@@ -130,11 +130,34 @@ interface ToastProps {
 
 // ===== Constants =====
 
+// Professional Logo Component
+const AppLogo = ({ size = 48 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: '#3B82F6', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#1D4ED8', stopOpacity: 1 }} />
+      </linearGradient>
+    </defs>
+    {/* Shopping basket */}
+    <rect x="20" y="35" width="60" height="50" rx="8" fill="url(#logoGradient)" />
+    {/* Basket handle */}
+    <path d="M 30 35 Q 50 15 70 35" stroke="white" strokeWidth="6" fill="none" strokeLinecap="round" />
+    {/* Smart indicator dots */}
+    <circle cx="40" cy="55" r="4" fill="white" opacity="0.9" />
+    <circle cx="50" cy="60" r="4" fill="white" opacity="0.9" />
+    <circle cx="60" cy="55" r="4" fill="white" opacity="0.9" />
+    {/* Checkmark overlay */}
+    <path d="M 35 60 L 45 70 L 65 45" stroke="white" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
+  </svg>
+);
+
 const categoryIcons = { 'מוצרי חלב': '🧀', 'מאפים': '🍞', 'ירקות': '🥬', 'פירות': '🍎', 'בשר': '🥩', 'משקאות': '☕', 'ניקיון': '🧹', 'אחר': '📦' };
 const memberColors = ['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
 const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅'];
 const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠', '💑', '👨‍👩‍👧'];
-const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
+// Professional color palette - Material Design inspired
+const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#EA580C', '#059669'];
 const ACTIONS_WIDTH = 200;
 
 // ===== Utility Functions =====
@@ -297,9 +320,22 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
 
 function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={() => { haptic('light'); onClose(); }}>
-      <div style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }} onClick={e => e.stopPropagation()}>
-        <div style={S.handle} /><h2 style={S.sheetTitle}>{title}</h2>{children}
+    <div style={{ ...S.fullScreenModal, animation: 'fadeIn 0.2s ease' }}>
+      <div style={{ ...S.modalHeader, animation: 'slideUp 0.3s ease' }}>
+        <button
+          onClick={() => { haptic('light'); onClose(); }}
+          style={S.closeBtn}
+          aria-label="סגור"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <h2 style={S.modalTitle}>{title}</h2>
+        <div style={{ width: '44px' }} />
+      </div>
+      <div style={S.modalContent}>
+        {children}
       </div>
     </div>
   );
@@ -1082,33 +1118,201 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const login = () => {
-    if (!email || !password) { setError('נא למלא הכל'); return; }
-    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-    const u = users.find((x: User) => x.email === email && x.password === password);
-    if (u) onLogin(u); else setError('פרטים שגויים');
+  // Email validation
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const register = () => {
-    if (!name || !email || !password || !confirm) { setError('נא למלא הכל'); return; }
-    if (password !== confirm) { setError('סיסמאות לא תואמות'); return; }
-    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-    if (users.find((x: User) => x.email === email)) { setError('אימייל קיים'); return; }
-    const u = { id: `u${Date.now()}`, name, email, password };
-    users.push(u); localStorage.setItem('sb_users', JSON.stringify(users)); onLogin(u);
+  // Password strength
+  const getPasswordStrength = (pwd: string) => {
+    if (pwd.length === 0) return { strength: 0, text: '', color: '' };
+    if (pwd.length < 4) return { strength: 1, text: 'חלשה', color: '#EF4444' };
+    if (pwd.length < 6) return { strength: 2, text: 'בינונית', color: '#F59E0B' };
+    return { strength: 3, text: 'חזקה', color: '#10B981' };
   };
+
+  const login = async () => {
+    setError('');
+
+    // Validation
+    if (!email.trim()) { setError('נא להזין אימייל'); return; }
+    if (!isValidEmail(email)) { setError('אימייל לא תקין'); return; }
+    if (!password) { setError('נא להזין סיסמה'); return; }
+
+    setLoading(true);
+    haptic('light');
+
+    // Simulate API delay for better UX
+    setTimeout(() => {
+      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
+      const u = users.find((x: User) => x.email === email && x.password === password);
+
+      if (u) {
+        haptic('medium');
+        onLogin(u);
+      } else {
+        haptic('heavy');
+        setError('אימייל או סיסמה שגויים');
+        setLoading(false);
+      }
+    }, 500);
+  };
+
+  const register = async () => {
+    setError('');
+
+    // Validation
+    if (!name.trim()) { setError('נא להזין שם'); return; }
+    if (name.trim().length < 2) { setError('שם חייב להכיל לפחות 2 תווים'); return; }
+    if (!email.trim()) { setError('נא להזין אימייל'); return; }
+    if (!isValidEmail(email)) { setError('אימייל לא תקין'); return; }
+    if (!password) { setError('נא להזין סיסמה'); return; }
+    if (password.length < 4) { setError('סיסמה חייבת להכיל לפחות 4 תווים'); return; }
+    if (!confirm) { setError('נא לאמת את הסיסמה'); return; }
+    if (password !== confirm) { setError('הסיסמאות אינן תואמות'); return; }
+
+    setLoading(true);
+    haptic('light');
+
+    // Simulate API delay
+    setTimeout(() => {
+      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
+
+      if (users.find((x: User) => x.email === email)) {
+        haptic('heavy');
+        setError('אימייל זה כבר קיים במערכת');
+        setLoading(false);
+        return;
+      }
+
+      const u = { id: `u${Date.now()}`, name: name.trim(), email, password };
+      users.push(u);
+      localStorage.setItem('sb_users', JSON.stringify(users));
+      haptic('medium');
+      onLogin(u);
+    }, 500);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    if (mode === 'login') login();
+    else register();
+  };
+
+  const pwdStrength = mode === 'register' ? getPasswordStrength(password) : null;
 
   return (
     <div style={S.loginScreen}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}><div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}><span style={{ fontSize: '40px' }}>🛒</span></div><h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 4px' }}>SmartBasket</h1><p style={{ color: '#6B7280', margin: 0 }}>רשימות קניות חכמות</p></div>
-      <div style={S.tabSwitch}><button style={{ ...S.tabSwitchBtn, ...(mode === 'login' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('login'); setError(''); }}>התחברות</button><button style={{ ...S.tabSwitchBtn, ...(mode === 'register' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('register'); setError(''); }}>הרשמה</button></div>
-      {mode === 'register' && <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={name} onChange={e => setName(e.target.value)} /></div>}
-      <div style={S.formGroup}><label style={S.label}>אימייל</label><input style={S.input} value={email} onChange={e => setEmail(e.target.value)} dir="ltr" /></div>
-      <div style={S.formGroup}><label style={S.label}>סיסמה</label><input type="password" style={S.input} value={password} onChange={e => setPassword(e.target.value)} /></div>
-      {mode === 'register' && <div style={S.formGroup}><label style={S.label}>אימות</label><input type="password" style={S.input} value={confirm} onChange={e => setConfirm(e.target.value)} /></div>}
-      {error && <div style={S.errorBox}>{error}</div>}
-      <button style={S.primaryBtn} onClick={() => { haptic('medium'); if (mode === 'login') login(); else register(); }}>{mode === 'login' ? 'התחבר' : 'הרשם'}</button>
+      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ width: '100px', height: '100px', background: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 12px 32px rgba(59,130,246,0.15)', border: '1px solid #E5E7EB' }}>
+          <AppLogo size={80} />
+        </div>
+        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
+        <p style={{ color: '#6B7280', margin: 0, fontSize: '15px' }}>רשימות קניות חכמות ומשותפות</p>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div style={S.tabSwitch}>
+          <button type="button" style={{ ...S.tabSwitchBtn, ...(mode === 'login' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('login'); setError(''); }}>התחברות</button>
+          <button type="button" style={{ ...S.tabSwitchBtn, ...(mode === 'register' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('register'); setError(''); }}>הרשמה</button>
+        </div>
+
+        {mode === 'register' && (
+          <div style={S.formGroup}>
+            <label style={S.label}>שם מלא</label>
+            <input
+              style={S.input}
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="הזן את שמך המלא"
+              autoComplete="name"
+              required
+              disabled={loading}
+            />
+          </div>
+        )}
+
+        <div style={S.formGroup}>
+          <label style={S.label}>אימייל</label>
+          <input
+            type="email"
+            style={S.input}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="example@mail.com"
+            dir="ltr"
+            autoComplete="email"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div style={S.formGroup}>
+          <label style={S.label}>סיסמה</label>
+          <input
+            type="password"
+            style={S.input}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="••••••••"
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            required
+            disabled={loading}
+          />
+          {mode === 'register' && password && pwdStrength && (
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, height: '4px', background: '#E5E7EB', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${(pwdStrength.strength / 3) * 100}%`, height: '100%', background: pwdStrength.color, transition: 'all 0.3s ease' }} />
+              </div>
+              <span style={{ fontSize: '12px', color: pwdStrength.color, fontWeight: '600' }}>{pwdStrength.text}</span>
+            </div>
+          )}
+        </div>
+
+        {mode === 'register' && (
+          <div style={S.formGroup}>
+            <label style={S.label}>אימות סיסמה</label>
+            <input
+              type="password"
+              style={S.input}
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              required
+              disabled={loading}
+            />
+          </div>
+        )}
+
+        {error && <div style={S.errorBox}>{error}</div>}
+
+        <button
+          type="submit"
+          style={{
+            ...S.primaryBtn,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'pulse 1s ease infinite' }} />
+              <span>טוען...</span>
+            </>
+          ) : (
+            <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
+          )}
+        </button>
+      </form>
     </div>
   );
 }
@@ -1282,4 +1486,9 @@ const S = {
   bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
   fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
   scrollableContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '40px' },
+  fullScreenModal: { position: 'fixed' as const, inset: 0, zIndex: 100, background: 'white', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
+  modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0, minHeight: '64px', background: 'white' },
+  closeBtn: { width: '44px', height: '44px', borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', transition: 'all 0.2s ease' },
+  modalTitle: { fontSize: '18px', fontWeight: '700', color: '#111827', margin: 0, flex: 1, textAlign: 'center' as const },
+  modalContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '32px' },
 };
