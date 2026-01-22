@@ -16,6 +16,9 @@ interface User {
 type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
 type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ניקיון' | 'אחר';
 
+// Screen Management
+type Screen = 'home' | 'profile' | 'settings' | 'stats';
+
 interface Product {
   id: string;
   name: string;
@@ -701,9 +704,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [showStats, setShowStats] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [showNotifications, setShowNotifications] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
@@ -784,7 +785,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       <div style={S.header}>
         <div style={S.headerRow}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ ...S.avatar, background: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }} onClick={() => setShowProfile(true)}>{user.avatarEmoji || user.name.charAt(0)}</div>
+            <div style={{ ...S.avatar, background: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }} onClick={() => setCurrentScreen('profile')}>{user.avatarEmoji || user.name.charAt(0)}</div>
             <div><div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>שלום,</div><div style={{ fontSize: '17px', fontWeight: '700', color: 'white' }}>{user.name}</div></div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -792,7 +793,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               {unreadCount > 0 && <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', borderRadius: '50%', background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unreadCount}</div>}
             </button>
-            <button style={S.iconBtn} onClick={() => setShowSettings(true)}>
+            <button style={S.iconBtn} onClick={() => setCurrentScreen('settings')}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
           </div>
@@ -878,10 +879,10 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
       </>}
 
-      {showSettings && <div style={S.fullScreen}>
+      {currentScreen === 'settings' && <div style={S.fullScreen}>
         <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button style={S.iconBtn} onClick={() => setShowSettings(false)}>
+            <button style={S.iconBtn} onClick={() => setCurrentScreen('home')}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>הגדרות</h1>
@@ -935,11 +936,11 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
 
         <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('home'); }}>
+          <div style={S.navItem} onClick={() => { setCurrentScreen('home'); setActiveNav('home'); }}>
             <span style={{ fontSize: '22px' }}>🏠</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
           </div>
-          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('stats'); setShowStats(true); }}>
+          <div style={S.navItem} onClick={() => { setCurrentScreen('stats'); setActiveNav('stats'); }}>
             <span style={{ fontSize: '22px' }}>📊</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
           </div>
@@ -950,10 +951,10 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
       </div>}
 
-      {showProfile && <div style={S.fullScreen}>
+      {currentScreen === 'profile' && <div style={S.fullScreen}>
         <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <button style={S.iconBtn} onClick={() => { setShowProfile(false); setEditProfile(null); }}>
+            <button style={S.iconBtn} onClick={() => { setCurrentScreen('home'); setEditProfile(null); }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>פרופיל</h1>
@@ -1019,17 +1020,17 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
                 </div>
               </div>
 
-              <button style={{ width: '100%', padding: '16px', marginTop: '24px', marginBottom: '80px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => { setShowProfile(false); setConfirmLogout(true); }}>התנתק</button>
+              <button style={{ width: '100%', padding: '16px', marginTop: '24px', marginBottom: '80px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => { setCurrentScreen('home'); setConfirmLogout(true); }}>התנתק</button>
             </>
           )}
         </div>
 
         <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('home'); }}>
+          <div style={S.navItem} onClick={() => { setCurrentScreen('home'); setActiveNav('home'); }}>
             <span style={{ fontSize: '22px' }}>🏠</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
           </div>
-          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('stats'); setShowStats(true); }}>
+          <div style={S.navItem} onClick={() => { setCurrentScreen('stats'); setActiveNav('stats'); }}>
             <span style={{ fontSize: '22px' }}>📊</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
           </div>
@@ -1040,7 +1041,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
       </div>}
 
-      {showStats && (() => {
+      {currentScreen === 'stats' && (() => {
         const totalProducts = userLists.reduce((sum: number, l: List) => sum + l.products.length, 0);
         const completedProducts = userLists.reduce((sum: number, l: List) => sum + l.products.filter(p => p.isPurchased).length, 0);
         const pendingProducts = totalProducts - completedProducts;
@@ -1161,7 +1162,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           </div>
         
         <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowStats(false); setActiveNav('home'); }}>
+          <div style={S.navItem} onClick={() => { setCurrentScreen('home'); setActiveNav('home'); }}>
             <span style={{ fontSize: '22px' }}>🏠</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
           </div>
@@ -1249,12 +1250,12 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
 
       {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק?" confirmText="התנתק" onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />}
 
-      <div style={S.bottomNav}>
+      {currentScreen === 'home' && <div style={S.bottomNav}>
         <div style={{ ...S.navItem, ...(activeNav === 'home' ? { background: '#F0FDFA' } : {}) }} onClick={() => setActiveNav('home')}>
           <span style={{ fontSize: '22px' }}>🏠</span>
           <span style={{ fontSize: '11px', color: activeNav === 'home' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'home' ? '600' : '400' }}>בית</span>
         </div>
-        <div style={{ ...S.navItem, ...(activeNav === 'stats' ? { background: '#F0FDFA' } : {}) }} onClick={() => { setActiveNav('stats'); setShowStats(true); }}>
+        <div style={{ ...S.navItem, ...(activeNav === 'stats' ? { background: '#F0FDFA' } : {}) }} onClick={() => { setActiveNav('stats'); setCurrentScreen('stats'); }}>
           <span style={{ fontSize: '22px' }}>📊</span>
           <span style={{ fontSize: '11px', color: activeNav === 'stats' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'stats' ? '600' : '400' }}>סטטיסטיקה</span>
         </div>
@@ -1262,7 +1263,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           <span style={{ fontSize: '22px' }}>➕</span>
           <span style={{ fontSize: '11px', color: '#6B7280' }}>חדש</span>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -1362,7 +1363,6 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div style={{
-      minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -1370,7 +1370,13 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
       padding: '20px',
       fontFamily: '-apple-system, sans-serif',
       direction: 'rtl',
-      overflowY: 'auto'
+      overflowY: 'auto',
+      position: 'fixed',
+      width: '100%',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0
     }}>
       <div style={{
         width: '100%',
@@ -1379,7 +1385,7 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
         borderRadius: '24px',
         boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         padding: '40px 32px',
-        margin: '20px 0',
+        margin: '20px auto',
         animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
       }}>
         {/* Logo & Title */}
@@ -1481,8 +1487,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 <input
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 50px',
-                    paddingRight: '50px',
+                    padding: '14px 16px 14px 16px',
+                    paddingRight: '48px',
                     borderRadius: '12px',
                     border: '2px solid #E5E7EB',
                     fontSize: '15px',
@@ -1527,15 +1533,16 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 type="email"
                 style={{
                   width: '100%',
-                  padding: '14px 16px 14px 50px',
-                  paddingRight: '50px',
+                  padding: '14px 16px 14px 16px',
+                  paddingRight: '48px',
                   borderRadius: '12px',
                   border: '2px solid #E5E7EB',
                   fontSize: '15px',
                   outline: 'none',
                   boxSizing: 'border-box',
                   transition: 'all 0.2s ease',
-                  background: loading ? '#F9FAFB' : 'white'
+                  background: loading ? '#F9FAFB' : 'white',
+                  textAlign: 'right'
                 }}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -1572,15 +1579,16 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 type="password"
                 style={{
                   width: '100%',
-                  padding: '14px 16px 14px 50px',
-                  paddingRight: '50px',
+                  padding: '14px 16px 14px 16px',
+                  paddingRight: '48px',
                   borderRadius: '12px',
                   border: '2px solid #E5E7EB',
                   fontSize: '15px',
                   outline: 'none',
                   boxSizing: 'border-box',
                   transition: 'all 0.2s ease',
-                  background: loading ? '#F9FAFB' : 'white'
+                  background: loading ? '#F9FAFB' : 'white',
+                  textAlign: 'right'
                 }}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -1625,15 +1633,16 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                   type="password"
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 50px',
-                  paddingRight: '50px',
+                    padding: '14px 16px 14px 16px',
+                    paddingRight: '48px',
                     borderRadius: '12px',
                     border: '2px solid #E5E7EB',
                     fontSize: '15px',
                     outline: 'none',
                     boxSizing: 'border-box',
                     transition: 'all 0.2s ease',
-                    background: loading ? '#F9FAFB' : 'white'
+                    background: loading ? '#F9FAFB' : 'white',
+                    textAlign: 'right'
                   }}
                   value={confirm}
                   onChange={e => setConfirm(e.target.value)}
