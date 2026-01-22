@@ -131,28 +131,12 @@ interface ToastProps {
 // ===== Constants =====
 
 // Professional Logo Component
-const AppLogo = ({ size = 48 }: { size?: number }) => (
-  <div style={{
-    width: size,
-    height: size,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: size * 0.6,
-    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-  }}>
-    🛒
-  </div>
-);
-
 const categoryIcons = { 'מוצרי חלב': '🧀', 'מאפים': '🍞', 'ירקות': '🥬', 'פירות': '🍎', 'בשר': '🥩', 'משקאות': '☕', 'ניקיון': '🧹', 'אחר': '📦' };
-const memberColors = ['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
+const memberColors = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
 const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅'];
 const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠', '💑', '👨‍👩‍👧'];
 // Beautiful & Pleasant color palette
-const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
+const COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 const ACTIONS_WIDTH = 200;
 
 // ===== Utility Functions =====
@@ -170,13 +154,17 @@ type ToastType = 'success' | 'error' | 'info' | 'warning';
 const toastConfig = {
   success: { icon: '✓', bg: 'linear-gradient(135deg, #22C55E, #16A34A)', shadow: 'rgba(34, 197, 94, 0.3)' },
   error: { icon: '✕', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', shadow: 'rgba(239, 68, 68, 0.3)' },
-  info: { icon: 'ℹ', bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', shadow: 'rgba(59, 130, 246, 0.3)' },
+  info: { icon: 'ℹ', bg: 'linear-gradient(135deg, #14B8A6, #0D9488)', shadow: 'rgba(20, 184, 166, 0.3)' },
   warning: { icon: '⚠', bg: 'linear-gradient(135deg, #F59E0B, #D97706)', shadow: 'rgba(245, 158, 11, 0.3)' }
 };
 
 function ConfirmModal({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) {
   return (
-    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={onCancel}>
+    <div
+      style={{ ...S.overlay, animation: 'fadeIn 0.2s ease', alignItems: 'center' }}
+      onClick={onCancel}
+      onTouchMove={(e) => e.preventDefault()}
+    >
       <div style={{ ...S.confirmBox, animation: 'scaleIn 0.3s ease' }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '0 0 12px', textAlign: 'center' }}>{title}</h3>
         <p style={{ fontSize: '15px', color: '#6B7280', margin: '0 0 24px', textAlign: 'center' }}>{message}</p>
@@ -258,7 +246,7 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
       {offset > 0 && (
         <div style={{ position: 'absolute' as const, top: 0, right: 0, bottom: 0, width: ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' as const }}>
           <div onClick={() => { haptic('medium'); doAction(onDelete); }} style={{ ...S.actionBtn, background: '#EF4444' }}><span>🗑️</span><span style={S.actionLabel}>מחק</span></div>
-          <div onClick={() => { haptic('light'); doAction(onEdit); }} style={{ ...S.actionBtn, background: '#3B82F6' }}><span>✏️</span><span style={S.actionLabel}>ערוך</span></div>
+          <div onClick={() => { haptic('light'); doAction(onEdit); }} style={{ ...S.actionBtn, background: '#14B8A6' }}><span>✏️</span><span style={S.actionLabel}>ערוך</span></div>
           <div onClick={() => { haptic('light'); doAction(onToggle); }} style={{ ...S.actionBtn, background: isPurchased ? '#F59E0B' : '#22C55E' }}>
             <span>{isPurchased ? '↩️' : '✓'}</span><span style={S.actionLabel}>{isPurchased ? 'החזר' : 'נקנה'}</span>
           </div>
@@ -315,8 +303,16 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
 
 function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={() => { haptic('light'); onClose(); }}>
-      <div style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }} onClick={e => e.stopPropagation()}>
+    <div
+      style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }}
+      onClick={() => { haptic('light'); onClose(); }}
+      onTouchMove={(e) => e.preventDefault()}
+    >
+      <div
+        style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }}
+        onClick={e => e.stopPropagation()}
+        onTouchMove={e => e.stopPropagation()}
+      >
         <div style={S.handle} />
         <h2 style={S.sheetTitle}>{title}</h2>
         {children}
@@ -341,6 +337,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
   const [newP, setNewP] = useState<{ name: string; quantity: number; unit: ProductUnit; category: ProductCategory }>({ name: '', quantity: 1, unit: 'יח׳', category: 'אחר' });
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('sb_hint_seen'));
+  const [addError, setAddError] = useState('');
 
   const dismissHint = () => { setShowHint(false); localStorage.setItem('sb_hint_seen', 'true'); };
 
@@ -353,7 +350,19 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
   const updateP = (products: Product[]) => onUpdateList({ ...list, products });
 
   const handleAdd = () => {
-    if (!newP.name.trim()) return;
+    setAddError('');
+    if (!newP.name.trim()) {
+      setAddError('נא להזין שם מוצר');
+      return;
+    }
+    if (newP.name.length < 2) {
+      setAddError('שם המוצר חייב להכיל לפחות 2 תווים');
+      return;
+    }
+    if (newP.quantity < 1) {
+      setAddError('כמות חייבת להיות לפחות 1');
+      return;
+    }
     setOpenItemId(null);
     const now = new Date();
     const date = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -431,17 +440,17 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
 
       <div style={S.content} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: '12px', marginBottom: '12px', border: '1px solid #BFDBFE' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '12px', marginBottom: '12px', border: '1px solid #99F6E4' }}>
             <span style={{ fontSize: '24px' }}>💡</span>
-            <div style={{ flex: 1, fontSize: '13px', color: '#1E40AF' }}>
+            <div style={{ flex: 1, fontSize: '13px', color: '#115E59' }}>
               <strong>טיפ:</strong> גרור שמאלה לפעולות • לחץ לפרטים
             </div>
-            <button onClick={dismissHint} style={{ background: 'none', border: 'none', color: '#3B82F6', fontSize: '20px', cursor: 'pointer', padding: '4px' }}>✕</button>
+            <button onClick={dismissHint} style={{ background: 'none', border: 'none', color: '#14B8A6', fontSize: '20px', cursor: 'pointer', padding: '4px' }}>✕</button>
           </div>
         )}
         {items.length === 0 ? (
           <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
-            <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #DBEAFE, #BFDBFE)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '56px' }}>
+            <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '56px' }}>
               {filter === 'pending' ? '🎉' : '📦'}
             </div>
             <p style={{ ...S.emptyText, marginBottom: '8px' }}>{filter === 'pending' ? 'כל הכבוד!' : 'אין מוצרים'}</p>
@@ -493,7 +502,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
               fontSize: '15px',
               fontWeight: '700',
               cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(99, 102, 241, 0.5)',
+              boxShadow: '0 6px 20px rgba(20, 184, 166, 0.5)',
               transition: 'all 0.2s ease'
             }}
             onClick={() => { haptic('medium'); setShowAdd(true); }}
@@ -507,8 +516,9 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
         </div>
       )}
 
-      {showAdd && <Modal title="מוצר חדש" onClose={() => setShowAdd(false)}>
-        <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={newP.name} onChange={e => setNewP({ ...newP, name: e.target.value })} placeholder="חלב תנובה" /></div>
+      {showAdd && <Modal title="מוצר חדש" onClose={() => { setShowAdd(false); setAddError(''); }}>
+        {addError && <div style={{ padding: '12px 16px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '12px', color: '#DC2626', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>⚠️ {addError}</div>}
+        <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={newP.name} onChange={e => { setNewP({ ...newP, name: e.target.value }); setAddError(''); }} placeholder="חלב תנובה" /></div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <div style={{ ...S.formGroup, flex: 1 }}>
             <label style={S.label}>כמות</label>
@@ -541,7 +551,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
           <label style={S.label}>קטגוריה</label>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {Object.entries(categoryIcons).map(([cat, icon]) => (
-              <button key={cat} onClick={() => setShowEdit({ ...showEdit, category: cat as ProductCategory })} style={{ padding: '8px 12px', borderRadius: '10px', border: showEdit.category === cat ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: showEdit.category === cat ? '#EFF6FF' : '#fff', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button key={cat} onClick={() => setShowEdit({ ...showEdit, category: cat as ProductCategory })} style={{ padding: '8px 12px', borderRadius: '10px', border: showEdit.category === cat ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: showEdit.category === cat ? '#F0FDFA' : '#fff', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>{icon}</span><span>{cat}</span>
               </button>
             ))}
@@ -618,30 +628,30 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>
+            <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #14B8A6, #0D9488)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 4px', color: '#111827' }}>שתף רשימה</h3>
             <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>שלח את רשימת הקניות</p>
           </div>
-          <div style={{ background: '#EFF6FF', borderRadius: '12px', border: '2px solid #BFDBFE', marginBottom: '20px', overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '15px', fontWeight: '700', color: '#1E40AF' }}>{list.name}</span>
-              <span style={{ fontSize: '13px', color: '#3B82F6', fontWeight: '600' }}>{list.products.filter(p => !p.isPurchased).length} פריטים</span>
+          <div style={{ background: '#F0FDFA', borderRadius: '12px', border: '2px solid #99F6E4', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #99F6E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '15px', fontWeight: '700', color: '#115E59' }}>{list.name}</span>
+              <span style={{ fontSize: '13px', color: '#14B8A6', fontWeight: '600' }}>{list.products.filter(p => !p.isPurchased).length} פריטים</span>
             </div>
             <div style={{ padding: '12px 16px', maxHeight: '140px', overflow: 'auto' }}>
               {list.products.filter(p => !p.isPurchased).length === 0 ? (
                 <div style={{ color: '#64748B', fontSize: '14px', textAlign: 'center', padding: '8px 0' }}>הרשימה ריקה</div>
               ) : (
                 list.products.filter(p => !p.isPurchased).slice(0, 5).map((p, i, arr) => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < arr.length - 1 ? '1px solid #DBEAFE' : 'none' }}>
-                    <span style={{ fontSize: '14px', color: '#1E40AF' }}>• {p.name}</span>
-                    <span style={{ fontSize: '13px', color: '#3B82F6' }}>{p.quantity} {p.unit}</span>
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < arr.length - 1 ? '1px solid #CCFBF1' : 'none' }}>
+                    <span style={{ fontSize: '14px', color: '#115E59' }}>• {p.name}</span>
+                    <span style={{ fontSize: '13px', color: '#14B8A6' }}>{p.quantity} {p.unit}</span>
                   </div>
                 ))
               )}
               {list.products.filter(p => !p.isPurchased).length > 5 && (
-                <div style={{ fontSize: '13px', color: '#3B82F6', textAlign: 'center', paddingTop: '8px' }}>+ עוד {list.products.filter(p => !p.isPurchased).length - 5} פריטים</div>
+                <div style={{ fontSize: '13px', color: '#14B8A6', textAlign: 'center', paddingTop: '8px' }}>+ עוד {list.products.filter(p => !p.isPurchased).length - 5} פריטים</div>
               )}
             </div>
           </div>
@@ -671,7 +681,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
 
       {showEditList && editListData && <Modal title={list.isGroup ? 'עריכת קבוצה' : 'עריכת רשימה'} onClose={() => setShowEditList(false)}>
         <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={editListData.name} onChange={e => setEditListData({ ...editListData, name: e.target.value })} /></div>
-        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{(list.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => <button key={i} onClick={() => setEditListData({ ...editListData, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: editListData.icon === i ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: editListData.icon === i ? '#EFF6FF' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
+        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{(list.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => <button key={i} onClick={() => setEditListData({ ...editListData, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: editListData.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editListData.icon === i ? '#F0FDFA' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
         <div style={S.formGroup}><label style={S.label}>צבע</label><div style={{ display: 'flex', gap: '10px' }}>{COLORS.map(c => <button key={c} onClick={() => setEditListData({ ...editListData, color: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editListData.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />)}</div></div>
         <button style={S.primaryBtn} onClick={saveListChanges}>שמור שינויים</button>
         <button style={{ ...S.dangerBtnFull, marginTop: '12px' }} onClick={() => { setShowEditList(false); setConfirmDeleteList(true); }}>מחק {list.isGroup ? 'קבוצה' : 'רשימה'}</button>
@@ -699,10 +709,11 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
-  const [newL, setNewL] = useState<{ name: string; icon: string; color: string }>({ name: '', icon: '📋', color: '#3B82F6' });
+  const [newL, setNewL] = useState<{ name: string; icon: string; color: string }>({ name: '', icon: '📋', color: '#14B8A6' });
   const [joinCode, setJoinCode] = useState('');
   const [joinPass, setJoinPass] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [createError, setCreateError] = useState('');
   const [activeNav, setActiveNav] = useState<'home' | 'stats'>('home');
 
   const userLists = lists.filter((l: List) => {
@@ -721,18 +732,26 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
   const display = (tab === 'all' ? userLists : tab === 'my' ? my : groups).filter((l: List) => l.name.includes(search));
 
   const handleCreate = (isGroup: boolean) => {
-    if (!newL.name.trim()) return;
-    onCreateList({ 
-      id: `l${Date.now()}`, 
-      ...newL, 
+    setCreateError('');
+    if (!newL.name.trim()) {
+      setCreateError('נא להזין שם לרשימה');
+      return;
+    }
+    if (newL.name.length < 2) {
+      setCreateError('השם חייב להכיל לפחות 2 תווים');
+      return;
+    }
+    onCreateList({
+      id: `l${Date.now()}`,
+      ...newL,
       isGroup,
-      owner: user, 
-      members: [], 
-      products: [], 
-      inviteCode: isGroup ? Math.random().toString(36).substring(2, 8).toUpperCase() : null, 
+      owner: user,
+      members: [],
+      products: [],
+      inviteCode: isGroup ? Math.random().toString(36).substring(2, 8).toUpperCase() : null,
       password: isGroup ? String(Math.floor(1000 + Math.random() * 9000)) : null 
     });
-    setNewL({ name: '', icon: isGroup ? '👨‍👩‍👧‍👦' : '🛒', color: '#3B82F6' });
+    setNewL({ name: '', icon: isGroup ? '👨‍👩‍👧‍👦' : '🛒', color: '#14B8A6' });
     setShowCreate(false);
     setShowCreateGroup(false);
   };
@@ -789,7 +808,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       <div style={{ ...S.content, paddingBottom: '100px' }}>
         {display.length === 0 ? (
           <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
-            <div style={{ width: '120px', height: '120px', borderRadius: '30px', background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '64px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)' }}>
+            <div style={{ width: '120px', height: '120px', borderRadius: '30px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '64px', boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </div>
             <p style={{ ...S.emptyText, marginBottom: '8px' }}>{tab === 'groups' ? 'טרם נוצרו קבוצות' : 'טרם נוצרו רשימות'}</p>
@@ -797,7 +816,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
               {tab === 'groups' ? 'התחל בקבוצה משותפת וצור רשימות קניות עם המשפחה והחברים' : 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך'}
             </p>
             <button
-              style={{ padding: '14px 32px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
+              style={{ padding: '14px 32px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #14B8A6, #0D9488)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
               onClick={() => { haptic('medium'); setShowMenu(true); }}
             >
               <span>✨</span>
@@ -835,7 +854,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button style={S.menuOption} onClick={() => openOption('private')}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📝</div>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📝</div>
               <div style={{ flex: 1, textAlign: 'right' }}>
                 <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>רשימה פרטית</div>
                 <div style={{ fontSize: '13px', color: '#6B7280' }}>רשימת קניות אישית</div>
@@ -860,7 +879,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       </>}
 
       {showSettings && <div style={S.fullScreen}>
-        <div style={{ background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '48px 20px 24px', flexShrink: 0 }}>
+        <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button style={S.iconBtn} onClick={() => setShowSettings(false)}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -873,7 +892,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
             <div style={S.settingRow}>
               <span style={{ fontSize: '20px' }}>🔔</span>
               <span style={{ flex: 1 }}>התראות</span>
-              <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#3B82F6', padding: '2px', cursor: 'pointer' }}>
+              <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#14B8A6', padding: '2px', cursor: 'pointer' }}>
                 <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', marginRight: 'auto' }} />
               </div>
             </div>
@@ -917,13 +936,13 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       </div>}
 
       {showProfile && <div style={S.fullScreen}>
-        <div style={{ background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <button style={S.iconBtn} onClick={() => { setShowProfile(false); setEditProfile(null); }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>פרופיל</h1>
-            {!editProfile && <button style={S.iconBtn} onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#3B82F6', avatarEmoji: user.avatarEmoji || '' })}>
+            {!editProfile && <button style={S.iconBtn} onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#14B8A6', avatarEmoji: user.avatarEmoji || '' })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>}
           </div>
@@ -942,7 +961,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
               <div style={{ marginBottom: '20px' }}>
                 <label style={S.label}>צבע אווטר</label>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#10B981', '#14B8A6'].map(c => (
+                  {['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4', '#0891B2'].map(c => (
                     <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
                   ))}
                 </div>
@@ -951,7 +970,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
                 <label style={S.label}>אימוג׳י (אופציונלי)</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {['', '😊', '😎', '🦁', '🐻', '🦊', '🐸', '🌟', '⚡', '🔥'].map(e => (
-                    <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#EFF6FF' : 'white', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {e || <span style={{ fontSize: '12px', color: '#9CA3AF' }}>ללא</span>}
                     </button>
                   ))}
@@ -991,58 +1010,107 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
       </div>}
 
-      {showStats && <div style={S.fullScreen}>
-        <div style={{ background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '48px 20px 24px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>סטטיסטיקות</h1>
+      {showStats && (() => {
+        const totalProducts = userLists.reduce((sum: number, l: List) => sum + l.products.length, 0);
+        const completedProducts = userLists.reduce((sum: number, l: List) => sum + l.products.filter(p => p.isPurchased).length, 0);
+        const pendingProducts = totalProducts - completedProducts;
+        const myListsCount = my.length;
+        const groupsCount = groups.length;
+        const categoryCounts = userLists.flatMap((l: List) => l.products).reduce((acc: Record<string, number>, p: Product) => {
+          acc[p.category] = (acc[p.category] || 0) + 1;
+          return acc;
+        }, {});
+        const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
+
+        return <div style={S.fullScreen}>
+          <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>📊 סטטיסטיקות</h1>
+            </div>
           </div>
-        </div>
-        <div style={S.scrollableContent}>
-          <div style={{ background: 'white', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-            <span style={{ fontSize: '48px' }}>📊</span>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '16px 0 8px' }}>סטטיסטיקות</h3>
-            <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>בקרוב...</p>
+          <div style={S.scrollableContent}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontSize: '32px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{userLists.length}</div>
+                <div style={{ fontSize: '13px', color: '#6B7280' }}>רשימות פעילות</div>
+              </div>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontSize: '32px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{totalProducts}</div>
+                <div style={{ fontSize: '13px', color: '#6B7280' }}>סה״כ מוצרים</div>
+              </div>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontSize: '32px', fontWeight: '700', color: '#10B981', marginBottom: '4px' }}>{completedProducts}</div>
+                <div style={{ fontSize: '13px', color: '#6B7280' }}>נרכשו</div>
+              </div>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontSize: '32px', fontWeight: '700', color: '#F59E0B', marginBottom: '4px' }}>{pendingProducts}</div>
+                <div style={{ fontSize: '13px', color: '#6B7280' }}>ממתינים</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px', color: '#111827' }}>חלוקת רשימות</h3>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1, padding: '16px', background: '#F0FDFA', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📝</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{myListsCount}</div>
+                  <div style={{ fontSize: '12px', color: '#6B7280' }}>רשימות אישיות</div>
+                </div>
+                <div style={{ flex: 1, padding: '16px', background: '#F0FDFA', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{groupsCount}</div>
+                  <div style={{ fontSize: '12px', color: '#6B7280' }}>קבוצות</div>
+                </div>
+              </div>
+            </div>
+
+            {topCategory && <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 12px', color: '#111827' }}>קטגוריה מובילה</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: '#F0FDFA', borderRadius: '12px' }}>
+                <div style={{ fontSize: '28px' }}>{categoryIcons[topCategory[0] as ProductCategory]}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>{topCategory[0]}</div>
+                  <div style={{ fontSize: '13px', color: '#6B7280' }}>{topCategory[1]} מוצרים</div>
+                </div>
+              </div>
+            </div>}
+
+            {totalProducts === 0 && <div style={{ background: 'white', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <span style={{ fontSize: '48px' }}>📊</span>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '16px 0 8px', color: '#111827' }}>אין עדיין נתונים</h3>
+              <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>התחל להוסיף מוצרים לרשימות כדי לראות סטטיסטיקות</p>
+            </div>}
           </div>
-          
-          <div style={{ background: 'white', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-            <span style={{ fontSize: '48px' }}>🏪</span>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '16px 0 8px' }}>מצא סופר באזור שלך</h3>
-            <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>בקרוב...</p>
-          </div>
-          
-          <div style={{ background: 'white', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <span style={{ fontSize: '48px' }}>💡</span>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '16px 0 8px' }}>מקום מומלץ לקנייה</h3>
-            <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>בקרוב...</p>
-          </div>
-        </div>
         
         <div style={S.bottomNav}>
           <div style={S.navItem} onClick={() => { setShowStats(false); setActiveNav('home'); }}>
             <span style={{ fontSize: '22px' }}>🏠</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
           </div>
-          <div style={{ ...S.navItem, background: '#EFF6FF' }}>
+          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
             <span style={{ fontSize: '22px' }}>📊</span>
-            <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: '600' }}>סטטיסטיקה</span>
+            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>סטטיסטיקה</span>
           </div>
           <div style={S.navItem} onClick={() => setShowMenu(true)}>
             <span style={{ fontSize: '22px' }}>➕</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>חדש</span>
           </div>
         </div>
-      </div>}
+      </div>;
+      })()}
 
-      {showCreate && <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#3B82F6' }); }}>
-        <div style={S.formGroup}><label style={S.label}>שם הרשימה</label><input style={S.input} value={newL.name} onChange={e => setNewL({ ...newL, name: e.target.value })} placeholder="קניות שבועיות" /></div>
-        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{LIST_ICONS.map(i => <button key={i} onClick={() => setNewL({ ...newL, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: newL.icon === i ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: newL.icon === i ? '#EFF6FF' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
+      {showCreate && <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
+        {createError && <div style={{ padding: '12px 16px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '12px', color: '#DC2626', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>⚠️ {createError}</div>}
+        <div style={S.formGroup}><label style={S.label}>שם הרשימה</label><input style={S.input} value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות שבועיות" /></div>
+        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{LIST_ICONS.map(i => <button key={i} onClick={() => setNewL({ ...newL, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: newL.icon === i ? '#F0FDFA' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
         <div style={S.formGroup}><label style={S.label}>צבע</label><div style={{ display: 'flex', gap: '10px' }}>{COLORS.map(c => <button key={c} onClick={() => setNewL({ ...newL, color: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: newL.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />)}</div></div>
         <button style={S.primaryBtn} onClick={() => handleCreate(false)}>צור רשימה</button>
       </Modal>}
 
-      {showCreateGroup && <Modal title="קבוצה חדשה" onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#3B82F6' }); }}>
-        <div style={S.formGroup}><label style={S.label}>שם הקבוצה</label><input style={S.input} value={newL.name} onChange={e => setNewL({ ...newL, name: e.target.value })} placeholder="קניות משפחתיות" /></div>
-        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{GROUP_ICONS.map(i => <button key={i} onClick={() => setNewL({ ...newL, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: newL.icon === i ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: newL.icon === i ? '#EFF6FF' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
+      {showCreateGroup && <Modal title="קבוצה חדשה" onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
+        {createError && <div style={{ padding: '12px 16px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '12px', color: '#DC2626', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>⚠️ {createError}</div>}
+        <div style={S.formGroup}><label style={S.label}>שם הקבוצה</label><input style={S.input} value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות משפחתיות" /></div>
+        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{GROUP_ICONS.map(i => <button key={i} onClick={() => setNewL({ ...newL, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: newL.icon === i ? '#F0FDFA' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
         <div style={S.formGroup}><label style={S.label}>צבע</label><div style={{ display: 'flex', gap: '10px' }}>{COLORS.map(c => <button key={c} onClick={() => setNewL({ ...newL, color: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: newL.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />)}</div></div>
         <button style={S.primaryBtn} onClick={() => handleCreate(true)}>צור קבוצה</button>
       </Modal>}
@@ -1065,7 +1133,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
 
       {editList && <Modal title={editList.isGroup ? 'עריכת קבוצה' : 'עריכת רשימה'} onClose={() => setEditList(null)}>
         <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={editList.name} onChange={e => setEditList({ ...editList, name: e.target.value })} /></div>
-        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => <button key={i} onClick={() => setEditList({ ...editList, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: editList.icon === i ? '2px solid #3B82F6' : '1.5px solid #E5E7EB', background: editList.icon === i ? '#EFF6FF' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
+        <div style={S.formGroup}><label style={S.label}>אייקון</label><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => <button key={i} onClick={() => setEditList({ ...editList, icon: i })} style={{ width: '48px', height: '48px', borderRadius: '12px', border: editList.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editList.icon === i ? '#F0FDFA' : '#fff', fontSize: '22px', cursor: 'pointer' }}>{i}</button>)}</div></div>
         <div style={S.formGroup}><label style={S.label}>צבע</label><div style={{ display: 'flex', gap: '10px' }}>{COLORS.map(c => <button key={c} onClick={() => setEditList({ ...editList, color: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editList.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />)}</div></div>
         <button style={S.primaryBtn} onClick={() => { onEditList(editList); setEditList(null); }}>שמור שינויים</button>
         <button style={{ ...S.dangerBtnFull, marginTop: '12px' }} onClick={() => { setConfirmDeleteList(editList); setEditList(null); }}>מחק {editList.isGroup ? 'קבוצה' : 'רשימה'}</button>
@@ -1104,13 +1172,13 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק?" confirmText="התנתק" onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />}
 
       <div style={S.bottomNav}>
-        <div style={{ ...S.navItem, ...(activeNav === 'home' ? { background: '#EFF6FF' } : {}) }} onClick={() => setActiveNav('home')}>
+        <div style={{ ...S.navItem, ...(activeNav === 'home' ? { background: '#F0FDFA' } : {}) }} onClick={() => setActiveNav('home')}>
           <span style={{ fontSize: '22px' }}>🏠</span>
-          <span style={{ fontSize: '11px', color: activeNav === 'home' ? '#3B82F6' : '#6B7280', fontWeight: activeNav === 'home' ? '600' : '400' }}>בית</span>
+          <span style={{ fontSize: '11px', color: activeNav === 'home' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'home' ? '600' : '400' }}>בית</span>
         </div>
-        <div style={{ ...S.navItem, ...(activeNav === 'stats' ? { background: '#EFF6FF' } : {}) }} onClick={() => { setActiveNav('stats'); setShowStats(true); }}>
+        <div style={{ ...S.navItem, ...(activeNav === 'stats' ? { background: '#F0FDFA' } : {}) }} onClick={() => { setActiveNav('stats'); setShowStats(true); }}>
           <span style={{ fontSize: '22px' }}>📊</span>
-          <span style={{ fontSize: '11px', color: activeNav === 'stats' ? '#3B82F6' : '#6B7280', fontWeight: activeNav === 'stats' ? '600' : '400' }}>סטטיסטיקה</span>
+          <span style={{ fontSize: '11px', color: activeNav === 'stats' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'stats' ? '600' : '400' }}>סטטיסטיקה</span>
         </div>
         <div style={S.navItem} onClick={() => setShowMenu(true)}>
           <span style={{ fontSize: '22px' }}>➕</span>
@@ -1215,114 +1283,350 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
   const pwdStrength = mode === 'register' ? getPasswordStrength(password) : null;
 
   return (
-    <div style={S.loginScreen}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <div style={{ width: '100px', height: '100px', background: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 12px 32px rgba(59,130,246,0.15)', border: '1px solid #E5E7EB' }}>
-          <AppLogo size={80} />
-        </div>
-        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #14B8A6, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
-        <p style={{ color: '#6B7280', margin: 0, fontSize: '15px' }}>רשימות קניות חכמות ומשותפות</p>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <div style={S.tabSwitch}>
-          <button type="button" style={{ ...S.tabSwitchBtn, ...(mode === 'login' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('login'); setError(''); }}>התחברות</button>
-          <button type="button" style={{ ...S.tabSwitchBtn, ...(mode === 'register' ? S.tabSwitchActive : {}) }} onClick={() => { setMode('register'); setError(''); }}>הרשמה</button>
-        </div>
-
-        {mode === 'register' && (
-          <div style={S.formGroup}>
-            <label style={S.label}>שם מלא</label>
-            <input
-              style={S.input}
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="הזן את שמך המלא"
-              autoComplete="name"
-              required
-              disabled={loading}
-            />
-          </div>
-        )}
-
-        <div style={S.formGroup}>
-          <label style={S.label}>אימייל</label>
-          <input
-            type="email"
-            style={S.input}
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="example@mail.com"
-            dir="ltr"
-            autoComplete="email"
-            required
-            disabled={loading}
-          />
-        </div>
-
-        <div style={S.formGroup}>
-          <label style={S.label}>סיסמה</label>
-          <input
-            type="password"
-            style={S.input}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            required
-            disabled={loading}
-          />
-          {mode === 'register' && password && pwdStrength && (
-            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ flex: 1, height: '4px', background: '#E5E7EB', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: `${(pwdStrength.strength / 3) * 100}%`, height: '100%', background: pwdStrength.color, transition: 'all 0.3s ease' }} />
-              </div>
-              <span style={{ fontSize: '12px', color: pwdStrength.color, fontWeight: '600' }}>{pwdStrength.text}</span>
-            </div>
-          )}
-        </div>
-
-        {mode === 'register' && (
-          <div style={S.formGroup}>
-            <label style={S.label}>אימות סיסמה</label>
-            <input
-              type="password"
-              style={S.input}
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-              disabled={loading}
-            />
-          </div>
-        )}
-
-        {error && <div style={S.errorBox}>{error}</div>}
-
-        <button
-          type="submit"
-          style={{
-            ...S.primaryBtn,
-            opacity: loading ? 0.7 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer',
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+      padding: '20px',
+      fontFamily: '-apple-system, sans-serif',
+      direction: 'rtl'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '440px',
+        background: 'white',
+        borderRadius: '24px',
+        boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+        padding: '48px 40px',
+        animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+      }}>
+        {/* Logo & Title */}
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+            borderRadius: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
-          }}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'pulse 1s ease infinite' }} />
-              <span>טוען...</span>
-            </>
-          ) : (
-            <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
+            margin: '0 auto 20px',
+            boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
+          }}>
+            <span style={{ fontSize: '48px' }}>🛒</span>
+          </div>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            margin: '0 0 8px',
+            color: '#111827'
+          }}>SmartBasket</h1>
+          <p style={{
+            color: '#6B7280',
+            margin: 0,
+            fontSize: '14px'
+          }}>רשימות קניות חכמות ומשותפות</p>
+        </div>
+
+        {/* Tab Switch */}
+        <div style={{
+          display: 'flex',
+          background: '#F3F4F6',
+          borderRadius: '12px',
+          padding: '4px',
+          marginBottom: '28px'
+        }}>
+          <button
+            type="button"
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '10px',
+              border: 'none',
+              background: mode === 'login' ? 'white' : 'transparent',
+              color: mode === 'login' ? '#14B8A6' : '#6B7280',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: mode === 'login' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
+            }}
+            onClick={() => { setMode('login'); setError(''); }}
+          >
+            התחברות
+          </button>
+          <button
+            type="button"
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '10px',
+              border: 'none',
+              background: mode === 'register' ? 'white' : 'transparent',
+              color: mode === 'register' ? '#14B8A6' : '#6B7280',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: mode === 'register' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
+            }}
+            onClick={() => { setMode('register'); setError(''); }}
+          >
+            הרשמה
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Name Field (Register only) */}
+          {mode === 'register' && (
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>שם מלא</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: '20px',
+                  opacity: 0.5
+                }}>👤</span>
+                <input
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px 14px 54px',
+                    borderRadius: '12px',
+                    border: '2px solid #E5E7EB',
+                    fontSize: '15px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s ease',
+                    background: loading ? '#F9FAFB' : 'white'
+                  }}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="הזן את שמך המלא"
+                  autoComplete="name"
+                  required
+                  disabled={loading}
+                  onFocus={(e) => e.target.style.borderColor = '#14B8A6'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+            </div>
           )}
-        </button>
-      </form>
+
+          {/* Email Field */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>אימייל</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '20px',
+                opacity: 0.5
+              }}>📧</span>
+              <input
+                type="email"
+                style={{
+                  width: '100%',
+                  padding: '14px 16px 14px 54px',
+                  borderRadius: '12px',
+                  border: '2px solid #E5E7EB',
+                  fontSize: '15px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  background: loading ? '#F9FAFB' : 'white'
+                }}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="example@mail.com"
+                dir="ltr"
+                autoComplete="email"
+                required
+                disabled={loading}
+                onFocus={(e) => e.target.style.borderColor = '#14B8A6'}
+                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+              />
+            </div>
+          </div>
+
+          {/* Password Field */}
+          <div style={{ marginBottom: mode === 'register' ? '20px' : '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>סיסמה</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '20px',
+                opacity: 0.5
+              }}>🔒</span>
+              <input
+                type="password"
+                style={{
+                  width: '100%',
+                  padding: '14px 16px 14px 54px',
+                  borderRadius: '12px',
+                  border: '2px solid #E5E7EB',
+                  fontSize: '15px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  background: loading ? '#F9FAFB' : 'white'
+                }}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                required
+                disabled={loading}
+                onFocus={(e) => e.target.style.borderColor = '#14B8A6'}
+                onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+              />
+            </div>
+            {mode === 'register' && password && pwdStrength && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ flex: 1, height: '6px', background: '#E5E7EB', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(pwdStrength.strength / 3) * 100}%`, height: '100%', background: pwdStrength.color, transition: 'all 0.3s ease' }} />
+                </div>
+                <span style={{ fontSize: '13px', color: pwdStrength.color, fontWeight: '600' }}>{pwdStrength.text}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Confirm Password (Register only) */}
+          {mode === 'register' && (
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>אימות סיסמה</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  fontSize: '20px',
+                  opacity: 0.5
+                }}>🔑</span>
+                <input
+                  type="password"
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px 14px 54px',
+                    borderRadius: '12px',
+                    border: '2px solid #E5E7EB',
+                    fontSize: '15px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.2s ease',
+                    background: loading ? '#F9FAFB' : 'white'
+                  }}
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                  disabled={loading}
+                  onFocus={(e) => e.target.style.borderColor = '#14B8A6'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              padding: '14px 16px',
+              background: '#FEE2E2',
+              border: '1px solid #FCA5A5',
+              borderRadius: '12px',
+              color: '#DC2626',
+              fontSize: '14px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: loading ? '#9CA3AF' : 'linear-gradient(135deg, #14B8A6, #10B981)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: loading ? 'none' : '0 8px 24px rgba(20, 184, 166, 0.3)',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px'
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '3px solid rgba(255,255,255,0.3)',
+                  borderTopColor: 'white',
+                  borderRadius: '50%',
+                  animation: 'pulse 1s ease infinite'
+                }} />
+                <span>טוען...</span>
+              </>
+            ) : (
+              <>
+                <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
+                <span>→</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -1334,27 +1638,29 @@ function Toast({ msg, type = 'success' }: ToastProps) {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '100px',
+      bottom: '120px',
       left: '50%',
       transform: 'translateX(-50%)',
       background: config.bg,
       color: 'white',
-      padding: '14px 28px',
-      borderRadius: '16px',
+      padding: '16px 32px',
+      borderRadius: '20px',
       fontSize: '15px',
       fontWeight: '600',
       zIndex: 9999,
       pointerEvents: 'none',
-      boxShadow: `0 8px 24px ${config.shadow}`,
-      animation: 'fadeInOut 2s ease',
+      boxShadow: `0 12px 32px ${config.shadow}, 0 4px 12px rgba(0, 0, 0, 0.08)`,
+      animation: 'slideUpFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
-      minWidth: '200px',
-      justifyContent: 'center'
+      gap: '12px',
+      minWidth: '240px',
+      maxWidth: '90%',
+      justifyContent: 'center',
+      backdropFilter: 'blur(10px)'
     }}>
-      <span style={{ fontSize: '18px' }}>{config.icon}</span>
-      <span>{msg}</span>
+      <span style={{ fontSize: '20px', flexShrink: 0 }}>{config.icon}</span>
+      <span style={{ textAlign: 'center' }}>{msg}</span>
     </div>
   );
 }
@@ -1464,26 +1770,26 @@ const S = {
   tabs: { display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '4px' },
   tab: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
   tabActive: { background: 'white', color: '#14B8A6' },
-  content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const },
+  content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const },
   empty: { textAlign: 'center' as const, padding: '48px 20px' },
   emptyText: { fontSize: '18px', fontWeight: '600', color: '#6B7280', margin: '12px 0 0' },
   listCard: { display: 'flex', alignItems: 'center', gap: '14px', background: 'white', padding: '16px', borderRadius: '16px', marginBottom: '12px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F1F5F9', transition: 'all 0.2s ease' },
   listIcon: { width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' },
-  badge: { background: '#DBEAFE', color: '#1D4ED8', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' },
+  badge: { background: '#CCFBF1', color: '#0D9488', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' },
   menuOption: { display: 'flex', alignItems: 'center', gap: '14px', background: '#F9FAFB', padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer', width: '100%' },
   settingRow: { display: 'flex', alignItems: 'center', gap: '14px', padding: '16px', borderBottom: '1px solid #F3F4F6', fontSize: '15px' },
   navItem: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '4px', padding: '8px 16px', borderRadius: '12px', cursor: 'pointer' },
   actionBtn: { width: '67px', height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer' },
   actionLabel: { fontSize: '11px', color: 'white', fontWeight: '600' },
   overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100, overflow: 'hidden' },
-  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '430px', maxHeight: '75vh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const },
+  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '430px', maxHeight: '75vh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const, touchAction: 'pan-y' as const },
   handle: { width: '40px', height: '4px', background: '#E5E7EB', borderRadius: '2px', margin: '0 auto 16px' },
   sheetTitle: { fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: '0 0 20px' },
   confirmBox: { background: 'white', borderRadius: '20px', padding: '24px', width: '90%', maxWidth: '320px', margin: 'auto' },
   formGroup: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' },
   input: { width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #E5E7EB', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const, textAlign: 'right' as const, transition: 'all 0.2s ease', minHeight: '52px' },
-  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #14B8A6, #10B981)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
+  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #14B8A6, #10B981)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
   secondaryBtn: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#F3F4F6', color: '#374151', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #EF4444, #DC2626)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s ease', flex: 1, minHeight: '48px' },
@@ -1495,7 +1801,7 @@ const S = {
   errorBox: { background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '10px', fontSize: '14px', textAlign: 'center' as const, marginBottom: '16px' },
   bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
   fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
-  scrollableContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '40px' },
+  scrollableContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '40px', overscrollBehavior: 'contain' as const },
   fullScreenModal: { position: 'fixed' as const, inset: 0, zIndex: 100, background: 'white', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0, minHeight: '64px', background: 'white' },
   closeBtn: { width: '44px', height: '44px', borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', transition: 'all 0.2s ease' },
