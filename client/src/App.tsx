@@ -132,24 +132,19 @@ interface ToastProps {
 
 // Professional Logo Component
 const AppLogo = ({ size = 48 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: '#4F46E5', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: '#6366F1', stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
-    {/* Shopping basket */}
-    <rect x="20" y="35" width="60" height="50" rx="8" fill="url(#logoGradient)" />
-    {/* Basket handle */}
-    <path d="M 30 35 Q 50 15 70 35" stroke="white" strokeWidth="6" fill="none" strokeLinecap="round" />
-    {/* Smart indicator dots */}
-    <circle cx="40" cy="55" r="4" fill="white" opacity="0.9" />
-    <circle cx="50" cy="60" r="4" fill="white" opacity="0.9" />
-    <circle cx="60" cy="55" r="4" fill="white" opacity="0.9" />
-    {/* Checkmark overlay */}
-    <path d="M 35 60 L 45 70 L 65 45" stroke="white" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-  </svg>
+  <div style={{
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: size * 0.6,
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+  }}>
+    🛒
+  </div>
 );
 
 const categoryIcons = { 'מוצרי חלב': '🧀', 'מאפים': '🍞', 'ירקות': '🥬', 'פירות': '🍎', 'בשר': '🥩', 'משקאות': '☕', 'ניקיון': '🧹', 'אחר': '📦' };
@@ -493,7 +488,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
               height: items.length > 5 ? '56px' : 'auto',
               borderRadius: '50px',
               border: 'none',
-              background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
+              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
               color: 'white',
               fontSize: '15px',
               fontWeight: '700',
@@ -947,7 +942,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
               <div style={{ marginBottom: '20px' }}>
                 <label style={S.label}>צבע אווטר</label>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#6366F1', '#14B8A6'].map(c => (
+                  {['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#10B981', '#14B8A6'].map(c => (
                     <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
                   ))}
                 </div>
@@ -1225,7 +1220,7 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
         <div style={{ width: '100px', height: '100px', background: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 12px 32px rgba(59,130,246,0.15)', border: '1px solid #E5E7EB' }}>
           <AppLogo size={80} />
         </div>
-        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
+        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #14B8A6, #10B981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
         <p style={{ color: '#6B7280', margin: 0, fontSize: '15px' }}>רשימות קניות חכמות ומשותפות</p>
       </div>
 
@@ -1459,7 +1454,7 @@ export default function App() {
 
 const S = {
   screen: { height: '100vh', display: 'flex', flexDirection: 'column' as const, background: '#F8FAFC', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', overflow: 'hidden', position: 'relative' as const },
-  header: { background: 'linear-gradient(135deg, #4F46E5, #6366F1)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' },
+  header: { background: 'linear-gradient(135deg, #14B8A6, #10B981)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
   title: { flex: 1, color: 'white', fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: 0 },
   iconBtn: { width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: 'rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', backdropFilter: 'blur(10px)' },
@@ -1468,7 +1463,7 @@ const S = {
   searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent', textAlign: 'right' as const },
   tabs: { display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '4px' },
   tab: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  tabActive: { background: 'white', color: '#4F46E5' },
+  tabActive: { background: 'white', color: '#14B8A6' },
   content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const },
   empty: { textAlign: 'center' as const, padding: '48px 20px' },
   emptyText: { fontSize: '18px', fontWeight: '600', color: '#6B7280', margin: '12px 0 0' },
@@ -1481,22 +1476,22 @@ const S = {
   actionBtn: { width: '67px', height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer' },
   actionLabel: { fontSize: '11px', color: 'white', fontWeight: '600' },
   overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100, overflow: 'hidden' },
-  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '430px', maxHeight: '85vh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const },
+  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '430px', maxHeight: '75vh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const },
   handle: { width: '40px', height: '4px', background: '#E5E7EB', borderRadius: '2px', margin: '0 auto 16px' },
   sheetTitle: { fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: '0 0 20px' },
   confirmBox: { background: 'white', borderRadius: '20px', padding: '24px', width: '90%', maxWidth: '320px', margin: 'auto' },
   formGroup: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' },
   input: { width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #E5E7EB', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const, textAlign: 'right' as const, transition: 'all 0.2s ease', minHeight: '52px' },
-  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
+  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #14B8A6, #10B981)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
   secondaryBtn: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#F3F4F6', color: '#374151', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #EF4444, #DC2626)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s ease', flex: 1, minHeight: '48px' },
   dangerBtnFull: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
-  loginScreen: { minHeight: '100vh', background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', padding: '48px 24px', boxSizing: 'border-box' as const },
+  loginScreen: { height: '100vh', overflowY: 'auto' as const, background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', padding: '48px 24px 80px', boxSizing: 'border-box' as const, WebkitOverflowScrolling: 'touch' as const },
   tabSwitch: { display: 'flex', background: '#F3F4F6', borderRadius: '12px', padding: '4px', marginBottom: '24px' },
   tabSwitchBtn: { flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#6B7280', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  tabSwitchActive: { background: 'white', color: '#4F46E5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  tabSwitchActive: { background: 'white', color: '#14B8A6', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   errorBox: { background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '10px', fontSize: '14px', textAlign: 'center' as const, marginBottom: '16px' },
   bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
   fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
