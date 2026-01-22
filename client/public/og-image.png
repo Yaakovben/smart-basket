@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="ogGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#ogGrad)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="150" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="1100" cy="530" r="200" fill="rgba(255,255,255,0.1)"/>
+
+  <!-- Main content -->
+  <g>
+    <!-- Shopping basket icon (large) -->
+    <g transform="translate(200, 180)">
+      <path d="M50 80 L75 180 C75 190 82 195 92 195 L168 195 C178 195 185 190 185 180 L210 80 Z" fill="white" opacity="0.95"/>
+      <path d="M75 80 C75 80 75 40 130 40 C185 40 185 80 185 80" stroke="white" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <path d="M95 115 L125 145 L165 105" stroke="#14B8A6" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Text content -->
+    <text x="550" y="280" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white" text-anchor="start">SmartBasket</text>
+    <text x="550" y="350" font-family="Arial, sans-serif" font-size="36" fill="rgba(255,255,255,0.95)" text-anchor="start">רשימת קניות חכמה ומשותפת</text>
+    <text x="550" y="420" font-family="Arial, sans-serif" font-size="28" fill="rgba(255,255,255,0.85)" text-anchor="start">נהל רשימות קניות עם המשפחה</text>
+    <text x="550" y="460" font-family="Arial, sans-serif" font-size="28" fill="rgba(255,255,255,0.85)" text-anchor="start">שתף בזמן אמת • קל לשימוש • חינמי</text>
+  </g>
+</svg>

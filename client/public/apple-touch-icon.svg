@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="180" height="180" rx="40" fill="url(#grad)"/>
+
+  <!-- Shopping basket icon -->
+  <g>
+    <!-- Basket body -->
+    <path d="M45 70 L55 125 C55 130 58 133 63 133 L117 133 C122 133 125 130 125 125 L135 70 Z" fill="white" opacity="0.95"/>
+
+    <!-- Basket handles -->
+    <path d="M55 70 C55 70 55 52 90 52 C125 52 125 70 125 70" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Checkmark -->
+    <path d="M65 85 L82 102 L115 69" stroke="#14B8A6" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
