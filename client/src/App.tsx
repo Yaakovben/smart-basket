@@ -572,20 +572,20 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(16,185,129,0.3)' }}>
+            <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #14B8A6, #0D9488)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
             </div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 4px', color: '#111827' }}>הזמן חברים</h3>
             <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>שתף את הפרטים להצטרפות לקבוצה</p>
           </div>
-          <div style={{ background: '#F0FDF4', borderRadius: '12px', border: '2px solid #BBF7D0', marginBottom: '20px', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #BBF7D0' }}>
-              <span style={{ color: '#166534', fontSize: '13px', fontWeight: '600' }}>קוד קבוצה</span>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: '#166534', letterSpacing: '3px', fontFamily: 'monospace' }}>{list.inviteCode}</span>
+          <div style={{ background: '#F0FDFA', borderRadius: '12px', border: '2px solid #99F6E4', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #99F6E4' }}>
+              <span style={{ color: '#115E59', fontSize: '13px', fontWeight: '600' }}>קוד קבוצה</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: '#115E59', letterSpacing: '3px', fontFamily: 'monospace' }}>{list.inviteCode}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
-              <span style={{ color: '#166534', fontSize: '13px', fontWeight: '600' }}>סיסמה</span>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: '#166534', letterSpacing: '3px', fontFamily: 'monospace' }}>{list.password}</span>
+              <span style={{ color: '#115E59', fontSize: '13px', fontWeight: '600' }}>סיסמה</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: '#115E59', letterSpacing: '3px', fontFamily: 'monospace' }}>{list.password}</span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -931,7 +931,22 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
             </div>
           </div>
 
-          <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', marginTop: '32px' }}>SmartBasket גרסה 1.0.0</p>
+          <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', marginTop: '32px', marginBottom: '80px' }}>SmartBasket גרסה 1.0.0</p>
+        </div>
+
+        <div style={S.bottomNav}>
+          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('home'); }}>
+            <span style={{ fontSize: '22px' }}>🏠</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
+          </div>
+          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('stats'); setShowStats(true); }}>
+            <span style={{ fontSize: '22px' }}>📊</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
+          </div>
+          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
+            <span style={{ fontSize: '22px' }}>⚙️</span>
+            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>הגדרות</span>
+          </div>
         </div>
       </div>}
 
@@ -984,7 +999,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
                 <label style={S.label}>אימייל</label>
                 <input style={S.input} value={editProfile.email} onChange={e => setEditProfile({ ...editProfile, email: e.target.value })} />
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', marginBottom: '80px' }}>
                 <button style={S.cancelBtn} onClick={() => setEditProfile(null)}>ביטול</button>
                 <button style={{ ...S.primaryBtn, flex: 1 }} onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}>שמור שינויים</button>
               </div>
@@ -1004,9 +1019,24 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
                 </div>
               </div>
 
-              <button style={{ width: '100%', padding: '16px', marginTop: '24px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => { setShowProfile(false); setConfirmLogout(true); }}>התנתק</button>
+              <button style={{ width: '100%', padding: '16px', marginTop: '24px', marginBottom: '80px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => { setShowProfile(false); setConfirmLogout(true); }}>התנתק</button>
             </>
           )}
+        </div>
+
+        <div style={S.bottomNav}>
+          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('home'); }}>
+            <span style={{ fontSize: '22px' }}>🏠</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
+          </div>
+          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('stats'); setShowStats(true); }}>
+            <span style={{ fontSize: '22px' }}>📊</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
+          </div>
+          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
+            <span style={{ fontSize: '22px' }}>👤</span>
+            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>פרופיל</span>
+          </div>
         </div>
       </div>}
 
@@ -1014,72 +1044,120 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         const totalProducts = userLists.reduce((sum: number, l: List) => sum + l.products.length, 0);
         const completedProducts = userLists.reduce((sum: number, l: List) => sum + l.products.filter(p => p.isPurchased).length, 0);
         const pendingProducts = totalProducts - completedProducts;
+        const completionRate = totalProducts > 0 ? Math.round((completedProducts / totalProducts) * 100) : 0;
         const myListsCount = my.length;
         const groupsCount = groups.length;
         const categoryCounts = userLists.flatMap((l: List) => l.products).reduce((acc: Record<string, number>, p: Product) => {
           acc[p.category] = (acc[p.category] || 0) + 1;
           return acc;
         }, {});
-        const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
+        const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+        const maxCategoryCount = sortedCategories[0]?.[1] || 1;
+        const circumference = 2 * Math.PI * 54;
+        const strokeDashoffset = circumference - (completionRate / 100) * circumference;
 
         return <div style={S.fullScreen}>
-          <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>📊 סטטיסטיקות</h1>
-            </div>
+          <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 32px', flexShrink: 0 }}>
+            <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: '0 0 24px', textAlign: 'center' }}>📊 סטטיסטיקות</h1>
+
+            {totalProducts > 0 && <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', borderRadius: '20px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', fontWeight: '800', color: 'white', lineHeight: 1, marginBottom: '8px' }}>{completionRate}%</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>שיעור השלמה</div>
+              </div>
+              <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="white" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'white' }}>{completedProducts}</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>מתוך {totalProducts}</div>
+                </div>
+              </div>
+            </div>}
           </div>
+
           <div style={S.scrollableContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ fontSize: '32px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{userLists.length}</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>רשימות פעילות</div>
+            {totalProducts === 0 ? (
+              <div style={{ background: 'white', borderRadius: '20px', padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '40px' }}>📊</div>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 12px', color: '#111827' }}>התחל למדוד!</h3>
+                <p style={{ color: '#6B7280', fontSize: '15px', margin: 0, lineHeight: 1.5 }}>הוסף מוצרים לרשימות כדי לראות<br/>סטטיסטיקות מפורטות ומרתקות</p>
               </div>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ fontSize: '32px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{totalProducts}</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>סה״כ מוצרים</div>
-              </div>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ fontSize: '32px', fontWeight: '700', color: '#10B981', marginBottom: '4px' }}>{completedProducts}</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>נרכשו</div>
-              </div>
-              <div style={{ background: 'white', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ fontSize: '32px', fontWeight: '700', color: '#F59E0B', marginBottom: '4px' }}>{pendingProducts}</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>ממתינים</div>
-              </div>
-            </div>
-
-            <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 16px', color: '#111827' }}>חלוקת רשימות</h3>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ flex: 1, padding: '16px', background: '#F0FDFA', borderRadius: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📝</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{myListsCount}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280' }}>רשימות אישיות</div>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(20,184,166,0.25)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>📋</div>
+                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{userLists.length}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>רשימות</div>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(16,185,129,0.25)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>✓</div>
+                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{completedProducts}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>נרכשו</div>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.25)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>⏳</div>
+                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{pendingProducts}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>ממתינים</div>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(139,92,246,0.25)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>🛒</div>
+                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{totalProducts}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>סה״כ</div>
+                  </div>
                 </div>
-                <div style={{ flex: 1, padding: '16px', background: '#F0FDFA', borderRadius: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
-                  <div style={{ fontSize: '20px', fontWeight: '700', color: '#14B8A6', marginBottom: '4px' }}>{groupsCount}</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280' }}>קבוצות</div>
-                </div>
-              </div>
-            </div>
 
-            {topCategory && <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 12px', color: '#111827' }}>קטגוריה מובילה</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: '#F0FDFA', borderRadius: '12px' }}>
-                <div style={{ fontSize: '28px' }}>{categoryIcons[topCategory[0] as ProductCategory]}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>{topCategory[0]}</div>
-                  <div style={{ fontSize: '13px', color: '#6B7280' }}>{topCategory[1]} מוצרים</div>
+                <div style={{ background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>📊</span>
+                    פילוח רשימות
+                  </h3>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '16px', textAlign: 'center', border: '2px solid #99F6E4' }}>
+                      <div style={{ fontSize: '32px', marginBottom: '12px' }}>📝</div>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#14B8A6', marginBottom: '6px' }}>{myListsCount}</div>
+                      <div style={{ fontSize: '13px', color: '#0D9488', fontWeight: '600' }}>אישיות</div>
+                    </div>
+                    <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '16px', textAlign: 'center', border: '2px solid #99F6E4' }}>
+                      <div style={{ fontSize: '32px', marginBottom: '12px' }}>👥</div>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#14B8A6', marginBottom: '6px' }}>{groupsCount}</div>
+                      <div style={{ fontSize: '13px', color: '#0D9488', fontWeight: '600' }}>קבוצות</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>}
 
-            {totalProducts === 0 && <div style={{ background: 'white', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <span style={{ fontSize: '48px' }}>📊</span>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '16px 0 8px', color: '#111827' }}>אין עדיין נתונים</h3>
-              <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>התחל להוסיף מוצרים לרשימות כדי לראות סטטיסטיקות</p>
-            </div>}
+                {sortedCategories.length > 0 && <div style={{ background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '90px' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>🏆</span>
+                    קטגוריות מובילות
+                  </h3>
+                  {sortedCategories.slice(0, 5).map(([category, count]) => {
+                    const percentage = (count / maxCategoryCount) * 100;
+                    return (
+                      <div key={category} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '20px' }}>{categoryIcons[category as ProductCategory]}</span>
+                            <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{category}</span>
+                          </div>
+                          <span style={{ fontSize: '15px', fontWeight: '700', color: '#14B8A6' }}>{count}</span>
+                        </div>
+                        <div style={{ height: '8px', background: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', background: 'linear-gradient(90deg, #14B8A6, #10B981)', borderRadius: '4px', width: `${percentage}%`, transition: 'width 0.8s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>}
+              </>
+            )}
           </div>
         
         <div style={S.bottomNav}>
@@ -1291,7 +1369,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
       background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
       padding: '20px',
       fontFamily: '-apple-system, sans-serif',
-      direction: 'rtl'
+      direction: 'rtl',
+      overflowY: 'auto'
     }}>
       <div style={{
         width: '100%',
@@ -1299,7 +1378,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
         background: 'white',
         borderRadius: '24px',
         boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
-        padding: '48px 40px',
+        padding: '40px 32px',
+        margin: '20px 0',
         animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
       }}>
         {/* Logo & Title */}
@@ -1401,14 +1481,16 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 <input
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 54px',
+                    padding: '14px 16px 14px 50px',
+                    paddingRight: '50px',
                     borderRadius: '12px',
                     border: '2px solid #E5E7EB',
                     fontSize: '15px',
                     outline: 'none',
                     boxSizing: 'border-box',
                     transition: 'all 0.2s ease',
-                    background: loading ? '#F9FAFB' : 'white'
+                    background: loading ? '#F9FAFB' : 'white',
+                    textAlign: 'right'
                   }}
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -1445,7 +1527,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 type="email"
                 style={{
                   width: '100%',
-                  padding: '14px 16px 14px 54px',
+                  padding: '14px 16px 14px 50px',
+                  paddingRight: '50px',
                   borderRadius: '12px',
                   border: '2px solid #E5E7EB',
                   fontSize: '15px',
@@ -1489,7 +1572,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                 type="password"
                 style={{
                   width: '100%',
-                  padding: '14px 16px 14px 54px',
+                  padding: '14px 16px 14px 50px',
+                  paddingRight: '50px',
                   borderRadius: '12px',
                   border: '2px solid #E5E7EB',
                   fontSize: '15px',
@@ -1541,7 +1625,8 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
                   type="password"
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 54px',
+                    padding: '14px 16px 14px 50px',
+                  paddingRight: '50px',
                     borderRadius: '12px',
                     border: '2px solid #E5E7EB',
                     fontSize: '15px',
@@ -1638,29 +1723,25 @@ function Toast({ msg, type = 'success' }: ToastProps) {
   return (
     <div style={{
       position: 'fixed',
-      bottom: '120px',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      bottom: '24px',
+      left: '20px',
       background: config.bg,
       color: 'white',
-      padding: '16px 32px',
-      borderRadius: '20px',
-      fontSize: '15px',
+      padding: '12px 16px',
+      borderRadius: '12px',
+      fontSize: '14px',
       fontWeight: '600',
       zIndex: 9999,
       pointerEvents: 'none',
-      boxShadow: `0 12px 32px ${config.shadow}, 0 4px 12px rgba(0, 0, 0, 0.08)`,
-      animation: 'slideUpFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      boxShadow: `0 8px 24px ${config.shadow}`,
+      animation: 'slideInLeft 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
-      minWidth: '240px',
-      maxWidth: '90%',
-      justifyContent: 'center',
-      backdropFilter: 'blur(10px)'
+      gap: '10px',
+      maxWidth: 'calc(100vw - 40px)'
     }}>
-      <span style={{ fontSize: '20px', flexShrink: 0 }}>{config.icon}</span>
-      <span style={{ textAlign: 'center' }}>{msg}</span>
+      <span style={{ fontSize: '18px', flexShrink: 0 }}>{config.icon}</span>
+      <span>{msg}</span>
     </div>
   );
 }
