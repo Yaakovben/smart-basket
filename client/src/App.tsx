@@ -125,6 +125,7 @@ interface LoginScreenProps {
 
 interface ToastProps {
   msg: string;
+  type?: ToastType;
 }
 
 // ===== Constants =====
@@ -136,15 +137,34 @@ const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠', '💑'
 const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
 const ACTIONS_WIDTH = 200;
 
+// ===== Utility Functions =====
+
+// Haptic feedback for mobile
+const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
+  if ('vibrate' in navigator) {
+    const patterns = { light: 10, medium: 20, heavy: 30 };
+    navigator.vibrate(patterns[style]);
+  }
+};
+
+// Enhanced toast types
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+const toastConfig = {
+  success: { icon: '✓', bg: 'linear-gradient(135deg, #22C55E, #16A34A)', shadow: 'rgba(34, 197, 94, 0.3)' },
+  error: { icon: '✕', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', shadow: 'rgba(239, 68, 68, 0.3)' },
+  info: { icon: 'ℹ', bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', shadow: 'rgba(59, 130, 246, 0.3)' },
+  warning: { icon: '⚠', bg: 'linear-gradient(135deg, #F59E0B, #D97706)', shadow: 'rgba(245, 158, 11, 0.3)' }
+};
+
 function ConfirmModal({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) {
   return (
-    <div style={S.overlay} onClick={onCancel}>
-      <div style={S.confirmBox} onClick={e => e.stopPropagation()}>
+    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={onCancel}>
+      <div style={{ ...S.confirmBox, animation: 'scaleIn 0.3s ease' }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '0 0 12px', textAlign: 'center' }}>{title}</h3>
         <p style={{ fontSize: '15px', color: '#6B7280', margin: '0 0 24px', textAlign: 'center' }}>{message}</p>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onCancel} style={S.cancelBtn}>ביטול</button>
-          <button onClick={onConfirm} style={S.dangerBtn}>{confirmText}</button>
+          <button onClick={() => { haptic('light'); onCancel(); }} style={S.cancelBtn}>ביטול</button>
+          <button onClick={() => { haptic('medium'); onConfirm(); }} style={S.dangerBtn}>{confirmText}</button>
         </div>
       </div>
     </div>
@@ -219,12 +239,24 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
     <div style={{ position: 'relative', marginBottom: '10px', borderRadius: '14px', height: '72px', overflow: 'hidden', background: '#F3F4F6' }}>
       {offset > 0 && (
         <div style={{ position: 'absolute' as const, top: 0, right: 0, bottom: 0, width: ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' as const }}>
-          <div onClick={() => doAction(onDelete)} style={{ ...S.actionBtn, background: '#EF4444' }}><span>🗑️</span><span style={S.actionLabel}>מחק</span></div>
-          <div onClick={() => doAction(onEdit)} style={{ ...S.actionBtn, background: '#3B82F6' }}><span>✏️</span><span style={S.actionLabel}>ערוך</span></div>
-          <div onClick={() => doAction(onToggle)} style={{ ...S.actionBtn, background: isPurchased ? '#F59E0B' : '#22C55E' }}>
+          <div onClick={() => { haptic('medium'); doAction(onDelete); }} style={{ ...S.actionBtn, background: '#EF4444' }}><span>🗑️</span><span style={S.actionLabel}>מחק</span></div>
+          <div onClick={() => { haptic('light'); doAction(onEdit); }} style={{ ...S.actionBtn, background: '#3B82F6' }}><span>✏️</span><span style={S.actionLabel}>ערוך</span></div>
+          <div onClick={() => { haptic('light'); doAction(onToggle); }} style={{ ...S.actionBtn, background: isPurchased ? '#F59E0B' : '#22C55E' }}>
             <span>{isPurchased ? '↩️' : '✓'}</span><span style={S.actionLabel}>{isPurchased ? 'החזר' : 'נקנה'}</span>
           </div>
         </div>
+      )}
+      {/* Swipe indicator */}
+      {offset > 0 && offset < ACTIONS_WIDTH && (
+        <div style={{
+          position: 'absolute' as const,
+          right: offset - 30,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '20px',
+          opacity: Math.min(offset / 60, 1),
+          pointerEvents: 'none'
+        }}>➤</div>
       )}
       <div
         {...handlers}
@@ -233,29 +265,31 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
             setOffset(0);
             onClose();
           } else {
+            haptic('light');
             onClick();
           }
         }}
-        style={{ 
-          position: 'absolute', 
-          inset: 0, 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '12px', 
-          background: isPurchased ? '#FAFAFA' : 'white', 
-          padding: '0 14px', 
-          borderRadius: '14px', 
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          background: isPurchased ? '#FAFAFA' : 'white',
+          padding: '0 14px',
+          borderRadius: '14px',
           border: '1px solid #E5E7EB',
           transform: `translateX(-${offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.2s ease-out'
+          transition: swiping ? 'none' : 'transform 0.2s ease-out',
+          boxShadow: offset > 0 ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
         }}
       >
-        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: isPurchased ? '#F3F4F6' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>{icon}</div>
+        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: isPurchased ? '#F3F4F6' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', transition: 'transform 0.2s ease' }}>{icon}</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: isPurchased ? '#9CA3AF' : '#111827', textDecoration: isPurchased ? 'line-through' : 'none' }}>{product.name}</div>
           <div style={{ fontSize: '13px', color: '#9CA3AF' }}>{product.quantity} {product.unit} • {product.addedBy}</div>
         </div>
-        {isPurchased && <span>✅</span>}
+        {isPurchased && <span style={{ fontSize: '20px' }}>✅</span>}
       </div>
     </div>
   );
@@ -263,8 +297,8 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
 
 function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div style={S.overlay} onClick={onClose}>
-      <div style={S.sheet} onClick={e => e.stopPropagation()}>
+    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={() => { haptic('light'); onClose(); }}>
+      <div style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }} onClick={e => e.stopPropagation()}>
         <div style={S.handle} /><h2 style={S.sheetTitle}>{title}</h2>{children}
       </div>
     </div>
@@ -385,7 +419,26 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
             <button onClick={dismissHint} style={{ background: 'none', border: 'none', color: '#3B82F6', fontSize: '20px', cursor: 'pointer', padding: '4px' }}>✕</button>
           </div>
         )}
-        {items.length === 0 ? <div style={S.empty}><span style={{ fontSize: '48px' }}>{filter === 'pending' ? '🎉' : '📦'}</span><p style={S.emptyText}>{filter === 'pending' ? 'הכל נקנה!' : 'אין פריטים'}</p></div> : items.map(p => (
+        {items.length === 0 ? (
+          <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
+            <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #DBEAFE, #BFDBFE)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '56px' }}>
+              {filter === 'pending' ? '🎉' : '📦'}
+            </div>
+            <p style={{ ...S.emptyText, marginBottom: '8px' }}>{filter === 'pending' ? 'כל הכבוד!' : 'אין מוצרים'}</p>
+            <p style={{ fontSize: '14px', color: '#9CA3AF', marginBottom: '24px' }}>
+              {filter === 'pending' ? 'כל המוצרים נקנו בהצלחה' : 'הוסף מוצרים חדשים לרשימה'}
+            </p>
+            {filter === 'pending' && (
+              <button
+                onClick={() => { haptic('light'); setShowAdd(true); }}
+                style={{ ...S.primaryBtn, maxWidth: '200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <span>➕</span>
+                <span>הוסף מוצר</span>
+              </button>
+            )}
+          </div>
+        ) : items.map(p => (
           <SwipeItem 
             key={p.id} 
             product={p} 
@@ -422,7 +475,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
           <div style={{ ...S.formGroup, flex: 1 }}><label style={S.label}>יחידה</label><select style={{ ...S.input, height: '52px', fontSize: '16px' }} value={newP.unit} onChange={e => setNewP({ ...newP, unit: e.target.value as ProductUnit })}><option>יח׳</option><option>ק״ג</option><option>גרם</option><option>ליטר</option></select></div>
         </div>
         <div style={S.formGroup}><label style={S.label}>קטגוריה</label><select style={S.input} value={newP.category} onChange={e => setNewP({ ...newP, category: e.target.value as ProductCategory })}>{Object.keys(categoryIcons).map(c => <option key={c}>{c}</option>)}</select></div>
-        <button style={S.primaryBtn} onClick={handleAdd}>הוסף</button>
+        <button style={S.primaryBtn} onClick={() => { haptic('medium'); handleAdd(); }}>הוסף</button>
       </Modal>}
 
       {showEdit && <Modal title="ערוך מוצר" onClose={() => setShowEdit(null)}>
@@ -448,7 +501,7 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
             ))}
           </div>
         </div>
-        <button style={S.primaryBtn} onClick={() => { updateP(list.products.map(x => x.id === showEdit.id ? showEdit : x)); setShowEdit(null); showToast('נשמר'); }}>שמור</button>
+        <button style={S.primaryBtn} onClick={() => { haptic('medium'); updateP(list.products.map(x => x.id === showEdit.id ? showEdit : x)); setShowEdit(null); showToast('נשמר'); }}>שמור</button>
       </Modal>}
 
       {showDetails && <Modal title="פרטים" onClose={() => setShowDetails(null)}>
@@ -689,11 +742,20 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
 
       <div style={{ ...S.content, paddingBottom: '100px' }}>
         {display.length === 0 ? (
-          <div style={S.empty}>
-            <span style={{ fontSize: '48px' }}>{tab === 'groups' ? '👥' : '📝'}</span>
-            <p style={S.emptyText}>{tab === 'groups' ? 'אין קבוצות עדיין' : 'אין רשימות עדיין'}</p>
-            <button style={{ marginTop: '16px', padding: '12px 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => setShowMenu(true)}>
-              {tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}
+          <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
+            <div style={{ width: '120px', height: '120px', borderRadius: '30px', background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '64px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)' }}>
+              {tab === 'groups' ? '👥' : '📝'}
+            </div>
+            <p style={{ ...S.emptyText, marginBottom: '8px' }}>{tab === 'groups' ? 'טרם נוצרו קבוצות' : 'טרם נוצרו רשימות'}</p>
+            <p style={{ fontSize: '14px', color: '#9CA3AF', marginBottom: '32px', maxWidth: '280px', margin: '0 auto 32px' }}>
+              {tab === 'groups' ? 'התחל בקבוצה משותפת וצור רשימות קניות עם המשפחה והחברים' : 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך'}
+            </p>
+            <button
+              style={{ padding: '14px 32px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
+              onClick={() => { haptic('medium'); setShowMenu(true); }}
+            >
+              <span>✨</span>
+              <span>{tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}</span>
             </button>
           </div>
         ) : display.map(l => {
@@ -1046,30 +1108,41 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
       <div style={S.formGroup}><label style={S.label}>סיסמה</label><input type="password" style={S.input} value={password} onChange={e => setPassword(e.target.value)} /></div>
       {mode === 'register' && <div style={S.formGroup}><label style={S.label}>אימות</label><input type="password" style={S.input} value={confirm} onChange={e => setConfirm(e.target.value)} /></div>}
       {error && <div style={S.errorBox}>{error}</div>}
-      <button style={S.primaryBtn} onClick={mode === 'login' ? login : register}>{mode === 'login' ? 'התחבר' : 'הרשם'}</button>
+      <button style={S.primaryBtn} onClick={() => { haptic('medium'); if (mode === 'login') login(); else register(); }}>{mode === 'login' ? 'התחבר' : 'הרשם'}</button>
     </div>
   );
 }
 
-function Toast({ msg }: ToastProps) { 
-  return msg ? (
+function Toast({ msg, type = 'success' }: ToastProps) {
+  if (!msg) return null;
+
+  const config = toastConfig[type];
+  return (
     <div style={{
-      position: 'fixed', 
-      bottom: '100px', 
-      left: '50%', 
-      transform: 'translateX(-50%)', 
-      background: 'linear-gradient(135deg, #1F2937, #111827)', 
-      color: 'white', 
-      padding: '14px 28px', 
-      borderRadius: '14px', 
-      fontSize: '15px', 
-      fontWeight: '600', 
-      zIndex: 9999, 
+      position: 'fixed',
+      bottom: '100px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      background: config.bg,
+      color: 'white',
+      padding: '14px 28px',
+      borderRadius: '16px',
+      fontSize: '15px',
+      fontWeight: '600',
+      zIndex: 9999,
       pointerEvents: 'none',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-      animation: 'fadeInOut 2s ease'
-    }}>✓ {msg}</div>
-  ) : null; 
+      boxShadow: `0 8px 24px ${config.shadow}`,
+      animation: 'fadeInOut 2s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      minWidth: '200px',
+      justifyContent: 'center'
+    }}>
+      <span style={{ fontSize: '18px' }}>{config.icon}</span>
+      <span>{msg}</span>
+    </div>
+  );
 }
 
 export default function App() {
@@ -1170,7 +1243,7 @@ const S = {
   header: { background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0 },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
   title: { flex: 1, color: 'white', fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: 0 },
-  iconBtn: { width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: 'rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: 'rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', backdropFilter: 'blur(10px)' },
   avatar: { width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '18px' },
   searchBox: { display: 'flex', alignItems: 'center', gap: '10px', background: 'white', borderRadius: '12px', padding: '12px 14px', marginBottom: '12px' },
   searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent', textAlign: 'right' as const },
@@ -1180,7 +1253,7 @@ const S = {
   content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const },
   empty: { textAlign: 'center' as const, padding: '48px 20px' },
   emptyText: { fontSize: '18px', fontWeight: '600', color: '#6B7280', margin: '12px 0 0' },
-  listCard: { display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '14px', borderRadius: '14px', marginBottom: '10px', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #F1F5F9' },
+  listCard: { display: 'flex', alignItems: 'center', gap: '14px', background: 'white', padding: '16px', borderRadius: '16px', marginBottom: '12px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F1F5F9', transition: 'all 0.2s ease' },
   listIcon: { width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' },
   badge: { background: '#DBEAFE', color: '#1D4ED8', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' },
   menuOption: { display: 'flex', alignItems: 'center', gap: '14px', background: '#F9FAFB', padding: '14px', borderRadius: '14px', border: 'none', cursor: 'pointer', width: '100%' },
@@ -1195,12 +1268,12 @@ const S = {
   confirmBox: { background: 'white', borderRadius: '20px', padding: '24px', width: '90%', maxWidth: '320px', margin: 'auto' },
   formGroup: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' },
-  input: { width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1.5px solid #E5E7EB', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const, textAlign: 'right' as const },
-  primaryBtn: { width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer' },
-  secondaryBtn: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#F3F4F6', color: '#374151', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: '#EF4444', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  dangerBtnFull: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
+  input: { width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #E5E7EB', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const, textAlign: 'right' as const, transition: 'all 0.2s ease', minHeight: '52px' },
+  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
+  secondaryBtn: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#F3F4F6', color: '#374151', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
+  cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
+  dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #EF4444, #DC2626)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s ease', flex: 1, minHeight: '48px' },
+  dangerBtnFull: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   loginScreen: { minHeight: '100vh', background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', padding: '48px 24px', boxSizing: 'border-box' as const },
   tabSwitch: { display: 'flex', background: '#F3F4F6', borderRadius: '12px', padding: '4px', marginBottom: '24px' },
   tabSwitchBtn: { flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#6B7280', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
