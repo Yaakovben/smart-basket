@@ -135,8 +135,8 @@ const AppLogo = ({ size = 48 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: '#3B82F6', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: '#1D4ED8', stopOpacity: 1 }} />
+        <stop offset="0%" style={{ stopColor: '#4F46E5', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#6366F1', stopOpacity: 1 }} />
       </linearGradient>
     </defs>
     {/* Shopping basket */}
@@ -156,8 +156,8 @@ const categoryIcons = { 'מוצרי חלב': '🧀', 'מאפים': '🍞', 'יר
 const memberColors = ['#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
 const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅'];
 const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠', '💑', '👨‍👩‍👧'];
-// Professional color palette - Material Design inspired
-const COLORS = ['#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#EA580C', '#059669'];
+// Beautiful & Pleasant color palette
+const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 const ACTIONS_WIDTH = 200;
 
 // ===== Utility Functions =====
@@ -320,21 +320,10 @@ function SwipeItem({ product, onToggle, onEdit, onDelete, onClick, isPurchased, 
 
 function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div style={{ ...S.fullScreenModal, animation: 'fadeIn 0.2s ease' }}>
-      <div style={{ ...S.modalHeader, animation: 'slideUp 0.3s ease' }}>
-        <button
-          onClick={() => { haptic('light'); onClose(); }}
-          style={S.closeBtn}
-          aria-label="סגור"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-        <h2 style={S.modalTitle}>{title}</h2>
-        <div style={{ width: '44px' }} />
-      </div>
-      <div style={S.modalContent}>
+    <div style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }} onClick={() => { haptic('light'); onClose(); }}>
+      <div style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }} onClick={e => e.stopPropagation()}>
+        <div style={S.handle} />
+        <h2 style={S.sheetTitle}>{title}</h2>
         {children}
       </div>
     </div>
@@ -490,12 +479,38 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
         ))}
       </div>
 
-      <div style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}>
-        <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '14px 24px', borderRadius: '50px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 16px rgba(59,130,246,0.4)', whiteSpace: 'nowrap' }} onClick={() => setShowAdd(true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          הוסף מוצר
-        </button>
-      </div>
+      {/* Floating Action Button - only show when there are items OR when viewing purchased */}
+      {(items.length > 0 || filter === 'purchased') && (
+        <div style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}>
+          <button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: items.length > 5 ? '0' : '8px',
+              padding: items.length > 5 ? '16px' : '14px 24px',
+              width: items.length > 5 ? '56px' : 'auto',
+              height: items.length > 5 ? '56px' : 'auto',
+              borderRadius: '50px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(99, 102, 241, 0.5)',
+              transition: 'all 0.2s ease'
+            }}
+            onClick={() => { haptic('medium'); setShowAdd(true); }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {items.length <= 5 && <span>הוסף מוצר</span>}
+          </button>
+        </div>
+      )}
 
       {showAdd && <Modal title="מוצר חדש" onClose={() => setShowAdd(false)}>
         <div style={S.formGroup}><label style={S.label}>שם</label><input style={S.input} value={newP.name} onChange={e => setNewP({ ...newP, name: e.target.value })} placeholder="חלב תנובה" /></div>
@@ -1210,7 +1225,7 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
         <div style={{ width: '100px', height: '100px', background: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 12px 32px rgba(59,130,246,0.15)', border: '1px solid #E5E7EB' }}>
           <AppLogo size={80} />
         </div>
-        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
+        <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>SmartBasket</h1>
         <p style={{ color: '#6B7280', margin: 0, fontSize: '15px' }}>רשימות קניות חכמות ומשותפות</p>
       </div>
 
@@ -1444,7 +1459,7 @@ export default function App() {
 
 const S = {
   screen: { height: '100vh', display: 'flex', flexDirection: 'column' as const, background: '#F8FAFC', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', overflow: 'hidden', position: 'relative' as const },
-  header: { background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0 },
+  header: { background: 'linear-gradient(135deg, #4F46E5, #6366F1)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
   title: { flex: 1, color: 'white', fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: 0 },
   iconBtn: { width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: 'rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', backdropFilter: 'blur(10px)' },
@@ -1453,7 +1468,7 @@ const S = {
   searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: '15px', background: 'transparent', textAlign: 'right' as const },
   tabs: { display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '4px' },
   tab: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  tabActive: { background: 'white', color: '#3B82F6' },
+  tabActive: { background: 'white', color: '#4F46E5' },
   content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const },
   empty: { textAlign: 'center' as const, padding: '48px 20px' },
   emptyText: { fontSize: '18px', fontWeight: '600', color: '#6B7280', margin: '12px 0 0' },
@@ -1473,7 +1488,7 @@ const S = {
   formGroup: { marginBottom: '16px' },
   label: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' },
   input: { width: '100%', padding: '14px 16px', borderRadius: '12px', border: '2px solid #E5E7EB', fontSize: '15px', outline: 'none', boxSizing: 'border-box' as const, textAlign: 'right' as const, transition: 'all 0.2s ease', minHeight: '52px' },
-  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
+  primaryBtn: { width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: 'linear-gradient(135deg, #4F46E5, #6366F1)', color: 'white', fontSize: '16px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', transition: 'all 0.2s ease', minHeight: '52px' },
   secondaryBtn: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#F3F4F6', color: '#374151', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #EF4444, #DC2626)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s ease', flex: 1, minHeight: '48px' },
@@ -1481,7 +1496,7 @@ const S = {
   loginScreen: { minHeight: '100vh', background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', padding: '48px 24px', boxSizing: 'border-box' as const },
   tabSwitch: { display: 'flex', background: '#F3F4F6', borderRadius: '12px', padding: '4px', marginBottom: '24px' },
   tabSwitchBtn: { flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#6B7280', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  tabSwitchActive: { background: 'white', color: '#3B82F6', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  tabSwitchActive: { background: 'white', color: '#4F46E5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   errorBox: { background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '10px', fontSize: '14px', textAlign: 'center' as const, marginBottom: '16px' },
   bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
   fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
