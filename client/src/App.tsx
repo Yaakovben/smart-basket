@@ -115,7 +115,6 @@ interface HomeScreenProps {
   onEditList: (list: List) => void;
   onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
   onLogout: () => void;
-  onUpdateUser: (user: Partial<User>) => void;
   onMarkNotificationsRead: (listId: string) => void;
   user: User;
 }
@@ -127,6 +126,16 @@ interface LoginScreenProps {
 interface ToastProps {
   msg: string;
   type?: ToastType;
+}
+
+interface ProfileScreenProps {
+  user: User;
+  onUpdateUser: (user: Partial<User>) => void;
+  onLogout: () => void;
+}
+
+interface SettingsScreenProps {
+  onDeleteAllData?: () => void;
 }
 
 // ===== Constants =====
@@ -695,19 +704,195 @@ function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteList, sho
   );
 }
 
-function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onUpdateUser, onMarkNotificationsRead, user }: HomeScreenProps) {
+function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenProps) {
+  const navigate = useNavigate();
+  const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
+  return (
+    <div style={S.screen}>
+      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <button style={S.iconBtn} onClick={() => { setEditProfile(null); navigate('/'); }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>פרופיל</h1>
+          {!editProfile && <button style={S.iconBtn} onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#14B8A6', avatarEmoji: user.avatarEmoji || '' })}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>}
+        </div>
+        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: editProfile?.avatarColor || user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '4px solid rgba(255,255,255,0.3)', fontSize: '40px', color: 'white', fontWeight: '700' }}>
+          {editProfile?.avatarEmoji || user.avatarEmoji || user.name.charAt(0)}
+        </div>
+        {!editProfile && <>
+          <div style={{ color: 'white', fontSize: '22px', fontWeight: '700' }}>{user.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', marginTop: '4px' }}>{user.email}</div>
+        </>}
+      </div>
+
+      <div style={{ ...S.scrollableContent, marginTop: '-20px' }}>
+        {editProfile ? (
+          <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={S.label}>צבע אווטר</label>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4', '#0891B2'].map(c => (
+                  <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={S.label}>אימוג׳י (אופציונלי)</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['', '😊', '😎', '🦁', '🐻', '🦊', '🐸', '🌟', '⚡', '🔥'].map(e => (
+                  <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {e || <span style={{ fontSize: '12px', color: '#9CA3AF' }}>ללא</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={S.formGroup}>
+              <label style={S.label}>שם</label>
+              <input style={S.input} value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} />
+            </div>
+            <div style={S.formGroup}>
+              <label style={S.label}>אימייל</label>
+              <input style={S.input} value={editProfile.email} onChange={e => setEditProfile({ ...editProfile, email: e.target.value })} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button style={S.cancelBtn} onClick={() => setEditProfile(null)}>ביטול</button>
+              <button style={{ ...S.primaryBtn, flex: 1 }} onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}>שמור שינויים</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div style={S.settingRow}>
+                <span style={{ fontSize: '20px' }}>👤</span>
+                <span style={{ flex: 1 }}>שם</span>
+                <span style={{ color: '#6B7280', fontSize: '14px' }}>{user.name}</span>
+              </div>
+              <div style={{ ...S.settingRow, borderBottom: 'none' }}>
+                <span style={{ fontSize: '20px' }}>✉️</span>
+                <span style={{ flex: 1 }}>אימייל</span>
+                <span style={{ color: '#6B7280', fontSize: '14px' }}>{user.email}</span>
+              </div>
+            </div>
+
+            <button style={{ width: '100%', padding: '16px', marginTop: '24px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => setConfirmLogout(true)}>התנתק</button>
+          </>
+        )}
+      </div>
+
+      <div style={S.bottomNav}>
+        <div style={S.navItem} onClick={() => navigate('/')}>
+          <span style={{ fontSize: '22px' }}>🏠</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
+        </div>
+        <div style={S.navItem} onClick={() => navigate('/settings')}>
+          <span style={{ fontSize: '22px' }}>⚙️</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
+        </div>
+        <div style={{ ...S.navItem, background: '#F0FDFA' }}>
+          <span style={{ fontSize: '22px' }}>👤</span>
+          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>פרופיל</span>
+        </div>
+      </div>
+
+      {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק מהחשבון?" confirmText="התנתק" onConfirm={() => { onLogout(); navigate('/login'); }} onCancel={() => setConfirmLogout(false)} />}
+    </div>
+  );
+}
+
+function SettingsScreen({ onDeleteAllData }: SettingsScreenProps) {
+  const navigate = useNavigate();
+
+  return (
+    <div style={S.screen}>
+      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button style={S.iconBtn} onClick={() => navigate('/')}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>הגדרות</h1>
+        </div>
+      </div>
+      <div style={S.scrollableContent}>
+        <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <div style={S.settingRow}>
+            <span style={{ fontSize: '20px' }}>🔔</span>
+            <span style={{ flex: 1 }}>התראות</span>
+            <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#14B8A6', padding: '2px', cursor: 'pointer' }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', marginRight: 'auto' }} />
+            </div>
+          </div>
+          <div style={S.settingRow}>
+            <span style={{ fontSize: '20px' }}>🌙</span>
+            <span style={{ flex: 1 }}>מצב כהה</span>
+            <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#E5E7EB', padding: '2px', cursor: 'pointer' }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white' }} />
+            </div>
+          </div>
+          <div style={{ ...S.settingRow, borderBottom: 'none' }}>
+            <span style={{ fontSize: '20px' }}>🌐</span>
+            <span style={{ flex: 1 }}>שפה</span>
+            <span style={{ color: '#6B7280', fontSize: '14px' }}>עברית</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: '16px' }}>
+          <div style={S.settingRow}>
+            <span style={{ fontSize: '20px' }}>❓</span>
+            <span style={{ flex: 1 }}>עזרה ותמיכה</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div style={{ ...S.settingRow, borderBottom: 'none' }}>
+            <span style={{ fontSize: '20px' }}>ℹ️</span>
+            <span style={{ flex: 1 }}>אודות</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: '16px' }}>
+          <div style={{ ...S.settingRow, borderBottom: 'none', color: '#DC2626', cursor: 'pointer' }} onClick={onDeleteAllData}>
+            <span style={{ fontSize: '20px' }}>🗑️</span>
+            <span style={{ flex: 1 }}>מחק את כל הנתונים</span>
+          </div>
+        </div>
+
+        <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', marginTop: '32px' }}>SmartBasket גרסה 1.0.0</p>
+      </div>
+
+      <div style={S.bottomNav}>
+        <div style={S.navItem} onClick={() => navigate('/')}>
+          <span style={{ fontSize: '22px' }}>🏠</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
+        </div>
+        <div style={{ ...S.navItem, background: '#F0FDFA' }}>
+          <span style={{ fontSize: '22px' }}>⚙️</span>
+          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>הגדרות</span>
+        </div>
+        <div style={S.navItem} onClick={() => navigate('/profile')}>
+          <span style={{ fontSize: '22px' }}>👤</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomeScreenProps) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
   const [newL, setNewL] = useState<{ name: string; icon: string; color: string }>({ name: '', icon: '📋', color: '#14B8A6' });
@@ -715,7 +900,6 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
   const [joinPass, setJoinPass] = useState('');
   const [joinError, setJoinError] = useState('');
   const [createError, setCreateError] = useState('');
-  const [activeNav, setActiveNav] = useState<'home' | 'stats'>('home');
 
   const userLists = lists.filter((l: List) => {
     if (l.isGroup) {
@@ -785,7 +969,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       <div style={S.header}>
         <div style={S.headerRow}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ ...S.avatar, background: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }} onClick={() => setShowProfile(true)}>{user.avatarEmoji || user.name.charAt(0)}</div>
+            <div style={{ ...S.avatar, background: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }} onClick={() => navigate('/profile')}>{user.avatarEmoji || user.name.charAt(0)}</div>
             <div><div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>שלום,</div><div style={{ fontSize: '17px', fontWeight: '700', color: 'white' }}>{user.name}</div></div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -793,7 +977,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               {unreadCount > 0 && <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '18px', height: '18px', borderRadius: '50%', background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unreadCount}</div>}
             </button>
-            <button style={S.iconBtn} onClick={() => setShowSettings(true)}>
+            <button style={S.iconBtn} onClick={() => navigate('/settings')}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
           </div>
@@ -878,168 +1062,6 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           </div>
         </div>
       </>}
-
-      {showSettings && <div style={S.fullScreen}>
-        <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 24px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button style={S.iconBtn} onClick={() => setShowSettings(false)}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>הגדרות</h1>
-          </div>
-        </div>
-        <div style={S.scrollableContent}>
-          <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div style={S.settingRow}>
-              <span style={{ fontSize: '20px' }}>🔔</span>
-              <span style={{ flex: 1 }}>התראות</span>
-              <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#14B8A6', padding: '2px', cursor: 'pointer' }}>
-                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', marginRight: 'auto' }} />
-              </div>
-            </div>
-            <div style={S.settingRow}>
-              <span style={{ fontSize: '20px' }}>🌙</span>
-              <span style={{ flex: 1 }}>מצב כהה</span>
-              <div style={{ width: '44px', height: '26px', borderRadius: '13px', background: '#E5E7EB', padding: '2px', cursor: 'pointer' }}>
-                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white' }} />
-              </div>
-            </div>
-            <div style={{ ...S.settingRow, borderBottom: 'none' }}>
-              <span style={{ fontSize: '20px' }}>🌐</span>
-              <span style={{ flex: 1 }}>שפה</span>
-              <span style={{ color: '#6B7280', fontSize: '14px' }}>עברית</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: '16px' }}>
-            <div style={S.settingRow}>
-              <span style={{ fontSize: '20px' }}>❓</span>
-              <span style={{ flex: 1 }}>עזרה ותמיכה</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div style={{ ...S.settingRow, borderBottom: 'none' }}>
-              <span style={{ fontSize: '20px' }}>ℹ️</span>
-              <span style={{ flex: 1 }}>אודות</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: '16px' }}>
-            <div style={{ ...S.settingRow, borderBottom: 'none', color: '#DC2626' }}>
-              <span style={{ fontSize: '20px' }}>🗑️</span>
-              <span style={{ flex: 1 }}>מחק את כל הנתונים</span>
-            </div>
-          </div>
-
-          <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', marginTop: '32px', marginBottom: '80px' }}>SmartBasket גרסה 1.0.0</p>
-        </div>
-
-        <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('home'); }}>
-            <span style={{ fontSize: '22px' }}>🏠</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
-          </div>
-          <div style={S.navItem} onClick={() => { setShowSettings(false); setActiveNav('stats'); setShowStats(true); }}>
-            <span style={{ fontSize: '22px' }}>📊</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
-          </div>
-          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
-            <span style={{ fontSize: '22px' }}>⚙️</span>
-            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>הגדרות</span>
-          </div>
-        </div>
-      </div>}
-
-      {showProfile && <div style={S.fullScreen}>
-        <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <button style={S.iconBtn} onClick={() => { setShowProfile(false); setEditProfile(null); }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>פרופיל</h1>
-            {!editProfile && <button style={S.iconBtn} onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#14B8A6', avatarEmoji: user.avatarEmoji || '' })}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>}
-          </div>
-          <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: editProfile?.avatarColor || user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '4px solid rgba(255,255,255,0.3)', fontSize: '40px', color: 'white', fontWeight: '700' }}>
-            {editProfile?.avatarEmoji || user.avatarEmoji || user.name.charAt(0)}
-          </div>
-          {!editProfile && <>
-            <div style={{ color: 'white', fontSize: '22px', fontWeight: '700' }}>{user.name}</div>
-            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', marginTop: '4px' }}>{user.email}</div>
-          </>}
-        </div>
-
-        <div style={{ ...S.scrollableContent, marginTop: '-20px' }}>
-          {editProfile ? (
-            <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={S.label}>צבע אווטר</label>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4', '#0891B2'].map(c => (
-                    <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
-                  ))}
-                </div>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={S.label}>אימוג׳י (אופציונלי)</label>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['', '😊', '😎', '🦁', '🐻', '🦊', '🐸', '🌟', '⚡', '🔥'].map(e => (
-                    <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {e || <span style={{ fontSize: '12px', color: '#9CA3AF' }}>ללא</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={S.formGroup}>
-                <label style={S.label}>שם</label>
-                <input style={S.input} value={editProfile.name} onChange={e => setEditProfile({ ...editProfile, name: e.target.value })} />
-              </div>
-              <div style={S.formGroup}>
-                <label style={S.label}>אימייל</label>
-                <input style={S.input} value={editProfile.email} onChange={e => setEditProfile({ ...editProfile, email: e.target.value })} />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', marginBottom: '80px' }}>
-                <button style={S.cancelBtn} onClick={() => setEditProfile(null)}>ביטול</button>
-                <button style={{ ...S.primaryBtn, flex: 1 }} onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}>שמור שינויים</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={S.settingRow}>
-                  <span style={{ fontSize: '20px' }}>👤</span>
-                  <span style={{ flex: 1 }}>שם</span>
-                  <span style={{ color: '#6B7280', fontSize: '14px' }}>{user.name}</span>
-                </div>
-                <div style={{ ...S.settingRow, borderBottom: 'none' }}>
-                  <span style={{ fontSize: '20px' }}>✉️</span>
-                  <span style={{ flex: 1 }}>אימייל</span>
-                  <span style={{ color: '#6B7280', fontSize: '14px' }}>{user.email}</span>
-                </div>
-              </div>
-
-              <button style={{ width: '100%', padding: '16px', marginTop: '24px', marginBottom: '80px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }} onClick={() => { setShowProfile(false); setConfirmLogout(true); }}>התנתק</button>
-            </>
-          )}
-        </div>
-
-        <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('home'); }}>
-            <span style={{ fontSize: '22px' }}>🏠</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
-          </div>
-          <div style={S.navItem} onClick={() => { setShowProfile(false); setActiveNav('stats'); setShowStats(true); }}>
-            <span style={{ fontSize: '22px' }}>📊</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>סטטיסטיקה</span>
-          </div>
-          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
-            <span style={{ fontSize: '22px' }}>👤</span>
-            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>פרופיל</span>
-          </div>
-        </div>
-      </div>}
 
       {showStats && (() => {
         const totalProducts = userLists.reduce((sum: number, l: List) => sum + l.products.length, 0);
@@ -1162,7 +1184,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           </div>
         
         <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => { setShowStats(false); setActiveNav('home'); }}>
+          <div style={S.navItem} onClick={() => setShowStats(false)}>
             <span style={{ fontSize: '22px' }}>🏠</span>
             <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
           </div>
@@ -1170,9 +1192,13 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
             <span style={{ fontSize: '22px' }}>📊</span>
             <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>סטטיסטיקה</span>
           </div>
-          <div style={S.navItem} onClick={() => setShowMenu(true)}>
-            <span style={{ fontSize: '22px' }}>➕</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>חדש</span>
+          <div style={S.navItem} onClick={() => navigate('/settings')}>
+            <span style={{ fontSize: '22px' }}>⚙️</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
+          </div>
+          <div style={S.navItem} onClick={() => navigate('/profile')}>
+            <span style={{ fontSize: '22px' }}>👤</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
           </div>
         </div>
       </div>;
@@ -1251,17 +1277,21 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק?" confirmText="התנתק" onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />}
 
       <div style={S.bottomNav}>
-        <div style={{ ...S.navItem, ...(activeNav === 'home' ? { background: '#F0FDFA' } : {}) }} onClick={() => setActiveNav('home')}>
+        <div style={{ ...S.navItem, background: '#F0FDFA' }}>
           <span style={{ fontSize: '22px' }}>🏠</span>
-          <span style={{ fontSize: '11px', color: activeNav === 'home' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'home' ? '600' : '400' }}>בית</span>
-        </div>
-        <div style={{ ...S.navItem, ...(activeNav === 'stats' ? { background: '#F0FDFA' } : {}) }} onClick={() => { setActiveNav('stats'); setShowStats(true); }}>
-          <span style={{ fontSize: '22px' }}>📊</span>
-          <span style={{ fontSize: '11px', color: activeNav === 'stats' ? '#14B8A6' : '#6B7280', fontWeight: activeNav === 'stats' ? '600' : '400' }}>סטטיסטיקה</span>
+          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>בית</span>
         </div>
         <div style={S.navItem} onClick={() => setShowMenu(true)}>
           <span style={{ fontSize: '22px' }}>➕</span>
           <span style={{ fontSize: '11px', color: '#6B7280' }}>חדש</span>
+        </div>
+        <div style={S.navItem} onClick={() => navigate('/settings')}>
+          <span style={{ fontSize: '22px' }}>⚙️</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
+        </div>
+        <div style={S.navItem} onClick={() => navigate('/profile')}>
+          <span style={{ fontSize: '22px' }}>👤</span>
+          <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
         </div>
       </div>
     </div>
@@ -1671,7 +1701,6 @@ function AppContent() {
               onDeleteList={id => { setLists(lists.filter(l => l.id !== id)); showToast('נמחק!'); }}
               onEditList={l => { setLists(lists.map(x => x.id === l.id ? l : x)); showToast('נשמר!'); }}
               onJoinGroup={handleJoinGroup}
-              onUpdateUser={handleUpdateUser}
               onMarkNotificationsRead={markNotificationsRead}
               onLogout={handleLogout}
             />
@@ -1680,6 +1709,16 @@ function AppContent() {
         <Route path="/list/:listId" element={
           <ProtectedRoute>
             <ListScreenWrapper />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfileScreen user={user!} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <SettingsScreen />
           </ProtectedRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -1699,7 +1738,7 @@ export default function App() {
 }
 
 const S = {
-  screen: { height: '100vh', display: 'flex', flexDirection: 'column' as const, background: '#F8FAFC', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', overflow: 'hidden', position: 'relative' as const },
+  screen: { height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column' as const, background: '#F8FAFC', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, width: '100%', maxWidth: '768px', margin: '0 auto', position: 'relative' as const },
   header: { background: 'linear-gradient(135deg, #14B8A6, #10B981)', padding: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
   title: { flex: 1, color: 'white', fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: 0 },
@@ -1710,7 +1749,7 @@ const S = {
   tabs: { display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '4px' },
   tab: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
   tabActive: { background: 'white', color: '#14B8A6' },
-  content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const },
+  content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '16px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const, minHeight: 0 },
   empty: { textAlign: 'center' as const, padding: '48px 20px' },
   emptyText: { fontSize: '18px', fontWeight: '600', color: '#6B7280', margin: '12px 0 0' },
   listCard: { display: 'flex', alignItems: 'center', gap: '14px', background: 'white', padding: '16px', borderRadius: '16px', marginBottom: '12px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #F1F5F9', transition: 'all 0.2s ease' },
@@ -1722,7 +1761,7 @@ const S = {
   actionBtn: { width: '67px', height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer' },
   actionLabel: { fontSize: '11px', color: 'white', fontWeight: '600' },
   overlay: { position: 'fixed' as const, inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100, overflow: 'hidden' },
-  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '430px', maxHeight: '75vh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const, touchAction: 'pan-y' as const },
+  sheet: { background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '768px', maxHeight: '85dvh', overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '12px 20px 32px', WebkitOverflowScrolling: 'touch' as const, overscrollBehavior: 'contain' as const, touchAction: 'pan-y' as const },
   handle: { width: '40px', height: '4px', background: '#E5E7EB', borderRadius: '2px', margin: '0 auto 16px' },
   sheetTitle: { fontSize: '18px', fontWeight: '700', textAlign: 'center' as const, margin: '0 0 20px' },
   confirmBox: { background: 'white', borderRadius: '20px', padding: '24px', width: '90%', maxWidth: '320px', margin: 'auto' },
@@ -1734,15 +1773,15 @@ const S = {
   cancelBtn: { flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
   dangerBtn: { padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #EF4444, #DC2626)', color: 'white', fontSize: '15px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s ease', flex: 1, minHeight: '48px' },
   dangerBtnFull: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', minHeight: '48px' },
-  loginScreen: { height: '100vh', overflowY: 'auto' as const, background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, maxWidth: '430px', margin: '0 auto', padding: '48px 24px 80px', boxSizing: 'border-box' as const, WebkitOverflowScrolling: 'touch' as const },
+  loginScreen: { height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column' as const, background: 'white', fontFamily: '-apple-system, sans-serif', direction: 'rtl' as const, width: '100%', maxWidth: '768px', margin: '0 auto', boxSizing: 'border-box' as const },
   tabSwitch: { display: 'flex', background: '#F3F4F6', borderRadius: '12px', padding: '4px', marginBottom: '24px' },
   tabSwitchBtn: { flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#6B7280', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
   tabSwitchActive: { background: 'white', color: '#14B8A6', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   errorBox: { background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '10px', fontSize: '14px', textAlign: 'center' as const, marginBottom: '16px' },
-  bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
-  fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
-  scrollableContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '40px', overscrollBehavior: 'contain' as const },
-  fullScreenModal: { position: 'fixed' as const, inset: 0, zIndex: 100, background: 'white', height: '100vh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', maxWidth: '430px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
+  bottomNav: { position: 'fixed' as const, bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '768px', background: 'white', display: 'flex', justifyContent: 'space-around', padding: '8px 0 max(24px, env(safe-area-inset-bottom))', borderTop: '1px solid #F3F4F6', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 10 },
+  fullScreen: { position: 'fixed' as const, inset: 0, zIndex: 100, background: '#F8FAFC', height: '100dvh', display: 'flex', flexDirection: 'column' as const, width: '100%', maxWidth: '768px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
+  scrollableContent: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, WebkitOverflowScrolling: 'touch' as const, padding: '20px', paddingBottom: '100px', overscrollBehavior: 'contain' as const, minHeight: 0 },
+  fullScreenModal: { position: 'fixed' as const, inset: 0, zIndex: 100, background: 'white', height: '100dvh', display: 'flex', flexDirection: 'column' as const, width: '100%', maxWidth: '768px', margin: '0 auto', left: '50%', transform: 'translateX(-50%)' },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0, minHeight: '64px', background: 'white' },
   closeBtn: { width: '44px', height: '44px', borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', transition: 'all 0.2s ease' },
   modalTitle: { fontSize: '18px', fontWeight: '700', color: '#111827', margin: 0, flex: 1, textAlign: 'center' as const },
