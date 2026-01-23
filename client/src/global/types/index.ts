@@ -1,4 +1,4 @@
-// User & Authentication
+// ===== User & Authentication =====
 export interface User {
   id: string;
   name: string;
@@ -8,7 +8,7 @@ export interface User {
   avatarEmoji?: string;
 }
 
-// Product Management
+// ===== Product =====
 export type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
 export type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ניקיון' | 'אחר';
 
@@ -24,7 +24,7 @@ export interface Product {
   createdTime?: string;
 }
 
-// List & Group Management
+// ===== List & Group =====
 export interface Member {
   id: string;
   name: string;
@@ -54,5 +54,5 @@ export interface List {
   notifications?: Notification[];
 }
 
-// Toast
-export type ToastType = 'success' | 'error' | 'info';
+// ===== Toast =====
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
