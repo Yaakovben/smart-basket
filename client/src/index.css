@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
@@ -110,6 +114,15 @@ body {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Button interactions */
 button {
   transition: transform 0.1s ease, box-shadow 0.2s ease;
@@ -140,4 +153,53 @@ button:focus-visible {
   #root > div {
     max-width: 900px !important;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Animation classes */
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Form input focus styles */
+input:focus {
+  border-color: #14B8A6 !important;
+}
+
+/* Safe area for iOS */
+.safe-area-bottom {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
