@@ -9,25 +9,72 @@ interface FullScreenModalProps {
 
 export function FullScreenModal({ title, onClose, children }: FullScreenModalProps) {
   return (
-    <div className="fixed inset-0 z-50 bg-white h-screen flex flex-col overflow-hidden max-w-[430px] mx-auto left-1/2 -translate-x-1/2">
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 100,
+      background: 'white',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      maxWidth: '430px',
+      margin: '0 auto',
+      left: '50%',
+      transform: 'translateX(-50%)'
+    }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0 min-h-[64px] bg-white">
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px 20px',
+        borderBottom: '1px solid #F3F4F6',
+        flexShrink: 0,
+        minHeight: '64px',
+        background: 'white'
+      }}>
         <button
           onClick={() => {
             haptic('light');
             onClose();
           }}
-          className="w-11 h-11 rounded-full border-none bg-gray-100 cursor-pointer flex items-center justify-center text-gray-500 hover:bg-gray-200"
-          aria-label="סגור"
+          style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            border: 'none',
+            background: '#F3F4F6',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6B7280',
+            transition: 'all 0.2s ease'
+          }}
         >
           ✕
         </button>
-        <h1 className="text-lg font-bold text-gray-900 flex-1 text-center">{title}</h1>
-        <div className="w-11" /> {/* Spacer for centering */}
+        <h1 style={{
+          fontSize: '18px',
+          fontWeight: '700',
+          color: '#111827',
+          margin: 0,
+          flex: 1,
+          textAlign: 'center'
+        }}>{title}</h1>
+        <div style={{ width: '44px' }} />
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 pb-8">
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        padding: '20px',
+        paddingBottom: '32px'
+      }}>
         {children}
       </div>
     </div>

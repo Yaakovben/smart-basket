@@ -6,10 +6,10 @@ interface ToastProps {
   visible: boolean;
 }
 
-const toastConfig: Record<ToastType, { icon: string; bgClass: string }> = {
-  success: { icon: '✓', bgClass: 'bg-gradient-to-br from-green-500 to-green-600' },
-  error: { icon: '✕', bgClass: 'bg-gradient-to-br from-red-500 to-red-600' },
-  info: { icon: 'ℹ', bgClass: 'bg-gradient-to-br from-teal-500 to-teal-600' }
+const toastConfig: Record<ToastType, { icon: string; bg: string; shadow: string }> = {
+  success: { icon: '✓', bg: 'linear-gradient(135deg, #22C55E, #16A34A)', shadow: 'rgba(34, 197, 94, 0.3)' },
+  error: { icon: '✕', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', shadow: 'rgba(239, 68, 68, 0.3)' },
+  info: { icon: 'ℹ', bg: 'linear-gradient(135deg, #14B8A6, #0D9488)', shadow: 'rgba(20, 184, 166, 0.3)' }
 };
 
 export function Toast({ message, type = 'success', visible }: ToastProps) {
@@ -18,13 +18,26 @@ export function Toast({ message, type = 'success', visible }: ToastProps) {
   const config = toastConfig[type];
 
   return (
-    <div
-      className={`fixed bottom-6 left-5 ${config.bgClass} text-white px-4 py-3 rounded-xl text-sm font-semibold z-[9999] pointer-events-none shadow-lg animate-slideInLeft flex items-center gap-2.5 max-w-[calc(100vw-40px)]`}
-      role="alert"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <span className="text-lg flex-shrink-0">{config.icon}</span>
+    <div style={{
+      position: 'fixed',
+      bottom: '24px',
+      left: '20px',
+      background: config.bg,
+      color: 'white',
+      padding: '12px 16px',
+      borderRadius: '12px',
+      fontSize: '14px',
+      fontWeight: '600',
+      zIndex: 9999,
+      pointerEvents: 'none',
+      boxShadow: `0 8px 24px ${config.shadow}`,
+      animation: 'slideInLeft 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      maxWidth: 'calc(100vw - 40px)'
+    }}>
+      <span style={{ fontSize: '18px', flexShrink: 0 }}>{config.icon}</span>
       <span>{message}</span>
     </div>
   );

@@ -11,32 +11,69 @@ interface ConfirmModalProps {
 export function ConfirmModal({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) {
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+        overflow: 'hidden',
+        animation: 'fadeIn 0.2s ease'
+      }}
       onClick={onCancel}
       onTouchMove={(e) => e.preventDefault()}
     >
       <div
-        className="bg-white rounded-2xl p-6 w-[90%] max-w-[320px] animate-scaleIn"
+        style={{
+          background: 'white',
+          borderRadius: '20px',
+          padding: '24px',
+          width: '90%',
+          maxWidth: '320px',
+          margin: 'auto',
+          animation: 'scaleIn 0.3s ease'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{title}</h3>
-        <p className="text-base text-gray-500 mb-6 text-center">{message}</p>
-        <div className="flex gap-3">
+        <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: '0 0 12px', textAlign: 'center' }}>{title}</h3>
+        <p style={{ fontSize: '15px', color: '#6B7280', margin: '0 0 24px', textAlign: 'center' }}>{message}</p>
+        <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onClick={() => {
-              haptic('light');
-              onCancel();
+            onClick={() => { haptic('light'); onCancel(); }}
+            style={{
+              flex: 1,
+              padding: '14px',
+              borderRadius: '12px',
+              border: '2px solid #E5E7EB',
+              background: 'white',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              minHeight: '48px'
             }}
-            className="flex-1 py-3.5 px-4 rounded-xl border-2 border-gray-200 bg-white text-base font-semibold cursor-pointer min-h-[48px] hover:bg-gray-50"
           >
             ביטול
           </button>
           <button
-            onClick={() => {
-              haptic('medium');
-              onConfirm();
+            onClick={() => { haptic('medium'); onConfirm(); }}
+            style={{
+              flex: 1,
+              padding: '14px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+              transition: 'all 0.2s ease',
+              minHeight: '48px'
             }}
-            className="flex-1 py-3.5 px-4 rounded-xl border-none bg-gradient-to-br from-red-500 to-red-600 text-white text-base font-semibold cursor-pointer shadow-lg min-h-[48px] hover:opacity-90"
           >
             {confirmText}
           </button>

@@ -82,80 +82,184 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   const pwdStrength = mode === 'register' ? getPasswordStrength(password) : null;
 
-  return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-teal-50 to-teal-100 font-sans" dir="rtl">
-      {/* Fixed Logo Section - Never scrolls */}
-      <div className="flex-shrink-0 pt-8 pb-4 px-5 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-teal-500/25">
-          <span className="text-5xl">🛒</span>
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">SmartBasket</h1>
-        <p className="text-gray-500 text-sm">רשימות קניות חכמות ומשותפות</p>
-      </div>
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 16px 14px 50px',
+    paddingRight: '50px',
+    borderRadius: '12px',
+    border: '2px solid #E5E7EB',
+    fontSize: '15px',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    transition: 'all 0.2s ease',
+    background: loading ? '#F9FAFB' : 'white',
+    textAlign: 'right' as const
+  };
 
-      {/* Scrollable Form Section */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8">
-        <div className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-xl shadow-teal-500/10 p-8 animate-scaleIn">
-          {/* Tab Switch */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-7">
+  const iconStyle = {
+    position: 'absolute' as const,
+    right: '16px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    fontSize: '20px',
+    opacity: 0.5
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '8px'
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+      padding: '20px',
+      fontFamily: '-apple-system, sans-serif',
+      direction: 'rtl'
+    }}>
+      {/* Card Container - Fixed height with internal scroll */}
+      <div style={{
+        width: '100%',
+        maxWidth: '440px',
+        background: 'white',
+        borderRadius: '24px',
+        boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: '90vh',
+        animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+      }}>
+        {/* Fixed Header - Logo & Title (never scrolls) */}
+        <div style={{
+          flexShrink: 0,
+          padding: '32px 32px 20px',
+          textAlign: 'center',
+          borderBottom: '1px solid #F3F4F6'
+        }}>
+          <div style={{
+            width: '72px',
+            height: '72px',
+            background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+            borderRadius: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
+          }}>
+            <span style={{ fontSize: '40px' }}>🛒</span>
+          </div>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            margin: '0 0 6px',
+            color: '#111827'
+          }}>SmartBasket</h1>
+          <p style={{
+            color: '#6B7280',
+            margin: 0,
+            fontSize: '14px'
+          }}>רשימות קניות חכמות ומשותפות</p>
+        </div>
+
+        {/* Fixed Tab Switch */}
+        <div style={{
+          flexShrink: 0,
+          padding: '20px 32px 0'
+        }}>
+          <div style={{
+            display: 'flex',
+            background: '#F3F4F6',
+            borderRadius: '12px',
+            padding: '4px'
+          }}>
             <button
               type="button"
-              className={`flex-1 py-3 rounded-lg border-none text-base font-semibold cursor-pointer transition-all ${
-                mode === 'login'
-                  ? 'bg-white text-teal-500 shadow-sm'
-                  : 'bg-transparent text-gray-500'
-              }`}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: mode === 'login' ? 'white' : 'transparent',
+                color: mode === 'login' ? '#14B8A6' : '#6B7280',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: mode === 'login' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
+              }}
               onClick={() => { setMode('login'); setError(''); }}
             >
               התחברות
             </button>
             <button
               type="button"
-              className={`flex-1 py-3 rounded-lg border-none text-base font-semibold cursor-pointer transition-all ${
-                mode === 'register'
-                  ? 'bg-white text-teal-500 shadow-sm'
-                  : 'bg-transparent text-gray-500'
-              }`}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: mode === 'register' ? 'white' : 'transparent',
+                color: mode === 'register' ? '#14B8A6' : '#6B7280',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: mode === 'register' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
+              }}
               onClick={() => { setMode('register'); setError(''); }}
             >
               הרשמה
             </button>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit}>
+        {/* Scrollable Form Area - Only this part scrolls */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '24px 32px',
+          minHeight: 0
+        }}>
+          <form onSubmit={handleSubmit} id="auth-form">
             {/* Name Field (Register only) */}
             {mode === 'register' && (
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">שם מלא</label>
-                <div className="relative">
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-50">👤</span>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={labelStyle}>שם מלא</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={iconStyle}>👤</span>
                   <input
                     type="text"
-                    className={`w-full py-3.5 px-4 pr-12 rounded-xl border-2 border-gray-200 text-base outline-none text-right transition-all ${
-                      loading ? 'bg-gray-50' : 'bg-white'
-                    }`}
+                    style={inputStyle}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="הזן את שמך המלא"
                     autoComplete="name"
                     required
                     disabled={loading}
+                    onFocus={(e) => (e.target.style.borderColor = '#14B8A6')}
+                    onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
                   />
                 </div>
               </div>
             )}
 
             {/* Email Field */}
-            <div className="mb-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">אימייל</label>
-              <div className="relative">
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-50">📧</span>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>אימייל</label>
+              <div style={{ position: 'relative' }}>
+                <span style={iconStyle}>📧</span>
                 <input
                   type="email"
-                  className={`w-full py-3.5 px-4 pr-12 rounded-xl border-2 border-gray-200 text-base outline-none transition-all ${
-                    loading ? 'bg-gray-50' : 'bg-white'
-                  }`}
-                  style={{ textAlign: 'right' }}
+                  style={inputStyle}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@mail.com"
@@ -163,99 +267,138 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   autoComplete="email"
                   required
                   disabled={loading}
+                  onFocus={(e) => (e.target.style.borderColor = '#14B8A6')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
                 />
               </div>
             </div>
 
             {/* Password Field */}
-            <div className={mode === 'register' ? 'mb-5' : 'mb-6'}>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">סיסמה</label>
-              <div className="relative">
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-50">🔒</span>
+            <div style={{ marginBottom: mode === 'register' ? '20px' : '0' }}>
+              <label style={labelStyle}>סיסמה</label>
+              <div style={{ position: 'relative' }}>
+                <span style={iconStyle}>🔒</span>
                 <input
                   type="password"
-                  className={`w-full py-3.5 px-4 pr-12 rounded-xl border-2 border-gray-200 text-base outline-none text-right transition-all ${
-                    loading ? 'bg-gray-50' : 'bg-white'
-                  }`}
+                  style={inputStyle}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   required
                   disabled={loading}
+                  onFocus={(e) => (e.target.style.borderColor = '#14B8A6')}
+                  onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
                 />
               </div>
               {mode === 'register' && password && pwdStrength && (
-                <div className="mt-2.5 flex items-center gap-2.5">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full transition-all duration-300"
-                      style={{
-                        width: `${(pwdStrength.strength / 3) * 100}%`,
-                        backgroundColor: pwdStrength.color
-                      }}
-                    />
+                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ flex: 1, height: '6px', background: '#E5E7EB', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${(pwdStrength.strength / 3) * 100}%`,
+                      height: '100%',
+                      background: pwdStrength.color,
+                      transition: 'all 0.3s ease'
+                    }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: pwdStrength.color }}>
-                    {pwdStrength.text}
-                  </span>
+                  <span style={{ fontSize: '13px', color: pwdStrength.color, fontWeight: '600' }}>{pwdStrength.text}</span>
                 </div>
               )}
             </div>
 
             {/* Confirm Password (Register only) */}
             {mode === 'register' && (
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">אימות סיסמה</label>
-                <div className="relative">
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-50">🔑</span>
+              <div>
+                <label style={labelStyle}>אימות סיסמה</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={iconStyle}>🔑</span>
                   <input
                     type="password"
-                    className={`w-full py-3.5 px-4 pr-12 rounded-xl border-2 border-gray-200 text-base outline-none text-right transition-all ${
-                      loading ? 'bg-gray-50' : 'bg-white'
-                    }`}
+                    style={inputStyle}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="••••••••"
                     autoComplete="new-password"
                     required
                     disabled={loading}
+                    onFocus={(e) => (e.target.style.borderColor = '#14B8A6')}
+                    onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
                   />
                 </div>
               </div>
             )}
-
-            {/* Error Message */}
-            {error && (
-              <div className="p-3.5 bg-red-50 border border-red-300 rounded-xl text-red-600 text-sm mb-5 text-center flex items-center justify-center gap-2">
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className={`w-full py-4 rounded-xl border-none text-white text-base font-bold cursor-pointer flex items-center justify-center gap-2.5 min-h-[52px] ${
-                loading
-                  ? 'bg-gray-400 cursor-not-allowed shadow-none'
-                  : 'bg-gradient-to-br from-teal-500 to-emerald-500 shadow-lg shadow-teal-500/30 hover:opacity-90'
-              }`}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>טוען...</span>
-                </>
-              ) : (
-                <>
-                  <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
-                  <span>←</span>
-                </>
-              )}
-            </button>
           </form>
+        </div>
+
+        {/* Fixed Footer - Error & Submit Button (never scrolls) */}
+        <div style={{
+          flexShrink: 0,
+          padding: '20px 32px 32px',
+          borderTop: '1px solid #F3F4F6'
+        }}>
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              padding: '14px 16px',
+              background: '#FEE2E2',
+              border: '1px solid #FCA5A5',
+              borderRadius: '12px',
+              color: '#DC2626',
+              fontSize: '14px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}>
+              <span>⚠️</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            form="auth-form"
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: loading ? '#9CA3AF' : 'linear-gradient(135deg, #14B8A6, #10B981)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: loading ? 'none' : '0 8px 24px rgba(20, 184, 166, 0.3)',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px'
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '3px solid rgba(255,255,255,0.3)',
+                  borderTopColor: 'white',
+                  borderRadius: '50%',
+                  animation: 'pulse 1s ease infinite'
+                }} />
+                <span>טוען...</span>
+              </>
+            ) : (
+              <>
+                <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
+                <span>→</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
