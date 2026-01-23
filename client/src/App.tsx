@@ -862,14 +862,7 @@ function SettingsScreen({ onDeleteAllData }: SettingsScreenProps) {
           <span style={{ fontSize: '22px' }}>🏠</span>
           <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
         </div>
-        <div style={{ ...S.navItem, background: '#F0FDFA' }}>
-          <span style={{ fontSize: '22px' }}>⚙️</span>
-          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>הגדרות</span>
-        </div>
-        <div style={S.navItem} onClick={() => navigate('/profile')}>
-          <span style={{ fontSize: '22px' }}>👤</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
-        </div>
+        
       </div>
     </div>
   );
@@ -1185,14 +1178,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
             <span style={{ fontSize: '22px' }}>📊</span>
             <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>סטטיסטיקה</span>
           </div>
-          <div style={S.navItem} onClick={() => navigate('/settings')}>
-            <span style={{ fontSize: '22px' }}>⚙️</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
-          </div>
-          <div style={S.navItem} onClick={() => navigate('/profile')}>
-            <span style={{ fontSize: '22px' }}>👤</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
-          </div>
+       
         </div>
       </div>;
       })()}
@@ -1278,14 +1264,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
           <span style={{ fontSize: '22px' }}>➕</span>
           <span style={{ fontSize: '11px', color: '#6B7280' }}>חדש</span>
         </div>
-        <div style={S.navItem} onClick={() => navigate('/settings')}>
-          <span style={{ fontSize: '22px' }}>⚙️</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
-        </div>
-        <div style={S.navItem} onClick={() => navigate('/profile')}>
-          <span style={{ fontSize: '22px' }}>👤</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>פרופיל</span>
-        </div>
+        
       </div>
     </div>
   );
