@@ -863,7 +863,6 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [editList, setEditList] = useState<List | null>(null);
@@ -1036,129 +1035,12 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
         </div>
       </>}
 
-      {showStats && (() => {
-        const totalProducts = userLists.reduce((sum: number, l: List) => sum + l.products.length, 0);
-        const completedProducts = userLists.reduce((sum: number, l: List) => sum + l.products.filter(p => p.isPurchased).length, 0);
-        const pendingProducts = totalProducts - completedProducts;
-        const completionRate = totalProducts > 0 ? Math.round((completedProducts / totalProducts) * 100) : 0;
-        const myListsCount = my.length;
-        const groupsCount = groups.length;
-        const categoryCounts = userLists.flatMap((l: List) => l.products).reduce((acc: Record<string, number>, p: Product) => {
-          acc[p.category] = (acc[p.category] || 0) + 1;
-          return acc;
-        }, {});
-        const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
-        const maxCategoryCount = sortedCategories[0]?.[1] || 1;
-        const circumference = 2 * Math.PI * 54;
-        const strokeDashoffset = circumference - (completionRate / 100) * circumference;
+ 
+       
 
-        return <div style={S.fullScreen}>
-          <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 32px', flexShrink: 0 }}>
-            <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: '0 0 24px', textAlign: 'center' }}>📊 סטטיסטיקות</h1>
+                
 
-            {totalProducts > 0 && <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', borderRadius: '20px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', fontWeight: '800', color: 'white', lineHeight: 1, marginBottom: '8px' }}>{completionRate}%</div>
-                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>שיעור השלמה</div>
-              </div>
-              <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-                <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="8" />
-                  <circle cx="60" cy="60" r="54" fill="none" stroke="white" strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
-                </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'white' }}>{completedProducts}</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>מתוך {totalProducts}</div>
-                </div>
-              </div>
-            </div>}
-          </div>
-
-          <div style={S.scrollableContent}>
-            {totalProducts === 0 ? (
-              <div style={{ background: 'white', borderRadius: '20px', padding: '40px 20px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '40px' }}>📊</div>
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 12px', color: '#111827' }}>התחל למדוד!</h3>
-                <p style={{ color: '#6B7280', fontSize: '15px', margin: 0, lineHeight: 1.5 }}>הוסף מוצרים לרשימות כדי לראות<br/>סטטיסטיקות מפורטות ומרתקות</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(20,184,166,0.25)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>📋</div>
-                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{userLists.length}</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>רשימות</div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(16,185,129,0.25)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>✓</div>
-                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{completedProducts}</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>נרכשו</div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.25)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>⏳</div>
-                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{pendingProducts}</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>ממתינים</div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', borderRadius: '16px', padding: '20px', textAlign: 'center', boxShadow: '0 4px 12px rgba(139,92,246,0.25)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <div style={{ fontSize: '28px', marginBottom: '4px' }}>🛒</div>
-                    <div style={{ fontSize: '32px', fontWeight: '800', color: 'white', marginBottom: '4px' }}>{totalProducts}</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', fontWeight: '600' }}>סה״כ</div>
-                  </div>
-                </div>
-
-                <div style={{ background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '20px' }}>📊</span>
-                    פילוח רשימות
-                  </h3>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '16px', textAlign: 'center', border: '2px solid #99F6E4' }}>
-                      <div style={{ fontSize: '32px', marginBottom: '12px' }}>📝</div>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#14B8A6', marginBottom: '6px' }}>{myListsCount}</div>
-                      <div style={{ fontSize: '13px', color: '#0D9488', fontWeight: '600' }}>אישיות</div>
-                    </div>
-                    <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '16px', textAlign: 'center', border: '2px solid #99F6E4' }}>
-                      <div style={{ fontSize: '32px', marginBottom: '12px' }}>👥</div>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#14B8A6', marginBottom: '6px' }}>{groupsCount}</div>
-                      <div style={{ fontSize: '13px', color: '#0D9488', fontWeight: '600' }}>קבוצות</div>
-                    </div>
-                  </div>
-                </div>
-
-                {sortedCategories.length > 0 && <div style={{ background: 'white', borderRadius: '20px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '90px' }}>
-                  <h3 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 20px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '20px' }}>🏆</span>
-                    קטגוריות מובילות
-                  </h3>
-                  {sortedCategories.slice(0, 5).map(([category, count]) => {
-                    const percentage = (count / maxCategoryCount) * 100;
-                    return (
-                      <div key={category} style={{ marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '20px' }}>{categoryIcons[category as ProductCategory]}</span>
-                            <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{category}</span>
-                          </div>
-                          <span style={{ fontSize: '15px', fontWeight: '700', color: '#14B8A6' }}>{count}</span>
-                        </div>
-                        <div style={{ height: '8px', background: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', background: 'linear-gradient(90deg, #14B8A6, #10B981)', borderRadius: '4px', width: `${percentage}%`, transition: 'width 0.8s ease' }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>}
-              </>
-            )}
-          </div>
-        
-
-      </div>;
-      })()}
+ 
 
       {showCreate && <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
         {createError && <div style={{ padding: '12px 16px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '12px', color: '#DC2626', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>⚠️ {createError}</div>}
