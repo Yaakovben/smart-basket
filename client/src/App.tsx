@@ -784,13 +784,6 @@ function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenProps) {
         )}
       </div>
 
-      <div style={S.bottomNav}>
-        <div style={S.navItem} onClick={() => navigate('/')}>
-          <span style={{ fontSize: '22px' }}>🏠</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
-        </div>
-
-      </div>
 
       {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק מהחשבון?" confirmText="התנתק" onConfirm={() => { onLogout(); navigate('/login'); }} onCancel={() => setConfirmLogout(false)} />}
     </div>
@@ -857,13 +850,7 @@ function SettingsScreen({ onDeleteAllData }: SettingsScreenProps) {
         <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '13px', marginTop: '32px' }}>SmartBasket גרסה 1.0.0</p>
       </div>
 
-      <div style={S.bottomNav}>
-        <div style={S.navItem} onClick={() => navigate('/')}>
-          <span style={{ fontSize: '22px' }}>🏠</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
-        </div>
-        
-      </div>
+  
     </div>
   );
 }
@@ -1169,17 +1156,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
             )}
           </div>
         
-        <div style={S.bottomNav}>
-          <div style={S.navItem} onClick={() => setShowStats(false)}>
-            <span style={{ fontSize: '22px' }}>🏠</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
-          </div>
-          <div style={{ ...S.navItem, background: '#F0FDFA' }}>
-            <span style={{ fontSize: '22px' }}>📊</span>
-            <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>סטטיסטיקה</span>
-          </div>
-       
-        </div>
+
       </div>;
       })()}
 
