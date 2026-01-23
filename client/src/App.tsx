@@ -789,14 +789,7 @@ function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenProps) {
           <span style={{ fontSize: '22px' }}>🏠</span>
           <span style={{ fontSize: '11px', color: '#6B7280' }}>בית</span>
         </div>
-        <div style={S.navItem} onClick={() => navigate('/settings')}>
-          <span style={{ fontSize: '22px' }}>⚙️</span>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>הגדרות</span>
-        </div>
-        <div style={{ ...S.navItem, background: '#F0FDFA' }}>
-          <span style={{ fontSize: '22px' }}>👤</span>
-          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>פרופיל</span>
-        </div>
+
       </div>
 
       {confirmLogout && <ConfirmModal title="התנתקות" message="להתנתק מהחשבון?" confirmText="התנתק" onConfirm={() => { onLogout(); navigate('/login'); }} onCancel={() => setConfirmLogout(false)} />}
