@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
+import { Box, Typography } from '@mui/material';
 import type { Product } from '../../../global/types';
-import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
 
 type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
@@ -16,6 +16,18 @@ interface SwipeItemProps {
   onOpen: () => void;
   onClose: () => void;
 }
+
+const actionBtnSx = {
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 0.5,
+  color: 'white',
+  fontSize: 18,
+  cursor: 'pointer'
+};
 
 export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, onOpen, onClose }: SwipeItemProps) => {
   const [offset, setOffset] = useState(0);
@@ -64,28 +76,35 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   const doAction = (fn: () => void) => { setOffset(0); onClose(); fn(); };
 
   return (
-    <div style={{ position: 'relative', marginBottom: '10px', borderRadius: '14px', height: '72px', overflow: 'hidden', background: '#F3F4F6' }}>
+    <Box sx={{ position: 'relative', mb: 1.25, borderRadius: 3.5, height: 72, overflow: 'hidden', bgcolor: '#F3F4F6' }}>
       {offset > 0 && (
-        <div style={{ position: 'absolute' as const, top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' as const }}>
-          <div onClick={() => { haptic('medium'); doAction(onDelete); }} style={{ ...S.actionBtn, background: '#EF4444' }}><span>🗑️</span><span style={S.actionLabel}>מחק</span></div>
-          <div onClick={() => { haptic('light'); doAction(onEdit); }} style={{ ...S.actionBtn, background: '#14B8A6' }}><span>✏️</span><span style={S.actionLabel}>ערוך</span></div>
-          <div onClick={() => { haptic('light'); doAction(onToggle); }} style={{ ...S.actionBtn, background: isPurchased ? '#F59E0B' : '#22C55E' }}>
-            <span>{isPurchased ? '↩️' : '✓'}</span><span style={S.actionLabel}>{isPurchased ? 'החזר' : 'נקנה'}</span>
-          </div>
-        </div>
+        <Box sx={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' }}>
+          <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnSx, bgcolor: 'error.main' }}>
+            <span>🗑️</span>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>מחק</Typography>
+          </Box>
+          <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnSx, bgcolor: 'primary.main' }}>
+            <span>✏️</span>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>ערוך</Typography>
+          </Box>
+          <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnSx, bgcolor: isPurchased ? 'warning.main' : 'success.main' }}>
+            <span>{isPurchased ? '↩️' : '✓'}</span>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{isPurchased ? 'החזר' : 'נקנה'}</Typography>
+          </Box>
+        </Box>
       )}
       {offset > 0 && offset < SWIPE_ACTIONS_WIDTH && (
-        <div style={{
-          position: 'absolute' as const,
+        <Box sx={{
+          position: 'absolute',
           right: offset - 30,
           top: '50%',
           transform: 'translateY(-50%)',
-          fontSize: '20px',
+          fontSize: 20,
           opacity: Math.min(offset / 60, 1),
           pointerEvents: 'none'
-        }}>➤</div>
+        }}>➤</Box>
       )}
-      <div
+      <Box
         {...handlers}
         onClick={() => {
           if (offset > 10) {
@@ -96,28 +115,42 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
             onClick();
           }
         }}
-        style={{
+        sx={{
           position: 'absolute',
           inset: 0,
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
-          background: isPurchased ? '#FAFAFA' : 'white',
-          padding: '0 14px',
-          borderRadius: '14px',
+          gap: 1.5,
+          bgcolor: isPurchased ? '#FAFAFA' : 'white',
+          px: 1.75,
+          borderRadius: 3.5,
           border: '1px solid #E5E7EB',
           transform: `translateX(-${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.2s ease-out',
           boxShadow: offset > 0 ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
         }}
       >
-        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: isPurchased ? '#F3F4F6' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', transition: 'transform 0.2s ease' }}>{icon}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: isPurchased ? '#9CA3AF' : '#111827', textDecoration: isPurchased ? 'line-through' : 'none' }}>{product.name}</div>
-          <div style={{ fontSize: '13px', color: '#9CA3AF' }}>{product.quantity} {product.unit} • {product.addedBy}</div>
-        </div>
-        {isPurchased && <span style={{ fontSize: '20px' }}>✅</span>}
-      </div>
-    </div>
+        <Box sx={{
+          width: 44,
+          height: 44,
+          borderRadius: 3,
+          bgcolor: isPurchased ? '#F3F4F6' : '#FEF3C7',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 22,
+          transition: 'transform 0.2s ease'
+        }}>{icon}</Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: isPurchased ? '#9CA3AF' : '#111827', textDecoration: isPurchased ? 'line-through' : 'none' }}>
+            {product.name}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>
+            {product.quantity} {product.unit} • {product.addedBy}
+          </Typography>
+        </Box>
+        {isPurchased && <Box component="span" sx={{ fontSize: 20 }}>✅</Box>}
+      </Box>
+    </Box>
   );
 }

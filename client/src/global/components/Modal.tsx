@@ -1,23 +1,59 @@
-import type { ModalProps } from '../types';
+import { Dialog, DialogTitle, DialogContent, Box, Slide } from '@mui/material';
+import type { TransitionProps } from '@mui/material/transitions';
+import { forwardRef } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
-import { S } from '../styles';
+
+interface ModalProps {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const Transition = forwardRef(function Transition(
+  props: TransitionProps & { children: ReactElement },
+  ref: Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {
+  const handleClose = () => {
+    haptic('light');
+    onClose();
+  };
+
   return (
-    <div
-      style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }}
-      onClick={() => { haptic('light'); onClose(); }}
-      onTouchMove={(e) => e.preventDefault()}
+    <Dialog
+      open
+      onClose={handleClose}
+      TransitionComponent={Transition}
+      fullWidth
+      maxWidth="xs"
+      PaperProps={{
+        sx: {
+          position: 'fixed',
+          bottom: 0,
+          m: 0,
+          borderRadius: '24px 24px 0 0',
+          maxHeight: '75vh',
+          maxWidth: 430,
+          width: '100%'
+        }
+      }}
+      sx={{
+        '& .MuiBackdrop-root': {
+          backdropFilter: 'blur(4px)'
+        }
+      }}
     >
-      <div
-        style={{ ...S.sheet, animation: 'slideUp 0.3s ease' }}
-        onClick={e => e.stopPropagation()}
-        onTouchMove={e => e.stopPropagation()}
-      >
-        <div style={S.handle} />
-        <h2 style={S.sheetTitle}>{title}</h2>
+      <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: 1, mx: 'auto', mt: 1.5, mb: 2 }} />
+      <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 18, p: 0, mb: 2.5 }}>
+        {title}
+      </DialogTitle>
+      <DialogContent sx={{ px: 2.5, pb: 4 }}>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
