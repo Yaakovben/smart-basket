@@ -1,6 +1,6 @@
 import type { User } from '../../../global/types';
 
-export interface ProfileScreenProps {
+export interface ProfilePageProps {
   user: User;
   onUpdateUser: (user: Partial<User>) => void;
   onLogout: () => void;

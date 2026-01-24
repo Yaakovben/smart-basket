@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import type { SettingsScreenProps } from '../types/settings-types';
+import type { SettingsPageProps } from '../types/settings-types';
 import { S } from '../../../global/styles';
 
-export function SettingsScreen({ onDeleteAllData }: SettingsScreenProps) {
+export function SettingsPage({ onDeleteAllData }: SettingsPageProps) {
   const navigate = useNavigate();
 
   return (

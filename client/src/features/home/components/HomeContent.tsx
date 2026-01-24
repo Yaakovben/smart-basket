@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { List, Member, Notification, Product } from '../../../global/types';
-import type { HomeScreenProps } from '../types/home-types';
+import type { HomePageProps } from '../types/home-types';
 import { S } from '../../../global/styles';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 
-export function HomeContent({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomeScreenProps) {
+export function HomeContent({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import type { Product, Member } from '../../../global/types';
-import type { ListScreenProps, ProductUnit, ProductCategory } from '../types/list-types';
+import type { ListPageProps, ProductUnit, ProductCategory } from '../types/list-types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from './SwipeItem';
 
-export function ListContent({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListScreenProps) {
+export function ListContent({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) {
   const [filter, setFilter] = useState<'pending' | 'purchased'>('pending');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);

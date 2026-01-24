@@ -1,6 +1,6 @@
 import type { List, User } from '../../../global/types';
 
-export interface HomeScreenProps {
+export interface HomePageProps {
   lists: List[];
   onSelectList: (list: List) => void;
   onCreateList: (list: List) => void;

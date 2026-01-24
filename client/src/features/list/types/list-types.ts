@@ -12,7 +12,7 @@ export interface SwipeItemProps {
   onClose: () => void;
 }
 
-export interface ListScreenProps {
+export interface ListPageProps {
   list: List;
   onBack: () => void;
   onUpdateList: (list: List) => void;

@@ -1,4 +1,4 @@
-export interface SettingsScreenProps {
+export interface SettingsPageProps {
   onDeleteAllData?: () => void;
 }
 

@@ -1,6 +1,6 @@
 import type { User } from '../../../global/types';
 
-export interface LoginScreenProps {
+export interface LoginPageProps {
   onLogin: (user: User) => void;
 }
 
