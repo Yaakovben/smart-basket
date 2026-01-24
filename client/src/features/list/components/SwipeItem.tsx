@@ -45,7 +45,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       setSwiping(false);
     },
     onTouchMove: (e: React.TouchEvent<HTMLDivElement>) => {
-      const dx = startX.current - e.touches[0].clientX;
+      const dx = e.touches[0].clientX - startX.current;
       const dy = Math.abs(e.touches[0].clientY - startY.current);
 
       if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > dy) {
@@ -78,31 +78,31 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   return (
     <Box sx={{ position: 'relative', mb: 1.25, borderRadius: 3.5, height: 72, overflow: 'hidden', bgcolor: '#F3F4F6' }}>
       {offset > 0 && (
-        <Box sx={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' }}>
-          <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnSx, bgcolor: 'error.main' }}>
-            <span>🗑️</span>
-            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>מחק</Typography>
+        <Box sx={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex' }}>
+          <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnSx, bgcolor: isPurchased ? 'warning.main' : 'success.main' }}>
+            <span>{isPurchased ? '↩️' : '✓'}</span>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{isPurchased ? 'החזר' : 'נקנה'}</Typography>
           </Box>
           <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnSx, bgcolor: 'primary.main' }}>
             <span>✏️</span>
             <Typography sx={{ fontSize: 11, fontWeight: 600 }}>ערוך</Typography>
           </Box>
-          <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnSx, bgcolor: isPurchased ? 'warning.main' : 'success.main' }}>
-            <span>{isPurchased ? '↩️' : '✓'}</span>
-            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{isPurchased ? 'החזר' : 'נקנה'}</Typography>
+          <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnSx, bgcolor: 'error.main' }}>
+            <span>🗑️</span>
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>מחק</Typography>
           </Box>
         </Box>
       )}
       {offset > 0 && offset < SWIPE_ACTIONS_WIDTH && (
         <Box sx={{
           position: 'absolute',
-          right: offset - 30,
+          left: offset - 30,
           top: '50%',
           transform: 'translateY(-50%)',
           fontSize: 20,
           opacity: Math.min(offset / 60, 1),
           pointerEvents: 'none'
-        }}>➤</Box>
+        }}>◄</Box>
       )}
       <Box
         {...handlers}
@@ -125,7 +125,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           px: 1.75,
           borderRadius: 3.5,
           border: '1px solid #E5E7EB',
-          transform: `translateX(-${offset}px)`,
+          transform: `translateX(${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.2s ease-out',
           boxShadow: offset > 0 ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
         }}

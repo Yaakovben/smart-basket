@@ -125,7 +125,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', direction: 'rtl', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -244,10 +244,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           sx={{
             position: 'fixed',
             bottom: fabPosition ? undefined : 70,
-            left: fabPosition ? undefined : '50%',
-            transform: fabPosition ? undefined : 'translateX(-50%)',
+            left: fabPosition ? undefined : 0,
+            right: fabPosition ? window.innerWidth - fabPosition.x - 28 : 0,
+            mx: fabPosition ? undefined : 'auto',
+            width: fabPosition ? undefined : 'fit-content',
             top: fabPosition ? fabPosition.y - 28 : undefined,
-            right: fabPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
             zIndex: 5,
             touchAction: items.length > 5 ? 'none' : 'auto'
           }}

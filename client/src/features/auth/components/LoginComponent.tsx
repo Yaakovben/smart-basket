@@ -87,8 +87,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
-      p: 2.5,
-      direction: 'rtl'
+      p: 2.5
     }}>
       <Paper sx={{
         width: '100%',

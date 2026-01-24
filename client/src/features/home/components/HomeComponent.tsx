@@ -96,7 +96,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', direction: 'rtl', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -398,7 +398,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       )}
 
       {/* Bottom Navigation */}
-      <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, zIndex: 10 }}>
+      <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, mx: 'auto', width: '100%', maxWidth: 430, zIndex: 10 }}>
         <BottomNavigationAction value="home" label="בית" icon={<HomeIcon />} />
         <BottomNavigationAction value="new" label="חדש" icon={<AddIcon />} onClick={() => setShowMenu(true)} />
       </BottomNavigation>
