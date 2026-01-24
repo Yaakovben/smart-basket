@@ -9,8 +9,17 @@ export interface User {
 }
 
 // ===== Product =====
-export type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
-export type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ניקיון' | 'אחר';
+export type ProductUnit = "יח׳" | "ק״ג" | "גרם" | "ליטר";
+export type ProductCategory =
+  | "מוצרי חלב"
+  | "מאפים"
+  | "ירקות"
+  | "פירות"
+  | "בשר"
+  | "משקאות"
+  | "ממתקים"
+  | "ניקיון"
+  | "אחר";
 
 export interface Product {
   id: string;
@@ -33,7 +42,7 @@ export interface Member {
 
 export interface Notification {
   id: string;
-  type: 'join' | 'leave';
+  type: "join" | "leave";
   userId: string;
   userName: string;
   timestamp: string;
@@ -55,4 +64,35 @@ export interface List {
 }
 
 // ===== Toast =====
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = "success" | "error" | "info" | "warning";
+
+// ===== Global Component Props =====
+export interface ConfirmModalProps {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  confirmText?: string;
+}
+
+export interface MemberAvatarProps {
+  member: Member | User;
+  size?: number;
+  index?: number;
+}
+
+export interface MembersButtonProps {
+  members: (Member | User)[];
+  onClick: () => void;
+}
+
+export interface ModalProps {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+export interface ToastProps {
+  msg: string;
+  type?: ToastType;
+}
