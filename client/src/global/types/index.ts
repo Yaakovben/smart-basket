@@ -9,8 +9,16 @@ export interface User {
 }
 
 // ===== Product =====
-export type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
-export type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ניקיון' | 'אחר';
+export type ProductUnit = "יח׳" | "ק״ג" | "גרם" | "ליטר";
+export type ProductCategory =
+  | "מוצרי חלב"
+  | "מאפים"
+  | "ירקות"
+  | "פירות"
+  | "בשר"
+  | "משקאות"
+  | "ניקיון"
+  | "אחר";
 
 export interface Product {
   id: string;
@@ -33,7 +41,7 @@ export interface Member {
 
 export interface Notification {
   id: string;
-  type: 'join' | 'leave';
+  type: "join" | "leave";
   userId: string;
   userName: string;
   timestamp: string;
@@ -55,7 +63,7 @@ export interface List {
 }
 
 // ===== Toast =====
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = "success" | "error" | "info" | "warning";
 
 // ===== Component Props =====
 export interface ConfirmModalProps {
@@ -111,7 +119,10 @@ export interface HomeScreenProps {
   onCreateList: (list: List) => void;
   onDeleteList: (listId: string) => void;
   onEditList: (list: List) => void;
-  onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
+  onJoinGroup: (
+    code: string,
+    password: string,
+  ) => { success: boolean; error?: string };
   onLogout: () => void;
   onMarkNotificationsRead: (listId: string) => void;
   user: User;
