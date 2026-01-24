@@ -1518,6 +1518,7 @@ function AppContent() {
 
   return (
     <>
+    
       <Routes>
         <Route path="/login" element={
           user ? <Navigate to="/" replace /> : <LoginScreen onLogin={handleLogin} />
