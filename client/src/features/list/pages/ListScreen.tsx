@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { ListScreenProps, Product, ProductUnit, ProductCategory, Member } from '../../../global/types';
+import type { Product, Member } from '../../../global/types';
+import type { ListScreenProps, ProductUnit, ProductCategory } from '../types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
@@ -25,9 +26,9 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
 
   const dismissHint = () => { setShowHint(false); localStorage.setItem('sb_hint_seen', 'true'); };
 
-  const pending = list.products.filter(p => !p.isPurchased);
-  const purchased = list.products.filter(p => p.isPurchased);
-  const items = (filter === 'pending' ? pending : purchased).filter(p => p.name.includes(search));
+  const pending = list.products.filter((p: Product) => !p.isPurchased);
+  const purchased = list.products.filter((p: Product) => p.isPurchased);
+  const items = (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(search));
   const allMembers = [list.owner, ...list.members];
   const isOwner = list.owner.id === user.id;
 
@@ -151,7 +152,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
               </button>
             )}
           </div>
-        ) : items.map(p => (
+        ) : items.map((p: Product) => (
           <SwipeItem
             key={p.id}
             product={p}
@@ -159,9 +160,9 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             isOpen={openItemId === p.id}
             onOpen={() => setOpenItemId(p.id)}
             onClose={() => setOpenItemId(null)}
-            onToggle={() => { updateP(list.products.map(x => x.id === p.id ? { ...x, isPurchased: !x.isPurchased } : x)); showToast('עודכן'); dismissHint(); }}
+            onToggle={() => { updateP(list.products.map((x: Product) => x.id === p.id ? { ...x, isPurchased: !x.isPurchased } : x)); showToast('עודכן'); dismissHint(); }}
             onEdit={() => setShowEdit({ ...p })}
-            onDelete={() => { updateP(list.products.filter(x => x.id !== p.id)); showToast('נמחק'); }}
+            onDelete={() => { updateP(list.products.filter((x: Product) => x.id !== p.id)); showToast('נמחק'); }}
             onClick={() => { setShowDetails(p); dismissHint(); }}
           />
         ))}
@@ -240,12 +241,12 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             ))}
           </div>
         </div>
-        <button style={S.primaryBtn} onClick={() => { haptic('medium'); updateP(list.products.map(x => x.id === showEdit.id ? showEdit : x)); setShowEdit(null); showToast('נשמר'); }}>שמור</button>
+        <button style={S.primaryBtn} onClick={() => { haptic('medium'); updateP(list.products.map((x: Product) => x.id === showEdit.id ? showEdit : x)); setShowEdit(null); showToast('נשמר'); }}>שמור</button>
       </Modal>}
 
       {showDetails && <Modal title="פרטים" onClose={() => setShowDetails(null)}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}><span style={{ fontSize: '56px' }}>{CATEGORY_ICONS[showDetails.category]}</span><h3 style={{ fontSize: '20px', fontWeight: '700', margin: '12px 0' }}>{showDetails.name}</h3></div>
-        <div style={{ background: '#F9FAFB', borderRadius: '12px' }}>{[['כמות', `${showDetails.quantity} ${showDetails.unit}`], ['קטגוריה', showDetails.category], ['נוסף ע״י', showDetails.addedBy], ['תאריך', showDetails.createdDate || '-'], ['שעה', showDetails.createdTime || '-']].map(([l, v], i, a) => <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < a.length - 1 ? '1px solid #E5E7EB' : 'none' }}><span style={{ color: '#6B7280' }}>{l}</span><span style={{ fontWeight: '600' }}>{v}</span></div>)}</div>
+        <div style={{ background: '#F9FAFB', borderRadius: '12px' }}>{([['כמות', `${showDetails.quantity} ${showDetails.unit}`], ['קטגוריה', showDetails.category], ['נוסף ע״י', showDetails.addedBy], ['תאריך', showDetails.createdDate || '-'], ['שעה', showDetails.createdTime || '-']] as [string, string][]).map(([l, v], i, a) => <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < a.length - 1 ? '1px solid #E5E7EB' : 'none' }}><span style={{ color: '#6B7280' }}>{l}</span><span style={{ fontWeight: '600' }}>{v}</span></div>)}</div>
       </Modal>}
 
       {showInvite && <>
@@ -320,21 +321,21 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
           <div style={{ background: '#F0FDFA', borderRadius: '12px', border: '2px solid #99F6E4', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #99F6E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '15px', fontWeight: '700', color: '#115E59' }}>{list.name}</span>
-              <span style={{ fontSize: '13px', color: '#14B8A6', fontWeight: '600' }}>{list.products.filter(p => !p.isPurchased).length} פריטים</span>
+              <span style={{ fontSize: '13px', color: '#14B8A6', fontWeight: '600' }}>{list.products.filter((p: Product) => !p.isPurchased).length} פריטים</span>
             </div>
             <div style={{ padding: '12px 16px', maxHeight: '140px', overflow: 'auto' }}>
-              {list.products.filter(p => !p.isPurchased).length === 0 ? (
+              {list.products.filter((p: Product) => !p.isPurchased).length === 0 ? (
                 <div style={{ color: '#64748B', fontSize: '14px', textAlign: 'center', padding: '8px 0' }}>הרשימה ריקה</div>
               ) : (
-                list.products.filter(p => !p.isPurchased).slice(0, 5).map((p, i, arr) => (
+                list.products.filter((p: Product) => !p.isPurchased).slice(0, 5).map((p: Product, i: number, arr: Product[]) => (
                   <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < arr.length - 1 ? '1px solid #CCFBF1' : 'none' }}>
                     <span style={{ fontSize: '14px', color: '#115E59' }}>• {p.name}</span>
                     <span style={{ fontSize: '13px', color: '#14B8A6' }}>{p.quantity} {p.unit}</span>
                   </div>
                 ))
               )}
-              {list.products.filter(p => !p.isPurchased).length > 5 && (
-                <div style={{ fontSize: '13px', color: '#14B8A6', textAlign: 'center', paddingTop: '8px' }}>+ עוד {list.products.filter(p => !p.isPurchased).length - 5} פריטים</div>
+              {list.products.filter((p: Product) => !p.isPurchased).length > 5 && (
+                <div style={{ fontSize: '13px', color: '#14B8A6', textAlign: 'center', paddingTop: '8px' }}>+ עוד {list.products.filter((p: Product) => !p.isPurchased).length - 5} פריטים</div>
               )}
             </div>
           </div>
@@ -342,7 +343,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '14px', fontWeight: '700', color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               onClick={() => {
-                navigator.clipboard?.writeText(`${list.name}\n${list.products.filter(p => !p.isPurchased).map(p => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)
+                navigator.clipboard?.writeText(`${list.name}\n${list.products.filter((p: Product) => !p.isPurchased).map((p: Product) => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)
                   .then(() => {
                     showToast('הועתק!');
                     setShowShareList(false);
@@ -354,7 +355,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             </button>
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#25D366', fontSize: '14px', fontWeight: '700', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${list.name}\n${list.products.filter(p => !p.isPurchased).map(p => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)}`)}
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${list.name}\n${list.products.filter((p: Product) => !p.isPurchased).map((p: Product) => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)}`)}
             >
               וואטסאפ
             </button>

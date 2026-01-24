@@ -355,6 +355,29 @@ export const S = {
     justifyContent: 'center',
     fontWeight: '700',
     fontSize: '18px'
+  },
+
+  // Menu Option
+  menuOption: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    padding: '14px',
+    borderRadius: '14px',
+    border: '1.5px solid #E5E7EB',
+    background: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    width: '100%'
+  },
+
+  // Scrollable Content
+  scrollableContent: {
+    flex: 1,
+    overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
+    padding: '20px',
+    WebkitOverflowScrolling: 'touch' as const
   }
 };
 

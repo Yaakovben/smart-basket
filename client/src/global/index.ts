@@ -4,11 +4,11 @@ export * from './types';
 // Hooks
 export * from './hooks';
 
-// Helpers
+// Helpers (includes constants re-exports)
 export * from './helpers';
 
-// Styles
-export * from './styles';
+// Styles (S object only, TOAST_CONFIG is in constants/helpers)
+export { S } from './styles';
 
 // Components
 export * from './components';

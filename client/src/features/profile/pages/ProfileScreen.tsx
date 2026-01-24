@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ProfileScreenProps } from '../../../global/types';
+import type { ProfileScreenProps } from '../types';
 import { S } from '../../../global/styles';
 import { ConfirmModal } from '../../../global/components';
 

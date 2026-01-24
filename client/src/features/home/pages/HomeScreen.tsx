@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { HomeScreenProps, List, Member, Notification } from '../../../global/types';
+import type { List, Member, Notification, Product } from '../../../global/types';
+import type { HomeScreenProps } from '../types';
 import { S } from '../../../global/styles';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS } from '../../../global/helpers';
-import { Modal, ConfirmModal, MemberAvatar } from '../../../global/components';
+import { Modal, ConfirmModal } from '../../../global/components';
 
 export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomeScreenProps) {
   const navigate = useNavigate();
@@ -130,8 +131,8 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
               <span>{tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}</span>
             </button>
           </div>
-        ) : display.map(l => {
-          const count = l.products.filter(p => !p.isPurchased).length;
+        ) : display.map((l: List) => {
+          const count = l.products.filter((p: Product) => !p.isPurchased).length;
           const isOwner = l.owner.id === user.id;
           return (
             <div key={l.id} style={S.listCard}>
@@ -235,7 +236,7 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {myNotifications.map(n => {
+            {myNotifications.map((n: Notification & { listName: string; listId: string }) => {
               const isLeave = n.type === 'leave';
               return (
                 <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: '12px', border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
@@ -248,7 +249,7 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
               );
             })}
             <button style={{ ...S.primaryBtn, marginTop: '8px' }} onClick={() => {
-              myNotifications.forEach(n => onMarkNotificationsRead(n.listId));
+              myNotifications.forEach((n: Notification & { listName: string; listId: string }) => onMarkNotificationsRead(n.listId));
               setShowNotifications(false);
             }}>סמן הכל כנקרא</button>
           </div>

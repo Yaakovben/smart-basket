@@ -167,15 +167,15 @@ function AppContent() {
         list={list}
         user={user!}
         onBack={() => navigate("/")}
-        onUpdateList={(u) => {
-          setLists(lists.map((l) => (l.id === u.id ? u : l)));
+        onUpdateList={(u: List) => {
+          setLists(lists.map((l: List) => (l.id === u.id ? u : l)));
         }}
-        onLeaveList={(id) => {
+        onLeaveList={(id: string) => {
           handleLeaveList(id);
           navigate("/");
         }}
-        onDeleteList={(id) => {
-          setLists(lists.filter((l) => l.id !== id));
+        onDeleteList={(id: string) => {
+          setLists(lists.filter((l: List) => l.id !== id));
           showToast("נמחק!");
           navigate("/");
         }}
@@ -211,16 +211,16 @@ function AppContent() {
                 lists={lists}
                 user={user!}
                 onSelectList={handleSelectList}
-                onCreateList={(l) => {
+                onCreateList={(l: List) => {
                   setLists([...lists, l]);
                   showToast("נוצר!");
                 }}
-                onDeleteList={(id) => {
-                  setLists(lists.filter((l) => l.id !== id));
+                onDeleteList={(id: string) => {
+                  setLists(lists.filter((l: List) => l.id !== id));
                   showToast("נמחק!");
                 }}
-                onEditList={(l) => {
-                  setLists(lists.map((x) => (x.id === l.id ? l : x)));
+                onEditList={(l: List) => {
+                  setLists(lists.map((x: List) => (x.id === l.id ? l : x)));
                   showToast("נשמר!");
                 }}
                 onJoinGroup={handleJoinGroup}

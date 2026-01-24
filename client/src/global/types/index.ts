@@ -65,7 +65,7 @@ export interface List {
 // ===== Toast =====
 export type ToastType = "success" | "error" | "info" | "warning";
 
-// ===== Component Props =====
+// ===== Global Component Props =====
 export interface ConfirmModalProps {
   title: string;
   message: string;
@@ -85,64 +85,13 @@ export interface MembersButtonProps {
   onClick: () => void;
 }
 
-export interface SwipeItemProps {
-  product: Product;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onClick: () => void;
-  isPurchased: boolean;
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-}
-
 export interface ModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
 }
 
-export interface ListScreenProps {
-  list: List;
-  onBack: () => void;
-  onUpdateList: (list: List) => void;
-  onLeaveList: (listId: string) => void;
-  onDeleteList: (listId: string) => void;
-  showToast: (message: string) => void;
-  user: User;
-}
-
-export interface HomeScreenProps {
-  lists: List[];
-  onSelectList: (list: List) => void;
-  onCreateList: (list: List) => void;
-  onDeleteList: (listId: string) => void;
-  onEditList: (list: List) => void;
-  onJoinGroup: (
-    code: string,
-    password: string,
-  ) => { success: boolean; error?: string };
-  onLogout: () => void;
-  onMarkNotificationsRead: (listId: string) => void;
-  user: User;
-}
-
-export interface LoginScreenProps {
-  onLogin: (user: User) => void;
-}
-
 export interface ToastProps {
   msg: string;
   type?: ToastType;
-}
-
-export interface ProfileScreenProps {
-  user: User;
-  onUpdateUser: (user: Partial<User>) => void;
-  onLogout: () => void;
-}
-
-export interface SettingsScreenProps {
-  onDeleteAllData?: () => void;
 }
