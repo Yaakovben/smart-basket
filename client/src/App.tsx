@@ -1117,7 +1117,7 @@ function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditLis
       <div style={S.bottomNav}>
         <div style={{ ...S.navItem, background: '#F0FDFA' }}>
           <span style={{ fontSize: '22px' }}>🏠</span>
-          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>בייייית</span>
+          <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '600' }}>בי!יית</span>
         </div>
         <div style={S.navItem} onClick={() => setShowMenu(true)}>
           <span style={{ fontSize: '22px' }}>➕</span>
