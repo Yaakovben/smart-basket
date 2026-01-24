@@ -22,7 +22,6 @@ export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteL
   const [newP, setNewP] = useState<{ name: string; quantity: number; unit: ProductUnit; category: ProductCategory }>({ name: '', quantity: 1, unit: 'יח׳', category: 'אחר' });
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('sb_hint_seen'));
-  const [showDragHint, setShowDragHint] = useState(() => !localStorage.getItem('sb_drag_hint_seen'));
   const [addError, setAddError] = useState('');
 
   // Draggable FAB state
@@ -52,7 +51,6 @@ export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteL
   }, []);
 
   const dismissHint = () => { setShowHint(false); localStorage.setItem('sb_hint_seen', 'true'); };
-  const dismissDragHint = () => { setShowDragHint(false); localStorage.setItem('sb_drag_hint_seen', 'true'); };
 
   const pending = list.products.filter((p: Product) => !p.isPurchased);
   const purchased = list.products.filter((p: Product) => p.isPurchased);
@@ -112,7 +110,7 @@ export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteL
 
   return (
     <div style={S.screen}>
-      <div style={{ ...S.header, background: list.isGroup ? 'linear-gradient(135deg, #8B5CF6, #7C3AED)' : 'linear-gradient(135deg, #14B8A6, #0D9488)' }}>
+      <div style={{ ...S.header, background: 'linear-gradient(135deg, #14B8A6, #0D9488)' }}>
         <div style={S.headerRow}>
           <button style={S.iconBtn} onClick={onBack}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           <h1 style={{ ...S.title, flex: 1, textAlign: 'center' }}>{list.name}</h1>
@@ -208,46 +206,16 @@ export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteL
             zIndex: 5,
             touchAction: items.length > 5 ? 'none' : 'auto'
           }}
-          onTouchStart={items.length > 5 ? (e) => { handleDragStart(e.touches[0].clientX, e.touches[0].clientY); dismissDragHint(); } : undefined}
+          onTouchStart={items.length > 5 ? (e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY) : undefined}
           onTouchMove={items.length > 5 ? (e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY) : undefined}
           onTouchEnd={items.length > 5 ? handleDragEnd : undefined}
-          onMouseDown={items.length > 5 ? (e) => { handleDragStart(e.clientX, e.clientY); dismissDragHint(); } : undefined}
+          onMouseDown={items.length > 5 ? (e) => handleDragStart(e.clientX, e.clientY) : undefined}
           onMouseMove={items.length > 5 && isDragging ? (e) => handleDragMove(e.clientX, e.clientY) : undefined}
           onMouseUp={items.length > 5 ? handleDragEnd : undefined}
           onMouseLeave={items.length > 5 ? handleDragEnd : undefined}
         >
-          {items.length > 5 && showDragHint && !fabPosition && (
-            <div style={{
-              position: 'absolute',
-              bottom: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              marginBottom: '8px',
-              background: 'rgba(0,0,0,0.75)',
-              color: 'white',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              whiteSpace: 'nowrap',
-              animation: 'fadeIn 0.3s ease'
-            }}>
-              ניתן לגרור
-              <div style={{
-                position: 'absolute',
-                bottom: '-6px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 0,
-                height: 0,
-                borderLeft: '6px solid transparent',
-                borderRight: '6px solid transparent',
-                borderTop: '6px solid rgba(0,0,0,0.75)'
-              }} />
-            </div>
-          )}
           <button
             style={{
-              position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -272,27 +240,6 @@ export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteL
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             {items.length <= 5 && <span>הוסף מוצר</span>}
-            {items.length > 5 && (
-              <div style={{
-                position: 'absolute',
-                bottom: '-2px',
-                right: '-2px',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-              }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="3" strokeLinecap="round">
-                  <circle cx="12" cy="5" r="1.5" fill="#14B8A6"/>
-                  <circle cx="12" cy="12" r="1.5" fill="#14B8A6"/>
-                  <circle cx="12" cy="19" r="1.5" fill="#14B8A6"/>
-                </svg>
-              </div>
-            )}
           </button>
         </div>
       )}
