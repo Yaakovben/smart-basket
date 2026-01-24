@@ -9,3 +9,6 @@ export * from './helpers';
 
 // Styles
 export * from './styles';
+
+// Components
+export * from './components';
