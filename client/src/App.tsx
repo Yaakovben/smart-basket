@@ -9,8 +9,14 @@ import {
 } from "react-router-dom";
 
 // Global imports
-import type { User, List, Member, Notification } from "./global/types";
+import type { User, List } from "./global/types";
 import { Toast } from "./global/components";
+import {
+  validateJoinGroup,
+  addMemberToList,
+  removeMemberFromList,
+  markListNotificationsRead
+} from "./global/helpers";
 
 // Feature imports
 import {
@@ -51,84 +57,25 @@ function AppContent() {
   }, [user]);
 
   const handleJoinGroup = (code: string, password: string) => {
-    if (!user) return { success: false, error: "משתמש לא מחובר" };
+    const validation = validateJoinGroup(lists, code, password, user);
+    if (!validation.success) return validation;
+
     const group = lists.find((l: List) => l.inviteCode === code && l.isGroup);
-    if (!group) return { success: false, error: "קבוצה לא נמצאה" };
-    if (group.password !== password)
-      return { success: false, error: "סיסמה שגויה" };
-    if (
-      group.owner.id === user.id ||
-      group.members.some((m: Member) => m.id === user.id)
-    ) {
-      return { success: false, error: "אתה כבר בקבוצה" };
-    }
-    const updatedLists = lists.map((l: List) =>
-      l.id === group.id
-        ? {
-            ...l,
-            members: [
-              ...l.members,
-              { id: user.id, name: user.name, email: user.email },
-            ],
-            notifications: [
-              ...(l.notifications || []),
-              {
-                id: `n${Date.now()}`,
-                type: "join" as const,
-                userId: user.id,
-                userName: user.name,
-                timestamp: new Date().toISOString(),
-                read: false,
-              },
-            ],
-          }
-        : l,
-    );
-    setLists(updatedLists);
+    if (!group || !user) return { success: false, error: "שגיאה" };
+
+    setLists(lists.map((l: List) => l.id === group.id ? addMemberToList(l, user) : l));
     showToast("הצטרפת לקבוצה!");
     return { success: true };
   };
 
   const handleLeaveList = (listId: string) => {
     if (!user) return;
-    setLists(
-      lists.map((l: List) =>
-        l.id === listId
-          ? {
-              ...l,
-              members: l.members.filter((m: Member) => m.id !== user.id),
-              notifications: [
-                ...(l.notifications || []),
-                {
-                  id: `n${Date.now()}`,
-                  type: "leave" as const,
-                  userId: user.id,
-                  userName: user.name,
-                  timestamp: new Date().toISOString(),
-                  read: false,
-                },
-              ],
-            }
-          : l,
-      ),
-    );
+    setLists(lists.map((l: List) => l.id === listId ? removeMemberFromList(l, user) : l));
     showToast("עזבת");
   };
 
   const markNotificationsRead = (listId: string) => {
-    setLists(
-      lists.map((l: List) =>
-        l.id === listId
-          ? {
-              ...l,
-              notifications: (l.notifications || []).map((n: Notification) => ({
-                ...n,
-                read: true,
-              })),
-            }
-          : l,
-      ),
-    );
+    setLists(lists.map((l: List) => l.id === listId ? markListNotificationsRead(l) : l));
   };
 
   const handleUpdateUser = (updatedUser: Partial<User>) => {

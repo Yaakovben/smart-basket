@@ -15,8 +15,22 @@ export {
   LIST_COLORS,
   SWIPE_ACTIONS_WIDTH,
   STORAGE_KEYS,
-  TOAST_CONFIG
+  TOAST_CONFIG,
+  MENU_OPTIONS
 } from '../constants';
+
+// List operations helpers
+export {
+  createNotification,
+  userToMember,
+  addMemberToList,
+  removeMemberFromList,
+  markListNotificationsRead,
+  findGroupByCode,
+  isUserInGroup,
+  validateJoinGroup
+} from './listOperations';
+export type { JoinGroupResult } from './listOperations';
 
 // Re-export feature helpers for backward compatibility
 export { isValidEmail, getPasswordStrength } from '../../features/auth/helpers';

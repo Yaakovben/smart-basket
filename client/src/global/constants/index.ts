@@ -8,16 +8,50 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'פירות': '🍎',
   'בשר': '🥩',
   'משקאות': '☕',
+  'ממתקים': '🍬',
   'ניקיון': '🧹',
   'אחר': '📦'
 };
 
 // ===== UI Constants =====
 export const MEMBER_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
-export const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅'];
+export const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅', '🛒', '🛍️'];
 export const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠', '💑', '👨‍👩‍👧'];
 export const LIST_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 export const SWIPE_ACTIONS_WIDTH = 200;
+
+// ===== Menu Options for Add Popup =====
+export interface MenuOption {
+  id: 'private' | 'group' | 'join';
+  icon: string;
+  iconBg: string;
+  title: string;
+  description: string;
+}
+
+export const MENU_OPTIONS: MenuOption[] = [
+  {
+    id: 'private',
+    icon: '📝',
+    iconBg: '#CCFBF1',
+    title: 'רשימה פרטית',
+    description: 'צור רשימת קניות אישית רק בשבילך'
+  },
+  {
+    id: 'group',
+    icon: '👨‍👩‍👧‍👦',
+    iconBg: '#E0E7FF',
+    title: 'קבוצה משותפת',
+    description: 'צור קבוצה ושתף עם משפחה וחברים'
+  },
+  {
+    id: 'join',
+    icon: '🔗',
+    iconBg: '#D1FAE5',
+    title: 'הצטרף לקבוצה קיימת',
+    description: 'יש לך קוד הזמנה? הכנס אותו כאן'
+  }
+];
 
 // ===== Storage Keys =====
 export const STORAGE_KEYS = {

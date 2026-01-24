@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { List, Member, Notification, Product } from '../../../global/types';
 import type { HomeScreenProps } from '../types';
 import { S } from '../../../global/styles';
-import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS } from '../../../global/helpers';
+import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 
 export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomeScreenProps) {
@@ -161,27 +161,15 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button style={S.menuOption} onClick={() => openOption('private')}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📝</div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>רשימה פרטית</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>רשימת קניות אישית</div>
-              </div>
-            </button>
-            <button style={S.menuOption} onClick={() => openOption('group')}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>👥</div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>קבוצה חדשה</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>שתף רשימה עם אחרים</div>
-              </div>
-            </button>
-            <button style={S.menuOption} onClick={() => openOption('join')}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>🔗</div>
-              <div style={{ flex: 1, textAlign: 'right' }}>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>הצטרף לקבוצה</div>
-                <div style={{ fontSize: '13px', color: '#6B7280' }}>יש לך קוד הזמנה?</div>
-              </div>
-            </button>
+            {MENU_OPTIONS.map((option) => (
+              <button key={option.id} style={S.menuOption} onClick={() => openOption(option.id)}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>{option.icon}</div>
+                <div style={{ flex: 1, textAlign: 'right' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>{option.title}</div>
+                  <div style={{ fontSize: '13px', color: '#6B7280' }}>{option.description}</div>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </>}
