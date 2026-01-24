@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Product, Member, List, User } from '../../../global/types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage } from '../../../global/helpers';
@@ -68,6 +68,13 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   const purchased = list.products.filter((p: Product) => p.isPurchased);
   const items = (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(search));
   const allMembers = [list.owner, ...list.members];
+
+  // Reset FAB position when items <= 5
+  useEffect(() => {
+    if (items.length <= 5) {
+      setFabPosition(null);
+    }
+  }, [items.length]);
   const isOwner = list.owner.id === user.id;
 
   const updateP = (products: Product[]) => onUpdateList({ ...list, products });
