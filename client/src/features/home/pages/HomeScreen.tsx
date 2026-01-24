@@ -106,7 +106,6 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
           </div>
         </div>
         <div style={S.searchBox}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="חפש..." value={search} onChange={e => setSearch(e.target.value)} style={S.searchInput} /></div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', fontWeight: '500', letterSpacing: '0.5px' }}>הרשימות והקבוצות שלי</div>
         <div style={S.tabs}>
           <button style={{ ...S.tab, ...(tab === 'all' ? S.tabActive : {}) }} onClick={() => setTab('all')}>הכל ({userLists.length})</button>
           <button style={{ ...S.tab, ...(tab === 'my' ? S.tabActive : {}) }} onClick={() => setTab('my')}>שלי ({my.length})</button>
@@ -114,9 +113,9 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
         </div>
       </div>
 
-      <div style={{ ...S.content, paddingBottom: '100px' }}>
+      <div style={{ ...S.content, paddingBottom: '100px', overflowY: display.length === 0 ? 'hidden' : 'auto' }}>
         {display.length === 0 ? (
-          <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
+          <div style={S.empty}>
             <div style={{ width: '120px', height: '120px', borderRadius: '30px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '64px', boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </div>
@@ -153,22 +152,24 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
       </div>
 
       {showMenu && <>
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 998 }} onClick={() => setShowMenu(false)} />
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderRadius: '24px 24px 0 0', padding: '20px', zIndex: 999, maxWidth: '430px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>מה תרצה ליצור?</h3>
-            <button style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowMenu(false)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 998, backdropFilter: 'blur(2px)' }} onClick={() => setShowMenu(false)} />
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderRadius: '20px 20px 0 0', padding: '12px 20px 28px', zIndex: 999, maxWidth: '430px', margin: '0 auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
+          <div style={{ width: '36px', height: '4px', background: '#E5E7EB', borderRadius: '2px', margin: '0 auto 16px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: '#111827' }}>מה תרצה ליצור?</h3>
+            <button style={{ width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: '#F3F4F6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowMenu(false)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {MENU_OPTIONS.map((option) => (
-              <button key={option.id} style={S.menuOption} onClick={() => openOption(option.id)}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>{option.icon}</div>
+              <button key={option.id} style={{ ...S.menuOption, padding: '12px 14px', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }} onClick={() => openOption(option.id)}>
+                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{option.icon}</div>
                 <div style={{ flex: 1, textAlign: 'right' }}>
-                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937' }}>{option.title}</div>
-                  <div style={{ fontSize: '13px', color: '#6B7280' }}>{option.description}</div>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#1F2937', marginBottom: '2px' }}>{option.title}</div>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>{option.description}</div>
                 </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             ))}
           </div>

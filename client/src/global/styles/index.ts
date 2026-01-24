@@ -162,7 +162,12 @@ export const S = {
   // Empty State
   empty: {
     textAlign: 'center' as const,
-    padding: '48px 20px'
+    padding: '48px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1
   },
   emptyText: {
     fontSize: '18px',

@@ -87,10 +87,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
       <div style={{ ...S.header, background: list.isGroup ? 'linear-gradient(135deg, #8B5CF6, #7C3AED)' : 'linear-gradient(135deg, #14B8A6, #0D9488)' }}>
         <div style={S.headerRow}>
           <button style={S.iconBtn} onClick={onBack}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ ...S.title, marginBottom: '2px' }}>{list.name}</h1>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>{list.isGroup ? 'קבוצה' : 'רשימה'} • {pending.length} פריטים לקנייה</div>
-          </div>
+          <h1 style={{ ...S.title, flex: 1, textAlign: 'center' }}>{list.name}</h1>
           <div style={{ display: 'flex', gap: '8px' }}>
             {isOwner && <button style={S.iconBtn} onClick={handleEditList}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -126,7 +123,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
         </div>
       </div>
 
-      <div style={S.content} onClick={() => setOpenItemId(null)}>
+      <div style={{ ...S.content, overflowY: items.length === 0 ? 'hidden' : 'auto' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '12px', marginBottom: '12px', border: '1px solid #99F6E4' }}>
             <span style={{ fontSize: '24px' }}>💡</span>
@@ -137,7 +134,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
           </div>
         )}
         {items.length === 0 ? (
-          <div style={{ ...S.empty, animation: 'fadeIn 0.5s ease' }}>
+          <div style={S.empty}>
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '56px' }}>
               {filter === 'pending' ? '🎉' : '📦'}
             </div>

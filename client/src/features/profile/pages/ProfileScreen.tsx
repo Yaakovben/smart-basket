@@ -11,8 +11,8 @@ export function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenPro
 
   return (
     <div style={S.screen}>
-      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '32px 20px 28px', textAlign: 'center', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: editProfile ? '16px 20px' : '32px 20px 28px', textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: editProfile ? '0' : '20px' }}>
           <button style={S.iconBtn} onClick={() => { setEditProfile(null); navigate('/'); }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
@@ -21,33 +21,36 @@ export function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenPro
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>}
         </div>
-        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: editProfile?.avatarColor || user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '3px solid rgba(255,255,255,0.3)', fontSize: '32px', color: 'white', fontWeight: '700' }}>
-          {editProfile?.avatarEmoji || user.avatarEmoji || user.name.charAt(0)}
-        </div>
-        <div style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>{editProfile?.name || user.name}</div>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', marginTop: '2px' }}>{editProfile?.email || user.email}</div>
+        {!editProfile && (
+          <>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '3px solid rgba(255,255,255,0.3)', fontSize: '32px', color: 'white', fontWeight: '700' }}>
+              {user.avatarEmoji || user.name.charAt(0)}
+            </div>
+            <div style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>{user.name}</div>
+            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', marginTop: '2px' }}>{user.email}</div>
+          </>
+        )}
       </div>
 
-      <div style={{ ...S.scrollableContent, marginTop: '-20px' }}>
+      <div style={{ ...S.scrollableContent, marginTop: editProfile ? '0' : '-20px' }}>
         {editProfile ? (
-          <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={S.label}>צבע אווטר</label>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4', '#0891B2'].map(c => (
-                  <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '40px', height: '40px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
-                ))}
+          <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: editProfile.avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', color: 'white', fontWeight: '700', border: '3px solid #E5E7EB' }}>
+                {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
               </div>
             </div>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={S.label}>אימוג׳י (אופציונלי)</label>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['', '😊', '😎', '🦁', '🐻', '🦊', '🐸', '🌟', '⚡', '🔥'].map(e => (
-                  <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '44px', height: '44px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {e || <span style={{ fontSize: '12px', color: '#9CA3AF' }}>ללא</span>}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}>
+              {['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'].map(c => (
+                <button key={c} onClick={() => setEditProfile({ ...editProfile, avatarColor: c })} style={{ width: '36px', height: '36px', borderRadius: '50%', background: c, border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer' }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'].map(e => (
+                <button key={e} onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })} style={{ width: '40px', height: '40px', borderRadius: '10px', border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', background: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {e || <span style={{ fontSize: '11px', color: '#9CA3AF' }}>ללא</span>}
+                </button>
+              ))}
             </div>
             <div style={S.formGroup}>
               <label style={S.label}>שם</label>
@@ -59,7 +62,7 @@ export function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenPro
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button style={S.cancelBtn} onClick={() => setEditProfile(null)}>ביטול</button>
-              <button style={{ ...S.primaryBtn, flex: 1 }} onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}>שמור שינויים</button>
+              <button style={{ ...S.primaryBtn, flex: 1 }} onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}>שמור</button>
             </div>
           </div>
         ) : (
