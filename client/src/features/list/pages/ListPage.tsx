@@ -1,6 +1,5 @@
-import type { ListPageProps } from '../types/list-types';
-import { ListContent } from '../components/ListContent';
+import { ListComponent } from '../components/ListComponent';
 
-export const ListPage = (props: ListPageProps) => {
-  return <ListContent {...props} />;
+export const ListPage = (props: React.ComponentProps<typeof ListComponent>) => {
+  return <ListComponent {...props} />;
 };

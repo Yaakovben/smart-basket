@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ProfilePageProps } from '../types/profile-types';
+import type { User } from '../../../global/types';
 import { S } from '../../../global/styles';
 import { ConfirmModal } from '../../../global/components';
 
-export const ProfileContent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
+interface ProfilePageProps {
+  user: User;
+  onUpdateUser: (user: Partial<User>) => void;
+  onLogout: () => void;
+}
+
+export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);

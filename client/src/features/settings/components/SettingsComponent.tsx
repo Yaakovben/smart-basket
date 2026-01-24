@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import type { SettingsPageProps } from '../types/settings-types';
 import { S } from '../../../global/styles';
 
-export const SettingsContent = ({ onDeleteAllData }: SettingsPageProps) => {
+interface SettingsPageProps {
+  onDeleteAllData?: () => void;
+}
+
+export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
 
   return (

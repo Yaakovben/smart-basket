@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import type { User } from '../../../global/types';
-import type { LoginPageProps } from '../types/auth-types';
 import { haptic } from '../../../global/helpers';
 
-export const LoginContent = ({ onLogin }: LoginPageProps) => {
+interface LoginPageProps {
+  onLogin: (user: User) => void;
+}
+
+export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

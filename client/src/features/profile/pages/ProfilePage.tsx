@@ -1,6 +1,5 @@
-import type { ProfilePageProps } from '../types/profile-types';
-import { ProfileContent } from '../components/ProfileContent';
+import { ProfileComponent } from '../components/ProfileComponent';
 
-export const ProfilePage = (props: ProfilePageProps) => {
-  return <ProfileContent {...props} />;
+export const ProfilePage = (props: React.ComponentProps<typeof ProfileComponent>) => {
+  return <ProfileComponent {...props} />;
 };

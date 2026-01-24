@@ -1,7 +1,21 @@
 import { useState, useRef } from 'react';
-import type { SwipeItemProps, ProductCategory } from '../types/list-types';
+import type { Product } from '../../../global/types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
+
+type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
+
+interface SwipeItemProps {
+  product: Product;
+  isPurchased: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClick: () => void;
+  onOpen: () => void;
+  onClose: () => void;
+}
 
 export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, onOpen, onClose }: SwipeItemProps) => {
   const [offset, setOffset] = useState(0);

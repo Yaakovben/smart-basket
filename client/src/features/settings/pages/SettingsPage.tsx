@@ -1,6 +1,5 @@
-import type { SettingsPageProps } from '../types/settings-types';
-import { SettingsContent } from '../components/SettingsContent';
+import { SettingsComponent } from '../components/SettingsComponent';
 
-export const SettingsPage = (props: SettingsPageProps) => {
-  return <SettingsContent {...props} />;
+export const SettingsPage = (props: React.ComponentProps<typeof SettingsComponent>) => {
+  return <SettingsComponent {...props} />;
 };

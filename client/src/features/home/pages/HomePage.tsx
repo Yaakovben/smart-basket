@@ -1,6 +1,5 @@
-import type { HomePageProps } from '../types/home-types';
-import { HomeContent } from '../components/HomeContent';
+import { HomeComponent } from '../components/HomeComponent';
 
-export const HomePage = (props: HomePageProps) => {
-  return <HomeContent {...props} />;
+export const HomePage = (props: React.ComponentProps<typeof HomeComponent>) => {
+  return <HomeComponent {...props} />;
 };

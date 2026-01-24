@@ -1,12 +1,24 @@
 import { useState, useRef, useCallback } from 'react';
-import type { Product, Member } from '../../../global/types';
-import type { ListPageProps, ProductUnit, ProductCategory } from '../types/list-types';
+import type { Product, Member, List, User } from '../../../global/types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from './SwipeItem';
 
-export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
+type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
+type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
+
+interface ListPageProps {
+  list: List;
+  user: User;
+  onBack: () => void;
+  onUpdateList: (list: List) => void;
+  onLeaveList: (listId: string) => void;
+  onDeleteList: (listId: string) => void;
+  showToast: (message: string) => void;
+}
+
+export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
   const [filter, setFilter] = useState<'pending' | 'purchased'>('pending');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);

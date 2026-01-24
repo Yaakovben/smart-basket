@@ -1,6 +1,5 @@
-import type { LoginPageProps } from '../types/auth-types';
-import { LoginContent } from '../components/LoginContent';
+import { LoginComponent } from '../components/LoginComponent';
 
-export const LoginPage = (props: LoginPageProps) => {
-  return <LoginContent {...props} />;
+export const LoginPage = (props: React.ComponentProps<typeof LoginComponent>) => {
+  return <LoginComponent {...props} />;
 };

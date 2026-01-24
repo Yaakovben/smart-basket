@@ -1,12 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { List, Member, Notification, Product } from '../../../global/types';
-import type { HomePageProps } from '../types/home-types';
+import type { List, Member, Notification, Product, User } from '../../../global/types';
 import { S } from '../../../global/styles';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 
-export const HomeContent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
+interface HomePageProps {
+  lists: List[];
+  user: User;
+  onSelectList: (list: List) => void;
+  onCreateList: (list: List) => void;
+  onDeleteList: (listId: string) => void;
+  onEditList: (list: List) => void;
+  onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
+  onLogout: () => void;
+  onMarkNotificationsRead: (listId: string) => void;
+}
+
+export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
   const navigate = useNavigate();
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');
