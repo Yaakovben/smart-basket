@@ -8,7 +8,7 @@ import {
   ListScreen,
   ProfileScreen,
   SettingsScreen,
-} from "../features";
+} from "../features/features";
 
 // Protected Route wrapper
 function ProtectedRoute({ children, user }: { children: React.ReactNode; user: User | null }) {

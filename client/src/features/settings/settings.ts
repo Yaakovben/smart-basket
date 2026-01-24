@@ -2,4 +2,4 @@
 export { SettingsScreen } from './pages/SettingsScreen';
 
 // Types
-export type { SettingsScreenProps, SettingsState } from './types';
+export type { SettingsScreenProps, SettingsState } from './types/settings-types';

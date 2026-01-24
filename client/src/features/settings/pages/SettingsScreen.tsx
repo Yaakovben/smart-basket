@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import type { SettingsScreenProps } from '../types';
+import type { SettingsScreenProps } from '../types/settings-types';
 import { S } from '../../../global/styles';
 
 export function SettingsScreen({ onDeleteAllData }: SettingsScreenProps) {

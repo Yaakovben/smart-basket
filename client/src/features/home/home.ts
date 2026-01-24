@@ -2,7 +2,7 @@
 export { HomeScreen } from './pages/HomeScreen';
 
 // Helpers
-export { generateInviteCode, generatePassword, generateListId } from './helpers';
+export { generateInviteCode, generatePassword, generateListId } from './helpers/home-helpers';
 
 // Types
-export type { HomeScreenProps, NewListData, TabType } from './types';
+export type { HomeScreenProps, NewListData, TabType } from './types/home-types';

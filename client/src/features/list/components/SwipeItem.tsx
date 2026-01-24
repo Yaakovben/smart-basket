@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import type { SwipeItemProps, ProductCategory } from '../types';
+import type { SwipeItemProps, ProductCategory } from '../types/list-types';
 import { S } from '../../../global/styles';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
 

@@ -35,6 +35,6 @@ export {
 export type { JoinGroupResult } from './listOperations';
 
 // Re-export feature helpers for backward compatibility
-export { isValidEmail, getPasswordStrength } from '../../features/auth/helpers';
-export { formatDate, formatTime } from '../../features/list/helpers';
-export { generateInviteCode, generatePassword } from '../../features/home/helpers';
+export { isValidEmail, getPasswordStrength } from '../../features/auth/helpers/auth-helpers';
+export { formatDate, formatTime } from '../../features/list/helpers/list-helpers';
+export { generateInviteCode, generatePassword } from '../../features/home/helpers/home-helpers';

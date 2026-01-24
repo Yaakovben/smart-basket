@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { User } from '../../../global/types';
-import type { LoginScreenProps } from '../types';
+import type { LoginScreenProps } from '../types/auth-types';
 import { haptic } from '../../../global/helpers';
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
