@@ -127,7 +127,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           value={search}
           onChange={e => setSearch(e.target.value)}
           size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 3 } }}
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: '12px' } }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#9CA3AF' }} /></InputAdornment> }}
         />
 
@@ -137,12 +137,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: 2.5,
+            borderRadius: '10px',
             p: 0.5,
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: 2,
+              borderRadius: '8px',
               py: 1.25,
               minHeight: 'auto',
               fontSize: 13,
@@ -163,7 +163,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       <Box sx={{ flex: 1, overflowY: display.length === 0 ? 'hidden' : 'auto', overflowX: 'hidden', p: 2, pb: '100px' }}>
         {display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Box sx={{ width: 120, height: 120, borderRadius: 7.5, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3, fontSize: 64, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
+            <Box sx={{ width: 120, height: 120, borderRadius: '30px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3, fontSize: 64, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
@@ -182,7 +182,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           return (
             <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelectList(l)}>
-                <Box sx={{ width: 48, height: 48, borderRadius: 3.5, bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
                   {l.icon}
                 </Box>
                 <Box sx={{ flex: 1 }}>
@@ -210,7 +210,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 998, backdropFilter: 'blur(2px)' }} onClick={() => setShowMenu(false)} />
           <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: '12px 20px 28px', zIndex: 999, maxWidth: 430, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
-            <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: 1, mx: 'auto', mb: 2 }} />
+            <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>מה תרצה ליצור?</Typography>
               <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: '#F3F4F6' }}>
@@ -219,8 +219,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {MENU_OPTIONS.map((option) => (
-                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: 1.5, borderRadius: 3, border: '1.5px solid #E5E7EB', textTransform: 'none' }}>
-                  <Box sx={{ width: 46, height: 46, borderRadius: 3, bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, mr: 1.5 }}>
+                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: 1.5, borderRadius: '12px', border: '1.5px solid #E5E7EB', textTransform: 'none' }}>
+                  <Box sx={{ width: 46, height: 46, borderRadius: '12px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, mr: 1.5 }}>
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
@@ -238,7 +238,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Create Private List Modal */}
       {showCreate && (
         <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
-          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>⚠️ {createError}</Alert>}
+          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {createError}</Alert>}
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם הרשימה</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות שבועיות" />
@@ -247,7 +247,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {LIST_ICONS.map(i => (
-                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: 3, border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
                   {i}
                 </Button>
               ))}
@@ -268,7 +268,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Create Group Modal */}
       {showCreateGroup && (
         <Modal title="קבוצה חדשה" onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
-          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>⚠️ {createError}</Alert>}
+          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {createError}</Alert>}
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם הקבוצה</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות משפחתיות" />
@@ -277,7 +277,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {GROUP_ICONS.map(i => (
-                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: 3, border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
                   {i}
                 </Button>
               ))}
@@ -307,7 +307,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>סיסמה</Typography>
             <TextField fullWidth value={joinPass} onChange={e => setJoinPass(e.target.value)} placeholder="••••" inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 18, letterSpacing: 2 } }} />
           </Box>
-          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2.5 }}>{joinError}</Alert>}
+          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>{joinError}</Alert>}
           <Button variant="contained" fullWidth onClick={handleJoin}>הצטרף לקבוצה</Button>
         </Modal>
       )}
@@ -323,7 +323,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Button key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: 3, border: editList.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editList.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: editList.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editList.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
                   {i}
                 </Button>
               ))}
@@ -368,7 +368,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               {myNotifications.map((n: Notification & { listName: string; listId: string }) => {
                 const isLeave = n.type === 'leave';
                 return (
-                  <Box key={n.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: 3, border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
+                  <Box key={n.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: '12px', border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
                     <Avatar sx={{ bgcolor: isLeave ? 'error.main' : 'success.main', width: 40, height: 40 }}>
                       {isLeave ? '👋' : '🎉'}
                     </Avatar>
@@ -398,7 +398,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       )}
 
       {/* Bottom Navigation */}
-      <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, mx: 'auto', width: '100%', maxWidth: 430, zIndex: 10 }}>
+      <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, zIndex: 10 }}>
         <BottomNavigationAction value="home" label="בית" icon={<HomeIcon />} />
         <BottomNavigationAction value="new" label="חדש" icon={<AddIcon />} onClick={() => setShowMenu(true)} />
       </BottomNavigation>

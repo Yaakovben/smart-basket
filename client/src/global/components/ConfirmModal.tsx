@@ -27,7 +27,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
-          borderRadius: 5,
+          borderRadius: '20px',
           p: 3,
           width: '90%',
           maxWidth: 320

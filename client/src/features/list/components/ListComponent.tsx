@@ -160,7 +160,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           value={search}
           onChange={e => setSearch(e.target.value)}
           size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 3 } }}
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: '12px' } }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#9CA3AF' }} /></InputAdornment> }}
         />
 
@@ -170,12 +170,12 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: 2.5,
+            borderRadius: '10px',
             p: 0.5,
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: 2,
+              borderRadius: '8px',
               py: 1.25,
               minHeight: 'auto',
               fontSize: 13,
@@ -194,7 +194,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {/* Content */}
       <Box sx={{ flex: 1, overflowY: items.length === 0 ? 'hidden' : 'auto', overflowX: 'hidden', p: 2, pb: '80px' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: 3, mb: 1.5, border: '1px solid #99F6E4' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '12px', mb: 1.5, border: '1px solid #99F6E4' }}>
             <Typography sx={{ fontSize: 24 }}>💡</Typography>
             <Typography sx={{ flex: 1, fontSize: 13, color: '#115E59' }}>
               <strong>טיפ:</strong> גרור שמאלה לפעולות • לחץ לפרטים
@@ -243,12 +243,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
         <Box
           sx={{
             position: 'fixed',
-            bottom: fabPosition ? undefined : 70,
-            left: fabPosition ? undefined : 0,
-            right: fabPosition ? window.innerWidth - fabPosition.x - 28 : 0,
-            mx: fabPosition ? undefined : 'auto',
-            width: fabPosition ? undefined : 'fit-content',
+            bottom: fabPosition ? undefined : '70px',
+            left: fabPosition ? undefined : '50%',
+            transform: fabPosition ? undefined : 'translateX(-50%)',
             top: fabPosition ? fabPosition.y - 28 : undefined,
+            right: fabPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
             zIndex: 5,
             touchAction: items.length > 5 ? 'none' : 'auto'
           }}
@@ -265,7 +264,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <AddIcon />
             </Fab>
           ) : (
-            <Button variant="contained" onClick={() => { haptic('medium'); setShowAdd(true); }} startIcon={<AddIcon />} sx={{ borderRadius: 50, px: 2.5, py: 1.5, boxShadow: '0 6px 20px rgba(20, 184, 166, 0.5)' }}>
+            <Button variant="contained" onClick={() => { haptic('medium'); setShowAdd(true); }} startIcon={<AddIcon />} sx={{ borderRadius: '50px', px: 2.5, py: 1.5, boxShadow: '0 6px 20px rgba(20, 184, 166, 0.5)' }}>
               הוסף מוצר
             </Button>
           )}
@@ -275,7 +274,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {/* Add Product Modal */}
       {showAdd && (
         <Modal title="מוצר חדש" onClose={() => { setShowAdd(false); setAddError(''); }}>
-          {addError && <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>⚠️ {addError}</Alert>}
+          {addError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {addError}</Alert>}
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם</Typography>
             <TextField fullWidth value={newP.name} onChange={e => { setNewP({ ...newP, name: e.target.value }); setAddError(''); }} placeholder="חלב תנובה" />
@@ -283,7 +282,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>כמות</Typography>
-              <Box sx={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 3, overflow: 'hidden', height: 52 }}>
+              <Box sx={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', height: 52 }}>
                 <Button onClick={() => setNewP({ ...newP, quantity: Math.max(1, newP.quantity - 1) })} sx={{ minWidth: 52, borderRadius: 0, bgcolor: '#F9FAFB', fontSize: 24 }}>−</Button>
                 <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50 }} value={newP.quantity} onChange={e => setNewP({ ...newP, quantity: Math.max(1, parseInt(e.target.value) || 1) })} />
                 <Button onClick={() => setNewP({ ...newP, quantity: newP.quantity + 1 })} sx={{ minWidth: 52, borderRadius: 0, bgcolor: '#F9FAFB', fontSize: 24 }}>+</Button>
@@ -323,7 +322,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>כמות</Typography>
-              <Box sx={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: 3, overflow: 'hidden', height: 52 }}>
+              <Box sx={{ display: 'flex', border: '1.5px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden', height: 52 }}>
                 <Button onClick={() => setShowEdit({ ...showEdit, quantity: Math.max(1, showEdit.quantity - 1) })} sx={{ minWidth: 52, borderRadius: 0, bgcolor: '#F9FAFB', fontSize: 24 }}>−</Button>
                 <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50 }} value={showEdit.quantity} onChange={e => setShowEdit({ ...showEdit, quantity: Math.max(1, parseInt(e.target.value) || 1) })} />
                 <Button onClick={() => setShowEdit({ ...showEdit, quantity: showEdit.quantity + 1 })} sx={{ minWidth: 52, borderRadius: 0, bgcolor: '#F9FAFB', fontSize: 24 }}>+</Button>
@@ -360,7 +359,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <Typography sx={{ fontSize: 56 }}>{CATEGORY_ICONS[showDetails.category]}</Typography>
             <Typography sx={{ fontSize: 20, fontWeight: 700, mt: 1.5 }}>{showDetails.name}</Typography>
           </Box>
-          <Box sx={{ bgcolor: '#F9FAFB', borderRadius: 3 }}>
+          <Box sx={{ bgcolor: '#F9FAFB', borderRadius: '12px' }}>
             {([['כמות', `${showDetails.quantity} ${showDetails.unit}`], ['קטגוריה', showDetails.category], ['נוסף ע״י', showDetails.addedBy], ['תאריך', showDetails.createdDate || '-'], ['שעה', showDetails.createdTime || '-']] as [string, string][]).map(([l, v], i, a) => (
               <Box key={l} sx={{ display: 'flex', justifyContent: 'space-between', p: '12px 16px', borderBottom: i < a.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                 <Typography sx={{ color: 'text.secondary' }}>{l}</Typography>
@@ -375,7 +374,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {showInvite && (
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 100, backdropFilter: 'blur(4px)' }} onClick={() => setShowInvite(false)} />
-          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', borderRadius: 5, p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', borderRadius: '20px', p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
             <IconButton onClick={() => setShowInvite(false)} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: '#F3F4F6' }} size="small">
               <CloseIcon sx={{ fontSize: 16, color: '#6B7280' }} />
             </IconButton>
@@ -386,7 +385,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>הזמן חברים</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>שתף את הפרטים להצטרפות לקבוצה</Typography>
             </Box>
-            <Box sx={{ bgcolor: '#F0FDFA', borderRadius: 3, border: '2px solid #99F6E4', mb: 2.5, overflow: 'hidden' }}>
+            <Box sx={{ bgcolor: '#F0FDFA', borderRadius: '12px', border: '2px solid #99F6E4', mb: 2.5, overflow: 'hidden' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid #99F6E4' }}>
                 <Typography sx={{ color: '#115E59', fontSize: 13, fontWeight: 600 }}>קוד קבוצה</Typography>
                 <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#115E59', letterSpacing: 3, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
@@ -440,7 +439,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {showShareList && (
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 100, backdropFilter: 'blur(4px)' }} onClick={() => setShowShareList(false)} />
-          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', borderRadius: 5, p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', borderRadius: '20px', p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
             <IconButton onClick={() => setShowShareList(false)} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: '#F3F4F6' }} size="small">
               <CloseIcon sx={{ fontSize: 16, color: '#6B7280' }} />
             </IconButton>
@@ -451,7 +450,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>שתף רשימה</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>שלח את רשימת הקניות</Typography>
             </Box>
-            <Box sx={{ bgcolor: '#F0FDFA', borderRadius: 3, border: '2px solid #99F6E4', mb: 2.5, overflow: 'hidden' }}>
+            <Box sx={{ bgcolor: '#F0FDFA', borderRadius: '12px', border: '2px solid #99F6E4', mb: 2.5, overflow: 'hidden' }}>
               <Box sx={{ p: '12px 16px', borderBottom: '1px solid #99F6E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#115E59' }}>{list.name}</Typography>
                 <Chip label={`${list.products.filter((p: Product) => !p.isPurchased).length} פריטים`} size="small" sx={{ bgcolor: 'transparent', color: 'primary.main' }} />
@@ -495,7 +494,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {(list.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Button key={i} onClick={() => setEditListData({ ...editListData, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: 3, border: editListData.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editListData.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setEditListData({ ...editListData, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: editListData.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editListData.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
                   {i}
                 </Button>
               ))}

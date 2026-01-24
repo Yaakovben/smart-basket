@@ -31,7 +31,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
       </Box>
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, WebkitOverflowScrolling: 'touch' }}>
-        <Paper sx={{ borderRadius: 4, overflow: 'hidden' }}>
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
           <Box sx={settingRowSx}>
             <Box component="span" sx={{ fontSize: 20 }}>🔔</Box>
             <Typography sx={{ flex: 1, fontWeight: 500 }}>התראות</Typography>
@@ -50,7 +50,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
           </Box>
         </Paper>
 
-        <Paper sx={{ borderRadius: 4, overflow: 'hidden', mt: 2 }}>
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx}>
             <Box component="span" sx={{ fontSize: 20 }}>❓</Box>
             <Typography sx={{ flex: 1, fontWeight: 500 }}>עזרה ותמיכה</Typography>
@@ -63,7 +63,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
           </Box>
         </Paper>
 
-        <Paper sx={{ borderRadius: 4, overflow: 'hidden', mt: 2 }}>
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={{ ...settingRowSx, borderBottom: 'none', color: 'error.dark', cursor: 'pointer' }} onClick={onDeleteAllData}>
             <Box component="span" sx={{ fontSize: 20 }}>🗑️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, color: 'inherit' }}>מחק את כל הנתונים</Typography>

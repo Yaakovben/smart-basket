@@ -17,7 +17,7 @@ export const MembersButton = ({ members, onClick }: MembersButtonProps) => {
         alignItems: 'center',
         gap: 1,
         bgcolor: 'rgba(255,255,255,0.15)',
-        borderRadius: 5,
+        borderRadius: '20px',
         px: 2,
         py: 0.75,
         pl: 1,

@@ -26,7 +26,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
         severity={type}
         icon={<Box component="span" sx={{ fontSize: 18 }}>{TOAST_ICONS[type]}</Box>}
         sx={{
-          borderRadius: 3,
+          borderRadius: '12px',
           fontWeight: 600,
           fontSize: 14,
           animation: 'slideInLeft 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',

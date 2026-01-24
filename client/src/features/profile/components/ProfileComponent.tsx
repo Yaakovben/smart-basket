@@ -65,7 +65,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, pt: editProfile ? 0 : 2.5, mt: editProfile ? 0 : -2.5, WebkitOverflowScrolling: 'touch' }}>
         {editProfile ? (
-          <Paper sx={{ borderRadius: 4, p: 2.5, mt: 2 }}>
+          <Paper sx={{ borderRadius: '16px', p: 2.5, mt: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
               <Box sx={{
                 width: 70,
@@ -107,7 +107,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                   sx={{
                     width: 40,
                     height: 40,
-                    borderRadius: 2.5,
+                    borderRadius: '10px',
                     border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB',
                     bgcolor: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white',
                     fontSize: 20,
@@ -140,7 +140,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           </Paper>
         ) : (
           <>
-            <Paper sx={{ borderRadius: 4, overflow: 'hidden' }}>
+            <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                 <Box component="span" sx={{ fontSize: 20 }}>👤</Box>
                 <Typography sx={{ flex: 1, fontWeight: 500 }}>שם</Typography>
@@ -159,7 +159,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               sx={{
                 mt: 3,
                 py: 2,
-                borderRadius: 3,
+                borderRadius: '12px',
                 bgcolor: '#FEE2E2',
                 color: '#DC2626',
                 fontWeight: 600,

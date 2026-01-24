@@ -92,7 +92,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       <Paper sx={{
         width: '100%',
         maxWidth: 440,
-        borderRadius: 6,
+        borderRadius: '24px',
         boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
@@ -109,7 +109,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             width: 72,
             height: 72,
             background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-            borderRadius: 4.5,
+            borderRadius: '18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -131,12 +131,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             variant="fullWidth"
             sx={{
               bgcolor: '#F3F4F6',
-              borderRadius: 3,
+              borderRadius: '12px',
               p: 0.5,
               minHeight: 'auto',
               '& .MuiTabs-indicator': { display: 'none' },
               '& .MuiTab-root': {
-                borderRadius: 2.5,
+                borderRadius: '10px',
                 py: 1.5,
                 minHeight: 'auto',
                 fontWeight: 600,
@@ -212,7 +212,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   sx={{
                     flex: 1,
                     height: 6,
-                    borderRadius: 1,
+                    borderRadius: '4px',
                     bgcolor: '#E5E7EB',
                     '& .MuiLinearProgress-bar': { bgcolor: pwdStrength.color }
                   }}
@@ -245,7 +245,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         {/* Footer */}
         <Box sx={{ flexShrink: 0, px: 4, pb: 4, pt: 2.5, borderTop: '1px solid', borderColor: 'divider' }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }} icon={<span>⚠️</span>}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} icon={<span>⚠️</span>}>
               {error}
             </Alert>
           )}
@@ -259,7 +259,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               py: 2,
               fontSize: 16,
               fontWeight: 700,
-              borderRadius: 3,
+              borderRadius: '12px',
               ...(loading && { bgcolor: '#9CA3AF', boxShadow: 'none' })
             }}
           >

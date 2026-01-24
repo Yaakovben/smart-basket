@@ -47,7 +47,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         }
       }}
     >
-      <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: 1, mx: 'auto', mt: 1.5, mb: 2 }} />
+      <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5, mb: 2 }} />
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 18, p: 0, mb: 2.5 }}>
         {title}
       </DialogTitle>
