@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Product, Member } from '../../../global/types';
 import type { ListScreenProps, ProductUnit, ProductCategory } from '../types';
 import { S } from '../../../global/styles';
-import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from '../components/SwipeItem';
 
@@ -276,7 +276,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '14px', fontWeight: '700', color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               onClick={() => {
-                navigator.clipboard?.writeText(`הצטרף לקבוצה "${list.name}"!\n\nקוד: ${list.inviteCode}\nסיסמה: ${list.password}`)
+                navigator.clipboard?.writeText(generateInviteMessage(list))
                   .then(() => {
                     showToast('הועתק!');
                     setShowInvite(false);
@@ -288,7 +288,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             </button>
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#25D366', fontSize: '14px', fontWeight: '700', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`הצטרף לקבוצה "${list.name}"!\n\nקוד: ${list.inviteCode}\nסיסמה: ${list.password}`)}`)}
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list))}`)}
             >
               וואטסאפ
             </button>
@@ -343,7 +343,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '2px solid #E5E7EB', background: 'white', fontSize: '14px', fontWeight: '700', color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               onClick={() => {
-                navigator.clipboard?.writeText(`${list.name}\n${list.products.filter((p: Product) => !p.isPurchased).map((p: Product) => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)
+                navigator.clipboard?.writeText(generateShareListMessage(list))
                   .then(() => {
                     showToast('הועתק!');
                     setShowShareList(false);
@@ -355,7 +355,7 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
             </button>
             <button
               style={{ flex: 1, padding: '14px', borderRadius: '12px', border: 'none', background: '#25D366', fontSize: '14px', fontWeight: '700', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${list.name}\n${list.products.filter((p: Product) => !p.isPurchased).map((p: Product) => `• ${p.name} - ${p.quantity} ${p.unit}`).join('\n')}`)}`)}
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list))}`)}
             >
               וואטסאפ
             </button>

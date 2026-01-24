@@ -1,4 +1,4 @@
-import type { List, User, Member, Notification } from '../types';
+import type { List, User, Member, Notification, Product } from '../types';
 
 /**
  * Creates a new notification object
@@ -113,4 +113,71 @@ export const validateJoinGroup = (
   }
 
   return { success: true };
+};
+
+/**
+ * Generates a formatted WhatsApp message for inviting members to a group
+ */
+export const generateInviteMessage = (list: List): string => {
+  const lines = [
+    `🛒 *הוזמנת להצטרף לקבוצה!*`,
+    ``,
+    `📋 שם הקבוצה: *${list.name}*`,
+    ``,
+    `━━━━━━━━━━━━━━━`,
+    `🔑 *פרטי הצטרפות:*`,
+    ``,
+    `📌 קוד: *${list.inviteCode}*`,
+    `🔐 סיסמה: *${list.password}*`,
+    `━━━━━━━━━━━━━━━`,
+    ``,
+    `💡 פתח את האפליקציה ולחץ על "הצטרף לקבוצה קיימת"`,
+    ``,
+    `_נשלח מאפליקציית SmartBasket_ 🧺`
+  ];
+  return lines.join('\n');
+};
+
+/**
+ * Generates a formatted WhatsApp message for sharing a shopping list
+ */
+export const generateShareListMessage = (list: List): string => {
+  const pendingProducts = list.products.filter((p: Product) => !p.isPurchased);
+  const purchasedProducts = list.products.filter((p: Product) => p.isPurchased);
+
+  const lines: string[] = [
+    `🛒 *רשימת קניות: ${list.name}*`,
+    ``,
+    `━━━━━━━━━━━━━━━`
+  ];
+
+  if (pendingProducts.length > 0) {
+    lines.push(`📝 *לקנות (${pendingProducts.length}):*`);
+    lines.push(``);
+    pendingProducts.forEach((p: Product) => {
+      lines.push(`☐ ${p.name} - ${p.quantity} ${p.unit}`);
+    });
+  }
+
+  if (purchasedProducts.length > 0) {
+    if (pendingProducts.length > 0) {
+      lines.push(``);
+      lines.push(`━━━━━━━━━━━━━━━`);
+    }
+    lines.push(`✅ *נקנה (${purchasedProducts.length}):*`);
+    lines.push(``);
+    purchasedProducts.forEach((p: Product) => {
+      lines.push(`☑ ~${p.name}~`);
+    });
+  }
+
+  if (pendingProducts.length === 0 && purchasedProducts.length === 0) {
+    lines.push(`📭 הרשימה ריקה`);
+  }
+
+  lines.push(``);
+  lines.push(`━━━━━━━━━━━━━━━`);
+  lines.push(`_נשלח מאפליקציית SmartBasket_ 🧺`);
+
+  return lines.join('\n');
 };

@@ -28,7 +28,9 @@ export {
   markListNotificationsRead,
   findGroupByCode,
   isUserInGroup,
-  validateJoinGroup
+  validateJoinGroup,
+  generateInviteMessage,
+  generateShareListMessage
 } from './listOperations';
 export type { JoinGroupResult } from './listOperations';
 
