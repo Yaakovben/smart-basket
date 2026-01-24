@@ -154,7 +154,7 @@ export const S = {
     overflowY: 'auto' as const,
     overflowX: 'hidden' as const,
     padding: '16px',
-    paddingBottom: '100px',
+    paddingBottom: '80px',
     WebkitOverflowScrolling: 'touch' as const,
     overscrollBehavior: 'contain' as const
   },
@@ -290,7 +290,7 @@ export const S = {
     background: 'white',
     display: 'flex',
     justifyContent: 'space-around',
-    padding: '8px 0 max(24px, env(safe-area-inset-bottom))',
+    padding: '4px 0 max(12px, env(safe-area-inset-bottom))',
     borderTop: '1px solid #F3F4F6',
     boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
     zIndex: 10
@@ -299,9 +299,9 @@ export const S = {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '4px',
-    padding: '8px 16px',
-    borderRadius: '12px',
+    gap: '2px',
+    padding: '6px 14px',
+    borderRadius: '10px',
     cursor: 'pointer'
   },
 

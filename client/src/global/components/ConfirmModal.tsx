@@ -2,7 +2,7 @@ import type { ConfirmModalProps } from '../types';
 import { haptic } from '../helpers';
 import { S } from '../styles';
 
-export function ConfirmModal({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) {
+export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) => {
   return (
     <div
       style={{ ...S.overlay, animation: 'fadeIn 0.2s ease', alignItems: 'center' }}

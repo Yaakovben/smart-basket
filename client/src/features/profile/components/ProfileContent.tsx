@@ -4,7 +4,7 @@ import type { ProfilePageProps } from '../types/profile-types';
 import { S } from '../../../global/styles';
 import { ConfirmModal } from '../../../global/components';
 
-export function ProfileContent({ user, onUpdateUser, onLogout }: ProfilePageProps) {
+export const ProfileContent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);

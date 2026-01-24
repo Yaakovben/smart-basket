@@ -2,7 +2,7 @@ import type { ModalProps } from '../types';
 import { haptic } from '../helpers';
 import { S } from '../styles';
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export const Modal = ({ title, onClose, children }: ModalProps) => {
   return (
     <div
       style={{ ...S.overlay, animation: 'fadeIn 0.2s ease' }}

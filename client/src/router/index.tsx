@@ -11,13 +11,13 @@ import {
 } from "../features/features";
 
 // Protected Route wrapper
-function ProtectedRoute({ children, user }: { children: React.ReactNode; user: User | null }) {
+const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
-}
+};
 
 // List Page Wrapper with URL params
-function ListPageWrapper({
+const ListPageWrapper = ({
   lists,
   user,
   updateList,
@@ -31,7 +31,7 @@ function ListPageWrapper({
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
   showToast: (msg: string) => void;
-}) {
+}) => {
   const navigate = useNavigate();
   const { listId } = useParams();
   const list = lists.find((l) => l.id === listId);
@@ -57,10 +57,10 @@ function ListPageWrapper({
       showToast={showToast}
     />
   );
-}
+};
 
 // Main App Router
-export function AppRouter() {
+export const AppRouter = () => {
   const navigate = useNavigate();
 
   // Hooks for state management

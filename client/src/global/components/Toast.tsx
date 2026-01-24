@@ -1,7 +1,7 @@
 import type { ToastProps } from '../types';
 import { TOAST_CONFIG } from '../styles';
 
-export function Toast({ msg, type = 'success' }: ToastProps) {
+export const Toast = ({ msg, type = 'success' }: ToastProps) => {
   if (!msg) return null;
 
   const config = TOAST_CONFIG[type];

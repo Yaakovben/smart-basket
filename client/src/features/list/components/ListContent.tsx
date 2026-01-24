@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { Product, Member } from '../../../global/types';
 import type { ListPageProps, ProductUnit, ProductCategory } from '../types/list-types';
 import { S } from '../../../global/styles';
@@ -6,7 +6,7 @@ import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateI
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from './SwipeItem';
 
-export function ListContent({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) {
+export const ListContent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
   const [filter, setFilter] = useState<'pending' | 'purchased'>('pending');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
@@ -23,6 +23,32 @@ export function ListContent({ list, onBack, onUpdateList, onLeaveList, onDeleteL
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(() => !localStorage.getItem('sb_hint_seen'));
   const [addError, setAddError] = useState('');
+
+  // Draggable FAB state
+  const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    const currentX = fabPosition?.x ?? window.innerWidth / 2;
+    const currentY = fabPosition?.y ?? window.innerHeight - 90;
+    dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
+    setIsDragging(true);
+  }, [fabPosition]);
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!dragRef.current || !isDragging) return;
+    const dx = clientX - dragRef.current.startX;
+    const dy = clientY - dragRef.current.startY;
+    const newX = Math.max(40, Math.min(window.innerWidth - 40, dragRef.current.startPosX + dx));
+    const newY = Math.max(100, Math.min(window.innerHeight - 60, dragRef.current.startPosY + dy));
+    setFabPosition({ x: newX, y: newY });
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    dragRef.current = null;
+  }, []);
 
   const dismissHint = () => { setShowHint(false); localStorage.setItem('sb_hint_seen', 'true'); };
 
@@ -169,29 +195,47 @@ export function ListContent({ list, onBack, onUpdateList, onLeaveList, onDeleteL
       </div>
 
       {(items.length > 0 || filter === 'purchased') && (
-        <div style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}>
+        <div
+          style={{
+            position: 'fixed',
+            bottom: fabPosition ? undefined : '70px',
+            left: fabPosition ? undefined : '50%',
+            transform: fabPosition ? undefined : 'translateX(-50%)',
+            top: fabPosition ? fabPosition.y - 28 : undefined,
+            right: fabPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
+            zIndex: 5,
+            touchAction: items.length > 5 ? 'none' : 'auto'
+          }}
+          onTouchStart={items.length > 5 ? (e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+          onTouchMove={items.length > 5 ? (e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+          onTouchEnd={items.length > 5 ? handleDragEnd : undefined}
+          onMouseDown={items.length > 5 ? (e) => handleDragStart(e.clientX, e.clientY) : undefined}
+          onMouseMove={items.length > 5 && isDragging ? (e) => handleDragMove(e.clientX, e.clientY) : undefined}
+          onMouseUp={items.length > 5 ? handleDragEnd : undefined}
+          onMouseLeave={items.length > 5 ? handleDragEnd : undefined}
+        >
           <button
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: items.length > 5 ? '0' : '8px',
-              padding: items.length > 5 ? '16px' : '14px 24px',
-              width: items.length > 5 ? '56px' : 'auto',
-              height: items.length > 5 ? '56px' : 'auto',
+              padding: items.length > 5 ? '14px' : '12px 20px',
+              width: items.length > 5 ? '52px' : 'auto',
+              height: items.length > 5 ? '52px' : 'auto',
               borderRadius: '50px',
               border: 'none',
               background: 'linear-gradient(135deg, #14B8A6, #10B981)',
               color: 'white',
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: '700',
-              cursor: 'pointer',
+              cursor: isDragging ? 'grabbing' : (items.length > 5 ? 'grab' : 'pointer'),
               boxShadow: '0 6px 20px rgba(20, 184, 166, 0.5)',
-              transition: 'all 0.2s ease'
+              transition: isDragging ? 'none' : 'all 0.2s ease'
             }}
-            onClick={() => { haptic('medium'); setShowAdd(true); }}
+            onClick={() => { if (!isDragging) { haptic('medium'); setShowAdd(true); } }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>

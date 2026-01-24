@@ -1,7 +1,7 @@
 import type { MembersButtonProps } from '../types';
 import { MemberAvatar } from './MemberAvatar';
 
-export function MembersButton({ members, onClick }: MembersButtonProps) {
+export const MembersButton = ({ members, onClick }: MembersButtonProps) => {
   const firstMember = members[0];
   return (
     <button onClick={onClick} style={{

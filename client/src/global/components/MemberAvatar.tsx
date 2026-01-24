@@ -1,7 +1,7 @@
 import type { MemberAvatarProps } from '../types';
 import { MEMBER_COLORS } from '../helpers';
 
-export function MemberAvatar({ member, size = 36, index = 0 }: MemberAvatarProps) {
+export const MemberAvatar = ({ member, size = 36, index = 0 }: MemberAvatarProps) => {
   return (
     <div style={{
       width: size,
