@@ -120,20 +120,12 @@ export const validateJoinGroup = (
  */
 export const generateInviteMessage = (list: List): string => {
   const lines = [
-    `🛒 *הוזמנת להצטרף לקבוצה!*`,
+    `הצטרף לקבוצת הקניות *${list.name}*`,
     ``,
-    `📋 שם הקבוצה: *${list.name}*`,
+    `קוד: *${list.inviteCode}*`,
+    `סיסמה: *${list.password}*`,
     ``,
-    `━━━━━━━━━━━━━━━`,
-    `🔑 *פרטי הצטרפות:*`,
-    ``,
-    `📌 קוד: *${list.inviteCode}*`,
-    `🔐 סיסמה: *${list.password}*`,
-    `━━━━━━━━━━━━━━━`,
-    ``,
-    `💡 פתח את האפליקציה ולחץ על "הצטרף לקבוצה קיימת"`,
-    ``,
-    `_נשלח מאפליקציית SmartBasket_ 🧺`
+    `נשלח מ-SmartBasket`
   ];
   return lines.join('\n');
 };
@@ -143,41 +135,22 @@ export const generateInviteMessage = (list: List): string => {
  */
 export const generateShareListMessage = (list: List): string => {
   const pendingProducts = list.products.filter((p: Product) => !p.isPurchased);
-  const purchasedProducts = list.products.filter((p: Product) => p.isPurchased);
 
   const lines: string[] = [
-    `🛒 *רשימת קניות: ${list.name}*`,
-    ``,
-    `━━━━━━━━━━━━━━━`
+    `*${list.name}*`,
+    ``
   ];
 
   if (pendingProducts.length > 0) {
-    lines.push(`📝 *לקנות (${pendingProducts.length}):*`);
-    lines.push(``);
     pendingProducts.forEach((p: Product) => {
-      lines.push(`☐ ${p.name} - ${p.quantity} ${p.unit}`);
+      lines.push(`• ${p.name} (${p.quantity} ${p.unit})`);
     });
-  }
-
-  if (purchasedProducts.length > 0) {
-    if (pendingProducts.length > 0) {
-      lines.push(``);
-      lines.push(`━━━━━━━━━━━━━━━`);
-    }
-    lines.push(`✅ *נקנה (${purchasedProducts.length}):*`);
-    lines.push(``);
-    purchasedProducts.forEach((p: Product) => {
-      lines.push(`☑ ~${p.name}~`);
-    });
-  }
-
-  if (pendingProducts.length === 0 && purchasedProducts.length === 0) {
-    lines.push(`📭 הרשימה ריקה`);
+  } else {
+    lines.push(`הרשימה ריקה`);
   }
 
   lines.push(``);
-  lines.push(`━━━━━━━━━━━━━━━`);
-  lines.push(`_נשלח מאפליקציית SmartBasket_ 🧺`);
+  lines.push(`נשלח מ-SmartBasket`);
 
   return lines.join('\n');
 };
