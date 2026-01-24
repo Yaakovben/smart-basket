@@ -3,11 +3,11 @@ import type { User, List } from "../global/types";
 import { useAuth, useLists, useToast } from "../global/hooks";
 import { Toast } from "../global/components";
 import {
-  LoginScreen,
-  HomeScreen,
-  ListScreen,
-  ProfileScreen,
-  SettingsScreen,
+  LoginPage,
+  HomePage,
+  ListPage,
+  ProfilePage,
+  SettingsPage,
 } from "../features/features";
 
 // Protected Route wrapper
@@ -16,8 +16,8 @@ function ProtectedRoute({ children, user }: { children: React.ReactNode; user: U
   return <>{children}</>;
 }
 
-// List Screen Wrapper with URL params
-function ListScreenWrapper({
+// List Page Wrapper with URL params
+function ListPageWrapper({
   lists,
   user,
   updateList,
@@ -39,7 +39,7 @@ function ListScreenWrapper({
   if (!list) return <Navigate to="/" replace />;
 
   return (
-    <ListScreen
+    <ListPage
       list={list}
       user={user}
       onBack={() => navigate("/")}
@@ -111,14 +111,14 @@ export function AppRouter() {
         <Route
           path="/login"
           element={
-            user ? <Navigate to="/" replace /> : <LoginScreen onLogin={handleLogin} />
+            user ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />
           }
         />
         <Route
           path="/"
           element={
             <ProtectedRoute user={user}>
-              <HomeScreen
+              <HomePage
                 lists={lists}
                 user={user!}
                 onSelectList={(list: List) => navigate(`/list/${list.id}`)}
@@ -136,7 +136,7 @@ export function AppRouter() {
           path="/list/:listId"
           element={
             <ProtectedRoute user={user}>
-              <ListScreenWrapper
+              <ListPageWrapper
                 lists={lists}
                 user={user!}
                 updateList={updateList}
@@ -151,7 +151,7 @@ export function AppRouter() {
           path="/profile"
           element={
             <ProtectedRoute user={user}>
-              <ProfileScreen
+              <ProfilePage
                 user={user!}
                 onUpdateUser={handleUpdateUser}
                 onLogout={handleLogout}
@@ -163,7 +163,7 @@ export function AppRouter() {
           path="/settings"
           element={
             <ProtectedRoute user={user}>
-              <SettingsScreen />
+              <SettingsPage />
             </ProtectedRoute>
           }
         />

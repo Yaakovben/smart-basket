@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { ProfileScreenProps } from '../types/profile-types';
+import type { ProfilePageProps } from '../types/profile-types';
 import { S } from '../../../global/styles';
 import { ConfirmModal } from '../../../global/components';
 
-export function ProfileContent({ user, onUpdateUser, onLogout }: ProfileScreenProps) {
+export function ProfileContent({ user, onUpdateUser, onLogout }: ProfilePageProps) {
   const navigate = useNavigate();
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);

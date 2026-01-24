@@ -1,5 +1,5 @@
 // Pages
-export { ProfileScreen } from './pages/ProfileScreen';
+export { ProfilePage } from './pages/ProfilePage';
 
 // Types
-export type { ProfileScreenProps, ProfileFormData } from './types/profile-types';
+export type { ProfilePageProps, ProfileFormData } from './types/profile-types';

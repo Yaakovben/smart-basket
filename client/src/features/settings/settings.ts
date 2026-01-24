@@ -1,5 +1,5 @@
 // Pages
-export { SettingsScreen } from './pages/SettingsScreen';
+export { SettingsPage } from './pages/SettingsPage';
 
 // Types
-export type { SettingsScreenProps, SettingsState } from './types/settings-types';
+export type { SettingsPageProps, SettingsState } from './types/settings-types';

@@ -1,5 +1,5 @@
 // Pages
-export { ListScreen } from './pages/ListScreen';
+export { ListPage } from './pages/ListPage';
 
 // Components
 export { SwipeItem } from './components/SwipeItem';
@@ -11,4 +11,4 @@ export { useSwipe } from './hooks/list-hooks';
 export { formatDate, formatTime, generateProductId } from './helpers/list-helpers';
 
 // Types
-export type { ListScreenProps, SwipeItemProps, ProductFormData, ProductUnit, ProductCategory } from './types/list-types';
+export type { ListPageProps, SwipeItemProps, ProductFormData, ProductUnit, ProductCategory } from './types/list-types';
