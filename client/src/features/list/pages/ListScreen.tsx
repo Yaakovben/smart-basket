@@ -84,10 +84,13 @@ export function ListScreen({ list, onBack, onUpdateList, onLeaveList, onDeleteLi
 
   return (
     <div style={S.screen}>
-      <div style={S.header}>
+      <div style={{ ...S.header, background: list.isGroup ? 'linear-gradient(135deg, #8B5CF6, #7C3AED)' : 'linear-gradient(135deg, #14B8A6, #0D9488)' }}>
         <div style={S.headerRow}>
           <button style={S.iconBtn} onClick={onBack}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          <h1 style={S.title}>{list.name}</h1>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <h1 style={{ ...S.title, marginBottom: '2px' }}>{list.name}</h1>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>{list.isGroup ? 'קבוצה' : 'רשימה'} • {pending.length} פריטים לקנייה</div>
+          </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {isOwner && <button style={S.iconBtn} onClick={handleEditList}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

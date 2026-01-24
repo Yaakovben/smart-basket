@@ -11,23 +11,21 @@ export function ProfileScreen({ user, onUpdateUser, onLogout }: ProfileScreenPro
 
   return (
     <div style={S.screen}>
-      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '48px 20px 40px', textAlign: 'center', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', padding: '32px 20px 28px', textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
           <button style={S.iconBtn} onClick={() => { setEditProfile(null); navigate('/'); }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>פרופיל</h1>
+          <h1 style={{ flex: 1, color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>{editProfile ? 'עריכת פרופיל' : 'פרופיל'}</h1>
           {!editProfile && <button style={S.iconBtn} onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#14B8A6', avatarEmoji: user.avatarEmoji || '' })}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>}
         </div>
-        <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: editProfile?.avatarColor || user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '4px solid rgba(255,255,255,0.3)', fontSize: '40px', color: 'white', fontWeight: '700' }}>
+        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: editProfile?.avatarColor || user.avatarColor || 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '3px solid rgba(255,255,255,0.3)', fontSize: '32px', color: 'white', fontWeight: '700' }}>
           {editProfile?.avatarEmoji || user.avatarEmoji || user.name.charAt(0)}
         </div>
-        {!editProfile && <>
-          <div style={{ color: 'white', fontSize: '22px', fontWeight: '700' }}>{user.name}</div>
-          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', marginTop: '4px' }}>{user.email}</div>
-        </>}
+        <div style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>{editProfile?.name || user.name}</div>
+        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', marginTop: '2px' }}>{editProfile?.email || user.email}</div>
       </div>
 
       <div style={{ ...S.scrollableContent, marginTop: '-20px' }}>

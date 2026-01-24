@@ -106,6 +106,7 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
           </div>
         </div>
         <div style={S.searchBox}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="חפש..." value={search} onChange={e => setSearch(e.target.value)} style={S.searchInput} /></div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginBottom: '8px', fontWeight: '500', letterSpacing: '0.5px' }}>הרשימות והקבוצות שלי</div>
         <div style={S.tabs}>
           <button style={{ ...S.tab, ...(tab === 'all' ? S.tabActive : {}) }} onClick={() => setTab('all')}>הכל ({userLists.length})</button>
           <button style={{ ...S.tab, ...(tab === 'my' ? S.tabActive : {}) }} onClick={() => setTab('my')}>שלי ({my.length})</button>
@@ -144,7 +145,7 @@ export function HomeScreen({ lists, onSelectList, onCreateList, onDeleteList, on
                 </div>
               </div>
               {isOwner && <button style={{ padding: '8px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setEditList(l); }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>}
             </div>
           );
