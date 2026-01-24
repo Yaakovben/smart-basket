@@ -196,8 +196,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditList(l); }}>
-                  <EditIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 36, height: 36 }}>
+                  <EditIcon sx={{ fontSize: 18, color: '#6B7280' }} />
                 </IconButton>
               )}
             </Card>
@@ -219,8 +219,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {MENU_OPTIONS.map((option) => (
-                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: 1.5, borderRadius: '12px', border: '1.5px solid #E5E7EB', textTransform: 'none' }}>
-                  <Box sx={{ width: 46, height: 46, borderRadius: '12px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, mr: 1.5 }}>
+                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: 1.5, borderRadius: '12px', border: '1.5px solid #E5E7EB', textTransform: 'none', gap: 2 }}>
+                  <Box sx={{ width: 50, height: 50, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
@@ -400,7 +400,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Bottom Navigation */}
       <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, zIndex: 10 }}>
         <BottomNavigationAction value="home" label="בית" icon={<HomeIcon />} />
-        <BottomNavigationAction value="new" label="חדש" icon={<AddIcon />} onClick={() => setShowMenu(true)} />
+        <BottomNavigationAction
+          value="new"
+          label="חדש"
+          icon={<Box sx={{ width: 32, height: 32, borderRadius: '10px', bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AddIcon sx={{ color: 'white', fontSize: 20 }} /></Box>}
+          onClick={() => setShowMenu(true)}
+        />
       </BottomNavigation>
     </Box>
   );

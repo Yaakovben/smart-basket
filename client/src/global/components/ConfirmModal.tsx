@@ -30,12 +30,18 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           borderRadius: '20px',
           p: 3,
           width: '90%',
-          maxWidth: 320
+          maxWidth: 320,
+          position: 'relative',
+          bottom: 'auto',
+          m: 'auto'
         }
       }}
       sx={{
         '& .MuiBackdrop-root': {
           backdropFilter: 'blur(4px)'
+        },
+        '& .MuiDialog-container': {
+          alignItems: 'center'
         }
       }}
     >
