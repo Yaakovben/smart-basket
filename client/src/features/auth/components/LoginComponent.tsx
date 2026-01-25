@@ -82,12 +82,14 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
   return (
     <Box sx={{
-      minHeight: '100vh',
+      minHeight: { xs: '100dvh', sm: '100vh' },
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
-      p: 2.5
+      p: { xs: 2, sm: 2.5 },
+      pt: 'max(20px, env(safe-area-inset-top))',
+      pb: 'max(20px, env(safe-area-inset-bottom))'
     }}>
       <Paper sx={{
         width: '100%',

@@ -20,8 +20,8 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
-      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: '48px 20px 24px', flexShrink: 0 }}>
+    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto' }}>
+      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' }, flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate('/')} sx={{ color: 'white' }}>
             <ArrowForwardIcon />
@@ -30,7 +30,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, WebkitOverflowScrolling: 'touch' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', WebkitOverflowScrolling: 'touch' }}>
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
           <Box sx={settingRowSx}>
             <Box component="span" sx={{ fontSize: 20 }}>🔔</Box>

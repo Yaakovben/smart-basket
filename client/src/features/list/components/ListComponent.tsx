@@ -125,9 +125,9 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
+    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
-      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
+      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <IconButton onClick={onBack} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
             <ArrowForwardIcon sx={{ color: 'white' }} />
@@ -192,7 +192,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: items.length === 0 ? 'hidden' : 'auto', overflowX: 'hidden', p: 2, pb: '80px' }} onClick={() => setOpenItemId(null)}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: 'calc(100px + env(safe-area-inset-bottom))' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '12px', mb: 1.5, border: '1px solid #99F6E4' }}>
             <Typography sx={{ fontSize: 24 }}>💡</Typography>
@@ -243,7 +243,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
         <Box
           sx={{
             position: 'fixed',
-            bottom: fabPosition ? undefined : '70px',
+            bottom: fabPosition ? undefined : 'calc(70px + env(safe-area-inset-bottom))',
             left: fabPosition ? undefined : '50%',
             transform: fabPosition ? undefined : 'translateX(-50%)',
             top: fabPosition ? fabPosition.y - 28 : undefined,

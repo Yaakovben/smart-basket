@@ -96,9 +96,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
+    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
-      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
+      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar onClick={() => navigate('/profile')} sx={{ bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }}>
@@ -160,7 +160,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: display.length === 0 ? 'hidden' : 'auto', overflowX: 'hidden', p: 2, pb: '100px' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: 'calc(100px + env(safe-area-inset-bottom))' }}>
         {display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <Box sx={{ width: 120, height: 120, borderRadius: '30px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3, fontSize: 64, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
@@ -209,7 +209,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {showMenu && (
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 998, backdropFilter: 'blur(2px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: '12px 20px 28px', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
+          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: { xs: '12px 16px', sm: '12px 20px' }, pb: 'calc(28px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>מה תרצה ליצור?</Typography>
@@ -409,7 +409,10 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           zIndex: 10,
           bgcolor: 'white',
-          borderTop: '1px solid #E5E7EB'
+          borderTop: '1px solid #E5E7EB',
+          pb: 'env(safe-area-inset-bottom)',
+          height: 'auto',
+          minHeight: 64
         }}
       >
         <BottomNavigationAction

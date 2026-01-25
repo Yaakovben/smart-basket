@@ -18,10 +18,12 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto' }}>
       <Box sx={{
         background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-        p: editProfile ? '16px 20px' : '32px 20px 28px',
+        p: editProfile
+          ? { xs: 'max(16px, env(safe-area-inset-top)) 16px', sm: '16px 20px' }
+          : { xs: 'max(32px, env(safe-area-inset-top) + 12px) 16px 28px', sm: '32px 20px 28px' },
         textAlign: 'center',
         flexShrink: 0
       }}>
@@ -63,7 +65,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         )}
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5, pt: editProfile ? 0 : 2.5, mt: editProfile ? 0 : -2.5, WebkitOverflowScrolling: 'touch' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pt: editProfile ? 0 : { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', mt: editProfile ? 0 : -2.5, WebkitOverflowScrolling: 'touch' }}>
         {editProfile ? (
           <Paper sx={{ borderRadius: '16px', p: 2.5, mt: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>

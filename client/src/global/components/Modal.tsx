@@ -36,9 +36,10 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           bottom: 0,
           m: 0,
           borderRadius: '24px 24px 0 0',
-          maxHeight: '85vh',
+          maxHeight: { xs: '90vh', sm: '85vh' },
           maxWidth: { xs: '100%', sm: 500, md: 600 },
-          width: '100%'
+          width: '100%',
+          pb: 'env(safe-area-inset-bottom)'
         }
       }}
       sx={{
@@ -51,7 +52,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 18, p: 0, mb: 2.5 }}>
         {title}
       </DialogTitle>
-      <DialogContent sx={{ px: 2.5, pb: 4 }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 2.5 }, pb: 4, overflowY: 'auto' }}>
         {children}
       </DialogContent>
     </Dialog>
