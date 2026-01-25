@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Box, TextField, Button, Typography, Tabs, Tab, Alert,
-  LinearProgress, CircularProgress, InputAdornment, Paper, Divider
+  LinearProgress, CircularProgress, InputAdornment, Paper, Divider, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import type { User } from '../../../global/types';
 import { haptic, SIZES } from '../../../global/helpers';
@@ -29,6 +29,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showGoogleForm, setShowGoogleForm] = useState(false);
+  const [googleName, setGoogleName] = useState('');
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [googleError, setGoogleError] = useState('');
 
   const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -84,25 +88,51 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   };
 
   const handleGoogleLogin = () => {
+    haptic('light');
+    setShowGoogleForm(true);
+    setGoogleName('');
+    setGoogleEmail('');
+    setGoogleError('');
+  };
+
+  const handleGoogleSubmit = () => {
+    setGoogleError('');
+    if (!googleName.trim()) { setGoogleError('נא להזין שם'); return; }
+    if (googleName.trim().length < 2) { setGoogleError('שם חייב להכיל לפחות 2 תווים'); return; }
+    if (!googleEmail.trim()) { setGoogleError('נא להזין אימייל'); return; }
+    if (!isValidEmail(googleEmail)) { setGoogleError('אימייל לא תקין'); return; }
+
     setGoogleLoading(true);
     haptic('light');
 
-    // Simulate Google login - in production, integrate with Google OAuth
     setTimeout(() => {
-      const mockGoogleUser = {
+      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
+
+      // Check if email already exists
+      const existingUser = users.find((u: User) => u.email === googleEmail);
+      if (existingUser) {
+        haptic('medium');
+        onLogin(existingUser);
+        setShowGoogleForm(false);
+        setGoogleLoading(false);
+        return;
+      }
+
+      const googleUser = {
         id: `g${Date.now()}`,
-        name: 'Google User',
-        email: `user${Date.now()}@gmail.com`,
+        name: googleName.trim(),
+        email: googleEmail.trim(),
         avatarEmoji: '',
         avatarColor: '#4285F4'
       };
 
-      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-      users.push(mockGoogleUser);
+      users.push(googleUser);
       localStorage.setItem('sb_users', JSON.stringify(users));
       haptic('medium');
-      onLogin(mockGoogleUser);
-    }, 1000);
+      setShowGoogleForm(false);
+      setGoogleLoading(false);
+      onLogin(googleUser);
+    }, 800);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -353,6 +383,100 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           </Button>
         </Box>
       </Paper>
+
+      {/* Google Login Form Dialog */}
+      <Dialog
+        open={showGoogleForm}
+        onClose={() => !googleLoading && setShowGoogleForm(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            maxWidth: 400,
+            width: '90%',
+            m: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{ textAlign: 'center', pt: 3, pb: 1 }}>
+          <Box sx={{
+            width: 56,
+            height: 56,
+            borderRadius: '14px',
+            bgcolor: '#F3F4F6',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 1.5
+          }}>
+            <GoogleIcon />
+          </Box>
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>
+            התחברות עם Google
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: '#6B7280', mt: 0.5 }}>
+            הזן את הפרטים שלך להמשך
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, pb: 3, pt: 1 }}>
+          {googleError && (
+            <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md, fontSize: SIZES.text.sm }} icon={<span>⚠️</span>}>
+              {googleError}
+            </Alert>
+          )}
+          <TextField
+            fullWidth
+            label="שם מלא"
+            value={googleName}
+            onChange={e => setGoogleName(e.target.value)}
+            placeholder="הזן את שמך המלא"
+            disabled={googleLoading}
+            sx={{ mb: 2 }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>👤</Box></InputAdornment>
+            }}
+          />
+          <TextField
+            fullWidth
+            type="email"
+            label="אימייל Google"
+            value={googleEmail}
+            onChange={e => setGoogleEmail(e.target.value)}
+            placeholder="example@gmail.com"
+            disabled={googleLoading}
+            sx={{ mb: 2.5 }}
+            inputProps={{ dir: 'ltr' }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>📧</Box></InputAdornment>
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <Button
+              variant="outlined"
+              onClick={() => setShowGoogleForm(false)}
+              disabled={googleLoading}
+              sx={{ flex: 1, borderRadius: SIZES.radius.md }}
+            >
+              ביטול
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleGoogleSubmit}
+              disabled={googleLoading}
+              sx={{ flex: 2, borderRadius: SIZES.radius.md }}
+            >
+              {googleLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={18} sx={{ color: 'white' }} />
+                  <span>מתחבר...</span>
+                </Box>
+              ) : (
+                'המשך'
+              )}
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

@@ -5,6 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface ProfilePageProps {
   user: User;
@@ -17,6 +18,7 @@ const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'
 
 export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
+  const { t } = useSettings();
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
@@ -55,7 +57,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <ArrowForwardIcon sx={{ fontSize: 18 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
-            {editProfile ? 'עריכת פרופיל' : 'פרופיל'}
+            {editProfile ? t('editProfile') : t('profile')}
           </Typography>
           {!editProfile && (
             <IconButton

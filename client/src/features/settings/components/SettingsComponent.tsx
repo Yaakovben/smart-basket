@@ -65,9 +65,17 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
         {/* Notifications & Appearance */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
           {/* Notifications Toggle */}
-          <Box sx={settingRowSx} onClick={() => setNotificationsExpanded(!notificationsExpanded)}>
+          <Box sx={settingRowSx} onClick={() => settings.notifications.enabled && setNotificationsExpanded(!notificationsExpanded)}>
             <Box component="span" sx={{ fontSize: 22 }}>🔔</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('notifications')}</Typography>
+            {settings.notifications.enabled && (
+              <Box
+                onClick={(e) => { e.stopPropagation(); setNotificationsExpanded(!notificationsExpanded); }}
+                sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', p: 0.5, mr: 0.5 }}
+              >
+                {notificationsExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF' }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF' }} />}
+              </Box>
+            )}
             <Switch
               checked={settings.notifications.enabled}
               onChange={(e) => {
@@ -77,9 +85,6 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
               onClick={(e) => e.stopPropagation()}
               color="primary"
             />
-            {settings.notifications.enabled && (
-              notificationsExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF' }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF' }} />
-            )}
           </Box>
 
           {/* Notification Settings Expanded */}

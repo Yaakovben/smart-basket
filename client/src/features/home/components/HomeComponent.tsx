@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import type { List, Member, Notification, Product, User } from '../../../global/types';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface HomePageProps {
   lists: List[];
@@ -30,6 +31,7 @@ interface HomePageProps {
 
 export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
   const navigate = useNavigate();
+  const { t } = useSettings();
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');
   const [showMenu, setShowMenu] = useState(false);
@@ -115,7 +117,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
             <Box>
-              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>שלום,</Typography>
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{t('hello')}</Typography>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
             </Box>
           </Box>
@@ -149,7 +151,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
         <TextField
           fullWidth
-          placeholder="חפש..."
+          placeholder={t('search')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           size="small"
@@ -179,9 +181,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             }
           }}
         >
-          <Tab value="all" label={`הכל (${userLists.length})`} />
-          <Tab value="my" label={`שלי (${my.length})`} />
-          <Tab value="groups" label={`קבוצות (${groups.length})`} />
+          <Tab value="all" label={`${t('all')} (${userLists.length})`} />
+          <Tab value="my" label={`${t('myLists')} (${my.length})`} />
+          <Tab value="groups" label={`${t('groups')} (${groups.length})`} />
         </Tabs>
       </Box>
 
@@ -193,10 +195,10 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               {tab === 'groups' ? '👥' : '📝'}
             </Box>
             <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-              {tab === 'groups' ? 'טרם נוצרו קבוצות' : 'טרם נוצרו רשימות'}
+              {tab === 'groups' ? t('noGroups') : t('noLists')}
             </Typography>
             <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: '#9CA3AF', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
-              {tab === 'groups' ? 'התחל בקבוצה משותפת וצור רשימות קניות עם המשפחה והחברים' : 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך'}
+              {tab === 'groups' ? t('noGroupsDesc') : t('noListsDesc')}
             </Typography>
             <Button
               variant="contained"
@@ -211,7 +213,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               }}
             >
               <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-              <span>{tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}</span>
+              <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
             </Button>
           </Box>
         ) : display.map((l: List) => {
@@ -226,10 +228,10 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 <Box sx={{ flex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-                    <Chip label={l.isGroup ? 'קבוצה' : 'פרטית'} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
+                    <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
                   </Box>
                   <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
-                    {count > 0 ? `${count} פריטים` : '✓ הושלם'}
+                    {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
                   </Typography>
                 </Box>
               </Box>
@@ -246,26 +248,42 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Menu Bottom Sheet */}
       {showMenu && (
         <>
-          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 998, backdropFilter: 'blur(2px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: { xs: '12px 16px', sm: '12px 20px' }, pb: 'calc(28px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
-            <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography sx={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>מה תרצה ליצור?</Typography>
-              <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: '#F3F4F6' }}>
-                <CloseIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
+          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 998, backdropFilter: 'blur(4px)' }} onClick={() => setShowMenu(false)} />
+          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: { xs: 2.5, sm: 3 }, pb: 'calc(32px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
+            <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2.5 }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary' }}>מה תרצה ליצור?</Typography>
+              <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 32, height: 32 }}>
+                <CloseIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
               </IconButton>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.75, sm: 1 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               {MENU_OPTIONS.map((option) => (
-                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: { xs: 1.25, sm: 1.5 }, borderRadius: { xs: '10px', sm: '12px' }, border: '1.5px solid #E5E7EB', textTransform: 'none', gap: { xs: 1.5, sm: 2 } }}>
-                  <Box sx={{ width: { xs: 44, sm: 50 }, height: { xs: 44, sm: 50 }, borderRadius: { xs: '12px', sm: '14px' }, bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: { xs: 22, sm: 26 }, flexShrink: 0 }}>
+                <Button
+                  key={option.id}
+                  onClick={() => openOption(option.id)}
+                  fullWidth
+                  sx={{
+                    justifyContent: 'flex-start',
+                    p: 2,
+                    borderRadius: '14px',
+                    border: '1.5px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    textTransform: 'none',
+                    gap: 2,
+                    transition: 'all 0.2s ease',
+                    '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }
+                  }}
+                >
+                  <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
-                    <Typography sx={{ fontSize: { xs: 14, sm: 15 }, fontWeight: 600, color: '#1F2937' }}>{option.title}</Typography>
-                    <Typography sx={{ fontSize: { xs: 11, sm: 12 }, color: '#9CA3AF' }}>{option.description}</Typography>
+                    <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{option.title}</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{option.description}</Typography>
                   </Box>
-                  <ChevronLeftIcon sx={{ color: '#D1D5DB', fontSize: { xs: 20, sm: 24 } }} />
+                  <ChevronLeftIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
                 </Button>
               ))}
             </Box>
@@ -275,7 +293,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Create Private List Modal */}
       {showCreate && (
-        <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
+        <Modal title={t('privateList')} onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
           {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>

@@ -14,6 +14,7 @@ import type { Product, Member, List, User } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from './SwipeItem';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
 type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
@@ -29,6 +30,7 @@ interface ListPageProps {
 }
 
 export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
+  const { t } = useSettings();
   const [filter, setFilter] = useState<'pending' | 'purchased'>('pending');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
@@ -79,7 +81,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   const allMembers = [list.owner, ...list.members];
 
   useEffect(() => {
-    if (items.length <= 5) setFabPosition(null);
+    if (items.length <= 3) setFabPosition(null);
   }, [items.length]);
 
   const isOwner = list.owner.id === user.id;
@@ -217,8 +219,8 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             }
           }}
         >
-          <Tab value="pending" label={`לקנות (${pending.length})`} />
-          <Tab value="purchased" label={`נקנה (${purchased.length})`} />
+          <Tab value="pending" label={`${t('toBuy')} (${pending.length})`} />
+          <Tab value="purchased" label={`${t('purchased')} (${purchased.length})`} />
         </Tabs>
       </Box>
 
@@ -292,17 +294,17 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             top: fabPosition ? fabPosition.y - 28 : undefined,
             right: fabPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
             zIndex: 5,
-            touchAction: items.length > 5 ? 'none' : 'auto'
+            touchAction: items.length > 3 ? 'none' : 'auto'
           }}
-          onTouchStart={items.length > 5 ? (e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY) : undefined}
-          onTouchMove={items.length > 5 ? (e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY) : undefined}
-          onTouchEnd={items.length > 5 ? handleDragEnd : undefined}
-          onMouseDown={items.length > 5 ? (e) => handleDragStart(e.clientX, e.clientY) : undefined}
-          onMouseMove={items.length > 5 && isDragging ? (e) => handleDragMove(e.clientX, e.clientY) : undefined}
-          onMouseUp={items.length > 5 ? handleDragEnd : undefined}
-          onMouseLeave={items.length > 5 ? handleDragEnd : undefined}
+          onTouchStart={items.length > 3 ? (e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+          onTouchMove={items.length > 3 ? (e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+          onTouchEnd={items.length > 3 ? handleDragEnd : undefined}
+          onMouseDown={items.length > 3 ? (e) => handleDragStart(e.clientX, e.clientY) : undefined}
+          onMouseMove={items.length > 3 && isDragging ? (e) => handleDragMove(e.clientX, e.clientY) : undefined}
+          onMouseUp={items.length > 3 ? handleDragEnd : undefined}
+          onMouseLeave={items.length > 3 ? handleDragEnd : undefined}
         >
-          {items.length > 5 ? (
+          {items.length > 3 ? (
             <Fab
               color="primary"
               onClick={() => { if (!isDragging) { haptic('medium'); setShowAdd(true); } }}

@@ -37,18 +37,18 @@ const COLORS = {
     headerGradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     cardShadow: '0 2px 8px rgba(0,0,0,0.04)'
   },
-  // Dark mode colors
+  // Dark mode colors - improved for better visibility
   dark: {
-    background: '#0F172A',
-    paper: '#1E293B',
-    card: '#1E293B',
-    text: '#F1F5F9',
-    textSecondary: '#94A3B8',
-    divider: '#334155',
-    border: '#475569',
-    inputBg: '#0F172A',
+    background: '#111827',
+    paper: '#1F2937',
+    card: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#D1D5DB',
+    divider: '#374151',
+    border: '#4B5563',
+    inputBg: '#374151',
     headerGradient: 'linear-gradient(135deg, #0D9488, #047857)',
-    cardShadow: '0 2px 8px rgba(0,0,0,0.3)'
+    cardShadow: '0 4px 12px rgba(0,0,0,0.5)'
   }
 } as const;
 
