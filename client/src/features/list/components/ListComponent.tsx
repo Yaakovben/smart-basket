@@ -267,7 +267,6 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <Button
               variant="contained"
               onClick={() => { haptic('medium'); setShowAdd(true); }}
-              startIcon={<AddIcon sx={{ fontSize: 22 }} />}
               sx={{
                 borderRadius: '16px',
                 px: 3,
@@ -276,13 +275,17 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 fontWeight: 600,
                 background: 'linear-gradient(135deg, #14B8A6, #10B981)',
                 boxShadow: '0 8px 24px rgba(20, 184, 166, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
                 '&:hover': {
                   background: 'linear-gradient(135deg, #0D9488, #059669)',
                   boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)'
                 }
               }}
             >
-              הוסף מוצר
+              <AddIcon sx={{ fontSize: 22 }} />
+              <span>הוסף מוצר</span>
             </Button>
           )}
         </Box>

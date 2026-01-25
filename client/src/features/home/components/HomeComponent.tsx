@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, BottomNavigation, BottomNavigationAction, InputAdornment, Alert
+  Chip, Avatar, Badge, InputAdornment, Alert
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -398,8 +398,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       )}
 
       {/* Bottom Navigation */}
-      <BottomNavigation
-        value="home"
+      <Box
         sx={{
           position: 'fixed',
           bottom: 0,
@@ -411,53 +410,48 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           bgcolor: 'white',
           borderTop: '1px solid #E5E7EB',
           pb: 'env(safe-area-inset-bottom)',
-          height: 'auto',
-          minHeight: 64
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 4,
+          py: 1.5
         }}
       >
-        <BottomNavigationAction
-          value="home"
-          label="בית"
-          icon={<HomeIcon sx={{ fontSize: 26 }} />}
+        <Box
+          onClick={() => {}}
           sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 3,
             py: 1,
-            color: '#6B7280',
-            '&.Mui-selected': {
-              color: 'primary.main',
-              '& .MuiBottomNavigationAction-label': {
-                fontWeight: 700,
-                fontSize: 12
-              }
-            }
+            borderRadius: '12px',
+            bgcolor: '#F0FDFA',
+            cursor: 'pointer'
           }}
-        />
-        <BottomNavigationAction
-          value="new"
-          label=""
-          icon={
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(20, 184, 166, 0.4)',
-                mt: -2
-              }}
-            >
-              <AddIcon sx={{ color: 'white', fontSize: 28 }} />
-            </Box>
-          }
+        >
+          <HomeIcon sx={{ fontSize: 24, color: 'primary.main' }} />
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>בית</Typography>
+        </Box>
+        <Box
           onClick={() => setShowMenu(true)}
           sx={{
-            p: 0,
-            minWidth: 60
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 3,
+            py: 1,
+            borderRadius: '12px',
+            cursor: 'pointer',
+            '&:active': { bgcolor: '#F3F4F6' }
           }}
-        />
-      </BottomNavigation>
+        >
+          <AddIcon sx={{ fontSize: 24, color: '#6B7280' }} />
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>חדש</Typography>
+        </Box>
+      </Box>
     </Box>
   );
 };
