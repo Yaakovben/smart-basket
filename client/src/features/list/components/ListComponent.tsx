@@ -217,8 +217,19 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               {filter === 'pending' ? 'כל המוצרים נקנו בהצלחה' : 'הוסף מוצרים חדשים לרשימה'}
             </Typography>
             {filter === 'pending' && (
-              <Button variant="contained" onClick={() => { haptic('light'); setShowAdd(true); }} startIcon={<span>➕</span>}>
-                הוסף מוצר
+              <Button
+                variant="contained"
+                onClick={() => { haptic('light'); setShowAdd(true); }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 3,
+                  py: 1.5
+                }}
+              >
+                <AddIcon sx={{ fontSize: 20 }} />
+                <span>הוסף מוצר</span>
               </Button>
             )}
           </Box>
@@ -277,14 +288,14 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 boxShadow: '0 8px 24px rgba(20, 184, 166, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.5,
+                gap: 1,
                 '&:hover': {
                   background: 'linear-gradient(135deg, #0D9488, #059669)',
                   boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)'
                 }
               }}
             >
-              <AddIcon sx={{ fontSize: 22 }} />
+              <AddIcon sx={{ fontSize: 20 }} />
               <span>הוסף מוצר</span>
             </Button>
           )}

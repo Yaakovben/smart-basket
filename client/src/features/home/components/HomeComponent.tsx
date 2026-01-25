@@ -172,8 +172,19 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 14, color: '#9CA3AF', mb: 4, maxWidth: 280 }}>
               {tab === 'groups' ? 'התחל בקבוצה משותפת וצור רשימות קניות עם המשפחה והחברים' : 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך'}
             </Typography>
-            <Button variant="contained" onClick={() => { haptic('medium'); setShowMenu(true); }} startIcon={<span>✨</span>}>
-              {tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}
+            <Button
+              variant="contained"
+              onClick={() => { haptic('medium'); setShowMenu(true); }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 3,
+                py: 1.5
+              }}
+            >
+              <AddIcon sx={{ fontSize: 20 }} />
+              <span>{tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}</span>
             </Button>
           </Box>
         ) : display.map((l: List) => {
