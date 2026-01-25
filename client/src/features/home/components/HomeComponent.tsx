@@ -96,7 +96,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -209,7 +209,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {showMenu && (
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 998, backdropFilter: 'blur(2px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: '12px 20px 28px', zIndex: 999, maxWidth: 430, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
+          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'white', borderRadius: '20px 20px 0 0', p: '12px 20px 28px', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}>
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: '#111827' }}>מה תרצה ליצור?</Typography>
@@ -398,13 +398,61 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       )}
 
       {/* Bottom Navigation */}
-      <BottomNavigation value="home" sx={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, zIndex: 10 }}>
-        <BottomNavigationAction value="home" label="בית" icon={<HomeIcon />} />
+      <BottomNavigation
+        value="home"
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 500, md: 600 },
+          zIndex: 10,
+          bgcolor: 'white',
+          borderTop: '1px solid #E5E7EB'
+        }}
+      >
+        <BottomNavigationAction
+          value="home"
+          label="בית"
+          icon={<HomeIcon sx={{ fontSize: 26 }} />}
+          sx={{
+            py: 1,
+            color: '#6B7280',
+            '&.Mui-selected': {
+              color: 'primary.main',
+              '& .MuiBottomNavigationAction-label': {
+                fontWeight: 700,
+                fontSize: 12
+              }
+            }
+          }}
+        />
         <BottomNavigationAction
           value="new"
-          label="חדש"
-          icon={<Box sx={{ width: 32, height: 32, borderRadius: '10px', bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AddIcon sx={{ color: 'white', fontSize: 20 }} /></Box>}
+          label=""
+          icon={
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(20, 184, 166, 0.4)',
+                mt: -2
+              }}
+            >
+              <AddIcon sx={{ color: 'white', fontSize: 28 }} />
+            </Box>
+          }
           onClick={() => setShowMenu(true)}
+          sx={{
+            p: 0,
+            minWidth: 60
+          }}
         />
       </BottomNavigation>
     </Box>

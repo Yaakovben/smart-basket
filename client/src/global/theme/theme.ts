@@ -121,9 +121,9 @@ export const theme = createTheme({
         paper: {
           borderRadius: '24px 24px 0 0',
           margin: 0,
-          maxWidth: 430,
+          maxWidth: 600,
           width: '100%',
-          maxHeight: '75vh',
+          maxHeight: '85vh',
           position: 'fixed',
           bottom: 0
         }

@@ -36,8 +36,8 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           bottom: 0,
           m: 0,
           borderRadius: '24px 24px 0 0',
-          maxHeight: '75vh',
-          maxWidth: 430,
+          maxHeight: '85vh',
+          maxWidth: { xs: '100%', sm: 500, md: 600 },
           width: '100%'
         }
       }}

@@ -125,7 +125,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: 430, mx: 'auto', overflow: 'hidden', position: 'relative' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: '48px 20px 20px', borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -264,7 +264,24 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <AddIcon />
             </Fab>
           ) : (
-            <Button variant="contained" onClick={() => { haptic('medium'); setShowAdd(true); }} startIcon={<AddIcon />} sx={{ borderRadius: '50px', px: 2.5, py: 1.5, boxShadow: '0 6px 20px rgba(20, 184, 166, 0.5)' }}>
+            <Button
+              variant="contained"
+              onClick={() => { haptic('medium'); setShowAdd(true); }}
+              startIcon={<AddIcon sx={{ fontSize: 22 }} />}
+              sx={{
+                borderRadius: '16px',
+                px: 3,
+                py: 1.5,
+                fontSize: 15,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+                boxShadow: '0 8px 24px rgba(20, 184, 166, 0.4)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0D9488, #059669)',
+                  boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)'
+                }
+              }}
+            >
               הוסף מוצר
             </Button>
           )}
