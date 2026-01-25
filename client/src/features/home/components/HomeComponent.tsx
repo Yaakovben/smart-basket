@@ -480,28 +480,15 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             flexDirection: 'column',
             alignItems: 'center',
             gap: 0.5,
+            px: { xs: 2.5, sm: 3 },
+            py: 1,
+            borderRadius: '12px',
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            '&:active': { bgcolor: '#F0FDFA' }
           }}
         >
-          <Box
-            sx={{
-              width: { xs: 44, sm: 48 },
-              height: { xs: 44, sm: 48 },
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
-              transition: 'all 0.2s ease',
-              '&:hover': { transform: 'scale(1.05)', boxShadow: '0 6px 16px rgba(20, 184, 166, 0.4)' },
-              '&:active': { transform: 'scale(0.95)' }
-            }}
-          >
-            <AddIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: 'white' }} />
-          </Box>
-          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 600, color: 'primary.main' }}>חדש</Typography>
+          <AddIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: '#6B7280' }} />
+          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 500, color: '#6B7280' }}>חדש</Typography>
         </Box>
       </Box>
     </Box>

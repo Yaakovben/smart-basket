@@ -122,7 +122,7 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Smooth transitions */
-* {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+/* Smooth transitions - only for interactive elements */
+button, a, input, [role="button"] {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
 }
