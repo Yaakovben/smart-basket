@@ -99,38 +99,38 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 2, sm: 2.5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
               onClick={() => navigate('/profile')}
               sx={{
                 bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)',
                 cursor: 'pointer',
-                width: { xs: 48, sm: 54 },
-                height: { xs: 48, sm: 54 },
-                fontSize: { xs: 20, sm: 24 },
+                width: 44,
+                height: 44,
+                fontSize: 18,
                 border: '2px solid rgba(255,255,255,0.3)'
               }}
             >
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
             <Box>
-              <Typography sx={{ fontSize: { xs: 14, sm: 15 }, color: 'rgba(255,255,255,0.85)' }}>שלום,</Typography>
-              <Typography sx={{ fontSize: { xs: 18, sm: 20 }, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>שלום,</Typography>
+              <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.25 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton
               onClick={() => setShowNotifications(true)}
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: SIZES.iconButton.md.width,
-                height: SIZES.iconButton.md.height
+                width: 36,
+                height: 36
               }}
             >
-              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 12, fontWeight: 700, minWidth: 20, height: 20 } }}>
-                <NotificationsIcon sx={{ color: 'white', fontSize: SIZES.icon.md }} />
+              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
+                <NotificationsIcon sx={{ color: 'white', fontSize: 18 }} />
               </Badge>
             </IconButton>
             <IconButton
@@ -138,11 +138,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: SIZES.iconButton.md.width,
-                height: SIZES.iconButton.md.height
+                width: 36,
+                height: 36
               }}
             >
-              <SettingsIcon sx={{ color: 'white', fontSize: SIZES.icon.md }} />
+              <SettingsIcon sx={{ color: 'white', fontSize: 18 }} />
             </IconButton>
           </Box>
         </Box>

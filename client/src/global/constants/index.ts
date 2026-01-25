@@ -24,38 +24,40 @@ export const SWIPE_ACTIONS_WIDTH = 200;
 export const SIZES = {
   // Icon Button Sizes
   iconButton: {
-    sm: { width: 40, height: 40 },
-    md: { width: 48, height: 48 },
-    lg: { width: 56, height: 56 }
+    xs: { width: 32, height: 32 },
+    sm: { width: 36, height: 36 },
+    md: { width: 40, height: 40 },
+    lg: { width: 44, height: 44 }
   },
   // Icon Sizes (inside buttons)
   icon: {
-    sm: 20,
-    md: 24,
-    lg: 28
+    xs: 16,
+    sm: 18,
+    md: 20,
+    lg: 22
   },
   // Emoji Icon Sizes
   emoji: {
-    sm: 20,
-    md: 24,
-    lg: 32,
-    xl: 48
+    sm: 18,
+    md: 22,
+    lg: 28,
+    xl: 40
   },
   // Avatar Sizes
   avatar: {
-    sm: { width: 40, height: 40, fontSize: 18 },
-    md: { width: 56, height: 56, fontSize: 24 },
-    lg: { width: 80, height: 80, fontSize: 32 },
-    xl: { width: 100, height: 100, fontSize: 40 }
+    sm: { width: 36, height: 36, fontSize: 16 },
+    md: { width: 44, height: 44, fontSize: 20 },
+    lg: { width: 64, height: 64, fontSize: 28 },
+    xl: { width: 80, height: 80, fontSize: 36 }
   },
   // Typography Sizes
   text: {
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 22,
-    xxl: 26
+    xs: 11,
+    sm: 13,
+    md: 15,
+    lg: 17,
+    xl: 20,
+    xxl: 24
   },
   // Spacing
   spacing: {
@@ -68,9 +70,9 @@ export const SIZES = {
   // Border Radius
   radius: {
     sm: '8px',
-    md: '12px',
-    lg: '16px',
-    xl: '20px',
+    md: '10px',
+    lg: '14px',
+    xl: '18px',
     round: '50%'
   }
 } as const;

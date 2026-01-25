@@ -5,7 +5,6 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
-import { SIZES } from '../../../global/constants';
 
 interface ProfilePageProps {
   user: User;
@@ -41,21 +40,21 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         textAlign: 'center',
         flexShrink: 0
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
           <IconButton
             onClick={() => { setEditProfile(null); navigate('/'); }}
             sx={{
               color: 'white',
-              width: SIZES.iconButton.md.width,
-              height: SIZES.iconButton.md.height,
+              width: 36,
+              height: 36,
               bgcolor: 'rgba(255,255,255,0.2)',
               backdropFilter: 'blur(10px)',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
             }}
           >
-            <ArrowForwardIcon sx={{ fontSize: SIZES.icon.md }} />
+            <ArrowForwardIcon sx={{ fontSize: 18 }} />
           </IconButton>
-          <Typography sx={{ flex: 1, color: 'white', fontSize: SIZES.text.xl, fontWeight: 700 }}>
+          <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
             {editProfile ? 'עריכת פרופיל' : 'פרופיל'}
           </Typography>
           {!editProfile && (
@@ -64,12 +63,12 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: SIZES.iconButton.md.width,
-                height: SIZES.iconButton.md.height,
+                width: 36,
+                height: 36,
                 '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
               }}
             >
-              <EditIcon sx={{ fontSize: SIZES.icon.md, color: 'white' }} />
+              <EditIcon sx={{ fontSize: 18, color: 'white' }} />
             </IconButton>
           )}
         </Box>
@@ -78,8 +77,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         {!editProfile && (
           <>
             <Box sx={{
-              width: SIZES.avatar.lg.width,
-              height: SIZES.avatar.lg.height,
+              width: 64,
+              height: 64,
               borderRadius: '50%',
               bgcolor: user.avatarColor || 'rgba(255,255,255,0.2)',
               display: 'flex',
@@ -88,59 +87,59 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               mx: 'auto',
               mb: 1.5,
               border: '3px solid rgba(255,255,255,0.3)',
-              fontSize: SIZES.avatar.lg.fontSize,
+              fontSize: 26,
               color: 'white',
               fontWeight: 700
             }}>
               {user.avatarEmoji || user.name.charAt(0)}
             </Box>
-            <Typography sx={{ color: 'white', fontSize: SIZES.text.xxl, fontWeight: 700 }}>{user.name}</Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: SIZES.text.md, mt: 0.5 }}>{user.email}</Typography>
+            <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
           </>
         )}
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pt: editProfile ? 2 : { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', mt: editProfile ? 0 : -3, WebkitOverflowScrolling: 'touch' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pt: editProfile ? 2 : 2, pb: 'calc(24px + env(safe-area-inset-bottom))', mt: editProfile ? 0 : -3, WebkitOverflowScrolling: 'touch' }}>
         {editProfile ? (
-          <Paper sx={{ borderRadius: SIZES.radius.lg, p: { xs: 2.5, sm: 3 } }}>
+          <Paper sx={{ borderRadius: '14px', p: 2.5 }}>
             {/* Avatar Preview */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
               <Box sx={{
-                width: SIZES.avatar.xl.width,
-                height: SIZES.avatar.xl.height,
+                width: 72,
+                height: 72,
                 borderRadius: '50%',
                 bgcolor: editProfile.avatarColor,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: SIZES.avatar.xl.fontSize,
+                fontSize: 32,
                 color: 'white',
                 fontWeight: 700,
-                border: '4px solid #E5E7EB',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                border: '3px solid #E5E7EB',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.1)'
               }}>
                 {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
               </Box>
             </Box>
 
             {/* Color Selection */}
-            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: 'text.secondary', mb: 1.5, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
               צבע
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 2.5 }}>
               {AVATAR_COLORS.map(c => (
                 <Box
                   key={c}
                   onClick={() => setEditProfile({ ...editProfile, avatarColor: c })}
                   sx={{
-                    width: 48,
-                    height: 48,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
                     bgcolor: c,
                     border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent',
                     cursor: 'pointer',
-                    transition: 'transform 0.2s',
+                    transition: 'transform 0.15s',
                     '&:hover': { transform: 'scale(1.1)' }
                   }}
                 />
@@ -148,39 +147,40 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             </Box>
 
             {/* Emoji Selection */}
-            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: 'text.secondary', mb: 1.5, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
               אימוג׳י
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 3, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: 0.75, justifyContent: 'center', mb: 2.5, flexWrap: 'wrap' }}>
               {AVATAR_EMOJIS.map(e => (
                 <Box
                   key={e}
                   onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })}
                   sx={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: SIZES.radius.md,
+                    width: 42,
+                    height: 42,
+                    borderRadius: '10px',
                     border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB',
                     bgcolor: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white',
-                    fontSize: SIZES.emoji.lg,
+                    fontSize: 22,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.15s',
                     '&:hover': { borderColor: '#14B8A6' }
                   }}
                 >
-                  {e || <Typography sx={{ fontSize: 11, color: '#9CA3AF' }}>ללא</Typography>}
+                  {e || <Typography sx={{ fontSize: 10, color: '#9CA3AF' }}>ללא</Typography>}
                 </Box>
               ))}
             </Box>
 
             {/* Name Field */}
-            <Box sx={{ mb: 2.5 }}>
-              <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: 'text.secondary', mb: 1 }}>שם</Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>שם</Typography>
               <TextField
                 fullWidth
+                size="small"
                 value={editProfile.name}
                 onChange={e => setEditProfile({ ...editProfile, name: e.target.value })}
                 placeholder="הכנס שם"
@@ -188,10 +188,11 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             </Box>
 
             {/* Email Field */}
-            <Box sx={{ mb: 3 }}>
-              <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: 'text.secondary', mb: 1 }}>אימייל</Typography>
+            <Box sx={{ mb: 2.5 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>אימייל</Typography>
               <TextField
                 fullWidth
+                size="small"
                 value={editProfile.email}
                 onChange={e => setEditProfile({ ...editProfile, email: e.target.value })}
                 placeholder="example@email.com"
@@ -226,16 +227,16 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         ) : (
           <>
             {/* User Info Card */}
-            <Paper sx={{ borderRadius: SIZES.radius.lg, overflow: 'hidden' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-                <Box component="span" sx={{ fontSize: SIZES.emoji.md }}>👤</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: SIZES.text.md }}>שם</Typography>
-                <Typography sx={{ color: 'text.secondary', fontSize: SIZES.text.sm }}>{user.name}</Typography>
+            <Paper sx={{ borderRadius: '14px', overflow: 'hidden' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Box component="span" sx={{ fontSize: 20 }}>👤</Box>
+                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14 }}>שם</Typography>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.name}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2 }}>
-                <Box component="span" sx={{ fontSize: SIZES.emoji.md }}>✉️</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: SIZES.text.md }}>אימייל</Typography>
-                <Typography sx={{ color: 'text.secondary', fontSize: SIZES.text.sm }}>{user.email}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75 }}>
+                <Box component="span" sx={{ fontSize: 20 }}>✉️</Box>
+                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14 }}>אימייל</Typography>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.email}</Typography>
               </Box>
             </Paper>
 
@@ -244,13 +245,13 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               fullWidth
               onClick={() => setConfirmLogout(true)}
               sx={{
-                mt: 3,
-                py: 2,
-                borderRadius: SIZES.radius.md,
+                mt: 2.5,
+                py: 1.5,
+                borderRadius: '10px',
                 bgcolor: '#FEE2E2',
                 color: '#DC2626',
                 fontWeight: 600,
-                fontSize: SIZES.text.md,
+                fontSize: 14,
                 '&:hover': { bgcolor: '#FECACA' }
               }}
             >

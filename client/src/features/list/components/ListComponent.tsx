@@ -134,25 +134,25 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             sx={{
               bgcolor: 'rgba(255,255,255,0.2)',
               backdropFilter: 'blur(10px)',
-              width: { xs: 38, sm: 42 },
-              height: { xs: 38, sm: 42 }
+              width: 36,
+              height: 36
             }}
           >
-            <ArrowForwardIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
+            <ArrowForwardIcon sx={{ color: 'white', fontSize: 18 }} />
           </IconButton>
-          <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 20, sm: 22 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
-          <Box sx={{ display: 'flex', gap: { xs: 0.75, sm: 1 } }}>
+          <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
+          <Box sx={{ display: 'flex', gap: 0.75 }}>
             {isOwner && (
               <IconButton
                 onClick={handleEditList}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.2)',
                   backdropFilter: 'blur(10px)',
-                  width: { xs: 44, sm: 48 },
-                  height: { xs: 44, sm: 48 }
+                  width: 36,
+                  height: 36
                 }}
               >
-                <EditIcon sx={{ color: 'white', fontSize: { xs: 22, sm: 24 } }} />
+                <EditIcon sx={{ color: 'white', fontSize: 18 }} />
               </IconButton>
             )}
             <IconButton
@@ -160,27 +160,27 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 }
+                width: 36,
+                height: 36
               }}
             >
-              <ShareIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 26 } }} />
+              <ShareIcon sx={{ color: 'white', fontSize: 18 }} />
             </IconButton>
           </Box>
         </Box>
 
         {list.isGroup && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 }, mb: { xs: 1.5, sm: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
             <MembersButton members={allMembers} onClick={() => setShowMembers(true)} />
             <IconButton
               onClick={() => setShowInvite(true)}
               sx={{
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 },
+                width: 36,
+                height: 36,
                 bgcolor: 'rgba(255,255,255,0.2)'
               }}
             >
-              <PersonAddIcon sx={{ color: 'white', fontSize: { xs: 26, sm: 28 } }} />
+              <PersonAddIcon sx={{ color: 'white', fontSize: 20 }} />
             </IconButton>
           </Box>
         )}
