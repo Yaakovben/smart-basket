@@ -9,6 +9,7 @@ html {
   height: 100%;
   height: 100dvh;
   width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -16,18 +17,25 @@ body {
   background: #F8FAFC;
   direction: rtl;
   width: 100%;
-  min-height: 100%;
-  min-height: 100dvh;
+  height: 100%;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: none;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  overscroll-behavior-y: contain;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100%;
   min-height: 100dvh;
   width: 100%;
   position: relative;
+}
+
+/* Scrollable containers */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 @keyframes fadeInOut {
@@ -38,83 +46,29 @@ body {
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUpFade {
-  0% {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-100px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.95);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Button interactions */
 button {
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-
-button:active {
-  transform: scale(0.98);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 button:focus-visible {
@@ -122,7 +76,16 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Smooth transitions - only for interactive elements */
-button, a, input, [role="button"] {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+/* Input styling */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 16px; /* Prevents zoom on iOS */
+}
+
+/* Prevent pull-to-refresh on mobile */
+@media (max-width: 600px) {
+  body {
+    overscroll-behavior-y: none;
+  }
 }

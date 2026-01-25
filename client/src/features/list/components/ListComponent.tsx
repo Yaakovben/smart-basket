@@ -125,7 +125,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
   };
 
   return (
-    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
+    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>
@@ -223,7 +223,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: { xs: 'calc(140px + env(safe-area-inset-bottom))', sm: 'calc(120px + env(safe-area-inset-bottom))' } }} onClick={() => setOpenItemId(null)}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(100px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 }, p: { xs: '10px 14px', sm: '12px 16px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: { xs: '10px', sm: '12px' }, mb: { xs: 1.25, sm: 1.5 }, border: '1px solid #99F6E4' }}>
             <Typography sx={{ fontSize: { xs: 20, sm: 24 } }}>💡</Typography>
@@ -237,7 +237,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
         )}
 
         {items.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: { xs: '36px 16px', sm: '48px 20px' }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 'calc(100vh - 340px)', sm: 'calc(100vh - 360px)' } }}>
+          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh' }}>
             <Box sx={{ width: { xs: 80, sm: 100 }, height: { xs: 80, sm: 100 }, borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2, sm: 2.5 }, fontSize: { xs: 44, sm: 56 } }}>
               {filter === 'pending' ? '🎉' : '📦'}
             </Box>

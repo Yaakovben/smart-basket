@@ -18,7 +18,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   return (
-    <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto' }}>
+    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
       <Box sx={{
         background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
         p: editProfile
