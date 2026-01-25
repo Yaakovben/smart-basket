@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Box, TextField, Button, Typography, Tabs, Tab, Alert,
   LinearProgress, CircularProgress, InputAdornment, Paper, Divider, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import type { User } from '../../../global/types';
 import { haptic, SIZES } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -21,6 +22,7 @@ const GoogleIcon = () => (
 );
 
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
+  const { t } = useSettings();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,20 +36,20 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const [googleEmail, setGoogleEmail] = useState('');
   const [googleError, setGoogleError] = useState('');
 
-  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const isValidEmail = useCallback((e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), []);
 
-  const getPasswordStrength = (pwd: string) => {
-    if (pwd.length === 0) return { strength: 0, text: '', color: '' };
-    if (pwd.length < 4) return { strength: 33, text: 'חלשה', color: '#EF4444' };
-    if (pwd.length < 6) return { strength: 66, text: 'בינונית', color: '#F59E0B' };
-    return { strength: 100, text: 'חזקה', color: '#10B981' };
-  };
+  const pwdStrength = useMemo(() => {
+    if (mode !== 'register' || password.length === 0) return null;
+    if (password.length < 4) return { strength: 33, color: '#EF4444' };
+    if (password.length < 6) return { strength: 66, color: '#F59E0B' };
+    return { strength: 100, color: '#10B981' };
+  }, [mode, password]);
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     setError('');
-    if (!email.trim()) { setError('נא להזין אימייל'); return; }
-    if (!isValidEmail(email)) { setError('אימייל לא תקין'); return; }
-    if (!password) { setError('נא להזין סיסמה'); return; }
+    if (!email.trim()) { setError(t('enterProductName').replace('מוצר', 'אימייל')); return; }
+    if (!isValidEmail(email)) { setError(t('unknownError')); return; }
+    if (!password) { setError(t('password') + ' ' + t('enterListName').slice(-5)); return; }
 
     setLoading(true);
     haptic('light');
@@ -56,20 +58,20 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
       const user = users.find((u: User) => u.email === email && u.password === password);
       if (user) { haptic('medium'); onLogin(user); }
-      else { haptic('heavy'); setError('אימייל או סיסמה שגויים'); setLoading(false); }
+      else { haptic('heavy'); setError(t('wrongPassword')); setLoading(false); }
     }, 500);
-  };
+  }, [email, password, isValidEmail, onLogin, t]);
 
-  const handleRegister = () => {
+  const handleRegister = useCallback(() => {
     setError('');
-    if (!name.trim()) { setError('נא להזין שם'); return; }
-    if (name.trim().length < 2) { setError('שם חייב להכיל לפחות 2 תווים'); return; }
-    if (!email.trim()) { setError('נא להזין אימייל'); return; }
-    if (!isValidEmail(email)) { setError('אימייל לא תקין'); return; }
-    if (!password) { setError('נא להזין סיסמה'); return; }
-    if (password.length < 4) { setError('סיסמה חייבת להכיל לפחות 4 תווים'); return; }
-    if (!confirm) { setError('נא לאמת את הסיסמה'); return; }
-    if (password !== confirm) { setError('הסיסמאות אינן תואמות'); return; }
+    if (!name.trim()) { setError(t('enterListName')); return; }
+    if (name.trim().length < 2) { setError(t('nameTooShort')); return; }
+    if (!email.trim()) { setError(t('enterListName')); return; }
+    if (!isValidEmail(email)) { setError(t('unknownError')); return; }
+    if (!password) { setError(t('enterListName')); return; }
+    if (password.length < 4) { setError(t('nameTooShort')); return; }
+    if (!confirm) { setError(t('enterListName')); return; }
+    if (password !== confirm) { setError(t('wrongPassword')); return; }
 
     setLoading(true);
     haptic('light');
@@ -77,7 +79,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
     setTimeout(() => {
       const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
       if (users.find((u: User) => u.email === email)) {
-        haptic('heavy'); setError('אימייל זה כבר קיים במערכת'); setLoading(false); return;
+        haptic('heavy'); setError(t('alreadyInGroup')); setLoading(false); return;
       }
       const newUser = { id: `u${Date.now()}`, name: name.trim(), email, password };
       users.push(newUser);
@@ -85,22 +87,22 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       haptic('medium');
       onLogin(newUser);
     }, 500);
-  };
+  }, [name, email, password, confirm, isValidEmail, onLogin, t]);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = useCallback(() => {
     haptic('light');
     setShowGoogleForm(true);
     setGoogleName('');
     setGoogleEmail('');
     setGoogleError('');
-  };
+  }, []);
 
-  const handleGoogleSubmit = () => {
+  const handleGoogleSubmit = useCallback(() => {
     setGoogleError('');
-    if (!googleName.trim()) { setGoogleError('נא להזין שם'); return; }
-    if (googleName.trim().length < 2) { setGoogleError('שם חייב להכיל לפחות 2 תווים'); return; }
-    if (!googleEmail.trim()) { setGoogleError('נא להזין אימייל'); return; }
-    if (!isValidEmail(googleEmail)) { setGoogleError('אימייל לא תקין'); return; }
+    if (!googleName.trim()) { setGoogleError(t('enterListName')); return; }
+    if (googleName.trim().length < 2) { setGoogleError(t('nameTooShort')); return; }
+    if (!googleEmail.trim()) { setGoogleError(t('enterListName')); return; }
+    if (!isValidEmail(googleEmail)) { setGoogleError(t('unknownError')); return; }
 
     setGoogleLoading(true);
     haptic('light');
@@ -133,15 +135,13 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       setGoogleLoading(false);
       onLogin(googleUser);
     }, 800);
-  };
+  }, [googleName, googleEmail, isValidEmail, onLogin, t]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (loading || googleLoading) return;
     mode === 'login' ? handleLogin() : handleRegister();
-  };
-
-  const pwdStrength = mode === 'register' ? getPasswordStrength(password) : null;
+  }, [loading, googleLoading, mode, handleLogin, handleRegister]);
 
   return (
     <Box sx={{
@@ -187,8 +187,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           }}>
             🛒
           </Box>
-          <Typography variant="h1" sx={{ mb: 0.75, color: '#111827', fontSize: SIZES.text.xxl }}>SmartBasket</Typography>
-          <Typography color="text.secondary" sx={{ fontSize: SIZES.text.sm }}>רשימות קניות חכמות ומשותפות</Typography>
+          <Typography variant="h1" sx={{ mb: 0.75, color: 'text.primary', fontSize: SIZES.text.xxl }}>{t('appName')}</Typography>
+          <Typography color="text.secondary" sx={{ fontSize: SIZES.text.sm }}>{t('aboutDescription')}</Typography>
         </Box>
 
         {/* Tabs */}
@@ -198,7 +198,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             onChange={(_, v) => { setMode(v); setError(''); }}
             variant="fullWidth"
             sx={{
-              bgcolor: '#F3F4F6',
+              bgcolor: 'action.hover',
               borderRadius: SIZES.radius.md,
               p: 0.5,
               minHeight: 'auto',
@@ -211,15 +211,15 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 fontSize: SIZES.text.sm,
                 color: 'text.secondary',
                 '&.Mui-selected': {
-                  bgcolor: 'white',
+                  bgcolor: 'background.paper',
                   color: 'primary.main',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
                 }
               }
             }}
           >
-            <Tab value="login" label="התחברות" />
-            <Tab value="register" label="הרשמה" />
+            <Tab value="login" label={t('login')} />
+            <Tab value="register" label={t('register')} />
           </Tabs>
         </Box>
 
@@ -234,9 +234,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               mb: 2.5,
               py: 1.5,
               borderRadius: SIZES.radius.md,
-              border: '2px solid #E5E7EB',
-              bgcolor: 'white',
-              color: '#374151',
+              border: '2px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              color: 'text.primary',
               fontWeight: 600,
               fontSize: SIZES.text.md,
               textTransform: 'none',
@@ -245,8 +246,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               gap: 1.5,
               transition: 'all 0.2s ease',
               '&:hover': {
-                bgcolor: '#F9FAFB',
-                borderColor: '#D1D5DB'
+                bgcolor: 'action.hover',
+                borderColor: 'text.secondary'
               }
             }}
           >
@@ -255,7 +256,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             ) : (
               <GoogleIcon />
             )}
-            <span>{mode === 'login' ? 'התחבר עם Google' : 'הירשם עם Google'}</span>
+            <span>{mode === 'login' ? `${t('login')} Google` : `${t('register')} Google`}</span>
           </Button>
 
           {/* Divider */}
@@ -267,10 +268,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             {mode === 'register' && (
               <TextField
                 fullWidth
-                label="שם מלא"
+                label={t('name')}
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="הזן את שמך המלא"
+                placeholder={t('name')}
                 autoComplete="name"
                 disabled={loading || googleLoading}
                 sx={{ mb: 2.5 }}
@@ -283,7 +284,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             <TextField
               fullWidth
               type="email"
-              label="אימייל"
+              label={t('email')}
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="example@mail.com"
@@ -299,7 +300,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             <TextField
               fullWidth
               type="password"
-              label="סיסמה"
+              label={t('password')}
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -310,7 +311,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               }}
             />
 
-            {mode === 'register' && password && pwdStrength && (
+            {pwdStrength && (
               <Box sx={{ mt: 1.25, mb: 2.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
                 <LinearProgress
                   variant="determinate"
@@ -319,13 +320,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     flex: 1,
                     height: 6,
                     borderRadius: '4px',
-                    bgcolor: '#E5E7EB',
+                    bgcolor: 'divider',
                     '& .MuiLinearProgress-bar': { bgcolor: pwdStrength.color }
                   }}
                 />
-                <Typography sx={{ fontSize: SIZES.text.xs, color: pwdStrength.color, fontWeight: 600 }}>
-                  {pwdStrength.text}
-                </Typography>
               </Box>
             )}
 
@@ -333,7 +331,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               <TextField
                 fullWidth
                 type="password"
-                label="אימות סיסמה"
+                label={`${t('confirm')} ${t('password')}`}
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
                 placeholder="••••••••"
@@ -366,17 +364,16 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               fontSize: SIZES.text.md,
               fontWeight: 700,
               borderRadius: SIZES.radius.md,
-              ...(loading && { bgcolor: '#9CA3AF', boxShadow: 'none' })
+              ...(loading && { bgcolor: 'text.secondary', boxShadow: 'none' })
             }}
           >
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                 <CircularProgress size={18} sx={{ color: 'white' }} />
-                <span>טוען...</span>
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <span>{mode === 'login' ? 'התחבר' : 'הרשם'}</span>
+                <span>{mode === 'login' ? t('login') : t('register')}</span>
                 <span>←</span>
               </Box>
             )}
@@ -402,7 +399,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             width: 56,
             height: 56,
             borderRadius: '14px',
-            bgcolor: '#F3F4F6',
+            bgcolor: 'action.hover',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -411,11 +408,11 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           }}>
             <GoogleIcon />
           </Box>
-          <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>
-            התחברות עם Google
+          <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary' }}>
+            {t('login')} Google
           </Typography>
-          <Typography sx={{ fontSize: 13, color: '#6B7280', mt: 0.5 }}>
-            הזן את הפרטים שלך להמשך
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5 }}>
+            {t('shareDetails')}
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ px: 3, pb: 3, pt: 1 }}>
@@ -426,10 +423,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           )}
           <TextField
             fullWidth
-            label="שם מלא"
+            label={t('name')}
             value={googleName}
             onChange={e => setGoogleName(e.target.value)}
-            placeholder="הזן את שמך המלא"
+            placeholder={t('name')}
             disabled={googleLoading}
             sx={{ mb: 2 }}
             InputProps={{
@@ -439,7 +436,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           <TextField
             fullWidth
             type="email"
-            label="אימייל Google"
+            label={`${t('email')} Google`}
             value={googleEmail}
             onChange={e => setGoogleEmail(e.target.value)}
             placeholder="example@gmail.com"
@@ -457,7 +454,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               disabled={googleLoading}
               sx={{ flex: 1, borderRadius: SIZES.radius.md }}
             >
-              ביטול
+              {t('cancel')}
             </Button>
             <Button
               variant="contained"
@@ -466,12 +463,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               sx={{ flex: 2, borderRadius: SIZES.radius.md }}
             >
               {googleLoading ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={18} sx={{ color: 'white' }} />
-                  <span>מתחבר...</span>
-                </Box>
+                <CircularProgress size={18} sx={{ color: 'white' }} />
               ) : (
-                'המשך'
+                t('confirm')
               )}
             </Button>
           </Box>

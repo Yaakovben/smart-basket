@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField, Button, Paper } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { COMMON_STYLES, SIZES } from '../../../global/helpers';
 
 interface ProfilePageProps {
   user: User;
@@ -16,20 +17,46 @@ interface ProfilePageProps {
 const AVATAR_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
 const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'];
 
+// Reusable styles
+const glassButtonSx = {
+  ...COMMON_STYLES.glassButton,
+  ...SIZES.iconButton.sm,
+  color: 'white'
+};
+
+const labelSx = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'text.secondary',
+  mb: 0.75
+};
+
 export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
   const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
-  const openEditProfile = () => {
+  const openEditProfile = useCallback(() => {
     setEditProfile({
       name: user.name,
       email: user.email,
       avatarColor: user.avatarColor || '#14B8A6',
       avatarEmoji: user.avatarEmoji || ''
     });
-  };
+  }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
+
+  const handleSave = useCallback(() => {
+    if (editProfile) {
+      onUpdateUser(editProfile);
+      setEditProfile(null);
+    }
+  }, [editProfile, onUpdateUser]);
+
+  const handleLogout = useCallback(() => {
+    onLogout();
+    navigate('/login');
+  }, [onLogout, navigate]);
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
@@ -43,34 +70,15 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
-          <IconButton
-            onClick={() => { setEditProfile(null); navigate('/'); }}
-            sx={{
-              color: 'white',
-              width: 36,
-              height: 36,
-              bgcolor: 'rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(10px)',
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-            }}
-          >
-            <ArrowForwardIcon sx={{ fontSize: 18 }} />
+          <IconButton onClick={() => { setEditProfile(null); navigate('/'); }} sx={glassButtonSx}>
+            <ArrowForwardIcon sx={{ fontSize: SIZES.icon.sm }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
             {editProfile ? t('editProfile') : t('profile')}
           </Typography>
           {!editProfile && (
-            <IconButton
-              onClick={openEditProfile}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(10px)',
-                width: 36,
-                height: 36,
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-              }}
-            >
-              <EditIcon sx={{ fontSize: 18, color: 'white' }} />
+            <IconButton onClick={openEditProfile} sx={glassButtonSx}>
+              <EditIcon sx={{ fontSize: SIZES.icon.sm }} />
             </IconButton>
           )}
         </Box>
@@ -118,7 +126,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 fontSize: 32,
                 color: 'white',
                 fontWeight: 700,
-                border: '3px solid #E5E7EB',
+                border: '3px solid',
+                borderColor: 'divider',
                 boxShadow: '0 6px 20px rgba(0,0,0,0.1)'
               }}>
                 {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
@@ -126,9 +135,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             </Box>
 
             {/* Color Selection */}
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
-              צבע
-            </Typography>
+            <Typography sx={{ ...labelSx, textAlign: 'center', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 2.5 }}>
               {AVATAR_COLORS.map(c => (
                 <Box
@@ -139,7 +146,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                     height: 36,
                     borderRadius: '50%',
                     bgcolor: c,
-                    border: editProfile.avatarColor === c ? '3px solid #111' : '3px solid transparent',
+                    border: editProfile.avatarColor === c ? '3px solid' : '3px solid transparent',
+                    borderColor: editProfile.avatarColor === c ? 'text.primary' : 'transparent',
                     cursor: 'pointer',
                     transition: 'transform 0.15s',
                     '&:hover': { transform: 'scale(1.1)' }
@@ -149,9 +157,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             </Box>
 
             {/* Emoji Selection */}
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
-              אימוג׳י
-            </Typography>
+            <Typography sx={{ ...labelSx, textAlign: 'center', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, justifyContent: 'center', mb: 2.5, flexWrap: 'wrap' }}>
               {AVATAR_EMOJIS.map(e => (
                 <Box
@@ -161,37 +167,38 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                     width: 42,
                     height: 42,
                     borderRadius: '10px',
-                    border: editProfile.avatarEmoji === e ? '2px solid #14B8A6' : '1.5px solid #E5E7EB',
-                    bgcolor: editProfile.avatarEmoji === e ? '#F0FDFA' : 'white',
+                    border: editProfile.avatarEmoji === e ? '2px solid' : '1.5px solid',
+                    borderColor: editProfile.avatarEmoji === e ? 'primary.main' : 'divider',
+                    bgcolor: editProfile.avatarEmoji === e ? 'primary.light' : 'background.paper',
                     fontSize: 22,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     transition: 'all 0.15s',
-                    '&:hover': { borderColor: '#14B8A6' }
+                    '&:hover': { borderColor: 'primary.main' }
                   }}
                 >
-                  {e || <Typography sx={{ fontSize: 10, color: '#9CA3AF' }}>ללא</Typography>}
+                  {e || <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>-</Typography>}
                 </Box>
               ))}
             </Box>
 
             {/* Name Field */}
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>שם</Typography>
+              <Typography sx={labelSx}>{t('name')}</Typography>
               <TextField
                 fullWidth
                 size="small"
                 value={editProfile.name}
                 onChange={e => setEditProfile({ ...editProfile, name: e.target.value })}
-                placeholder="הכנס שם"
+                placeholder={t('name')}
               />
             </Box>
 
             {/* Email Field */}
             <Box sx={{ mb: 2.5 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>אימייל</Typography>
+              <Typography sx={labelSx}>{t('email')}</Typography>
               <TextField
                 fullWidth
                 size="small"
@@ -206,23 +213,17 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               <Button
                 variant="outlined"
                 onClick={() => setEditProfile(null)}
-                sx={{
-                  flex: 1,
-                  borderColor: '#E5E7EB',
-                  borderWidth: 2,
-                  color: 'text.primary',
-                  '&:hover': { borderColor: '#E5E7EB', borderWidth: 2, bgcolor: '#F9FAFB' }
-                }}
+                sx={{ flex: 1 }}
               >
-                ביטול
+                {t('cancel')}
               </Button>
               <Button
                 variant="contained"
                 fullWidth
                 sx={{ flex: 2 }}
-                onClick={() => { onUpdateUser(editProfile); setEditProfile(null); }}
+                onClick={handleSave}
               >
-                שמור שינויים
+                {t('saveChanges')}
               </Button>
             </Box>
           </Paper>
@@ -232,12 +233,12 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <Paper sx={{ borderRadius: '14px', overflow: 'hidden' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, borderBottom: '1px solid', borderColor: 'divider' }}>
                 <Box component="span" sx={{ fontSize: 20 }}>👤</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14 }}>שם</Typography>
+                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14, color: 'text.primary' }}>{t('name')}</Typography>
                 <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.name}</Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75 }}>
                 <Box component="span" sx={{ fontSize: 20 }}>✉️</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14 }}>אימייל</Typography>
+                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14, color: 'text.primary' }}>{t('email')}</Typography>
                 <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.email}</Typography>
               </Box>
             </Paper>
@@ -250,14 +251,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 mt: 2.5,
                 py: 1.5,
                 borderRadius: '10px',
-                bgcolor: '#FEE2E2',
-                color: '#DC2626',
+                bgcolor: 'error.light',
+                color: 'error.main',
                 fontWeight: 600,
                 fontSize: 14,
-                '&:hover': { bgcolor: '#FECACA' }
+                '&:hover': { bgcolor: 'error.light', opacity: 0.8 }
               }}
             >
-              התנתק
+              {t('logout')}
             </Button>
           </>
         )}
@@ -266,10 +267,10 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
       {/* Confirm Logout Modal */}
       {confirmLogout && (
         <ConfirmModal
-          title="התנתקות"
-          message="להתנתק מהחשבון?"
-          confirmText="התנתק"
-          onConfirm={() => { onLogout(); navigate('/login'); }}
+          title={t('logout')}
+          message={t('logoutConfirm')}
+          confirmText={t('logout')}
+          onConfirm={handleLogout}
           onCancel={() => setConfirmLogout(false)}
         />
       )}

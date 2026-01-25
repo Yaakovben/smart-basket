@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
@@ -16,6 +16,41 @@ import type { List, Member, Notification, Product, User } from '../../../global/
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+
+// Reusable styles
+const glassButtonSx = {
+  bgcolor: 'rgba(255,255,255,0.2)',
+  backdropFilter: 'blur(10px)',
+  width: 36,
+  height: 36
+};
+
+const iconSelectSx = (isSelected: boolean) => ({
+  width: 44,
+  height: 44,
+  borderRadius: '10px',
+  border: isSelected ? '2px solid' : '1.5px solid',
+  borderColor: isSelected ? 'primary.main' : 'divider',
+  bgcolor: isSelected ? 'rgba(20, 184, 166, 0.08)' : 'transparent',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 20,
+  cursor: 'pointer',
+  transition: 'all 0.15s',
+  '&:hover': { borderColor: 'primary.main' }
+});
+
+const colorSelectSx = (isSelected: boolean) => ({
+  width: 36,
+  height: 36,
+  borderRadius: '50%',
+  border: isSelected ? '3px solid' : '3px solid transparent',
+  borderColor: isSelected ? 'text.primary' : 'transparent',
+  cursor: 'pointer',
+  transition: 'transform 0.15s',
+  '&:hover': { transform: 'scale(1.1)' }
+});
 
 interface HomePageProps {
   lists: List[];
@@ -48,25 +83,35 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   const [joinError, setJoinError] = useState('');
   const [createError, setCreateError] = useState('');
 
-  const userLists = lists.filter((l: List) => {
-    if (l.isGroup) {
-      return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
-    }
+  // Memoized computed values
+  const userLists = useMemo(() => lists.filter((l: List) => {
+    if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
     return l.owner.id === user.id;
-  });
+  }), [lists, user.id]);
 
-  const myNotifications = userLists
+  const { my, groups } = useMemo(() => ({
+    my: userLists.filter((l: List) => !l.isGroup),
+    groups: userLists.filter((l: List) => l.isGroup)
+  }), [userLists]);
+
+  const myNotifications = useMemo(() => userLists
     .filter((l: List) => l.isGroup && (l.notifications?.length ?? 0) > 0)
-    .flatMap((l: List) => (l.notifications || []).filter((n: Notification) => !n.read && n.userId !== user.id).map((n: Notification) => ({ ...n, listName: l.name, listId: l.id })));
-  const unreadCount = myNotifications.length;
-  const my = userLists.filter((l: List) => !l.isGroup);
-  const groups = userLists.filter((l: List) => l.isGroup);
-  const display = (tab === 'all' ? userLists : tab === 'my' ? my : groups).filter((l: List) => l.name.includes(search));
+    .flatMap((l: List) => (l.notifications || [])
+      .filter((n: Notification) => !n.read && n.userId !== user.id)
+      .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }))
+    ), [userLists, user.id]);
 
-  const handleCreate = (isGroup: boolean) => {
+  const unreadCount = myNotifications.length;
+
+  const display = useMemo(() => {
+    const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
+    return search ? base.filter((l: List) => l.name.includes(search)) : base;
+  }, [tab, userLists, my, groups, search]);
+
+  const handleCreate = useCallback((isGroup: boolean) => {
     setCreateError('');
-    if (!newL.name.trim()) { setCreateError('נא להזין שם לרשימה'); return; }
-    if (newL.name.length < 2) { setCreateError('השם חייב להכיל לפחות 2 תווים'); return; }
+    if (!newL.name.trim()) { setCreateError(t('enterListName')); return; }
+    if (newL.name.length < 2) { setCreateError(t('nameTooShort')); return; }
     onCreateList({
       id: `l${Date.now()}`,
       ...newL,
@@ -80,22 +125,22 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     setNewL({ name: '', icon: isGroup ? '👨‍👩‍👧‍👦' : '🛒', color: '#14B8A6' });
     setShowCreate(false);
     setShowCreateGroup(false);
-  };
+  }, [newL, onCreateList, user, t]);
 
-  const handleJoin = () => {
+  const handleJoin = useCallback(() => {
     setJoinError('');
-    if (!joinCode.trim() || !joinPass.trim()) { setJoinError('נא למלא קוד וסיסמה'); return; }
+    if (!joinCode.trim() || !joinPass.trim()) { setJoinError(t('enterCodeAndPassword')); return; }
     const result = onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
     if (result.success) { setShowJoin(false); setJoinCode(''); setJoinPass(''); }
-    else { setJoinError(result.error || 'שגיאה לא ידועה'); }
-  };
+    else { setJoinError(result.error || t('unknownError')); }
+  }, [joinCode, joinPass, onJoinGroup, t]);
 
-  const openOption = (option: string) => {
+  const openOption = useCallback((option: string) => {
     setShowMenu(false);
     if (option === 'private') setShowCreate(true);
-    if (option === 'group') setShowCreateGroup(true);
-    if (option === 'join') setShowJoin(true);
-  };
+    else if (option === 'group') setShowCreateGroup(true);
+    else if (option === 'join') setShowJoin(true);
+  }, []);
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
@@ -122,28 +167,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <IconButton
-              onClick={() => setShowNotifications(true)}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(10px)',
-                width: 36,
-                height: 36
-              }}
-            >
+            <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
               <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
                 <NotificationsIcon sx={{ color: 'white', fontSize: 18 }} />
               </Badge>
             </IconButton>
-            <IconButton
-              onClick={() => navigate('/settings')}
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(10px)',
-                width: 36,
-                height: 36
-              }}
-            >
+            <IconButton onClick={() => navigate('/settings')} sx={glassButtonSx}>
               <SettingsIcon sx={{ color: 'white', fontSize: 18 }} />
             </IconButton>
           </Box>
@@ -319,21 +348,19 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {LIST_ICONS.map(i => (
-                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 44, height: 44, borderRadius: '10px', border: newL.icon === i ? '2px solid' : '1.5px solid', borderColor: newL.icon === i ? 'primary.main' : 'divider', bgcolor: newL.icon === i ? 'rgba(20, 184, 166, 0.08)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', transition: 'all 0.15s', '&:hover': { borderColor: 'primary.main' } }}>
-                  {i}
-                </Box>
+                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>צבע</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid' : '3px solid transparent', borderColor: newL.color === c ? 'text.primary' : 'transparent', cursor: 'pointer', transition: 'transform 0.15s', '&:hover': { transform: 'scale(1.1)' } }} />
+                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(false)} sx={{ py: 1.25, fontSize: 15 }}>צור רשימה</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(false)} sx={{ py: 1.25, fontSize: 15 }}>{t('createList')}</Button>
         </Modal>
       )}
 
@@ -365,21 +392,19 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {GROUP_ICONS.map(i => (
-                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 44, height: 44, borderRadius: '10px', border: newL.icon === i ? '2px solid' : '1.5px solid', borderColor: newL.icon === i ? 'primary.main' : 'divider', bgcolor: newL.icon === i ? 'rgba(20, 184, 166, 0.08)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', transition: 'all 0.15s', '&:hover': { borderColor: 'primary.main' } }}>
-                  {i}
-                </Box>
+                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>צבע</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid' : '3px solid transparent', borderColor: newL.color === c ? 'text.primary' : 'transparent', cursor: 'pointer', transition: 'transform 0.15s', '&:hover': { transform: 'scale(1.1)' } }} />
+                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(true)} sx={{ py: 1.25, fontSize: 15 }}>צור קבוצה</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(true)} sx={{ py: 1.25, fontSize: 15 }}>{t('createGroup')}</Button>
         </Modal>
       )}
 
@@ -461,23 +486,21 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Box key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={{ width: 44, height: 44, borderRadius: '10px', border: editList.icon === i ? '2px solid' : '1.5px solid', borderColor: editList.icon === i ? 'primary.main' : 'divider', bgcolor: editList.icon === i ? 'rgba(20, 184, 166, 0.08)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', transition: 'all 0.15s', '&:hover': { borderColor: 'primary.main' } }}>
-                  {i}
-                </Box>
+                <Box key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={iconSelectSx(editList.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>צבע</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setEditList({ ...editList, color: c })} sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: c, border: editList.color === c ? '3px solid' : '3px solid transparent', borderColor: editList.color === c ? 'text.primary' : 'transparent', cursor: 'pointer', transition: 'transform 0.15s', '&:hover': { transform: 'scale(1.1)' } }} />
+                <Box key={c} onClick={() => setEditList({ ...editList, color: c })} sx={{ ...colorSelectSx(editList.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.25, fontSize: 15 }}>שמור שינויים</Button>
+          <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
           <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1, bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, '&:hover': { bgcolor: '#FECACA' } }}>
-            מחק {editList.isGroup ? 'קבוצה' : 'רשימה'}
+            {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
         </Modal>
       )}
