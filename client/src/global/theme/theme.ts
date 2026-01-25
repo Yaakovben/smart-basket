@@ -1,50 +1,85 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles';
 import type { ThemeMode, Language } from '../types';
 
+// ===== Color Palette =====
+const COLORS = {
+  primary: {
+    main: '#14B8A6',
+    dark: '#0D9488',
+    light: '#5EEAD4'
+  },
+  secondary: {
+    main: '#10B981',
+    dark: '#059669'
+  },
+  error: {
+    main: '#EF4444',
+    dark: '#DC2626'
+  },
+  warning: {
+    main: '#F59E0B',
+    dark: '#D97706'
+  },
+  success: {
+    main: '#22C55E',
+    dark: '#16A34A'
+  },
+  // Light mode colors
+  light: {
+    background: '#F8FAFC',
+    paper: '#FFFFFF',
+    card: '#FFFFFF',
+    text: '#1F2937',
+    textSecondary: '#6B7280',
+    divider: '#F3F4F6',
+    border: '#E5E7EB',
+    inputBg: '#FFFFFF',
+    headerGradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+    cardShadow: '0 2px 8px rgba(0,0,0,0.04)'
+  },
+  // Dark mode colors
+  dark: {
+    background: '#0F172A',
+    paper: '#1E293B',
+    card: '#1E293B',
+    text: '#F1F5F9',
+    textSecondary: '#94A3B8',
+    divider: '#334155',
+    border: '#475569',
+    inputBg: '#0F172A',
+    headerGradient: 'linear-gradient(135deg, #0D9488, #047857)',
+    cardShadow: '0 2px 8px rgba(0,0,0,0.3)'
+  }
+} as const;
+
 const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
   const isRtl = language === 'he';
   const isDark = mode === 'dark';
+  const colors = isDark ? COLORS.dark : COLORS.light;
 
   return {
     direction: isRtl ? 'rtl' : 'ltr',
 
     palette: {
       mode,
-      primary: {
-        main: '#14B8A6',
-        dark: '#0D9488',
-        light: '#5EEAD4',
-        contrastText: '#fff'
-      },
-      secondary: {
-        main: '#10B981',
-        dark: '#059669'
-      },
-      error: {
-        main: '#EF4444',
-        dark: '#DC2626'
-      },
-      warning: {
-        main: '#F59E0B',
-        dark: '#D97706'
-      },
-      success: {
-        main: '#22C55E',
-        dark: '#16A34A'
-      },
+      primary: { ...COLORS.primary, contrastText: '#fff' },
+      secondary: COLORS.secondary,
+      error: COLORS.error,
+      warning: COLORS.warning,
+      success: COLORS.success,
       background: {
-        default: isDark ? '#0F172A' : '#F8FAFC',
-        paper: isDark ? '#1E293B' : '#FFFFFF'
+        default: colors.background,
+        paper: colors.paper
       },
       text: {
-        primary: isDark ? '#F1F5F9' : '#1F2937',
-        secondary: isDark ? '#94A3B8' : '#6B7280'
+        primary: colors.text,
+        secondary: colors.textSecondary
       },
-      divider: isDark ? '#334155' : '#F3F4F6'
+      divider: colors.divider
     },
 
     typography: {
-      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       h1: { fontSize: '24px', fontWeight: 700 },
       h2: { fontSize: '18px', fontWeight: 700 },
       body1: { fontSize: '15px' },
@@ -52,24 +87,33 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
       button: { fontSize: '15px', fontWeight: 600, textTransform: 'none' }
     },
 
-    shape: {
-      borderRadius: 12
-    },
+    shape: { borderRadius: 12 },
 
     components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            backgroundColor: colors.background,
+            color: colors.text,
+            transition: 'background-color 0.3s ease, color 0.3s ease'
+          }
+        }
+      },
       MuiButton: {
         styleOverrides: {
           root: {
             borderRadius: 14,
             minHeight: 48,
             boxShadow: 'none',
+            transition: 'all 0.2s ease',
             '&:hover': { boxShadow: 'none' }
           },
           containedPrimary: {
             background: 'linear-gradient(135deg, #14B8A6, #10B981)',
             boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
             '&:hover': {
-              background: 'linear-gradient(135deg, #0D9488, #059669)'
+              background: 'linear-gradient(135deg, #0D9488, #059669)',
+              boxShadow: '0 6px 16px rgba(20, 184, 166, 0.4)'
             }
           },
           containedError: {
@@ -78,15 +122,24 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             '&:hover': {
               background: 'linear-gradient(135deg, #DC2626, #B91C1C)'
             }
+          },
+          outlined: {
+            borderColor: colors.border,
+            color: colors.text,
+            '&:hover': {
+              borderColor: COLORS.primary.main,
+              backgroundColor: isDark ? 'rgba(20, 184, 166, 0.1)' : 'rgba(20, 184, 166, 0.05)'
+            }
           }
         }
       },
       MuiIconButton: {
         styleOverrides: {
           root: {
-            width: 44,
-            height: 44,
-            borderRadius: 14
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            transition: 'all 0.2s ease'
           }
         }
       },
@@ -96,21 +149,29 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             '& .MuiOutlinedInput-root': {
               borderRadius: 12,
               minHeight: 52,
-              backgroundColor: isDark ? '#1E293B' : undefined,
+              backgroundColor: colors.inputBg,
+              transition: 'all 0.2s ease',
               '& fieldset': {
                 borderWidth: 2,
-                borderColor: isDark ? '#475569' : '#E5E7EB'
+                borderColor: colors.border,
+                transition: 'border-color 0.2s ease'
               },
               '&:hover fieldset': {
-                borderColor: '#14B8A6'
+                borderColor: COLORS.primary.main
               },
               '&.Mui-focused fieldset': {
-                borderColor: '#14B8A6'
+                borderColor: COLORS.primary.main
               }
             },
             '& .MuiInputBase-input': {
               textAlign: isRtl ? 'right' : 'left',
-              color: isDark ? '#F1F5F9' : undefined
+              color: colors.text
+            },
+            '& .MuiInputLabel-root': {
+              color: colors.textSecondary
+            },
+            '& .MuiInputAdornment-root': {
+              color: colors.textSecondary
             }
           }
         }
@@ -119,16 +180,18 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
         styleOverrides: {
           root: {
             borderRadius: 16,
-            boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.04)',
-            border: `1px solid ${isDark ? '#334155' : '#F1F5F9'}`,
-            backgroundColor: isDark ? '#1E293B' : '#FFFFFF'
+            boxShadow: colors.cardShadow,
+            border: `1px solid ${colors.divider}`,
+            backgroundColor: colors.card,
+            transition: 'all 0.2s ease'
           }
         }
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: isDark ? '#1E293B' : '#FFFFFF'
+            backgroundColor: colors.paper,
+            transition: 'background-color 0.3s ease'
           }
         }
       },
@@ -142,7 +205,7 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             maxHeight: '85vh',
             position: 'fixed',
             bottom: 0,
-            backgroundColor: isDark ? '#1E293B' : '#FFFFFF'
+            backgroundColor: colors.paper
           }
         }
       },
@@ -164,9 +227,9 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             height: 'auto',
             padding: '4px 0',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-            borderTop: `1px solid ${isDark ? '#334155' : '#F3F4F6'}`,
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
-            backgroundColor: isDark ? '#1E293B' : '#FFFFFF'
+            borderTop: `1px solid ${colors.divider}`,
+            boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.2)' : '0 -2px 10px rgba(0,0,0,0.05)',
+            backgroundColor: colors.paper
           }
         }
       },
@@ -176,8 +239,9 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             padding: '6px 14px',
             borderRadius: 10,
             minWidth: 'auto',
+            color: colors.textSecondary,
             '&.Mui-selected': {
-              color: '#14B8A6'
+              color: COLORS.primary.main
             }
           },
           label: {
@@ -191,7 +255,7 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
       MuiTabs: {
         styleOverrides: {
           root: {
-            background: 'rgba(255,255,255,0.15)',
+            background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.15)',
             borderRadius: 10,
             padding: 4,
             minHeight: 'auto'
@@ -209,11 +273,12 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             minHeight: 'auto',
             fontSize: 13,
             fontWeight: 600,
-            color: 'rgba(255,255,255,0.9)',
+            color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.9)',
             textTransform: 'none',
+            transition: 'all 0.2s ease',
             '&.Mui-selected': {
-              background: isDark ? '#1E293B' : 'white',
-              color: '#14B8A6'
+              background: colors.paper,
+              color: COLORS.primary.main
             }
           }
         }
@@ -251,7 +316,7 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             '&.Mui-checked': {
               transform: 'translateX(20px)',
               '& + .MuiSwitch-track': {
-                backgroundColor: '#14B8A6',
+                backgroundColor: COLORS.primary.main,
                 opacity: 1
               }
             }
@@ -259,12 +324,44 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
           thumb: {
             width: 24,
             height: 24,
-            backgroundColor: '#fff'
+            backgroundColor: '#fff',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
           },
           track: {
             borderRadius: 16,
-            backgroundColor: isDark ? '#475569' : '#E5E7EB',
-            opacity: 1
+            backgroundColor: colors.border,
+            opacity: 1,
+            transition: 'background-color 0.2s ease'
+          }
+        }
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12
+          },
+          standardError: {
+            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEF2F2',
+            color: isDark ? '#FCA5A5' : '#DC2626'
+          },
+          standardSuccess: {
+            backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : '#F0FDF4',
+            color: isDark ? '#86EFAC' : '#16A34A'
+          }
+        }
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            borderRadius: 4,
+            backgroundColor: colors.border
+          }
+        }
+      },
+      MuiDivider: {
+        styleOverrides: {
+          root: {
+            borderColor: colors.divider
           }
         }
       }
@@ -275,6 +372,9 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
 export const createAppTheme = (mode: ThemeMode, language: Language) => {
   return createTheme(getBaseTheme(mode, language));
 };
+
+// Export colors for use in components
+export const THEME_COLORS = COLORS;
 
 // Default theme for backward compatibility
 export const theme = createTheme(getBaseTheme('light', 'he'));
