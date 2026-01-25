@@ -71,8 +71,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             }}>
               {user.avatarEmoji || user.name.charAt(0)}
             </Box>
-            <Typography sx={{ color: 'white', fontSize: { xs: 16, sm: 18 }, fontWeight: 700 }}>{user.name}</Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: { xs: 12, sm: 13 }, mt: 0.25 }}>{user.email}</Typography>
+            <Typography sx={{ color: 'white', fontSize: { xs: 22, sm: 24 }, fontWeight: 700 }}>{user.name}</Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: { xs: 14, sm: 15 }, mt: 0.25 }}>{user.email}</Typography>
           </>
         )}
       </Box>

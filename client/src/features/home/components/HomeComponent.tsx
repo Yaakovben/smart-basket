@@ -163,15 +163,15 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: { xs: '8px', sm: '10px' },
-            p: { xs: 0.4, sm: 0.5 },
+            borderRadius: { xs: '10px', sm: '12px' },
+            p: { xs: 0.5, sm: 0.6 },
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: { xs: '6px', sm: '8px' },
-              py: { xs: 1, sm: 1.25 },
+              borderRadius: { xs: '8px', sm: '10px' },
+              py: { xs: 1.25, sm: 1.5 },
               minHeight: 'auto',
-              fontSize: { xs: 12, sm: 13 },
+              fontSize: { xs: 15, sm: 16 },
               fontWeight: 600,
               color: 'rgba(255,255,255,0.9)',
               textTransform: 'none',
@@ -234,8 +234,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 36, height: 36 }}>
-                  <EditIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 44, height: 44 }}>
+                  <EditIcon sx={{ fontSize: 22, color: '#6B7280' }} />
                 </IconButton>
               )}
             </Card>

@@ -66,6 +66,26 @@ export interface List {
 // ===== Toast =====
 export type ToastType = "success" | "error" | "info" | "warning";
 
+// ===== Settings =====
+export type Language = "he" | "en" | "ru";
+export type ThemeMode = "light" | "dark";
+
+export interface NotificationSettings {
+  enabled: boolean;
+  groupJoin: boolean;
+  groupLeave: boolean;
+  productAdd: boolean;
+  productDelete: boolean;
+  productEdit: boolean;
+  productPurchase: boolean;
+}
+
+export interface AppSettings {
+  theme: ThemeMode;
+  language: Language;
+  notifications: NotificationSettings;
+}
+
 // ===== Global Component Props =====
 export interface ConfirmModalProps {
   title: string;

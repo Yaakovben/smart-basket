@@ -16,7 +16,9 @@ export {
   SWIPE_ACTIONS_WIDTH,
   STORAGE_KEYS,
   TOAST_CONFIG,
-  MENU_OPTIONS
+  MENU_OPTIONS,
+  DEFAULT_SETTINGS,
+  LANGUAGES
 } from '../constants';
 
 // List operations helpers

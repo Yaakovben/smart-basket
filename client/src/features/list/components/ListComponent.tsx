@@ -140,7 +140,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           >
             <ArrowForwardIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
           </IconButton>
-          <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 16, sm: 18 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
+          <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 20, sm: 22 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
           <Box sx={{ display: 'flex', gap: { xs: 0.75, sm: 1 } }}>
             {isOwner && (
               <IconButton
@@ -148,11 +148,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.2)',
                   backdropFilter: 'blur(10px)',
-                  width: { xs: 38, sm: 42 },
-                  height: { xs: 38, sm: 42 }
+                  width: { xs: 44, sm: 48 },
+                  height: { xs: 44, sm: 48 }
                 }}
               >
-                <EditIcon sx={{ color: 'white', fontSize: { xs: 16, sm: 18 } }} />
+                <EditIcon sx={{ color: 'white', fontSize: { xs: 22, sm: 24 } }} />
               </IconButton>
             )}
             <IconButton
@@ -160,11 +160,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: { xs: 38, sm: 42 },
-                height: { xs: 38, sm: 42 }
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 }
               }}
             >
-              <ShareIcon sx={{ color: 'white', fontSize: { xs: 18, sm: 20 } }} />
+              <ShareIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 26 } }} />
             </IconButton>
           </Box>
         </Box>
@@ -175,12 +175,12 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <IconButton
               onClick={() => setShowInvite(true)}
               sx={{
-                width: { xs: 36, sm: 40 },
-                height: { xs: 36, sm: 40 },
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 },
                 bgcolor: 'rgba(255,255,255,0.2)'
               }}
             >
-              <PersonAddIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
+              <PersonAddIcon sx={{ color: 'white', fontSize: { xs: 26, sm: 28 } }} />
             </IconButton>
           </Box>
         )}
@@ -201,15 +201,15 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: { xs: '8px', sm: '10px' },
-            p: { xs: 0.4, sm: 0.5 },
+            borderRadius: { xs: '10px', sm: '12px' },
+            p: { xs: 0.5, sm: 0.6 },
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: { xs: '6px', sm: '8px' },
-              py: { xs: 1, sm: 1.25 },
+              borderRadius: { xs: '8px', sm: '10px' },
+              py: { xs: 1.25, sm: 1.5 },
               minHeight: 'auto',
-              fontSize: { xs: 12, sm: 13 },
+              fontSize: { xs: 15, sm: 16 },
               fontWeight: 600,
               color: 'rgba(255,255,255,0.9)',
               textTransform: 'none',

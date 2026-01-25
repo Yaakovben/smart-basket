@@ -58,8 +58,31 @@ export const STORAGE_KEYS = {
   USERS: 'sb_users',
   CURRENT_USER: 'sb_current_user',
   LISTS: 'sb_lists',
-  HINT_SEEN: 'sb_hint_seen'
+  HINT_SEEN: 'sb_hint_seen',
+  SETTINGS: 'sb_settings'
 } as const;
+
+// ===== Default Settings =====
+export const DEFAULT_SETTINGS = {
+  theme: 'light' as const,
+  language: 'he' as const,
+  notifications: {
+    enabled: true,
+    groupJoin: true,
+    groupLeave: true,
+    productAdd: true,
+    productDelete: true,
+    productEdit: true,
+    productPurchase: true
+  }
+};
+
+// ===== Languages =====
+export const LANGUAGES = [
+  { code: 'he', name: 'עברית', nameEn: 'Hebrew' },
+  { code: 'en', name: 'English', nameEn: 'English' },
+  { code: 'ru', name: 'Русский', nameEn: 'Russian' }
+] as const;
 
 // ===== Toast Config =====
 export const TOAST_CONFIG: Record<ToastType, { icon: string; bg: string; shadow: string }> = {
