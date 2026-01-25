@@ -120,12 +120,17 @@ export const validateJoinGroup = (
  */
 export const generateInviteMessage = (list: List): string => {
   const lines = [
-    `הצטרף לקבוצת הקניות *${list.name}*`,
+    `🛒 הצטרף לקבוצת הקניות [${list.name}]`,
     ``,
-    `קוד: *${list.inviteCode}*`,
-    `סיסמה: *${list.password}*`,
+    `📋 קוד קבוצה:`,
+    `${list.inviteCode}`,
     ``,
-    `נשלח מ-SmartBasket`
+    `🔑 סיסמה:`,
+    `${list.password}`,
+    ``,
+    `💡 העתק את הקוד והסיסמה והזן באפליקציה`,
+    ``,
+    `📱 SmartBasket`
   ];
   return lines.join('\n');
 };
@@ -137,20 +142,22 @@ export const generateShareListMessage = (list: List): string => {
   const pendingProducts = list.products.filter((p: Product) => !p.isPurchased);
 
   const lines: string[] = [
-    `*${list.name}*`,
+    `🛒 רשימת קניות [${list.name}]`,
     ``
   ];
 
   if (pendingProducts.length > 0) {
+    lines.push(`📝 ${pendingProducts.length} פריטים:`);
+    lines.push(``);
     pendingProducts.forEach((p: Product) => {
-      lines.push(`• ${p.name} (${p.quantity} ${p.unit})`);
+      lines.push(`• ${p.name} - ${p.quantity} ${p.unit}`);
     });
   } else {
-    lines.push(`הרשימה ריקה`);
+    lines.push(`✅ הרשימה הושלמה!`);
   }
 
   lines.push(``);
-  lines.push(`נשלח מ-SmartBasket`);
+  lines.push(`📱 SmartBasket`);
 
   return lines.join('\n');
 };

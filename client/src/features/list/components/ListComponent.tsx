@@ -426,18 +426,36 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
 
       {/* Product Details Modal */}
       {showDetails && (
-        <Modal title="פרטים" onClose={() => setShowDetails(null)}>
-          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-            <Typography sx={{ fontSize: 56 }}>{CATEGORY_ICONS[showDetails.category]}</Typography>
-            <Typography sx={{ fontSize: 20, fontWeight: 700, mt: 1.5 }}>{showDetails.name}</Typography>
+        <Modal title="פרטי מוצר" onClose={() => setShowDetails(null)}>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box sx={{ width: 80, height: 80, borderRadius: '20px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>
+              <Typography sx={{ fontSize: 40 }}>{CATEGORY_ICONS[showDetails.category]}</Typography>
+            </Box>
+            <Typography sx={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{showDetails.name}</Typography>
+            <Chip
+              label={`${showDetails.quantity} ${showDetails.unit}`}
+              sx={{ mt: 1.5, bgcolor: '#F0FDFA', color: 'primary.main', fontWeight: 600, fontSize: 14 }}
+            />
           </Box>
-          <Box sx={{ bgcolor: '#F9FAFB', borderRadius: '12px' }}>
-            {([['כמות', `${showDetails.quantity} ${showDetails.unit}`], ['קטגוריה', showDetails.category], ['נוסף ע״י', showDetails.addedBy], ['תאריך', showDetails.createdDate || '-'], ['שעה', showDetails.createdTime || '-']] as [string, string][]).map(([l, v], i, a) => (
-              <Box key={l} sx={{ display: 'flex', justifyContent: 'space-between', p: '12px 16px', borderBottom: i < a.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
-                <Typography sx={{ color: 'text.secondary' }}>{l}</Typography>
-                <Typography sx={{ fontWeight: 600 }}>{v}</Typography>
-              </Box>
-            ))}
+          <Box sx={{ bgcolor: '#F9FAFB', borderRadius: '14px', overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '14px 18px', borderBottom: '1px solid #E5E7EB' }}>
+              <Typography sx={{ color: '#6B7280', fontSize: 14 }}>קטגוריה</Typography>
+              <Typography sx={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{showDetails.category}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '14px 18px', borderBottom: '1px solid #E5E7EB' }}>
+              <Typography sx={{ color: '#6B7280', fontSize: 14 }}>נוסף ע״י</Typography>
+              <Typography sx={{ fontWeight: 600, fontSize: 15, color: showDetails.addedBy === user.name ? 'primary.main' : '#111827' }}>
+                {showDetails.addedBy === user.name ? 'את/ה' : showDetails.addedBy}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '14px 18px', borderBottom: '1px solid #E5E7EB' }}>
+              <Typography sx={{ color: '#6B7280', fontSize: 14 }}>תאריך</Typography>
+              <Typography sx={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{showDetails.createdDate || '-'}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '14px 18px' }}>
+              <Typography sx={{ color: '#6B7280', fontSize: 14 }}>שעה</Typography>
+              <Typography sx={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{showDetails.createdTime || '-'}</Typography>
+            </Box>
           </Box>
         </Modal>
       )}
