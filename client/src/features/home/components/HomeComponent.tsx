@@ -99,24 +99,49 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Avatar onClick={() => navigate('/profile')} sx={{ bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 } }}>
+            <Avatar
+              onClick={() => navigate('/profile')}
+              sx={{
+                bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)',
+                cursor: 'pointer',
+                width: { xs: 40, sm: 44 },
+                height: { xs: 40, sm: 44 },
+                fontSize: { xs: 16, sm: 18 }
+              }}
+            >
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
             <Box>
-              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>שלום,</Typography>
-              <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
+              <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: 'rgba(255,255,255,0.8)' }}>שלום,</Typography>
+              <Typography sx={{ fontSize: { xs: 15, sm: 17 }, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={() => setShowNotifications(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 11, fontWeight: 700, minWidth: 18, height: 18 } }}>
-                <NotificationsIcon sx={{ color: 'white' }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1 } }}>
+            <IconButton
+              onClick={() => setShowNotifications(true)}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 }
+              }}
+            >
+              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: { xs: 10, sm: 11 }, fontWeight: 700, minWidth: { xs: 16, sm: 18 }, height: { xs: 16, sm: 18 } } }}>
+                <NotificationsIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
               </Badge>
             </IconButton>
-            <IconButton onClick={() => navigate('/settings')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-              <SettingsIcon sx={{ color: 'white' }} />
+            <IconButton
+              onClick={() => navigate('/settings')}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 }
+              }}
+            >
+              <SettingsIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
             </IconButton>
           </Box>
         </Box>
@@ -137,15 +162,15 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: '10px',
-            p: 0.5,
+            borderRadius: { xs: '8px', sm: '10px' },
+            p: { xs: 0.4, sm: 0.5 },
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: '8px',
-              py: 1.25,
+              borderRadius: { xs: '6px', sm: '8px' },
+              py: { xs: 1, sm: 1.25 },
               minHeight: 'auto',
-              fontSize: 13,
+              fontSize: { xs: 12, sm: 13 },
               fontWeight: 600,
               color: 'rgba(255,255,255,0.9)',
               textTransform: 'none',
@@ -162,14 +187,14 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Content */}
       <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: 'calc(100px + env(safe-area-inset-bottom))' }}>
         {display.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Box sx={{ width: 120, height: 120, borderRadius: '30px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3, fontSize: 64, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
+          <Box sx={{ textAlign: 'center', p: { xs: '36px 16px', sm: '48px 20px' }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </Box>
-            <Typography sx={{ fontSize: 18, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
               {tab === 'groups' ? 'טרם נוצרו קבוצות' : 'טרם נוצרו רשימות'}
             </Typography>
-            <Typography sx={{ fontSize: 14, color: '#9CA3AF', mb: 4, maxWidth: 280 }}>
+            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: '#9CA3AF', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
               {tab === 'groups' ? 'התחל בקבוצה משותפת וצור רשימות קניות עם המשפחה והחברים' : 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך'}
             </Typography>
             <Button
@@ -179,11 +204,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
-                px: 3,
-                py: 1.5
+                px: { xs: 2.5, sm: 3 },
+                py: { xs: 1.25, sm: 1.5 },
+                fontSize: { xs: 14, sm: 15 }
               }}
             >
-              <AddIcon sx={{ fontSize: 20 }} />
+              <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               <span>{tab === 'groups' ? 'צור קבוצה ראשונה' : 'צור רשימה ראשונה'}</span>
             </Button>
           </Box>
@@ -191,24 +217,24 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           const count = l.products.filter((p: Product) => !p.isPurchased).length;
           const isOwner = l.owner.id === user.id;
           return (
-            <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelectList(l)}>
-                <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+            <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 1.75 }, p: { xs: 1.5, sm: 2 }, mb: { xs: 1.25, sm: 1.5 }, cursor: 'pointer' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 1.75 }, flex: 1 }} onClick={() => onSelectList(l)}>
+                <Box sx={{ width: { xs: 44, sm: 48 }, height: { xs: 44, sm: 48 }, borderRadius: { xs: '12px', sm: '14px' }, bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: { xs: 22, sm: 24 } }}>
                   {l.icon}
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-                    <Chip label={l.isGroup ? 'קבוצה' : 'פרטית'} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1 }, mb: 0.5, flexWrap: 'wrap' }}>
+                    <Typography sx={{ fontSize: { xs: 14, sm: 16 }, fontWeight: 600 }}>{l.name}</Typography>
+                    <Chip label={l.isGroup ? 'קבוצה' : 'פרטית'} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: { xs: 20, sm: 22 }, fontSize: { xs: 11, sm: 12 } }} />
                   </Box>
-                  <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
+                  <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: count > 0 ? 'warning.main' : 'success.main' }}>
                     {count > 0 ? `${count} פריטים` : '✓ הושלם'}
                   </Typography>
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 36, height: 36 }}>
-                  <EditIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}>
+                  <EditIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: '#6B7280' }} />
                 </IconButton>
               )}
             </Card>
@@ -228,17 +254,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 <CloseIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
               </IconButton>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.75, sm: 1 } }}>
               {MENU_OPTIONS.map((option) => (
-                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: 1.5, borderRadius: '12px', border: '1.5px solid #E5E7EB', textTransform: 'none', gap: 2 }}>
-                  <Box sx={{ width: 50, height: 50, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
+                <Button key={option.id} onClick={() => openOption(option.id)} fullWidth sx={{ justifyContent: 'flex-start', p: { xs: 1.25, sm: 1.5 }, borderRadius: { xs: '10px', sm: '12px' }, border: '1.5px solid #E5E7EB', textTransform: 'none', gap: { xs: 1.5, sm: 2 } }}>
+                  <Box sx={{ width: { xs: 44, sm: 50 }, height: { xs: 44, sm: 50 }, borderRadius: { xs: '12px', sm: '14px' }, bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: { xs: 22, sm: 26 }, flexShrink: 0 }}>
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
-                    <Typography sx={{ fontSize: 15, fontWeight: 600, color: '#1F2937' }}>{option.title}</Typography>
-                    <Typography sx={{ fontSize: 12, color: '#9CA3AF' }}>{option.description}</Typography>
+                    <Typography sx={{ fontSize: { xs: 14, sm: 15 }, fontWeight: 600, color: '#1F2937' }}>{option.title}</Typography>
+                    <Typography sx={{ fontSize: { xs: 11, sm: 12 }, color: '#9CA3AF' }}>{option.description}</Typography>
                   </Box>
-                  <ChevronLeftIcon sx={{ color: '#D1D5DB' }} />
+                  <ChevronLeftIcon sx={{ color: '#D1D5DB', fontSize: { xs: 20, sm: 24 } }} />
                 </Button>
               ))}
             </Box>
@@ -424,8 +450,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 4,
-          py: 1.5
+          gap: { xs: 6, sm: 8 },
+          py: { xs: 1.5, sm: 2 },
+          px: { xs: 2, sm: 4 }
         }}
       >
         <Box
@@ -435,15 +462,16 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             flexDirection: 'column',
             alignItems: 'center',
             gap: 0.5,
-            px: 3,
+            px: { xs: 2.5, sm: 3 },
             py: 1,
             borderRadius: '12px',
             bgcolor: '#F0FDFA',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
           }}
         >
-          <HomeIcon sx={{ fontSize: 24, color: 'primary.main' }} />
-          <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>בית</Typography>
+          <HomeIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: 'primary.main' }} />
+          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 700, color: 'primary.main' }}>בית</Typography>
         </Box>
         <Box
           onClick={() => setShowMenu(true)}
@@ -452,15 +480,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             flexDirection: 'column',
             alignItems: 'center',
             gap: 0.5,
-            px: 3,
+            px: { xs: 2.5, sm: 3 },
             py: 1,
             borderRadius: '12px',
             cursor: 'pointer',
-            '&:active': { bgcolor: '#F3F4F6' }
+            transition: 'all 0.2s ease',
+            '&:hover': { bgcolor: '#F3F4F6' },
+            '&:active': { bgcolor: '#E5E7EB' }
           }}
         >
-          <AddIcon sx={{ fontSize: 24, color: '#6B7280' }} />
-          <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>חדש</Typography>
+          <AddIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: '#6B7280' }} />
+          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 600, color: '#6B7280' }}>חדש</Typography>
         </Box>
       </Box>
     </Box>

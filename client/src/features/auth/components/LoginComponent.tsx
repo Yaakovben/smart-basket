@@ -93,12 +93,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
     }}>
       <Paper sx={{
         width: '100%',
-        maxWidth: 440,
-        borderRadius: '24px',
+        maxWidth: { xs: '100%', sm: 440 },
+        borderRadius: { xs: '20px', sm: '24px' },
         boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '90vh',
+        maxHeight: { xs: '95vh', sm: '90vh' },
         animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         '@keyframes scaleIn': {
           from: { transform: 'scale(0.95)', opacity: 0 },
@@ -106,42 +106,43 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         }
       }}>
         {/* Header */}
-        <Box sx={{ flexShrink: 0, p: 4, pb: 2.5, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ flexShrink: 0, p: { xs: 3, sm: 4 }, pb: { xs: 2, sm: 2.5 }, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box sx={{
-            width: 72,
-            height: 72,
+            width: { xs: 60, sm: 72 },
+            height: { xs: 60, sm: 72 },
             background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-            borderRadius: '18px',
+            borderRadius: { xs: '14px', sm: '18px' },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: 2,
+            mb: { xs: 1.5, sm: 2 },
             boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
           }}>
-            <Typography sx={{ fontSize: 40 }}>🛒</Typography>
+            <Typography sx={{ fontSize: { xs: 32, sm: 40 } }}>🛒</Typography>
           </Box>
-          <Typography variant="h1" sx={{ mb: 0.75, color: '#111827' }}>SmartBasket</Typography>
-          <Typography color="text.secondary" sx={{ fontSize: 14 }}>רשימות קניות חכמות ומשותפות</Typography>
+          <Typography variant="h1" sx={{ mb: 0.75, color: '#111827', fontSize: { xs: 22, sm: 24 } }}>SmartBasket</Typography>
+          <Typography color="text.secondary" sx={{ fontSize: { xs: 13, sm: 14 } }}>רשימות קניות חכמות ומשותפות</Typography>
         </Box>
 
         {/* Tabs */}
-        <Box sx={{ flexShrink: 0, px: 4, pt: 2.5 }}>
+        <Box sx={{ flexShrink: 0, px: { xs: 3, sm: 4 }, pt: { xs: 2, sm: 2.5 } }}>
           <Tabs
             value={mode}
             onChange={(_, v) => { setMode(v); setError(''); }}
             variant="fullWidth"
             sx={{
               bgcolor: '#F3F4F6',
-              borderRadius: '12px',
-              p: 0.5,
+              borderRadius: { xs: '10px', sm: '12px' },
+              p: { xs: 0.4, sm: 0.5 },
               minHeight: 'auto',
               '& .MuiTabs-indicator': { display: 'none' },
               '& .MuiTab-root': {
-                borderRadius: '10px',
-                py: 1.5,
+                borderRadius: { xs: '8px', sm: '10px' },
+                py: { xs: 1.25, sm: 1.5 },
                 minHeight: 'auto',
                 fontWeight: 600,
+                fontSize: { xs: 13, sm: 14 },
                 color: 'text.secondary',
                 '&.Mui-selected': {
                   bgcolor: 'white',
@@ -157,7 +158,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         </Box>
 
         {/* Form */}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3, minHeight: 0 }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', px: { xs: 3, sm: 4 }, py: { xs: 2.5, sm: 3 }, minHeight: 0 }}>
           <form onSubmit={handleSubmit} id="auth-form">
             {mode === 'register' && (
               <TextField
@@ -245,9 +246,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         </Box>
 
         {/* Footer */}
-        <Box sx={{ flexShrink: 0, px: 4, pb: 4, pt: 2.5, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ flexShrink: 0, px: { xs: 3, sm: 4 }, pb: { xs: 3, sm: 4 }, pt: { xs: 2, sm: 2.5 }, borderTop: '1px solid', borderColor: 'divider' }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} icon={<span>⚠️</span>}>
+            <Alert severity="error" sx={{ mb: { xs: 1.5, sm: 2 }, borderRadius: { xs: '10px', sm: '12px' }, fontSize: { xs: 13, sm: 14 } }} icon={<span>⚠️</span>}>
               {error}
             </Alert>
           )}
@@ -258,16 +259,16 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             fullWidth
             disabled={loading}
             sx={{
-              py: 2,
-              fontSize: 16,
+              py: { xs: 1.75, sm: 2 },
+              fontSize: { xs: 15, sm: 16 },
               fontWeight: 700,
-              borderRadius: '12px',
+              borderRadius: { xs: '10px', sm: '12px' },
               ...(loading && { bgcolor: '#9CA3AF', boxShadow: 'none' })
             }}
           >
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <CircularProgress size={20} sx={{ color: 'white' }} />
+                <CircularProgress size={18} sx={{ color: 'white' }} />
                 <span>טוען...</span>
               </Box>
             ) : (

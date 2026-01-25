@@ -35,8 +35,8 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           position: 'fixed',
           bottom: 0,
           m: 0,
-          borderRadius: '24px 24px 0 0',
-          maxHeight: { xs: '90vh', sm: '85vh' },
+          borderRadius: { xs: '20px 20px 0 0', sm: '24px 24px 0 0' },
+          maxHeight: { xs: '92vh', sm: '85vh' },
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           width: '100%',
           pb: 'env(safe-area-inset-bottom)'
@@ -48,11 +48,11 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         }
       }}
     >
-      <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5, mb: 2 }} />
-      <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 18, p: 0, mb: 2.5 }}>
+      <Box sx={{ width: { xs: 36, sm: 40 }, height: { xs: 3.5, sm: 4 }, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: { xs: 1.25, sm: 1.5 }, mb: { xs: 1.75, sm: 2 } }} />
+      <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: { xs: 16, sm: 18 }, p: 0, mb: { xs: 2, sm: 2.5 } }}>
         {title}
       </DialogTitle>
-      <DialogContent sx={{ px: { xs: 2, sm: 2.5 }, pb: 4, overflowY: 'auto' }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 2.5 }, pb: { xs: 3, sm: 4 }, overflowY: 'auto' }}>
         {children}
       </DialogContent>
     </Dialog>

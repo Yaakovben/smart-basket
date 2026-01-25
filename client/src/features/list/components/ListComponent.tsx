@@ -128,28 +128,59 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
     <Box sx={{ minHeight: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative' }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <IconButton onClick={onBack} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-            <ArrowForwardIcon sx={{ color: 'white' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>
+          <IconButton
+            onClick={onBack}
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(10px)',
+              width: { xs: 38, sm: 42 },
+              height: { xs: 38, sm: 42 }
+            }}
+          >
+            <ArrowForwardIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
           </IconButton>
-          <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 16, sm: 18 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
+          <Box sx={{ display: 'flex', gap: { xs: 0.75, sm: 1 } }}>
             {isOwner && (
-              <IconButton onClick={handleEditList} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-                <EditIcon sx={{ color: 'white', fontSize: 18 }} />
+              <IconButton
+                onClick={handleEditList}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(10px)',
+                  width: { xs: 38, sm: 42 },
+                  height: { xs: 38, sm: 42 }
+                }}
+              >
+                <EditIcon sx={{ color: 'white', fontSize: { xs: 16, sm: 18 } }} />
               </IconButton>
             )}
-            <IconButton onClick={() => setShowShareList(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-              <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
+            <IconButton
+              onClick={() => setShowShareList(true)}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 }
+              }}
+            >
+              <ShareIcon sx={{ color: 'white', fontSize: { xs: 18, sm: 20 } }} />
             </IconButton>
           </Box>
         </Box>
 
         {list.isGroup && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 }, mb: { xs: 1.5, sm: 2 } }}>
             <MembersButton members={allMembers} onClick={() => setShowMembers(true)} />
-            <IconButton onClick={() => setShowInvite(true)} sx={{ width: 40, height: 40, bgcolor: 'rgba(255,255,255,0.2)' }}>
-              <PersonAddIcon sx={{ color: 'white', fontSize: 24 }} />
+            <IconButton
+              onClick={() => setShowInvite(true)}
+              sx={{
+                width: { xs: 36, sm: 40 },
+                height: { xs: 36, sm: 40 },
+                bgcolor: 'rgba(255,255,255,0.2)'
+              }}
+            >
+              <PersonAddIcon sx={{ color: 'white', fontSize: { xs: 20, sm: 24 } }} />
             </IconButton>
           </Box>
         )}
@@ -170,15 +201,15 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           variant="fullWidth"
           sx={{
             bgcolor: 'rgba(255,255,255,0.15)',
-            borderRadius: '10px',
-            p: 0.5,
+            borderRadius: { xs: '8px', sm: '10px' },
+            p: { xs: 0.4, sm: 0.5 },
             minHeight: 'auto',
             '& .MuiTabs-indicator': { display: 'none' },
             '& .MuiTab-root': {
-              borderRadius: '8px',
-              py: 1.25,
+              borderRadius: { xs: '6px', sm: '8px' },
+              py: { xs: 1, sm: 1.25 },
               minHeight: 'auto',
-              fontSize: 13,
+              fontSize: { xs: 12, sm: 13 },
               fontWeight: 600,
               color: 'rgba(255,255,255,0.9)',
               textTransform: 'none',
@@ -194,26 +225,26 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {/* Content */}
       <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: 'calc(100px + env(safe-area-inset-bottom))' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: '12px 16px', background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: '12px', mb: 1.5, border: '1px solid #99F6E4' }}>
-            <Typography sx={{ fontSize: 24 }}>💡</Typography>
-            <Typography sx={{ flex: 1, fontSize: 13, color: '#115E59' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 }, p: { xs: '10px 14px', sm: '12px 16px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: { xs: '10px', sm: '12px' }, mb: { xs: 1.25, sm: 1.5 }, border: '1px solid #99F6E4' }}>
+            <Typography sx={{ fontSize: { xs: 20, sm: 24 } }}>💡</Typography>
+            <Typography sx={{ flex: 1, fontSize: { xs: 12, sm: 13 }, color: '#115E59' }}>
               <strong>טיפ:</strong> גרור שמאלה לפעולות • לחץ לפרטים
             </Typography>
             <IconButton size="small" onClick={dismissHint} sx={{ color: 'primary.main' }}>
-              <CloseIcon fontSize="small" />
+              <CloseIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
             </IconButton>
           </Box>
         )}
 
         {items.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: '48px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Box sx={{ width: 100, height: 100, borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2.5, fontSize: 56 }}>
+          <Box sx={{ textAlign: 'center', p: { xs: '36px 16px', sm: '48px 20px' }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <Box sx={{ width: { xs: 80, sm: 100 }, height: { xs: 80, sm: 100 }, borderRadius: '50%', background: filter === 'pending' ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2, sm: 2.5 }, fontSize: { xs: 44, sm: 56 } }}>
               {filter === 'pending' ? '🎉' : '📦'}
             </Box>
-            <Typography sx={{ fontSize: 18, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
               {filter === 'pending' ? 'כל הכבוד!' : 'אין מוצרים'}
             </Typography>
-            <Typography sx={{ fontSize: 14, color: '#9CA3AF', mb: 3 }}>
+            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: '#9CA3AF', mb: { xs: 2.5, sm: 3 } }}>
               {filter === 'pending' ? 'כל המוצרים נקנו בהצלחה' : 'הוסף מוצרים חדשים לרשימה'}
             </Typography>
             {filter === 'pending' && (
@@ -224,11 +255,12 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
-                  px: 3,
-                  py: 1.5
+                  px: { xs: 2.5, sm: 3 },
+                  py: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: 14, sm: 15 }
                 }}
               >
-                <AddIcon sx={{ fontSize: 20 }} />
+                <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                 <span>הוסף מוצר</span>
               </Button>
             )}
@@ -271,18 +303,27 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           onMouseLeave={items.length > 5 ? handleDragEnd : undefined}
         >
           {items.length > 5 ? (
-            <Fab color="primary" onClick={() => { if (!isDragging) { haptic('medium'); setShowAdd(true); } }} sx={{ cursor: isDragging ? 'grabbing' : 'grab', transition: isDragging ? 'none' : 'all 0.2s ease' }}>
-              <AddIcon />
+            <Fab
+              color="primary"
+              onClick={() => { if (!isDragging) { haptic('medium'); setShowAdd(true); } }}
+              sx={{
+                cursor: isDragging ? 'grabbing' : 'grab',
+                transition: isDragging ? 'none' : 'all 0.2s ease',
+                width: { xs: 52, sm: 56 },
+                height: { xs: 52, sm: 56 }
+              }}
+            >
+              <AddIcon sx={{ fontSize: { xs: 22, sm: 24 } }} />
             </Fab>
           ) : (
             <Button
               variant="contained"
               onClick={() => { haptic('medium'); setShowAdd(true); }}
               sx={{
-                borderRadius: '16px',
-                px: 3,
-                py: 1.5,
-                fontSize: 15,
+                borderRadius: { xs: '14px', sm: '16px' },
+                px: { xs: 2.5, sm: 3 },
+                py: { xs: 1.25, sm: 1.5 },
+                fontSize: { xs: 14, sm: 15 },
                 fontWeight: 600,
                 background: 'linear-gradient(135deg, #14B8A6, #10B981)',
                 boxShadow: '0 8px 24px rgba(20, 184, 166, 0.4)',
@@ -295,7 +336,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 }
               }}
             >
-              <AddIcon sx={{ fontSize: 20 }} />
+              <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               <span>הוסף מוצר</span>
             </Button>
           )}
