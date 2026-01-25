@@ -185,9 +185,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: 'calc(100px + env(safe-area-inset-bottom))' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 1.5, sm: 2 }, pb: { xs: 'calc(140px + env(safe-area-inset-bottom))', sm: 'calc(120px + env(safe-area-inset-bottom))' } }}>
         {display.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: { xs: '36px 16px', sm: '48px 20px' }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+          <Box sx={{ textAlign: 'center', p: { xs: '36px 16px', sm: '48px 20px' }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 'calc(100vh - 280px)', sm: 'calc(100vh - 300px)' } }}>
             <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </Box>
@@ -233,8 +233,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}>
-                  <EditIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: '#6B7280' }} />
+                <IconButton
+                  onClick={(e) => { e.stopPropagation(); setEditList(l); }}
+                  sx={{
+                    bgcolor: '#E0F2FE',
+                    width: { xs: 34, sm: 38 },
+                    height: { xs: 34, sm: 38 },
+                    border: '1.5px solid #BAE6FD',
+                    '&:hover': { bgcolor: '#BAE6FD' }
+                  }}
+                >
+                  <EditIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: '#0284C7' }} />
                 </IconButton>
               )}
             </Card>
@@ -480,17 +489,28 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             flexDirection: 'column',
             alignItems: 'center',
             gap: 0.5,
-            px: { xs: 2.5, sm: 3 },
-            py: 1,
-            borderRadius: '12px',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            '&:hover': { bgcolor: '#F3F4F6' },
-            '&:active': { bgcolor: '#E5E7EB' }
+            transition: 'all 0.2s ease'
           }}
         >
-          <AddIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: '#6B7280' }} />
-          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 600, color: '#6B7280' }}>חדש</Typography>
+          <Box
+            sx={{
+              width: { xs: 44, sm: 48 },
+              height: { xs: 44, sm: 48 },
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
+              transition: 'all 0.2s ease',
+              '&:hover': { transform: 'scale(1.05)', boxShadow: '0 6px 16px rgba(20, 184, 166, 0.4)' },
+              '&:active': { transform: 'scale(0.95)' }
+            }}
+          >
+            <AddIcon sx={{ fontSize: { xs: 24, sm: 26 }, color: 'white' }} />
+          </Box>
+          <Typography sx={{ fontSize: { xs: 11, sm: 12 }, fontWeight: 600, color: 'primary.main' }}>חדש</Typography>
         </Box>
       </Box>
     </Box>

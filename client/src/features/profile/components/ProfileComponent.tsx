@@ -40,9 +40,15 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           {!editProfile && (
             <IconButton
               onClick={() => setEditProfile({ name: user.name, email: user.email, avatarColor: user.avatarColor || '#14B8A6', avatarEmoji: user.avatarEmoji || '' })}
-              sx={{ color: 'white', width: { xs: 38, sm: 42 }, height: { xs: 38, sm: 42 } }}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 },
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+              }}
             >
-              <EditIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+              <EditIcon sx={{ fontSize: { xs: 18, sm: 20 }, color: 'white' }} />
             </IconButton>
           )}
         </Box>
