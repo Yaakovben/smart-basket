@@ -217,33 +217,24 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           const count = l.products.filter((p: Product) => !p.isPurchased).length;
           const isOwner = l.owner.id === user.id;
           return (
-            <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 1.75 }, p: { xs: 1.5, sm: 2 }, mb: { xs: 1.25, sm: 1.5 }, cursor: 'pointer' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 1.75 }, flex: 1 }} onClick={() => onSelectList(l)}>
-                <Box sx={{ width: { xs: 44, sm: 48 }, height: { xs: 44, sm: 48 }, borderRadius: { xs: '12px', sm: '14px' }, bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: { xs: 22, sm: 24 } }}>
+            <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelectList(l)}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
                   {l.icon}
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1 }, mb: 0.5, flexWrap: 'wrap' }}>
-                    <Typography sx={{ fontSize: { xs: 14, sm: 16 }, fontWeight: 600 }}>{l.name}</Typography>
-                    <Chip label={l.isGroup ? 'קבוצה' : 'פרטית'} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: { xs: 20, sm: 22 }, fontSize: { xs: 11, sm: 12 } }} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
+                    <Chip label={l.isGroup ? 'קבוצה' : 'פרטית'} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
                   </Box>
-                  <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: count > 0 ? 'warning.main' : 'success.main' }}>
+                  <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
                     {count > 0 ? `${count} פריטים` : '✓ הושלם'}
                   </Typography>
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton
-                  onClick={(e) => { e.stopPropagation(); setEditList(l); }}
-                  sx={{
-                    bgcolor: '#E0F2FE',
-                    width: { xs: 34, sm: 38 },
-                    height: { xs: 34, sm: 38 },
-                    border: '1.5px solid #BAE6FD',
-                    '&:hover': { bgcolor: '#BAE6FD' }
-                  }}
-                >
-                  <EditIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: '#0284C7' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 36, height: 36 }}>
+                  <EditIcon sx={{ fontSize: 18, color: '#6B7280' }} />
                 </IconButton>
               )}
             </Card>
