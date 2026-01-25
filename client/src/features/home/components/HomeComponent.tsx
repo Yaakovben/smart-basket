@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
 import type { List, Member, Notification, Product, User } from '../../../global/types';
-import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS } from '../../../global/helpers';
+import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 
 interface HomePageProps {
@@ -125,12 +125,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 }
+                width: SIZES.iconButton.md.width,
+                height: SIZES.iconButton.md.height
               }}
             >
-              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: { xs: 11, sm: 12 }, fontWeight: 700, minWidth: { xs: 18, sm: 20 }, height: { xs: 18, sm: 20 } } }}>
-                <NotificationsIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 26 } }} />
+              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 12, fontWeight: 700, minWidth: 20, height: 20 } }}>
+                <NotificationsIcon sx={{ color: 'white', fontSize: SIZES.icon.md }} />
               </Badge>
             </IconButton>
             <IconButton
@@ -138,11 +138,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               sx={{
                 bgcolor: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 }
+                width: SIZES.iconButton.md.width,
+                height: SIZES.iconButton.md.height
               }}
             >
-              <SettingsIcon sx={{ color: 'white', fontSize: { xs: 24, sm: 26 } }} />
+              <SettingsIcon sx={{ color: 'white', fontSize: SIZES.icon.md }} />
             </IconButton>
           </Box>
         </Box>
@@ -234,8 +234,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: 44, height: 44 }}>
-                  <EditIcon sx={{ fontSize: 22, color: '#6B7280' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: SIZES.iconButton.md.width, height: SIZES.iconButton.md.height }}>
+                  <EditIcon sx={{ fontSize: SIZES.icon.md, color: '#6B7280' }} />
                 </IconButton>
               )}
             </Card>
@@ -276,107 +276,183 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Create Private List Modal */}
       {showCreate && (
         <Modal title="רשימה פרטית חדשה" onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
-          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {createError}</Alert>}
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם הרשימה</Typography>
+          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
+          {/* Preview */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Box sx={{
+              width: 72,
+              height: 72,
+              borderRadius: SIZES.radius.lg,
+              bgcolor: newL.color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: SIZES.emoji.xl,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}>
+              {newL.icon}
+            </Box>
+          </Box>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1 }}>שם הרשימה</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות שבועיות" />
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>אייקון</Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
               {LIST_ICONS.map(i => (
-                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 52, height: 52, minWidth: 52, borderRadius: SIZES.radius.md, border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: SIZES.emoji.md, transition: 'all 0.2s', '&:hover': { borderColor: '#14B8A6' } }}>
                   {i}
                 </Button>
               ))}
             </Box>
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>צבע</Typography>
-            <Box sx={{ display: 'flex', gap: 1.25 }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>צבע</Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />
+                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(false)}>צור רשימה</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(false)} sx={{ py: 1.5 }}>צור רשימה</Button>
         </Modal>
       )}
 
       {/* Create Group Modal */}
       {showCreateGroup && (
         <Modal title="קבוצה חדשה" onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
-          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {createError}</Alert>}
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם הקבוצה</Typography>
+          {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
+          {/* Preview */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Box sx={{
+              width: 72,
+              height: 72,
+              borderRadius: SIZES.radius.lg,
+              bgcolor: newL.color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: SIZES.emoji.xl,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}>
+              {newL.icon}
+            </Box>
+          </Box>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1 }}>שם הקבוצה</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות משפחתיות" />
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>אייקון</Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
               {GROUP_ICONS.map(i => (
-                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={{ width: 52, height: 52, minWidth: 52, borderRadius: SIZES.radius.md, border: newL.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: newL.icon === i ? '#F0FDFA' : 'white', fontSize: SIZES.emoji.md, transition: 'all 0.2s', '&:hover': { borderColor: '#14B8A6' } }}>
                   {i}
                 </Button>
               ))}
             </Box>
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>צבע</Typography>
-            <Box sx={{ display: 'flex', gap: 1.25 }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>צבע</Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />
+                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: c, border: newL.color === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(true)}>צור קבוצה</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(true)} sx={{ py: 1.5 }}>צור קבוצה</Button>
         </Modal>
       )}
 
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title="הצטרף לקבוצה" onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 14, mb: 2.5 }}>הזן את הקוד והסיסמה שקיבלת</Typography>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>קוד קבוצה</Typography>
-            <TextField fullWidth value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} placeholder="XXXXXX" inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: 18, letterSpacing: 2, textTransform: 'uppercase' } }} />
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box sx={{
+              width: 72,
+              height: 72,
+              borderRadius: SIZES.radius.lg,
+              bgcolor: '#D1FAE5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+              fontSize: SIZES.emoji.xl
+            }}>
+              🔗
+            </Box>
+            <Typography sx={{ color: 'text.secondary', fontSize: SIZES.text.sm }}>הזן את הקוד והסיסמה שקיבלת</Typography>
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>סיסמה</Typography>
-            <TextField fullWidth value={joinPass} onChange={e => setJoinPass(e.target.value)} placeholder="••••" inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 18, letterSpacing: 2 } }} />
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1 }}>קוד קבוצה</Typography>
+            <TextField
+              fullWidth
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="XXXXXX"
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: 20, letterSpacing: 4, textTransform: 'uppercase', fontWeight: 600 } }}
+            />
           </Box>
-          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>{joinError}</Alert>}
-          <Button variant="contained" fullWidth onClick={handleJoin}>הצטרף לקבוצה</Button>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1 }}>סיסמה</Typography>
+            <TextField
+              fullWidth
+              value={joinPass}
+              onChange={e => setJoinPass(e.target.value)}
+              placeholder="••••"
+              inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 20, letterSpacing: 4, fontWeight: 600 } }}
+            />
+          </Box>
+          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{joinError}</Alert>}
+          <Button variant="contained" fullWidth onClick={handleJoin} sx={{ py: 1.5 }}>הצטרף לקבוצה</Button>
         </Modal>
       )}
 
       {/* Edit List Modal */}
       {editList && (
         <Modal title={editList.isGroup ? 'עריכת קבוצה' : 'עריכת רשימה'} onClose={() => setEditList(null)}>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>שם</Typography>
+          {/* Preview */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Box sx={{
+              width: 72,
+              height: 72,
+              borderRadius: SIZES.radius.lg,
+              bgcolor: editList.color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: SIZES.emoji.xl,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}>
+              {editList.icon}
+            </Box>
+          </Box>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1 }}>שם</Typography>
             <TextField fullWidth value={editList.name} onChange={e => setEditList({ ...editList, name: e.target.value })} />
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>אייקון</Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>אייקון</Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Button key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={{ width: 48, height: 48, minWidth: 48, borderRadius: '12px', border: editList.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editList.icon === i ? '#F0FDFA' : 'white', fontSize: 22 }}>
+                <Button key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={{ width: 52, height: 52, minWidth: 52, borderRadius: SIZES.radius.md, border: editList.icon === i ? '2px solid #14B8A6' : '1.5px solid #E5E7EB', bgcolor: editList.icon === i ? '#F0FDFA' : 'white', fontSize: SIZES.emoji.md, transition: 'all 0.2s', '&:hover': { borderColor: '#14B8A6' } }}>
                   {i}
                 </Button>
               ))}
             </Box>
           </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151', mb: 1 }}>צבע</Typography>
-            <Box sx={{ display: 'flex', gap: 1.25 }}>
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: SIZES.text.sm, fontWeight: 600, color: '#374151', mb: 1.5 }}>צבע</Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setEditList({ ...editList, color: c })} sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: c, border: editList.color === c ? '3px solid #111' : 'none', cursor: 'pointer' }} />
+                <Box key={c} onClick={() => setEditList({ ...editList, color: c })} sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: c, border: editList.color === c ? '3px solid #111' : '3px solid transparent', cursor: 'pointer', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' } }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }}>שמור שינויים</Button>
-          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, bgcolor: '#FEE2E2', color: '#DC2626', '&:hover': { bgcolor: '#FECACA' } }}>
+          <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.5 }}>שמור שינויים</Button>
+          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.5, bgcolor: '#FEE2E2', color: '#DC2626', '&:hover': { bgcolor: '#FECACA' } }}>
             מחק {editList.isGroup ? 'קבוצה' : 'רשימה'}
           </Button>
         </Modal>

@@ -20,6 +20,89 @@ export const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠',
 export const LIST_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 export const SWIPE_ACTIONS_WIDTH = 200;
 
+// ===== Unified Size Constants =====
+export const SIZES = {
+  // Icon Button Sizes
+  iconButton: {
+    sm: { width: 40, height: 40 },
+    md: { width: 48, height: 48 },
+    lg: { width: 56, height: 56 }
+  },
+  // Icon Sizes (inside buttons)
+  icon: {
+    sm: 20,
+    md: 24,
+    lg: 28
+  },
+  // Emoji Icon Sizes
+  emoji: {
+    sm: 20,
+    md: 24,
+    lg: 32,
+    xl: 48
+  },
+  // Avatar Sizes
+  avatar: {
+    sm: { width: 40, height: 40, fontSize: 18 },
+    md: { width: 56, height: 56, fontSize: 24 },
+    lg: { width: 80, height: 80, fontSize: 32 },
+    xl: { width: 100, height: 100, fontSize: 40 }
+  },
+  // Typography Sizes
+  text: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 22,
+    xxl: 26
+  },
+  // Spacing
+  spacing: {
+    xs: 0.5,
+    sm: 1,
+    md: 1.5,
+    lg: 2,
+    xl: 3
+  },
+  // Border Radius
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '20px',
+    round: '50%'
+  }
+} as const;
+
+// ===== Common Styles =====
+export const COMMON_STYLES = {
+  // Glass effect for buttons
+  glassButton: {
+    bgcolor: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)',
+    '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+  },
+  // Card styles
+  card: {
+    borderRadius: SIZES.radius.lg,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    border: '1px solid #F1F5F9'
+  },
+  // Input field styles
+  inputField: {
+    borderRadius: SIZES.radius.md,
+    border: '1.5px solid #E5E7EB',
+    '&:focus-within': { borderColor: '#14B8A6' }
+  },
+  // Gradient backgrounds
+  gradients: {
+    primary: 'linear-gradient(135deg, #14B8A6, #10B981)',
+    header: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+    error: 'linear-gradient(135deg, #EF4444, #DC2626)'
+  }
+} as const;
+
 // ===== Menu Options for Add Popup =====
 export interface MenuOption {
   id: 'private' | 'group' | 'join';
