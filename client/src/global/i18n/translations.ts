@@ -151,7 +151,17 @@ type TranslationKey =
   | 'wrongPassword'
   | 'alreadyInGroup'
   | 'userNotLoggedIn'
-  | 'unknownError';
+  | 'unknownError'
+  | 'or'
+  | 'enterEmail'
+  | 'invalidEmail'
+  | 'enterPassword'
+  | 'enterName'
+  | 'passwordTooShort'
+  | 'confirmPassword'
+  | 'passwordMismatch'
+  | 'emailExists'
+  | 'whatToCreate';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -307,7 +317,17 @@ export const translations: Record<Language, Translations> = {
     wrongPassword: 'סיסמה שגויה',
     alreadyInGroup: 'אתה כבר בקבוצה',
     userNotLoggedIn: 'משתמש לא מחובר',
-    unknownError: 'שגיאה לא ידועה'
+    unknownError: 'שגיאה לא ידועה',
+    or: 'או',
+    enterEmail: 'נא להזין אימייל',
+    invalidEmail: 'אימייל לא תקין',
+    enterPassword: 'נא להזין סיסמה',
+    enterName: 'נא להזין שם',
+    passwordTooShort: 'סיסמה חייבת להכיל לפחות 4 תווים',
+    confirmPassword: 'נא לאמת סיסמה',
+    passwordMismatch: 'הסיסמאות אינן תואמות',
+    emailExists: 'אימייל זה כבר קיים',
+    whatToCreate: 'מה תרצה ליצור?'
   },
   en: {
     // General
@@ -460,7 +480,17 @@ export const translations: Record<Language, Translations> = {
     wrongPassword: 'Wrong password',
     alreadyInGroup: 'You are already in this group',
     userNotLoggedIn: 'User not logged in',
-    unknownError: 'Unknown error'
+    unknownError: 'Unknown error',
+    or: 'or',
+    enterEmail: 'Please enter email',
+    invalidEmail: 'Invalid email',
+    enterPassword: 'Please enter password',
+    enterName: 'Please enter name',
+    passwordTooShort: 'Password must be at least 4 characters',
+    confirmPassword: 'Please confirm password',
+    passwordMismatch: 'Passwords do not match',
+    emailExists: 'This email already exists',
+    whatToCreate: 'What would you like to create?'
   },
   ru: {
     // General
@@ -613,7 +643,17 @@ export const translations: Record<Language, Translations> = {
     wrongPassword: 'Неверный пароль',
     alreadyInGroup: 'Вы уже в этой группе',
     userNotLoggedIn: 'Пользователь не авторизован',
-    unknownError: 'Неизвестная ошибка'
+    unknownError: 'Неизвестная ошибка',
+    or: 'или',
+    enterEmail: 'Введите email',
+    invalidEmail: 'Неверный email',
+    enterPassword: 'Введите пароль',
+    enterName: 'Введите имя',
+    passwordTooShort: 'Пароль должен содержать минимум 4 символа',
+    confirmPassword: 'Подтвердите пароль',
+    passwordMismatch: 'Пароли не совпадают',
+    emailExists: 'Этот email уже существует',
+    whatToCreate: 'Что вы хотите создать?'
   }
 };
 

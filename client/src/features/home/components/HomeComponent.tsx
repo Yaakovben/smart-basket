@@ -281,7 +281,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: { xs: 2.5, sm: 3 }, pb: 'calc(32px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
             <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2.5 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary' }}>מה תרצה ליצור?</Typography>
+              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
               <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 32, height: 32 }}>
                 <CloseIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
               </IconButton>
@@ -292,6 +292,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   key={option.id}
                   onClick={() => openOption(option.id)}
                   fullWidth
+                  disableFocusRipple
                   sx={{
                     justifyContent: 'flex-start',
                     p: 2,
@@ -302,7 +303,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     textTransform: 'none',
                     gap: 2,
                     transition: 'all 0.2s ease',
-                    '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }
+                    '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+                    '&:focus': { outline: 'none', borderColor: 'divider' },
+                    '&.Mui-focusVisible': { outline: 'none', borderColor: 'divider' }
                   }}
                 >
                   <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
