@@ -27,8 +27,9 @@ const settingRowSx = {
 const subSettingRowSx = {
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   gap: 1.5,
-  p: '12px 16px 12px 32px',
+  p: '12px 16px 12px 48px',
   borderBottom: '1px solid',
   borderColor: 'divider'
 };

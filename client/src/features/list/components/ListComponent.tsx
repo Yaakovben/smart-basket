@@ -223,7 +223,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(100px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }} onClick={() => setOpenItemId(null)}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(120px + env(safe-area-inset-bottom))', sm: 'calc(110px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }} onClick={() => setOpenItemId(null)}>
         {showHint && items.length > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.25, sm: 1.5 }, p: { xs: '10px 14px', sm: '12px 16px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', borderRadius: { xs: '10px', sm: '12px' }, mb: { xs: 1.25, sm: 1.5 }, border: '1px solid #99F6E4' }}>
             <Typography sx={{ fontSize: { xs: 20, sm: 24 } }}>💡</Typography>
