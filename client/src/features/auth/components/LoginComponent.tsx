@@ -199,7 +199,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               borderRadius: '12px',
               border: '1px solid',
               borderColor: 'divider',
-              bgcolor: 'white',
+              bgcolor: 'background.paper',
               color: 'text.primary',
               fontSize: 15,
               fontWeight: 500,
@@ -211,12 +211,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               gap: 1.5,
               transition: 'all 0.2s ease',
               '&:hover': {
-                bgcolor: '#F8F9FA',
-                borderColor: '#DADCE0',
+                bgcolor: 'action.hover',
+                borderColor: 'divider',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
               },
               '&:active': {
-                bgcolor: '#F1F3F4'
+                bgcolor: 'action.selected'
               }
             }}
           >

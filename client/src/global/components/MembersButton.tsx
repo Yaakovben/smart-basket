@@ -4,15 +4,25 @@ import type { Member, User } from '../types';
 
 interface MembersButtonProps {
   members: (Member | User)[];
+  currentUserId?: string;
   onClick: () => void;
 }
 
 const MAX_VISIBLE = 3;
 const AVATAR_SIZE = 32;
-const OVERLAP = 10;
+const OVERLAP = 22; // 3/4 overlap so only 1/4 of each avatar shows
 
-export const MembersButton = ({ members, onClick }: MembersButtonProps) => {
-  const visibleMembers = members.slice(0, MAX_VISIBLE);
+export const MembersButton = ({ members, currentUserId, onClick }: MembersButtonProps) => {
+  // Sort members so current user is first
+  const sortedMembers = currentUserId
+    ? [...members].sort((a, b) => {
+        if (a.id === currentUserId) return -1;
+        if (b.id === currentUserId) return 1;
+        return 0;
+      })
+    : members;
+
+  const visibleMembers = sortedMembers.slice(0, MAX_VISIBLE);
   const extraCount = members.length - MAX_VISIBLE;
 
   return (

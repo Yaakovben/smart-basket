@@ -147,6 +147,7 @@ type TranslationKey =
   | 'productNameTooShort'
   | 'quantityMin'
   | 'enterCodeAndPassword'
+  | 'enterCodeAndPasswordHint'
   | 'groupNotFound'
   | 'wrongPassword'
   | 'alreadyInGroup'
@@ -326,6 +327,7 @@ export const translations: Record<Language, Translations> = {
     productNameTooShort: 'שם המוצר חייב להכיל לפחות 2 תווים',
     quantityMin: 'כמות חייבת להיות לפחות 1',
     enterCodeAndPassword: 'נא למלא קוד וסיסמה',
+    enterCodeAndPasswordHint: 'הזן את הקוד והסיסמה שקיבלת',
     groupNotFound: 'קבוצה לא נמצאה',
     wrongPassword: 'סיסמה שגויה',
     alreadyInGroup: 'אתה כבר בקבוצה',
@@ -502,6 +504,7 @@ export const translations: Record<Language, Translations> = {
     productNameTooShort: 'Product name must be at least 2 characters',
     quantityMin: 'Quantity must be at least 1',
     enterCodeAndPassword: 'Please enter code and password',
+    enterCodeAndPasswordHint: 'Enter the code and password you received',
     groupNotFound: 'Group not found',
     wrongPassword: 'Wrong password',
     alreadyInGroup: 'You are already in this group',
@@ -678,6 +681,7 @@ export const translations: Record<Language, Translations> = {
     productNameTooShort: 'Название товара должно содержать минимум 2 символа',
     quantityMin: 'Количество должно быть минимум 1',
     enterCodeAndPassword: 'Введите код и пароль',
+    enterCodeAndPasswordHint: 'Введите код и пароль, которые вы получили',
     groupNotFound: 'Группа не найдена',
     wrongPassword: 'Неверный пароль',
     alreadyInGroup: 'Вы уже в этой группе',

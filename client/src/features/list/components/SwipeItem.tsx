@@ -38,6 +38,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   const startY = useRef(0);
   const startOff = useRef(0);
   const hasCalledOpen = useRef(false);
+  const directionLocked = useRef<'horizontal' | 'vertical' | null>(null);
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
   // Close this item when another item is opened
@@ -64,32 +65,54 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       startOff.current = offset;
       setSwiping(false);
       hasCalledOpen.current = false;
+      directionLocked.current = null;
     },
     onTouchMove: (e: React.TouchEvent<HTMLDivElement>) => {
       const dx = startX.current - e.touches[0].clientX;
-      const dy = Math.abs(e.touches[0].clientY - startY.current);
+      const dy = e.touches[0].clientY - startY.current;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
 
-      if (!swiping && Math.abs(dx) > 8 && Math.abs(dx) > dy * 1.5) {
-        setSwiping(true);
-        document.body.style.overflow = 'hidden';
-        document.body.style.touchAction = 'none';
-        // Call onOpen early to close other items
-        if (!hasCalledOpen.current && dx > 0) {
-          hasCalledOpen.current = true;
-          onOpen();
+      // Lock direction early (after 5px movement)
+      if (!directionLocked.current && (absDx > 5 || absDy > 5)) {
+        directionLocked.current = absDx > absDy ? 'horizontal' : 'vertical';
+        if (directionLocked.current === 'horizontal') {
+          // Immediately prevent scroll when horizontal swipe detected
+          e.preventDefault();
+          document.body.style.overflow = 'hidden';
+          document.body.style.touchAction = 'none';
         }
       }
 
-      if (swiping) {
+      // If locked to vertical, let the page scroll normally
+      if (directionLocked.current === 'vertical') {
+        return;
+      }
+
+      // Handle horizontal swipe
+      if (directionLocked.current === 'horizontal') {
         e.preventDefault();
         e.stopPropagation();
-        const rawOffset = startOff.current + dx;
-        setOffset(calcOffset(rawOffset));
+
+        if (!swiping && absDx > 8) {
+          setSwiping(true);
+          // Call onOpen early to close other items
+          if (!hasCalledOpen.current && dx > 0) {
+            hasCalledOpen.current = true;
+            onOpen();
+          }
+        }
+
+        if (swiping) {
+          const rawOffset = startOff.current + dx;
+          setOffset(calcOffset(rawOffset));
+        }
       }
     },
     onTouchEnd: () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
+      directionLocked.current = null;
       if (swiping) {
         if (offset > 60) {
           setOffset(SWIPE_ACTIONS_WIDTH);

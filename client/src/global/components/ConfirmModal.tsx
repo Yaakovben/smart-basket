@@ -45,7 +45,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
         }
       }}
     >
-      <DialogTitle sx={{ p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: '#111827' }}>
+      <DialogTitle sx={{ p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: 'text.primary' }}>
         {title}
       </DialogTitle>
       <DialogContent sx={{ p: 0, mb: 3 }}>
@@ -59,10 +59,10 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           variant="outlined"
           fullWidth
           sx={{
-            borderColor: '#E5E7EB',
+            borderColor: 'divider',
             borderWidth: 2,
             color: 'text.primary',
-            '&:hover': { borderColor: '#E5E7EB', borderWidth: 2, bgcolor: '#F9FAFB' }
+            '&:hover': { borderColor: 'divider', borderWidth: 2, bgcolor: 'action.hover' }
           }}
         >
           ביטול

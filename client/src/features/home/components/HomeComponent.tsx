@@ -185,7 +185,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           value={search}
           onChange={e => setSearch(e.target.value)}
           size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: '12px' } }}
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#9CA3AF' }} /></InputAdornment> }}
         />
 
@@ -207,7 +207,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               fontWeight: 600,
               color: 'rgba(255,255,255,0.9)',
               textTransform: 'none',
-              '&.Mui-selected': { bgcolor: 'white', color: 'primary.main' }
+              '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' }
             }
           }}
         >
@@ -221,7 +221,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
         {display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
-            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, background: 'linear-gradient(135deg, #F0FDFA, #CCFBF1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
+            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
             </Box>
             <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
@@ -266,8 +266,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 </Box>
               </Box>
               {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: '#F3F4F6', width: SIZES.iconButton.sm.width, height: SIZES.iconButton.sm.height }}>
-                  <EditIcon sx={{ fontSize: SIZES.icon.sm, color: '#6B7280' }} />
+                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: 'action.hover', width: SIZES.iconButton.sm.width, height: SIZES.iconButton.sm.height }}>
+                  <EditIcon sx={{ fontSize: SIZES.icon.sm, color: 'text.secondary' }} />
                 </IconButton>
               )}
             </Card>
@@ -295,6 +295,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   fullWidth
                   disableRipple
                   disableFocusRipple
+                  disableTouchRipple
                   tabIndex={-1}
                   sx={{
                     justifyContent: 'flex-start',
@@ -305,12 +306,14 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     bgcolor: 'background.paper',
                     textTransform: 'none',
                     gap: 2,
-                    transition: 'all 0.2s ease',
+                    transition: 'none',
                     '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
                     '&:focus': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
                     '&:focus-visible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
                     '&.Mui-focusVisible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
-                    '&:active': { borderColor: 'divider', bgcolor: 'action.hover' }
+                    '&:active': { borderColor: 'divider', bgcolor: 'background.paper' },
+                    '&.MuiButtonBase-root': { outline: 'none' },
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                 >
                   <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
@@ -418,52 +421,63 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Join Group Modal */}
       {showJoin && (
-        <Modal title="הצטרף לקבוצה" onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+        <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Box sx={{
-              width: 56,
-              height: 56,
-              borderRadius: '14px',
-              bgcolor: '#D1FAE5',
+              width: 64,
+              height: 64,
+              borderRadius: '16px',
+              bgcolor: 'action.hover',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               mx: 'auto',
-              mb: 1.5,
-              fontSize: 26
+              mb: 2,
+              fontSize: 32,
+              border: '1px solid',
+              borderColor: 'divider'
             }}>
-              🔗
+              👥
             </Box>
-            <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>הזן את הקוד והסיסמה שקיבלת</Typography>
+            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('enterCodeAndPasswordHint')}</Typography>
           </Box>
-          <Box sx={{ bgcolor: 'action.hover', borderRadius: '12px', p: 2, mb: 2 }}>
-            <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>קוד קבוצה</Typography>
-              <TextField
-                fullWidth
-                value={joinCode}
-                onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="XXXXXX"
-                size="small"
-                inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: 18, letterSpacing: 6, textTransform: 'uppercase', fontWeight: 700 } }}
-                sx={{ bgcolor: 'background.paper', borderRadius: '8px' }}
-              />
-            </Box>
-            <Box>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>סיסמה</Typography>
-              <TextField
-                fullWidth
-                value={joinPass}
-                onChange={e => setJoinPass(e.target.value)}
-                placeholder="••••"
-                size="small"
-                inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 18, letterSpacing: 6, fontWeight: 700 } }}
-                sx={{ bgcolor: 'background.paper', borderRadius: '8px' }}
-              />
-            </Box>
+
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('groupCode')}</Typography>
+            <TextField
+              fullWidth
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="ABC123"
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: 20, letterSpacing: 8, textTransform: 'uppercase', fontWeight: 700 } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: 'action.hover'
+                }
+              }}
+            />
           </Box>
-          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px', fontSize: 13 }}>{joinError}</Alert>}
-          <Button variant="contained" fullWidth onClick={handleJoin} sx={{ py: 1.25, fontSize: 15 }}>הצטרף לקבוצה</Button>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('password')}</Typography>
+            <TextField
+              fullWidth
+              value={joinPass}
+              onChange={e => setJoinPass(e.target.value)}
+              placeholder="1234"
+              inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 20, letterSpacing: 8, fontWeight: 700 } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: 'action.hover'
+                }
+              }}
+            />
+          </Box>
+
+          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>{joinError}</Alert>}
+          <Button variant="contained" fullWidth onClick={handleJoin} sx={{ py: 1.5, fontSize: 15, borderRadius: '12px' }}>{t('joinGroup')}</Button>
         </Modal>
       )}
 

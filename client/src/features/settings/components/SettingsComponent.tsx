@@ -56,10 +56,11 @@ const switchSx = {
     boxSizing: 'border-box',
     width: 24,
     height: 24,
+    backgroundColor: 'background.paper',
   },
   '& .MuiSwitch-track': {
     borderRadius: 16,
-    backgroundColor: '#E9E9EA',
+    backgroundColor: 'action.disabled',
     opacity: 1,
   },
 };
@@ -86,10 +87,11 @@ const smallSwitchSx = {
     boxSizing: 'border-box',
     width: 20,
     height: 20,
+    backgroundColor: 'background.paper',
   },
   '& .MuiSwitch-track': {
     borderRadius: 13,
-    backgroundColor: '#E9E9EA',
+    backgroundColor: 'action.disabled',
     opacity: 1,
   },
 };
