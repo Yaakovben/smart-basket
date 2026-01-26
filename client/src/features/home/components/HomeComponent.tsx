@@ -413,9 +413,10 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', mb: 1.5 }}>
-            {t('enterCodeAndPasswordHint')}
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 1.5 }}>
+            <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, mx: 'auto', mb: 1 }}>🔗</Box>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{t('enterCodeAndPasswordHint')}</Typography>
+          </Box>
 
           <Box sx={{ mb: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
@@ -426,7 +427,6 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               fullWidth
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-              autoFocus
               size="small"
               inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, fontWeight: 700, fontSize: 16 } }}
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
