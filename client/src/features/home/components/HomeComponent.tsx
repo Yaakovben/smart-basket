@@ -64,6 +64,7 @@ interface HomePageProps {
   onMarkNotificationsRead: (listId: string) => void;
 }
 
+
 export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
