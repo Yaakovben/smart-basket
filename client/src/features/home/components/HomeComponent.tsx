@@ -169,11 +169,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
               <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
-                <NotificationsIcon sx={{ color: 'white', fontSize: 18 }} />
+                <NotificationsIcon sx={{ color: 'white', fontSize: 22 }} />
               </Badge>
             </IconButton>
             <IconButton onClick={() => navigate('/settings')} sx={glassButtonSx}>
-              <SettingsIcon sx={{ color: 'white', fontSize: 18 }} />
+              <SettingsIcon sx={{ color: 'white', fontSize: 22 }} />
             </IconButton>
           </Box>
         </Box>

@@ -180,17 +180,17 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>
           <IconButton onClick={onBack} sx={glassButtonSx}>
-            <ArrowForwardIcon sx={{ color: 'white', fontSize: SIZES.icon.sm }} />
+            <ArrowForwardIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center' }}>{list.name}</Typography>
           <Box sx={{ display: 'flex', gap: 0.75 }}>
             {isOwner && (
               <IconButton onClick={handleEditList} sx={glassButtonSx}>
-                <EditIcon sx={{ color: 'white', fontSize: SIZES.icon.sm }} />
+                <EditIcon sx={{ color: 'white', fontSize: 22 }} />
               </IconButton>
             )}
             <IconButton onClick={() => setShowShareList(true)} sx={glassButtonSx}>
-              <ShareIcon sx={{ color: 'white', fontSize: SIZES.icon.sm }} />
+              <ShareIcon sx={{ color: 'white', fontSize: 22 }} />
             </IconButton>
           </Box>
         </Box>
@@ -199,7 +199,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
             <MembersButton members={allMembers} onClick={() => setShowMembers(true)} />
             <IconButton onClick={() => setShowInvite(true)} sx={glassButtonSx}>
-              <PersonAddIcon sx={{ color: 'white', fontSize: SIZES.icon.md }} />
+              <PersonAddIcon sx={{ color: 'white', fontSize: 22 }} />
             </IconButton>
           </Box>
         )}

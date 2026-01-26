@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField, Button, Paper } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
+import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -71,14 +72,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
           <IconButton onClick={() => { setEditProfile(null); navigate('/'); }} sx={glassButtonSx}>
-            <ArrowForwardIcon sx={{ fontSize: SIZES.icon.sm }} />
+            <ArrowForwardIcon sx={{ fontSize: 22 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
             {editProfile ? t('editProfile') : t('profile')}
           </Typography>
           {!editProfile && (
             <IconButton onClick={openEditProfile} sx={glassButtonSx}>
-              <EditIcon sx={{ fontSize: SIZES.icon.sm }} />
+              <EditIcon sx={{ fontSize: 22 }} />
             </IconButton>
           )}
         </Box>
@@ -87,8 +88,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         {!editProfile && (
           <>
             <Box sx={{
-              width: 64,
-              height: 64,
+              width: 80,
+              height: 80,
               borderRadius: '50%',
               bgcolor: user.avatarColor || 'rgba(255,255,255,0.2)',
               display: 'flex',
@@ -97,7 +98,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               mx: 'auto',
               mb: 1.5,
               border: '3px solid rgba(255,255,255,0.3)',
-              fontSize: 26,
+              fontSize: 32,
               color: 'white',
               fontWeight: 700
             }}>
@@ -116,14 +117,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             {/* Avatar Preview */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
               <Box sx={{
-                width: 72,
-                height: 72,
+                width: 88,
+                height: 88,
                 borderRadius: '50%',
                 bgcolor: editProfile.avatarColor,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 32,
+                fontSize: 38,
                 color: 'white',
                 fontWeight: 700,
                 border: '3px solid',
@@ -247,16 +248,18 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <Button
               fullWidth
               onClick={() => setConfirmLogout(true)}
-          sx={{
-  mt: 2.5,
-  py: 1.5,
-  borderRadius: '10px',
-  bgcolor: '#EF4444',
-  color: 'white',
-  fontWeight: 600,
-  fontSize: 14,
-  '&:hover': { bgcolor: '#DC2626' }
-}}
+              startIcon={<LogoutIcon sx={{ fontSize: 20 }} />}
+              sx={{
+                mt: 2.5,
+                py: 1.5,
+                borderRadius: '12px',
+                bgcolor: '#FEE2E2',
+                color: '#DC2626',
+                fontWeight: 600,
+                fontSize: 15,
+                gap: 1,
+                '&:hover': { bgcolor: '#FECACA' }
+              }}
             >
               {t('logout')}
             </Button>
