@@ -8,13 +8,15 @@ import type { ListFilter } from '../types/list-types';
 // ===== Props =====
 interface EmptyStateProps {
   filter: ListFilter;
+  totalProducts: number;
   onAddProduct: () => void;
 }
 
 // ===== Component =====
-export const EmptyState = memo(({ filter, onAddProduct }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptyStateProps) => {
   const { t } = useSettings();
-  const isPending = filter === 'pending';
+  // Show "all done" only if there are products and we're on pending tab
+  const isAllDone = filter === 'pending' && totalProducts > 0;
 
   return (
     <Box sx={{
@@ -31,7 +33,7 @@ export const EmptyState = memo(({ filter, onAddProduct }: EmptyStateProps) => {
           width: { xs: 80, sm: 100 },
           height: { xs: 80, sm: 100 },
           borderRadius: '50%',
-          background: isPending ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : 'action.hover',
+          background: isAllDone ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : 'action.hover',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -39,17 +41,17 @@ export const EmptyState = memo(({ filter, onAddProduct }: EmptyStateProps) => {
           fontSize: { xs: 44, sm: 56 }
         }}
         role="img"
-        aria-label={isPending ? t('allDone') : t('noProducts')}
+        aria-label={isAllDone ? t('allDone') : t('noProducts')}
       >
-        {isPending ? '🎉' : '📦'}
+        {isAllDone ? '🎉' : '📦'}
       </Box>
       <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-        {isPending ? t('allDone') : t('noProducts')}
+        {isAllDone ? t('allDone') : t('noProducts')}
       </Typography>
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 } }}>
-        {isPending ? t('allDoneDesc') : t('noProductsDesc')}
+        {isAllDone ? t('allDoneDesc') : t('noProductsDesc')}
       </Typography>
-      {isPending && (
+      {!isAllDone && (
         <Button
           variant="contained"
           onClick={() => { haptic('light'); onAddProduct(); }}
