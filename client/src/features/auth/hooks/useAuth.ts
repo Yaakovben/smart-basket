@@ -5,13 +5,12 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { StorageService } from '../../../global/services/storage';
 import { isValidEmail } from '../helpers/auth-helpers';
 import type { UseAuthReturn, GoogleUserInfo } from '../types/auth-types';
+import { loginSchema, registerSchema, validateForm } from '../../../global/validation';
 
 // ===== Constants =====
 const GOOGLE_API_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const DEFAULT_AVATAR_COLOR = '#14B8A6';
 const GOOGLE_AVATAR_COLOR = '#4285F4';
-const MIN_NAME_LENGTH = 2;
-const MIN_PASSWORD_LENGTH = 4;
 
 // ===== Types =====
 interface UseAuthParams {
@@ -33,36 +32,26 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
   // ===== Validation =====
   const validateLoginForm = useCallback((): boolean => {
-    if (!email.trim()) {
-      setError(t('enterEmail'));
-      return false;
-    }
-    if (!isValidEmail(email)) {
-      setError(t('invalidEmail'));
-      return false;
-    }
-    if (!password) {
-      setError(t('enterPassword'));
+    const result = validateForm(loginSchema, { email: email.trim(), password });
+    if (!result.success) {
+      setError(t(result.error as Parameters<typeof t>[0]));
       return false;
     }
     return true;
   }, [email, password, t]);
 
   const validateRegisterForm = useCallback((): boolean => {
-    if (!name.trim()) {
-      setError(t('enterName'));
-      return false;
-    }
-    if (name.trim().length < MIN_NAME_LENGTH) {
-      setError(t('nameTooShort'));
-      return false;
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(t('passwordTooShort'));
+    const result = validateForm(registerSchema, {
+      name: name.trim(),
+      email: email.trim(),
+      password
+    });
+    if (!result.success) {
+      setError(t(result.error as Parameters<typeof t>[0]));
       return false;
     }
     return true;
-  }, [name, password, t]);
+  }, [name, email, password, t]);
 
   // ===== Email Handlers =====
   const checkEmailExists = useCallback((emailToCheck: string) => {

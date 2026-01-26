@@ -1,0 +1,89 @@
+import { z } from 'zod';
+
+// ===== Auth Schemas =====
+export const emailSchema = z
+  .string()
+  .min(1, 'enterEmail')
+  .email('invalidEmail');
+
+export const passwordSchema = z
+  .string()
+  .min(4, 'passwordTooShort');
+
+export const nameSchema = z
+  .string()
+  .min(1, 'enterName')
+  .min(2, 'nameTooShort');
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'enterPassword')
+});
+
+export const registerSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema
+});
+
+// ===== Product Schemas =====
+export const productNameSchema = z
+  .string()
+  .min(1, 'enterProductName')
+  .min(2, 'productNameTooShort');
+
+export const quantitySchema = z
+  .number()
+  .min(1, 'quantityMin');
+
+export const newProductSchema = z.object({
+  name: productNameSchema,
+  quantity: quantitySchema,
+  unit: z.string(),
+  category: z.string()
+});
+
+// ===== List Schemas =====
+export const listNameSchema = z
+  .string()
+  .min(1, 'enterListName')
+  .min(2, 'listNameTooShort');
+
+export const newListSchema = z.object({
+  name: listNameSchema,
+  icon: z.string(),
+  color: z.string()
+});
+
+// ===== Join Group Schema =====
+export const joinGroupSchema = z.object({
+  code: z.string().length(6, 'invalidCode'),
+  password: z.string().length(4, 'invalidPassword')
+});
+
+// ===== Types from Schemas =====
+export type LoginFormData = z.infer<typeof loginSchema>;
+export type RegisterFormData = z.infer<typeof registerSchema>;
+export type NewProductFormData = z.infer<typeof newProductSchema>;
+export type NewListFormData = z.infer<typeof newListSchema>;
+export type JoinGroupFormData = z.infer<typeof joinGroupSchema>;
+
+// ===== Validation Helper =====
+export type ValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+export function validateForm<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): ValidationResult<T> {
+  const result = schema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  // Return the first error message (translation key)
+  const firstError = result.error.issues[0];
+  return { success: false, error: firstError.message };
+}

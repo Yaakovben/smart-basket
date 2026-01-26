@@ -4,6 +4,7 @@ import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { StorageService } from '../../../global/services/storage';
 import { formatDate, formatTime, generateProductId } from '../helpers/list-helpers';
+import { newProductSchema, validateForm } from '../../../global/validation';
 import type {
   NewProductForm,
   EditListForm,
@@ -15,15 +16,13 @@ import type {
 } from '../types/list-types';
 
 // ===== Constants =====
-const MIN_PRODUCT_NAME_LENGTH = 2;
-const MIN_QUANTITY = 1;
 const FAB_VISIBILITY_THRESHOLD = 3;
 const FAB_BOUNDARY = { minX: 40, minY: 100, bottomOffset: 60 };
 const DEFAULT_FAB_BOTTOM_OFFSET = 90;
 
 const DEFAULT_NEW_PRODUCT: NewProductForm = {
   name: '',
-  quantity: MIN_QUANTITY,
+  quantity: 1,
   unit: 'יח׳',
   category: 'אחר'
 };
@@ -142,16 +141,14 @@ export const useList = ({
   }, [list, onUpdateList]);
 
   const validateProduct = useCallback((): boolean => {
-    if (!newProduct.name.trim()) {
-      setAddError(t('enterProductName'));
-      return false;
-    }
-    if (newProduct.name.length < MIN_PRODUCT_NAME_LENGTH) {
-      setAddError(t('productNameTooShort'));
-      return false;
-    }
-    if (newProduct.quantity < MIN_QUANTITY) {
-      setAddError(t('quantityMin'));
+    const result = validateForm(newProductSchema, {
+      name: newProduct.name.trim(),
+      quantity: newProduct.quantity,
+      unit: newProduct.unit,
+      category: newProduct.category
+    });
+    if (!result.success) {
+      setAddError(t(result.error as Parameters<typeof t>[0]));
       return false;
     }
     return true;
