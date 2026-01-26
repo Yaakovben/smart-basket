@@ -344,11 +344,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>שם הרשימה</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('listName')}</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {LIST_ICONS.map(i => (
                 <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
@@ -369,7 +369,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Create Group Modal */}
       {showCreateGroup && (
-        <Modal title="קבוצה חדשה" onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
+        <Modal title={t('newGroup')} onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
           {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
@@ -388,11 +388,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>שם הקבוצה</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('groupName')}</Typography>
             <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {GROUP_ICONS.map(i => (
                 <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
@@ -512,11 +512,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>שם</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('name')}</Typography>
             <TextField fullWidth value={editList.name} onChange={e => setEditList({ ...editList, name: e.target.value })} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
                 <Box key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={iconSelectSx(editList.icon === i)}>{i}</Box>
@@ -532,7 +532,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
-          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1, bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, '&:hover': { bgcolor: '#FECACA' } }}>
+          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1, bgcolor: 'rgba(239, 68, 68, 0.08)', color: '#F87171', fontSize: 14, fontWeight: 500, '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.12)' } }}>
             {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
         </Modal>

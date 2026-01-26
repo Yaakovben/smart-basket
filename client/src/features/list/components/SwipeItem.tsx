@@ -129,34 +129,35 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   const doAction = (fn: () => void) => { setOffset(0); onClose(); fn(); };
 
   return (
-    <Box sx={{ position: 'relative', mb: '6px', borderRadius: '14px', height: '72px', overflow: 'hidden', bgcolor: 'action.hover' }}>
-      {offset > 0 && (
-        <Box sx={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' }}>
-          <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
-            <span>🗑️</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
-          </Box>
-          <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
-            <span>✏️</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
-          </Box>
-          <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
-            <span>{isPurchased ? '↩️' : '✓'}</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
-          </Box>
+    <Box sx={{ position: 'relative', mb: '6px', borderRadius: '14px', height: '72px', overflow: 'hidden' }}>
+      {/* Action buttons background - always rendered for smoother animation */}
+      <Box sx={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: SWIPE_ACTIONS_WIDTH,
+        display: 'flex',
+        flexDirection: 'row-reverse',
+        borderRadius: '14px',
+        overflow: 'hidden',
+        opacity: offset > 0 ? 1 : 0,
+        transition: 'opacity 0.15s ease',
+        zIndex: 2
+      }}>
+        <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#F87171' }}>
+          <span>🗑️</span>
+          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
-      )}
-      {offset > 0 && offset < SWIPE_ACTIONS_WIDTH && (
-        <Box sx={{
-          position: 'absolute',
-          right: offset - 30,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontSize: '20px',
-          opacity: Math.min(offset / 60, 1),
-          pointerEvents: 'none'
-        }}>➤</Box>
-      )}
+        <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
+          <span>✏️</span>
+          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
+        </Box>
+        <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#FBBF24' : '#34D399' }}>
+          <span>{isPurchased ? '↩️' : '✓'}</span>
+          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
+        </Box>
+      </Box>
       <Box
         {...handlers}
         onClick={() => {
@@ -170,30 +171,30 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         }}
         sx={{
           position: 'absolute',
-          inset: 0,
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: offset,
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           bgcolor: isPurchased ? 'action.disabledBackground' : 'background.paper',
           px: '14px',
           borderRadius: '14px',
-          border: '1px solid',
-          borderColor: 'divider',
-          transform: `translateX(-${offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.2s ease-out',
-          boxShadow: offset > 0 ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+          transition: swiping ? 'none' : 'right 0.2s ease-out',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          zIndex: 1
         }}
       >
         <Box sx={{
           width: '44px',
           height: '44px',
           borderRadius: '12px',
-          bgcolor: isPurchased ? 'action.hover' : 'warning.light',
+          bgcolor: isPurchased ? 'action.hover' : 'rgba(20, 184, 166, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '22px',
-          transition: 'transform 0.2s ease'
+          fontSize: '22px'
         }}>{icon}</Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontSize: '15px', fontWeight: 600, color: isPurchased ? 'text.secondary' : 'text.primary', textDecoration: isPurchased ? 'line-through' : 'none' }}>

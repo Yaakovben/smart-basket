@@ -48,6 +48,7 @@ type TranslationKey =
   | 'groups'
   | 'createList'
   | 'createGroup'
+  | 'newGroup'
   | 'joinGroup'
   | 'privateList'
   | 'privateListDesc'
@@ -229,6 +230,7 @@ export const translations: Record<Language, Translations> = {
     groups: 'קבוצות',
     createList: 'צור רשימה',
     createGroup: 'צור קבוצה',
+    newGroup: 'קבוצה חדשה',
     joinGroup: 'הצטרף לקבוצה',
     privateList: 'רשימה פרטית',
     privateListDesc: 'צור רשימת קניות אישית רק בשבילך',
@@ -407,6 +409,7 @@ export const translations: Record<Language, Translations> = {
     groups: 'Groups',
     createList: 'Create List',
     createGroup: 'Create Group',
+    newGroup: 'New Group',
     joinGroup: 'Join Group',
     privateList: 'Private List',
     privateListDesc: 'Create a personal shopping list just for you',
@@ -585,6 +588,7 @@ export const translations: Record<Language, Translations> = {
     groups: 'Группы',
     createList: 'Создать список',
     createGroup: 'Создать группу',
+    newGroup: 'Новая группа',
     joinGroup: 'Присоединиться',
     privateList: 'Личный список',
     privateListDesc: 'Создайте личный список покупок только для себя',
