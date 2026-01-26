@@ -494,16 +494,16 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>{t('inviteFriends')}</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
             </Box>
-            <Box sx={{ bgcolor: 'primary.light', borderRadius: '12px', border: '2px solid', borderColor: 'primary.main', mb: 2.5, overflow: 'hidden', opacity: 0.9 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid', borderColor: 'primary.main' }}>
-                <Typography sx={{ color: 'primary.dark', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-                <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.dark', letterSpacing: 3, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px' }}>
-                <Typography sx={{ color: 'primary.dark', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-                <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.dark', letterSpacing: 3, fontFamily: 'monospace' }}>{list.password}</Typography>
-              </Box>
-            </Box>
+           <Box sx={{ bgcolor: '#D1F4EF', borderRadius: '12px', border: '2px solid', borderColor: '#14B8A6', mb: 2.5, overflow: 'hidden' }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid', borderColor: '#A7E8DC' }}>
+    <Typography sx={{ color: '#0D7377', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
+    <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#0D7377', letterSpacing: 3, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
+  </Box>
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px' }}>
+    <Typography sx={{ color: '#0D7377', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
+    <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#0D7377', letterSpacing: 3, fontFamily: 'monospace' }}>{list.password}</Typography>
+  </Box>
+</Box>
             <Box sx={{ display: 'flex', gap: 1.25 }}>
               <Button variant="outlined" fullWidth onClick={() => { navigator.clipboard?.writeText(generateInviteMessage(list)).then(() => { showToast(t('copied')); setShowInvite(false); }).catch(() => showToast(t('copyError'))); }}>
                 📋 {t('copy')}
@@ -559,27 +559,27 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>{t('shareList')}</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareList')}</Typography>
             </Box>
-            <Box sx={{ bgcolor: 'primary.light', borderRadius: '12px', border: '2px solid', borderColor: 'primary.main', mb: 2.5, overflow: 'hidden', opacity: 0.9 }}>
-              <Box sx={{ p: '12px 16px', borderBottom: '1px solid', borderColor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'primary.dark' }}>{list.name}</Typography>
-                <Chip label={`${pending.length} ${t('items')}`} size="small" sx={{ bgcolor: 'transparent', color: 'primary.main' }} />
-              </Box>
-              <Box sx={{ p: '12px 16px', maxHeight: 140, overflow: 'auto' }}>
-                {pending.length === 0 ? (
-                  <Typography sx={{ color: 'text.secondary', fontSize: 14, textAlign: 'center', py: 1 }}>{t('noProducts')}</Typography>
-                ) : (
-                  pending.slice(0, 5).map((p: Product, i: number) => (
-                    <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: i < Math.min(pending.length, 5) - 1 ? '1px solid' : 'none', borderColor: 'primary.light' }}>
-                      <Typography sx={{ fontSize: 14, color: 'primary.dark' }}>• {p.name}</Typography>
-                      <Typography sx={{ fontSize: 13, color: 'primary.main' }}>{p.quantity} {p.unit}</Typography>
-                    </Box>
-                  ))
-                )}
-                {pending.length > 5 && (
-                  <Typography sx={{ fontSize: 13, color: 'primary.main', textAlign: 'center', pt: 1 }}>+ {pending.length - 5} {t('items')}</Typography>
-                )}
-              </Box>
-            </Box>
+            <Box sx={{ bgcolor: '#D1F4EF', borderRadius: '12px', border: '2px solid', borderColor: '#14B8A6', mb: 2.5, overflow: 'hidden' }}>
+  <Box sx={{ p: '12px 16px', borderBottom: '1px solid', borderColor: '#A7E8DC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#0D7377' }}>{list.name}</Typography>
+    <Chip label={`${pending.length} ${t('items')}`} size="small" sx={{ bgcolor: 'transparent', color: '#0D9488' }} />
+  </Box>
+  <Box sx={{ p: '12px 16px', maxHeight: 140, overflow: 'auto' }}>
+    {pending.length === 0 ? (
+      <Typography sx={{ color: 'text.secondary', fontSize: 14, textAlign: 'center', py: 1 }}>{t('noProducts')}</Typography>
+    ) : (
+      pending.slice(0, 5).map((p: Product, i: number) => (
+        <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: i < Math.min(pending.length, 5) - 1 ? '1px solid' : 'none', borderColor: '#A7E8DC' }}>
+          <Typography sx={{ fontSize: 14, color: '#0D7377' }}>• {p.name}</Typography>
+          <Typography sx={{ fontSize: 13, color: '#0D9488' }}>{p.quantity} {p.unit}</Typography>
+        </Box>
+      ))
+    )}
+    {pending.length > 5 && (
+      <Typography sx={{ fontSize: 13, color: '#0D9488', textAlign: 'center', pt: 1 }}>+ {pending.length - 5} {t('items')}</Typography>
+    )}
+  </Box>
+</Box>
             <Box sx={{ display: 'flex', gap: 1.25 }}>
               <Button variant="outlined" fullWidth onClick={() => { navigator.clipboard?.writeText(generateShareListMessage(list)).then(() => { showToast(t('copied')); setShowShareList(false); }).catch(() => showToast(t('copyError'))); }}>
                 📋 {t('copy')}

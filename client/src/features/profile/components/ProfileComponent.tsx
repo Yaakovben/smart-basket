@@ -247,16 +247,16 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             <Button
               fullWidth
               onClick={() => setConfirmLogout(true)}
-              sx={{
-                mt: 2.5,
-                py: 1.5,
-                borderRadius: '10px',
-                bgcolor: 'error.light',
-                color: 'error.main',
-                fontWeight: 600,
-                fontSize: 14,
-                '&:hover': { bgcolor: 'error.light', opacity: 0.8 }
-              }}
+          sx={{
+  mt: 2.5,
+  py: 1.5,
+  borderRadius: '10px',
+  bgcolor: '#EF4444',
+  color: 'white',
+  fontWeight: 600,
+  fontSize: 14,
+  '&:hover': { bgcolor: '#DC2626' }
+}}
             >
               {t('logout')}
             </Button>
