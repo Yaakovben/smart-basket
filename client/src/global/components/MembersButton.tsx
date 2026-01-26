@@ -47,6 +47,11 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
         }
       }}
     >
+      {showExtra && (
+        <Typography sx={{ color: 'white', fontSize: 12, fontWeight: 700 }}>
+          +{extraCount}
+        </Typography>
+      )}
       <Box
         sx={{
           display: 'flex',
@@ -69,11 +74,6 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
           </Box>
         ))}
       </Box>
-      {showExtra && (
-        <Typography sx={{ color: 'white', fontSize: 12, fontWeight: 700 }}>
-          {extraCount}+
-        </Typography>
-      )}
     </Button>
   );
 };

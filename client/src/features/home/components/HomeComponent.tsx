@@ -12,6 +12,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import type { List, Member, Notification, Product, User } from '../../../global/types';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
@@ -344,7 +345,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>שם הרשימה</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות שבועיות" size="small" />
+            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
@@ -388,7 +389,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>שם הקבוצה</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }} placeholder="קניות משפחתיות" size="small" />
+            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>אייקון</Typography>
@@ -413,29 +414,67 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
+          {/* Header Icon */}
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Avatar sx={{
+              width: 64,
+              height: 64,
+              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+              mx: 'auto',
+              mb: 1.5,
+              boxShadow: '0 8px 24px rgba(20,184,166,0.3)'
+            }}>
+              <GroupAddIcon sx={{ fontSize: 32 }} />
+            </Avatar>
+            <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>
+              {t('enterCodeAndPasswordHint')}
+            </Typography>
+          </Box>
+
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('groupCode')}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
+              {joinCode.length === 6 && <Typography sx={{ fontSize: 12, color: 'success.main' }}>✓</Typography>}
+            </Box>
             <TextField
               fullWidth
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-              placeholder="ABC123"
               autoFocus
               inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 6, fontWeight: 700, fontSize: 20 } }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  borderColor: joinCode.length === 6 ? 'success.main' : undefined,
+                  '&.Mui-focused': { borderColor: joinCode.length === 6 ? 'success.main' : undefined }
+                }
+              }}
             />
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5, textAlign: 'center' }}>
+              6 {t('language') === 'שפה' ? 'תווים באנגלית' : 'characters'}
+            </Typography>
           </Box>
 
           <Box sx={{ mb: 3 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('password')}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
+              {joinPass.length === 4 && <Typography sx={{ fontSize: 12, color: 'success.main' }}>✓</Typography>}
+            </Box>
             <TextField
               fullWidth
               value={joinPass}
               onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="1234"
               inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 8, fontWeight: 700, fontSize: 20 } }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  borderColor: joinPass.length === 4 ? 'success.main' : undefined
+                }
+              }}
             />
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5, textAlign: 'center' }}>
+              4 {t('language') === 'שפה' ? 'ספרות' : 'digits'}
+            </Typography>
           </Box>
 
           {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>{joinError}</Alert>}
