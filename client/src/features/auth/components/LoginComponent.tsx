@@ -6,20 +6,12 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useGoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
 import type { User } from '../../../global/types';
-import { haptic, SIZES } from '../../../global/helpers';
+import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
-}
-
-interface GoogleUserInfo {
-  name: string;
-  email: string;
-  picture?: string;
-  sub: string;
 }
 
 // Google Logo SVG
@@ -39,7 +31,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
 
@@ -140,9 +131,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return;
     handleEmailSubmit();
-  }, [loading, handleEmailSubmit]);
+  }, [handleEmailSubmit]);
 
   return (
     <Box sx={{
@@ -288,7 +278,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   }}
                   placeholder="example@mail.com"
                   autoComplete="email"
-                  disabled={loading}
                   size="small"
                   sx={{ mb: 2, mt: 2 }}
                   inputProps={{ dir: 'ltr' }}
@@ -306,7 +295,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     onChange={e => setName(e.target.value)}
                     placeholder={t('name')}
                     autoComplete="name"
-                    disabled={loading}
                     size="small"
                     sx={{ mb: 2 }}
                     InputProps={{
@@ -324,7 +312,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete={isNewUser ? 'new-password' : 'current-password'}
-                  disabled={loading}
                   size="small"
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
@@ -348,7 +335,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={loading}
                   sx={{
                     mt: 2.5,
                     py: 1.5,
@@ -357,11 +343,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     borderRadius: '12px'
                   }}
                 >
-                  {loading ? (
-                    <CircularProgress size={20} sx={{ color: 'white' }} />
-                  ) : (
-                    isNewUser ? t('register') : t('login')
-                  )}
+                  {isNewUser ? t('register') : t('login')}
                 </Button>
               </form>
             </Box>
