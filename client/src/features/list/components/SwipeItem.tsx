@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Product } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -128,9 +129,12 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
 
   const doAction = (fn: () => void) => { setOffset(0); onClose(); fn(); };
 
+  // Calculate button animation progress (0 to 1)
+  const progress = Math.min(offset / SWIPE_ACTIONS_WIDTH, 1);
+
   return (
     <Box sx={{ position: 'relative', mb: '6px', borderRadius: '14px', height: '72px', overflow: 'hidden' }}>
-      {/* Action buttons background - always rendered for smoother animation */}
+      {/* Action buttons - slide in smoothly */}
       <Box sx={{
         position: 'absolute',
         top: 0,
@@ -141,19 +145,35 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         flexDirection: 'row-reverse',
         borderRadius: '14px',
         overflow: 'hidden',
-        opacity: offset > 0 ? 1 : 0,
-        transition: 'opacity 0.15s ease',
         pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'auto' : 'none'
       }}>
-        <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
+        <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{
+          ...actionBtnStyle,
+          bgcolor: '#EF4444',
+          transform: `translateX(${(1 - progress) * 100}%)`,
+          opacity: progress,
+          transition: swiping ? 'none' : 'transform 0.25s ease-out, opacity 0.2s ease'
+        }}>
           <span>🗑️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
-        <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
+        <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{
+          ...actionBtnStyle,
+          bgcolor: '#14B8A6',
+          transform: `translateX(${(1 - progress) * 70}%)`,
+          opacity: progress,
+          transition: swiping ? 'none' : 'transform 0.25s ease-out 0.03s, opacity 0.2s ease 0.03s'
+        }}>
           <span>✏️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
         </Box>
-        <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
+        <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{
+          ...actionBtnStyle,
+          bgcolor: isPurchased ? '#F59E0B' : '#22C55E',
+          transform: `translateX(${(1 - progress) * 40}%)`,
+          opacity: progress,
+          transition: swiping ? 'none' : 'transform 0.25s ease-out 0.06s, opacity 0.2s ease 0.06s'
+        }}>
           <span>{isPurchased ? '↩️' : '✓'}</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
         </Box>
@@ -179,11 +199,20 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           px: '14px',
           borderRadius: '14px',
           transform: `translateX(-${offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.2s ease-out',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          transition: swiping ? 'none' : 'transform 0.2s ease-out, opacity 0.15s ease, box-shadow 0.15s ease',
+          boxShadow: swiping ? '0 4px 12px rgba(0,0,0,0.15)' : '0 1px 3px rgba(0,0,0,0.08)',
+          opacity: swiping ? 0.95 : 1,
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'none' : 'auto'
         }}
       >
+        {/* Drag handle indicator */}
+        <DragIndicatorIcon sx={{
+          fontSize: 18,
+          color: 'text.disabled',
+          opacity: swiping ? 0 : 0.5,
+          transition: 'opacity 0.15s ease',
+          mr: -0.5
+        }} />
         <Box sx={{
           width: '44px',
           height: '44px',
