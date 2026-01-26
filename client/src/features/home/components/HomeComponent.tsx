@@ -30,8 +30,8 @@ const checkmarkPopKeyframes = {
 const shakeKeyframes = {
   '@keyframes shake': {
     '0%, 100%': { transform: 'translateX(0)' },
-    '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
-    '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' }
+    '25%, 75%': { transform: 'translateX(-2px)' },
+    '50%': { transform: 'translateX(2px)' }
   }
 };
 
@@ -96,7 +96,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     userLists, my, groups, myNotifications, unreadCount, display,
     // Setters
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
-    setEditList, setConfirmDeleteList, setJoinCode, setJoinPass,
+    setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
     // Handlers
     handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
     closeJoinModal, updateNewListField, updateEditListField, saveEditList,
@@ -368,7 +368,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <TextField
               fullWidth
               value={joinCode}
-              onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+              onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setJoinError(''); }}
               placeholder="_ _ _ _ _ _"
               size="small"
               inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 8, fontWeight: 700, fontSize: 20 } }}
@@ -377,14 +377,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: joinError ? 'error.lighter' : 'action.hover',
-                  borderColor: joinError ? 'error.main' : undefined,
+                  bgcolor: joinError ? '#FEE2E2' : 'action.hover',
                   transition: 'all 0.2s',
-                  '&.Mui-focused': { bgcolor: 'background.paper', borderColor: 'primary.main' }
+                  '& fieldset': { borderColor: joinError ? '#EF4444' : undefined },
+                  '&.Mui-focused': { bgcolor: 'background.paper' },
+                  '&.Mui-focused fieldset': { borderColor: joinError ? '#EF4444' : undefined }
                 }
               }}
               InputProps={{
-                endAdornment: joinCode.length === 6 ? (
+                endAdornment: joinError ? (
+                  <Box sx={{ color: '#EF4444', fontSize: 20, fontWeight: 700 }}>✕</Box>
+                ) : joinCode.length === 6 ? (
                   <Box sx={{
                     color: 'success.main',
                     fontSize: 20,
@@ -405,7 +408,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <TextField
               fullWidth
               value={joinPass}
-              onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              onChange={e => { setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4)); setJoinError(''); }}
               placeholder="_ _ _ _"
               size="small"
               inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 12, fontWeight: 700, fontSize: 20 } }}
@@ -414,14 +417,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: joinError ? 'error.lighter' : 'action.hover',
-                  borderColor: joinError ? 'error.main' : undefined,
+                  bgcolor: joinError ? '#FEE2E2' : 'action.hover',
                   transition: 'all 0.2s',
-                  '&.Mui-focused': { bgcolor: 'background.paper', borderColor: 'primary.main' }
+                  '& fieldset': { borderColor: joinError ? '#EF4444' : undefined },
+                  '&.Mui-focused': { bgcolor: 'background.paper' },
+                  '&.Mui-focused fieldset': { borderColor: joinError ? '#EF4444' : undefined }
                 }
               }}
               InputProps={{
-                endAdornment: joinPass.length === 4 ? (
+                endAdornment: joinError ? (
+                  <Box sx={{ color: '#EF4444', fontSize: 20, fontWeight: 700 }}>✕</Box>
+                ) : joinPass.length === 4 ? (
                   <Box sx={{
                     color: 'success.main',
                     fontSize: 20,
