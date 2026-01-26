@@ -17,6 +17,7 @@ export const MemberAvatar = ({ member, size = 36, index = 0 }: MemberAvatarProps
         bgcolor: MEMBER_COLORS[index % MEMBER_COLORS.length],
         fontSize: size * 0.4,
         fontWeight: 700,
+        lineHeight: 1,
         border: '2px solid white',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}

@@ -21,8 +21,8 @@ import { useSettings } from '../../../global/context/SettingsContext';
 const glassButtonSx = {
   bgcolor: 'rgba(255,255,255,0.2)',
   backdropFilter: 'blur(10px)',
-  width: 36,
-  height: 36
+  width: 40,
+  height: 40
 };
 
 const iconSelectSx = (isSelected: boolean) => ({

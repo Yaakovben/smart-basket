@@ -21,7 +21,7 @@ const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'
 // Reusable styles
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
-  ...SIZES.iconButton.sm,
+  ...SIZES.iconButton.md,
   color: 'white'
 };
 
@@ -98,11 +98,11 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               mx: 'auto',
               mb: 1.5,
               border: '3px solid rgba(255,255,255,0.3)',
-              fontSize: 32,
-              color: 'white',
-              fontWeight: 700
+              color: 'white'
             }}>
-              {user.avatarEmoji || user.name.charAt(0)}
+              <Box component="span" sx={{ fontSize: 32, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
+                {user.avatarEmoji || user.name.charAt(0)}
+              </Box>
             </Box>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
@@ -124,14 +124,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 38,
                 color: 'white',
-                fontWeight: 700,
                 border: '3px solid',
                 borderColor: 'divider',
                 boxShadow: '0 6px 20px rgba(0,0,0,0.1)'
               }}>
-                {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
+                <Box component="span" sx={{ fontSize: 38, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
+                  {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
+                </Box>
               </Box>
             </Box>
 
@@ -230,20 +230,6 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           </Paper>
         ) : (
           <>
-            {/* User Info Card */}
-            <Paper sx={{ borderRadius: '14px', overflow: 'hidden' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, borderBottom: '1px solid', borderColor: 'divider' }}>
-                <Box component="span" sx={{ fontSize: 20 }}>👤</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14, color: 'text.primary' }}>{t('name')}</Typography>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.name}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75 }}>
-                <Box component="span" sx={{ fontSize: 20 }}>✉️</Box>
-                <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 14, color: 'text.primary' }}>{t('email')}</Typography>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{user.email}</Typography>
-              </Box>
-            </Paper>
-
             {/* Logout Button */}
             <Button
               fullWidth

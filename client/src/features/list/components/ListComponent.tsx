@@ -19,7 +19,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 // Reusable styles
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
-  ...SIZES.iconButton.sm
+  ...SIZES.iconButton.md
 };
 
 const labelSx = {

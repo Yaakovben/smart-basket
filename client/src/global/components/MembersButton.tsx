@@ -27,7 +27,7 @@ export const MembersButton = ({ members, onClick }: MembersButtonProps) => {
         }
       }}
     >
-      <MemberAvatar member={firstMember} size={28} index={0} />
+      <MemberAvatar member={firstMember} size={36} index={0} />
       <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 600 }}>
         {members.length} חברים
       </Typography>
