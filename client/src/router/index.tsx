@@ -1,14 +1,23 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import type { User, List } from "../global/types";
 import { useAuth, useLists, useToast } from "../global/hooks";
 import { Toast } from "../global/components";
-import {
-  LoginPage,
-  HomePage,
-  ListPage,
-  ProfilePage,
-  SettingsPage,
-} from "../features/features";
+
+// Lazy load pages
+const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
+const HomePage = lazy(() => import("../features/home/home").then(m => ({ default: m.HomePage })));
+const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
+const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
+const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
+
+// Loading fallback
+const PageLoader = () => (
+  <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <CircularProgress color="primary" />
+  </Box>
+);
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
@@ -107,6 +116,7 @@ export const AppRouter = () => {
 
   return (
     <>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route
           path="/login"
@@ -169,6 +179,7 @@ export const AppRouter = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
       <Toast msg={toast} />
     </>
   );

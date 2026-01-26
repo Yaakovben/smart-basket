@@ -161,7 +161,9 @@ type TranslationKey =
   | 'confirmPassword'
   | 'passwordMismatch'
   | 'emailExists'
-  | 'whatToCreate';
+  | 'whatToCreate'
+  | 'loginWithoutGoogle'
+  | 'hideEmailLogin';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -327,7 +329,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'נא לאמת סיסמה',
     passwordMismatch: 'הסיסמאות אינן תואמות',
     emailExists: 'אימייל זה כבר קיים',
-    whatToCreate: 'מה תרצה ליצור?'
+    whatToCreate: 'מה תרצה ליצור?',
+    loginWithoutGoogle: 'התחברות ללא Google',
+    hideEmailLogin: 'הסתר'
   },
   en: {
     // General
@@ -490,7 +494,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'Please confirm password',
     passwordMismatch: 'Passwords do not match',
     emailExists: 'This email already exists',
-    whatToCreate: 'What would you like to create?'
+    whatToCreate: 'What would you like to create?',
+    loginWithoutGoogle: 'Login without Google',
+    hideEmailLogin: 'Hide'
   },
   ru: {
     // General
@@ -653,7 +659,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'Подтвердите пароль',
     passwordMismatch: 'Пароли не совпадают',
     emailExists: 'Этот email уже существует',
-    whatToCreate: 'Что вы хотите создать?'
+    whatToCreate: 'Что вы хотите создать?',
+    loginWithoutGoogle: 'Войти без Google',
+    hideEmailLogin: 'Скрыть'
   }
 };
 

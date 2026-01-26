@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import {
-  Box, TextField, Button, Typography, Tabs, Tab, Alert,
-  LinearProgress, CircularProgress, InputAdornment, Paper, Divider
+  Box, TextField, Button, Typography, Alert,
+  CircularProgress, InputAdornment, Paper, Collapse
 } from '@mui/material';
-import { GoogleLogin } from '@react-oauth/google';
-import type { CredentialResponse } from '@react-oauth/google';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { useGoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import type { User } from '../../../global/types';
 import { haptic, SIZES } from '../../../global/helpers';
@@ -21,35 +22,52 @@ interface GoogleUserInfo {
   sub: string;
 }
 
+// Google Logo SVG
+const GoogleLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
+
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   const isValidEmail = useCallback((e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), []);
 
-  const pwdStrength = useMemo(() => {
-    if (mode !== 'register' || password.length === 0) return null;
-    if (password.length < 4) return { strength: 33, color: '#EF4444' };
-    if (password.length < 6) return { strength: 66, color: '#F59E0B' };
-    return { strength: 100, color: '#10B981' };
-  }, [mode, password]);
+  // Check if email exists when user finishes typing
+  const checkEmailExists = useCallback((emailToCheck: string) => {
+    if (!isValidEmail(emailToCheck)) return;
+    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
+    const exists = users.some((u: User) => u.email === emailToCheck);
+    setIsNewUser(!exists);
+  }, [isValidEmail]);
 
-  const handleGoogleSuccess = useCallback((credentialResponse: CredentialResponse) => {
-    if (credentialResponse.credential) {
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
       try {
-        const decoded: GoogleUserInfo = jwtDecode(credentialResponse.credential);
-        haptic('medium');
+        // Fetch user info from Google
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        const userInfo = await response.json();
 
+        haptic('medium');
         const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
 
         // Check if user already exists
-        const existingUser = users.find((u: User) => u.email === decoded.email);
+        const existingUser = users.find((u: User) => u.email === userInfo.email);
         if (existingUser) {
           onLogin(existingUser);
           return;
@@ -57,9 +75,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
         // Create new user from Google data
         const googleUser: User = {
-          id: `g${decoded.sub}`,
-          name: decoded.name,
-          email: decoded.email,
+          id: `g${userInfo.sub}`,
+          name: userInfo.name,
+          email: userInfo.email,
           avatarEmoji: '',
           avatarColor: '#4285F4'
         };
@@ -68,66 +86,63 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         localStorage.setItem('sb_users', JSON.stringify(users));
         onLogin(googleUser);
       } catch (err) {
-        console.error('Error decoding Google token:', err);
+        console.error('Error fetching Google user info:', err);
         setError(t('unknownError'));
+      } finally {
+        setGoogleLoading(false);
       }
+    },
+    onError: () => {
+      haptic('heavy');
+      setError(t('unknownError'));
+      setGoogleLoading(false);
     }
-  }, [onLogin, t]);
+  });
 
-  const handleGoogleError = useCallback(() => {
-    haptic('heavy');
-    setError(t('unknownError'));
-  }, [t]);
-
-  const handleLogin = useCallback(() => {
+  const handleEmailSubmit = useCallback(() => {
     setError('');
     if (!email.trim()) { setError(t('enterEmail') || 'נא להזין אימייל'); return; }
     if (!isValidEmail(email)) { setError(t('invalidEmail') || 'אימייל לא תקין'); return; }
     if (!password) { setError(t('enterPassword') || 'נא להזין סיסמה'); return; }
 
-    setLoading(true);
-    haptic('light');
+    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
+    const existingUser = users.find((u: User) => u.email === email);
 
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-      const user = users.find((u: User) => u.email === email && u.password === password);
-      if (user) { haptic('medium'); onLogin(user); }
-      else { haptic('heavy'); setError(t('wrongPassword')); setLoading(false); }
-    }, 500);
-  }, [email, password, isValidEmail, onLogin, t]);
-
-  const handleRegister = useCallback(() => {
-    setError('');
-    if (!name.trim()) { setError(t('enterName') || 'נא להזין שם'); return; }
-    if (name.trim().length < 2) { setError(t('nameTooShort')); return; }
-    if (!email.trim()) { setError(t('enterEmail') || 'נא להזין אימייל'); return; }
-    if (!isValidEmail(email)) { setError(t('invalidEmail') || 'אימייל לא תקין'); return; }
-    if (!password) { setError(t('enterPassword') || 'נא להזין סיסמה'); return; }
-    if (password.length < 4) { setError(t('passwordTooShort') || 'סיסמה חייבת להכיל לפחות 4 תווים'); return; }
-    if (!confirm) { setError(t('confirmPassword') || 'נא לאמת סיסמה'); return; }
-    if (password !== confirm) { setError(t('passwordMismatch') || 'הסיסמאות אינן תואמות'); return; }
-
-    setLoading(true);
-    haptic('light');
-
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-      if (users.find((u: User) => u.email === email)) {
-        haptic('heavy'); setError(t('emailExists') || 'אימייל זה כבר קיים'); setLoading(false); return;
+    if (existingUser) {
+      // Login
+      if (existingUser.password === password) {
+        haptic('medium');
+        onLogin(existingUser);
+      } else {
+        haptic('heavy');
+        setError(t('wrongPassword'));
       }
-      const newUser = { id: `u${Date.now()}`, name: name.trim(), email, password };
+    } else {
+      // Register
+      if (!name.trim()) { setError(t('enterName') || 'נא להזין שם'); return; }
+      if (name.trim().length < 2) { setError(t('nameTooShort')); return; }
+      if (password.length < 4) { setError(t('passwordTooShort') || 'סיסמה חייבת להכיל לפחות 4 תווים'); return; }
+
+      const newUser = {
+        id: `u${Date.now()}`,
+        name: name.trim(),
+        email,
+        password,
+        avatarEmoji: '',
+        avatarColor: '#14B8A6'
+      };
       users.push(newUser);
       localStorage.setItem('sb_users', JSON.stringify(users));
       haptic('medium');
       onLogin(newUser);
-    }, 500);
-  }, [name, email, password, confirm, isValidEmail, onLogin, t]);
+    }
+  }, [email, password, name, isValidEmail, onLogin, t]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    mode === 'login' ? handleLogin() : handleRegister();
-  }, [loading, mode, handleLogin, handleRegister]);
+    handleEmailSubmit();
+  }, [loading, handleEmailSubmit]);
 
   return (
     <Box sx={{
@@ -144,12 +159,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
     }}>
       <Paper sx={{
         width: '100%',
-        maxWidth: { xs: '100%', sm: 440 },
-        borderRadius: { xs: '20px', sm: '24px' },
+        maxWidth: { xs: '100%', sm: 400 },
+        borderRadius: { xs: '24px', sm: '28px' },
         boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: { xs: '95vh', sm: '90vh' },
+        overflow: 'hidden',
         animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         '@keyframes scaleIn': {
           from: { transform: 'scale(0.95)', opacity: 0 },
@@ -157,192 +172,200 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         }
       }}>
         {/* Header */}
-        <Box sx={{ flexShrink: 0, p: { xs: 3, sm: 4 }, pb: { xs: 2, sm: 2.5 }, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: { xs: 4, sm: 5 }, pb: { xs: 3, sm: 3.5 }, textAlign: 'center' }}>
           <Box sx={{
-            width: { xs: 64, sm: 72 },
-            height: { xs: 64, sm: 72 },
+            width: { xs: 80, sm: 88 },
+            height: { xs: 80, sm: 88 },
             background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-            borderRadius: { xs: '16px', sm: '18px' },
+            borderRadius: { xs: '22px', sm: '24px' },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: { xs: 1.5, sm: 2 },
-            boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)',
-            fontSize: { xs: 32, sm: 40 }
+            mb: { xs: 2.5, sm: 3 },
+            boxShadow: '0 12px 32px rgba(20, 184, 166, 0.3)',
+            fontSize: { xs: 40, sm: 48 }
           }}>
             🛒
           </Box>
-          <Typography variant="h1" sx={{ mb: 0.75, color: 'text.primary', fontSize: SIZES.text.xxl }}>{t('appName')}</Typography>
-          <Typography color="text.secondary" sx={{ fontSize: SIZES.text.sm }}>{t('aboutDescription')}</Typography>
+          <Typography sx={{ mb: 1, color: 'text.primary', fontSize: { xs: 24, sm: 28 }, fontWeight: 700 }}>
+            {t('appName')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ fontSize: { xs: 14, sm: 15 }, lineHeight: 1.5 }}>
+            {t('aboutDescription')}
+          </Typography>
         </Box>
 
-        {/* Tabs */}
-        <Box sx={{ flexShrink: 0, px: { xs: 3, sm: 4 }, pt: { xs: 2, sm: 2.5 } }}>
-          <Tabs
-            value={mode}
-            onChange={(_, v) => { setMode(v); setError(''); }}
-            variant="fullWidth"
+        {/* Content */}
+        <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
+          {/* Google Login Button - Professional Style */}
+          <Button
+            fullWidth
+            onClick={() => googleLogin()}
+            disabled={googleLoading}
             sx={{
-              bgcolor: 'action.hover',
-              borderRadius: SIZES.radius.md,
-              p: 0.5,
-              minHeight: 'auto',
-              '& .MuiTabs-indicator': { display: 'none' },
-              '& .MuiTab-root': {
-                borderRadius: SIZES.radius.sm,
-                py: 1.5,
-                minHeight: 'auto',
-                fontWeight: 600,
-                fontSize: SIZES.text.sm,
-                color: 'text.secondary',
-                '&.Mui-selected': {
-                  bgcolor: 'background.paper',
-                  color: 'primary.main',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                }
+              py: 1.5,
+              px: 3,
+              borderRadius: '12px',
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'white',
+              color: 'text.primary',
+              fontSize: 15,
+              fontWeight: 500,
+              textTransform: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1.5,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                bgcolor: '#F8F9FA',
+                borderColor: '#DADCE0',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+              },
+              '&:active': {
+                bgcolor: '#F1F3F4'
               }
             }}
           >
-            <Tab value="login" label={t('login')} />
-            <Tab value="register" label={t('register')} />
-          </Tabs>
-        </Box>
-
-        {/* Form */}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: { xs: 3, sm: 4 }, py: { xs: 2.5, sm: 3 }, minHeight: 0 }}>
-          {/* Google Login Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              useOneTap
-              shape="rectangular"
-              size="large"
-              text={mode === 'login' ? 'signin_with' : 'signup_with'}
-              width="100%"
-            />
-          </Box>
-
-          {/* Divider */}
-          <Divider sx={{ my: 2.5 }}>
-            <Typography sx={{ fontSize: SIZES.text.xs, color: 'text.secondary', px: 1 }}>{t('or') || 'או'}</Typography>
-          </Divider>
-
-          <form onSubmit={handleSubmit} id="auth-form">
-            {mode === 'register' && (
-              <TextField
-                fullWidth
-                label={t('name')}
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder={t('name')}
-                autoComplete="name"
-                disabled={loading}
-                sx={{ mb: 2.5 }}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>👤</Box></InputAdornment>
-                }}
-              />
+            {googleLoading ? (
+              <CircularProgress size={20} sx={{ color: 'text.secondary' }} />
+            ) : (
+              <>
+                <GoogleLogo />
+                <span>המשך עם Google</span>
+              </>
             )}
+          </Button>
 
-            <TextField
-              fullWidth
-              type="email"
-              label={t('email')}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="example@mail.com"
-              autoComplete="email"
-              disabled={loading}
-              sx={{ mb: 2.5 }}
-              inputProps={{ dir: 'ltr' }}
-              InputProps={{
-                startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>📧</Box></InputAdornment>
-              }}
-            />
-
-            <TextField
-              fullWidth
-              type="password"
-              label={t('password')}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              disabled={loading}
-              InputProps={{
-                startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>🔒</Box></InputAdornment>
-              }}
-            />
-
-            {pwdStrength && (
-              <Box sx={{ mt: 1.25, mb: 2.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={pwdStrength.strength}
-                  sx={{
-                    flex: 1,
-                    height: 6,
-                    borderRadius: '4px',
-                    bgcolor: 'divider',
-                    '& .MuiLinearProgress-bar': { bgcolor: pwdStrength.color }
-                  }}
-                />
-              </Box>
-            )}
-
-            {mode === 'register' && (
-              <TextField
-                fullWidth
-                type="password"
-                label={`${t('confirm')} ${t('password')}`}
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="new-password"
-                disabled={loading}
-                sx={{ mt: password ? 0 : 2.5 }}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: SIZES.emoji.sm }}>🔑</Box></InputAdornment>
-                }}
-              />
-            )}
-          </form>
-        </Box>
-
-        {/* Footer */}
-        <Box sx={{ flexShrink: 0, px: { xs: 3, sm: 4 }, pb: { xs: 3, sm: 4 }, pt: { xs: 2, sm: 2.5 }, borderTop: '1px solid', borderColor: 'divider' }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md, fontSize: SIZES.text.sm }} icon={<span>⚠️</span>}>
+          {error && !showEmailForm && (
+            <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 13 }} icon={<span>⚠️</span>}>
               {error}
             </Alert>
           )}
-          <Button
-            type="submit"
-            form="auth-form"
-            variant="contained"
-            fullWidth
-            disabled={loading}
+
+          {/* Email Login Toggle */}
+          <Box
+            onClick={() => { setShowEmailForm(!showEmailForm); setError(''); }}
             sx={{
-              py: 1.75,
-              fontSize: SIZES.text.md,
-              fontWeight: 700,
-              borderRadius: SIZES.radius.md,
-              ...(loading && { bgcolor: 'text.secondary', boxShadow: 'none' })
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.5,
+              cursor: 'pointer',
+              py: 2,
+              mt: 1,
+              color: 'text.secondary',
+              '&:hover': { color: 'primary.main' },
+              transition: 'color 0.2s'
             }}
           >
-            {loading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <CircularProgress size={18} sx={{ color: 'white' }} />
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                <span>{mode === 'login' ? t('login') : t('register')}</span>
-                <span>←</span>
-              </Box>
-            )}
-          </Button>
+            <Typography sx={{ fontSize: 13, fontWeight: 500 }}>
+              {showEmailForm ? t('hideEmailLogin') : t('loginWithoutGoogle')}
+            </Typography>
+            {showEmailForm ? <KeyboardArrowUpIcon sx={{ fontSize: 18 }} /> : <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
+          </Box>
+
+          {/* Collapsible Email Form */}
+          <Collapse in={showEmailForm}>
+            <Box sx={{
+              pt: 1,
+              borderTop: '1px solid',
+              borderColor: 'divider'
+            }}>
+              <form onSubmit={handleSubmit}>
+                {/* Email Field */}
+                <TextField
+                  fullWidth
+                  type="email"
+                  label={t('email')}
+                  value={email}
+                  onChange={e => {
+                    setEmail(e.target.value);
+                    checkEmailExists(e.target.value);
+                  }}
+                  placeholder="example@mail.com"
+                  autoComplete="email"
+                  disabled={loading}
+                  size="small"
+                  sx={{ mb: 2, mt: 2 }}
+                  inputProps={{ dir: 'ltr' }}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>
+                  }}
+                />
+
+                {/* Name Field - Only for new users */}
+                <Collapse in={isNewUser && email.length > 0}>
+                  <TextField
+                    fullWidth
+                    label={t('name')}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder={t('name')}
+                    autoComplete="name"
+                    disabled={loading}
+                    size="small"
+                    sx={{ mb: 2 }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>👤</Box></InputAdornment>
+                    }}
+                  />
+                </Collapse>
+
+                {/* Password Field */}
+                <TextField
+                  fullWidth
+                  type="password"
+                  label={t('password')}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete={isNewUser ? 'new-password' : 'current-password'}
+                  disabled={loading}
+                  size="small"
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
+                  }}
+                />
+
+                {/* Helper text */}
+                {email && isValidEmail(email) && (
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
+                    {isNewUser ? '👋 משתמש חדש? נרשם אותך אוטומטית' : '👋 שלום שוב! הזן סיסמה להתחברות'}
+                  </Typography>
+                )}
+
+                {error && showEmailForm && (
+                  <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span>⚠️</span>}>
+                    {error}
+                  </Alert>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={loading}
+                  sx={{
+                    mt: 2.5,
+                    py: 1.5,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    borderRadius: '12px'
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={20} sx={{ color: 'white' }} />
+                  ) : (
+                    isNewUser ? t('register') : t('login')
+                  )}
+                </Button>
+              </form>
+            </Box>
+          </Collapse>
         </Box>
       </Paper>
     </Box>
