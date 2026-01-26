@@ -18,6 +18,23 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
 import type { ExtendedNotification } from '../types/home-types';
 
+// ===== Animations =====
+const checkmarkPopKeyframes = {
+  '@keyframes checkmarkPop': {
+    '0%': { transform: 'scale(0)', opacity: 0 },
+    '50%': { transform: 'scale(1.3)' },
+    '100%': { transform: 'scale(1)', opacity: 1 }
+  }
+};
+
+const shakeKeyframes = {
+  '@keyframes shake': {
+    '0%, 100%': { transform: 'translateX(0)' },
+    '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+    '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' }
+  }
+};
+
 // ===== Reusable Styles =====
 const glassButtonSx = {
   bgcolor: 'rgba(255,255,255,0.2)',
@@ -336,7 +353,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               mb: 2,
               boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
             }}>
-              👥
+              🔗
             </Box>
             <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
               {t('enterCodeAndPasswordHint')}
@@ -344,50 +361,74 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           </Box>
 
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('groupCode')}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>6 תווים</Typography>
+            </Box>
             <TextField
               fullWidth
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-              placeholder="ABC123"
+              placeholder="_ _ _ _ _ _"
               size="small"
-              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 6, fontWeight: 700, fontSize: 18 } }}
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 8, fontWeight: 700, fontSize: 20 } }}
               sx={{
+                ...shakeKeyframes,
+                animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: 'action.hover',
+                  bgcolor: joinError ? 'error.lighter' : 'action.hover',
+                  borderColor: joinError ? 'error.main' : undefined,
                   transition: 'all 0.2s',
-                  '&.Mui-focused': { bgcolor: 'background.paper' }
+                  '&.Mui-focused': { bgcolor: 'background.paper', borderColor: 'primary.main' }
                 }
               }}
               InputProps={{
                 endAdornment: joinCode.length === 6 ? (
-                  <Box sx={{ color: 'success.main', fontSize: 18 }}>✓</Box>
+                  <Box sx={{
+                    color: 'success.main',
+                    fontSize: 20,
+                    fontWeight: 700,
+                    animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    ...checkmarkPopKeyframes
+                  }}>✓</Box>
                 ) : null
               }}
             />
           </Box>
 
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('password')}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>4 ספרות</Typography>
+            </Box>
             <TextField
               fullWidth
               value={joinPass}
               onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="••••"
+              placeholder="_ _ _ _"
               size="small"
-              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 8, fontWeight: 700, fontSize: 18 } }}
+              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 12, fontWeight: 700, fontSize: 20 } }}
               sx={{
+                ...shakeKeyframes,
+                animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: 'action.hover',
+                  bgcolor: joinError ? 'error.lighter' : 'action.hover',
+                  borderColor: joinError ? 'error.main' : undefined,
                   transition: 'all 0.2s',
-                  '&.Mui-focused': { bgcolor: 'background.paper' }
+                  '&.Mui-focused': { bgcolor: 'background.paper', borderColor: 'primary.main' }
                 }
               }}
               InputProps={{
                 endAdornment: joinPass.length === 4 ? (
-                  <Box sx={{ color: 'success.main', fontSize: 18 }}>✓</Box>
+                  <Box sx={{
+                    color: 'success.main',
+                    fontSize: 20,
+                    fontWeight: 700,
+                    animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    ...checkmarkPopKeyframes
+                  }}>✓</Box>
                 ) : null
               }}
             />
