@@ -289,35 +289,22 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               {MENU_OPTIONS.map((option) => (
-                <Button
+                <Box
                   key={option.id}
                   onClick={() => openOption(option.id)}
-                  fullWidth
-                  disableRipple
-                  disableFocusRipple
-                  disableTouchRipple
-                  autoFocus={false}
-                  tabIndex={-1}
                   sx={{
-                    justifyContent: 'flex-start',
+                    display: 'flex',
+                    alignItems: 'center',
                     p: 2,
                     borderRadius: '14px',
                     border: '1.5px solid',
                     borderColor: 'divider',
                     bgcolor: 'background.paper',
-                    textTransform: 'none',
                     gap: 2,
-                    transition: 'none',
-                    outline: '0 !important',
-                    boxShadow: 'none !important',
-                    '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-                    '&:focus, &:focus-visible, &.Mui-focusVisible, &:active, &.MuiButtonBase-root:focus': {
-                      outline: '0 !important',
-                      boxShadow: 'none !important',
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper'
-                    },
-                    WebkitTapHighlightColor: 'transparent'
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                    userSelect: 'none',
+                    '&:active': { bgcolor: 'action.hover' }
                   }}
                 >
                   <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
@@ -328,7 +315,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{option.description}</Typography>
                   </Box>
                   <ChevronLeftIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
-                </Button>
+                </Box>
               ))}
             </Box>
           </Box>
@@ -426,40 +413,16 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Box sx={{
-              width: 64,
-              height: 64,
-              borderRadius: '16px',
-              bgcolor: 'action.hover',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 2,
-              fontSize: 32,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}>
-              👥
-            </Box>
-            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('enterCodeAndPasswordHint')}</Typography>
-          </Box>
-
           <Box sx={{ mb: 2.5 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('groupCode')}</Typography>
             <TextField
               fullWidth
               value={joinCode}
-              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+              onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
               placeholder="ABC123"
-              inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: 20, letterSpacing: 8, textTransform: 'uppercase', fontWeight: 700 } }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  bgcolor: 'action.hover'
-                }
-              }}
+              autoFocus
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 6, fontWeight: 700, fontSize: 20 } }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
             />
           </Box>
 
@@ -468,20 +431,23 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <TextField
               fullWidth
               value={joinPass}
-              onChange={e => setJoinPass(e.target.value)}
+              onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
               placeholder="1234"
-              inputProps={{ maxLength: 4, style: { textAlign: 'center', fontSize: 20, letterSpacing: 8, fontWeight: 700 } }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  bgcolor: 'action.hover'
-                }
-              }}
+              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 8, fontWeight: 700, fontSize: 20 } }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
             />
           </Box>
 
           {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>{joinError}</Alert>}
-          <Button variant="contained" fullWidth onClick={handleJoin} sx={{ py: 1.5, fontSize: 15, borderRadius: '12px' }}>{t('joinGroup')}</Button>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleJoin}
+            disabled={joinCode.length < 6 || joinPass.length < 4}
+            sx={{ py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+          >
+            {t('joinGroup')}
+          </Button>
         </Modal>
       )}
 

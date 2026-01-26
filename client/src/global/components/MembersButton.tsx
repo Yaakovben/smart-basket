@@ -13,11 +13,11 @@ const AVATAR_SIZE = 28;
 const AVATAR_OVERLAP = 10; // How much each avatar overlaps the previous one
 
 export const MembersButton = ({ members, currentUserId, onClick }: MembersButtonProps) => {
-  // Sort members so current user is LAST (appears on right)
+  // Sort members so current user is FIRST (appears on left, on top)
   const sortedMembers = currentUserId
     ? [...members].sort((a, b) => {
-        if (a.id === currentUserId) return 1;
-        if (b.id === currentUserId) return -1;
+        if (a.id === currentUserId) return -1;
+        if (b.id === currentUserId) return 1;
         return 0;
       })
     : members;
@@ -47,11 +47,6 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
         }
       }}
     >
-      {showExtra && (
-        <Typography sx={{ color: 'white', fontSize: 12, fontWeight: 700 }}>
-          +{extraCount}
-        </Typography>
-      )}
       <Box
         sx={{
           display: 'flex',
@@ -67,13 +62,18 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
             sx={{
               position: 'absolute',
               left: index * (AVATAR_SIZE - AVATAR_OVERLAP),
-              zIndex: index + 1
+              zIndex: MAX_VISIBLE - index
             }}
           >
             <MemberAvatar member={member} size={AVATAR_SIZE} index={index} />
           </Box>
         ))}
       </Box>
+      {showExtra && (
+        <Typography sx={{ color: 'white', fontSize: 12, fontWeight: 700 }}>
+          {extraCount}+
+        </Typography>
+      )}
     </Button>
   );
 };
