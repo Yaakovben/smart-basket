@@ -17,16 +17,19 @@ const ThemedApp = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <AppRouter />
+        <AppRouter /> 
       </BrowserRouter>
     </ThemeProvider>
   );
 };
 
 const App = () => (
-  <SettingsProvider>
+  <SettingsProvider>   
     <ThemedApp />
   </SettingsProvider>
 );
+
+
+
 
 export default App;
