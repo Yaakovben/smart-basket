@@ -10,8 +10,8 @@ export default defineConfig({
         manualChunks: {
           // Split vendor libraries into separate chunks
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@mui/icons-material'],
-          'vendor-emotion': ['@emotion/react', '@emotion/styled'],
+          // MUI and Emotion must be together (MUI depends on Emotion)
+          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
         }
       }
     }
