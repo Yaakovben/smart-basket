@@ -9,6 +9,23 @@ import type {
   UseHomeReturn
 } from '../types/home-types';
 
+// ===== Constants =====
+const DEFAULT_COLOR = '#14B8A6';
+const MIN_NAME_LENGTH = 2;
+
+const DEFAULT_NEW_LIST: NewListForm = {
+  name: '',
+  icon: '📋',
+  color: DEFAULT_COLOR
+};
+
+const DEFAULT_NEW_GROUP: NewListForm = {
+  name: '',
+  icon: '👨‍👩‍👧‍👦',
+  color: DEFAULT_COLOR
+};
+
+// ===== Types =====
 interface UseHomeParams {
   lists: List[];
   user: User;
@@ -18,18 +35,6 @@ interface UseHomeParams {
   onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
   onMarkNotificationsRead: (listId: string) => void;
 }
-
-const DEFAULT_NEW_LIST: NewListForm = {
-  name: '',
-  icon: '📋',
-  color: '#14B8A6'
-};
-
-const DEFAULT_NEW_GROUP: NewListForm = {
-  name: '',
-  icon: '👨‍👩‍👧‍👦',
-  color: '#14B8A6'
-};
 
 export const useHome = ({
   lists,
@@ -88,17 +93,22 @@ export const useHome = ({
     return search ? base.filter((l: List) => l.name.includes(search)) : base;
   }, [tab, userLists, my, groups, search]);
 
-  // ===== Handlers =====
-  const handleCreate = useCallback((isGroup: boolean) => {
-    setCreateError('');
+  // ===== Create List Handlers =====
+  const validateListName = useCallback((): boolean => {
     if (!newL.name.trim()) {
       setCreateError(t('enterListName'));
-      return;
+      return false;
     }
-    if (newL.name.length < 2) {
+    if (newL.name.length < MIN_NAME_LENGTH) {
       setCreateError(t('nameTooShort'));
-      return;
+      return false;
     }
+    return true;
+  }, [newL.name, t]);
+
+  const handleCreate = useCallback((isGroup: boolean) => {
+    setCreateError('');
+    if (!validateListName()) return;
 
     onCreateList({
       id: generateListId(),
@@ -114,8 +124,9 @@ export const useHome = ({
     setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
     setShowCreate(false);
     setShowCreateGroup(false);
-  }, [newL, onCreateList, user, t]);
+  }, [newL, onCreateList, user, validateListName]);
 
+  // ===== Join Group Handlers =====
   const handleJoin = useCallback(() => {
     setJoinError('');
     if (!joinCode.trim() || !joinPass.trim()) {
@@ -132,6 +143,7 @@ export const useHome = ({
     }
   }, [joinCode, joinPass, onJoinGroup, t]);
 
+  // ===== Menu Handlers =====
   const openOption = useCallback((option: string) => {
     setShowMenu(false);
     if (option === 'private') setShowCreate(true);
@@ -158,6 +170,7 @@ export const useHome = ({
     setJoinPass('');
   }, []);
 
+  // ===== Form Field Handlers =====
   const updateNewListField = useCallback(<K extends keyof NewListForm>(
     field: K,
     value: NewListForm[K]
@@ -173,6 +186,7 @@ export const useHome = ({
     setEditList(prev => prev ? { ...prev, [field]: value } : null);
   }, []);
 
+  // ===== Edit/Delete List Handlers =====
   const saveEditList = useCallback(() => {
     if (!editList) return;
     onEditList(editList);
@@ -185,6 +199,7 @@ export const useHome = ({
     setConfirmDeleteList(null);
   }, [confirmDeleteList, onDeleteList]);
 
+  // ===== Notifications Handlers =====
   const markAllNotificationsRead = useCallback(() => {
     myNotifications.forEach((n) => onMarkNotificationsRead(n.listId));
     setShowNotifications(false);

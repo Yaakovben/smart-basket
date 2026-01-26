@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { StorageService } from '../../../global/services/storage';
 import { formatDate, formatTime, generateProductId } from '../helpers/list-helpers';
 import type {
   NewProductForm,
@@ -13,6 +14,21 @@ import type {
   UseListReturn
 } from '../types/list-types';
 
+// ===== Constants =====
+const MIN_PRODUCT_NAME_LENGTH = 2;
+const MIN_QUANTITY = 1;
+const FAB_VISIBILITY_THRESHOLD = 3;
+const FAB_BOUNDARY = { minX: 40, minY: 100, bottomOffset: 60 };
+const DEFAULT_FAB_BOTTOM_OFFSET = 90;
+
+const DEFAULT_NEW_PRODUCT: NewProductForm = {
+  name: '',
+  quantity: MIN_QUANTITY,
+  unit: 'יח׳',
+  category: 'אחר'
+};
+
+// ===== Types =====
 interface UseListParams {
   list: List;
   user: User;
@@ -22,13 +38,6 @@ interface UseListParams {
   onBack: () => void;
   showToast: (message: string) => void;
 }
-
-const DEFAULT_NEW_PRODUCT: NewProductForm = {
-  name: '',
-  quantity: 1,
-  unit: 'יח׳',
-  category: 'אחר'
-};
 
 export const useList = ({
   list,
@@ -41,14 +50,13 @@ export const useList = ({
 }: UseListParams): UseListReturn => {
   const { t } = useSettings();
 
-  // ===== UI State =====
+  // ===== Filter & Search State =====
   const [filter, setFilter] = useState<ListFilter>('pending');
   const [search, setSearch] = useState('');
   const [openItemId, setOpenItemId] = useState<string | null>(null);
-  const [showHint, setShowHint] = useState(() => !localStorage.getItem('sb_hint_seen'));
-  const [addError, setAddError] = useState('');
+  const [showHint, setShowHint] = useState(() => !StorageService.isHintSeen());
 
-  // ===== Modal State =====
+  // ===== Modal Visibility State =====
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Product | null>(null);
   const [showDetails, setShowDetails] = useState<Product | null>(null);
@@ -60,8 +68,9 @@ export const useList = ({
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
   // ===== Form State =====
-  const [newP, setNewP] = useState<NewProductForm>(DEFAULT_NEW_PRODUCT);
+  const [newProduct, setNewProduct] = useState<NewProductForm>(DEFAULT_NEW_PRODUCT);
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
+  const [addError, setAddError] = useState('');
 
   // ===== FAB Drag State =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
@@ -96,23 +105,23 @@ export const useList = ({
 
   // ===== Effects =====
   useEffect(() => {
-    if (items.length <= 3) setFabPosition(null);
+    if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
   }, [items.length]);
 
-  // ===== Drag Handlers =====
+  // ===== FAB Drag Handlers =====
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
     const currentX = fabPosition?.x ?? window.innerWidth / 2;
-    const currentY = fabPosition?.y ?? window.innerHeight - 90;
+    const currentY = fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
     dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
     setIsDragging(true);
   }, [fabPosition]);
 
   const handleDragMove = useCallback((clientX: number, clientY: number) => {
     if (!dragRef.current || !isDragging) return;
-    const dx = clientX - dragRef.current.startX;
-    const dy = clientY - dragRef.current.startY;
-    const newX = Math.max(40, Math.min(window.innerWidth - 40, dragRef.current.startPosX + dx));
-    const newY = Math.max(100, Math.min(window.innerHeight - 60, dragRef.current.startPosY + dy));
+    const deltaX = clientX - dragRef.current.startX;
+    const deltaY = clientY - dragRef.current.startY;
+    const newX = Math.max(FAB_BOUNDARY.minX, Math.min(window.innerWidth - FAB_BOUNDARY.minX, dragRef.current.startPosX + deltaX));
+    const newY = Math.max(FAB_BOUNDARY.minY, Math.min(window.innerHeight - FAB_BOUNDARY.bottomOffset, dragRef.current.startPosY + deltaY));
     setFabPosition({ x: newX, y: newY });
   }, [isDragging]);
 
@@ -124,7 +133,7 @@ export const useList = ({
   // ===== Hint Handler =====
   const dismissHint = useCallback(() => {
     setShowHint(false);
-    localStorage.setItem('sb_hint_seen', 'true');
+    StorageService.markHintSeen();
   }, []);
 
   // ===== Product Handlers =====
@@ -132,36 +141,41 @@ export const useList = ({
     onUpdateList({ ...list, products });
   }, [list, onUpdateList]);
 
+  const validateProduct = useCallback((): boolean => {
+    if (!newProduct.name.trim()) {
+      setAddError(t('enterProductName'));
+      return false;
+    }
+    if (newProduct.name.length < MIN_PRODUCT_NAME_LENGTH) {
+      setAddError(t('productNameTooShort'));
+      return false;
+    }
+    if (newProduct.quantity < MIN_QUANTITY) {
+      setAddError(t('quantityMin'));
+      return false;
+    }
+    return true;
+  }, [newProduct, t]);
+
   const handleAdd = useCallback(() => {
     setAddError('');
-    if (!newP.name.trim()) {
-      setAddError(t('enterProductName'));
-      return;
-    }
-    if (newP.name.length < 2) {
-      setAddError(t('productNameTooShort'));
-      return;
-    }
-    if (newP.quantity < 1) {
-      setAddError(t('quantityMin'));
-      return;
-    }
+    if (!validateProduct()) return;
 
     setOpenItemId(null);
-    const newProduct: Product = {
+    const product: Product = {
       id: generateProductId(),
-      ...newP,
+      ...newProduct,
       isPurchased: false,
       addedBy: user.name,
       createdDate: formatDate(),
       createdTime: formatTime()
     };
 
-    updateProducts([...list.products, newProduct]);
-    setNewP(DEFAULT_NEW_PRODUCT);
+    updateProducts([...list.products, product]);
+    setNewProduct(DEFAULT_NEW_PRODUCT);
     setShowAdd(false);
     showToast(t('added'));
-  }, [newP, list.products, user.name, updateProducts, showToast, t]);
+  }, [newProduct, list.products, user.name, updateProducts, showToast, t, validateProduct]);
 
   const toggleProduct = useCallback((productId: string) => {
     updateProducts(
@@ -193,7 +207,7 @@ export const useList = ({
     field: K,
     value: NewProductForm[K]
   ) => {
-    setNewP(prev => ({ ...prev, [field]: value }));
+    setNewProduct(prev => ({ ...prev, [field]: value }));
     if (field === 'name') setAddError('');
   }, []);
 
@@ -206,7 +220,7 @@ export const useList = ({
 
   const incrementQuantity = useCallback((type: 'new' | 'edit') => {
     if (type === 'new') {
-      setNewP(prev => ({ ...prev, quantity: prev.quantity + 1 }));
+      setNewProduct(prev => ({ ...prev, quantity: prev.quantity + 1 }));
     } else if (showEdit) {
       setShowEdit(prev => prev ? { ...prev, quantity: prev.quantity + 1 } : null);
     }
@@ -214,7 +228,7 @@ export const useList = ({
 
   const decrementQuantity = useCallback((type: 'new' | 'edit') => {
     if (type === 'new') {
-      setNewP(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }));
+      setNewProduct(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }));
     } else if (showEdit) {
       setShowEdit(prev => prev ? { ...prev, quantity: Math.max(1, prev.quantity - 1) } : null);
     }
@@ -284,7 +298,7 @@ export const useList = ({
     editListData,
     confirmDeleteList,
     confirm,
-    newP,
+    newProduct,
     openItemId,
     showHint,
     addError,
@@ -311,7 +325,7 @@ export const useList = ({
     setEditListData,
     setConfirmDeleteList,
     setConfirm,
-    setNewP,
+    setNewProduct,
     setOpenItemId,
     setAddError,
 

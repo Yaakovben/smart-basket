@@ -63,7 +63,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
     // State
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
-    confirmDeleteList, confirm, newP, openItemId, showHint, addError,
+    confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
     fabPosition, isDragging,
     // Computed
     pending, purchased, items, allMembers, isOwner,
@@ -260,21 +260,21 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           {addError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {addError}</Alert>}
           <Box sx={{ mb: 2 }}>
             <Typography sx={labelSx}>{t('name')}</Typography>
-            <TextField fullWidth value={newP.name} onChange={e => updateNewProductField('name', e.target.value)} placeholder={t('productName')} />
+            <TextField fullWidth value={newProduct.name} onChange={e => updateNewProductField('name', e.target.value)} placeholder={t('productName')} />
           </Box>
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('quantity')}</Typography>
               <Box sx={quantityBoxSx}>
                 <Button onClick={() => decrementQuantity('new')} sx={quantityBtnSx}>−</Button>
-                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={newP.quantity} onChange={e => updateNewProductField('quantity', Math.max(1, parseInt(e.target.value) || 1))} />
+                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={newProduct.quantity} onChange={e => updateNewProductField('quantity', Math.max(1, parseInt(e.target.value) || 1))} />
                 <Button onClick={() => incrementQuantity('new')} sx={quantityBtnSx}>+</Button>
               </Box>
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('unit')}</Typography>
               <FormControl fullWidth>
-                <Select value={newP.unit} onChange={e => updateNewProductField('unit', e.target.value as ProductUnit)} sx={{ height: 52 }}>
+                <Select value={newProduct.unit} onChange={e => updateNewProductField('unit', e.target.value as ProductUnit)} sx={{ height: 52 }}>
                   <MenuItem value="יח׳">{t('unitPiece')}</MenuItem>
                   <MenuItem value="ק״ג">{t('unitKg')}</MenuItem>
                   <MenuItem value="גרם">{t('unitGram')}</MenuItem>
@@ -286,7 +286,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           <Box sx={{ mb: 2 }}>
             <Typography sx={labelSx}>{t('category')}</Typography>
             <FormControl fullWidth>
-              <Select value={newP.category} onChange={e => updateNewProductField('category', e.target.value as ProductCategory)}>
+              <Select value={newProduct.category} onChange={e => updateNewProductField('category', e.target.value as ProductCategory)}>
                 {Object.keys(CATEGORY_ICONS).map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
               </Select>
             </FormControl>

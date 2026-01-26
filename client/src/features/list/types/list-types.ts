@@ -53,7 +53,7 @@ export interface UseListReturn {
   editListData: EditListForm | null;
   confirmDeleteList: boolean;
   confirm: ConfirmState | null;
-  newP: NewProductForm;
+  newProduct: NewProductForm;
   openItemId: string | null;
   showHint: boolean;
   addError: string;
@@ -80,7 +80,7 @@ export interface UseListReturn {
   setEditListData: (data: EditListForm | null) => void;
   setConfirmDeleteList: (show: boolean) => void;
   setConfirm: (confirm: ConfirmState | null) => void;
-  setNewP: (data: NewProductForm) => void;
+  setNewProduct: (data: NewProductForm) => void;
   setOpenItemId: (id: string | null) => void;
   setAddError: (error: string) => void;
 

@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '../../../global/types';
 import type { EditProfileForm, UseProfileReturn } from '../types/profile-types';
 
+// ===== Constants =====
+const DEFAULT_AVATAR_COLOR = '#14B8A6';
+
 interface UseProfileParams {
   user: User;
   onUpdateUser: (user: Partial<User>) => void;
@@ -21,7 +24,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     setEditProfile({
       name: user.name,
       email: user.email,
-      avatarColor: user.avatarColor || '#14B8A6',
+      avatarColor: user.avatarColor || DEFAULT_AVATAR_COLOR,
       avatarEmoji: user.avatarEmoji || ''
     });
   }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
