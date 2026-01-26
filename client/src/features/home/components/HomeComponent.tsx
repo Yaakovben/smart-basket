@@ -414,27 +414,14 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          {/* Header Icon */}
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Avatar sx={{
-              width: 52,
-              height: 52,
-              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-              mx: 'auto',
-              mb: 1,
-              boxShadow: '0 6px 16px rgba(20,184,166,0.25)'
-            }}>
-              <GroupsIcon sx={{ fontSize: 26, color: 'white' }} />
-            </Avatar>
-            <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
-              {t('enterCodeAndPasswordHint')}
-            </Typography>
-          </Box>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', mb: 1.5 }}>
+            {t('enterCodeAndPasswordHint')}
+          </Typography>
 
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
-              {joinCode.length === 6 && <Typography sx={{ fontSize: 12, color: 'success.main' }}>✓</Typography>}
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
+              {joinCode.length === 6 && <Typography sx={{ fontSize: 11, color: 'success.main' }}>✓</Typography>}
             </Box>
             <TextField
               fullWidth
@@ -442,50 +429,33 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
               autoFocus
               size="small"
-              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 5, fontWeight: 700, fontSize: 18 } }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '10px',
-                  borderColor: joinCode.length === 6 ? 'success.main' : undefined,
-                  '&.Mui-focused': { borderColor: joinCode.length === 6 ? 'success.main' : undefined }
-                }
-              }}
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, fontWeight: 700, fontSize: 16 } }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
             />
-            <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.5, textAlign: 'center' }}>
-              6 {t('language') === 'שפה' ? 'תווים באנגלית' : 'characters'}
-            </Typography>
           </Box>
 
-          <Box sx={{ mb: 2.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
-              {joinPass.length === 4 && <Typography sx={{ fontSize: 12, color: 'success.main' }}>✓</Typography>}
+          <Box sx={{ mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
+              {joinPass.length === 4 && <Typography sx={{ fontSize: 11, color: 'success.main' }}>✓</Typography>}
             </Box>
             <TextField
               fullWidth
               value={joinPass}
               onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
               size="small"
-              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 6, fontWeight: 700, fontSize: 18 } }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '10px',
-                  borderColor: joinPass.length === 4 ? 'success.main' : undefined
-                }
-              }}
+              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 5, fontWeight: 700, fontSize: 16 } }}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
             />
-            <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.5, textAlign: 'center' }}>
-              4 {t('language') === 'שפה' ? 'ספרות' : 'digits'}
-            </Typography>
           </Box>
 
-          {joinError && <Alert severity="error" sx={{ mb: 1.5, borderRadius: '10px', fontSize: 12, py: 0.5 }}>{joinError}</Alert>}
+          {joinError && <Alert severity="error" sx={{ mb: 1, borderRadius: '10px', fontSize: 11, py: 0.25 }}>{joinError}</Alert>}
           <Button
             variant="contained"
             fullWidth
             onClick={handleJoin}
             disabled={joinCode.length < 6 || joinPass.length < 4}
-            sx={{ py: 1.25, fontSize: 14, fontWeight: 600, borderRadius: '10px' }}
+            sx={{ py: 1, fontSize: 14, fontWeight: 600, borderRadius: '10px' }}
           >
             {t('joinGroup')}
           </Button>
