@@ -219,7 +219,7 @@ export const translations: Record<Language, Translations> = {
     sendWhatsApp: 'שלח וואטסאפ',
     helpDescription: 'נשמח לעזור! פנה אלינו בכל שאלה.',
     // About
-    aboutDescription: 'ניהול קניות חכם, פשוט ומשותף',
+    aboutDescription: 'פשוט, נוח ומשותף - הדרך החכמה לרשימות, לבד או ביחד',
     developedBy: 'פותח על ידי',
     allRightsReserved: 'כל הזכויות שמורות',
     // Home
@@ -398,7 +398,7 @@ export const translations: Record<Language, Translations> = {
     sendWhatsApp: 'Send WhatsApp',
     helpDescription: 'We\'d love to help! Contact us with any questions.',
     // About
-    aboutDescription: 'Smart, simple, shared shopping',
+    aboutDescription: 'Simple, convenient, shared - the smart way to list, alone or together',
     developedBy: 'Developed by',
     allRightsReserved: 'All rights reserved',
     // Home
@@ -577,7 +577,7 @@ export const translations: Record<Language, Translations> = {
     sendWhatsApp: 'Отправить WhatsApp',
     helpDescription: 'Мы рады помочь! Свяжитесь с нами по любым вопросам.',
     // About
-    aboutDescription: 'Умные покупки. Просто. Вместе.',
+    aboutDescription: 'Просто, удобно, вместе - умный способ вести списки, один или с семьёй',
     developedBy: 'Разработано',
     allRightsReserved: 'Все права защищены',
     // Home
