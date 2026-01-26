@@ -292,9 +292,9 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             isOpen={openItemId === p.id}
             onOpen={() => setOpenItemId(p.id)}
             onClose={() => setOpenItemId(null)}
-            onToggle={() => { updateProducts(list.products.map((x: Product) => x.id === p.id ? { ...x, isPurchased: !x.isPurchased } : x)); showToast('עודכן'); dismissHint(); }}
+            onToggle={() => { updateProducts(list.products.map((x: Product) => x.id === p.id ? { ...x, isPurchased: !x.isPurchased } : x)); showToast(t('updated')); dismissHint(); }}
             onEdit={() => setShowEdit({ ...p })}
-            onDelete={() => { updateProducts(list.products.filter((x: Product) => x.id !== p.id)); showToast('נמחק'); }}
+            onDelete={() => { updateProducts(list.products.filter((x: Product) => x.id !== p.id)); showToast(t('deleted')); }}
             onClick={() => { setShowDetails(p); dismissHint(); }}
           />
         ))}

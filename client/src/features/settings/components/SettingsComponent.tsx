@@ -34,6 +34,66 @@ const subSettingRowSx = {
   borderColor: 'divider'
 };
 
+const switchSx = {
+  width: 52,
+  height: 32,
+  padding: 0,
+  '& .MuiSwitch-switchBase': {
+    padding: 0,
+    margin: '4px',
+    transitionDuration: '300ms',
+    '&.Mui-checked': {
+      transform: 'translateX(20px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#14B8A6',
+        opacity: 1,
+        border: 0,
+      },
+    },
+  },
+  '& .MuiSwitch-thumb': {
+    boxSizing: 'border-box',
+    width: 24,
+    height: 24,
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 16,
+    backgroundColor: '#E9E9EA',
+    opacity: 1,
+  },
+};
+
+const smallSwitchSx = {
+  width: 44,
+  height: 26,
+  padding: 0,
+  '& .MuiSwitch-switchBase': {
+    padding: 0,
+    margin: '3px',
+    transitionDuration: '300ms',
+    '&.Mui-checked': {
+      transform: 'translateX(18px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#14B8A6',
+        opacity: 1,
+        border: 0,
+      },
+    },
+  },
+  '& .MuiSwitch-thumb': {
+    boxSizing: 'border-box',
+    width: 20,
+    height: 20,
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 13,
+    backgroundColor: '#E9E9EA',
+    opacity: 1,
+  },
+};
+
 export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateLanguage, updateNotifications, t } = useSettings();
@@ -83,7 +143,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
                 updateNotifications({ enabled: e.target.checked });
               }}
               onClick={(e) => e.stopPropagation()}
-              color="primary"
+              sx={switchSx}
             />
           </Box>
 
@@ -96,19 +156,17 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberJoined')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.groupJoin}
                   onChange={(e) => updateNotifications({ groupJoin: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
               <Box sx={{ ...subSettingRowSx, borderBottom: 'none' }}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberLeft')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.groupLeave}
                   onChange={(e) => updateNotifications({ groupLeave: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
 
@@ -118,37 +176,33 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productAdded')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.productAdd}
                   onChange={(e) => updateNotifications({ productAdd: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productDeleted')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.productDelete}
                   onChange={(e) => updateNotifications({ productDelete: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productEdited')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.productEdit}
                   onChange={(e) => updateNotifications({ productEdit: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
               <Box sx={{ ...subSettingRowSx, borderBottom: 'none' }}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productPurchased')}</Typography>
                 <Switch
-                  size="small"
                   checked={settings.notifications.productPurchase}
                   onChange={(e) => updateNotifications({ productPurchase: e.target.checked })}
-                  color="primary"
+                  sx={smallSwitchSx}
                 />
               </Box>
             </Box>
@@ -162,7 +216,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
               checked={settings.theme === 'dark'}
               onChange={toggleDarkMode}
               onClick={(e) => e.stopPropagation()}
-              color="primary"
+              sx={switchSx}
             />
           </Box>
 
@@ -358,7 +412,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
       {confirmDelete && (
         <ConfirmModal
           title={t('deleteAllData')}
-          message={settings.language === 'he' ? 'למחוק את כל הנתונים? פעולה זו לא ניתנת לביטול.' : settings.language === 'ru' ? 'Удалить все данные? Это действие нельзя отменить.' : 'Delete all data? This action cannot be undone.'}
+          message={t('deleteConfirmMessage')}
           confirmText={t('delete')}
           onConfirm={() => {
             setConfirmDelete(false);

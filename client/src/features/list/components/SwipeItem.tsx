@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Product } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
 
@@ -30,12 +31,21 @@ const actionBtnStyle = {
 };
 
 export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, onOpen, onClose }: SwipeItemProps) => {
+  const { t } = useSettings();
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const startX = useRef(0);
   const startY = useRef(0);
   const startOff = useRef(0);
+  const hasCalledOpen = useRef(false);
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
+
+  // Close this item when another item is opened
+  useEffect(() => {
+    if (!isOpen && offset > 0) {
+      setOffset(0);
+    }
+  }, [isOpen, offset]);
 
   const handlers = {
     onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => {
@@ -43,6 +53,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       startY.current = e.touches[0].clientY;
       startOff.current = offset;
       setSwiping(false);
+      hasCalledOpen.current = false;
     },
     onTouchMove: (e: React.TouchEvent<HTMLDivElement>) => {
       const dx = startX.current - e.touches[0].clientX;
@@ -51,6 +62,11 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > dy) {
         setSwiping(true);
         document.body.style.overflow = 'hidden';
+        // Call onOpen early to close other items
+        if (!hasCalledOpen.current && dx > 0) {
+          hasCalledOpen.current = true;
+          onOpen();
+        }
       }
 
       if (swiping) {
@@ -63,7 +79,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       if (swiping) {
         if (offset > 60) {
           setOffset(SWIPE_ACTIONS_WIDTH);
-          onOpen();
+          haptic('light');
         } else {
           setOffset(0);
           if (isOpen) onClose();
@@ -81,15 +97,15 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         <Box sx={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' }}>
           <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
             <span>🗑️</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>מחק</Typography>
+            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
           </Box>
           <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
             <span>✏️</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>ערוך</Typography>
+            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
           </Box>
           <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
             <span>{isPurchased ? '↩️' : '✓'}</span>
-            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? 'החזר' : 'נקנה'}</Typography>
+            <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
           </Box>
         </Box>
       )}

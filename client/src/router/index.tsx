@@ -4,6 +4,7 @@ import { Box, CircularProgress } from "@mui/material";
 import type { User, List } from "../global/types";
 import { useAuth, useLists, useToast } from "../global/hooks";
 import { Toast } from "../global/components";
+import { useSettings } from "../global/context/SettingsContext";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -43,6 +44,7 @@ const ListPageWrapper = ({
 }) => {
   const navigate = useNavigate();
   const { listId } = useParams();
+  const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
 
   if (!list) return <Navigate to="/" replace />;
@@ -55,12 +57,12 @@ const ListPageWrapper = ({
       onUpdateList={updateList}
       onLeaveList={(id: string) => {
         leaveList(id);
-        showToast("עזבת");
+        showToast(t('left'));
         navigate("/");
       }}
       onDeleteList={(id: string) => {
         deleteList(id);
-        showToast("נמחק!");
+        showToast(t('deleted'));
         navigate("/");
       }}
       showToast={showToast}
@@ -71,6 +73,7 @@ const ListPageWrapper = ({
 // Main App Router
 export const AppRouter = () => {
   const navigate = useNavigate();
+  const { t } = useSettings();
 
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
@@ -90,28 +93,28 @@ export const AppRouter = () => {
 
   const handleJoinGroup = (code: string, password: string) => {
     const result = joinGroup(code, password);
-    if (result.success) showToast("הצטרפת לקבוצה!");
+    if (result.success) showToast(t('joinedGroup'));
     return result;
   };
 
   const handleUpdateUser = (updates: Partial<User>) => {
     updateUser(updates);
-    showToast("הפרופיל עודכן");
+    showToast(t('profileUpdated'));
   };
 
   const handleCreateList = (list: List) => {
     createList(list);
-    showToast("נוצר!");
+    showToast(t('created'));
   };
 
   const handleDeleteList = (id: string) => {
     deleteList(id);
-    showToast("נמחק!");
+    showToast(t('deleted'));
   };
 
   const handleEditList = (list: List) => {
     updateList(list);
-    showToast("נשמר!");
+    showToast(t('saved'));
   };
 
   return (

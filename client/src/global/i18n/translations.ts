@@ -163,7 +163,16 @@ type TranslationKey =
   | 'emailExists'
   | 'whatToCreate'
   | 'loginWithoutGoogle'
-  | 'hideEmailLogin';
+  | 'hideEmailLogin'
+  | 'return'
+  | 'profileUpdated'
+  | 'created'
+  | 'joinedGroup'
+  | 'left'
+  | 'deleteGroupTitle'
+  | 'deleteListTitle'
+  | 'deleteConfirmMessage'
+  | 'noNotifications';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -331,7 +340,16 @@ export const translations: Record<Language, Translations> = {
     emailExists: 'אימייל זה כבר קיים',
     whatToCreate: 'מה תרצה ליצור?',
     loginWithoutGoogle: 'התחברות ללא Google',
-    hideEmailLogin: 'הסתר'
+    hideEmailLogin: 'הסתר',
+    return: 'החזר',
+    profileUpdated: 'הפרופיל עודכן',
+    created: 'נוצר',
+    joinedGroup: 'הצטרפת לקבוצה',
+    left: 'עזבת',
+    deleteGroupTitle: 'מחיקת קבוצה',
+    deleteListTitle: 'מחיקת רשימה',
+    deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
+    noNotifications: 'אין התראות חדשות'
   },
   en: {
     // General
@@ -496,7 +514,16 @@ export const translations: Record<Language, Translations> = {
     emailExists: 'This email already exists',
     whatToCreate: 'What would you like to create?',
     loginWithoutGoogle: 'Login without Google',
-    hideEmailLogin: 'Hide'
+    hideEmailLogin: 'Hide',
+    return: 'Return',
+    profileUpdated: 'Profile updated',
+    created: 'Created',
+    joinedGroup: 'Joined group',
+    left: 'Left',
+    deleteGroupTitle: 'Delete Group',
+    deleteListTitle: 'Delete List',
+    deleteConfirmMessage: 'This action cannot be undone',
+    noNotifications: 'No new notifications'
   },
   ru: {
     // General
@@ -661,7 +688,16 @@ export const translations: Record<Language, Translations> = {
     emailExists: 'Этот email уже существует',
     whatToCreate: 'Что вы хотите создать?',
     loginWithoutGoogle: 'Войти без Google',
-    hideEmailLogin: 'Скрыть'
+    hideEmailLogin: 'Скрыть',
+    return: 'Вернуть',
+    profileUpdated: 'Профиль обновлён',
+    created: 'Создано',
+    joinedGroup: 'Вы присоединились к группе',
+    left: 'Вы покинули',
+    deleteGroupTitle: 'Удалить группу',
+    deleteListTitle: 'Удалить список',
+    deleteConfirmMessage: 'Это действие нельзя отменить',
+    noNotifications: 'Нет новых уведомлений'
   }
 };
 
