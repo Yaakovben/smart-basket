@@ -262,35 +262,41 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
       {showLanguage && (
         <Modal title={t('language')} onClose={() => setShowLanguage(false)}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {LANGUAGES.map((lang) => (
-              <Button
-                key={lang.code}
-                onClick={() => handleLanguageSelect(lang.code as Language)}
-                fullWidth
-                sx={{
-                  justifyContent: 'flex-start',
-                  p: 2,
-                  borderRadius: '12px',
-                  border: settings.language === lang.code ? '2px solid #14B8A6' : '1.5px solid',
-                  borderColor: settings.language === lang.code ? '#14B8A6' : 'divider',
-                  bgcolor: settings.language === lang.code ? '#F0FDFA' : 'transparent',
-                  textTransform: 'none'
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                  <Typography sx={{ fontSize: 24 }}>
-                    {lang.code === 'he' ? '🇮🇱' : lang.code === 'en' ? '🇺🇸' : '🇷🇺'}
-                  </Typography>
-                  <Box sx={{ flex: 1, textAlign: settings.language === 'he' ? 'right' : 'left' }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary' }}>{lang.name}</Typography>
-                    <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{lang.nameEn}</Typography>
+            {LANGUAGES.map((lang) => {
+              const isSelected = settings.language === lang.code;
+              return (
+                <Button
+                  key={lang.code}
+                  onClick={() => handleLanguageSelect(lang.code as Language)}
+                  fullWidth
+                  sx={{
+                    justifyContent: 'flex-start',
+                    p: 2,
+                    borderRadius: '12px',
+                    border: isSelected ? '2px solid' : '1.5px solid',
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    bgcolor: isSelected ? 'rgba(20, 184, 166, 0.1)' : 'transparent',
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: isSelected ? 'rgba(20, 184, 166, 0.15)' : 'action.hover'
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                    <Typography sx={{ fontSize: 24 }}>
+                      {lang.code === 'he' ? '🇮🇱' : lang.code === 'en' ? '🇺🇸' : '🇷🇺'}
+                    </Typography>
+                    <Box sx={{ flex: 1, textAlign: settings.language === 'he' ? 'right' : 'left' }}>
+                      <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary' }}>{lang.name}</Typography>
+                      <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{lang.nameEn}</Typography>
+                    </Box>
+                    {isSelected && (
+                      <Typography sx={{ fontSize: 20, color: 'primary.main' }}>✓</Typography>
+                    )}
                   </Box>
-                  {settings.language === lang.code && (
-                    <Typography sx={{ fontSize: 20, color: 'primary.main' }}>✓</Typography>
-                  )}
-                </Box>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </Box>
         </Modal>
       )}

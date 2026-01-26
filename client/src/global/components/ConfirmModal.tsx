@@ -3,6 +3,7 @@ import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
+import { useSettings } from '../context/SettingsContext';
 
 interface ConfirmModalProps {
   title: string;
@@ -19,7 +20,8 @@ const Transition = forwardRef(function Transition(
   return <Zoom ref={ref} {...props} />;
 });
 
-export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'אישור' }: ConfirmModalProps) => {
+export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText }: ConfirmModalProps) => {
+  const { t } = useSettings();
   return (
     <Dialog
       open
@@ -65,7 +67,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
             '&:hover': { borderColor: 'divider', borderWidth: 2, bgcolor: 'action.hover' }
           }}
         >
-          ביטול
+          {t('cancel')}
         </Button>
         <Button
           onClick={() => { haptic('medium'); onConfirm(); }}
@@ -73,7 +75,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           color="error"
           fullWidth
         >
-          {confirmText}
+          {confirmText || t('confirm')}
         </Button>
       </DialogActions>
     </Dialog>

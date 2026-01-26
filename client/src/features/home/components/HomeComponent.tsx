@@ -483,7 +483,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Edit List Modal */}
       {editList && (
-        <Modal title={editList.isGroup ? 'עריכת קבוצה' : 'עריכת רשימה'} onClose={() => setEditList(null)}>
+        <Modal title={editList.isGroup ? t('editGroup') : t('editList')} onClose={() => setEditList(null)}>
           {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
             <Box sx={{
@@ -530,9 +530,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Confirm Delete */}
       {confirmDeleteList && (
         <ConfirmModal
-          title={confirmDeleteList.isGroup ? 'מחיקת קבוצה' : 'מחיקת רשימה'}
-          message={`למחוק את "${confirmDeleteList.name}"? פעולה זו לא ניתנת לביטול.`}
-          confirmText="מחק"
+          title={confirmDeleteList.isGroup ? t('deleteGroupTitle') : t('deleteListTitle')}
+          message={`${t('delete')} "${confirmDeleteList.name}"? ${t('deleteConfirmMessage')}`}
+          confirmText={t('delete')}
           onConfirm={() => { onDeleteList(confirmDeleteList.id); setConfirmDeleteList(null); }}
           onCancel={() => setConfirmDeleteList(null)}
         />
@@ -540,11 +540,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Notifications Modal */}
       {showNotifications && (
-        <Modal title="התראות" onClose={() => setShowNotifications(false)}>
+        <Modal title={t('notifications')} onClose={() => setShowNotifications(false)}>
           {myNotifications.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4, px: 2.5 }}>
               <Typography sx={{ fontSize: 48 }}>🔔</Typography>
-              <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>אין התראות חדשות</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>{t('noNotifications')}</Typography>
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
@@ -557,7 +557,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography sx={{ fontSize: 14, fontWeight: 600, color: isLeave ? '#991B1B' : '#166534' }}>
-                        {n.userName} {isLeave ? 'עזב/ה את הקבוצה' : 'הצטרף/ה לקבוצה'}
+                        {n.userName} {isLeave ? t('left') : t('joinedGroup')}
                       </Typography>
                       <Typography sx={{ fontSize: 13, color: isLeave ? '#B91C1C' : '#15803D' }}>{n.listName}</Typography>
                     </Box>
@@ -568,7 +568,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 myNotifications.forEach((n: Notification & { listName: string; listId: string }) => onMarkNotificationsRead(n.listId));
                 setShowNotifications(false);
               }}>
-                סמן הכל כנקרא
+                {t('markAllAsRead')}
               </Button>
             </Box>
           )}

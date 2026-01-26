@@ -175,7 +175,8 @@ type TranslationKey =
   | 'deleteConfirmMessage'
   | 'noNotifications'
   | 'home'
-  | 'new';
+  | 'new'
+  | 'markAllAsRead';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -355,7 +356,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
-    new: 'חדש'
+    new: 'חדש',
+    markAllAsRead: 'סמן הכל כנקרא'
   },
   en: {
     // General
@@ -532,7 +534,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'This action cannot be undone',
     noNotifications: 'No new notifications',
     home: 'Home',
-    new: 'New'
+    new: 'New',
+    markAllAsRead: 'Mark all as read'
   },
   ru: {
     // General
@@ -709,7 +712,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'Это действие нельзя отменить',
     noNotifications: 'Нет новых уведомлений',
     home: 'Главная',
-    new: 'Новый'
+    new: 'Новый',
+    markAllAsRead: 'Отметить все как прочитанное'
   }
 };
 

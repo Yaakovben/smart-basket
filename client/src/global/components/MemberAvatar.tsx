@@ -19,6 +19,7 @@ export const MemberAvatar = ({ member, size = 36, index = 0 }: MemberAvatarProps
         fontWeight: 700,
         lineHeight: 1,
         border: '2px solid white',
+        boxSizing: 'border-box',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}
     >

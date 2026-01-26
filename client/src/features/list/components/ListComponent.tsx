@@ -534,15 +534,15 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                   onClick={() => removeMember(m.id)}
                   size="small"
                   sx={{
-                    bgcolor: 'action.hover',
-                    color: 'text.secondary',
+                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                    color: 'error.main',
                     fontSize: 12,
-                    fontWeight: 500,
+                    fontWeight: 600,
                     px: 1.5,
                     py: 0.5,
                     minWidth: 'auto',
                     borderRadius: '8px',
-                    '&:hover': { bgcolor: 'action.selected', color: 'error.main' }
+                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
                   }}
                 >
                   {t('removeMember')}
@@ -551,7 +551,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             </Box>
           ))}
           {!isOwner && list.isGroup && (
-            <Button fullWidth onClick={leaveList} sx={{ mt: 2.5, bgcolor: 'action.hover', color: 'text.secondary', '&:hover': { bgcolor: 'action.selected', color: 'error.main' } }}>
+            <Button fullWidth onClick={leaveList} sx={{ mt: 2.5, bgcolor: 'rgba(239, 68, 68, 0.1)', color: 'error.main', fontWeight: 600, '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' } }}>
               {t('leaveGroup')}
             </Button>
           )}
