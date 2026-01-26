@@ -1,4 +1,3 @@
-import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
@@ -12,12 +11,14 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
-import type { List, Member, Notification, Product, User } from '../../../global/types';
+import type { List, Product, User } from '../../../global/types';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useHome } from '../hooks/useHome';
+import type { ExtendedNotification } from '../types/home-types';
 
-// Reusable styles
+// ===== Reusable Styles =====
 const glassButtonSx = {
   bgcolor: 'rgba(255,255,255,0.2)',
   backdropFilter: 'blur(10px)',
@@ -52,6 +53,7 @@ const colorSelectSx = (isSelected: boolean) => ({
   '&:hover': { transform: 'scale(1.1)' }
 });
 
+// ===== Props Interface =====
 interface HomePageProps {
   lists: List[];
   user: User;
@@ -64,84 +66,27 @@ interface HomePageProps {
   onMarkNotificationsRead: (listId: string) => void;
 }
 
-
 export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
-  const [tab, setTab] = useState('all');
-  const [search, setSearch] = useState('');
-  const [showMenu, setShowMenu] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [showJoin, setShowJoin] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [confirmLogout, setConfirmLogout] = useState(false);
-  const [editList, setEditList] = useState<List | null>(null);
-  const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
-  const [newL, setNewL] = useState<{ name: string; icon: string; color: string }>({ name: '', icon: '📋', color: '#14B8A6' });
-  const [joinCode, setJoinCode] = useState('');
-  const [joinPass, setJoinPass] = useState('');
-  const [joinError, setJoinError] = useState('');
-  const [createError, setCreateError] = useState('');
 
-  // Memoized computed values
-  const userLists = useMemo(() => lists.filter((l: List) => {
-    if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
-    return l.owner.id === user.id;
-  }), [lists, user.id]);
-
-  const { my, groups } = useMemo(() => ({
-    my: userLists.filter((l: List) => !l.isGroup),
-    groups: userLists.filter((l: List) => l.isGroup)
-  }), [userLists]);
-
-  const myNotifications = useMemo(() => userLists
-    .filter((l: List) => l.isGroup && (l.notifications?.length ?? 0) > 0)
-    .flatMap((l: List) => (l.notifications || [])
-      .filter((n: Notification) => !n.read && n.userId !== user.id)
-      .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }))
-    ), [userLists, user.id]);
-
-  const unreadCount = myNotifications.length;
-
-  const display = useMemo(() => {
-    const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
-    return search ? base.filter((l: List) => l.name.includes(search)) : base;
-  }, [tab, userLists, my, groups, search]);
-
-  const handleCreate = useCallback((isGroup: boolean) => {
-    setCreateError('');
-    if (!newL.name.trim()) { setCreateError(t('enterListName')); return; }
-    if (newL.name.length < 2) { setCreateError(t('nameTooShort')); return; }
-    onCreateList({
-      id: `l${Date.now()}`,
-      ...newL,
-      isGroup,
-      owner: user,
-      members: [],
-      products: [],
-      inviteCode: isGroup ? Math.random().toString(36).substring(2, 8).toUpperCase() : null,
-      password: isGroup ? String(Math.floor(1000 + Math.random() * 9000)) : null
-    });
-    setNewL({ name: '', icon: isGroup ? '👨‍👩‍👧‍👦' : '🛒', color: '#14B8A6' });
-    setShowCreate(false);
-    setShowCreateGroup(false);
-  }, [newL, onCreateList, user, t]);
-
-  const handleJoin = useCallback(() => {
-    setJoinError('');
-    if (!joinCode.trim() || !joinPass.trim()) { setJoinError(t('enterCodeAndPassword')); return; }
-    const result = onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
-    if (result.success) { setShowJoin(false); setJoinCode(''); setJoinPass(''); }
-    else { setJoinError(result.error || t('unknownError')); }
-  }, [joinCode, joinPass, onJoinGroup, t]);
-
-  const openOption = useCallback((option: string) => {
-    setShowMenu(false);
-    if (option === 'private') setShowCreate(true);
-    else if (option === 'group') setShowCreateGroup(true);
-    else if (option === 'join') setShowJoin(true);
-  }, []);
+  const {
+    // State
+    tab, search, showMenu, showCreate, showCreateGroup, showJoin,
+    showNotifications, confirmLogout, editList, confirmDeleteList,
+    newL, joinCode, joinPass, joinError, createError,
+    // Computed
+    userLists, my, groups, myNotifications, unreadCount, display,
+    // Setters
+    setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
+    setEditList, setConfirmDeleteList, setJoinCode, setJoinPass,
+    // Handlers
+    handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
+    closeJoinModal, updateNewListField, updateEditListField, saveEditList,
+    deleteList, markAllNotificationsRead
+  } = useHome({
+    lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, onMarkNotificationsRead
+  });
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
@@ -151,14 +96,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
               onClick={() => navigate('/profile')}
-              sx={{
-                bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)',
-                cursor: 'pointer',
-                width: 44,
-                height: 44,
-                fontSize: 18,
-                border: '2px solid rgba(255,255,255,0.3)'
-              }}
+              sx={{ bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer', width: 44, height: 44, fontSize: 18, border: '2px solid rgba(255,255,255,0.3)' }}
             >
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
@@ -233,14 +171,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Button
               variant="contained"
               onClick={() => { haptic('medium'); setShowMenu(true); }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                px: { xs: 2.5, sm: 3 },
-                py: { xs: 1.25, sm: 1.5 },
-                fontSize: { xs: 14, sm: 15 }
-              }}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 2.5, sm: 3 }, py: { xs: 1.25, sm: 1.5 }, fontSize: { xs: 14, sm: 15 } }}
             >
               <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
@@ -324,33 +255,22 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Create Private List Modal */}
       {showCreate && (
-        <Modal title={t('privateList')} onClose={() => { setShowCreate(false); setNewL({ name: '', icon: '📋', color: '#14B8A6' }); setCreateError(''); }}>
+        <Modal title={t('privateList')} onClose={closeCreateModal}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
-          {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-            <Box sx={{
-              width: 60,
-              height: 60,
-              borderRadius: '14px',
-              bgcolor: newL.color,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 28,
-              boxShadow: `0 4px 12px ${newL.color}40`
-            }}>
+            <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: newL.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${newL.color}40` }}>
               {newL.icon}
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('listName')}</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
+            <TextField fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {LIST_ICONS.map(i => (
-                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
+                <Box key={i} onClick={() => updateNewListField('icon', i)} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
@@ -358,7 +278,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
+                <Box key={c} onClick={() => updateNewListField('color', c)} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
@@ -368,33 +288,22 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Create Group Modal */}
       {showCreateGroup && (
-        <Modal title={t('newGroup')} onClose={() => { setShowCreateGroup(false); setNewL({ name: '', icon: '👨‍👩‍👧‍👦', color: '#14B8A6' }); setCreateError(''); }}>
+        <Modal title={t('newGroup')} onClose={closeCreateGroupModal}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
-          {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-            <Box sx={{
-              width: 60,
-              height: 60,
-              borderRadius: '14px',
-              bgcolor: newL.color,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 28,
-              boxShadow: `0 4px 12px ${newL.color}40`
-            }}>
+            <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: newL.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${newL.color}40` }}>
               {newL.icon}
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('groupName')}</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => { setNewL({ ...newL, name: e.target.value }); setCreateError(''); }}  size="small" />
+            <TextField fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {GROUP_ICONS.map(i => (
-                <Box key={i} onClick={() => setNewL({ ...newL, icon: i })} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
+                <Box key={i} onClick={() => updateNewListField('icon', i)} sx={iconSelectSx(newL.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
@@ -402,7 +311,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setNewL({ ...newL, color: c })} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
+                <Box key={c} onClick={() => updateNewListField('color', c)} sx={{ ...colorSelectSx(newL.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
@@ -412,49 +321,93 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Join Group Modal */}
       {showJoin && (
-        <Modal title={t('joinGroup')} onClose={() => { setShowJoin(false); setJoinError(''); setJoinCode(''); setJoinPass(''); }}>
-          <Box sx={{ textAlign: 'center', mb: 1.5 }}>
-            <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, mx: 'auto', mb: 1 }}>🔗</Box>
-            <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{t('enterCodeAndPasswordHint')}</Typography>
+        <Modal title={t('joinGroup')} onClose={closeJoinModal}>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box sx={{
+              width: 72,
+              height: 72,
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 32,
+              mx: 'auto',
+              mb: 2,
+              boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
+            }}>
+              👥
+            </Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
+              {t('enterCodeAndPasswordHint')}
+            </Typography>
           </Box>
 
-          <Box sx={{ mb: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
-              {joinCode.length === 6 && <Typography sx={{ fontSize: 11, color: 'success.main' }}>✓</Typography>}
-            </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('groupCode')}</Typography>
             <TextField
               fullWidth
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+              placeholder="ABC123"
               size="small"
-              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 4, fontWeight: 700, fontSize: 16 } }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 6, fontWeight: 700, fontSize: 18 } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: 'action.hover',
+                  transition: 'all 0.2s',
+                  '&.Mui-focused': { bgcolor: 'background.paper' }
+                }
+              }}
+              InputProps={{
+                endAdornment: joinCode.length === 6 ? (
+                  <Box sx={{ color: 'success.main', fontSize: 18 }}>✓</Box>
+                ) : null
+              }}
             />
           </Box>
 
-          <Box sx={{ mb: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
-              {joinPass.length === 4 && <Typography sx={{ fontSize: 11, color: 'success.main' }}>✓</Typography>}
-            </Box>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('password')}</Typography>
             <TextField
               fullWidth
               value={joinPass}
               onChange={e => setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="••••"
               size="small"
-              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 5, fontWeight: 700, fontSize: 16 } }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 8, fontWeight: 700, fontSize: 18 } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: 'action.hover',
+                  transition: 'all 0.2s',
+                  '&.Mui-focused': { bgcolor: 'background.paper' }
+                }
+              }}
+              InputProps={{
+                endAdornment: joinPass.length === 4 ? (
+                  <Box sx={{ color: 'success.main', fontSize: 18 }}>✓</Box>
+                ) : null
+              }}
             />
           </Box>
 
-          {joinError && <Alert severity="error" sx={{ mb: 1, borderRadius: '10px', fontSize: 11, py: 0.25 }}>{joinError}</Alert>}
+          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>{joinError}</Alert>}
+
           <Button
             variant="contained"
             fullWidth
             onClick={handleJoin}
             disabled={joinCode.length < 6 || joinPass.length < 4}
-            sx={{ py: 1, fontSize: 14, fontWeight: 600, borderRadius: '10px' }}
+            sx={{
+              py: 1.5,
+              fontSize: 15,
+              fontWeight: 600,
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
+              '&:disabled': { boxShadow: 'none' }
+            }}
           >
             {t('joinGroup')}
           </Button>
@@ -464,31 +417,20 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Edit List Modal */}
       {editList && (
         <Modal title={editList.isGroup ? t('editGroup') : t('editList')} onClose={() => setEditList(null)}>
-          {/* Preview */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-            <Box sx={{
-              width: 60,
-              height: 60,
-              borderRadius: '14px',
-              bgcolor: editList.color,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 28,
-              boxShadow: `0 4px 12px ${editList.color}40`
-            }}>
+            <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: editList.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${editList.color}40` }}>
               {editList.icon}
             </Box>
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('name')}</Typography>
-            <TextField fullWidth value={editList.name} onChange={e => setEditList({ ...editList, name: e.target.value })} size="small" />
+            <TextField fullWidth value={editList.name} onChange={e => updateEditListField('name', e.target.value)} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
             <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Box key={i} onClick={() => setEditList({ ...editList, icon: i })} sx={iconSelectSx(editList.icon === i)}>{i}</Box>
+                <Box key={i} onClick={() => updateEditListField('icon', i)} sx={iconSelectSx(editList.icon === i)}>{i}</Box>
               ))}
             </Box>
           </Box>
@@ -496,11 +438,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => setEditList({ ...editList, color: c })} sx={{ ...colorSelectSx(editList.color === c), bgcolor: c }} />
+                <Box key={c} onClick={() => updateEditListField('color', c)} sx={{ ...colorSelectSx(editList.color === c), bgcolor: c }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
+          <Button variant="contained" fullWidth onClick={saveEditList} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
           <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}>
             {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
@@ -513,7 +455,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           title={confirmDeleteList.isGroup ? t('deleteGroupTitle') : t('deleteListTitle')}
           message={`${t('delete')} "${confirmDeleteList.name}"? ${t('deleteConfirmMessage')}`}
           confirmText={t('delete')}
-          onConfirm={() => { onDeleteList(confirmDeleteList.id); setConfirmDeleteList(null); }}
+          onConfirm={deleteList}
           onCancel={() => setConfirmDeleteList(null)}
         />
       )}
@@ -528,7 +470,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-              {myNotifications.map((n: Notification & { listName: string; listId: string }) => {
+              {myNotifications.map((n: ExtendedNotification) => {
                 const isLeave = n.type === 'leave';
                 return (
                   <Box key={n.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: '12px', border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
@@ -544,10 +486,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   </Box>
                 );
               })}
-              <Button variant="contained" fullWidth sx={{ mt: 1 }} onClick={() => {
-                myNotifications.forEach((n: Notification & { listName: string; listId: string }) => onMarkNotificationsRead(n.listId));
-                setShowNotifications(false);
-              }}>
+              <Button variant="contained" fullWidth sx={{ mt: 1 }} onClick={markAllNotificationsRead}>
                 {t('markAllAsRead')}
               </Button>
             </Box>

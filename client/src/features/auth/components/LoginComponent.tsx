@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react';
 import {
   Box, TextField, Button, Typography, Alert,
   CircularProgress, InputAdornment, Paper, Collapse
@@ -7,14 +6,10 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useGoogleLogin } from '@react-oauth/google';
 import type { User } from '../../../global/types';
-import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useAuth } from '../hooks/useAuth';
 
-interface LoginPageProps {
-  onLogin: (user: User) => void;
-}
-
-// Google Logo SVG
+// ===== Google Logo SVG =====
 const GoogleLogo = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -24,115 +19,25 @@ const GoogleLogo = () => (
   </svg>
 );
 
+// ===== Props Interface =====
+interface LoginPageProps {
+  onLogin: (user: User) => void;
+}
+
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
 
-  const isValidEmail = useCallback((e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), []);
-
-  // Check if email exists when user finishes typing
-  const checkEmailExists = useCallback((emailToCheck: string) => {
-    if (!isValidEmail(emailToCheck)) return;
-    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-    const exists = users.some((u: User) => u.email === emailToCheck);
-    setIsNewUser(!exists);
-  }, [isValidEmail]);
+  const {
+    name, email, password, error, googleLoading, isNewUser, showEmailForm,
+    setName, setPassword,
+    handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
+    toggleEmailForm, isValidEmail
+  } = useAuth({ onLogin });
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGoogleLoading(true);
-      try {
-        // Fetch user info from Google
-        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-        });
-        const userInfo = await response.json();
-
-        haptic('medium');
-        const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-
-        // Check if user already exists
-        const existingUser = users.find((u: User) => u.email === userInfo.email);
-        if (existingUser) {
-          onLogin(existingUser);
-          return;
-        }
-
-        // Create new user from Google data
-        const googleUser: User = {
-          id: `g${userInfo.sub}`,
-          name: userInfo.name,
-          email: userInfo.email,
-          avatarEmoji: '',
-          avatarColor: '#4285F4'
-        };
-
-        users.push(googleUser);
-        localStorage.setItem('sb_users', JSON.stringify(users));
-        onLogin(googleUser);
-      } catch (err) {
-        console.error('Error fetching Google user info:', err);
-        setError(t('unknownError'));
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    onError: () => {
-      haptic('heavy');
-      setError(t('unknownError'));
-      setGoogleLoading(false);
-    }
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleError
   });
-
-  const handleEmailSubmit = useCallback(() => {
-    setError('');
-    if (!email.trim()) { setError(t('enterEmail') || 'נא להזין אימייל'); return; }
-    if (!isValidEmail(email)) { setError(t('invalidEmail') || 'אימייל לא תקין'); return; }
-    if (!password) { setError(t('enterPassword') || 'נא להזין סיסמה'); return; }
-
-    const users = JSON.parse(localStorage.getItem('sb_users') || '[]');
-    const existingUser = users.find((u: User) => u.email === email);
-
-    if (existingUser) {
-      // Login
-      if (existingUser.password === password) {
-        haptic('medium');
-        onLogin(existingUser);
-      } else {
-        haptic('heavy');
-        setError(t('wrongPassword'));
-      }
-    } else {
-      // Register
-      if (!name.trim()) { setError(t('enterName') || 'נא להזין שם'); return; }
-      if (name.trim().length < 2) { setError(t('nameTooShort')); return; }
-      if (password.length < 4) { setError(t('passwordTooShort') || 'סיסמה חייבת להכיל לפחות 4 תווים'); return; }
-
-      const newUser = {
-        id: `u${Date.now()}`,
-        name: name.trim(),
-        email,
-        password,
-        avatarEmoji: '',
-        avatarColor: '#14B8A6'
-      };
-      users.push(newUser);
-      localStorage.setItem('sb_users', JSON.stringify(users));
-      haptic('medium');
-      onLogin(newUser);
-    }
-  }, [email, password, name, isValidEmail, onLogin, t]);
-
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    handleEmailSubmit();
-  }, [handleEmailSubmit]);
 
   return (
     <Box sx={{
@@ -188,7 +93,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
         {/* Content */}
         <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
-          {/* Google Login Button - Professional Style */}
+          {/* Google Login Button */}
           <Button
             fullWidth
             onClick={() => googleLogin()}
@@ -210,14 +115,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
               justifyContent: 'center',
               gap: 1.5,
               transition: 'all 0.2s ease',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-              },
-              '&:active': {
-                bgcolor: 'action.selected'
-              }
+              '&:hover': { bgcolor: 'action.hover', borderColor: 'divider', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' },
+              '&:active': { bgcolor: 'action.selected' }
             }}
           >
             {googleLoading ? (
@@ -238,7 +137,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
           {/* Email Login Toggle */}
           <Box
-            onClick={() => { setShowEmailForm(!showEmailForm); setError(''); }}
+            onClick={toggleEmailForm}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -260,11 +159,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
           {/* Collapsible Email Form */}
           <Collapse in={showEmailForm}>
-            <Box sx={{
-              pt: 1,
-              borderTop: '1px solid',
-              borderColor: 'divider'
-            }}>
+            <Box sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
               <form onSubmit={handleSubmit}>
                 {/* Email Field */}
                 <TextField
@@ -272,10 +167,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="email"
                   label={t('email')}
                   value={email}
-                  onChange={e => {
-                    setEmail(e.target.value);
-                    checkEmailExists(e.target.value);
-                  }}
+                  onChange={e => handleEmailChange(e.target.value)}
                   placeholder="example@mail.com"
                   autoComplete="email"
                   size="small"
@@ -335,13 +227,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  sx={{
-                    mt: 2.5,
-                    py: 1.5,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    borderRadius: '12px'
-                  }}
+                  sx={{ mt: 2.5, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
                 >
                   {isNewUser ? t('register') : t('login')}
                 </Button>

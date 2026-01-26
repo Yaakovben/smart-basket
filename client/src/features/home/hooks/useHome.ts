@@ -1,0 +1,249 @@
+import { useState, useMemo, useCallback } from 'react';
+import type { List, Member, Notification, User } from '../../../global/types';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { generateInviteCode, generatePassword, generateListId } from '../helpers/home-helpers';
+import type {
+  NewListForm,
+  HomeTab,
+  ExtendedNotification,
+  UseHomeReturn
+} from '../types/home-types';
+
+interface UseHomeParams {
+  lists: List[];
+  user: User;
+  onCreateList: (list: List) => void;
+  onDeleteList: (listId: string) => void;
+  onEditList: (list: List) => void;
+  onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
+  onMarkNotificationsRead: (listId: string) => void;
+}
+
+const DEFAULT_NEW_LIST: NewListForm = {
+  name: '',
+  icon: '📋',
+  color: '#14B8A6'
+};
+
+const DEFAULT_NEW_GROUP: NewListForm = {
+  name: '',
+  icon: '👨‍👩‍👧‍👦',
+  color: '#14B8A6'
+};
+
+export const useHome = ({
+  lists,
+  user,
+  onCreateList,
+  onDeleteList,
+  onEditList,
+  onJoinGroup,
+  onMarkNotificationsRead
+}: UseHomeParams): UseHomeReturn => {
+  const { t } = useSettings();
+
+  // ===== UI State =====
+  const [tab, setTab] = useState<HomeTab>('all');
+  const [search, setSearch] = useState('');
+
+  // ===== Modal State =====
+  const [showMenu, setShowMenu] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [editList, setEditList] = useState<List | null>(null);
+  const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
+
+  // ===== Form State =====
+  const [newL, setNewL] = useState<NewListForm>(DEFAULT_NEW_LIST);
+  const [joinCode, setJoinCode] = useState('');
+  const [joinPass, setJoinPass] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [createError, setCreateError] = useState('');
+
+  // ===== Computed Values =====
+  const userLists = useMemo(() => lists.filter((l: List) => {
+    if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
+    return l.owner.id === user.id;
+  }), [lists, user.id]);
+
+  const { my, groups } = useMemo(() => ({
+    my: userLists.filter((l: List) => !l.isGroup),
+    groups: userLists.filter((l: List) => l.isGroup)
+  }), [userLists]);
+
+  const myNotifications = useMemo((): ExtendedNotification[] => userLists
+    .filter((l: List) => l.isGroup && (l.notifications?.length ?? 0) > 0)
+    .flatMap((l: List) => (l.notifications || [])
+      .filter((n: Notification) => !n.read && n.userId !== user.id)
+      .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }))
+    ), [userLists, user.id]);
+
+  const unreadCount = myNotifications.length;
+
+  const display = useMemo(() => {
+    const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
+    return search ? base.filter((l: List) => l.name.includes(search)) : base;
+  }, [tab, userLists, my, groups, search]);
+
+  // ===== Handlers =====
+  const handleCreate = useCallback((isGroup: boolean) => {
+    setCreateError('');
+    if (!newL.name.trim()) {
+      setCreateError(t('enterListName'));
+      return;
+    }
+    if (newL.name.length < 2) {
+      setCreateError(t('nameTooShort'));
+      return;
+    }
+
+    onCreateList({
+      id: generateListId(),
+      ...newL,
+      isGroup,
+      owner: user,
+      members: [],
+      products: [],
+      inviteCode: isGroup ? generateInviteCode() : null,
+      password: isGroup ? generatePassword() : null
+    });
+
+    setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
+    setShowCreate(false);
+    setShowCreateGroup(false);
+  }, [newL, onCreateList, user, t]);
+
+  const handleJoin = useCallback(() => {
+    setJoinError('');
+    if (!joinCode.trim() || !joinPass.trim()) {
+      setJoinError(t('enterCodeAndPassword'));
+      return;
+    }
+    const result = onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
+    if (result.success) {
+      setShowJoin(false);
+      setJoinCode('');
+      setJoinPass('');
+    } else {
+      setJoinError(result.error || t('unknownError'));
+    }
+  }, [joinCode, joinPass, onJoinGroup, t]);
+
+  const openOption = useCallback((option: string) => {
+    setShowMenu(false);
+    if (option === 'private') setShowCreate(true);
+    else if (option === 'group') setShowCreateGroup(true);
+    else if (option === 'join') setShowJoin(true);
+  }, []);
+
+  const closeCreateModal = useCallback(() => {
+    setShowCreate(false);
+    setNewL(DEFAULT_NEW_LIST);
+    setCreateError('');
+  }, []);
+
+  const closeCreateGroupModal = useCallback(() => {
+    setShowCreateGroup(false);
+    setNewL(DEFAULT_NEW_GROUP);
+    setCreateError('');
+  }, []);
+
+  const closeJoinModal = useCallback(() => {
+    setShowJoin(false);
+    setJoinError('');
+    setJoinCode('');
+    setJoinPass('');
+  }, []);
+
+  const updateNewListField = useCallback(<K extends keyof NewListForm>(
+    field: K,
+    value: NewListForm[K]
+  ) => {
+    setNewL(prev => ({ ...prev, [field]: value }));
+    if (field === 'name') setCreateError('');
+  }, []);
+
+  const updateEditListField = useCallback(<K extends keyof List>(
+    field: K,
+    value: List[K]
+  ) => {
+    setEditList(prev => prev ? { ...prev, [field]: value } : null);
+  }, []);
+
+  const saveEditList = useCallback(() => {
+    if (!editList) return;
+    onEditList(editList);
+    setEditList(null);
+  }, [editList, onEditList]);
+
+  const deleteList = useCallback(() => {
+    if (!confirmDeleteList) return;
+    onDeleteList(confirmDeleteList.id);
+    setConfirmDeleteList(null);
+  }, [confirmDeleteList, onDeleteList]);
+
+  const markAllNotificationsRead = useCallback(() => {
+    myNotifications.forEach((n) => onMarkNotificationsRead(n.listId));
+    setShowNotifications(false);
+  }, [myNotifications, onMarkNotificationsRead]);
+
+  return {
+    // State
+    tab,
+    search,
+    showMenu,
+    showCreate,
+    showCreateGroup,
+    showJoin,
+    showNotifications,
+    confirmLogout,
+    editList,
+    confirmDeleteList,
+    newL,
+    joinCode,
+    joinPass,
+    joinError,
+    createError,
+
+    // Computed values
+    userLists,
+    my,
+    groups,
+    myNotifications,
+    unreadCount,
+    display,
+
+    // Setters
+    setTab,
+    setSearch,
+    setShowMenu,
+    setShowCreate,
+    setShowCreateGroup,
+    setShowJoin,
+    setShowNotifications,
+    setConfirmLogout,
+    setEditList,
+    setConfirmDeleteList,
+    setNewL,
+    setJoinCode,
+    setJoinPass,
+    setJoinError,
+    setCreateError,
+
+    // Handlers
+    handleCreate,
+    handleJoin,
+    openOption,
+    closeCreateModal,
+    closeCreateGroupModal,
+    closeJoinModal,
+    updateNewListField,
+    updateEditListField,
+    saveEditList,
+    deleteList,
+    markAllNotificationsRead
+  };
+};

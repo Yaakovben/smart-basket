@@ -1,4 +1,3 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Tabs, Tab,
   Chip, Avatar, Fab, Select, MenuItem, InputAdornment, Alert, FormControl
@@ -10,13 +9,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CloseIcon from '@mui/icons-material/Close';
-import type { Product, Member, List, User, ProductUnit, ProductCategory } from '../../../global/types';
+import type { Product, List, User, ProductUnit, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, COMMON_STYLES, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal, MemberAvatar, MembersButton } from '../../../global/components';
 import { SwipeItem } from './SwipeItem';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useList } from '../hooks/useList';
 
-// Reusable styles
+// ===== Reusable Styles =====
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
   ...SIZES.iconButton.md
@@ -45,6 +45,7 @@ const quantityBtnSx = {
   fontSize: 24
 };
 
+// ===== Props Interface =====
 interface ListPageProps {
   list: List;
   user: User;
@@ -57,122 +58,28 @@ interface ListPageProps {
 
 export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
   const { t } = useSettings();
-  const [filter, setFilter] = useState<'pending' | 'purchased'>('pending');
-  const [search, setSearch] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
-  const [showEdit, setShowEdit] = useState<Product | null>(null);
-  const [showDetails, setShowDetails] = useState<Product | null>(null);
-  const [showInvite, setShowInvite] = useState(false);
-  const [showMembers, setShowMembers] = useState(false);
-  const [showShareList, setShowShareList] = useState(false);
-  const [showEditList, setShowEditList] = useState(false);
-  const [editListData, setEditListData] = useState<{ name: string; icon: string; color: string } | null>(null);
-  const [confirmDeleteList, setConfirmDeleteList] = useState(false);
-  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
-  const [newP, setNewP] = useState<{ name: string; quantity: number; unit: ProductUnit; category: ProductCategory }>({ name: '', quantity: 1, unit: 'יח׳', category: 'אחר' });
-  const [openItemId, setOpenItemId] = useState<string | null>(null);
-  const [showHint, setShowHint] = useState(() => !localStorage.getItem('sb_hint_seen'));
-  const [addError, setAddError] = useState('');
 
-  const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
-
-  // Memoized computed values
-  const pending = useMemo(() => list.products.filter((p: Product) => !p.isPurchased), [list.products]);
-  const purchased = useMemo(() => list.products.filter((p: Product) => p.isPurchased), [list.products]);
-  const items = useMemo(() => (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(search)), [filter, pending, purchased, search]);
-  const allMembers = useMemo(() => [list.owner, ...list.members], [list.owner, list.members]);
-  const isOwner = useMemo(() => list.owner.id === user.id, [list.owner.id, user.id]);
-
-  // Memoized handlers
-  const handleDragStart = useCallback((clientX: number, clientY: number) => {
-    const currentX = fabPosition?.x ?? window.innerWidth / 2;
-    const currentY = fabPosition?.y ?? window.innerHeight - 90;
-    dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
-    setIsDragging(true);
-  }, [fabPosition]);
-
-  const handleDragMove = useCallback((clientX: number, clientY: number) => {
-    if (!dragRef.current || !isDragging) return;
-    const dx = clientX - dragRef.current.startX;
-    const dy = clientY - dragRef.current.startY;
-    const newX = Math.max(40, Math.min(window.innerWidth - 40, dragRef.current.startPosX + dx));
-    const newY = Math.max(100, Math.min(window.innerHeight - 60, dragRef.current.startPosY + dy));
-    setFabPosition({ x: newX, y: newY });
-  }, [isDragging]);
-
-  const handleDragEnd = useCallback(() => {
-    setIsDragging(false);
-    dragRef.current = null;
-  }, []);
-
-  const dismissHint = useCallback(() => {
-    setShowHint(false);
-    localStorage.setItem('sb_hint_seen', 'true');
-  }, []);
-
-  const updateProducts = useCallback((products: Product[]) => {
-    onUpdateList({ ...list, products });
-  }, [list, onUpdateList]);
-
-  const handleAdd = useCallback(() => {
-    setAddError('');
-    if (!newP.name.trim()) { setAddError(t('enterProductName')); return; }
-    if (newP.name.length < 2) { setAddError(t('productNameTooShort')); return; }
-    if (newP.quantity < 1) { setAddError(t('quantityMin')); return; }
-    setOpenItemId(null);
-    const now = new Date();
-    const date = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-    updateProducts([...list.products, { id: `p${Date.now()}`, ...newP, isPurchased: false, addedBy: user.name, createdDate: date, createdTime: time }]);
-    setNewP({ name: '', quantity: 1, unit: 'יח׳', category: 'אחר' });
-    setShowAdd(false);
-    showToast(t('added'));
-  }, [newP, list.products, user.name, updateProducts, showToast, t]);
-
-  const handleEditList = useCallback(() => {
-    setEditListData({ name: list.name, icon: list.icon, color: list.color });
-    setShowEditList(true);
-  }, [list.name, list.icon, list.color]);
-
-  const saveListChanges = useCallback(() => {
-    onUpdateList({ ...list, ...editListData });
-    setShowEditList(false);
-    showToast(t('saved'));
-  }, [list, editListData, onUpdateList, showToast, t]);
-
-  const handleDeleteList = useCallback(() => {
-    onDeleteList(list.id);
-    onBack();
-  }, [list.id, onDeleteList, onBack]);
-
-  const removeMember = useCallback((mid: string) => {
-    setConfirm({
-      title: t('removeMember'),
-      message: t('removeMember') + '?',
-      onConfirm: () => {
-        onUpdateList({ ...list, members: list.members.filter((m: Member) => m.id !== mid) });
-        setConfirm(null);
-        showToast(t('removed'));
-      }
-    });
-  }, [list, onUpdateList, showToast, t]);
-
-  const leaveList = useCallback(() => {
-    setConfirm({
-      title: t('leaveGroup'),
-      message: t('leaveGroup') + '?',
-      onConfirm: () => {
-        onLeaveList(list.id);
-        setConfirm(null);
-      }
-    });
-  }, [list.id, onLeaveList, t]);
-
-  useEffect(() => {
-    if (items.length <= 3) setFabPosition(null);
-  }, [items.length]);
+  const {
+    // State
+    filter, search, showAdd, showEdit, showDetails, showInvite,
+    showMembers, showShareList, showEditList, editListData,
+    confirmDeleteList, confirm, newP, openItemId, showHint, addError,
+    fabPosition, isDragging,
+    // Computed
+    pending, purchased, items, allMembers, isOwner,
+    // Setters
+    setFilter, setSearch, setShowAdd, setShowEdit, setShowDetails,
+    setShowInvite, setShowMembers, setShowShareList, setShowEditList,
+    setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
+    // Handlers
+    handleDragStart, handleDragMove, handleDragEnd, dismissHint,
+    handleAdd, handleEditList, saveListChanges, handleDeleteList,
+    removeMember, leaveList, toggleProduct, deleteProduct, saveEditedProduct,
+    updateNewProductField, updateEditProductField, incrementQuantity,
+    decrementQuantity, closeAddModal
+  } = useList({
+    list, user, onUpdateList, onLeaveList, onDeleteList, onBack, showToast
+  });
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
@@ -270,14 +177,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Button
                 variant="contained"
                 onClick={() => { haptic('light'); setShowAdd(true); }}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: { xs: 2.5, sm: 3 },
-                  py: { xs: 1.25, sm: 1.5 },
-                  fontSize: { xs: 14, sm: 15 }
-                }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 2.5, sm: 3 }, py: { xs: 1.25, sm: 1.5 }, fontSize: { xs: 14, sm: 15 } }}
               >
                 <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                 <span>{t('addProduct')}</span>
@@ -292,9 +192,9 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             isOpen={openItemId === p.id}
             onOpen={() => setOpenItemId(p.id)}
             onClose={() => setOpenItemId(null)}
-            onToggle={() => { updateProducts(list.products.map((x: Product) => x.id === p.id ? { ...x, isPurchased: !x.isPurchased } : x)); showToast(t('updated')); dismissHint(); }}
+            onToggle={() => toggleProduct(p.id)}
             onEdit={() => setShowEdit({ ...p })}
-            onDelete={() => { updateProducts(list.products.filter((x: Product) => x.id !== p.id)); showToast(t('deleted')); }}
+            onDelete={() => deleteProduct(p.id)}
             onClick={() => { setShowDetails(p); dismissHint(); }}
           />
         ))}
@@ -325,12 +225,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <Fab
               color="primary"
               onClick={() => { if (!isDragging) { haptic('medium'); setShowAdd(true); } }}
-              sx={{
-                cursor: isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'none' : 'all 0.2s ease',
-                width: { xs: 52, sm: 56 },
-                height: { xs: 52, sm: 56 }
-              }}
+              sx={{ cursor: isDragging ? 'grabbing' : 'grab', transition: isDragging ? 'none' : 'all 0.2s ease', width: { xs: 52, sm: 56 }, height: { xs: 52, sm: 56 } }}
             >
               <AddIcon sx={{ fontSize: { xs: 22, sm: 24 } }} />
             </Fab>
@@ -349,10 +244,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #0D9488, #059669)',
-                  boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)'
-                }
+                '&:hover': { background: 'linear-gradient(135deg, #0D9488, #059669)', boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)' }
               }}
             >
               <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
@@ -364,25 +256,25 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
 
       {/* Add Product Modal */}
       {showAdd && (
-        <Modal title={t('newProduct')} onClose={() => { setShowAdd(false); setAddError(''); }}>
+        <Modal title={t('newProduct')} onClose={closeAddModal}>
           {addError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>⚠️ {addError}</Alert>}
           <Box sx={{ mb: 2 }}>
             <Typography sx={labelSx}>{t('name')}</Typography>
-            <TextField fullWidth value={newP.name} onChange={e => { setNewP({ ...newP, name: e.target.value }); setAddError(''); }} placeholder={t('productName')} />
+            <TextField fullWidth value={newP.name} onChange={e => updateNewProductField('name', e.target.value)} placeholder={t('productName')} />
           </Box>
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('quantity')}</Typography>
               <Box sx={quantityBoxSx}>
-                <Button onClick={() => setNewP({ ...newP, quantity: Math.max(1, newP.quantity - 1) })} sx={quantityBtnSx}>−</Button>
-                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={newP.quantity} onChange={e => setNewP({ ...newP, quantity: Math.max(1, parseInt(e.target.value) || 1) })} />
-                <Button onClick={() => setNewP({ ...newP, quantity: newP.quantity + 1 })} sx={quantityBtnSx}>+</Button>
+                <Button onClick={() => decrementQuantity('new')} sx={quantityBtnSx}>−</Button>
+                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={newP.quantity} onChange={e => updateNewProductField('quantity', Math.max(1, parseInt(e.target.value) || 1))} />
+                <Button onClick={() => incrementQuantity('new')} sx={quantityBtnSx}>+</Button>
               </Box>
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('unit')}</Typography>
               <FormControl fullWidth>
-                <Select value={newP.unit} onChange={e => setNewP({ ...newP, unit: e.target.value as ProductUnit })} sx={{ height: 52 }}>
+                <Select value={newP.unit} onChange={e => updateNewProductField('unit', e.target.value as ProductUnit)} sx={{ height: 52 }}>
                   <MenuItem value="יח׳">{t('unitPiece')}</MenuItem>
                   <MenuItem value="ק״ג">{t('unitKg')}</MenuItem>
                   <MenuItem value="גרם">{t('unitGram')}</MenuItem>
@@ -394,7 +286,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
           <Box sx={{ mb: 2 }}>
             <Typography sx={labelSx}>{t('category')}</Typography>
             <FormControl fullWidth>
-              <Select value={newP.category} onChange={e => setNewP({ ...newP, category: e.target.value as ProductCategory })}>
+              <Select value={newP.category} onChange={e => updateNewProductField('category', e.target.value as ProductCategory)}>
                 {Object.keys(CATEGORY_ICONS).map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
               </Select>
             </FormControl>
@@ -408,21 +300,21 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
         <Modal title={t('editProduct')} onClose={() => setShowEdit(null)}>
           <Box sx={{ mb: 2 }}>
             <Typography sx={labelSx}>{t('name')}</Typography>
-            <TextField fullWidth value={showEdit.name} onChange={e => setShowEdit({ ...showEdit, name: e.target.value })} />
+            <TextField fullWidth value={showEdit.name} onChange={e => updateEditProductField('name', e.target.value)} />
           </Box>
           <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('quantity')}</Typography>
               <Box sx={quantityBoxSx}>
-                <Button onClick={() => setShowEdit({ ...showEdit, quantity: Math.max(1, showEdit.quantity - 1) })} sx={quantityBtnSx}>−</Button>
-                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={showEdit.quantity} onChange={e => setShowEdit({ ...showEdit, quantity: Math.max(1, parseInt(e.target.value) || 1) })} />
-                <Button onClick={() => setShowEdit({ ...showEdit, quantity: showEdit.quantity + 1 })} sx={quantityBtnSx}>+</Button>
+                <Button onClick={() => decrementQuantity('edit')} sx={quantityBtnSx}>−</Button>
+                <input type="number" min="1" style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }} value={showEdit.quantity} onChange={e => updateEditProductField('quantity', Math.max(1, parseInt(e.target.value) || 1))} />
+                <Button onClick={() => incrementQuantity('edit')} sx={quantityBtnSx}>+</Button>
               </Box>
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography sx={labelSx}>{t('unit')}</Typography>
               <FormControl fullWidth>
-                <Select value={showEdit.unit} onChange={e => setShowEdit({ ...showEdit, unit: e.target.value as ProductUnit })} sx={{ height: 52 }}>
+                <Select value={showEdit.unit} onChange={e => updateEditProductField('unit', e.target.value as ProductUnit)} sx={{ height: 52 }}>
                   <MenuItem value="יח׳">{t('unitPiece')}</MenuItem>
                   <MenuItem value="ק״ג">{t('unitKg')}</MenuItem>
                   <MenuItem value="גרם">{t('unitGram')}</MenuItem>
@@ -435,11 +327,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             <Typography sx={labelSx}>{t('category')}</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
-                <Chip key={cat} label={`${icon} ${cat}`} onClick={() => setShowEdit({ ...showEdit, category: cat as ProductCategory })} variant={showEdit.category === cat ? 'filled' : 'outlined'} color={showEdit.category === cat ? 'primary' : 'default'} sx={{ cursor: 'pointer' }} />
+                <Chip key={cat} label={`${icon} ${cat}`} onClick={() => updateEditProductField('category', cat as ProductCategory)} variant={showEdit.category === cat ? 'filled' : 'outlined'} color={showEdit.category === cat ? 'primary' : 'default'} sx={{ cursor: 'pointer' }} />
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => { haptic('medium'); updateProducts(list.products.map((x: Product) => x.id === showEdit.id ? showEdit : x)); setShowEdit(null); showToast(t('saved')); }}>{t('save')}</Button>
+          <Button variant="contained" fullWidth onClick={saveEditedProduct}>{t('save')}</Button>
         </Modal>
       )}
 
@@ -447,24 +339,11 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
       {showDetails && (
         <Modal title={t('productDetails')} onClose={() => setShowDetails(null)}>
           <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-            <Box sx={{
-              width: 72,
-              height: 72,
-              borderRadius: '18px',
-              bgcolor: 'rgba(20, 184, 166, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 1.5,
-              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.15)'
-            }}>
+            <Box sx={{ width: 72, height: 72, borderRadius: '18px', bgcolor: 'rgba(20, 184, 166, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 1.5, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.15)' }}>
               <Typography sx={{ fontSize: 36 }}>{CATEGORY_ICONS[showDetails.category]}</Typography>
             </Box>
             <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5 }}>{showDetails.name}</Typography>
-            <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
-              {showDetails.quantity} {showDetails.unit}
-            </Typography>
+            <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>{showDetails.quantity} {showDetails.unit}</Typography>
           </Box>
           <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '12px 16px', borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -504,16 +383,16 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>{t('inviteFriends')}</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
             </Box>
-           <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
-    <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-    <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
-  </Box>
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px' }}>
-    <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-    <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>{list.password}</Typography>
-  </Box>
-</Box>
+            <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
+                <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
+                <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>{list.password}</Typography>
+              </Box>
+            </Box>
             <Box sx={{ display: 'flex', gap: 1.25 }}>
               <Button fullWidth onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list))}`)} sx={{ bgcolor: '#25D366', color: 'white', '&:hover': { bgcolor: '#1ebe5a' }, gap: 1 }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -543,17 +422,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
                 <Button
                   onClick={() => removeMember(m.id)}
                   size="small"
-                  sx={{
-                    bgcolor: 'rgba(239, 68, 68, 0.1)',
-                    color: 'error.main',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    px: 1.5,
-                    py: 0.5,
-                    minWidth: 'auto',
-                    borderRadius: '8px',
-                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
-                  }}
+                  sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', color: 'error.main', fontSize: 12, fontWeight: 600, px: 1.5, py: 0.5, minWidth: 'auto', borderRadius: '8px', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' } }}
                 >
                   {t('removeMember')}
                 </Button>
@@ -584,26 +453,26 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
               <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareList')}</Typography>
             </Box>
             <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
-  <Box sx={{ p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-    <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'primary.main' }}>{list.name}</Typography>
-    <Chip label={`${pending.length} ${t('items')}`} size="small" sx={{ bgcolor: 'transparent', color: 'primary.main' }} />
-  </Box>
-  <Box sx={{ p: '12px 16px', maxHeight: 140, overflow: 'auto' }}>
-    {pending.length === 0 ? (
-      <Typography sx={{ color: 'text.secondary', fontSize: 14, textAlign: 'center', py: 1 }}>{t('noProducts')}</Typography>
-    ) : (
-      pending.slice(0, 5).map((p: Product, i: number) => (
-        <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: i < Math.min(pending.length, 5) - 1 ? '1px solid' : 'none', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
-          <Typography sx={{ fontSize: 14, color: 'primary.dark' }}>• {p.name}</Typography>
-          <Typography sx={{ fontSize: 13, color: 'primary.main' }}>{p.quantity} {p.unit}</Typography>
-        </Box>
-      ))
-    )}
-    {pending.length > 5 && (
-      <Typography sx={{ fontSize: 13, color: 'primary.main', textAlign: 'center', pt: 1 }}>+ {pending.length - 5} {t('items')}</Typography>
-    )}
-  </Box>
-</Box>
+              <Box sx={{ p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'primary.main' }}>{list.name}</Typography>
+                <Chip label={`${pending.length} ${t('items')}`} size="small" sx={{ bgcolor: 'transparent', color: 'primary.main' }} />
+              </Box>
+              <Box sx={{ p: '12px 16px', maxHeight: 140, overflow: 'auto' }}>
+                {pending.length === 0 ? (
+                  <Typography sx={{ color: 'text.secondary', fontSize: 14, textAlign: 'center', py: 1 }}>{t('noProducts')}</Typography>
+                ) : (
+                  pending.slice(0, 5).map((p: Product, i: number) => (
+                    <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75, borderBottom: i < Math.min(pending.length, 5) - 1 ? '1px solid' : 'none', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
+                      <Typography sx={{ fontSize: 14, color: 'primary.dark' }}>• {p.name}</Typography>
+                      <Typography sx={{ fontSize: 13, color: 'primary.main' }}>{p.quantity} {p.unit}</Typography>
+                    </Box>
+                  ))
+                )}
+                {pending.length > 5 && (
+                  <Typography sx={{ fontSize: 13, color: 'primary.main', textAlign: 'center', pt: 1 }}>+ {pending.length - 5} {t('items')}</Typography>
+                )}
+              </Box>
+            </Box>
             <Box sx={{ display: 'flex', gap: 1.25 }}>
               <Button fullWidth onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list))}`)} sx={{ bgcolor: '#25D366', color: 'white', '&:hover': { bgcolor: '#1ebe5a' }, gap: 1 }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>

@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField, Button, Paper } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -8,17 +7,10 @@ import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES, SIZES } from '../../../global/helpers';
+import { useProfile } from '../hooks/useProfile';
+import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 
-interface ProfilePageProps {
-  user: User;
-  onUpdateUser: (user: Partial<User>) => void;
-  onLogout: () => void;
-}
-
-const AVATAR_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
-const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'];
-
-// Reusable styles
+// ===== Reusable Styles =====
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
   ...SIZES.iconButton.md,
@@ -32,32 +24,22 @@ const labelSx = {
   mb: 0.75
 };
 
+// ===== Props Interface =====
+interface ProfilePageProps {
+  user: User;
+  onUpdateUser: (user: Partial<User>) => void;
+  onLogout: () => void;
+}
+
 export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
-  const [editProfile, setEditProfile] = useState<{ name: string; email: string; avatarColor: string; avatarEmoji: string } | null>(null);
-  const [confirmLogout, setConfirmLogout] = useState(false);
 
-  const openEditProfile = useCallback(() => {
-    setEditProfile({
-      name: user.name,
-      email: user.email,
-      avatarColor: user.avatarColor || '#14B8A6',
-      avatarEmoji: user.avatarEmoji || ''
-    });
-  }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
-
-  const handleSave = useCallback(() => {
-    if (editProfile) {
-      onUpdateUser(editProfile);
-      setEditProfile(null);
-    }
-  }, [editProfile, onUpdateUser]);
-
-  const handleLogout = useCallback(() => {
-    onLogout();
-    navigate('/login');
-  }, [onLogout, navigate]);
+  const {
+    editProfile, confirmLogout,
+    setConfirmLogout,
+    openEditProfile, handleSave, handleLogout, updateEditField, closeEdit
+  } = useProfile({ user, onUpdateUser, onLogout });
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
@@ -71,7 +53,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
-          <IconButton onClick={() => { setEditProfile(null); navigate('/'); }} sx={glassButtonSx}>
+          <IconButton onClick={() => { closeEdit(); navigate('/'); }} sx={glassButtonSx}>
             <ArrowForwardIcon sx={{ fontSize: 22 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
@@ -141,7 +123,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               {AVATAR_COLORS.map(c => (
                 <Box
                   key={c}
-                  onClick={() => setEditProfile({ ...editProfile, avatarColor: c })}
+                  onClick={() => updateEditField('avatarColor', c)}
                   sx={{
                     width: 36,
                     height: 36,
@@ -163,7 +145,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               {AVATAR_EMOJIS.map(e => (
                 <Box
                   key={e}
-                  onClick={() => setEditProfile({ ...editProfile, avatarEmoji: e })}
+                  onClick={() => updateEditField('avatarEmoji', e)}
                   sx={{
                     width: 42,
                     height: 42,
@@ -192,7 +174,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 fullWidth
                 size="small"
                 value={editProfile.name}
-                onChange={e => setEditProfile({ ...editProfile, name: e.target.value })}
+                onChange={e => updateEditField('name', e.target.value)}
                 placeholder={t('name')}
               />
             </Box>
@@ -204,26 +186,17 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 fullWidth
                 size="small"
                 value={editProfile.email}
-                onChange={e => setEditProfile({ ...editProfile, email: e.target.value })}
+                onChange={e => updateEditField('email', e.target.value)}
                 placeholder="example@email.com"
               />
             </Box>
 
             {/* Action Buttons */}
             <Box sx={{ display: 'flex', gap: 1.5 }}>
-              <Button
-                variant="outlined"
-                onClick={() => setEditProfile(null)}
-                sx={{ flex: 1 }}
-              >
+              <Button variant="outlined" onClick={closeEdit} sx={{ flex: 1 }}>
                 {t('cancel')}
               </Button>
-              <Button
-                variant="contained"
-                fullWidth
-                sx={{ flex: 2 }}
-                onClick={handleSave}
-              >
+              <Button variant="contained" fullWidth sx={{ flex: 2 }} onClick={handleSave}>
                 {t('saveChanges')}
               </Button>
             </Box>
