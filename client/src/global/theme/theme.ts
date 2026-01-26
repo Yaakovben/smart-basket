@@ -18,7 +18,8 @@ const COLORS = {
   },
   warning: {
     main: '#F59E0B',
-    dark: '#D97706'
+    dark: '#D97706',
+    light: '#FEF3C7'
   },
   success: {
     main: '#22C55E',

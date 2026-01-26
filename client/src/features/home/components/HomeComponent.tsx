@@ -293,7 +293,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   key={option.id}
                   onClick={() => openOption(option.id)}
                   fullWidth
+                  disableRipple
                   disableFocusRipple
+                  tabIndex={-1}
                   sx={{
                     justifyContent: 'flex-start',
                     p: 2,
@@ -305,8 +307,10 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     gap: 2,
                     transition: 'all 0.2s ease',
                     '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-                    '&:focus': { outline: 'none', borderColor: 'divider' },
-                    '&.Mui-focusVisible': { outline: 'none', borderColor: 'divider' }
+                    '&:focus': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
+                    '&:focus-visible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
+                    '&.Mui-focusVisible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
+                    '&:active': { borderColor: 'divider', bgcolor: 'action.hover' }
                   }}
                 >
                   <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
@@ -600,7 +604,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           }}
         >
           <HomeIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'primary.main' }}>בית</Typography>
+          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'primary.main' }}>{t('home')}</Typography>
         </Box>
         <Box
           onClick={() => { haptic('light'); setShowMenu(true); }}
@@ -619,7 +623,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           }}
         >
           <AddIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'text.secondary' }}>חדש</Typography>
+          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'text.secondary' }}>{t('new')}</Typography>
         </Box>
       </Box>
     </Box>

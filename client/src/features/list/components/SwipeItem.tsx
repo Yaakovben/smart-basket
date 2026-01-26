@@ -47,6 +47,16 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
     }
   }, [isOpen, offset]);
 
+  // Rubber band effect - dampens movement beyond max width
+  const calcOffset = (rawOffset: number) => {
+    if (rawOffset <= SWIPE_ACTIONS_WIDTH) {
+      return Math.max(0, rawOffset);
+    }
+    // Beyond max: apply resistance (30% of extra distance)
+    const extra = rawOffset - SWIPE_ACTIONS_WIDTH;
+    return SWIPE_ACTIONS_WIDTH + extra * 0.3;
+  };
+
   const handlers = {
     onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => {
       startX.current = e.touches[0].clientX;
@@ -59,9 +69,10 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       const dx = startX.current - e.touches[0].clientX;
       const dy = Math.abs(e.touches[0].clientY - startY.current);
 
-      if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > dy) {
+      if (!swiping && Math.abs(dx) > 8 && Math.abs(dx) > dy * 1.5) {
         setSwiping(true);
         document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
         // Call onOpen early to close other items
         if (!hasCalledOpen.current && dx > 0) {
           hasCalledOpen.current = true;
@@ -71,11 +82,14 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
 
       if (swiping) {
         e.preventDefault();
-        setOffset(Math.max(0, Math.min(SWIPE_ACTIONS_WIDTH, startOff.current + dx)));
+        e.stopPropagation();
+        const rawOffset = startOff.current + dx;
+        setOffset(calcOffset(rawOffset));
       }
     },
     onTouchEnd: () => {
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
       if (swiping) {
         if (offset > 60) {
           setOffset(SWIPE_ACTIONS_WIDTH);
@@ -92,7 +106,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   const doAction = (fn: () => void) => { setOffset(0); onClose(); fn(); };
 
   return (
-    <Box sx={{ position: 'relative', mb: '10px', borderRadius: '14px', height: '72px', overflow: 'hidden', bgcolor: '#F3F4F6' }}>
+    <Box sx={{ position: 'relative', mb: '6px', borderRadius: '14px', height: '72px', overflow: 'hidden', bgcolor: 'action.hover' }}>
       {offset > 0 && (
         <Box sx={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: SWIPE_ACTIONS_WIDTH, display: 'flex', flexDirection: 'row-reverse' }}>
           <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
@@ -137,10 +151,11 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          bgcolor: isPurchased ? '#FAFAFA' : 'white',
+          bgcolor: isPurchased ? 'action.disabledBackground' : 'background.paper',
           px: '14px',
           borderRadius: '14px',
-          border: '1px solid #E5E7EB',
+          border: '1px solid',
+          borderColor: 'divider',
           transform: `translateX(-${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.2s ease-out',
           boxShadow: offset > 0 ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
@@ -150,7 +165,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           width: '44px',
           height: '44px',
           borderRadius: '12px',
-          bgcolor: isPurchased ? '#F3F4F6' : '#FEF3C7',
+          bgcolor: isPurchased ? 'action.hover' : 'warning.light',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -158,10 +173,10 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           transition: 'transform 0.2s ease'
         }}>{icon}</Box>
         <Box sx={{ flex: 1 }}>
-          <Typography sx={{ fontSize: '15px', fontWeight: 600, color: isPurchased ? '#9CA3AF' : '#111827', textDecoration: isPurchased ? 'line-through' : 'none' }}>
+          <Typography sx={{ fontSize: '15px', fontWeight: 600, color: isPurchased ? 'text.secondary' : 'text.primary', textDecoration: isPurchased ? 'line-through' : 'none' }}>
             {product.name}
           </Typography>
-          <Typography sx={{ fontSize: '13px', color: '#9CA3AF' }}>
+          <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy}
           </Typography>
         </Box>

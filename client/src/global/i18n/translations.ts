@@ -172,7 +172,9 @@ type TranslationKey =
   | 'deleteGroupTitle'
   | 'deleteListTitle'
   | 'deleteConfirmMessage'
-  | 'noNotifications';
+  | 'noNotifications'
+  | 'home'
+  | 'new';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -349,7 +351,9 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
-    noNotifications: 'אין התראות חדשות'
+    noNotifications: 'אין התראות חדשות',
+    home: 'בית',
+    new: 'חדש'
   },
   en: {
     // General
@@ -523,7 +527,9 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
     deleteConfirmMessage: 'This action cannot be undone',
-    noNotifications: 'No new notifications'
+    noNotifications: 'No new notifications',
+    home: 'Home',
+    new: 'New'
   },
   ru: {
     // General
@@ -697,7 +703,9 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',
     deleteConfirmMessage: 'Это действие нельзя отменить',
-    noNotifications: 'Нет новых уведомлений'
+    noNotifications: 'Нет новых уведомлений',
+    home: 'Главная',
+    new: 'Новый'
   }
 };
 
