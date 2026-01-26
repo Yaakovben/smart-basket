@@ -39,6 +39,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
   const startOff = useRef(0);
   const hasCalledOpen = useRef(false);
   const directionLocked = useRef<'horizontal' | 'vertical' | null>(null);
+  const justSwiped = useRef(false);
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
   // Close this item when another item is opened
@@ -114,6 +115,8 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       document.body.style.touchAction = '';
       directionLocked.current = null;
       if (swiping) {
+        justSwiped.current = true;
+        setTimeout(() => { justSwiped.current = false; }, 100);
         if (offset > 60) {
           setOffset(SWIPE_ACTIONS_WIDTH);
           haptic('light');
@@ -161,6 +164,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       <Box
         {...handlers}
         onClick={() => {
+          if (justSwiped.current) return;
           if (offset > 10) {
             setOffset(0);
             onClose();
@@ -179,7 +183,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
           px: '14px',
           borderRadius: '14px',
           transform: `translateX(-${offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.2s ease-out',
+          transition: swiping ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'none' : 'auto'
         }}

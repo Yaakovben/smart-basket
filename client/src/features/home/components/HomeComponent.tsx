@@ -280,15 +280,15 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {showMenu && (
         <>
           <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 998, backdropFilter: 'blur(4px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: { xs: 2.5, sm: 3 }, pb: 'calc(32px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
-            <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 2.5 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
+          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 400 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
+            <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
               <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 32, height: 32 }}>
                 <CloseIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
               </IconButton>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {MENU_OPTIONS.map((option) => (
                 <Box
                   key={option.id}
@@ -296,26 +296,26 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    p: 2,
-                    borderRadius: '14px',
-                    border: '1.5px solid',
+                    p: 1.5,
+                    borderRadius: '12px',
+                    border: '1px solid',
                     borderColor: 'divider',
                     bgcolor: 'background.paper',
-                    gap: 2,
+                    gap: 1.5,
                     cursor: 'pointer',
                     WebkitTapHighlightColor: 'transparent',
                     userSelect: 'none',
                     '&:active': { bgcolor: 'action.hover' }
                   }}
                 >
-                  <Box sx={{ width: 52, height: 52, borderRadius: '14px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
+                  <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: option.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
-                    <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{t(option.titleKey)}</Typography>
-                    <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{t(option.descKey)}</Typography>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{t(option.titleKey)}</Typography>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t(option.descKey)}</Typography>
                   </Box>
-                  <ChevronLeftIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
+                  <ChevronLeftIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
                 </Box>
               ))}
             </Box>

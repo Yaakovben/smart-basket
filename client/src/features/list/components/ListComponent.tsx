@@ -642,7 +642,7 @@ export const ListComponent = ({ list, onBack, onUpdateList, onLeaveList, onDelet
             </Box>
           </Box>
           <Button variant="contained" fullWidth onClick={saveListChanges}>{t('saveChanges')}</Button>
-          <Button fullWidth onClick={() => { setShowEditList(false); setConfirmDeleteList(true); }} sx={{ mt: 1.5, bgcolor: 'error.light', color: 'error.main', '&:hover': { bgcolor: 'error.light', opacity: 0.8 } }}>
+          <Button fullWidth onClick={() => { setShowEditList(false); setConfirmDeleteList(true); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}>
             {list.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
         </Modal>
