@@ -143,7 +143,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         overflow: 'hidden',
         opacity: offset > 0 ? 1 : 0,
         transition: 'opacity 0.15s ease',
-        zIndex: 2
+        pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'auto' : 'none'
       }}>
         <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#F87171' }}>
           <span>🗑️</span>
@@ -171,19 +171,17 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         }}
         sx={{
           position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: offset,
+          inset: 0,
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           bgcolor: isPurchased ? 'action.disabledBackground' : 'background.paper',
           px: '14px',
           borderRadius: '14px',
-          transition: swiping ? 'none' : 'right 0.2s ease-out',
+          transform: `translateX(-${offset}px)`,
+          transition: swiping ? 'none' : 'transform 0.2s ease-out',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          zIndex: 1
+          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'none' : 'auto'
         }}
       >
         <Box sx={{

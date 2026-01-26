@@ -312,8 +312,8 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     {option.icon}
                   </Box>
                   <Box sx={{ flex: 1, textAlign: 'right' }}>
-                    <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{option.title}</Typography>
-                    <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{option.description}</Typography>
+                    <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{t(option.titleKey)}</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>{t(option.descKey)}</Typography>
                   </Box>
                   <ChevronLeftIcon sx={{ color: 'text.secondary', fontSize: 22 }} />
                 </Box>

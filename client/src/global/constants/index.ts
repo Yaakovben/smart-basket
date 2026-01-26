@@ -110,8 +110,8 @@ export interface MenuOption {
   id: 'private' | 'group' | 'join';
   icon: string;
   iconBg: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
 }
 
 export const MENU_OPTIONS: MenuOption[] = [
@@ -119,22 +119,22 @@ export const MENU_OPTIONS: MenuOption[] = [
     id: 'private',
     icon: '📝',
     iconBg: '#CCFBF1',
-    title: 'רשימה פרטית',
-    description: 'צור רשימת קניות אישית רק בשבילך'
+    titleKey: 'privateList',
+    descKey: 'privateListDesc'
   },
   {
     id: 'group',
     icon: '👨‍👩‍👧‍👦',
     iconBg: '#E0E7FF',
-    title: 'קבוצה משותפת',
-    description: 'צור קבוצה ושתף עם משפחה וחברים'
+    titleKey: 'sharedGroup',
+    descKey: 'sharedGroupDesc'
   },
   {
     id: 'join',
     icon: '🔗',
     iconBg: '#D1FAE5',
-    title: 'הצטרף לקבוצה קיימת',
-    description: 'יש לך קוד הזמנה? הכנס אותו כאן'
+    titleKey: 'joinExistingGroup',
+    descKey: 'joinExistingGroupDesc'
   }
 ];
 
