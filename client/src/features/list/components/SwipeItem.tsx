@@ -145,17 +145,17 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         transition: 'opacity 0.15s ease',
         pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'auto' : 'none'
       }}>
-        <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#FBBF24' : '#22C55E' }}>
-          <span>{isPurchased ? '↩️' : '✓'}</span>
-          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
+        <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
+          <span>🗑️</span>
+          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
-        <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#FBBF24' }}>
+        <Box onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
           <span>✏️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
         </Box>
-        <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444', borderTopLeftRadius: '14px', borderBottomLeftRadius: '14px', boxShadow: '-4px 0 12px rgba(0,0,0,0.1)' }}>
-          <span>🗑️</span>
-          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
+        <Box onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
+          <span>{isPurchased ? '↩️' : '✓'}</span>
+          <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
         </Box>
       </Box>
       <Box
