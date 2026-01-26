@@ -62,6 +62,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         <IconButton
           onClick={handleClose}
           size="small"
+          aria-label="Close"
           sx={{
             position: 'absolute',
             left: 12,

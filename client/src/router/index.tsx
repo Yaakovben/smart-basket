@@ -12,6 +12,8 @@ const HomePage = lazy(() => import("../features/home/home").then(m => ({ default
 const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
+const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
 
 // Loading fallback
 const PageLoader = () => (
@@ -180,6 +182,8 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>

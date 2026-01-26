@@ -27,6 +27,8 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
       open
       onClose={onCancel}
       TransitionComponent={Transition}
+      aria-labelledby="confirm-dialog-title"
+      aria-describedby="confirm-dialog-description"
       PaperProps={{
         sx: {
           borderRadius: '20px',
@@ -47,11 +49,11 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
         }
       }}
     >
-      <DialogTitle sx={{ p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: 'text.primary' }}>
+      <DialogTitle id="confirm-dialog-title" sx={{ p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: 'text.primary' }}>
         {title}
       </DialogTitle>
       <DialogContent sx={{ p: 0, mb: 3 }}>
-        <Typography sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 15 }}>
+        <Typography id="confirm-dialog-description" sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 15 }}>
           {message}
         </Typography>
       </DialogContent>

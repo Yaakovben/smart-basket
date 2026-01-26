@@ -177,7 +177,14 @@ type TranslationKey =
   | 'noNotifications'
   | 'home'
   | 'new'
-  | 'markAllAsRead';
+  | 'markAllAsRead'
+  // Legal
+  | 'privacyPolicy'
+  | 'termsOfService'
+  | 'consentTitle'
+  | 'consentDescription'
+  | 'accept'
+  | 'legal';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -359,7 +366,14 @@ export const translations: Record<Language, Translations> = {
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
     new: 'חדש',
-    markAllAsRead: 'סמן הכל כנקרא'
+    markAllAsRead: 'סמן הכל כנקרא',
+    // Legal
+    privacyPolicy: 'מדיניות פרטיות',
+    termsOfService: 'תנאי שימוש',
+    consentTitle: 'הסכמה לשימוש בנתונים',
+    consentDescription: 'אנו משתמשים באחסון מקומי (LocalStorage) כדי לשמור את ההעדפות שלך ואת נתוני האפליקציה במכשיר שלך. המידע נשאר במכשירך ואינו נשלח לשרתים חיצוניים.',
+    accept: 'מסכים',
+    legal: 'משפטי'
   },
   en: {
     // General
@@ -538,7 +552,14 @@ export const translations: Record<Language, Translations> = {
     noNotifications: 'No new notifications',
     home: 'Home',
     new: 'New',
-    markAllAsRead: 'Mark all as read'
+    markAllAsRead: 'Mark all as read',
+    // Legal
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
+    consentTitle: 'Data Usage Consent',
+    consentDescription: 'We use local storage (LocalStorage) to save your preferences and app data on your device. The information stays on your device and is not sent to external servers.',
+    accept: 'Accept',
+    legal: 'Legal'
   },
   ru: {
     // General
@@ -717,7 +738,14 @@ export const translations: Record<Language, Translations> = {
     noNotifications: 'Нет новых уведомлений',
     home: 'Главная',
     new: 'Новый',
-    markAllAsRead: 'Отметить все как прочитанное'
+    markAllAsRead: 'Отметить все как прочитанное',
+    // Legal
+    privacyPolicy: 'Политика конфиденциальности',
+    termsOfService: 'Условия использования',
+    consentTitle: 'Согласие на использование данных',
+    consentDescription: 'Мы используем локальное хранилище (LocalStorage) для сохранения ваших настроек и данных приложения на вашем устройстве. Информация остаётся на вашем устройстве и не отправляется на внешние серверы.',
+    accept: 'Принять',
+    legal: 'Правовая информация'
   }
 };
 

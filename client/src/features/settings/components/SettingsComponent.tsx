@@ -166,6 +166,19 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
         </Paper>
 
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>
+            <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('privacyPolicy')}</Typography>
+            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+          </Box>
+          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/terms')}>
+            <Box component="span" sx={{ fontSize: 22 }}>📄</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsOfService')}</Typography>
+            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+          </Box>
+        </Paper>
+
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={{ ...settingRowSx, borderBottom: 'none', color: 'error.dark' }} onClick={() => setConfirmDelete(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>🗑️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>{t('deleteAllData')}</Typography>

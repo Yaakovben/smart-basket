@@ -21,10 +21,13 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
       open={!!msg}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       sx={{ bottom: 24, left: 20, maxWidth: 'calc(100vw - 40px)' }}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <Alert
         severity={type}
-        icon={<Box component="span" sx={{ fontSize: 18 }}>{TOAST_ICONS[type]}</Box>}
+        icon={<Box component="span" sx={{ fontSize: 18 }} aria-hidden="true">{TOAST_ICONS[type]}</Box>}
         sx={{
           borderRadius: '12px',
           fontWeight: 600,

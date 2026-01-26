@@ -130,7 +130,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           </Button>
 
           {error && !showEmailForm && (
-            <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 13 }} icon={<span>⚠️</span>}>
+            <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 13 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
               {error}
             </Alert>
           )}
@@ -218,7 +218,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 )}
 
                 {error && showEmailForm && (
-                  <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span>⚠️</span>}>
+                  <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
                     {error}
                   </Alert>
                 )}

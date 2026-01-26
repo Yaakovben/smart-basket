@@ -4,6 +4,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
+import { ConsentBanner } from "./global/components";
 
 const ThemedApp = () => {
   const { settings } = useSettings();
@@ -17,7 +18,8 @@ const ThemedApp = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <AppRouter /> 
+        <AppRouter />
+        <ConsentBanner />
       </BrowserRouter>
     </ThemeProvider>
   );
