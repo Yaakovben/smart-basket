@@ -532,7 +532,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             </Box>
           </Box>
           <Button variant="contained" fullWidth onClick={() => { onEditList(editList); setEditList(null); }} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
-          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1, bgcolor: 'rgba(239, 68, 68, 0.08)', color: '#F87171', fontSize: 14, fontWeight: 500, '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.12)' } }}>
+          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}>
             {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
         </Modal>
