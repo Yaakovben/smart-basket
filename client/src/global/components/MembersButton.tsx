@@ -13,11 +13,11 @@ const AVATAR_SIZE = 28;
 const AVATAR_OVERLAP = 10; // How much each avatar overlaps the previous one
 
 export const MembersButton = ({ members, currentUserId, onClick }: MembersButtonProps) => {
-  // Sort members so current user is first
+  // Sort members so current user is LAST (appears on right)
   const sortedMembers = currentUserId
     ? [...members].sort((a, b) => {
-        if (a.id === currentUserId) return -1;
-        if (b.id === currentUserId) return 1;
+        if (a.id === currentUserId) return 1;
+        if (b.id === currentUserId) return -1;
         return 0;
       })
     : members;
@@ -26,9 +26,8 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
   const extraCount = members.length - MAX_VISIBLE;
   const showExtra = extraCount > 0;
 
-  // Calculate container width based on number of avatars
-  const totalItems = visibleMembers.length + (showExtra ? 1 : 0);
-  const containerWidth = AVATAR_SIZE + (totalItems - 1) * (AVATAR_SIZE - AVATAR_OVERLAP);
+  // Calculate container width based on number of avatars only
+  const containerWidth = AVATAR_SIZE + (visibleMembers.length - 1) * (AVATAR_SIZE - AVATAR_OVERLAP);
 
   return (
     <Button
@@ -36,6 +35,7 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
       sx={{
         display: 'flex',
         alignItems: 'center',
+        gap: 0.75,
         bgcolor: 'rgba(255,255,255,0.15)',
         borderRadius: '16px',
         px: 1,
@@ -47,6 +47,11 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
         }
       }}
     >
+      {showExtra && (
+        <Typography sx={{ color: 'white', fontSize: 12, fontWeight: 700 }}>
+          +{extraCount}
+        </Typography>
+      )}
       <Box
         sx={{
           display: 'flex',
@@ -62,34 +67,12 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
             sx={{
               position: 'absolute',
               left: index * (AVATAR_SIZE - AVATAR_OVERLAP),
-              zIndex: totalItems - index
+              zIndex: index + 1
             }}
           >
             <MemberAvatar member={member} size={AVATAR_SIZE} index={index} />
           </Box>
         ))}
-        {showExtra && (
-          <Box
-            sx={{
-              position: 'absolute',
-              left: visibleMembers.length * (AVATAR_SIZE - AVATAR_OVERLAP),
-              width: AVATAR_SIZE,
-              height: AVATAR_SIZE,
-              borderRadius: '50%',
-              bgcolor: 'rgba(0,0,0,0.5)',
-              border: '2px solid white',
-              boxSizing: 'border-box',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0
-            }}
-          >
-            <Typography sx={{ color: 'white', fontSize: 10, fontWeight: 700 }}>
-              +{extraCount}
-            </Typography>
-          </Box>
-        )}
       </Box>
     </Button>
   );

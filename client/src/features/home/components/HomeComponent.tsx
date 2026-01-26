@@ -296,6 +296,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   disableRipple
                   disableFocusRipple
                   disableTouchRipple
+                  autoFocus={false}
                   tabIndex={-1}
                   sx={{
                     justifyContent: 'flex-start',
@@ -307,12 +308,15 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     textTransform: 'none',
                     gap: 2,
                     transition: 'none',
+                    outline: '0 !important',
+                    boxShadow: 'none !important',
                     '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-                    '&:focus': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
-                    '&:focus-visible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
-                    '&.Mui-focusVisible': { outline: 'none', boxShadow: 'none', borderColor: 'divider', bgcolor: 'background.paper' },
-                    '&:active': { borderColor: 'divider', bgcolor: 'background.paper' },
-                    '&.MuiButtonBase-root': { outline: 'none' },
+                    '&:focus, &:focus-visible, &.Mui-focusVisible, &:active, &.MuiButtonBase-root:focus': {
+                      outline: '0 !important',
+                      boxShadow: 'none !important',
+                      borderColor: 'divider',
+                      bgcolor: 'background.paper'
+                    },
                     WebkitTapHighlightColor: 'transparent'
                   }}
                 >
