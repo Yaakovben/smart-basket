@@ -190,7 +190,24 @@ type TranslationKey =
   | 'consentTitle'
   | 'consentDescription'
   | 'accept'
-  | 'legal';
+  | 'legal'
+  // Admin Dashboard
+  | 'adminDashboard'
+  | 'loginActivity'
+  | 'totalUsers'
+  | 'loginsToday'
+  | 'loginsThisMonth'
+  | 'allActivity'
+  | 'dailyView'
+  | 'monthlyView'
+  | 'hourlyView'
+  | 'noActivityFound'
+  | 'loginMethod'
+  | 'viaEmail'
+  | 'viaGoogle'
+  | 'selectMonth'
+  | 'selectDate'
+  | 'selectHour';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -385,7 +402,24 @@ export const translations: Record<Language, Translations> = {
     consentTitle: 'הסכמה לשימוש בנתונים',
     consentDescription: 'אנו משתמשים באחסון מקומי (LocalStorage) כדי לשמור את ההעדפות שלך ואת נתוני האפליקציה במכשיר שלך. המידע נשאר במכשירך ואינו נשלח לשרתים חיצוניים.',
     accept: 'מסכים',
-    legal: 'משפטי'
+    legal: 'משפטי',
+    // Admin Dashboard
+    adminDashboard: 'לוח בקרה למנהל',
+    loginActivity: 'פעילות התחברות',
+    totalUsers: 'סה״כ משתמשים',
+    loginsToday: 'התחברויות היום',
+    loginsThisMonth: 'התחברויות החודש',
+    allActivity: 'כל הפעילות',
+    dailyView: 'יומי',
+    monthlyView: 'חודשי',
+    hourlyView: 'שעתי',
+    noActivityFound: 'לא נמצאה פעילות',
+    loginMethod: 'שיטת התחברות',
+    viaEmail: 'באמצעות אימייל',
+    viaGoogle: 'באמצעות Google',
+    selectMonth: 'בחר חודש',
+    selectDate: 'בחר תאריך',
+    selectHour: 'בחר שעה'
   },
   en: {
     // General
@@ -577,7 +611,24 @@ export const translations: Record<Language, Translations> = {
     consentTitle: 'Data Usage Consent',
     consentDescription: 'We use local storage (LocalStorage) to save your preferences and app data on your device. The information stays on your device and is not sent to external servers.',
     accept: 'Accept',
-    legal: 'Legal'
+    legal: 'Legal',
+    // Admin Dashboard
+    adminDashboard: 'Admin Dashboard',
+    loginActivity: 'Login Activity',
+    totalUsers: 'Total Users',
+    loginsToday: 'Logins Today',
+    loginsThisMonth: 'Logins This Month',
+    allActivity: 'All Activity',
+    dailyView: 'Daily',
+    monthlyView: 'Monthly',
+    hourlyView: 'Hourly',
+    noActivityFound: 'No activity found',
+    loginMethod: 'Login Method',
+    viaEmail: 'Via Email',
+    viaGoogle: 'Via Google',
+    selectMonth: 'Select Month',
+    selectDate: 'Select Date',
+    selectHour: 'Select Hour'
   },
   ru: {
     // General
@@ -769,7 +820,24 @@ export const translations: Record<Language, Translations> = {
     consentTitle: 'Согласие на использование данных',
     consentDescription: 'Мы используем локальное хранилище (LocalStorage) для сохранения ваших настроек и данных приложения на вашем устройстве. Информация остаётся на вашем устройстве и не отправляется на внешние серверы.',
     accept: 'Принять',
-    legal: 'Правовая информация'
+    legal: 'Правовая информация',
+    // Admin Dashboard
+    adminDashboard: 'Панель администратора',
+    loginActivity: 'Активность входа',
+    totalUsers: 'Всего пользователей',
+    loginsToday: 'Входов сегодня',
+    loginsThisMonth: 'Входов в этом месяце',
+    allActivity: 'Вся активность',
+    dailyView: 'По дням',
+    monthlyView: 'По месяцам',
+    hourlyView: 'По часам',
+    noActivityFound: 'Активность не найдена',
+    loginMethod: 'Метод входа',
+    viaEmail: 'Через Email',
+    viaGoogle: 'Через Google',
+    selectMonth: 'Выберите месяц',
+    selectDate: 'Выберите дату',
+    selectHour: 'Выберите час'
   }
 };
 

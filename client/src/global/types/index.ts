@@ -67,6 +67,27 @@ export interface List {
 // ===== Toast =====
 export type ToastType = "success" | "error" | "info" | "warning";
 
+// ===== Login Activity (Admin Dashboard) =====
+export type LoginMethod = 'email' | 'google';
+
+export interface LoginActivity {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  timestamp: string;
+  loginMethod: LoginMethod;
+}
+
+export type ActivityFilterMode = 'all' | 'daily' | 'monthly' | 'hourly';
+
+export interface ActivityFilters {
+  filterMode: ActivityFilterMode;
+  selectedMonth?: string;
+  selectedDate?: string;
+  selectedHour?: number;
+}
+
 // ===== Settings =====
 export type Language = "he" | "en" | "ru";
 export type ThemeMode = "light" | "dark";

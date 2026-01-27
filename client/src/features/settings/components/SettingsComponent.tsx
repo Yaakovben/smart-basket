@@ -5,10 +5,11 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { LANGUAGES } from '../../../global/constants';
+import { LANGUAGES, ADMIN_CONFIG } from '../../../global/constants';
 import type { Language } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
+import { useAuth } from '../../../global/hooks';
 
 // ===== Reusable Styles =====
 const settingRowSx = {
@@ -75,6 +76,8 @@ interface SettingsPageProps {
 export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
+  const { user } = useAuth();
+  const isAdmin = user?.email === ADMIN_CONFIG.adminEmail;
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,
@@ -164,6 +167,17 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
             <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
           </Box>
         </Paper>
+
+        {/* Admin Dashboard - Only visible to admin */}
+        {isAdmin && (
+          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+            <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
+              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
+              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
+              <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            </Box>
+          </Paper>
+        )}
 
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>

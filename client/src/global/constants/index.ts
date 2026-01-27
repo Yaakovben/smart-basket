@@ -145,7 +145,13 @@ export const STORAGE_KEYS = {
   CURRENT_USER: 'sb_current_user',
   LISTS: 'sb_lists',
   HINT_SEEN: 'sb_hint_seen',
-  SETTINGS: 'sb_settings'
+  SETTINGS: 'sb_settings',
+  LOGIN_ACTIVITY: 'sb_login_activity'
+} as const;
+
+// ===== Admin Configuration =====
+export const ADMIN_CONFIG = {
+  adminEmail: 'yaakovbenyizchak1@gmail.com'
 } as const;
 
 // ===== Default Settings =====

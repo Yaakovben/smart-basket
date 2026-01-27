@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import type { User, List, Member, Notification } from '../types';
+import type { User, List, Member, Notification, LoginMethod } from '../types';
 import { STORAGE_KEYS } from '../constants';
+import { ActivityTracker } from '../services';
 
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] {
@@ -40,8 +41,10 @@ export function useToast(duration = 1200) {
 export function useAuth() {
   const [user, setUser] = useLocalStorage<User | null>(STORAGE_KEYS.CURRENT_USER, null);
 
-  const login = useCallback((userData: User) => {
+  const login = useCallback((userData: User, loginMethod: LoginMethod = 'email') => {
     setUser(userData);
+    // Track login activity for admin dashboard
+    ActivityTracker.trackLogin(userData, loginMethod);
   }, [setUser]);
 
   const logout = useCallback(() => {

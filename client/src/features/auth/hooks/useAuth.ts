@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { User } from '../../../global/types';
+import type { User, LoginMethod } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { StorageService } from '../../../global/services/storage';
@@ -14,7 +14,7 @@ const GOOGLE_AVATAR_COLOR = '#4285F4';
 
 // ===== Types =====
 interface UseAuthParams {
-  onLogin: (user: User) => void;
+  onLogin: (user: User, loginMethod?: LoginMethod) => void;
 }
 
 // ===== Hook =====
@@ -85,7 +85,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleLogin = useCallback((existingUser: User) => {
     if (existingUser.password === password) {
       haptic('medium');
-      onLogin(existingUser);
+      onLogin(existingUser, 'email');
     } else {
       haptic('heavy');
       setError(t('wrongPassword'));
@@ -107,7 +107,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     users.push(newUser);
     StorageService.setUsers(users);
     haptic('medium');
-    onLogin(newUser);
+    onLogin(newUser, 'email');
   }, [name, email, password, onLogin, validateRegisterForm]);
 
   const handleEmailSubmit = useCallback(() => {
@@ -144,7 +144,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       // Check for existing user
       const existingUser = users.find((u: User) => u.email === userInfo.email);
       if (existingUser) {
-        onLogin(existingUser);
+        onLogin(existingUser, 'google');
         return;
       }
 
@@ -159,7 +159,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
       users.push(googleUser);
       StorageService.setUsers(users);
-      onLogin(googleUser);
+      onLogin(googleUser, 'google');
     } catch {
       setError(t('unknownError'));
     } finally {

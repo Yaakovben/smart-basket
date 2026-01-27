@@ -5,6 +5,7 @@ import type { User, List } from "../global/types";
 import { useAuth, useLists, useToast } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
+import { ADMIN_CONFIG } from "../global/constants";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -14,6 +15,7 @@ const ProfilePage = lazy(() => import("../features/profile/profile").then(m => (
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
+const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 
 // Loading fallback
 const PageLoader = () => (
@@ -25,6 +27,14 @@ const PageLoader = () => (
 // Protected Route wrapper
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
+// Admin Route wrapper - only allows admin user
+const AdminRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
+  if (!user) return <Navigate to="/login" replace />;
+  const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
+  if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -184,6 +194,14 @@ export const AppRouter = () => {
         />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute user={user}>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
