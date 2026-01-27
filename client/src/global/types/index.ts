@@ -38,6 +38,7 @@ export interface Member {
   id: string;
   name: string;
   email: string;
+  isAdmin?: boolean;
 }
 
 export interface Notification {

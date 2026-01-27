@@ -10,6 +10,7 @@ interface SwipeItemProps {
   product: Product;
   isPurchased: boolean;
   isOpen: boolean;
+  currentUserName: string;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -30,7 +31,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t } = useSettings();
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
@@ -203,7 +204,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
             {product.name}
           </Typography>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
-            {product.quantity} {product.unit} • {product.addedBy}
+            {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
           </Typography>
         </Box>
         {isPurchased && <Box component="span" sx={{ fontSize: '20px' }}>✅</Box>}

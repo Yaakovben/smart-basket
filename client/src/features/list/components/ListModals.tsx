@@ -139,6 +139,8 @@ interface MembersModalProps {
   onClose: () => void;
   onRemoveMember: (id: string, name: string) => void;
   onLeaveGroup: () => void;
+  onToggleAdmin: (id: string) => void;
+  onMakeAllAdmins: () => void;
 }
 
 export const MembersModal = memo(({
@@ -148,14 +150,40 @@ export const MembersModal = memo(({
   isOwner,
   onClose,
   onRemoveMember,
-  onLeaveGroup
+  onLeaveGroup,
+  onToggleAdmin,
+  onMakeAllAdmins
 }: MembersModalProps) => {
   const { t } = useSettings();
 
   if (!isOpen) return null;
 
+  // Check if member is admin (owner is always admin)
+  const isMemberAdmin = (memberId: string) => {
+    if (memberId === list.owner.id) return true;
+    const member = list.members.find(m => m.id === memberId);
+    return member?.isAdmin === true;
+  };
+
   return (
     <Modal title={t('members')} onClose={onClose}>
+      {/* Make All Admins Button */}
+      {isOwner && list.isGroup && list.members.length > 0 && (
+        <Button
+          fullWidth
+          onClick={onMakeAllAdmins}
+          sx={{
+            mb: 2,
+            bgcolor: 'rgba(20, 184, 166, 0.1)',
+            color: 'primary.main',
+            fontWeight: 600,
+            '&:hover': { bgcolor: 'rgba(20, 184, 166, 0.2)' }
+          }}
+        >
+          {t('makeAllAdmins')}
+        </Button>
+      )}
+
       {members.map((m, i) => (
         <Box
           key={m.id}
@@ -169,34 +197,53 @@ export const MembersModal = memo(({
           }}
         >
           <MemberAvatar member={m} size={44} index={i} />
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{m.name}</Typography>
-              {m.id === list.owner.id && (
+              {isMemberAdmin(m.id) && (
                 <Chip label={t('admin')} size="small" sx={{ bgcolor: 'warning.light', color: 'warning.dark', height: 22 }} />
               )}
             </Box>
-            <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{m.email}</Typography>
+            <Typography sx={{ fontSize: 13, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email}</Typography>
           </Box>
           {isOwner && m.id !== list.owner.id && (
-            <Button
-              onClick={() => onRemoveMember(m.id, m.name)}
-              size="small"
-              sx={{
-                bgcolor: 'rgba(239, 68, 68, 0.1)',
-                color: 'error.main',
-                fontSize: 12,
-                fontWeight: 600,
-                px: 1.5,
-                py: 0.5,
-                minWidth: 'auto',
-                borderRadius: '8px',
-                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
-              }}
-              aria-label={`${t('removeMember')} ${m.name}`}
-            >
-              {t('removeMember')}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 0.5, flexDirection: 'column' }}>
+              <Button
+                onClick={() => onToggleAdmin(m.id)}
+                size="small"
+                sx={{
+                  bgcolor: isMemberAdmin(m.id) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(20, 184, 166, 0.1)',
+                  color: isMemberAdmin(m.id) ? 'error.main' : 'primary.main',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  px: 1,
+                  py: 0.3,
+                  minWidth: 'auto',
+                  borderRadius: '6px',
+                  '&:hover': { bgcolor: isMemberAdmin(m.id) ? 'rgba(239, 68, 68, 0.2)' : 'rgba(20, 184, 166, 0.2)' }
+                }}
+              >
+                {isMemberAdmin(m.id) ? t('removeAdmin') : t('makeAdmin')}
+              </Button>
+              <Button
+                onClick={() => onRemoveMember(m.id, m.name)}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(239, 68, 68, 0.1)',
+                  color: 'error.main',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  px: 1,
+                  py: 0.3,
+                  minWidth: 'auto',
+                  borderRadius: '6px',
+                  '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' }
+                }}
+                aria-label={`${t('removeMember')} ${m.name}`}
+              >
+                {t('removeMember')}
+              </Button>
+            </Box>
           )}
         </Box>
       ))}

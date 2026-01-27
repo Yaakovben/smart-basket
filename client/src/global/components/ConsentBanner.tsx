@@ -66,7 +66,12 @@ export const ConsentBanner = memo(() => {
           </Button>
           <Button
             variant="outlined"
-            onClick={() => navigate('/privacy')}
+            onClick={() => {
+              // Set consent since privacy page has accept button
+              localStorage.setItem(CONSENT_KEY, 'true');
+              setShowBanner(false);
+              navigate('/privacy');
+            }}
             sx={{ flex: 1, minWidth: 120 }}
             aria-label={t('privacyPolicy')}
           >

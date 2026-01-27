@@ -44,7 +44,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
     // Handlers
     handleDragStart, handleDragMove, handleDragEnd, dismissHint,
     handleAdd, handleEditList, saveListChanges, handleDeleteList,
-    removeMember, leaveList, toggleProduct, deleteProduct, saveEditedProduct,
+    removeMember, leaveList, toggleMemberAdmin, makeAllAdmins,
+    toggleProduct, deleteProduct, saveEditedProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal
   } = useList({
@@ -110,6 +111,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
               product={p}
               isPurchased={p.isPurchased}
               isOpen={openItemId === p.id}
+              currentUserName={user.name}
               onOpen={() => setOpenItemId(p.id)}
               onClose={() => setOpenItemId(null)}
               onToggle={() => toggleProduct(p.id)}
@@ -177,6 +179,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
         onClose={() => setShowMembers(false)}
         onRemoveMember={removeMember}
         onLeaveGroup={leaveList}
+        onToggleAdmin={toggleMemberAdmin}
+        onMakeAllAdmins={makeAllAdmins}
       />
 
       <ShareListModal

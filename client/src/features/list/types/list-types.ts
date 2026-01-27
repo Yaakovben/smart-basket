@@ -95,6 +95,8 @@ export interface UseListReturn {
   handleDeleteList: () => void;
   removeMember: (memberId: string, memberName: string) => void;
   leaveList: () => void;
+  toggleMemberAdmin: (memberId: string) => void;
+  makeAllAdmins: () => void;
   updateProducts: (products: Product[]) => void;
   toggleProduct: (productId: string) => void;
   deleteProduct: (productId: string) => void;

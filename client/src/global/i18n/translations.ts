@@ -166,6 +166,9 @@ type TranslationKey =
   | 'didYouMean'
   | 'removeMemberConfirm'
   | 'leaveGroupConfirm'
+  | 'makeAdmin'
+  | 'removeAdmin'
+  | 'makeAllAdmins'
   | 'whatToCreate'
   | 'loginWithoutGoogle'
   | 'hideEmailLogin'
@@ -358,6 +361,9 @@ export const translations: Record<Language, Translations> = {
     didYouMean: 'האם התכוונת ל',
     removeMemberConfirm: 'האם להסיר את {name} מהקבוצה?',
     leaveGroupConfirm: 'האם לעזוב את הקבוצה?',
+    makeAdmin: 'הפוך למנהל',
+    removeAdmin: 'הסר מנהל',
+    makeAllAdmins: 'הפוך את כולם למנהלים',
     whatToCreate: 'מה תרצה ליצור?',
     loginWithoutGoogle: 'התחברות ללא Google',
     hideEmailLogin: 'הסתר',
@@ -547,6 +553,9 @@ export const translations: Record<Language, Translations> = {
     didYouMean: 'Did you mean',
     removeMemberConfirm: 'Remove {name} from the group?',
     leaveGroupConfirm: 'Leave the group?',
+    makeAdmin: 'Make Admin',
+    removeAdmin: 'Remove Admin',
+    makeAllAdmins: 'Make All Admins',
     whatToCreate: 'What would you like to create?',
     loginWithoutGoogle: 'Login without Google',
     hideEmailLogin: 'Hide',
@@ -736,6 +745,9 @@ export const translations: Record<Language, Translations> = {
     didYouMean: 'Возможно вы имели в виду',
     removeMemberConfirm: 'Удалить {name} из группы?',
     leaveGroupConfirm: 'Покинуть группу?',
+    makeAdmin: 'Сделать админом',
+    removeAdmin: 'Убрать админа',
+    makeAllAdmins: 'Сделать всех админами',
     whatToCreate: 'Что вы хотите создать?',
     loginWithoutGoogle: 'Войти без Google',
     hideEmailLogin: 'Скрыть',
