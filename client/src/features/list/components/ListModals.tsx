@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
 import type { List, User, Product } from '../../../global/types';
-import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, SIZES } from '../../../global/helpers';
+import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, SIZES, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { EditListForm } from '../types/list-types';
@@ -112,9 +112,12 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         </Box>
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
+            component="a"
+            href={`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list))}`}
+            target="_blank"
+            rel="noopener noreferrer"
             fullWidth
-            onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list))}`)}
-            sx={{ bgcolor: '#25D366', color: 'white', '&:hover': { bgcolor: '#1ebe5a' }, gap: 1 }}
+            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, textDecoration: 'none' }}
             aria-label="WhatsApp"
           >
             <WhatsAppIcon />
@@ -306,9 +309,12 @@ export const ShareListModal = memo(({
         </Box>
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
+            component="a"
+            href={`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list))}`}
+            target="_blank"
+            rel="noopener noreferrer"
             fullWidth
-            onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list))}`)}
-            sx={{ bgcolor: '#25D366', color: 'white', '&:hover': { bgcolor: '#1ebe5a' }, gap: 1 }}
+            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, textDecoration: 'none' }}
             aria-label="WhatsApp"
           >
             <WhatsAppIcon />

@@ -2,6 +2,7 @@ import { Box, Typography, Paper, LinearProgress, Chip } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LoginIcon from '@mui/icons-material/Login';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';
 import type { Language } from '../../../global/types';
 
@@ -15,52 +16,6 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
 
   // Find max logins for progress bar scaling
   const maxLogins = Math.max(...users.map(u => u.totalLogins), 1);
-
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const locale = language === 'he' ? 'he-IL' : language === 'ru' ? 'ru-RU' : 'en-US';
-    return date.toLocaleDateString(locale, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('he-IL', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getRelativeTime = (timestamp: string) => {
-    const now = new Date();
-    const date = new Date(timestamp);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return language === 'he' ? 'עכשיו' : language === 'ru' ? 'сейчас' : 'now';
-    if (diffMins < 60) return language === 'he' ? `לפני ${diffMins} דק'` : language === 'ru' ? `${diffMins} мин назад` : `${diffMins}m ago`;
-    if (diffHours < 24) return language === 'he' ? `לפני ${diffHours} שע'` : language === 'ru' ? `${diffHours} ч назад` : `${diffHours}h ago`;
-    if (diffDays < 7) return language === 'he' ? `לפני ${diffDays} ימים` : language === 'ru' ? `${diffDays} дн назад` : `${diffDays}d ago`;
-    return formatDate(timestamp);
-  };
-
-  const isActiveToday = (timestamp?: string) => {
-    if (!timestamp) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return timestamp.startsWith(today);
-  };
-
-  const isActiveThisWeek = (timestamp?: string) => {
-    if (!timestamp) return false;
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return new Date(timestamp) > weekAgo;
-  };
 
   if (users.length === 0) {
     return (
@@ -229,10 +184,10 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
                       fontWeight: 600,
                       color: activeToday ? '#10B981' : activeThisWeek ? '#F59E0B' : 'text.primary'
                     }}>
-                      {getRelativeTime(user.lastLoginAt)}
+                      {getRelativeTime(user.lastLoginAt, language)}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
-                      {formatDate(user.lastLoginAt)} {formatTime(user.lastLoginAt)}
+                      {formatDateShort(user.lastLoginAt, language)} {formatTimeShort(user.lastLoginAt)}
                     </Typography>
                   </Box>
                 ) : (

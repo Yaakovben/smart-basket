@@ -209,6 +209,24 @@ export function useLists(user: User | null) {
     [setLists],
   );
 
+  const markSingleNotificationRead = useCallback(
+    (listId: string, notificationId: string) => {
+      setLists((prev) =>
+        prev.map((l) =>
+          l.id === listId
+            ? {
+                ...l,
+                notifications: (l.notifications || []).map((n) =>
+                  n.id === notificationId ? { ...n, read: true } : n
+                ),
+              }
+            : l,
+        ),
+      );
+    },
+    [setLists],
+  );
+
   return {
     lists,
     createList,
@@ -217,5 +235,6 @@ export function useLists(user: User | null) {
     joinGroup,
     leaveList,
     markNotificationsRead,
+    markSingleNotificationRead,
   };
 }

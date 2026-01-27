@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Product } from '../../../global/types';
-import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
@@ -31,7 +31,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t } = useSettings();
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
@@ -117,8 +117,8 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       directionLocked.current = null;
       if (swiping) {
         justSwiped.current = true;
-        setTimeout(() => { justSwiped.current = false; }, 100);
-        if (offset > 60) {
+        setTimeout(() => { justSwiped.current = false; }, SWIPE_CONFIG.debounceMs);
+        if (offset > SWIPE_CONFIG.openThreshold) {
           setOffset(SWIPE_ACTIONS_WIDTH);
           haptic('light');
         } else {
@@ -166,7 +166,7 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
         {...handlers}
         onClick={() => {
           if (justSwiped.current) return;
-          if (offset > 10) {
+          if (offset > SWIPE_CONFIG.offsetClickThreshold) {
             setOffset(0);
             onClose();
           } else {
@@ -211,4 +211,4 @@ export const SwipeItem = ({ product, onToggle, onEdit, onDelete, onClick, isPurc
       </Box>
     </Box>
   );
-}
+});

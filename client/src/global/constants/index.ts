@@ -21,6 +21,24 @@ export const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '👫', '🏠',
 export const LIST_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 export const SWIPE_ACTIONS_WIDTH = 200;
 
+// ===== Brand Colors =====
+export const BRAND_COLORS = {
+  whatsapp: '#25D366',
+  whatsappHover: '#1ebe5a',
+  google: '#4285F4',
+  primary: '#14B8A6',
+  error: '#EF4444',
+  errorHover: '#DC2626',
+  success: '#22C55E'
+} as const;
+
+// ===== Swipe Constants =====
+export const SWIPE_CONFIG = {
+  debounceMs: 100,
+  offsetClickThreshold: 10,
+  openThreshold: 60
+} as const;
+
 // ===== Unified Size Constants =====
 export const SIZES = {
   // Icon Button Sizes

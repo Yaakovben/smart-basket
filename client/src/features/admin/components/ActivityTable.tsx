@@ -1,6 +1,7 @@
 import { Box, Typography, Paper, Chip } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { formatDateLong, formatTimeShort, isToday, isYesterday } from '../../../global/helpers';
 import type { LoginActivity } from '../../../global/types';
 
 interface ActivityTableProps {
@@ -16,36 +17,6 @@ interface GroupedActivities {
 export const ActivityTable = ({ activities }: ActivityTableProps) => {
   const { t, settings } = useSettings();
 
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const locale = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-US';
-    return date.toLocaleDateString(locale, {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('he-IL', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const isToday = (dateStr: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    return dateStr === today;
-  };
-
-  const isYesterday = (dateStr: string) => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return dateStr === yesterday.toISOString().split('T')[0];
-  };
-
   const getDateLabel = (dateStr: string) => {
     if (isToday(dateStr)) {
       return settings.language === 'he' ? 'היום' : settings.language === 'ru' ? 'Сегодня' : 'Today';
@@ -53,7 +24,7 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
     if (isYesterday(dateStr)) {
       return settings.language === 'he' ? 'אתמול' : settings.language === 'ru' ? 'Вчера' : 'Yesterday';
     }
-    return formatDate(dateStr + 'T00:00:00');
+    return formatDateLong(dateStr + 'T00:00:00', settings.language);
   };
 
   // Group activities by date
@@ -157,7 +128,7 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
                     fontWeight: 700,
                     color: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6'
                   }}>
-                    {formatTime(activity.timestamp)}
+                    {formatTimeShort(activity.timestamp)}
                   </Typography>
                 </Box>
 

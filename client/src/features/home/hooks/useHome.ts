@@ -35,6 +35,7 @@ interface UseHomeParams {
   onEditList: (list: List) => void;
   onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
   onMarkNotificationsRead: (listId: string) => void;
+  onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
 }
 
 export const useHome = ({
@@ -44,7 +45,8 @@ export const useHome = ({
   onDeleteList,
   onEditList,
   onJoinGroup,
-  onMarkNotificationsRead
+  onMarkNotificationsRead,
+  onMarkSingleNotificationRead
 }: UseHomeParams): UseHomeReturn => {
   const { t } = useSettings();
 
@@ -210,6 +212,10 @@ export const useHome = ({
     setShowNotifications(false);
   }, [myNotifications, onMarkNotificationsRead]);
 
+  const markNotificationRead = useCallback((listId: string, notificationId: string) => {
+    onMarkSingleNotificationRead(listId, notificationId);
+  }, [onMarkSingleNotificationRead]);
+
   return {
     // State
     tab,
@@ -264,6 +270,7 @@ export const useHome = ({
     updateEditListField,
     saveEditList,
     deleteList,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    markNotificationRead
   };
 };

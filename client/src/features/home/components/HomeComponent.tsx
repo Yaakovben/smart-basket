@@ -81,9 +81,10 @@ interface HomePageProps {
   onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
   onLogout: () => void;
   onMarkNotificationsRead: (listId: string) => void;
+  onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
 }
 
-export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, user }: HomePageProps) => {
+export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, onMarkSingleNotificationRead, user }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
 
@@ -100,9 +101,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     // Handlers
     handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
     closeJoinModal, updateNewListField, updateEditListField, saveEditList,
-    deleteList, markAllNotificationsRead
+    deleteList, markAllNotificationsRead, markNotificationRead
   } = useHome({
-    lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, onMarkNotificationsRead
+    lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, onMarkNotificationsRead, onMarkSingleNotificationRead
   });
 
   return (
@@ -526,10 +527,17 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography sx={{ fontSize: 14, fontWeight: 600, color: isLeave ? '#991B1B' : '#166534' }}>
-                        {n.userName} {isLeave ? t('left') : t('joinedGroup')}
+                        {n.userName} {isLeave ? t('memberLeft') : t('memberJoined')}
                       </Typography>
                       <Typography sx={{ fontSize: 13, color: isLeave ? '#B91C1C' : '#15803D' }}>{n.listName}</Typography>
                     </Box>
+                    <IconButton
+                      size="small"
+                      onClick={() => markNotificationRead(n.listId, n.id)}
+                      sx={{ color: isLeave ? '#991B1B' : '#166534' }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
                   </Box>
                 );
               })}

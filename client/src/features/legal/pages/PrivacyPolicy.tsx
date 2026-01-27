@@ -10,6 +10,7 @@ export const PrivacyPolicy = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const isHebrew = settings.language === 'he';
+  const hasConsent = localStorage.getItem(CONSENT_KEY) === 'true';
 
   const handleAcceptAndGoBack = () => {
     localStorage.setItem(CONSENT_KEY, 'true');
@@ -88,14 +89,16 @@ export const PrivacyPolicy = memo(() => {
               לשאלות בנוגע למדיניות פרטיות זו, ניתן לפנות אלינו באימייל.
             </Typography>
 
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleAcceptAndGoBack}
-              sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
-            >
-              {t('accept')}
-            </Button>
+            {!hasConsent && (
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleAcceptAndGoBack}
+                sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+              >
+                {t('accept')}
+              </Button>
+            )}
           </>
         ) : (
           <>
@@ -145,14 +148,16 @@ export const PrivacyPolicy = memo(() => {
               For questions about this privacy policy, please contact us via email.
             </Typography>
 
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleAcceptAndGoBack}
-              sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
-            >
-              {t('accept')}
-            </Button>
+            {!hasConsent && (
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleAcceptAndGoBack}
+                sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+              >
+                {t('accept')}
+              </Button>
+            )}
           </>
         )}
       </Box>

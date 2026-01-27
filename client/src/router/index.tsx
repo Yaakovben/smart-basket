@@ -89,7 +89,7 @@ export const AppRouter = () => {
 
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
-  const { lists, createList, updateList, deleteList, joinGroup, leaveList, markNotificationsRead } = useLists(user);
+  const { lists, createList, updateList, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, showToast } = useToast();
 
   // Handlers
@@ -152,6 +152,7 @@ export const AppRouter = () => {
                 onEditList={handleEditList}
                 onJoinGroup={handleJoinGroup}
                 onMarkNotificationsRead={markNotificationsRead}
+                onMarkSingleNotificationRead={markSingleNotificationRead}
                 onLogout={handleLogout}
               />
             </ProtectedRoute>

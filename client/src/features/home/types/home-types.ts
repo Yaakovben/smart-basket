@@ -72,4 +72,5 @@ export interface UseHomeReturn {
   saveEditList: () => void;
   deleteList: () => void;
   markAllNotificationsRead: () => void;
+  markNotificationRead: (listId: string, notificationId: string) => void;
 }
