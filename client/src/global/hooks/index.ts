@@ -3,6 +3,9 @@ import type { User, List, Member, Notification, LoginMethod } from "../types";
 import { STORAGE_KEYS } from "../constants";
 import { ActivityTracker } from "../services";
 
+// Re-export useDebounce
+export { useDebounce } from './useDebounce';
+
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(
   key: string,

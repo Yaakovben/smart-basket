@@ -28,6 +28,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
@@ -114,14 +115,19 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     setError('');
     if (!validateLoginForm()) return;
 
-    const users = StorageService.getUsers();
-    const existingUser = users.find((u: User) => u.email === email);
+    setEmailLoading(true);
+    // Small delay for UX feedback
+    setTimeout(() => {
+      const users = StorageService.getUsers();
+      const existingUser = users.find((u: User) => u.email === email);
 
-    if (existingUser) {
-      handleLogin(existingUser);
-    } else {
-      handleRegister(users);
-    }
+      if (existingUser) {
+        handleLogin(existingUser);
+      } else {
+        handleRegister(users);
+      }
+      setEmailLoading(false);
+    }, 300);
   }, [email, validateLoginForm, handleLogin, handleRegister]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -187,6 +193,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     password,
     error,
     googleLoading,
+    emailLoading,
     isNewUser,
     showEmailForm,
     emailSuggestion,

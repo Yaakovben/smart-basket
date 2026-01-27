@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
 import { formatDate, formatTime, generateProductId } from '../helpers/list-helpers';
 import { newProductSchema, validateForm } from '../../../global/validation';
@@ -87,9 +88,12 @@ export const useList = ({
     [list.products]
   );
 
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(search, 300);
+
   const items = useMemo(
-    () => (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(search)),
-    [filter, pending, purchased, search]
+    () => (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(debouncedSearch)),
+    [filter, pending, purchased, debouncedSearch]
   );
 
   const allMembers = useMemo(
@@ -185,8 +189,18 @@ export const useList = ({
   }, [list.products, updateProducts, showToast, t, dismissHint]);
 
   const deleteProduct = useCallback((productId: string) => {
-    updateProducts(list.products.filter((p: Product) => p.id !== productId));
-    showToast(t('deleted'));
+    const product = list.products.find((p: Product) => p.id === productId);
+    if (!product) return;
+
+    setConfirm({
+      title: t('deleteProduct'),
+      message: `${t('delete')} "${product.name}"?`,
+      onConfirm: () => {
+        updateProducts(list.products.filter((p: Product) => p.id !== productId));
+        setConfirm(null);
+        showToast(t('deleted'));
+      }
+    });
   }, [list.products, updateProducts, showToast, t]);
 
   const saveEditedProduct = useCallback(() => {

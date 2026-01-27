@@ -5,6 +5,7 @@ export interface AuthFormState {
   password: string;
   error: string;
   googleLoading: boolean;
+  emailLoading: boolean;
   isNewUser: boolean;
   showEmailForm: boolean;
 }
@@ -17,6 +18,7 @@ export interface UseAuthReturn {
   password: string;
   error: string;
   googleLoading: boolean;
+  emailLoading: boolean;
   isNewUser: boolean;
   showEmailForm: boolean;
   emailSuggestion: string | null;

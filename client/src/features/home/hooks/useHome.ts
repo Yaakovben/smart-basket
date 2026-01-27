@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { List, Member, Notification, User } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useDebounce } from '../../../global/hooks';
 import { generateInviteCode, generatePassword, generateListId } from '../helpers/home-helpers';
 import type {
   NewListForm,
@@ -88,10 +89,13 @@ export const useHome = ({
 
   const unreadCount = myNotifications.length;
 
+  // Debounce search for better performance
+  const debouncedSearch = useDebounce(search, 300);
+
   const display = useMemo(() => {
     const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
-    return search ? base.filter((l: List) => l.name.includes(search)) : base;
-  }, [tab, userLists, my, groups, search]);
+    return debouncedSearch ? base.filter((l: List) => l.name.includes(debouncedSearch)) : base;
+  }, [tab, userLists, my, groups, debouncedSearch]);
 
   // ===== Create List Handlers =====
   const validateListName = useCallback((): boolean => {

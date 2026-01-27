@@ -28,7 +28,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
 
   const {
-    name, email, password, error, googleLoading, isNewUser, showEmailForm, emailSuggestion,
+    name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
     setName, setPassword,
     handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
     toggleEmailForm, applySuggestion, isValidEmail
@@ -249,9 +249,14 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
+                  disabled={emailLoading}
                   sx={{ mt: 2.5, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
                 >
-                  {isNewUser ? t('register') : t('login')}
+                  {emailLoading ? (
+                    <CircularProgress size={20} sx={{ color: 'white' }} />
+                  ) : (
+                    isNewUser ? t('register') : t('login')
+                  )}
                 </Button>
               </form>
             </Box>

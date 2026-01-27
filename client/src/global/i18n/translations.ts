@@ -77,6 +77,7 @@ type TranslationKey =
   | 'category'
   | 'add'
   | 'editProduct'
+  | 'deleteProduct'
   | 'productDetails'
   | 'addedBy'
   | 'date'
@@ -295,6 +296,7 @@ export const translations: Record<Language, Translations> = {
     category: 'קטגוריה',
     add: 'הוסף',
     editProduct: 'ערוך מוצר',
+    deleteProduct: 'מחק מוצר',
     productDetails: 'פרטי מוצר',
     addedBy: 'נוסף ע״י',
     date: 'תאריך',
@@ -510,6 +512,7 @@ export const translations: Record<Language, Translations> = {
     category: 'Category',
     add: 'Add',
     editProduct: 'Edit Product',
+    deleteProduct: 'Delete Product',
     productDetails: 'Product Details',
     addedBy: 'Added by',
     date: 'Date',
@@ -725,6 +728,7 @@ export const translations: Record<Language, Translations> = {
     category: 'Категория',
     add: 'Добавить',
     editProduct: 'Редактировать товар',
+    deleteProduct: 'Удалить товар',
     productDetails: 'Детали товара',
     addedBy: 'Добавлено',
     date: 'Дата',

@@ -4,7 +4,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
-import { ConsentBanner } from "./global/components";
+import { ConsentBanner, ErrorBoundary } from "./global/components";
 
 const ThemedApp = () => {
   const { settings } = useSettings();
@@ -26,9 +26,11 @@ const ThemedApp = () => {
 };
 
 const App = () => (
-  <SettingsProvider>   
-    <ThemedApp />
-  </SettingsProvider>
+  <ErrorBoundary>
+    <SettingsProvider>
+      <ThemedApp />
+    </SettingsProvider>
+  </ErrorBoundary>
 );
 
 
