@@ -28,10 +28,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
 
   const {
-    name, email, password, error, googleLoading, isNewUser, showEmailForm,
+    name, email, password, error, googleLoading, isNewUser, showEmailForm, emailSuggestion,
     setName, setPassword,
     handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
-    toggleEmailForm, isValidEmail
+    toggleEmailForm, applySuggestion, isValidEmail
   } = useAuth({ onLogin });
 
   const googleLogin = useGoogleLogin({
@@ -171,12 +171,34 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   placeholder="example@mail.com"
                   autoComplete="email"
                   size="small"
-                  sx={{ mb: 2, mt: 2 }}
+                  sx={{ mb: emailSuggestion ? 0.5 : 2, mt: 2 }}
                   inputProps={{ dir: 'ltr' }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>
                   }}
                 />
+
+                {/* Email Suggestion */}
+                {emailSuggestion && (
+                  <Box
+                    onClick={applySuggestion}
+                    sx={{
+                      mb: 2,
+                      p: 1,
+                      bgcolor: 'warning.light',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      '&:hover': { bgcolor: 'warning.main' }
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 13, color: 'warning.dark' }}>
+                      {t('didYouMean')} <strong style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{email.split('@')[0]}@{emailSuggestion}</strong>?
+                    </Typography>
+                  </Box>
+                )}
 
                 {/* Name Field - Only for new users */}
                 <Collapse in={isNewUser && email.length > 0}>

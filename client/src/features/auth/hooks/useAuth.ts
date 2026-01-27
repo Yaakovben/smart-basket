@@ -3,7 +3,7 @@ import type { User } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { StorageService } from '../../../global/services/storage';
-import { isValidEmail } from '../helpers/auth-helpers';
+import { isValidEmail, checkEmailDomainTypo } from '../helpers/auth-helpers';
 import type { UseAuthReturn, GoogleUserInfo } from '../types/auth-types';
 import { loginSchema, registerSchema, validateForm } from '../../../global/validation';
 
@@ -29,6 +29,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
   // ===== Validation =====
   const validateLoginForm = useCallback((): boolean => {
@@ -63,8 +64,23 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
+    setError('');
     checkEmailExists(newEmail);
+
+    // Check for domain typos
+    const suggestion = checkEmailDomainTypo(newEmail);
+    setEmailSuggestion(suggestion);
   }, [checkEmailExists]);
+
+  const applySuggestion = useCallback(() => {
+    if (emailSuggestion && email.includes('@')) {
+      const localPart = email.split('@')[0];
+      const correctedEmail = `${localPart}@${emailSuggestion}`;
+      setEmail(correctedEmail);
+      setEmailSuggestion(null);
+      checkEmailExists(correctedEmail);
+    }
+  }, [email, emailSuggestion, checkEmailExists]);
 
   const handleLogin = useCallback((existingUser: User) => {
     if (existingUser.password === password) {
@@ -173,6 +189,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     googleLoading,
     isNewUser,
     showEmailForm,
+    emailSuggestion,
 
     // Setters
     setName,
@@ -188,6 +205,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleGoogleSuccess,
     handleGoogleError,
     toggleEmailForm,
+    applySuggestion,
     isValidEmail
   };
 };

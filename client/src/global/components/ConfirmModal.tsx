@@ -53,7 +53,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
         {title}
       </DialogTitle>
       <DialogContent sx={{ p: 0, mb: 3 }}>
-        <Typography id="confirm-dialog-description" sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 15 }}>
+        <Typography id="confirm-dialog-description" sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 15, whiteSpace: 'pre-line' }}>
           {message}
         </Typography>
       </DialogContent>

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -56,6 +56,16 @@ interface InviteModalProps {
 
 export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteModalProps) => {
   const { t } = useSettings();
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -127,7 +137,7 @@ interface MembersModalProps {
   members: User[];
   isOwner: boolean;
   onClose: () => void;
-  onRemoveMember: (id: string) => void;
+  onRemoveMember: (id: string, name: string) => void;
   onLeaveGroup: () => void;
 }
 
@@ -170,7 +180,7 @@ export const MembersModal = memo(({
           </Box>
           {isOwner && m.id !== list.owner.id && (
             <Button
-              onClick={() => onRemoveMember(m.id)}
+              onClick={() => onRemoveMember(m.id, m.name)}
               size="small"
               sx={{
                 bgcolor: 'rgba(239, 68, 68, 0.1)',
@@ -223,6 +233,16 @@ export const ShareListModal = memo(({
   showToast
 }: ShareListModalProps) => {
   const { t } = useSettings();
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

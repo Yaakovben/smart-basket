@@ -19,6 +19,7 @@ export interface UseAuthReturn {
   googleLoading: boolean;
   isNewUser: boolean;
   showEmailForm: boolean;
+  emailSuggestion: string | null;
 
   // Setters
   setName: (name: string) => void;
@@ -34,6 +35,7 @@ export interface UseAuthReturn {
   handleGoogleSuccess: (tokenResponse: { access_token: string }) => Promise<void>;
   handleGoogleError: () => void;
   toggleEmailForm: () => void;
+  applySuggestion: () => void;
   isValidEmail: (email: string) => boolean;
 }
 

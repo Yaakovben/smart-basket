@@ -255,10 +255,11 @@ export const useList = ({
   }, [list.id, onDeleteList, onBack]);
 
   // ===== Member Handlers =====
-  const removeMember = useCallback((memberId: string) => {
+  const removeMember = useCallback((memberId: string, memberName: string) => {
+    const message = t('removeMemberConfirm').replace('{name}', memberName);
     setConfirm({
       title: t('removeMember'),
-      message: t('removeMember') + '?',
+      message,
       onConfirm: () => {
         onUpdateList({
           ...list,
@@ -273,7 +274,7 @@ export const useList = ({
   const leaveList = useCallback(() => {
     setConfirm({
       title: t('leaveGroup'),
-      message: t('leaveGroup') + '?',
+      message: t('leaveGroupConfirm'),
       onConfirm: () => {
         onLeaveList(list.id);
         setConfirm(null);

@@ -93,7 +93,7 @@ export interface UseListReturn {
   handleEditList: () => void;
   saveListChanges: () => void;
   handleDeleteList: () => void;
-  removeMember: (memberId: string) => void;
+  removeMember: (memberId: string, memberName: string) => void;
   leaveList: () => void;
   updateProducts: (products: Product[]) => void;
   toggleProduct: (productId: string) => void;

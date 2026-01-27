@@ -200,8 +200,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
       {/* Confirm Modals */}
       {confirmDeleteList && (
         <ConfirmModal
-          title={list.isGroup ? t('deleteGroup') : t('deleteList')}
-          message={`${t('delete')} "${list.name}"?`}
+          title={list.isGroup ? t('deleteGroupTitle') : t('deleteListTitle')}
+          message={`${t('delete')} "${list.name}"?\n${t('deleteConfirmMessage')}`}
           confirmText={t('delete')}
           onConfirm={handleDeleteList}
           onCancel={() => setConfirmDeleteList(false)}

@@ -163,6 +163,9 @@ type TranslationKey =
   | 'confirmPassword'
   | 'passwordMismatch'
   | 'emailExists'
+  | 'didYouMean'
+  | 'removeMemberConfirm'
+  | 'leaveGroupConfirm'
   | 'whatToCreate'
   | 'loginWithoutGoogle'
   | 'hideEmailLogin'
@@ -352,6 +355,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'נא לאמת סיסמה',
     passwordMismatch: 'הסיסמאות אינן תואמות',
     emailExists: 'אימייל זה כבר קיים',
+    didYouMean: 'האם התכוונת ל',
+    removeMemberConfirm: 'האם להסיר את {name} מהקבוצה?',
+    leaveGroupConfirm: 'האם לעזוב את הקבוצה?',
     whatToCreate: 'מה תרצה ליצור?',
     loginWithoutGoogle: 'התחברות ללא Google',
     hideEmailLogin: 'הסתר',
@@ -538,6 +544,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'Please confirm password',
     passwordMismatch: 'Passwords do not match',
     emailExists: 'This email already exists',
+    didYouMean: 'Did you mean',
+    removeMemberConfirm: 'Remove {name} from the group?',
+    leaveGroupConfirm: 'Leave the group?',
     whatToCreate: 'What would you like to create?',
     loginWithoutGoogle: 'Login without Google',
     hideEmailLogin: 'Hide',
@@ -724,6 +733,9 @@ export const translations: Record<Language, Translations> = {
     confirmPassword: 'Подтвердите пароль',
     passwordMismatch: 'Пароли не совпадают',
     emailExists: 'Этот email уже существует',
+    didYouMean: 'Возможно вы имели в виду',
+    removeMemberConfirm: 'Удалить {name} из группы?',
+    leaveGroupConfirm: 'Покинуть группу?',
     whatToCreate: 'Что вы хотите создать?',
     loginWithoutGoogle: 'Войти без Google',
     hideEmailLogin: 'Скрыть',
