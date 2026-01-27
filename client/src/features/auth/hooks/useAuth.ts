@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User, LoginMethod } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -63,15 +63,37 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     setIsNewUser(!exists);
   }, []);
 
+  // Debounce email suggestion to avoid showing while typing
+  const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
     setError('');
     checkEmailExists(newEmail);
 
-    // Check for domain typos
-    const suggestion = checkEmailDomainTypo(newEmail);
-    setEmailSuggestion(suggestion);
+    // Clear previous suggestion immediately when typing
+    setEmailSuggestion(null);
+
+    // Clear existing timer
+    if (suggestionTimerRef.current) {
+      clearTimeout(suggestionTimerRef.current);
+    }
+
+    // Check for domain typos after user stops typing (500ms delay)
+    suggestionTimerRef.current = setTimeout(() => {
+      const suggestion = checkEmailDomainTypo(newEmail);
+      setEmailSuggestion(suggestion);
+    }, 500);
   }, [checkEmailExists]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (suggestionTimerRef.current) {
+        clearTimeout(suggestionTimerRef.current);
+      }
+    };
+  }, []);
 
   const applySuggestion = useCallback(() => {
     if (emailSuggestion && email.includes('@')) {
