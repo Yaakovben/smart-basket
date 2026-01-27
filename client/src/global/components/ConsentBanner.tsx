@@ -11,12 +11,11 @@ export const ConsentBanner = memo(() => {
   const location = useLocation();
   const { t } = useSettings();
 
+  // Re-check consent when location changes (e.g., after accepting on privacy page)
   useEffect(() => {
     const hasConsent = localStorage.getItem(CONSENT_KEY);
-    if (!hasConsent) {
-      setShowBanner(true);
-    }
-  }, []);
+    setShowBanner(!hasConsent);
+  }, [location.pathname]);
 
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, 'true');
