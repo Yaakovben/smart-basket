@@ -214,7 +214,18 @@ type TranslationKey =
   | 'registeredUsers'
   | 'lastLogin'
   | 'neverLoggedIn'
-  | 'refreshData';
+  | 'refreshData'
+  // Error Boundary
+  | 'errorTitle'
+  | 'errorDescription'
+  | 'tryAgain'
+  | 'refreshPage'
+  // Auth
+  | 'continueWithGoogle'
+  | 'newUserHint'
+  | 'returningUserHint'
+  // Share
+  | 'shareListDescription';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -433,7 +444,18 @@ export const translations: Record<Language, Translations> = {
     registeredUsers: 'משתמשים רשומים',
     lastLogin: 'התחברות אחרונה',
     neverLoggedIn: 'מעולם לא התחבר',
-    refreshData: 'רענן נתונים'
+    refreshData: 'רענן נתונים',
+    // Error Boundary
+    errorTitle: 'משהו השתבש',
+    errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
+    tryAgain: 'נסה שוב',
+    refreshPage: 'רענן דף',
+    // Auth
+    continueWithGoogle: 'המשך עם Google',
+    newUserHint: 'משתמש חדש? נרשם אותך אוטומטית',
+    returningUserHint: 'שלום שוב! הזן סיסמה להתחברות',
+    // Share
+    shareListDescription: 'שתף את רשימת הקניות שלך'
   },
   en: {
     // General
@@ -649,7 +671,18 @@ export const translations: Record<Language, Translations> = {
     registeredUsers: 'Registered Users',
     lastLogin: 'Last Login',
     neverLoggedIn: 'Never logged in',
-    refreshData: 'Refresh Data'
+    refreshData: 'Refresh Data',
+    // Error Boundary
+    errorTitle: 'Something went wrong',
+    errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
+    tryAgain: 'Try Again',
+    refreshPage: 'Refresh Page',
+    // Auth
+    continueWithGoogle: 'Continue with Google',
+    newUserHint: 'New user? We\'ll register you automatically',
+    returningUserHint: 'Welcome back! Enter password to login',
+    // Share
+    shareListDescription: 'Share your shopping list'
   },
   ru: {
     // General
@@ -865,7 +898,18 @@ export const translations: Record<Language, Translations> = {
     registeredUsers: 'Зарегистрированные пользователи',
     lastLogin: 'Последний вход',
     neverLoggedIn: 'Никогда не входил',
-    refreshData: 'Обновить данные'
+    refreshData: 'Обновить данные',
+    // Error Boundary
+    errorTitle: 'Что-то пошло не так',
+    errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',
+    tryAgain: 'Попробовать снова',
+    refreshPage: 'Обновить страницу',
+    // Auth
+    continueWithGoogle: 'Продолжить с Google',
+    newUserHint: 'Новый пользователь? Мы зарегистрируем вас автоматически',
+    returningUserHint: 'С возвращением! Введите пароль для входа',
+    // Share
+    shareListDescription: 'Поделитесь своим списком покупок'
   }
 };
 

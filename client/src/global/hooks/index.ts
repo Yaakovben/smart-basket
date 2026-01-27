@@ -119,17 +119,18 @@ export function useLists(user: User | null) {
 
   const joinGroup = useCallback(
     (code: string, password: string): { success: boolean; error?: string } => {
-      if (!user) return { success: false, error: "משתמש לא מחובר" };
+      // Return translation keys for errors - caller should translate
+      if (!user) return { success: false, error: "userNotLoggedIn" };
 
       const group = lists.find((l) => l.inviteCode === code && l.isGroup);
-      if (!group) return { success: false, error: "קבוצה לא נמצאה" };
+      if (!group) return { success: false, error: "groupNotFound" };
       if (group.password !== password)
-        return { success: false, error: "סיסמה שגויה" };
+        return { success: false, error: "wrongPassword" };
       if (
         group.owner.id === user.id ||
         group.members.some((m) => m.id === user.id)
       ) {
-        return { success: false, error: "אתה כבר בקבוצה" };
+        return { success: false, error: "alreadyInGroup" };
       }
 
       const notification: Notification = {

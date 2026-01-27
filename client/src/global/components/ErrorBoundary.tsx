@@ -1,5 +1,21 @@
 import { Component, type ReactNode } from 'react';
 import { Box, Typography, Button } from '@mui/material';
+import { translations } from '../i18n/translations';
+import type { Language } from '../types';
+
+// Get language from localStorage (fallback to Hebrew)
+const getLanguage = (): Language => {
+  try {
+    const settings = localStorage.getItem('sb_settings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      return parsed.language || 'he';
+    }
+  } catch {
+    // ignore
+  }
+  return 'he';
+};
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -39,6 +55,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback;
       }
 
+      const lang = getLanguage();
+      const t = translations[lang];
+
       return (
         <Box
           sx={{
@@ -71,12 +90,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             variant="h5"
             sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}
           >
-            משהו השתבש
+            {t.errorTitle}
           </Typography>
           <Typography
             sx={{ color: 'text.secondary', mb: 3, maxWidth: 300 }}
           >
-            אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.
+            {t.errorDescription}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
@@ -84,14 +103,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onClick={this.handleReset}
               sx={{ borderRadius: '12px', px: 3 }}
             >
-              נסה שוב
+              {t.tryAgain}
             </Button>
             <Button
               variant="contained"
               onClick={this.handleRefresh}
               sx={{ borderRadius: '12px', px: 3 }}
             >
-              רענן דף
+              {t.refreshPage}
             </Button>
           </Box>
         </Box>

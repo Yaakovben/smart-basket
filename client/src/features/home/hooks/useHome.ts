@@ -143,7 +143,8 @@ export const useHome = ({
       setJoinCode('');
       setJoinPass('');
     } else {
-      setJoinError(result.error || t('unknownError'));
+      // result.error is a translation key
+      setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
     }
   }, [joinCode, joinPass, onJoinGroup, t]);
 

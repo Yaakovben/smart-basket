@@ -124,7 +124,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             ) : (
               <>
                 <GoogleLogo />
-                <span>המשך עם Google</span>
+                <span>{t('continueWithGoogle')}</span>
               </>
             )}
           </Button>
@@ -235,7 +235,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {/* Helper text */}
                 {email && isValidEmail(email) && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
-                    {isNewUser ? '👋 משתמש חדש? נרשם אותך אוטומטית' : '👋 שלום שוב! הזן סיסמה להתחברות'}
+                    {isNewUser ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
                   </Typography>
                 )}
 
