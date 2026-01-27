@@ -146,7 +146,8 @@ export const STORAGE_KEYS = {
   LISTS: 'sb_lists',
   HINT_SEEN: 'sb_hint_seen',
   SETTINGS: 'sb_settings',
-  LOGIN_ACTIVITY: 'sb_login_activity'
+  LOGIN_ACTIVITY: 'sb_login_activity',
+  CONSENT_ACCEPTED: 'sb_consent_accepted'
 } as const;
 
 // ===== Admin Configuration =====

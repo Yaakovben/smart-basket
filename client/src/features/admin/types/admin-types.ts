@@ -23,7 +23,6 @@ export interface UseAdminDashboardReturn {
   stats: DashboardStats;
 
   // State
-  isLoading: boolean;
   filters: ActivityFilters;
 
   // Actions

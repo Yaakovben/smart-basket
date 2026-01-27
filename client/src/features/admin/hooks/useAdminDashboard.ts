@@ -13,7 +13,6 @@ const DEFAULT_FILTERS: ActivityFilters = {
 
 export const useAdminDashboard = (): UseAdminDashboardReturn => {
   const [filters, setFilters] = useState<ActivityFilters>(DEFAULT_FILTERS);
-  const [isLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Get all data - refreshKey triggers re-fetch
@@ -165,7 +164,6 @@ export const useAdminDashboard = (): UseAdminDashboardReturn => {
     allUsers,
     usersWithLoginInfo,
     stats,
-    isLoading,
     filters,
     setFilters,
     setFilterMode,

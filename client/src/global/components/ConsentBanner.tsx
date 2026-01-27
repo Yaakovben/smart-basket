@@ -2,8 +2,7 @@ import { useState, useEffect, memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-
-const CONSENT_KEY = 'sb_consent_accepted';
+import { STORAGE_KEYS } from '../constants';
 
 export const ConsentBanner = memo(() => {
   const [showBanner, setShowBanner] = useState(false);
@@ -13,12 +12,12 @@ export const ConsentBanner = memo(() => {
 
   // Re-check consent when location changes (e.g., after accepting on privacy page)
   useEffect(() => {
-    const hasConsent = localStorage.getItem(CONSENT_KEY);
+    const hasConsent = localStorage.getItem(STORAGE_KEYS.CONSENT_ACCEPTED);
     setShowBanner(!hasConsent);
   }, [location.pathname]);
 
   const handleAccept = () => {
-    localStorage.setItem(CONSENT_KEY, 'true');
+    localStorage.setItem(STORAGE_KEYS.CONSENT_ACCEPTED, 'true');
     setShowBanner(false);
   };
 
