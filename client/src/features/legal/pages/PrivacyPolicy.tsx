@@ -1,13 +1,20 @@
 import { memo } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
+
+const CONSENT_KEY = 'sb_consent_accepted';
 
 export const PrivacyPolicy = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const isHebrew = settings.language === 'he';
+
+  const handleAcceptAndGoBack = () => {
+    localStorage.setItem(CONSENT_KEY, 'true');
+    navigate(-1);
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
@@ -80,6 +87,15 @@ export const PrivacyPolicy = memo(() => {
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               לשאלות בנוגע למדיניות פרטיות זו, ניתן לפנות אלינו באימייל.
             </Typography>
+
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleAcceptAndGoBack}
+              sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+            >
+              {t('accept')}
+            </Button>
           </>
         ) : (
           <>
@@ -128,6 +144,15 @@ export const PrivacyPolicy = memo(() => {
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               For questions about this privacy policy, please contact us via email.
             </Typography>
+
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleAcceptAndGoBack}
+              sx={{ mt: 3, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+            >
+              {t('accept')}
+            </Button>
           </>
         )}
       </Box>
