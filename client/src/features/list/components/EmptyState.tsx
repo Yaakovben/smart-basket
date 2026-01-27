@@ -51,7 +51,8 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 } }}>
         {isAllDone ? t('allDoneDesc') : t('noProductsDesc')}
       </Typography>
-      {!isAllDone && (
+      {/* Only show button on pending tab when no products at all (FAB handles purchased tab) */}
+      {!isAllDone && filter === 'pending' && totalProducts === 0 && (
         <Button
           variant="contained"
           onClick={() => { haptic('light'); onAddProduct(); }}

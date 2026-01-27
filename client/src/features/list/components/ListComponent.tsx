@@ -123,8 +123,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
         )}
       </Box>
 
-      {/* FAB - Add Product Button */}
-      {(items.length > 0 || filter === 'purchased') && (
+      {/* FAB - Add Product Button (show when: has items, or on purchased tab, or products exist but filtered) */}
+      {(items.length > 0 || filter === 'purchased' || (pending.length + purchased.length) > 0) && (
         <AddProductFab
           itemCount={items.length}
           fabPosition={fabPosition}
