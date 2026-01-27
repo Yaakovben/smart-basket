@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 
 const CONSENT_KEY = 'sb_consent_accepted';
@@ -8,6 +8,7 @@ const CONSENT_KEY = 'sb_consent_accepted';
 export const ConsentBanner = memo(() => {
   const [showBanner, setShowBanner] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useSettings();
 
   useEffect(() => {
@@ -22,7 +23,10 @@ export const ConsentBanner = memo(() => {
     setShowBanner(false);
   };
 
-  if (!showBanner) return null;
+  // Hide banner on privacy and terms pages
+  const isLegalPage = location.pathname === '/privacy' || location.pathname === '/terms';
+
+  if (!showBanner || isLegalPage) return null;
 
   return (
     <Box
@@ -66,12 +70,7 @@ export const ConsentBanner = memo(() => {
           </Button>
           <Button
             variant="outlined"
-            onClick={() => {
-              // Set consent since privacy page has accept button
-              localStorage.setItem(CONSENT_KEY, 'true');
-              setShowBanner(false);
-              navigate('/privacy');
-            }}
+            onClick={() => navigate('/privacy')}
             sx={{ flex: 1, minWidth: 120 }}
             aria-label={t('privacyPolicy')}
           >
