@@ -282,24 +282,6 @@ export const useList = ({
     });
   }, [list.id, onLeaveList, t]);
 
-  const toggleMemberAdmin = useCallback((memberId: string) => {
-    onUpdateList({
-      ...list,
-      members: list.members.map((m: Member) =>
-        m.id === memberId ? { ...m, isAdmin: !m.isAdmin } : m
-      )
-    });
-    showToast(t('saved'));
-  }, [list, onUpdateList, showToast, t]);
-
-  const makeAllAdmins = useCallback(() => {
-    onUpdateList({
-      ...list,
-      members: list.members.map((m: Member) => ({ ...m, isAdmin: true }))
-    });
-    showToast(t('saved'));
-  }, [list, onUpdateList, showToast, t]);
-
   return {
     // State
     filter,
@@ -356,8 +338,6 @@ export const useList = ({
     handleDeleteList,
     removeMember,
     leaveList,
-    toggleMemberAdmin,
-    makeAllAdmins,
     updateProducts,
     toggleProduct,
     deleteProduct,

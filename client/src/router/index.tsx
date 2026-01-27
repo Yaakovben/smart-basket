@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
-import type { User, List } from "../global/types";
+import type { User, List, LoginMethod } from "../global/types";
 import { useAuth, useLists, useToast } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
@@ -93,8 +93,8 @@ export const AppRouter = () => {
   const { message: toast, showToast } = useToast();
 
   // Handlers
-  const handleLogin = (u: User) => {
-    login(u);
+  const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
+    login(u, loginMethod);
     navigate("/");
   };
 

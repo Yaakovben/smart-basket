@@ -207,7 +207,13 @@ type TranslationKey =
   | 'viaGoogle'
   | 'selectMonth'
   | 'selectDate'
-  | 'selectHour';
+  | 'selectHour'
+  | 'uniqueUsersToday'
+  | 'uniqueUsersThisMonth'
+  | 'registeredUsers'
+  | 'lastLogin'
+  | 'neverLoggedIn'
+  | 'refreshData';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -419,7 +425,13 @@ export const translations: Record<Language, Translations> = {
     viaGoogle: 'באמצעות Google',
     selectMonth: 'בחר חודש',
     selectDate: 'בחר תאריך',
-    selectHour: 'בחר שעה'
+    selectHour: 'בחר שעה',
+    uniqueUsersToday: 'משתמשים פעילים היום',
+    uniqueUsersThisMonth: 'משתמשים פעילים החודש',
+    registeredUsers: 'משתמשים רשומים',
+    lastLogin: 'התחברות אחרונה',
+    neverLoggedIn: 'מעולם לא התחבר',
+    refreshData: 'רענן נתונים'
   },
   en: {
     // General
@@ -628,7 +640,13 @@ export const translations: Record<Language, Translations> = {
     viaGoogle: 'Via Google',
     selectMonth: 'Select Month',
     selectDate: 'Select Date',
-    selectHour: 'Select Hour'
+    selectHour: 'Select Hour',
+    uniqueUsersToday: 'Active Users Today',
+    uniqueUsersThisMonth: 'Active Users This Month',
+    registeredUsers: 'Registered Users',
+    lastLogin: 'Last Login',
+    neverLoggedIn: 'Never logged in',
+    refreshData: 'Refresh Data'
   },
   ru: {
     // General
@@ -837,7 +855,13 @@ export const translations: Record<Language, Translations> = {
     viaGoogle: 'Через Google',
     selectMonth: 'Выберите месяц',
     selectDate: 'Выберите дату',
-    selectHour: 'Выберите час'
+    selectHour: 'Выберите час',
+    uniqueUsersToday: 'Активных пользователей сегодня',
+    uniqueUsersThisMonth: 'Активных пользователей в этом месяце',
+    registeredUsers: 'Зарегистрированные пользователи',
+    lastLogin: 'Последний вход',
+    neverLoggedIn: 'Никогда не входил',
+    refreshData: 'Обновить данные'
   }
 };
 
