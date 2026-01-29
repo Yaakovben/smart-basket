@@ -136,8 +136,7 @@ export const ListHeader = memo(({
 
       {/* Quick Add (Pending Tab Only) - Mobile First Design */}
       {filter === 'pending' && (
-        <Box sx={{ mb: 1.5, display: 'flex', gap: 1, alignItems: 'stretch' }}>
-          {/* Input Field */}
+        <Box sx={{ mb: 1.5 }}>
           <TextField
             inputRef={inputRef}
             fullWidth
@@ -150,7 +149,8 @@ export const ListHeader = memo(({
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'background.paper',
                 borderRadius: '14px',
-                height: 48,
+                height: 52,
+                pr: 0.75,
                 transition: 'all 0.3s ease',
                 ...(justAdded && {
                   boxShadow: '0 0 0 3px rgba(34, 197, 94, 0.4)',
@@ -179,37 +179,31 @@ export const ListHeader = memo(({
                   </Box>
                 </InputAdornment>
               ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Grow in={quickAddValue.trim().length >= 2}>
+                    <IconButton
+                      onClick={handleQuickAdd}
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        width: 40,
+                        height: 40,
+                        borderRadius: '10px',
+                        transition: 'all 0.15s ease',
+                        '&:hover': { bgcolor: 'primary.dark' },
+                        '&:active': { transform: 'scale(0.92)' }
+                      }}
+                      aria-label={t('add')}
+                    >
+                      <AddIcon sx={{ fontSize: 24 }} />
+                    </IconButton>
+                  </Grow>
+                </InputAdornment>
+              ),
               'aria-label': t('quickAddPlaceholder')
             }}
           />
-          {/* Add Button - Large Touch Target */}
-          <Grow in={quickAddValue.trim().length >= 2}>
-            <Box
-              onClick={handleQuickAdd}
-              sx={{
-                width: 48,
-                height: 48,
-                minWidth: 48,
-                borderRadius: '14px',
-                bgcolor: 'background.paper',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                transition: 'all 0.15s ease',
-                '&:active': {
-                  transform: 'scale(0.95)',
-                  bgcolor: 'primary.main',
-                  '& .add-icon': { color: 'white' }
-                }
-              }}
-              role="button"
-              aria-label={t('add')}
-            >
-              <AddIcon className="add-icon" sx={{ fontSize: 28, color: 'primary.main', transition: 'color 0.15s ease' }} />
-            </Box>
-          </Grow>
         </Box>
       )}
 
