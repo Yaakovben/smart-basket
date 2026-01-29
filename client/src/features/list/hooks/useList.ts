@@ -18,7 +18,7 @@ import type {
 
 // ===== Constants =====
 const FAB_VISIBILITY_THRESHOLD = 3;
-const FAB_BOUNDARY = { minX: 40, minY: 100, bottomOffset: 60 };
+const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 };
 const DEFAULT_FAB_BOTTOM_OFFSET = 90;
 
 const DEFAULT_NEW_PRODUCT: NewProductForm = {

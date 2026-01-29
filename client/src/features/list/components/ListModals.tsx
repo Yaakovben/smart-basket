@@ -96,16 +96,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Typography>
           <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
         </Box>
-        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '16px', border: '2px solid', borderColor: 'rgba(20, 184, 166, 0.25)', mb: 2.5, overflow: 'hidden' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '16px 20px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
+        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 18px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.12)' }}>
             <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-            <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>
               {list.inviteCode}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '16px 20px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 18px' }}>
             <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-            <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>
               {list.password}
             </Typography>
           </Box>
@@ -274,12 +274,12 @@ export const ShareListModal = memo(({
           <Typography id="share-title" sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>{t('shareList')}</Typography>
           <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareListDescription')}</Typography>
         </Box>
-        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
-          <Box sx={{ p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
+          <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'primary.main' }}>{list.name}</Typography>
             <Chip label={`${pendingProducts.length} ${t('items')}`} size="small" sx={{ bgcolor: 'transparent', color: 'primary.main' }} />
           </Box>
-          <Box sx={{ p: '12px 16px', maxHeight: 140, overflow: 'auto' }}>
+          <Box sx={{ p: '14px 18px', maxHeight: 140, overflow: 'auto' }}>
             {pendingProducts.length === 0 ? (
               <Typography sx={{ color: 'text.secondary', fontSize: 14, textAlign: 'center', py: 1 }}>{t('noProducts')}</Typography>
             ) : (
@@ -292,7 +292,7 @@ export const ShareListModal = memo(({
                     alignItems: 'center',
                     py: 0.75,
                     borderBottom: i < Math.min(pendingProducts.length, 5) - 1 ? '1px solid' : 'none',
-                    borderColor: 'rgba(20, 184, 166, 0.15)'
+                    borderColor: 'rgba(20, 184, 166, 0.12)'
                   }}
                 >
                   <Typography sx={{ fontSize: 14, color: 'primary.dark' }}>• {p.name}</Typography>
