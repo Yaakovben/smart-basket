@@ -1,4 +1,4 @@
-import { Box, Button, TextField, MenuItem, Select, FormControl, Typography, InputLabel } from '@mui/material';
+import { Box, Button, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ActivityFilters as ActivityFiltersType } from '../../../global/types';
 
@@ -19,11 +19,11 @@ export const ActivityFilters = ({
 }: ActivityFiltersProps) => {
   const { t } = useSettings();
 
-  const filterModes: Array<{ value: ActivityFiltersType['filterMode']; label: string; icon: string }> = [
-    { value: 'all', label: t('allActivity'), icon: '📊' },
-    { value: 'daily', label: t('dailyView'), icon: '📅' },
-    { value: 'monthly', label: t('monthlyView'), icon: '🗓️' },
-    { value: 'hourly', label: t('hourlyView'), icon: '⏰' }
+  const filterModes: Array<{ value: ActivityFiltersType['filterMode']; label: string }> = [
+    { value: 'all', label: t('allActivity') },
+    { value: 'daily', label: t('dailyView') },
+    { value: 'monthly', label: t('monthlyView') },
+    { value: 'hourly', label: t('hourlyView') }
   ];
 
   const today = new Date().toISOString().split('T')[0];
@@ -38,13 +38,12 @@ export const ActivityFilters = ({
       boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
     }}>
       {/* Filter Mode Buttons */}
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: 1.5 }}>
-        סינון לפי
-      </Typography>
       <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 1,
+        display: 'flex',
+        gap: 0.5,
+        p: 0.5,
+        bgcolor: 'rgba(20, 184, 166, 0.08)',
+        borderRadius: '12px',
         mb: filters.filterMode !== 'all' ? 2 : 0
       }}>
         {filterModes.map(mode => (
@@ -52,27 +51,21 @@ export const ActivityFilters = ({
             key={mode.value}
             onClick={() => onFilterModeChange(mode.value)}
             sx={{
-              borderRadius: '12px',
-              bgcolor: filters.filterMode === mode.value ? 'primary.main' : 'rgba(20, 184, 166, 0.08)',
+              borderRadius: '10px',
+              bgcolor: filters.filterMode === mode.value ? 'primary.main' : 'transparent',
               color: filters.filterMode === mode.value ? 'white' : 'text.primary',
               textTransform: 'none',
-              py: 1.25,
-              px: 1,
-              fontSize: 12,
+              py: 1,
+              px: 1.5,
+              fontSize: 13,
               fontWeight: 600,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.5,
-              border: '1.5px solid',
-              borderColor: filters.filterMode === mode.value ? 'primary.main' : 'rgba(20, 184, 166, 0.2)',
+              minHeight: 40,
               transition: 'all 0.2s ease',
               '&:hover': {
-                bgcolor: filters.filterMode === mode.value ? 'primary.dark' : 'rgba(20, 184, 166, 0.15)',
-                borderColor: 'primary.main'
+                bgcolor: filters.filterMode === mode.value ? 'primary.dark' : 'rgba(20, 184, 166, 0.1)'
               }
             }}
           >
-            <Box sx={{ fontSize: 18 }}>{mode.icon}</Box>
             {mode.label}
           </Button>
         ))}

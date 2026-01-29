@@ -54,7 +54,6 @@ export const ListHeader = memo(({
 }: ListHeaderProps) => {
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
-  const [justAdded, setJustAdded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleQuickAdd = useCallback(() => {
@@ -64,10 +63,6 @@ export const ListHeader = memo(({
     haptic('light');
     onQuickAdd(trimmed);
     setQuickAddValue('');
-
-    // Show inline success feedback
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1200);
 
     // Keep focus on input for rapid additions
     inputRef.current?.focus();
@@ -151,15 +146,8 @@ export const ListHeader = memo(({
                 borderRadius: '14px',
                 height: 52,
                 pr: 0.75,
-                transition: 'all 0.3s ease',
-                ...(justAdded && {
-                  boxShadow: '0 0 0 3px rgba(34, 197, 94, 0.4)',
-                  borderColor: '#22C55E'
-                }),
                 '&.Mui-focused': {
-                  boxShadow: justAdded
-                    ? '0 0 0 3px rgba(34, 197, 94, 0.4)'
-                    : '0 0 0 3px rgba(255,255,255,0.3)'
+                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
                 }
               },
               '& .MuiOutlinedInput-input': {
@@ -170,13 +158,7 @@ export const ListHeader = memo(({
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Box sx={{
-                    fontSize: 20,
-                    transition: 'transform 0.2s ease',
-                    transform: justAdded ? 'scale(1.2)' : 'scale(1)'
-                  }}>
-                    {justAdded ? '✅' : '🛒'}
-                  </Box>
+                  <Box sx={{ fontSize: 20 }}>🛒</Box>
                 </InputAdornment>
               ),
               endAdornment: (
