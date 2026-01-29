@@ -6,6 +6,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
@@ -149,28 +150,16 @@ export const ListHeader = memo(({
             onClick={handleToggleSearch}
             sx={{
               ...glassButtonSx,
-              bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
-              transition: 'all 0.2s ease',
-              position: 'relative',
-              // Subtle ring animation when search is open to indicate toggle
-              ...(showSearch && {
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  inset: -2,
-                  borderRadius: '50%',
-                  border: '2px solid rgba(255,255,255,0.4)',
-                  animation: 'searchPulse 2s ease-in-out infinite',
-                  '@keyframes searchPulse': {
-                    '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
-                    '50%': { opacity: 0.8, transform: 'scale(1.05)' }
-                  }
-                }
-              })
+              bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+              transition: 'all 0.2s ease'
             }}
             aria-label={showSearch ? t('close') : t('search')}
           >
-            <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+            {showSearch ? (
+              <SearchOffIcon sx={{ color: 'white', fontSize: 22 }} />
+            ) : (
+              <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+            )}
           </IconButton>
         </Box>
       )}
@@ -261,24 +250,7 @@ export const ListHeader = memo(({
                 </InputAdornment>
               ),
               endAdornment: (
-                <InputAdornment position="end" sx={{ gap: 0.5 }}>
-                  {/* Clear button - only shown when there's text */}
-                  {quickAddValue && (
-                    <IconButton
-                      onClick={() => {
-                        setQuickAddValue('');
-                        inputRef.current?.focus();
-                      }}
-                      size="small"
-                      sx={{
-                        color: 'text.secondary',
-                        p: 0.5
-                      }}
-                      aria-label={t('close')}
-                    >
-                      <CloseIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  )}
+                <InputAdornment position="end">
                   {/* Add button - always visible, disabled when < 2 chars */}
                   <IconButton
                     onClick={handleQuickAdd}

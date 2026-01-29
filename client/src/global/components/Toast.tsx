@@ -6,11 +6,11 @@ interface ToastProps {
   type?: ToastType;
 }
 
-const TOAST_CONFIG: Record<ToastType, { icon: string; color: string }> = {
-  success: { icon: '✓', color: '#059669' },
-  error: { icon: '✕', color: '#DC2626' },
-  info: { icon: 'i', color: '#2563EB' },
-  warning: { icon: '!', color: '#D97706' }
+const TOAST_CONFIG: Record<ToastType, { icon: string; color: string; bg: string }> = {
+  success: { icon: '✓', color: '#059669', bg: '#ECFDF5' },
+  error: { icon: '✕', color: '#DC2626', bg: '#FEF2F2' },
+  info: { icon: 'i', color: '#2563EB', bg: '#EFF6FF' },
+  warning: { icon: '!', color: '#D97706', bg: '#FFFBEB' }
 };
 
 export const Toast = ({ msg, type = 'success' }: ToastProps) => {
@@ -35,40 +35,41 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          px: 2,
-          py: 1,
-          bgcolor: 'rgba(255,255,255,0.95)',
-          borderRadius: '100px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)',
-          backdropFilter: 'blur(10px)',
-          animation: 'fadeIn 0.2s ease-out',
-          '@keyframes fadeIn': {
-            from: { transform: 'scale(0.95)', opacity: 0 },
-            to: { transform: 'scale(1)', opacity: 1 }
+          gap: 1.25,
+          px: 2.5,
+          py: 1.25,
+          bgcolor: config.bg,
+          borderRadius: '16px',
+          border: `1.5px solid ${config.color}20`,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          animation: 'slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          '@keyframes slideDown': {
+            from: { transform: 'translateY(-20px)', opacity: 0 },
+            to: { transform: 'translateY(0)', opacity: 1 }
           }
         }}
       >
         <Box sx={{
-          width: 20,
-          height: 20,
+          width: 24,
+          height: 24,
           borderRadius: '50%',
-          bgcolor: `${config.color}12`,
+          bgcolor: `${config.color}18`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: config.color,
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 700,
           flexShrink: 0
         }}>
           {config.icon}
         </Box>
         <Typography sx={{
-          fontSize: 13,
-          fontWeight: 500,
-          color: '#374151',
-          whiteSpace: 'nowrap'
+          fontSize: 14,
+          fontWeight: 600,
+          color: config.color,
+          whiteSpace: 'nowrap',
+          letterSpacing: '-0.01em'
         }}>
           {msg}
         </Typography>
