@@ -1,12 +1,11 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Grow } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Grow, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
@@ -60,11 +59,11 @@ export const ListHeader = memo(({
   onQuickAdd
 }: ListHeaderProps) => {
   const { t } = useSettings();
-  const [showSearch, setShowSearch] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [lastAdded, setLastAdded] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const handleQuickAdd = useCallback(() => {
     const trimmed = quickAddValue.trim();
@@ -72,7 +71,6 @@ export const ListHeader = memo(({
 
     haptic('light');
     onQuickAdd(trimmed);
-    setLastAdded(trimmed);
     setQuickAddValue('');
     setShowSuccess(true);
 
@@ -87,21 +85,26 @@ export const ListHeader = memo(({
     }
   }, [handleQuickAdd]);
 
+  const toggleSearch = useCallback(() => {
+    setShowSearch(prev => {
+      if (!prev) {
+        // Opening search - focus after animation
+        setTimeout(() => searchRef.current?.focus(), 100);
+      } else {
+        // Closing search - clear it
+        onSearchChange('');
+      }
+      return !prev;
+    });
+  }, [onSearchChange]);
+
   // Reset success animation
   useEffect(() => {
     if (showSuccess) {
-      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      const timer = setTimeout(() => setShowSuccess(false), 800);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
-
-  // Close search when switching to pending tab
-  useEffect(() => {
-    if (filter === 'pending') {
-      setShowSearch(false);
-      onSearchChange('');
-    }
-  }, [filter, onSearchChange]);
 
   return (
     <Box sx={{
@@ -157,136 +160,109 @@ export const ListHeader = memo(({
         </Box>
       )}
 
-      {/* Quick Add / Search Area */}
-      {filter === 'pending' ? (
-        // Quick Add Mode
-        <Box sx={{ mb: 1.5 }}>
-          {/* Success Feedback - shows above input */}
-          <Collapse in={showSuccess}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              py: 1,
-              mb: 1,
-              bgcolor: 'rgba(255,255,255,0.2)',
-              borderRadius: '10px'
-            }}>
-              <CheckCircleIcon sx={{ color: '#22C55E', fontSize: 20 }} />
-              <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600 }}>
-                ✓ {lastAdded} {t('added')}
-              </Typography>
-            </Box>
-          </Collapse>
-
-          {/* Quick Add Input */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              inputRef={inputRef}
-              fullWidth
-              placeholder={t('quickAddPlaceholder')}
-              value={quickAddValue}
-              onChange={(e) => setQuickAddValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'background.paper',
-                  borderRadius: '12px',
-                  transition: 'all 0.2s ease',
-                  '&.Mui-focused': {
-                    boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
-                  }
+      {/* Quick Add (Pending Tab Only) */}
+      {filter === 'pending' && (
+        <Box sx={{ mb: 1.5, display: 'flex', gap: 1 }}>
+          <TextField
+            inputRef={inputRef}
+            fullWidth
+            placeholder={t('quickAddPlaceholder')}
+            value={quickAddValue}
+            onChange={(e) => setQuickAddValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: showSuccess ? 'rgba(34, 197, 94, 0.15)' : 'background.paper',
+                borderRadius: '12px',
+                transition: 'all 0.3s ease',
+                border: showSuccess ? '2px solid' : '1px solid transparent',
+                borderColor: showSuccess ? 'rgba(34, 197, 94, 0.5)' : 'transparent',
+                '&.Mui-focused': {
+                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
                 }
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Box sx={{ fontSize: 18 }}>🛒</Box>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Grow in={quickAddValue.trim().length >= 2}>
-                        <IconButton
-                          onClick={handleQuickAdd}
-                          size="small"
-                          sx={{
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            width: 32,
-                            height: 32,
-                            '&:hover': { bgcolor: 'primary.dark' }
-                          }}
-                          aria-label={t('add')}
-                        >
-                          <AddIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Grow>
-                    </Box>
-                  </InputAdornment>
-                ),
-                'aria-label': t('quickAddPlaceholder')
-              }}
-            />
-            {/* Search Toggle */}
-            <IconButton
-              onClick={() => setShowSearch(!showSearch)}
-              sx={{
-                ...glassButtonSx,
-                bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)'
-              }}
-              aria-label={t('search')}
-            >
-              {showSearch ? (
-                <CloseIcon sx={{ color: 'white', fontSize: 22 }} />
-              ) : (
-                <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
-              )}
-            </IconButton>
-          </Box>
-
-          {/* Collapsible Search */}
-          <Collapse in={showSearch}>
-            <TextField
-              fullWidth
-              placeholder={t('search')}
-              value={search}
-              onChange={e => onSearchChange(e.target.value)}
-              size="small"
-              sx={{ mt: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-                'aria-label': t('search')
-              }}
-            />
-          </Collapse>
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Box sx={{
+                    fontSize: 18,
+                    transition: 'transform 0.3s ease',
+                    transform: showSuccess ? 'scale(1.2)' : 'scale(1)'
+                  }}>
+                    {showSuccess ? '✅' : '🛒'}
+                  </Box>
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Grow in={quickAddValue.trim().length >= 2}>
+                    <IconButton
+                      onClick={handleQuickAdd}
+                      size="small"
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        width: 32,
+                        height: 32,
+                        '&:hover': { bgcolor: 'primary.dark' }
+                      }}
+                      aria-label={t('add')}
+                    >
+                      <AddIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Grow>
+                </InputAdornment>
+              ),
+              'aria-label': t('quickAddPlaceholder')
+            }}
+          />
+          {/* Search Toggle Button */}
+          <IconButton
+            onClick={toggleSearch}
+            sx={{
+              ...glassButtonSx,
+              bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)'
+            }}
+            aria-label={t('search')}
+          >
+            {showSearch ? (
+              <CloseIcon sx={{ color: 'white', fontSize: 22 }} />
+            ) : (
+              <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+            )}
+          </IconButton>
         </Box>
-      ) : (
-        // Search Mode (Purchased Tab)
-        <TextField
-          fullWidth
-          placeholder={t('search')}
-          value={search}
-          onChange={e => onSearchChange(e.target.value)}
-          size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'text.secondary' }} />
-              </InputAdornment>
-            ),
-            'aria-label': t('search')
-          }}
-        />
       )}
+
+      {/* Search Field - Collapsible */}
+      <Collapse in={showSearch || filter === 'purchased'}>
+        <Box sx={{ mb: 1.5 }}>
+          <TextField
+            inputRef={searchRef}
+            fullWidth
+            placeholder={t('search')}
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'background.paper',
+                borderRadius: '12px'
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              'aria-label': t('search')
+            }}
+          />
+        </Box>
+      </Collapse>
 
       {/* Filter Tabs */}
       <Tabs

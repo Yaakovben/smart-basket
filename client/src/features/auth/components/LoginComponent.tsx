@@ -268,7 +268,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                           </Typography>
                         </Box>
                         <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                          {password.length} {t('characters') || 'תווים'}
+                          {password.length} תווים
                         </Typography>
                       </Box>
                       <Box sx={{
