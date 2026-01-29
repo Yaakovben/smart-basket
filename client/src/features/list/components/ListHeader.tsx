@@ -1,12 +1,15 @@
-import { memo } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment } from '@mui/material';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Grow } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import type { List, User } from '../../../global/types';
-import { COMMON_STYLES, SIZES } from '../../../global/helpers';
+import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
 import { MembersButton } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -34,6 +37,7 @@ interface ListHeaderProps {
   onShareList: () => void;
   onShowMembers: () => void;
   onShowInvite: () => void;
+  onQuickAdd?: (name: string) => void;
 }
 
 // ===== Component =====
@@ -52,9 +56,52 @@ export const ListHeader = memo(({
   onEditList,
   onShareList,
   onShowMembers,
-  onShowInvite
+  onShowInvite,
+  onQuickAdd
 }: ListHeaderProps) => {
   const { t } = useSettings();
+  const [showSearch, setShowSearch] = useState(false);
+  const [quickAddValue, setQuickAddValue] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [lastAdded, setLastAdded] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleQuickAdd = useCallback(() => {
+    const trimmed = quickAddValue.trim();
+    if (trimmed.length < 2 || !onQuickAdd) return;
+
+    haptic('light');
+    onQuickAdd(trimmed);
+    setLastAdded(trimmed);
+    setQuickAddValue('');
+    setShowSuccess(true);
+
+    // Keep focus on input for rapid additions
+    inputRef.current?.focus();
+  }, [quickAddValue, onQuickAdd]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleQuickAdd();
+    }
+  }, [handleQuickAdd]);
+
+  // Reset success animation
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
+  // Close search when switching to pending tab
+  useEffect(() => {
+    if (filter === 'pending') {
+      setShowSearch(false);
+      onSearchChange('');
+    }
+  }, [filter, onSearchChange]);
 
   return (
     <Box sx={{
@@ -110,23 +157,136 @@ export const ListHeader = memo(({
         </Box>
       )}
 
-      {/* Search Field */}
-      <TextField
-        fullWidth
-        placeholder={t('search')}
-        value={search}
-        onChange={e => onSearchChange(e.target.value)}
-        size="small"
-        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: 'text.secondary' }} />
-            </InputAdornment>
-          ),
-          'aria-label': t('search')
-        }}
-      />
+      {/* Quick Add / Search Area */}
+      {filter === 'pending' ? (
+        // Quick Add Mode
+        <Box sx={{ mb: 1.5 }}>
+          {/* Success Feedback - shows above input */}
+          <Collapse in={showSuccess}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              py: 1,
+              mb: 1,
+              bgcolor: 'rgba(255,255,255,0.2)',
+              borderRadius: '10px'
+            }}>
+              <CheckCircleIcon sx={{ color: '#22C55E', fontSize: 20 }} />
+              <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600 }}>
+                ✓ {lastAdded} {t('added')}
+              </Typography>
+            </Box>
+          </Collapse>
+
+          {/* Quick Add Input */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              inputRef={inputRef}
+              fullWidth
+              placeholder={t('quickAddPlaceholder')}
+              value={quickAddValue}
+              onChange={(e) => setQuickAddValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'background.paper',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease',
+                  '&.Mui-focused': {
+                    boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
+                  }
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Box sx={{ fontSize: 18 }}>🛒</Box>
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Grow in={quickAddValue.trim().length >= 2}>
+                        <IconButton
+                          onClick={handleQuickAdd}
+                          size="small"
+                          sx={{
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            width: 32,
+                            height: 32,
+                            '&:hover': { bgcolor: 'primary.dark' }
+                          }}
+                          aria-label={t('add')}
+                        >
+                          <AddIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Grow>
+                    </Box>
+                  </InputAdornment>
+                ),
+                'aria-label': t('quickAddPlaceholder')
+              }}
+            />
+            {/* Search Toggle */}
+            <IconButton
+              onClick={() => setShowSearch(!showSearch)}
+              sx={{
+                ...glassButtonSx,
+                bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)'
+              }}
+              aria-label={t('search')}
+            >
+              {showSearch ? (
+                <CloseIcon sx={{ color: 'white', fontSize: 22 }} />
+              ) : (
+                <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+              )}
+            </IconButton>
+          </Box>
+
+          {/* Collapsible Search */}
+          <Collapse in={showSearch}>
+            <TextField
+              fullWidth
+              placeholder={t('search')}
+              value={search}
+              onChange={e => onSearchChange(e.target.value)}
+              size="small"
+              sx={{ mt: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+                'aria-label': t('search')
+              }}
+            />
+          </Collapse>
+        </Box>
+      ) : (
+        // Search Mode (Purchased Tab)
+        <TextField
+          fullWidth
+          placeholder={t('search')}
+          value={search}
+          onChange={e => onSearchChange(e.target.value)}
+          size="small"
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+            'aria-label': t('search')
+          }}
+        />
+      )}
 
       {/* Filter Tabs */}
       <Tabs
