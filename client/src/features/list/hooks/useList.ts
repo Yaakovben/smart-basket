@@ -178,6 +178,27 @@ export const useList = ({
     showToast(t('added'));
   }, [newProduct, list.products, user.name, updateProducts, showToast, t, validateProduct]);
 
+  const handleQuickAdd = useCallback((name: string) => {
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) return;
+
+    setOpenItemId(null);
+    const product: Product = {
+      id: generateProductId(),
+      name: trimmedName,
+      quantity: 1,
+      unit: 'יח׳',
+      category: 'אחר',
+      isPurchased: false,
+      addedBy: user.name,
+      createdDate: formatDate(),
+      createdTime: formatTime()
+    };
+
+    updateProducts([...list.products, product]);
+    showToast(t('added'));
+  }, [list.products, user.name, updateProducts, showToast, t]);
+
   const toggleProduct = useCallback((productId: string) => {
     updateProducts(
       list.products.map((p: Product) =>
@@ -347,6 +368,7 @@ export const useList = ({
     handleDragEnd,
     dismissHint,
     handleAdd,
+    handleQuickAdd,
     handleEditList,
     saveListChanges,
     handleDeleteList,

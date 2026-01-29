@@ -11,6 +11,7 @@ import { EmptyState } from './EmptyState';
 import { SwipeHint } from './SwipeHint';
 import { SwipeItem } from './SwipeItem';
 import { AddProductFab } from './AddProductFab';
+import { QuickAddBar } from './QuickAddBar';
 import { AddProductModal, EditProductModal, ProductDetailsModal } from './ProductModals';
 import { InviteModal, MembersModal, ShareListModal, EditListModal } from './ListModals';
 
@@ -43,7 +44,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
     setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
     // Handlers
     handleDragStart, handleDragMove, handleDragEnd, dismissHint,
-    handleAdd, handleEditList, saveListChanges, handleDeleteList,
+    handleAdd, handleQuickAdd, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
@@ -96,6 +97,11 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
         role="main"
         aria-label={list.name}
       >
+        {/* Quick Add Bar - only show on pending tab */}
+        {filter === 'pending' && (
+          <QuickAddBar onQuickAdd={handleQuickAdd} />
+        )}
+
         {/* Swipe Hint */}
         {showHint && items.length > 0 && (
           <SwipeHint onDismiss={dismissHint} />

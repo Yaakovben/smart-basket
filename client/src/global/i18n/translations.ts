@@ -225,7 +225,9 @@ type TranslationKey =
   | 'newUserHint'
   | 'returningUserHint'
   // Share
-  | 'shareListDescription';
+  | 'shareListDescription'
+  // Quick Add
+  | 'quickAddPlaceholder';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -455,7 +457,9 @@ export const translations: Record<Language, Translations> = {
     newUserHint: 'משתמש חדש? נרשם אותך אוטומטית',
     returningUserHint: 'שלום שוב! הזן סיסמה להתחברות',
     // Share
-    shareListDescription: 'שתף את רשימת הקניות שלך'
+    shareListDescription: 'שתף את רשימת הקניות שלך',
+    // Quick Add
+    quickAddPlaceholder: 'הוסף מוצר מהיר...'
   },
   en: {
     // General
@@ -682,7 +686,9 @@ export const translations: Record<Language, Translations> = {
     newUserHint: 'New user? We\'ll register you automatically',
     returningUserHint: 'Welcome back! Enter password to login',
     // Share
-    shareListDescription: 'Share your shopping list'
+    shareListDescription: 'Share your shopping list',
+    // Quick Add
+    quickAddPlaceholder: 'Quick add product...'
   },
   ru: {
     // General
@@ -909,7 +915,9 @@ export const translations: Record<Language, Translations> = {
     newUserHint: 'Новый пользователь? Мы зарегистрируем вас автоматически',
     returningUserHint: 'С возвращением! Введите пароль для входа',
     // Share
-    shareListDescription: 'Поделитесь своим списком покупок'
+    shareListDescription: 'Поделитесь своим списком покупок',
+    // Quick Add
+    quickAddPlaceholder: 'Быстро добавить товар...'
   }
 };
 

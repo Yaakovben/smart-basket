@@ -90,6 +90,7 @@ export interface UseListReturn {
   handleDragEnd: () => void;
   dismissHint: () => void;
   handleAdd: () => void;
+  handleQuickAdd: (name: string) => void;
   handleEditList: () => void;
   saveListChanges: () => void;
   handleDeleteList: () => void;
