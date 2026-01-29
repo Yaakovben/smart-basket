@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert
@@ -105,6 +106,16 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   } = useHome({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, onMarkNotificationsRead, onMarkSingleNotificationRead
   });
+
+  // Ref for password field in Join Group modal
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus to password field when code is complete
+  useEffect(() => {
+    if (joinCode.length === 6 && showJoin) {
+      passwordInputRef.current?.focus();
+    }
+  }, [joinCode, showJoin]);
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
@@ -386,16 +397,18 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 }
               }}
               InputProps={{
-                endAdornment: joinError ? (
-                  <Box sx={{ color: '#EF4444', fontSize: 20, fontWeight: 700 }}>✕</Box>
+                startAdornment: joinError ? (
+                  <InputAdornment position="start"><Box sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700 }}>✕</Box></InputAdornment>
                 ) : joinCode.length === 6 ? (
-                  <Box sx={{
-                    color: 'success.main',
-                    fontSize: 20,
-                    fontWeight: 700,
-                    animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    ...checkmarkPopKeyframes
-                  }}>✓</Box>
+                  <InputAdornment position="start">
+                    <Box sx={{
+                      color: 'success.main',
+                      fontSize: 18,
+                      fontWeight: 700,
+                      animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                      ...checkmarkPopKeyframes
+                    }}>✓</Box>
+                  </InputAdornment>
                 ) : null
               }}
             />
@@ -412,6 +425,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               onChange={e => { setJoinPass(e.target.value.replace(/\D/g, '').slice(0, 4)); setJoinError(''); }}
               placeholder="_ _ _ _"
               size="small"
+              inputRef={passwordInputRef}
               inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 12, fontWeight: 700, fontSize: 20 } }}
               sx={{
                 ...shakeKeyframes,
@@ -426,16 +440,18 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                 }
               }}
               InputProps={{
-                endAdornment: joinError ? (
-                  <Box sx={{ color: '#EF4444', fontSize: 20, fontWeight: 700 }}>✕</Box>
+                startAdornment: joinError ? (
+                  <InputAdornment position="start"><Box sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700 }}>✕</Box></InputAdornment>
                 ) : joinPass.length === 4 ? (
-                  <Box sx={{
-                    color: 'success.main',
-                    fontSize: 20,
-                    fontWeight: 700,
-                    animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    ...checkmarkPopKeyframes
-                  }}>✓</Box>
+                  <InputAdornment position="start">
+                    <Box sx={{
+                      color: 'success.main',
+                      fontSize: 18,
+                      fontWeight: 700,
+                      animation: 'checkmarkPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                      ...checkmarkPopKeyframes
+                    }}>✓</Box>
+                  </InputAdornment>
                 ) : null
               }}
             />

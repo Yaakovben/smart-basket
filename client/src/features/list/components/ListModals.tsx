@@ -96,14 +96,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Typography>
           <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
         </Box>
-        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.2)', mb: 2.5, overflow: 'hidden' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
+        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.08)', borderRadius: '16px', border: '2px solid', borderColor: 'rgba(20, 184, 166, 0.25)', mb: 2.5, overflow: 'hidden' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '16px 20px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.15)' }}>
             <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
             <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>
               {list.inviteCode}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '14px 16px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '16px 20px' }}>
             <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
             <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace' }}>
               {list.password}

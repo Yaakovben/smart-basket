@@ -5,13 +5,18 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { LANGUAGES, ADMIN_CONFIG } from '../../../global/constants';
+import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES, SIZES } from '../../../global/constants';
 import type { Language } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
 import { useAuth } from '../../../global/hooks';
 
 // ===== Reusable Styles =====
+const glassButtonSx = {
+  ...COMMON_STYLES.glassButton,
+  ...SIZES.iconButton.md,
+  color: 'white'
+};
 const settingRowSx = {
   display: 'flex',
   alignItems: 'center',
@@ -89,8 +94,8 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
       <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' }, flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton onClick={() => navigate('/')} sx={{ color: 'white' }}>
-            <ArrowForwardIcon />
+          <IconButton onClick={() => navigate('/')} sx={glassButtonSx}>
+            <ArrowForwardIcon sx={{ fontSize: 22 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 20, fontWeight: 700 }}>{t('settings')}</Typography>
         </Box>

@@ -8,6 +8,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import type { User } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../hooks/useAuth';
+import { getPasswordStrength } from '../helpers/auth-helpers';
 
 // ===== Google Logo SVG =====
 const GoogleLogo = () => (
@@ -231,6 +232,32 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
                   }}
                 />
+
+                {/* Password Strength Indicator - Only for new users */}
+                {isNewUser && password.length > 0 && (() => {
+                  const strength = getPasswordStrength(password);
+                  return (
+                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ flex: 1, display: 'flex', gap: 0.5 }}>
+                        {[1, 2, 3].map((level) => (
+                          <Box
+                            key={level}
+                            sx={{
+                              flex: 1,
+                              height: 4,
+                              borderRadius: 2,
+                              bgcolor: level <= strength.strength ? strength.color : 'action.disabledBackground',
+                              transition: 'background-color 0.2s ease'
+                            }}
+                          />
+                        ))}
+                      </Box>
+                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: strength.color, minWidth: 50 }}>
+                        {strength.text}
+                      </Typography>
+                    </Box>
+                  );
+                })()}
 
                 {/* Helper text */}
                 {email && isValidEmail(email) && (

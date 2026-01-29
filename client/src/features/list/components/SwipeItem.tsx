@@ -147,7 +147,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
         overflow: 'hidden',
         opacity: offset > 0 ? 1 : 0,
         transition: 'opacity 0.15s ease',
-        pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'auto' : 'none'
+        pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.7 ? 'auto' : 'none'
       }}>
         <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
           <span>🗑️</span>
@@ -186,7 +186,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           transform: `translateX(-${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH ? 'none' : 'auto'
+          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.7 ? 'none' : 'auto'
         }}
       >
         <Box sx={{
