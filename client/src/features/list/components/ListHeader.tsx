@@ -164,6 +164,27 @@ export const ListHeader = memo(({
         </Box>
       )}
 
+      {/* Search Button Row (Private Lists Only) */}
+      {!list.isGroup && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+          <IconButton
+            onClick={handleToggleSearch}
+            sx={{
+              ...glassButtonSx,
+              bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+              transition: 'all 0.2s ease'
+            }}
+            aria-label={showSearch ? t('close') : t('search')}
+          >
+            {showSearch ? (
+              <SearchOffIcon sx={{ color: 'white', fontSize: 22 }} />
+            ) : (
+              <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+            )}
+          </IconButton>
+        </Box>
+      )}
+
       {/* Search Row */}
       <Collapse in={showSearch}>
         <Box sx={{ mb: 1.5 }}>
@@ -176,7 +197,7 @@ export const ListHeader = memo(({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: '#ffffff',
+                bgcolor: 'background.paper',
                 borderRadius: '14px',
                 height: 48,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
@@ -185,7 +206,8 @@ export const ListHeader = memo(({
                 }
               },
               '& .MuiOutlinedInput-input': {
-                fontSize: 15
+                fontSize: 15,
+                color: 'text.primary'
               }
             }}
             InputProps={{
@@ -211,92 +233,91 @@ export const ListHeader = memo(({
         </Box>
       </Collapse>
 
-      {/* Quick Add (Pending Tab Only) - Mobile First Design */}
-      {filter === 'pending' && (
-        <Box sx={{ mb: 1.5 }}>
-          <TextField
-            inputRef={inputRef}
-            fullWidth
-            placeholder={t('quickAddPlaceholder')}
-            value={quickAddValue}
-            onChange={(e) => setQuickAddValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            size="small"
-            inputProps={{
-              autoCapitalize: 'sentences',
-              autoCorrect: 'off',
-              spellCheck: false
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: '#ffffff',
-                borderRadius: '14px',
-                height: 52,
-                pr: 0.75,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                '&.Mui-focused': {
-                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)'
-                }
-              },
-              '& .MuiOutlinedInput-input': {
-                fontSize: 16, // Prevents iOS zoom on focus
-                py: 1.5
+      {/* Quick Add - Mobile First Design */}
+      <Box sx={{ mb: 1.5 }}>
+        <TextField
+          inputRef={inputRef}
+          fullWidth
+          placeholder={t('quickAddPlaceholder')}
+          value={quickAddValue}
+          onChange={(e) => setQuickAddValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          size="small"
+          inputProps={{
+            autoCapitalize: 'sentences',
+            autoCorrect: 'off',
+            spellCheck: false
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.paper',
+              borderRadius: '14px',
+              height: 52,
+              pr: 0.75,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              '&.Mui-focused': {
+                boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)'
               }
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Box sx={{ fontSize: 20 }}>🛒</Box>
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  {/* Add button - always visible, disabled when < 2 chars */}
-                  <IconButton
-                    onClick={handleQuickAdd}
-                    disabled={quickAddValue.trim().length < 2}
-                    sx={{
+            },
+            '& .MuiOutlinedInput-input': {
+              fontSize: 16, // Prevents iOS zoom on focus
+              py: 1.5,
+              color: 'text.primary'
+            }
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Box sx={{ fontSize: 20 }}>🛒</Box>
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                {/* Add button - always visible, disabled when < 2 chars */}
+                <IconButton
+                  onClick={handleQuickAdd}
+                  disabled={quickAddValue.trim().length < 2}
+                  sx={{
+                    background: quickAddValue.trim().length >= 2
+                      ? 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)'
+                      : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
+                    color: 'white',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '10px',
+                    boxShadow: quickAddValue.trim().length >= 2
+                      ? '0 2px 6px rgba(20, 184, 166, 0.35)'
+                      : 'none',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
                       background: quickAddValue.trim().length >= 2
-                        ? 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)'
+                        ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
                         : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
-                      color: 'white',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '10px',
                       boxShadow: quickAddValue.trim().length >= 2
-                        ? '0 2px 6px rgba(20, 184, 166, 0.35)'
-                        : 'none',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        background: quickAddValue.trim().length >= 2
-                          ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
-                          : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
-                        boxShadow: quickAddValue.trim().length >= 2
-                          ? '0 3px 10px rgba(20, 184, 166, 0.45)'
-                          : 'none'
-                      },
-                      '&:active': {
-                        transform: quickAddValue.trim().length >= 2 ? 'scale(0.92)' : 'none',
-                        boxShadow: quickAddValue.trim().length >= 2
-                          ? '0 1px 3px rgba(20, 184, 166, 0.3)'
-                          : 'none'
-                      },
-                      '&.Mui-disabled': {
-                        color: 'white',
-                        opacity: 0.7
-                      }
-                    }}
-                    aria-label={t('add')}
-                  >
-                    <AddIcon sx={{ fontSize: 22 }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              'aria-label': t('quickAddPlaceholder')
-            }}
-          />
-        </Box>
-      )}
+                        ? '0 3px 10px rgba(20, 184, 166, 0.45)'
+                        : 'none'
+                    },
+                    '&:active': {
+                      transform: quickAddValue.trim().length >= 2 ? 'scale(0.92)' : 'none',
+                      boxShadow: quickAddValue.trim().length >= 2
+                        ? '0 1px 3px rgba(20, 184, 166, 0.3)'
+                        : 'none'
+                    },
+                    '&.Mui-disabled': {
+                      color: 'white',
+                      opacity: 0.7
+                    }
+                  }}
+                  aria-label={t('add')}
+                >
+                  <AddIcon sx={{ fontSize: 22 }} />
+                </IconButton>
+              </InputAdornment>
+            ),
+            'aria-label': t('quickAddPlaceholder')
+          }}
+        />
+      </Box>
 
       {/* Filter Tabs - Larger Touch Targets */}
       <Tabs

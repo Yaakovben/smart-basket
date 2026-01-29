@@ -75,9 +75,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
-      // Lock direction early (after 5px movement)
-      if (!directionLocked.current && (absDx > 5 || absDy > 5)) {
-        directionLocked.current = absDx > absDy ? 'horizontal' : 'vertical';
+      // Lock direction after 10px movement with more aggressive horizontal detection
+      // Require horizontal to be at least 1.5x vertical to lock as horizontal (like WhatsApp)
+      if (!directionLocked.current && (absDx > 10 || absDy > 10)) {
+        // More strict: horizontal only if significantly more horizontal than vertical
+        directionLocked.current = absDx > absDy * 1.5 ? 'horizontal' : 'vertical';
         if (directionLocked.current === 'horizontal') {
           // Immediately prevent scroll when horizontal swipe detected
           e.preventDefault();

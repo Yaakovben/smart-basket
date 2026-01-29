@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SIZES } from '../../../global/helpers';
@@ -53,6 +53,30 @@ export const AddProductModal = memo(({
   onDecrement
 }: AddProductModalProps) => {
   const { t } = useSettings();
+  const quantityRef = useRef<HTMLInputElement>(null);
+
+  const isNameValid = newProduct.name.trim().length >= 2;
+
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      quantityRef.current?.focus();
+      quantityRef.current?.select();
+    }
+  }, []);
+
+  const handleQuantityKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Blur to close keyboard on last text input
+      (e.target as HTMLInputElement).blur();
+      // If valid, submit
+      if (isNameValid) {
+        haptic('medium');
+        onAdd();
+      }
+    }
+  }, [isNameValid, onAdd]);
 
   if (!isOpen) return null;
 
@@ -70,8 +94,12 @@ export const AddProductModal = memo(({
           fullWidth
           value={newProduct.name}
           onChange={e => onUpdateField('name', e.target.value)}
+          onKeyDown={handleNameKeyDown}
           placeholder={t('productName')}
           aria-required="true"
+          inputProps={{
+            enterKeyHint: 'next'
+          }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
@@ -86,12 +114,15 @@ export const AddProductModal = memo(({
               −
             </Button>
             <input
+              ref={quantityRef}
               id="product-quantity"
               type="number"
               min="1"
+              enterKeyHint="done"
               style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }}
               value={newProduct.quantity}
               onChange={e => onUpdateField('quantity', Math.max(1, parseInt(e.target.value) || 1))}
+              onKeyDown={handleQuantityKeyDown}
               aria-label={t('quantity')}
             />
             <Button
@@ -140,6 +171,7 @@ export const AddProductModal = memo(({
         variant="contained"
         fullWidth
         onClick={() => { haptic('medium'); onAdd(); }}
+        disabled={!isNameValid}
         aria-label={t('add')}
       >
         {t('add')}
@@ -171,6 +203,28 @@ export const EditProductModal = memo(({
   onDecrement
 }: EditProductModalProps) => {
   const { t } = useSettings();
+  const quantityRef = useRef<HTMLInputElement>(null);
+
+  const isNameValid = product ? product.name.trim().length >= 2 : false;
+  const canSave = hasChanges && isNameValid;
+
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      quantityRef.current?.focus();
+      quantityRef.current?.select();
+    }
+  }, []);
+
+  const handleQuantityKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      (e.target as HTMLInputElement).blur();
+      if (canSave) {
+        onSave();
+      }
+    }
+  }, [canSave, onSave]);
 
   if (!product) return null;
 
@@ -183,7 +237,11 @@ export const EditProductModal = memo(({
           fullWidth
           value={product.name}
           onChange={e => onUpdateField('name', e.target.value)}
+          onKeyDown={handleNameKeyDown}
           aria-required="true"
+          inputProps={{
+            enterKeyHint: 'next'
+          }}
         />
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
@@ -192,12 +250,15 @@ export const EditProductModal = memo(({
           <Box sx={quantityBoxSx}>
             <Button onClick={onDecrement} sx={quantityBtnSx} aria-label="−">−</Button>
             <input
+              ref={quantityRef}
               id="edit-product-quantity"
               type="number"
               min="1"
+              enterKeyHint="done"
               style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }}
               value={product.quantity}
               onChange={e => onUpdateField('quantity', Math.max(1, parseInt(e.target.value) || 1))}
+              onKeyDown={handleQuantityKeyDown}
               aria-label={t('quantity')}
             />
             <Button onClick={onIncrement} sx={quantityBtnSx} aria-label="+">+</Button>
@@ -237,7 +298,7 @@ export const EditProductModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('save')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!canSave}>{t('save')}</Button>
     </Modal>
   );
 });
