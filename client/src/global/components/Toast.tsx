@@ -6,11 +6,11 @@ interface ToastProps {
   type?: ToastType;
 }
 
-const TOAST_CONFIG: Record<ToastType, { accent: string; text: string }> = {
-  success: { accent: '#10B981', text: 'text.primary' },
-  error: { accent: '#EF4444', text: 'text.primary' },
-  info: { accent: '#3B82F6', text: 'text.primary' },
-  warning: { accent: '#F59E0B', text: 'text.primary' }
+const TOAST_CONFIG: Record<ToastType, { icon: string; color: string }> = {
+  success: { icon: '✓', color: '#059669' },
+  error: { icon: '✕', color: '#DC2626' },
+  info: { icon: 'i', color: '#2563EB' },
+  warning: { icon: '!', color: '#D97706' }
 };
 
 export const Toast = ({ msg, type = 'success' }: ToastProps) => {
@@ -22,7 +22,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
       open={!!msg}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       sx={{
-        top: 'max(12px, env(safe-area-inset-top))',
+        top: 'max(20px, env(safe-area-inset-top))',
         left: '50%',
         right: 'auto',
         transform: 'translateX(-50%)'
@@ -35,31 +35,41 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
-          pl: 0,
-          pr: 2.5,
+          gap: 1,
+          px: 2,
           py: 1,
-          bgcolor: 'background.paper',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          overflow: 'hidden',
-          animation: 'floatIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-          '@keyframes floatIn': {
-            from: { transform: 'translateY(-20px) scale(0.95)', opacity: 0 },
-            to: { transform: 'translateY(0) scale(1)', opacity: 1 }
+          bgcolor: 'rgba(255,255,255,0.95)',
+          borderRadius: '100px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)',
+          animation: 'fadeIn 0.2s ease-out',
+          '@keyframes fadeIn': {
+            from: { transform: 'scale(0.95)', opacity: 0 },
+            to: { transform: 'scale(1)', opacity: 1 }
           }
         }}
       >
-        {/* Accent line */}
-        <Box
-          sx={{
-            width: 4,
-            alignSelf: 'stretch',
-            bgcolor: config.accent,
-            borderRadius: '4px 0 0 4px'
-          }}
-        />
-        <Typography sx={{ fontSize: 14, fontWeight: 500, color: config.text, py: 0.5 }}>
+        <Box sx={{
+          width: 20,
+          height: 20,
+          borderRadius: '50%',
+          bgcolor: `${config.color}12`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: config.color,
+          fontSize: 11,
+          fontWeight: 700,
+          flexShrink: 0
+        }}>
+          {config.icon}
+        </Box>
+        <Typography sx={{
+          fontSize: 13,
+          fontWeight: 500,
+          color: '#374151',
+          whiteSpace: 'nowrap'
+        }}>
           {msg}
         </Typography>
       </Box>

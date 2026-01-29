@@ -227,7 +227,8 @@ type TranslationKey =
   // Share
   | 'shareListDescription'
   // Quick Add
-  | 'quickAddPlaceholder';
+  | 'quickAddPlaceholder'
+  | 'searchProducts';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -459,7 +460,8 @@ export const translations: Record<Language, Translations> = {
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
-    quickAddPlaceholder: 'הוספת מוצר מהירה...'
+    quickAddPlaceholder: 'הוספת מוצר מהירה...',
+    searchProducts: 'חיפוש מוצרים...'
   },
   en: {
     // General
@@ -688,7 +690,8 @@ export const translations: Record<Language, Translations> = {
     // Share
     shareListDescription: 'Share your shopping list',
     // Quick Add
-    quickAddPlaceholder: 'Quick add product...'
+    quickAddPlaceholder: 'Quick add product...',
+    searchProducts: 'Search products...'
   },
   ru: {
     // General
@@ -917,7 +920,8 @@ export const translations: Record<Language, Translations> = {
     // Share
     shareListDescription: 'Поделитесь своим списком покупок',
     // Quick Add
-    quickAddPlaceholder: 'Быстро добавить товар...'
+    quickAddPlaceholder: 'Быстро добавить товар...',
+    searchProducts: 'Поиск товаров...'
   }
 };
 

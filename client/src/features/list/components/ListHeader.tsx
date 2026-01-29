@@ -1,10 +1,12 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Grow } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Grow, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
 import { MembersButton } from '../../../global/components';
@@ -22,12 +24,14 @@ interface ListHeaderProps {
   list: List;
   user: User;
   filter: ListFilter;
+  search: string;
   pendingCount: number;
   purchasedCount: number;
   allMembers: User[];
   isOwner: boolean;
   onBack: () => void;
   onFilterChange: (filter: ListFilter) => void;
+  onSearchChange: (search: string) => void;
   onEditList: () => void;
   onShareList: () => void;
   onShowMembers: () => void;
@@ -40,12 +44,14 @@ export const ListHeader = memo(({
   list,
   user,
   filter,
+  search,
   pendingCount,
   purchasedCount,
   allMembers,
   isOwner,
   onBack,
   onFilterChange,
+  onSearchChange,
   onEditList,
   onShareList,
   onShowMembers,
@@ -54,7 +60,19 @@ export const ListHeader = memo(({
 }: ListHeaderProps) => {
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleToggleSearch = useCallback(() => {
+    if (showSearch) {
+      setShowSearch(false);
+      onSearchChange('');
+    } else {
+      setShowSearch(true);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+  }, [showSearch, onSearchChange]);
 
   const handleQuickAdd = useCallback(() => {
     const trimmed = quickAddValue.trim();
@@ -126,8 +144,67 @@ export const ListHeader = memo(({
           >
             <PersonAddIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
+          <Box sx={{ flex: 1 }} />
+          <IconButton
+            onClick={handleToggleSearch}
+            sx={{
+              ...glassButtonSx,
+              bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
+              transition: 'all 0.2s ease'
+            }}
+            aria-label={t('search')}
+          >
+            <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+          </IconButton>
         </Box>
       )}
+
+      {/* Search Row */}
+      <Collapse in={showSearch}>
+        <Box sx={{ mb: 1.5 }}>
+          <TextField
+            inputRef={searchInputRef}
+            fullWidth
+            placeholder={t('searchProducts')}
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: '#ffffff',
+                borderRadius: '14px',
+                height: 48,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                '&.Mui-focused': {
+                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)'
+                }
+              },
+              '& .MuiOutlinedInput-input': {
+                fontSize: 15
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+              endAdornment: search ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => onSearchChange('')}
+                    size="small"
+                    sx={{ color: 'text.secondary' }}
+                    aria-label={t('close')}
+                  >
+                    <CloseIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </InputAdornment>
+              ) : null
+            }}
+          />
+        </Box>
+      </Collapse>
 
       {/* Quick Add (Pending Tab Only) - Mobile First Design */}
       {filter === 'pending' && (
@@ -142,12 +219,13 @@ export const ListHeader = memo(({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'background.paper',
+                bgcolor: '#ffffff',
                 borderRadius: '14px',
                 height: 52,
                 pr: 0.75,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 '&.Mui-focused': {
-                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
+                  boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)'
                 }
               },
               '& .MuiOutlinedInput-input': {
@@ -167,18 +245,25 @@ export const ListHeader = memo(({
                     <IconButton
                       onClick={handleQuickAdd}
                       sx={{
-                        bgcolor: 'primary.main',
+                        background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
                         color: 'white',
                         width: 40,
                         height: 40,
                         borderRadius: '10px',
-                        transition: 'all 0.15s ease',
-                        '&:hover': { bgcolor: 'primary.dark' },
-                        '&:active': { transform: 'scale(0.92)' }
+                        boxShadow: '0 2px 6px rgba(20, 184, 166, 0.35)',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
+                          boxShadow: '0 3px 10px rgba(20, 184, 166, 0.45)'
+                        },
+                        '&:active': {
+                          transform: 'scale(0.92)',
+                          boxShadow: '0 1px 3px rgba(20, 184, 166, 0.3)'
+                        }
                       }}
                       aria-label={t('add')}
                     >
-                      <AddIcon sx={{ fontSize: 24 }} />
+                      <AddIcon sx={{ fontSize: 22 }} />
                     </IconButton>
                   </Grow>
                 </InputAdornment>

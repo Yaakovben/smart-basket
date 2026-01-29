@@ -31,14 +31,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
 
   const {
     // State
-    filter, showAdd, showEdit, showDetails, showInvite,
+    filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
     fabPosition, isDragging,
     // Computed
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     // Setters
-    setFilter, setShowAdd, setShowDetails,
+    setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
     setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
     // Handlers
@@ -68,12 +68,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
         list={list}
         user={user}
         filter={filter}
+        search={search}
         pendingCount={pending.length}
         purchasedCount={purchased.length}
         allMembers={allMembers}
         isOwner={isOwner}
         onBack={onBack}
         onFilterChange={setFilter}
+        onSearchChange={setSearch}
         onEditList={handleEditList}
         onShareList={() => setShowShareList(true)}
         onShowMembers={() => setShowMembers(true)}
