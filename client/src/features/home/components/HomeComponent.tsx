@@ -79,7 +79,7 @@ interface HomePageProps {
   onCreateList: (list: List) => void;
   onDeleteList: (listId: string) => void;
   onEditList: (list: List) => void;
-  onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
+  onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onLogout: () => void;
   onMarkNotificationsRead: (listId: string) => void;
   onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;

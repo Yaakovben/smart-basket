@@ -178,6 +178,15 @@ type TranslationKey =
   | 'created'
   | 'joinedGroup'
   | 'left'
+  // Socket notifications
+  | 'addedProductNotif'
+  | 'editedProductNotif'
+  | 'deletedProductNotif'
+  | 'purchasedNotif'
+  | 'unmarkedPurchasedNotif'
+  | 'joinedGroupNotif'
+  | 'leftGroupNotif'
+  | 'inListNotif'
   | 'deleteGroupTitle'
   | 'deleteListTitle'
   | 'deleteConfirmMessage'
@@ -411,6 +420,15 @@ export const translations: Record<Language, Translations> = {
     created: 'נוצר',
     joinedGroup: 'הצטרפת לקבוצה',
     left: 'עזבת',
+    // Socket notifications
+    addedProductNotif: 'הוסיף/ה',
+    editedProductNotif: 'ערך/ה',
+    deletedProductNotif: 'מחק/ה',
+    purchasedNotif: 'סימן/ה כנקנה',
+    unmarkedPurchasedNotif: 'ביטל/ה סימון',
+    joinedGroupNotif: 'הצטרף/ה לקבוצה',
+    leftGroupNotif: 'עזב/ה את הקבוצה',
+    inListNotif: 'ברשימה',
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
@@ -641,6 +659,15 @@ export const translations: Record<Language, Translations> = {
     created: 'Created',
     joinedGroup: 'Joined group',
     left: 'Left',
+    // Socket notifications
+    addedProductNotif: 'added',
+    editedProductNotif: 'edited',
+    deletedProductNotif: 'deleted',
+    purchasedNotif: 'marked as purchased',
+    unmarkedPurchasedNotif: 'unmarked',
+    joinedGroupNotif: 'joined the group',
+    leftGroupNotif: 'left the group',
+    inListNotif: 'in list',
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
     deleteConfirmMessage: 'This action cannot be undone',
@@ -871,6 +898,15 @@ export const translations: Record<Language, Translations> = {
     created: 'Создано',
     joinedGroup: 'Вы присоединились к группе',
     left: 'Вы покинули',
+    // Socket notifications
+    addedProductNotif: 'добавил(а)',
+    editedProductNotif: 'изменил(а)',
+    deletedProductNotif: 'удалил(а)',
+    purchasedNotif: 'отметил(а) как купленный',
+    unmarkedPurchasedNotif: 'снял(а) отметку',
+    joinedGroupNotif: 'присоединился(ась) к группе',
+    leftGroupNotif: 'покинул(а) группу',
+    inListNotif: 'в списке',
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',
     deleteConfirmMessage: 'Это действие нельзя отменить',

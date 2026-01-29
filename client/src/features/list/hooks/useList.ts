@@ -4,8 +4,10 @@ import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
-import { formatDate, formatTime, generateProductId } from '../helpers/list-helpers';
+// formatDate, formatTime, generateProductId removed - products created on server
 import { newProductSchema, validateForm } from '../../../global/validation';
+import { productsApi, listsApi } from '../../../services/api';
+import { socketService } from '../../../services/socket';
 import type {
   NewProductForm,
   EditListForm,
@@ -15,6 +17,19 @@ import type {
   ListFilter,
   UseListReturn
 } from '../types/list-types';
+
+// Helper to convert API product to client Product type
+const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }): Product => ({
+  id: apiProduct.id,
+  name: apiProduct.name,
+  quantity: apiProduct.quantity,
+  unit: apiProduct.unit as Product['unit'],
+  category: apiProduct.category as Product['category'],
+  isPurchased: apiProduct.isPurchased,
+  addedBy: apiProduct.addedBy,
+  createdDate: new Date(apiProduct.createdAt).toLocaleDateString('he-IL'),
+  createdTime: new Date(apiProduct.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+});
 
 // ===== Constants =====
 const FAB_VISIBILITY_THRESHOLD = 3;
@@ -179,56 +194,112 @@ export const useList = ({
     return true;
   }, [newProduct, t]);
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = useCallback(async () => {
     setAddError('');
     if (!validateProduct()) return;
 
     setOpenItemId(null);
-    const product: Product = {
-      id: generateProductId(),
-      ...newProduct,
-      isPurchased: false,
-      addedBy: user.name,
-      createdDate: formatDate(),
-      createdTime: formatTime()
-    };
 
-    updateProducts([...list.products, product]);
-    setNewProduct(DEFAULT_NEW_PRODUCT);
-    setShowAdd(false);
-    showToast(t('added'));
-  }, [newProduct, list.products, user.name, updateProducts, showToast, t, validateProduct]);
+    try {
+      // Call API to add product
+      const updatedList = await productsApi.addProduct(list.id, {
+        name: newProduct.name.trim(),
+        quantity: newProduct.quantity,
+        unit: newProduct.unit,
+        category: newProduct.category,
+      });
 
-  const handleQuickAdd = useCallback((name: string) => {
+      // Find the newly added product (last one in the list)
+      const addedProduct = updatedList.products[updatedList.products.length - 1];
+
+      // Emit socket event to notify other users
+      socketService.emitProductAdded(list.id, {
+        id: addedProduct.id,
+        name: addedProduct.name,
+        quantity: addedProduct.quantity,
+        unit: addedProduct.unit,
+        category: addedProduct.category,
+      }, user.name);
+
+      // Update local state with the new products
+      updateProducts(updatedList.products.map(convertApiProduct));
+      setNewProduct(DEFAULT_NEW_PRODUCT);
+      setShowAdd(false);
+      showToast(t('added'));
+    } catch (error) {
+      console.error('Failed to add product:', error);
+      setAddError(t('unknownError'));
+    }
+  }, [newProduct, list.id, user.name, updateProducts, showToast, t, validateProduct]);
+
+  const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) return;
 
     setOpenItemId(null);
-    const product: Product = {
-      id: generateProductId(),
-      name: trimmedName,
-      quantity: 1,
-      unit: 'יח׳',
-      category: 'אחר',
-      isPurchased: false,
-      addedBy: user.name,
-      createdDate: formatDate(),
-      createdTime: formatTime()
-    };
 
-    updateProducts([...list.products, product]);
-    showToast(t('added'));
-  }, [list.products, user.name, updateProducts, showToast, t]);
+    try {
+      // Call API to add product
+      const updatedList = await productsApi.addProduct(list.id, {
+        name: trimmedName,
+        quantity: 1,
+        unit: 'יח׳',
+        category: 'אחר',
+      });
 
-  const toggleProduct = useCallback((productId: string) => {
+      // Find the newly added product (last one in the list)
+      const addedProduct = updatedList.products[updatedList.products.length - 1];
+
+      // Emit socket event to notify other users
+      socketService.emitProductAdded(list.id, {
+        id: addedProduct.id,
+        name: addedProduct.name,
+        quantity: addedProduct.quantity,
+        unit: addedProduct.unit,
+        category: addedProduct.category,
+      }, user.name);
+
+      // Update local state with the new products
+      updateProducts(updatedList.products.map(convertApiProduct));
+      showToast(t('added'));
+    } catch (error) {
+      console.error('Failed to add product:', error);
+      showToast(t('unknownError'));
+    }
+  }, [list.id, user.name, updateProducts, showToast, t]);
+
+  const toggleProduct = useCallback(async (productId: string) => {
+    // Optimistic update for immediate UI response
+    const product = list.products.find((p: Product) => p.id === productId);
+    if (!product) return;
+
+    const newIsPurchased = !product.isPurchased;
+
     updateProducts(
       list.products.map((p: Product) =>
-        p.id === productId ? { ...p, isPurchased: !p.isPurchased } : p
+        p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
       )
     );
     showToast(t('updated'));
     dismissHint();
-  }, [list.products, updateProducts, showToast, t, dismissHint]);
+
+    try {
+      // Call API to toggle product
+      await productsApi.togglePurchased(list.id, productId);
+
+      // Emit socket event to notify other users
+      socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
+    } catch (error) {
+      console.error('Failed to toggle product:', error);
+      // Revert optimistic update on error
+      updateProducts(
+        list.products.map((p: Product) =>
+          p.id === productId ? { ...p, isPurchased: product.isPurchased } : p
+        )
+      );
+      showToast(t('unknownError'));
+    }
+  }, [list.id, list.products, user.name, updateProducts, showToast, t, dismissHint]);
 
   const deleteProduct = useCallback((productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
@@ -237,24 +308,57 @@ export const useList = ({
     setConfirm({
       title: t('deleteProduct'),
       message: `${t('delete')} "${product.name}"?`,
-      onConfirm: () => {
-        updateProducts(list.products.filter((p: Product) => p.id !== productId));
-        setConfirm(null);
-        showToast(t('deleted'));
+      onConfirm: async () => {
+        try {
+          // Call API to delete product
+          const updatedList = await productsApi.deleteProduct(list.id, productId);
+
+          // Emit socket event to notify other users
+          socketService.emitProductDeleted(list.id, productId, product.name, user.name);
+
+          updateProducts(updatedList.products.map(convertApiProduct));
+          setConfirm(null);
+          showToast(t('deleted'));
+        } catch (error) {
+          console.error('Failed to delete product:', error);
+          setConfirm(null);
+          showToast(t('unknownError'));
+        }
       }
     });
-  }, [list.products, updateProducts, showToast, t]);
+  }, [list.id, list.products, user.name, updateProducts, showToast, t]);
 
-  const saveEditedProduct = useCallback(() => {
+  const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !hasProductChanges) return;
     haptic('medium');
-    updateProducts(
-      list.products.map((p: Product) => (p.id === showEdit.id ? showEdit : p))
-    );
-    setShowEdit(null);
-    setOriginalEditProduct(null);
-    showToast(t('saved'));
-  }, [showEdit, hasProductChanges, list.products, updateProducts, showToast, t]);
+
+    try {
+      // Call API to update product
+      const updatedList = await productsApi.updateProduct(list.id, showEdit.id, {
+        name: showEdit.name,
+        quantity: showEdit.quantity,
+        unit: showEdit.unit,
+        category: showEdit.category,
+      });
+
+      // Emit socket event to notify other users
+      socketService.emitProductUpdated(list.id, {
+        id: showEdit.id,
+        name: showEdit.name,
+        quantity: showEdit.quantity,
+        unit: showEdit.unit,
+        category: showEdit.category,
+      }, user.name);
+
+      updateProducts(updatedList.products.map(convertApiProduct));
+      setShowEdit(null);
+      setOriginalEditProduct(null);
+      showToast(t('saved'));
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      showToast(t('unknownError'));
+    }
+  }, [showEdit, hasProductChanges, list.id, user.name, updateProducts, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
     setShowEdit({ ...product });
@@ -327,13 +431,22 @@ export const useList = ({
     setConfirm({
       title: t('removeMember'),
       message,
-      onConfirm: () => {
-        onUpdateList({
-          ...list,
-          members: list.members.filter((m: Member) => m.id !== memberId)
-        });
-        setConfirm(null);
-        showToast(t('removed'));
+      onConfirm: async () => {
+        try {
+          // Call API to remove member
+          await listsApi.removeMember(list.id, memberId);
+          // Update local state
+          onUpdateList({
+            ...list,
+            members: list.members.filter((m: Member) => m.id !== memberId)
+          });
+          setConfirm(null);
+          showToast(t('removed'));
+        } catch (error) {
+          console.error('Failed to remove member:', error);
+          setConfirm(null);
+          showToast(t('unknownError'));
+        }
       }
     });
   }, [list, onUpdateList, showToast, t]);

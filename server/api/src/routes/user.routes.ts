@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { UserController } from '../controllers';
+import { authenticate, validate } from '../middleware';
+import { updateProfileSchema } from '../utils/validators';
+
+const router = Router();
+
+// All user routes require authentication
+router.use(authenticate);
+
+router.get('/me', UserController.getProfile);
+router.put('/me', validate(updateProfileSchema), UserController.updateProfile);
+router.delete('/me', UserController.deleteAccount);
+
+export default router;

@@ -1,0 +1,25 @@
+{
+  "name": "smart-basket-socket",
+  "version": "1.0.0",
+  "description": "SmartBasket Socket.io server for real-time notifications",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.2",
+    "jsonwebtoken": "^9.0.2",
+    "ioredis": "^5.3.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.2",
+    "@types/node": "^20.10.0",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/cors": "^2.8.17",
+    "ts-node-dev": "^2.0.0"
+  }
+}

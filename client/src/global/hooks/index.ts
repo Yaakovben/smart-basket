@@ -1,10 +1,13 @@
-import { useState, useCallback } from "react";
-import type { User, List, Member, Notification, LoginMethod } from "../types";
-import { STORAGE_KEYS } from "../constants";
+import { useState, useCallback, useEffect } from "react";
+import type { User, List, Member, LoginMethod } from "../types";
 import { ActivityTracker } from "../services";
+import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/api";
+import { socketService } from "../../services/socket";
+import { getAccessToken, clearTokens } from "../../services/api/client";
 
 // Re-export useDebounce
 export { useDebounce } from './useDebounce';
+export { useSocketNotifications } from './useSocketNotifications';
 
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(
@@ -51,147 +54,220 @@ export function useToast(duration = 1200) {
 
 // ===== useAuth Hook =====
 export function useAuth() {
-  const [user, setUser] = useLocalStorage<User | null>(
-    STORAGE_KEYS.CURRENT_USER,
-    null,
-  );
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = getAccessToken();
+      if (token) {
+        try {
+          const profile = await authApi.getProfile();
+          setUser(profile);
+          // Connect socket when authenticated
+          socketService.connect();
+        } catch {
+          // Token invalid, clear it
+          clearTokens();
+        }
+      }
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
 
   const login = useCallback(
     (userData: User, loginMethod: LoginMethod = "email") => {
       setUser(userData);
       // Track login activity for admin dashboard
       ActivityTracker.trackLogin(userData, loginMethod);
+      // Connect socket after login
+      socketService.connect();
     },
-    [setUser],
+    [],
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore errors, just clear local state
+    }
+    socketService.disconnect();
     setUser(null);
-  }, [setUser]);
+  }, []);
 
   const updateUser = useCallback(
-    (updates: Partial<User>) => {
+    async (updates: Partial<User>) => {
       if (!user) return;
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-
-      // Update in users list
-      const users = JSON.parse(
-        localStorage.getItem(STORAGE_KEYS.USERS) || "[]",
-      );
-      const updatedUsers = users.map((u: User) =>
-        u.id === user.id ? { ...u, ...updates } : u,
-      );
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
+      try {
+        const updatedUser = await authApi.updateProfile(updates);
+        setUser(updatedUser);
+      } catch (error) {
+        console.error('Failed to update profile:', error);
+        throw error;
+      }
     },
-    [user, setUser],
+    [user],
   );
 
-  return { user, login, logout, updateUser, isAuthenticated: !!user };
+  return { user, login, logout, updateUser, isAuthenticated: !!user, loading };
 }
+
+// Helper to convert API member to client Member type
+const convertApiMember = (apiMember: ApiMember): Member => ({
+  id: apiMember.user.id,
+  name: apiMember.user.name,
+  email: apiMember.user.email,
+  isAdmin: apiMember.isAdmin,
+});
+
+// Helper to convert API list to client List type
+const convertApiList = (apiList: ApiList): List => ({
+  id: apiList.id,
+  name: apiList.name,
+  icon: apiList.icon,
+  color: apiList.color,
+  isGroup: apiList.isGroup,
+  owner: {
+    id: apiList.owner.id,
+    name: apiList.owner.name,
+    email: apiList.owner.email,
+    avatarColor: apiList.owner.avatarColor,
+    avatarEmoji: apiList.owner.avatarEmoji,
+  },
+  members: apiList.members.map(convertApiMember),
+  products: apiList.products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    quantity: p.quantity,
+    unit: p.unit,
+    category: p.category,
+    isPurchased: p.isPurchased,
+    addedBy: p.addedBy,
+  })),
+  inviteCode: apiList.inviteCode,
+  notifications: apiList.notifications,
+});
 
 // ===== useLists Hook =====
 export function useLists(user: User | null) {
-  const [lists, setLists] = useLocalStorage<List[]>(STORAGE_KEYS.LISTS, []);
+  const [lists, setLists] = useState<List[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch lists when user changes
+  useEffect(() => {
+    if (user) {
+      fetchLists();
+    } else {
+      setLists([]);
+    }
+  }, [user?.id]);
+
+  const fetchLists = useCallback(async () => {
+    setLoading(true);
+    try {
+      const apiLists = await listsApi.getLists();
+      setLists(apiLists.map(convertApiList));
+    } catch (error) {
+      console.error('Failed to fetch lists:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const createList = useCallback(
-    (list: List) => {
-      setLists((prev) => [...prev, list]);
+    async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'>) => {
+      try {
+        const newList = await listsApi.createList({
+          name: list.name,
+          icon: list.icon,
+          color: list.color,
+          isGroup: list.isGroup,
+          password: list.password || undefined,
+        });
+        setLists((prev) => [...prev, convertApiList(newList)]);
+        return convertApiList(newList);
+      } catch (error) {
+        console.error('Failed to create list:', error);
+        throw error;
+      }
     },
-    [setLists],
+    [],
   );
 
   const updateList = useCallback(
-    (updatedList: List) => {
-      setLists((prev) =>
-        prev.map((l) => (l.id === updatedList.id ? updatedList : l)),
-      );
+    async (updatedList: List) => {
+      try {
+        const updated = await listsApi.updateList(updatedList.id, {
+          name: updatedList.name,
+          icon: updatedList.icon,
+          color: updatedList.color,
+        });
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      } catch (error) {
+        console.error('Failed to update list:', error);
+        throw error;
+      }
     },
-    [setLists],
+    [],
   );
 
   const deleteList = useCallback(
-    (listId: string) => {
-      setLists((prev) => prev.filter((l) => l.id !== listId));
+    async (listId: string) => {
+      try {
+        await listsApi.deleteList(listId);
+        setLists((prev) => prev.filter((l) => l.id !== listId));
+      } catch (error) {
+        console.error('Failed to delete list:', error);
+        throw error;
+      }
     },
-    [setLists],
+    [],
   );
 
   const joinGroup = useCallback(
-    (code: string, password: string): { success: boolean; error?: string } => {
-      // Return translation keys for errors - caller should translate
+    async (code: string, password: string): Promise<{ success: boolean; error?: string }> => {
       if (!user) return { success: false, error: "userNotLoggedIn" };
 
-      const group = lists.find((l) => l.inviteCode === code && l.isGroup);
-      if (!group) return { success: false, error: "groupNotFound" };
-      if (group.password !== password)
-        return { success: false, error: "wrongPassword" };
-      if (
-        group.owner.id === user.id ||
-        group.members.some((m) => m.id === user.id)
-      ) {
-        return { success: false, error: "alreadyInGroup" };
+      try {
+        const joinedList = await listsApi.joinGroup({ inviteCode: code, password });
+        setLists((prev) => [...prev, convertApiList(joinedList)]);
+        // Join socket room for this list
+        socketService.joinList(joinedList.id);
+        return { success: true };
+      } catch (error: unknown) {
+        const apiError = error as { response?: { data?: { error?: string } } };
+        const errorMessage = apiError.response?.data?.error || 'unknownError';
+        return { success: false, error: errorMessage };
       }
-
-      const notification: Notification = {
-        id: `n${Date.now()}`,
-        type: "join",
-        userId: user.id,
-        userName: user.name,
-        timestamp: new Date().toISOString(),
-        read: false,
-      };
-
-      setLists((prev) =>
-        prev.map((l) =>
-          l.id === group.id
-            ? {
-                ...l,
-                members: [
-                  ...l.members,
-                  { id: user.id, name: user.name, email: user.email },
-                ],
-                notifications: [...(l.notifications || []), notification],
-              }
-            : l,
-        ),
-      );
-
-      return { success: true };
     },
-    [user, lists, setLists],
+    [user],
   );
 
   const leaveList = useCallback(
-    (listId: string) => {
+    async (listId: string) => {
       if (!user) return;
 
-      const notification: Notification = {
-        id: `n${Date.now()}`,
-        type: "leave",
-        userId: user.id,
-        userName: user.name,
-        timestamp: new Date().toISOString(),
-        read: false,
-      };
-
-      setLists((prev) =>
-        prev.map((l) =>
-          l.id === listId
-            ? {
-                ...l,
-                members: l.members.filter((m: Member) => m.id !== user.id),
-                notifications: [...(l.notifications || []), notification],
-              }
-            : l,
-        ),
-      );
+      try {
+        await listsApi.leaveGroup(listId);
+        // Leave socket room
+        socketService.leaveList(listId);
+        setLists((prev) => prev.filter((l) => l.id !== listId));
+      } catch (error) {
+        console.error('Failed to leave list:', error);
+        throw error;
+      }
     },
-    [user, setLists],
+    [user],
   );
 
   const markNotificationsRead = useCallback(
     (listId: string) => {
+      // Update locally for now - can add API call later
       setLists((prev) =>
         prev.map((l) =>
           l.id === listId
@@ -206,11 +282,12 @@ export function useLists(user: User | null) {
         ),
       );
     },
-    [setLists],
+    [],
   );
 
   const markSingleNotificationRead = useCallback(
     (listId: string, notificationId: string) => {
+      // Update locally for now - can add API call later
       setLists((prev) =>
         prev.map((l) =>
           l.id === listId
@@ -224,11 +301,101 @@ export function useLists(user: User | null) {
         ),
       );
     },
-    [setLists],
+    [],
   );
+
+  // Subscribe to socket events for real-time updates
+  useEffect(() => {
+    if (!user) return;
+
+    // Join all list rooms
+    lists.forEach((list) => socketService.joinList(list.id));
+
+    // Subscribe to list updates
+    const unsubscribeListUpdated = socketService.on('list:updated', (data: unknown) => {
+      const listData = data as { listId: string };
+      // Refetch the specific list
+      listsApi.getList(listData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    const unsubscribeUserJoined = socketService.on('user:joined', (data: unknown) => {
+      const eventData = data as { listId: string };
+      // Refetch the list to get updated members
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    const unsubscribeUserLeft = socketService.on('user:left', (data: unknown) => {
+      const eventData = data as { listId: string };
+      // Refetch the list to get updated members
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    // Subscribe to product events
+    const unsubscribeProductAdded = socketService.on('product:added', (data: unknown) => {
+      const eventData = data as { listId: string };
+      // Refetch the list to get updated products
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    const unsubscribeProductUpdated = socketService.on('product:updated', (data: unknown) => {
+      const eventData = data as { listId: string };
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    const unsubscribeProductDeleted = socketService.on('product:deleted', (data: unknown) => {
+      const eventData = data as { listId: string };
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    const unsubscribeProductToggled = socketService.on('product:toggled', (data: unknown) => {
+      const eventData = data as { listId: string };
+      listsApi.getList(eventData.listId).then((updated) => {
+        setLists((prev) =>
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+        );
+      }).catch(console.error);
+    });
+
+    return () => {
+      unsubscribeListUpdated();
+      unsubscribeUserJoined();
+      unsubscribeUserLeft();
+      unsubscribeProductAdded();
+      unsubscribeProductUpdated();
+      unsubscribeProductDeleted();
+      unsubscribeProductToggled();
+      // Leave all rooms on cleanup
+      lists.forEach((list) => socketService.leaveList(list.id));
+    };
+  }, [user?.id, lists.map(l => l.id).join(',')]);
 
   return {
     lists,
+    loading,
     createList,
     updateList,
     deleteList,
@@ -236,5 +403,6 @@ export function useLists(user: User | null) {
     leaveList,
     markNotificationsRead,
     markSingleNotificationRead,
+    refetch: fetchLists,
   };
 }

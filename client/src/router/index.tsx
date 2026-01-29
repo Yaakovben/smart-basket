@@ -1,8 +1,8 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import type { User, List, LoginMethod } from "../global/types";
-import { useAuth, useLists, useToast } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -92,6 +92,15 @@ export const AppRouter = () => {
   const { lists, createList, updateList, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, showToast } = useToast();
 
+  // Create list names map for notifications
+  const listNames = useMemo(() =>
+    lists.reduce((acc, list) => ({ ...acc, [list.id]: list.name }), {} as Record<string, string>),
+    [lists]
+  );
+
+  // Subscribe to socket notifications (respects notification settings)
+  useSocketNotifications(user, showToast, listNames);
+
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
     login(u, loginMethod);
@@ -103,8 +112,8 @@ export const AppRouter = () => {
     navigate("/login");
   };
 
-  const handleJoinGroup = (code: string, password: string) => {
-    const result = joinGroup(code, password);
+  const handleJoinGroup = async (code: string, password: string) => {
+    const result = await joinGroup(code, password);
     if (result.success) showToast(t('joinedGroup'));
     return result;
   };

@@ -2,15 +2,10 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User, LoginMethod } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { StorageService } from '../../../global/services/storage';
 import { isValidEmail, checkEmailDomainTypo } from '../helpers/auth-helpers';
-import type { UseAuthReturn, GoogleUserInfo } from '../types/auth-types';
+import type { UseAuthReturn } from '../types/auth-types';
 import { loginSchema, registerSchema, validateForm } from '../../../global/validation';
-
-// ===== Constants =====
-const GOOGLE_API_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
-const DEFAULT_AVATAR_COLOR = '#14B8A6';
-const GOOGLE_AVATAR_COLOR = '#4285F4';
+import { authApi } from '../../../services/api';
 
 // ===== Types =====
 interface UseAuthParams {
@@ -56,11 +51,13 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   }, [name, email, password, t]);
 
   // ===== Email Handlers =====
+  // Note: With API, we can't easily check if email exists beforehand
+  // So we'll always show name field and let the server handle it
   const checkEmailExists = useCallback((emailToCheck: string) => {
     if (!isValidEmail(emailToCheck)) return;
-    const users = StorageService.getUsers();
-    const exists = users.some((u: User) => u.email === emailToCheck);
-    setIsNewUser(!exists);
+    // With server-side auth, we just set isNewUser to true to show name field
+    // The server will handle the actual login vs register logic
+    setIsNewUser(true);
   }, []);
 
   // Debounce email suggestion to avoid showing while typing
@@ -105,52 +102,60 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     }
   }, [email, emailSuggestion, checkEmailExists]);
 
-  const handleLogin = useCallback((existingUser: User) => {
-    if (existingUser.password === password) {
-      haptic('medium');
-      onLogin(existingUser, 'email');
-    } else {
-      haptic('heavy');
-      setError(t('wrongPassword'));
-    }
-  }, [password, onLogin, t]);
-
-  const handleRegister = useCallback((users: User[]) => {
-    if (!validateRegisterForm()) return;
-
-    const newUser: User = {
-      id: `u${Date.now()}`,
-      name: name.trim(),
-      email,
-      password,
-      avatarEmoji: '',
-      avatarColor: DEFAULT_AVATAR_COLOR
-    };
-
-    users.push(newUser);
-    StorageService.setUsers(users);
-    haptic('medium');
-    onLogin(newUser, 'email');
-  }, [name, email, password, onLogin, validateRegisterForm]);
-
-  const handleEmailSubmit = useCallback(() => {
+  const handleEmailSubmit = useCallback(async () => {
     setError('');
+
+    // First try to login
     if (!validateLoginForm()) return;
 
     setEmailLoading(true);
-    // Small delay for UX feedback
-    setTimeout(() => {
-      const users = StorageService.getUsers();
-      const existingUser = users.find((u: User) => u.email === email);
+    try {
+      // Try login first
+      const { user } = await authApi.login({ email: email.trim(), password });
+      haptic('medium');
+      onLogin(user, 'email');
+    } catch (loginError: unknown) {
+      // If login fails with 401, try to register
+      const apiError = loginError as { response?: { status?: number; data?: { error?: string } } };
 
-      if (existingUser) {
-        handleLogin(existingUser);
+      if (apiError.response?.status === 401) {
+        // User doesn't exist or wrong password - try register if we have name
+        if (name.trim()) {
+          if (!validateRegisterForm()) {
+            setEmailLoading(false);
+            return;
+          }
+          try {
+            const { user } = await authApi.register({
+              name: name.trim(),
+              email: email.trim(),
+              password
+            });
+            haptic('medium');
+            onLogin(user, 'email');
+          } catch (registerError: unknown) {
+            haptic('heavy');
+            const regError = registerError as { response?: { data?: { error?: string } } };
+            const errorMsg = regError.response?.data?.error;
+            if (errorMsg === 'Email already exists') {
+              setError(t('wrongPassword'));
+            } else {
+              setError(t('unknownError'));
+            }
+          }
+        } else {
+          // No name provided, so it's a wrong password for existing user
+          haptic('heavy');
+          setError(t('wrongPassword'));
+        }
       } else {
-        handleRegister(users);
+        haptic('heavy');
+        setError(t('unknownError'));
       }
+    } finally {
       setEmailLoading(false);
-    }, 300);
-  }, [email, validateLoginForm, handleLogin, handleRegister]);
+    }
+  }, [email, password, name, validateLoginForm, validateRegisterForm, onLogin, t]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -161,34 +166,12 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string }) => {
     setGoogleLoading(true);
     try {
-      const response = await fetch(GOOGLE_API_URL, {
-        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-      });
-      const userInfo: GoogleUserInfo = await response.json();
-
+      // Send Google access token to our server
+      const { user } = await authApi.googleAuth(tokenResponse.access_token);
       haptic('medium');
-      const users = StorageService.getUsers();
-
-      // Check for existing user
-      const existingUser = users.find((u: User) => u.email === userInfo.email);
-      if (existingUser) {
-        onLogin(existingUser, 'google');
-        return;
-      }
-
-      // Create new Google user
-      const googleUser: User = {
-        id: `g${userInfo.sub}`,
-        name: userInfo.name,
-        email: userInfo.email,
-        avatarEmoji: '',
-        avatarColor: GOOGLE_AVATAR_COLOR
-      };
-
-      users.push(googleUser);
-      StorageService.setUsers(users);
-      onLogin(googleUser, 'google');
+      onLogin(user, 'google');
     } catch {
+      haptic('heavy');
       setError(t('unknownError'));
     } finally {
       setGoogleLoading(false);

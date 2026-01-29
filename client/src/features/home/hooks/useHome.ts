@@ -33,7 +33,7 @@ interface UseHomeParams {
   onCreateList: (list: List) => void;
   onDeleteList: (listId: string) => void;
   onEditList: (list: List) => void;
-  onJoinGroup: (code: string, password: string) => { success: boolean; error?: string };
+  onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onMarkNotificationsRead: (listId: string) => void;
   onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
 }
@@ -133,13 +133,13 @@ export const useHome = ({
   }, [newL, onCreateList, user, validateListName]);
 
   // ===== Join Group Handlers =====
-  const handleJoin = useCallback(() => {
+  const handleJoin = useCallback(async () => {
     setJoinError('');
     if (!joinCode.trim() || !joinPass.trim()) {
       setJoinError(t('enterCodeAndPassword'));
       return;
     }
-    const result = onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
+    const result = await onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
     if (result.success) {
       setShowJoin(false);
       setJoinCode('');
