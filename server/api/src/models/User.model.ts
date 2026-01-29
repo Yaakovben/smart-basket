@@ -83,8 +83,6 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// Note: email and googleId indexes are created by unique: true in schema definition
 
 export const User = mongoose.model<IUser>('User', userSchema);

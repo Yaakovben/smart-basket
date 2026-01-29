@@ -190,9 +190,8 @@ const listSchema = new Schema<IList>(
   }
 );
 
-// Indexes
+// Indexes (inviteCode index created by unique: true in schema)
 listSchema.index({ owner: 1 });
 listSchema.index({ 'members.user': 1 });
-listSchema.index({ inviteCode: 1 });
 
 export const List = mongoose.model<IList>('List', listSchema);
