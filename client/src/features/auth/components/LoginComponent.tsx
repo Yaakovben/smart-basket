@@ -236,60 +236,22 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {/* Password Strength Indicator - Only for new users */}
                 {isNewUser && password.length > 0 && (() => {
                   const strength = getPasswordStrength(password);
-                  const strengthIcons = ['🔓', '🔐', '🔒', '🛡️'];
-                  const strengthGradients = [
-                    'linear-gradient(90deg, #EF4444, #F87171)',
-                    'linear-gradient(90deg, #F59E0B, #FBBF24)',
-                    'linear-gradient(90deg, #10B981, #34D399)'
-                  ];
+                  const colors = ['#EF4444', '#F59E0B', '#10B981'];
                   return (
                     <Box sx={{
-                      mt: 1.5,
-                      p: 1.5,
-                      bgcolor: 'rgba(0,0,0,0.02)',
-                      borderRadius: '12px',
-                      border: '1px solid',
-                      borderColor: 'divider'
+                      mt: 1,
+                      height: 4,
+                      borderRadius: 2,
+                      bgcolor: 'action.disabledBackground',
+                      overflow: 'hidden'
                     }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                          <Box sx={{
-                            fontSize: 16,
-                            animation: strength.strength === 3 ? 'pulse 1s ease-in-out infinite' : 'none',
-                            '@keyframes pulse': {
-                              '0%, 100%': { transform: 'scale(1)' },
-                              '50%': { transform: 'scale(1.15)' }
-                            }
-                          }}>
-                            {strengthIcons[strength.strength]}
-                          </Box>
-                          <Typography sx={{ fontSize: 12, fontWeight: 600, color: strength.color }}>
-                            {strength.text}
-                          </Typography>
-                        </Box>
-                        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                          {password.length} תווים
-                        </Typography>
-                      </Box>
                       <Box sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: 'action.disabledBackground',
-                        overflow: 'hidden',
-                        position: 'relative'
-                      }}>
-                        <Box sx={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 0,
-                          height: '100%',
-                          width: `${(strength.strength / 3) * 100}%`,
-                          background: strengthGradients[strength.strength - 1] || 'transparent',
-                          borderRadius: 3,
-                          transition: 'width 0.3s ease, background 0.3s ease',
-                          boxShadow: strength.strength === 3 ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
-                        }} />
-                      </Box>
+                        height: '100%',
+                        width: `${(strength.strength / 3) * 100}%`,
+                        bgcolor: colors[strength.strength - 1] || 'transparent',
+                        borderRadius: 2,
+                        transition: 'width 0.3s ease, background-color 0.3s ease'
+                      }} />
                     </Box>
                   );
                 })()}

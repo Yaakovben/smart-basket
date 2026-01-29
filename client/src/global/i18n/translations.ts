@@ -459,7 +459,7 @@ export const translations: Record<Language, Translations> = {
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
-    quickAddPlaceholder: 'הוסף מוצר מהיר...'
+    quickAddPlaceholder: 'הוספת מוצר מהירה...'
   },
   en: {
     // General
