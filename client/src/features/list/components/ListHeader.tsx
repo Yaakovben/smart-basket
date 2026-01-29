@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Grow, Collapse } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
@@ -150,9 +150,25 @@ export const ListHeader = memo(({
             sx={{
               ...glassButtonSx,
               bgcolor: showSearch ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              position: 'relative',
+              // Subtle ring animation when search is open to indicate toggle
+              ...(showSearch && {
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  inset: -2,
+                  borderRadius: '50%',
+                  border: '2px solid rgba(255,255,255,0.4)',
+                  animation: 'searchPulse 2s ease-in-out infinite',
+                  '@keyframes searchPulse': {
+                    '0%, 100%': { opacity: 0.4, transform: 'scale(1)' },
+                    '50%': { opacity: 0.8, transform: 'scale(1.05)' }
+                  }
+                }
+              })
             }}
-            aria-label={t('search')}
+            aria-label={showSearch ? t('close') : t('search')}
           >
             <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
@@ -217,6 +233,11 @@ export const ListHeader = memo(({
             onChange={(e) => setQuickAddValue(e.target.value)}
             onKeyDown={handleKeyDown}
             size="small"
+            inputProps={{
+              autoCapitalize: 'sentences',
+              autoCorrect: 'off',
+              spellCheck: false
+            }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 bgcolor: '#ffffff',
@@ -229,7 +250,7 @@ export const ListHeader = memo(({
                 }
               },
               '& .MuiOutlinedInput-input': {
-                fontSize: 15,
+                fontSize: 16, // Prevents iOS zoom on focus
                 py: 1.5
               }
             }}
@@ -240,32 +261,63 @@ export const ListHeader = memo(({
                 </InputAdornment>
               ),
               endAdornment: (
-                <InputAdornment position="end">
-                  <Grow in={quickAddValue.trim().length >= 2}>
+                <InputAdornment position="end" sx={{ gap: 0.5 }}>
+                  {/* Clear button - only shown when there's text */}
+                  {quickAddValue && (
                     <IconButton
-                      onClick={handleQuickAdd}
-                      sx={{
-                        background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-                        color: 'white',
-                        width: 40,
-                        height: 40,
-                        borderRadius: '10px',
-                        boxShadow: '0 2px 6px rgba(20, 184, 166, 0.35)',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
-                          boxShadow: '0 3px 10px rgba(20, 184, 166, 0.45)'
-                        },
-                        '&:active': {
-                          transform: 'scale(0.92)',
-                          boxShadow: '0 1px 3px rgba(20, 184, 166, 0.3)'
-                        }
+                      onClick={() => {
+                        setQuickAddValue('');
+                        inputRef.current?.focus();
                       }}
-                      aria-label={t('add')}
+                      size="small"
+                      sx={{
+                        color: 'text.secondary',
+                        p: 0.5
+                      }}
+                      aria-label={t('close')}
                     >
-                      <AddIcon sx={{ fontSize: 22 }} />
+                      <CloseIcon sx={{ fontSize: 18 }} />
                     </IconButton>
-                  </Grow>
+                  )}
+                  {/* Add button - always visible, disabled when < 2 chars */}
+                  <IconButton
+                    onClick={handleQuickAdd}
+                    disabled={quickAddValue.trim().length < 2}
+                    sx={{
+                      background: quickAddValue.trim().length >= 2
+                        ? 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)'
+                        : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
+                      color: 'white',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '10px',
+                      boxShadow: quickAddValue.trim().length >= 2
+                        ? '0 2px 6px rgba(20, 184, 166, 0.35)'
+                        : 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: quickAddValue.trim().length >= 2
+                          ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
+                          : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
+                        boxShadow: quickAddValue.trim().length >= 2
+                          ? '0 3px 10px rgba(20, 184, 166, 0.45)'
+                          : 'none'
+                      },
+                      '&:active': {
+                        transform: quickAddValue.trim().length >= 2 ? 'scale(0.92)' : 'none',
+                        boxShadow: quickAddValue.trim().length >= 2
+                          ? '0 1px 3px rgba(20, 184, 166, 0.3)'
+                          : 'none'
+                      },
+                      '&.Mui-disabled': {
+                        color: 'white',
+                        opacity: 0.7
+                      }
+                    }}
+                    aria-label={t('add')}
+                  >
+                    <AddIcon sx={{ fontSize: 22 }} />
+                  </IconButton>
                 </InputAdornment>
               ),
               'aria-label': t('quickAddPlaceholder')
