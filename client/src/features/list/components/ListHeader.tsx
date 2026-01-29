@@ -178,20 +178,17 @@ export const ListHeader = memo(({
                   <Grow in={quickAddValue.trim().length >= 2}>
                     <IconButton
                       onClick={handleQuickAdd}
+                      size="small"
                       sx={{
                         bgcolor: 'primary.main',
                         color: 'white',
-                        width: 44,
-                        height: 44,
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(20, 184, 166, 0.4)',
-                        '&:hover': { bgcolor: 'primary.dark' },
-                        '&:active': { transform: 'scale(0.95)' },
-                        transition: 'all 0.15s ease'
+                        width: 32,
+                        height: 32,
+                        '&:hover': { bgcolor: 'primary.dark' }
                       }}
                       aria-label={t('add')}
                     >
-                      <AddIcon sx={{ fontSize: 24 }} />
+                      <AddIcon sx={{ fontSize: 20 }} />
                     </IconButton>
                   </Grow>
                 </InputAdornment>
