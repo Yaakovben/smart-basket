@@ -153,6 +153,7 @@ AddProductModal.displayName = 'AddProductModal';
 // ===== Edit Product Modal =====
 interface EditProductModalProps {
   product: Product | null;
+  hasChanges: boolean;
   onClose: () => void;
   onSave: () => void;
   onUpdateField: <K extends keyof Product>(field: K, value: Product[K]) => void;
@@ -162,6 +163,7 @@ interface EditProductModalProps {
 
 export const EditProductModal = memo(({
   product,
+  hasChanges,
   onClose,
   onSave,
   onUpdateField,
@@ -235,7 +237,7 @@ export const EditProductModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave}>{t('save')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('save')}</Button>
     </Modal>
   );
 });

@@ -6,11 +6,11 @@ interface ToastProps {
   type?: ToastType;
 }
 
-const TOAST_CONFIG: Record<ToastType, { icon: string; bg: string; color: string }> = {
-  success: { icon: '✓', bg: 'rgba(34, 197, 94, 0.95)', color: 'white' },
-  error: { icon: '✕', bg: 'rgba(239, 68, 68, 0.95)', color: 'white' },
-  info: { icon: 'ℹ', bg: 'rgba(59, 130, 246, 0.95)', color: 'white' },
-  warning: { icon: '⚠', bg: 'rgba(245, 158, 11, 0.95)', color: 'white' }
+const TOAST_CONFIG: Record<ToastType, { accent: string; text: string }> = {
+  success: { accent: '#10B981', text: 'text.primary' },
+  error: { accent: '#EF4444', text: 'text.primary' },
+  info: { accent: '#3B82F6', text: 'text.primary' },
+  warning: { accent: '#F59E0B', text: 'text.primary' }
 };
 
 export const Toast = ({ msg, type = 'success' }: ToastProps) => {
@@ -22,7 +22,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
       open={!!msg}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       sx={{
-        top: 'max(16px, env(safe-area-inset-top))',
+        top: 'max(12px, env(safe-area-inset-top))',
         left: '50%',
         right: 'auto',
         transform: 'translateX(-50%)'
@@ -35,23 +35,33 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          px: 2,
-          py: 1.25,
-          bgcolor: config.bg,
-          color: config.color,
-          borderRadius: '24px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-          backdropFilter: 'blur(8px)',
-          animation: 'slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          '@keyframes slideDown': {
-            from: { transform: 'translateY(-100%)', opacity: 0 },
-            to: { transform: 'translateY(0)', opacity: 1 }
+          gap: 1.5,
+          pl: 0,
+          pr: 2.5,
+          py: 1,
+          bgcolor: 'background.paper',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          overflow: 'hidden',
+          animation: 'floatIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          '@keyframes floatIn': {
+            from: { transform: 'translateY(-20px) scale(0.95)', opacity: 0 },
+            to: { transform: 'translateY(0) scale(1)', opacity: 1 }
           }
         }}
       >
-        <Box sx={{ fontSize: 16, fontWeight: 700 }}>{config.icon}</Box>
-        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{msg}</Typography>
+        {/* Accent line */}
+        <Box
+          sx={{
+            width: 4,
+            alignSelf: 'stretch',
+            bgcolor: config.accent,
+            borderRadius: '4px 0 0 4px'
+          }}
+        />
+        <Typography sx={{ fontSize: 14, fontWeight: 500, color: config.text, py: 0.5 }}>
+          {msg}
+        </Typography>
       </Box>
     </Snackbar>
   );

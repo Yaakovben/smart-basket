@@ -66,6 +66,8 @@ export interface UseListReturn {
   items: Product[];
   allMembers: Member[];
   isOwner: boolean;
+  hasProductChanges: boolean;
+  hasListChanges: boolean;
 
   // Setters
   setFilter: (filter: ListFilter) => void;
@@ -100,6 +102,8 @@ export interface UseListReturn {
   toggleProduct: (productId: string) => void;
   deleteProduct: (productId: string) => void;
   saveEditedProduct: () => void;
+  openEditProduct: (product: Product) => void;
+  closeEditProduct: () => void;
   updateNewProductField: <K extends keyof NewProductForm>(field: K, value: NewProductForm[K]) => void;
   updateEditProductField: <K extends keyof Product>(field: K, value: Product[K]) => void;
   incrementQuantity: (type: 'new' | 'edit') => void;

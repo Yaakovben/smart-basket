@@ -59,6 +59,7 @@ export const useList = ({
   // ===== Modal Visibility State =====
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Product | null>(null);
+  const [originalEditProduct, setOriginalEditProduct] = useState<Product | null>(null);
   const [showDetails, setShowDetails] = useState<Product | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -105,6 +106,26 @@ export const useList = ({
     () => list.owner.id === user.id,
     [list.owner.id, user.id]
   );
+
+  // Change detection
+  const hasProductChanges = useMemo(() => {
+    if (!showEdit || !originalEditProduct) return false;
+    return (
+      showEdit.name !== originalEditProduct.name ||
+      showEdit.quantity !== originalEditProduct.quantity ||
+      showEdit.unit !== originalEditProduct.unit ||
+      showEdit.category !== originalEditProduct.category
+    );
+  }, [showEdit, originalEditProduct]);
+
+  const hasListChanges = useMemo(() => {
+    if (!editListData) return false;
+    return (
+      editListData.name !== list.name ||
+      editListData.icon !== list.icon ||
+      editListData.color !== list.color
+    );
+  }, [editListData, list.name, list.icon, list.color]);
 
   // ===== Effects =====
   useEffect(() => {
@@ -225,14 +246,25 @@ export const useList = ({
   }, [list.products, updateProducts, showToast, t]);
 
   const saveEditedProduct = useCallback(() => {
-    if (!showEdit) return;
+    if (!showEdit || !hasProductChanges) return;
     haptic('medium');
     updateProducts(
       list.products.map((p: Product) => (p.id === showEdit.id ? showEdit : p))
     );
     setShowEdit(null);
+    setOriginalEditProduct(null);
     showToast(t('saved'));
-  }, [showEdit, list.products, updateProducts, showToast, t]);
+  }, [showEdit, hasProductChanges, list.products, updateProducts, showToast, t]);
+
+  const openEditProduct = useCallback((product: Product) => {
+    setShowEdit({ ...product });
+    setOriginalEditProduct({ ...product });
+  }, []);
+
+  const closeEditProduct = useCallback(() => {
+    setShowEdit(null);
+    setOriginalEditProduct(null);
+  }, []);
 
   // ===== Form Update Handlers =====
   const updateNewProductField = useCallback(<K extends keyof NewProductForm>(
@@ -278,11 +310,11 @@ export const useList = ({
   }, [list.name, list.icon, list.color]);
 
   const saveListChanges = useCallback(() => {
-    if (!editListData) return;
+    if (!editListData || !hasListChanges) return;
     onUpdateList({ ...list, ...editListData });
     setShowEditList(false);
     showToast(t('saved'));
-  }, [list, editListData, onUpdateList, showToast, t]);
+  }, [list, editListData, hasListChanges, onUpdateList, showToast, t]);
 
   const handleDeleteList = useCallback(() => {
     onDeleteList(list.id);
@@ -344,6 +376,8 @@ export const useList = ({
     items,
     allMembers,
     isOwner,
+    hasProductChanges,
+    hasListChanges,
 
     // Setters
     setFilter,
@@ -378,6 +412,8 @@ export const useList = ({
     toggleProduct,
     deleteProduct,
     saveEditedProduct,
+    openEditProduct,
+    closeEditProduct,
     updateNewProductField,
     updateEditProductField,
     incrementQuantity,

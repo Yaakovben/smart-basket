@@ -36,16 +36,16 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
     fabPosition, isDragging,
     // Computed
-    pending, purchased, items, allMembers, isOwner,
+    pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     // Setters
-    setFilter, setShowAdd, setShowEdit, setShowDetails,
+    setFilter, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
     setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
     // Handlers
     handleDragStart, handleDragMove, handleDragEnd, dismissHint,
     handleAdd, handleQuickAdd, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,
-    toggleProduct, deleteProduct, saveEditedProduct,
+    toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal
   } = useList({
@@ -114,7 +114,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
               onOpen={() => setOpenItemId(p.id)}
               onClose={() => setOpenItemId(null)}
               onToggle={() => toggleProduct(p.id)}
-              onEdit={() => setShowEdit({ ...p })}
+              onEdit={() => openEditProduct(p)}
               onDelete={() => deleteProduct(p.id)}
               onClick={() => { setShowDetails(p); dismissHint(); }}
             />
@@ -149,7 +149,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
 
       <EditProductModal
         product={showEdit}
-        onClose={() => setShowEdit(null)}
+        hasChanges={hasProductChanges}
+        onClose={closeEditProduct}
         onSave={saveEditedProduct}
         onUpdateField={updateEditProductField}
         onIncrement={() => incrementQuantity('edit')}
@@ -192,6 +193,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
         isOpen={showEditList}
         list={list}
         editData={editListData}
+        hasChanges={hasListChanges}
         onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
         onDelete={() => { setShowEditList(false); setConfirmDeleteList(true); }}

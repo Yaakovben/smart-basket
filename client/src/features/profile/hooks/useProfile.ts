@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../../../global/types';
 import type { EditProfileForm, UseProfileReturn } from '../types/profile-types';
@@ -19,6 +19,17 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
   const [editProfile, setEditProfile] = useState<EditProfileForm | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
+  // ===== Computed =====
+  const hasChanges = useMemo(() => {
+    if (!editProfile) return false;
+    return (
+      editProfile.name !== user.name ||
+      editProfile.email !== user.email ||
+      editProfile.avatarColor !== (user.avatarColor || DEFAULT_AVATAR_COLOR) ||
+      editProfile.avatarEmoji !== (user.avatarEmoji || '')
+    );
+  }, [editProfile, user]);
+
   // ===== Handlers =====
   const openEditProfile = useCallback(() => {
     setEditProfile({
@@ -30,11 +41,11 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
   }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
 
   const handleSave = useCallback(() => {
-    if (editProfile) {
+    if (editProfile && hasChanges) {
       onUpdateUser(editProfile);
       setEditProfile(null);
     }
-  }, [editProfile, onUpdateUser]);
+  }, [editProfile, hasChanges, onUpdateUser]);
 
   const handleLogout = useCallback(() => {
     onLogout();
@@ -56,6 +67,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     // State
     editProfile,
     confirmLogout,
+    hasChanges,
 
     // Setters
     setEditProfile,

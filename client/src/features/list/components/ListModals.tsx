@@ -21,8 +21,9 @@ const modalOverlaySx = {
   position: 'fixed',
   inset: 0,
   bgcolor: 'rgba(0,0,0,0.5)',
-  zIndex: 100,
-  backdropFilter: 'blur(4px)'
+  zIndex: 1000,
+  backdropFilter: 'blur(4px)',
+  touchAction: 'none'
 };
 
 const modalContainerSx = {
@@ -36,7 +37,10 @@ const modalContainerSx = {
   zIndex: 1001,
   width: '90%',
   maxWidth: 340,
-  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+  boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+  overscrollBehavior: 'contain',
+  maxHeight: '85vh',
+  overflowY: 'auto'
 };
 
 // ===== WhatsApp Icon =====
@@ -335,6 +339,7 @@ interface EditListModalProps {
   isOpen: boolean;
   list: List;
   editData: EditListForm | null;
+  hasChanges: boolean;
   onClose: () => void;
   onSave: () => void;
   onDelete: () => void;
@@ -345,6 +350,7 @@ export const EditListModal = memo(({
   isOpen,
   list,
   editData,
+  hasChanges,
   onClose,
   onSave,
   onDelete,
@@ -419,7 +425,7 @@ export const EditListModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave}>{t('saveChanges')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('saveChanges')}</Button>
       <Button
         fullWidth
         onClick={onDelete}

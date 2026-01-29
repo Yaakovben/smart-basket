@@ -36,7 +36,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   const { t } = useSettings();
 
   const {
-    editProfile, confirmLogout,
+    editProfile, confirmLogout, hasChanges,
     setConfirmLogout,
     openEditProfile, handleSave, handleLogout, updateEditField, closeEdit
   } = useProfile({ user, onUpdateUser, onLogout });
@@ -196,7 +196,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               <Button variant="outlined" onClick={closeEdit} sx={{ flex: 1 }}>
                 {t('cancel')}
               </Button>
-              <Button variant="contained" fullWidth sx={{ flex: 2 }} onClick={handleSave}>
+              <Button variant="contained" fullWidth sx={{ flex: 2 }} onClick={handleSave} disabled={!hasChanges}>
                 {t('saveChanges')}
               </Button>
             </Box>

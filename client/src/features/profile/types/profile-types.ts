@@ -11,6 +11,7 @@ export interface UseProfileReturn {
   // State
   editProfile: EditProfileForm | null;
   confirmLogout: boolean;
+  hasChanges: boolean;
 
   // Setters
   setEditProfile: (profile: EditProfileForm | null) => void;
