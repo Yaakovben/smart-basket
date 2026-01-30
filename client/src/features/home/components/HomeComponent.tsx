@@ -536,6 +536,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
               {myNotifications.map((n: ExtendedNotification) => {
                 const isLeave = n.type === 'leave';
+                const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
+                const dateStr = notificationDate ? notificationDate.toLocaleDateString('he-IL') : '';
+                const timeStr = notificationDate ? notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
                 return (
                   <Box key={n.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: '12px', border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
                     <Avatar sx={{ bgcolor: isLeave ? 'error.main' : 'success.main', width: 40, height: 40 }}>
@@ -546,6 +549,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                         {n.userName} {isLeave ? t('memberLeft') : t('memberJoined')}
                       </Typography>
                       <Typography sx={{ fontSize: 13, color: isLeave ? '#B91C1C' : '#15803D' }}>{n.listName}</Typography>
+                      {notificationDate && (
+                        <Typography sx={{ fontSize: 11, color: isLeave ? '#DC2626' : '#16A34A', mt: 0.5 }}>
+                          {dateStr} • {timeStr}
+                        </Typography>
+                      )}
                     </Box>
                     <IconButton
                       size="small"

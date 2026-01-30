@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Collapse } from '@mui/material';
 import { translations } from '../i18n/translations';
 import type { Language } from '../types';
 
@@ -25,15 +25,17 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  showDetails: boolean;
+  copied: boolean;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, showDetails: false, copied: false };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 
@@ -44,11 +46,43 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleReset = (): void => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, showDetails: false, copied: false });
   };
 
   handleRefresh = (): void => {
     window.location.reload();
+  };
+
+  toggleDetails = (): void => {
+    this.setState(prev => ({ showDetails: !prev.showDetails }));
+  };
+
+  copyErrorDetails = async (): Promise<void> => {
+    const { error } = this.state;
+    if (!error) return;
+
+    const errorDetails = `
+שגיאה: ${error.name}
+הודעה: ${error.message}
+זמן: ${new Date().toLocaleString('he-IL')}
+${error.stack ? `\nStack:\n${error.stack}` : ''}
+    `.trim();
+
+    try {
+      await navigator.clipboard.writeText(errorDetails);
+      this.setState({ copied: true });
+      setTimeout(() => this.setState({ copied: false }), 2000);
+    } catch {
+      // Fallback for browsers that don't support clipboard
+      const textArea = document.createElement('textarea');
+      textArea.value = errorDetails;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      this.setState({ copied: true });
+      setTimeout(() => this.setState({ copied: false }), 2000);
+    }
   };
 
   render(): ReactNode {
@@ -59,6 +93,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       const lang = getLanguage();
       const t = translations[lang];
+      const { error, showDetails, copied } = this.state;
 
       return (
         <Box
@@ -70,7 +105,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             justifyContent: 'center',
             p: 3,
             textAlign: 'center',
-            bgcolor: 'background.default'
+            bgcolor: 'background.default',
+            overflow: 'auto'
           }}
         >
           <Box
@@ -99,7 +135,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           >
             {t.errorDescription}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Button
               variant="outlined"
               onClick={this.handleReset}
@@ -115,6 +151,49 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               {t.refreshPage}
             </Button>
           </Box>
+
+          {/* Error details for mobile users to report */}
+          <Button
+            variant="text"
+            onClick={this.toggleDetails}
+            sx={{ color: 'text.secondary', fontSize: 13, mb: 1 }}
+          >
+            {showDetails ? 'הסתר פרטי שגיאה' : 'הצג פרטי שגיאה'}
+          </Button>
+
+          <Collapse in={showDetails}>
+            <Box
+              sx={{
+                bgcolor: 'rgba(0,0,0,0.05)',
+                borderRadius: '12px',
+                p: 2,
+                maxWidth: 320,
+                width: '100%',
+                textAlign: 'left',
+                mb: 2
+              }}
+            >
+              <Typography sx={{ fontSize: 12, color: 'error.main', fontFamily: 'monospace', wordBreak: 'break-word' }}>
+                {error?.name}: {error?.message}
+              </Typography>
+              {error?.stack && (
+                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace', mt: 1, maxHeight: 100, overflow: 'auto', wordBreak: 'break-word' }}>
+                  {error.stack.split('\n').slice(0, 5).join('\n')}
+                </Typography>
+              )}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={this.copyErrorDetails}
+                sx={{ mt: 1.5, fontSize: 12, borderRadius: '8px' }}
+              >
+                {copied ? 'הועתק!' : 'העתק פרטי שגיאה'}
+              </Button>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
+                העתק ושלח את פרטי השגיאה לתמיכה
+              </Typography>
+            </Box>
+          </Collapse>
         </Box>
       );
     }

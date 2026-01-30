@@ -1,4 +1,4 @@
-import apiClient, { setTokens, clearTokens, getRefreshToken } from './client';
+import apiClient, { setTokens, clearTokens, getRefreshToken, getAccessToken, setAuthInProgress } from './client';
 
 export interface User {
   id: string;
@@ -29,29 +29,55 @@ export interface RegisterData {
   password: string;
 }
 
+// Helper to save tokens and verify they were saved
+const saveAndVerifyTokens = (accessToken: string, refreshToken: string): void => {
+  setTokens(accessToken, refreshToken);
+  // Verify tokens were actually saved (some browsers/extensions may block localStorage)
+  const savedToken = getAccessToken();
+  if (!savedToken) {
+    throw new Error('Failed to save authentication tokens. Please check if localStorage is enabled.');
+  }
+};
+
 export const authApi = {
   // Register new user
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post<{ data: AuthResponse }>('/auth/register', data);
-    const { user, tokens } = response.data.data;
-    setTokens(tokens.accessToken, tokens.refreshToken);
-    return { user, tokens };
+    setAuthInProgress(true);
+    try {
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/register', data);
+      const { user, tokens } = response.data.data;
+      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
+      return { user, tokens };
+    } finally {
+      // Small delay to ensure state updates complete before allowing redirects
+      setTimeout(() => setAuthInProgress(false), 1000);
+    }
   },
 
   // Login with email/password
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await apiClient.post<{ data: AuthResponse }>('/auth/login', data);
-    const { user, tokens } = response.data.data;
-    setTokens(tokens.accessToken, tokens.refreshToken);
-    return { user, tokens };
+    setAuthInProgress(true);
+    try {
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/login', data);
+      const { user, tokens } = response.data.data;
+      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
+      return { user, tokens };
+    } finally {
+      setTimeout(() => setAuthInProgress(false), 1000);
+    }
   },
 
   // Login/Register with Google
   async googleAuth(accessToken: string): Promise<AuthResponse> {
-    const response = await apiClient.post<{ data: AuthResponse }>('/auth/google', { accessToken });
-    const { user, tokens } = response.data.data;
-    setTokens(tokens.accessToken, tokens.refreshToken);
-    return { user, tokens };
+    setAuthInProgress(true);
+    try {
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/google', { accessToken });
+      const { user, tokens } = response.data.data;
+      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
+      return { user, tokens };
+    } finally {
+      setTimeout(() => setAuthInProgress(false), 1000);
+    }
   },
 
   // Logout

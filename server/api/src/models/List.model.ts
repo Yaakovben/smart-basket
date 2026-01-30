@@ -92,7 +92,15 @@ const productSchema = new Schema<IProduct>(
       required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (_, ret) => {
+        const { _id, ...rest } = ret;
+        return { ...rest, id: _id.toString() };
+      },
+    },
+  }
 );
 
 const memberSchema = new Schema<IMember>(
@@ -114,30 +122,40 @@ const memberSchema = new Schema<IMember>(
   { _id: false }
 );
 
-const notificationSchema = new Schema<INotification>({
-  type: {
-    type: String,
-    enum: ['join', 'leave'],
-    required: true,
+const notificationSchema = new Schema<INotification>(
+  {
+    type: {
+      type: String,
+      enum: ['join', 'leave'],
+      required: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    userName: {
+      type: String,
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    read: {
+      type: Boolean,
+      default: false,
+    },
   },
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  userName: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-  read: {
-    type: Boolean,
-    default: false,
-  },
-});
+  {
+    toJSON: {
+      transform: (_, ret) => {
+        const { _id, ...rest } = ret;
+        return { ...rest, id: _id.toString() };
+      },
+    },
+  }
+);
 
 const listSchema = new Schema<IList>(
   {

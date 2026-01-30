@@ -68,8 +68,9 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
           fontSize: 14,
           fontWeight: 600,
           color: config.color,
-          whiteSpace: 'nowrap',
-          letterSpacing: '-0.01em'
+          whiteSpace: type === 'error' ? 'normal' : 'nowrap',
+          letterSpacing: '-0.01em',
+          maxWidth: type === 'error' ? 280 : 'none'
         }}>
           {msg}
         </Typography>

@@ -234,6 +234,9 @@ type TranslationKey =
   | 'continueWithGoogle'
   | 'newUserHint'
   | 'returningUserHint'
+  | 'loginOrRegisterHint'
+  | 'networkError'
+  | 'googleLoginError'
   // Share
   | 'shareListDescription'
   // Quick Add
@@ -477,6 +480,9 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'המשך עם Google',
     newUserHint: 'משתמש חדש? נרשם אותך אוטומטית',
     returningUserHint: 'שלום שוב! הזן סיסמה להתחברות',
+    loginOrRegisterHint: 'אם אתה משתמש חדש, הזן את שמך. אם יש לך חשבון, בדוק את הסיסמה.',
+    networkError: 'שגיאת חיבור לשרת',
+    googleLoginError: 'שגיאה בהתחברות עם Google',
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
@@ -717,6 +723,9 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'Continue with Google',
     newUserHint: 'New user? We\'ll register you automatically',
     returningUserHint: 'Welcome back! Enter password to login',
+    loginOrRegisterHint: 'If you\'re a new user, enter your name. If you have an account, check your password.',
+    networkError: 'Server connection error',
+    googleLoginError: 'Error signing in with Google',
     // Share
     shareListDescription: 'Share your shopping list',
     // Quick Add
@@ -957,6 +966,9 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'Продолжить с Google',
     newUserHint: 'Новый пользователь? Мы зарегистрируем вас автоматически',
     returningUserHint: 'С возвращением! Введите пароль для входа',
+    loginOrRegisterHint: 'Если вы новый пользователь, введите имя. Если у вас есть аккаунт, проверьте пароль.',
+    networkError: 'Ошибка подключения к серверу',
+    googleLoginError: 'Ошибка входа через Google',
     // Share
     shareListDescription: 'Поделитесь своим списком покупок',
     // Quick Add

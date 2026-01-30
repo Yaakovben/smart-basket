@@ -6,6 +6,10 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
+// Flag to prevent auto-redirect during active auth process
+let isAuthInProgress = false;
+export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
+
 // Create axios instance with timeout for mobile networks
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -83,8 +87,11 @@ apiClient.interceptors.response.use(
 
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
-        clearTokens();
-        window.location.href = '/login';
+        // Don't redirect if we're in the middle of authentication
+        if (!isAuthInProgress) {
+          clearTokens();
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
 
@@ -102,8 +109,11 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        clearTokens();
-        window.location.href = '/login';
+        // Don't redirect if we're in the middle of authentication
+        if (!isAuthInProgress) {
+          clearTokens();
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

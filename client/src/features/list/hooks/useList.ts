@@ -212,7 +212,7 @@ export const useList = ({
       unit: newProduct.unit,
       category: newProduct.category,
       isPurchased: false,
-      addedBy: user.id,
+      addedBy: user.name,
       createdDate: new Date().toLocaleDateString('he-IL'),
       createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
     };
@@ -272,7 +272,7 @@ export const useList = ({
       unit: 'יח׳',
       category: 'אחר',
       isPurchased: false,
-      addedBy: user.id,
+      addedBy: user.name,
       createdDate: new Date().toLocaleDateString('he-IL'),
       createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
     };

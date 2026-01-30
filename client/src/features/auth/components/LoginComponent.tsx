@@ -234,7 +234,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 />
 
                 {/* Password Strength Indicator - Only for new users */}
-                {isNewUser && password.length > 0 && (() => {
+                {name.trim() && password.length > 0 && (() => {
                   const strength = getPasswordStrength(password);
                   const colors = ['#EF4444', '#F59E0B', '#10B981'];
                   return (
@@ -259,7 +259,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {/* Helper text */}
                 {email && isValidEmail(email) && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
-                    {isNewUser ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
+                    {name.trim() ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
                   </Typography>
                 )}
 
@@ -279,7 +279,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   {emailLoading ? (
                     <CircularProgress size={20} sx={{ color: 'white' }} />
                   ) : (
-                    isNewUser ? t('register') : t('login')
+                    name.trim() ? t('register') : t('login')
                   )}
                 </Button>
               </form>
