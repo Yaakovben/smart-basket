@@ -22,6 +22,9 @@ export interface UseAuthReturn {
   isNewUser: boolean;
   showEmailForm: boolean;
   emailSuggestion: string | null;
+  emailChecked: boolean;
+  isGoogleAccount: boolean;
+  checkingEmail: boolean;
 
   // Setters
   setName: (name: string) => void;
@@ -39,6 +42,7 @@ export interface UseAuthReturn {
   toggleEmailForm: () => void;
   applySuggestion: () => void;
   isValidEmail: (email: string) => boolean;
+  checkEmailExists: () => Promise<void>;
 }
 
 // ===== Google User Info =====

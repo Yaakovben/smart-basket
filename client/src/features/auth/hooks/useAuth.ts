@@ -26,6 +26,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [emailLoading, setEmailLoading] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
+  const [emailChecked, setEmailChecked] = useState(false);
+  const [isGoogleAccount, setIsGoogleAccount] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   // ===== Validation =====
   const validateLoginForm = useCallback((): boolean => {
@@ -51,12 +54,36 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   }, [name, email, password, t]);
 
   // ===== Email Handlers =====
-  // Note: With API, we can't easily check if email exists beforehand
-  // So we'll always show name field and let the server handle it
-  const checkEmailExists = useCallback((emailToCheck: string) => {
-    if (!isValidEmail(emailToCheck)) return;
-    // Don't automatically set isNewUser - let the user decide or server response guide us
-  }, []);
+  // Check email existence via API
+  const checkEmailExists = useCallback(async () => {
+    if (!isValidEmail(email.trim())) {
+      setError(t('invalidEmail'));
+      return;
+    }
+
+    setCheckingEmail(true);
+    setError('');
+
+    try {
+      const result = await authApi.checkEmail(email.trim());
+      setEmailChecked(true);
+      setIsNewUser(!result.exists);
+      setIsGoogleAccount(result.isGoogleAccount);
+
+      if (result.isGoogleAccount) {
+        setError(t('useGoogleSignIn'));
+      }
+    } catch (err: unknown) {
+      const apiError = err as { code?: string; message?: string };
+      if (apiError.code === 'ERR_NETWORK') {
+        setError('שגיאת חיבור לשרת');
+      } else {
+        setError(apiError.message || t('unknownError'));
+      }
+    } finally {
+      setCheckingEmail(false);
+    }
+  }, [email, t]);
 
   // Debounce email suggestion to avoid showing while typing
   const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,7 +91,10 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
     setError('');
-    checkEmailExists(newEmail);
+    // Reset email check state when email changes
+    setEmailChecked(false);
+    setIsNewUser(false);
+    setIsGoogleAccount(false);
 
     // Clear previous suggestion immediately when typing
     setEmailSuggestion(null);
@@ -79,7 +109,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const suggestion = checkEmailDomainTypo(newEmail);
       setEmailSuggestion(suggestion);
     }, 500);
-  }, [checkEmailExists]);
+  }, []);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -96,15 +126,30 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const correctedEmail = `${localPart}@${emailSuggestion}`;
       setEmail(correctedEmail);
       setEmailSuggestion(null);
-      checkEmailExists(correctedEmail);
+      // Reset email check state when email changes
+      setEmailChecked(false);
+      setIsNewUser(false);
+      setIsGoogleAccount(false);
     }
-  }, [email, emailSuggestion, checkEmailExists]);
+  }, [email, emailSuggestion]);
 
   const handleEmailSubmit = useCallback(async () => {
     setError('');
 
-    // If name is provided, try to register first
-    if (name.trim()) {
+    // If email not checked yet, check it first
+    if (!emailChecked) {
+      await checkEmailExists();
+      return;
+    }
+
+    // If this is a Google account, show error
+    if (isGoogleAccount) {
+      setError(t('useGoogleSignIn'));
+      return;
+    }
+
+    // If new user, register
+    if (isNewUser) {
       if (!validateRegisterForm()) return;
 
       setEmailLoading(true);
@@ -114,8 +159,6 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           email: email.trim(),
           password
         });
-        // DEBUG: Show what we got back
-        console.log('[AUTH DEBUG] Register result:', result);
         if (!result || !result.user) {
           setError('שגיאה: לא התקבל מידע משתמש מהשרת');
           setEmailLoading(false);
@@ -123,60 +166,27 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         }
         const { user } = result;
         haptic('medium');
-        // DEBUG: Before calling onLogin
-        console.log('[AUTH DEBUG] Calling onLogin with user:', user.id, user.name);
         onLogin(user, 'email');
-        // DEBUG: After onLogin (should redirect, so this might not show)
-        console.log('[AUTH DEBUG] onLogin completed');
         return;
       } catch (registerError: unknown) {
-        const regError = registerError as { response?: { status?: number; data?: { message?: string; error?: string } } };
-        const regErrorMsg = regError.response?.data?.message || regError.response?.data?.error || '';
+        haptic('heavy');
+        const regApiError = registerError as { response?: { data?: { message?: string; error?: string } }; code?: string; message?: string };
+        const regErrorMsg = regApiError.response?.data?.message || regApiError.response?.data?.error || '';
 
-        // If email already exists (409 conflict), try to login instead
-        if (regError.response?.status === 409 ||
-            regErrorMsg?.toLowerCase().includes('already exists') ||
-            regErrorMsg?.toLowerCase().includes('already registered')) {
-          // Email exists, try login
-          try {
-            const { user } = await authApi.login({ email: email.trim(), password });
-            haptic('medium');
-            onLogin(user, 'email');
-            return;
-          } catch (loginError: unknown) {
-            const apiError = loginError as { response?: { status?: number; data?: { error?: string; message?: string } }; message?: string };
-            const errorMsg = apiError.response?.data?.message || apiError.response?.data?.error || '';
-
-            haptic('heavy');
-            if (apiError.message?.includes('localStorage')) {
-              setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
-            } else if (apiError.response?.status === 400 && errorMsg.toLowerCase().includes('google')) {
-              setError(t('useGoogleSignIn'));
-            } else {
-              setError(t('wrongPassword'));
-            }
-            setEmailLoading(false);
-            return;
-          }
+        if (regApiError.code === 'ERR_NETWORK') {
+          setError('שגיאת חיבור לשרת');
+        } else if (regApiError.message?.includes('localStorage')) {
+          setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
         } else {
-          haptic('heavy');
-          const regApiError = registerError as { code?: string; message?: string };
-          if (regApiError.code === 'ERR_NETWORK') {
-            setError('שגיאת חיבור לשרת');
-          } else if (regApiError.message?.includes('localStorage')) {
-            setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
-          } else {
-            setError(regErrorMsg || regApiError.message || t('unknownError'));
-          }
-          setEmailLoading(false);
-          return;
+          setError(regErrorMsg || regApiError.message || t('unknownError'));
         }
       } finally {
         setEmailLoading(false);
       }
+      return;
     }
 
-    // No name provided - try login
+    // Existing user - login
     if (!validateLoginForm()) return;
 
     setEmailLoading(true);
@@ -190,20 +200,14 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
       haptic('heavy');
 
-      // Check for network error
       if (apiError.code === 'ERR_NETWORK') {
         setError('שגיאת חיבור לשרת');
-      // Check for localStorage error
       } else if (apiError.message?.includes('localStorage')) {
         setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
-      // Check if user registered with Google (400 Bad Request with specific message)
       } else if (apiError.response?.status === 400 && errorMsg.toLowerCase().includes('google')) {
         setError(t('useGoogleSignIn'));
       } else if (apiError.response?.status === 401) {
-        // User doesn't exist or wrong password
-        // Show name field and ask user to fill it if they're new
-        setIsNewUser(true);
-        setError(t('loginOrRegisterHint'));
+        setError(t('wrongPassword'));
       } else if (errorMsg) {
         setError(errorMsg);
       } else {
@@ -212,7 +216,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     } finally {
       setEmailLoading(false);
     }
-  }, [email, password, name, validateLoginForm, validateRegisterForm, onLogin, t]);
+  }, [email, password, name, emailChecked, isNewUser, isGoogleAccount, validateLoginForm, validateRegisterForm, onLogin, t, checkEmailExists]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -273,6 +277,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     isNewUser,
     showEmailForm,
     emailSuggestion,
+    emailChecked,
+    isGoogleAccount,
+    checkingEmail,
 
     // Setters
     setName,
@@ -289,6 +296,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleGoogleError,
     toggleEmailForm,
     applySuggestion,
-    isValidEmail
+    isValidEmail,
+    checkEmailExists
   };
 };

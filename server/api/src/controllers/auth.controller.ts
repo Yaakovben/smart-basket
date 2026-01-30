@@ -1,9 +1,20 @@
 import type { Request, Response } from 'express';
 import { AuthService, TokenService } from '../services';
 import { asyncHandler, ApiError } from '../utils';
-import type { RegisterInput, LoginInput, GoogleAuthInput } from '../utils/validators';
+import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../utils/validators';
 
 export class AuthController {
+  // Check if email exists
+  static checkEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { email } = req.body as CheckEmailInput;
+    const result = await AuthService.checkEmail(email);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  });
+
   static register = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as RegisterInput;
     const ipAddress = req.ip || req.socket.remoteAddress;

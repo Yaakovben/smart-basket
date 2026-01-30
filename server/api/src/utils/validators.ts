@@ -16,6 +16,12 @@ export const loginSchema = z.object({
   }),
 });
 
+export const checkEmailSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email format'),
+  }),
+});
+
 export const googleAuthSchema = z.object({
   body: z.object({
     accessToken: z.string().min(1, 'Access token is required'),
@@ -120,6 +126,7 @@ export const reorderProductsSchema = z.object({
 // ===== Type exports =====
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
+export type CheckEmailInput = z.infer<typeof checkEmailSchema>['body'];
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>['body'];
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>['body'];
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>['body'];

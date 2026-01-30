@@ -23,6 +23,11 @@ export interface LoginData {
   password: string;
 }
 
+export interface CheckEmailResponse {
+  exists: boolean;
+  isGoogleAccount: boolean;
+}
+
 export interface RegisterData {
   name: string;
   email: string;
@@ -40,6 +45,12 @@ const saveAndVerifyTokens = (accessToken: string, refreshToken: string): void =>
 };
 
 export const authApi = {
+  // Check if email exists
+  async checkEmail(email: string): Promise<CheckEmailResponse> {
+    const response = await apiClient.post<{ data: CheckEmailResponse }>('/auth/check-email', { email });
+    return response.data.data;
+  },
+
   // Register new user
   async register(data: RegisterData): Promise<AuthResponse> {
     setAuthInProgress(true);

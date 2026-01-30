@@ -30,9 +30,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
   const {
     name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
+    emailChecked, isGoogleAccount, checkingEmail,
     setName, setPassword,
     handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
-    toggleEmailForm, applySuggestion, isValidEmail
+    toggleEmailForm, applySuggestion
   } = useAuth({ onLogin });
 
   const googleLogin = useGoogleLogin({
@@ -172,15 +173,26 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   placeholder="example@mail.com"
                   autoComplete="email"
                   size="small"
+                  disabled={emailChecked && !isGoogleAccount}
                   sx={{ mb: emailSuggestion ? 0.5 : 2, mt: 2 }}
                   inputProps={{ dir: 'ltr' }}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>
+                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>,
+                    endAdornment: emailChecked && !isGoogleAccount ? (
+                      <InputAdornment position="end">
+                        <Box
+                          onClick={() => handleEmailChange('')}
+                          sx={{ cursor: 'pointer', fontSize: 14, color: 'primary.main' }}
+                        >
+                          {t('change')}
+                        </Box>
+                      </InputAdornment>
+                    ) : undefined
                   }}
                 />
 
                 {/* Email Suggestion */}
-                {emailSuggestion && (
+                {emailSuggestion && !emailChecked && (
                   <Box
                     onClick={applySuggestion}
                     sx={{
@@ -201,8 +213,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   </Box>
                 )}
 
-                {/* Name Field - Only for new users */}
-                <Collapse in={isNewUser && email.length > 0}>
+                {/* Name Field - Only for new users after email check */}
+                <Collapse in={emailChecked && isNewUser}>
                   <TextField
                     fullWidth
                     label={t('name')}
@@ -218,48 +230,50 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   />
                 </Collapse>
 
-                {/* Password Field */}
-                <TextField
-                  fullWidth
-                  type="password"
-                  label={t('password')}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete={isNewUser ? 'new-password' : 'current-password'}
-                  size="small"
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
-                  }}
-                />
+                {/* Password Field - Only after email check and not Google account */}
+                <Collapse in={emailChecked && !isGoogleAccount}>
+                  <TextField
+                    fullWidth
+                    type="password"
+                    label={t('password')}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete={isNewUser ? 'new-password' : 'current-password'}
+                    size="small"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
+                    }}
+                  />
 
-                {/* Password Strength Indicator - Only for new users */}
-                {name.trim() && password.length > 0 && (() => {
-                  const strength = getPasswordStrength(password);
-                  const colors = ['#EF4444', '#F59E0B', '#10B981'];
-                  return (
-                    <Box sx={{
-                      mt: 1,
-                      height: 4,
-                      borderRadius: 2,
-                      bgcolor: 'action.disabledBackground',
-                      overflow: 'hidden'
-                    }}>
+                  {/* Password Strength Indicator - Only for new users */}
+                  {isNewUser && password.length > 0 && (() => {
+                    const strength = getPasswordStrength(password);
+                    const colors = ['#EF4444', '#F59E0B', '#10B981'];
+                    return (
                       <Box sx={{
-                        height: '100%',
-                        width: `${(strength.strength / 3) * 100}%`,
-                        bgcolor: colors[strength.strength - 1] || 'transparent',
+                        mt: 1,
+                        height: 4,
                         borderRadius: 2,
-                        transition: 'width 0.3s ease, background-color 0.3s ease'
-                      }} />
-                    </Box>
-                  );
-                })()}
+                        bgcolor: 'action.disabledBackground',
+                        overflow: 'hidden'
+                      }}>
+                        <Box sx={{
+                          height: '100%',
+                          width: `${(strength.strength / 3) * 100}%`,
+                          bgcolor: colors[strength.strength - 1] || 'transparent',
+                          borderRadius: 2,
+                          transition: 'width 0.3s ease, background-color 0.3s ease'
+                        }} />
+                      </Box>
+                    );
+                  })()}
+                </Collapse>
 
                 {/* Helper text */}
-                {email && isValidEmail(email) && (
+                {emailChecked && !isGoogleAccount && (
                   <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
-                    {name.trim() ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
+                    {isNewUser ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
                   </Typography>
                 )}
 
@@ -273,13 +287,17 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={emailLoading}
+                  disabled={emailLoading || checkingEmail || (emailChecked && isGoogleAccount)}
                   sx={{ mt: 2.5, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
                 >
-                  {emailLoading ? (
+                  {emailLoading || checkingEmail ? (
                     <CircularProgress size={20} sx={{ color: 'white' }} />
+                  ) : !emailChecked ? (
+                    t('continue')
+                  ) : isNewUser ? (
+                    t('register')
                   ) : (
-                    name.trim() ? t('register') : t('login')
+                    t('login')
                   )}
                 </Button>
               </form>

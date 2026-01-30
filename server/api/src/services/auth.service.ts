@@ -13,6 +13,20 @@ interface GoogleUserInfo {
 }
 
 export class AuthService {
+  // Check if email exists in the database
+  static async checkEmail(email: string): Promise<{ exists: boolean; isGoogleAccount: boolean }> {
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+googleId');
+
+    if (!user) {
+      return { exists: false, isGoogleAccount: false };
+    }
+
+    // Check if this is a Google-only account (no password)
+    const isGoogleAccount = !!(user.googleId && !user.password);
+
+    return { exists: true, isGoogleAccount };
+  }
+
   static async register(
     data: RegisterInput,
     ipAddress?: string,

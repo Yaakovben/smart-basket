@@ -235,6 +235,8 @@ type TranslationKey =
   | 'newUserHint'
   | 'returningUserHint'
   | 'loginOrRegisterHint'
+  | 'continue'
+  | 'change'
   | 'networkError'
   | 'googleLoginError'
   // Share
@@ -478,9 +480,11 @@ export const translations: Record<Language, Translations> = {
     refreshPage: 'רענן דף',
     // Auth
     continueWithGoogle: 'המשך עם Google',
-    newUserHint: 'משתמש חדש? נרשם אותך אוטומטית',
+    newUserHint: 'משתמש חדש? הזן שם וסיסמה להרשמה',
     returningUserHint: 'שלום שוב! הזן סיסמה להתחברות',
     loginOrRegisterHint: 'אם אתה משתמש חדש, הזן את שמך. אם יש לך חשבון, בדוק את הסיסמה.',
+    continue: 'המשך',
+    change: 'שנה',
     networkError: 'שגיאת חיבור לשרת',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     // Share
@@ -721,9 +725,11 @@ export const translations: Record<Language, Translations> = {
     refreshPage: 'Refresh Page',
     // Auth
     continueWithGoogle: 'Continue with Google',
-    newUserHint: 'New user? We\'ll register you automatically',
+    newUserHint: 'New user? Enter name and password to register',
     returningUserHint: 'Welcome back! Enter password to login',
     loginOrRegisterHint: 'If you\'re a new user, enter your name. If you have an account, check your password.',
+    continue: 'Continue',
+    change: 'Change',
     networkError: 'Server connection error',
     googleLoginError: 'Error signing in with Google',
     // Share
@@ -964,9 +970,11 @@ export const translations: Record<Language, Translations> = {
     refreshPage: 'Обновить страницу',
     // Auth
     continueWithGoogle: 'Продолжить с Google',
-    newUserHint: 'Новый пользователь? Мы зарегистрируем вас автоматически',
+    newUserHint: 'Новый пользователь? Введите имя и пароль для регистрации',
     returningUserHint: 'С возвращением! Введите пароль для входа',
     loginOrRegisterHint: 'Если вы новый пользователь, введите имя. Если у вас есть аккаунт, проверьте пароль.',
+    continue: 'Продолжить',
+    change: 'Изменить',
     networkError: 'Ошибка подключения к серверу',
     googleLoginError: 'Ошибка входа через Google',
     // Share
