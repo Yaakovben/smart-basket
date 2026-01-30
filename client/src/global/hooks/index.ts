@@ -148,6 +148,7 @@ const convertApiList = (apiList: ApiList): List => ({
     addedBy: p.addedBy,
   })),
   inviteCode: apiList.inviteCode,
+  password: apiList.password,
   notifications: apiList.notifications,
 });
 

@@ -49,6 +49,7 @@ export interface List {
   members: Member[];
   products: Product[];
   inviteCode?: string;
+  password?: string;
   notifications: Notification[];
   createdAt: string;
   updatedAt: string;
