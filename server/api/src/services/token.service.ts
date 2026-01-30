@@ -15,8 +15,8 @@ export class TokenService {
     return crypto.randomBytes(64).toString('hex');
   }
 
-  static async createTokens(userId: string, email: string): Promise<AuthTokens> {
-    const payload: TokenPayload = { userId, email };
+  static async createTokens(userId: string, email: string, name: string): Promise<AuthTokens> {
+    const payload: TokenPayload = { userId, email, name };
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken();
 
@@ -43,12 +43,13 @@ export class TokenService {
       return null;
     }
 
-    const user = tokenDoc.user as unknown as { _id: string; email: string };
+    const user = tokenDoc.user as unknown as { _id: string; email: string; name: string };
     const userId = user._id.toString();
     const email = user.email;
+    const name = user.name;
 
     // Generate new tokens
-    const newAccessToken = this.generateAccessToken({ userId, email });
+    const newAccessToken = this.generateAccessToken({ userId, email, name });
     const newRefreshToken = this.generateRefreshToken();
 
     // Update refresh token in database

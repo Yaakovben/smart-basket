@@ -3,11 +3,13 @@ import type { Socket } from 'socket.io';
 export interface AuthenticatedSocket extends Socket {
   userId?: string;
   email?: string;
+  userName?: string;
 }
 
 export interface TokenPayload {
   userId: string;
   email: string;
+  name: string;
 }
 
 // Socket events from client to server

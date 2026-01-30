@@ -48,6 +48,7 @@ interface UseListParams {
   list: List;
   user: User;
   onUpdateList: (list: List) => void;
+  onUpdateListLocal: (list: List) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   onBack: () => void;
@@ -58,6 +59,7 @@ export const useList = ({
   list,
   user,
   onUpdateList,
+  onUpdateListLocal,
   onLeaveList,
   onDeleteList,
   onBack,
@@ -176,9 +178,10 @@ export const useList = ({
   }, []);
 
   // ===== Product Handlers =====
+  // Use onUpdateListLocal for optimistic updates (doesn't call API)
   const updateProducts = useCallback((products: Product[]) => {
-    onUpdateList({ ...list, products });
-  }, [list, onUpdateList]);
+    onUpdateListLocal({ ...list, products });
+  }, [list, onUpdateListLocal]);
 
   const validateProduct = useCallback((): boolean => {
     const result = validateForm(newProductSchema, {
@@ -479,8 +482,8 @@ export const useList = ({
         try {
           // Call API to remove member
           await listsApi.removeMember(list.id, memberId);
-          // Update local state
-          onUpdateList({
+          // Update local state (without API call since we already called the API)
+          onUpdateListLocal({
             ...list,
             members: list.members.filter((m: Member) => m.id !== memberId)
           });
@@ -493,7 +496,7 @@ export const useList = ({
         }
       }
     });
-  }, [list, onUpdateList, showToast, t]);
+  }, [list, onUpdateListLocal, showToast, t]);
 
   const leaveList = useCallback(() => {
     setConfirm({

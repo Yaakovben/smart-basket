@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
 export interface TokenPayload {
   userId: string;
   email: string;
+  name: string;
 }
 
 export interface AuthTokens {

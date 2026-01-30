@@ -20,13 +20,14 @@ interface ListPageProps {
   user: User;
   onBack: () => void;
   onUpdateList: (list: List) => void;
+  onUpdateListLocal: (list: List) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   showToast: (message: string) => void;
 }
 
 // ===== Main Component =====
-export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
+export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
   const { t } = useSettings();
 
   const {
@@ -49,7 +50,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onLeaveList, on
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal
   } = useList({
-    list, user, onUpdateList, onLeaveList, onDeleteList, onBack, showToast
+    list, user, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, onBack, showToast
   });
 
   return (

@@ -43,6 +43,7 @@ const ListPageWrapper = ({
   lists,
   user,
   updateList,
+  updateListLocal,
   leaveList,
   deleteList,
   showToast,
@@ -50,6 +51,7 @@ const ListPageWrapper = ({
   lists: List[];
   user: User;
   updateList: (list: List) => void;
+  updateListLocal: (list: List) => void;
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
   showToast: (msg: string, type?: ToastType) => void;
@@ -67,6 +69,7 @@ const ListPageWrapper = ({
       user={user}
       onBack={() => navigate("/")}
       onUpdateList={updateList}
+      onUpdateListLocal={updateListLocal}
       onLeaveList={(id: string) => {
         leaveList(id);
         showToast(t('left'));
@@ -89,7 +92,7 @@ export const AppRouter = () => {
 
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
-  const { lists, createList, updateList, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
+  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast } = useToast();
 
   // Create list names map for notifications
@@ -175,6 +178,7 @@ export const AppRouter = () => {
                 lists={lists}
                 user={user!}
                 updateList={updateList}
+                updateListLocal={updateListLocal}
                 leaveList={leaveList}
                 deleteList={deleteList}
                 showToast={showToast}

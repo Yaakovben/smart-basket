@@ -38,7 +38,8 @@ export class AuthService {
     // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
-      user.email
+      user.email,
+      user.name
     );
 
     // Log activity
@@ -89,7 +90,8 @@ export class AuthService {
     // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
-      user.email
+      user.email,
+      user.name
     );
 
     // Log activity
@@ -157,7 +159,8 @@ export class AuthService {
     // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
-      user.email
+      user.email,
+      user.name
     );
 
     // Log activity

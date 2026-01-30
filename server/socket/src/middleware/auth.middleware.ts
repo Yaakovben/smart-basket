@@ -17,6 +17,7 @@ export const authenticateSocket = (
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
     (socket as AuthenticatedSocket).userId = decoded.userId;
     (socket as AuthenticatedSocket).email = decoded.email;
+    (socket as AuthenticatedSocket).userName = decoded.name;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

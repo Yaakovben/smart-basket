@@ -30,7 +30,7 @@ export const registerListHandlers = (
     socket.to(`list:${listId}`).emit('user:joined', {
       listId,
       userId,
-      userName: socket.email || 'Unknown',
+      userName: socket.userName || 'Unknown',
       timestamp: new Date(),
     });
   });
@@ -48,7 +48,7 @@ export const registerListHandlers = (
     socket.to(`list:${listId}`).emit('user:left', {
       listId,
       userId,
-      userName: socket.email || 'Unknown',
+      userName: socket.userName || 'Unknown',
       timestamp: new Date(),
     });
   });
@@ -62,7 +62,7 @@ export const registerListHandlers = (
         socket.to(`list:${listId}`).emit('user:left', {
           listId,
           userId,
-          userName: socket.email || 'Unknown',
+          userName: socket.userName || 'Unknown',
           timestamp: new Date(),
         });
       }

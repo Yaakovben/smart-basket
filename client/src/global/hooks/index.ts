@@ -203,6 +203,16 @@ export function useLists(user: User | null) {
     [],
   );
 
+  // Update list locally without API call (for optimistic updates)
+  const updateListLocal = useCallback(
+    (updatedList: List) => {
+      setLists((prev) =>
+        prev.map((l) => (l.id === updatedList.id ? updatedList : l)),
+      );
+    },
+    [],
+  );
+
   const updateList = useCallback(
     async (updatedList: List) => {
       try {
@@ -404,6 +414,7 @@ export function useLists(user: User | null) {
     loading,
     createList,
     updateList,
+    updateListLocal,
     deleteList,
     joinGroup,
     leaveList,
