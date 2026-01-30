@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { User, List, Member, LoginMethod } from "../types";
+import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
@@ -128,6 +128,19 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
   isAdmin: apiMember.isAdmin,
 });
 
+// Helper to convert API product to client Product type
+const convertApiProduct = (p: ApiList['products'][0]): Product => ({
+  id: p.id,
+  name: p.name,
+  quantity: p.quantity,
+  unit: p.unit,
+  category: p.category,
+  isPurchased: p.isPurchased,
+  addedBy: p.addedBy,
+  createdDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString('he-IL') : undefined,
+  createdTime: p.createdAt ? new Date(p.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : undefined,
+});
+
 // Helper to convert API list to client List type
 const convertApiList = (apiList: ApiList): List => ({
   id: apiList.id,
@@ -143,15 +156,7 @@ const convertApiList = (apiList: ApiList): List => ({
     avatarEmoji: apiList.owner.avatarEmoji,
   },
   members: apiList.members.map(convertApiMember),
-  products: apiList.products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    quantity: p.quantity,
-    unit: p.unit,
-    category: p.category,
-    isPurchased: p.isPurchased,
-    addedBy: p.addedBy,
-  })),
+  products: apiList.products.map(convertApiProduct),
   inviteCode: apiList.inviteCode,
   password: apiList.password,
   notifications: apiList.notifications,

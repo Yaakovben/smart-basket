@@ -321,6 +321,7 @@ export const useList = ({
     if (!product) return;
 
     const newIsPurchased = !product.isPurchased;
+    const previousProducts = [...list.products];
 
     updateProducts(
       list.products.map((p: Product) =>
@@ -332,18 +333,17 @@ export const useList = ({
 
     try {
       // Call API to toggle product
-      await productsApi.togglePurchased(list.id, productId);
+      const updatedList = await productsApi.togglePurchased(list.id, productId);
+
+      // Update with server response to ensure consistency
+      updateProducts(updatedList.products.map(convertApiProduct));
 
       // Emit socket event to notify other users
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
       console.error('Failed to toggle product:', error);
       // Revert optimistic update on error
-      updateProducts(
-        list.products.map((p: Product) =>
-          p.id === productId ? { ...p, isPurchased: product.isPurchased } : p
-        )
-      );
+      updateProducts(previousProducts);
       showToast(t('unknownError'), 'error');
     }
   }, [list.id, list.products, user.name, updateProducts, showToast, t, dismissHint]);
