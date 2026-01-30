@@ -67,14 +67,18 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = getAccessToken();
+      console.log('[HOOKS DEBUG] checkAuth running, token exists:', !!token);
       if (token) {
         try {
+          console.log('[HOOKS DEBUG] Fetching profile...');
           const profile = await authApi.getProfile();
+          console.log('[HOOKS DEBUG] Profile fetched:', profile?.id, profile?.name);
           setUser(profile);
           // Connect socket when authenticated
           socketService.connect();
-        } catch {
+        } catch (err) {
           // Token invalid, clear it
+          console.log('[HOOKS DEBUG] Profile fetch failed, clearing tokens:', err);
           clearTokens();
         }
       }
@@ -85,10 +89,13 @@ export function useAuth() {
 
   const login = useCallback(
     (userData: User, _loginMethod: LoginMethod = "email") => {
+      console.log('[HOOKS DEBUG] login() called, setting user:', userData?.id, userData?.name);
       setUser(userData);
+      console.log('[HOOKS DEBUG] setUser completed');
       // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
       socketService.connect();
+      console.log('[HOOKS DEBUG] socket connect called');
     },
     [],
   );

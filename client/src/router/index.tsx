@@ -106,8 +106,11 @@ export const AppRouter = () => {
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
+    console.log('[ROUTER DEBUG] handleLogin called with user:', u?.id, u?.name);
     login(u, loginMethod);
+    console.log('[ROUTER DEBUG] login() completed, about to navigate');
     navigate("/");
+    console.log('[ROUTER DEBUG] navigate("/") called');
   };
 
   const handleLogout = () => {

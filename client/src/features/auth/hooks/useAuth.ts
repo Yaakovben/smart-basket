@@ -109,13 +109,25 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
       setEmailLoading(true);
       try {
-        const { user } = await authApi.register({
+        const result = await authApi.register({
           name: name.trim(),
           email: email.trim(),
           password
         });
+        // DEBUG: Show what we got back
+        console.log('[AUTH DEBUG] Register result:', result);
+        if (!result || !result.user) {
+          setError('שגיאה: לא התקבל מידע משתמש מהשרת');
+          setEmailLoading(false);
+          return;
+        }
+        const { user } = result;
         haptic('medium');
+        // DEBUG: Before calling onLogin
+        console.log('[AUTH DEBUG] Calling onLogin with user:', user.id, user.name);
         onLogin(user, 'email');
+        // DEBUG: After onLogin (should redirect, so this might not show)
+        console.log('[AUTH DEBUG] onLogin completed');
         return;
       } catch (registerError: unknown) {
         const regError = registerError as { response?: { status?: number; data?: { message?: string; error?: string } } };
