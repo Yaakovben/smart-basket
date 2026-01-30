@@ -13,12 +13,6 @@ interface ProductEventData {
   userName: string;
 }
 
-interface UserEventData {
-  listId: string;
-  userId: string;
-  userName: string;
-}
-
 export function useSocketNotifications(
   user: User | null,
   showToast: (message: string) => void,
@@ -28,7 +22,7 @@ export function useSocketNotifications(
   const notificationSettings = settings.notifications;
 
   const shouldShowNotification = useCallback((
-    eventType: 'productAdd' | 'productDelete' | 'productEdit' | 'productPurchase' | 'groupJoin' | 'groupLeave'
+    eventType: 'productAdd' | 'productDelete' | 'productEdit' | 'productPurchase'
   ): boolean => {
     if (!notificationSettings.enabled) return false;
     return notificationSettings[eventType] ?? false;
@@ -88,37 +82,16 @@ export function useSocketNotifications(
       }
     });
 
-    // User joined notification
-    const unsubUserJoined = socketService.on('user:joined', (data: unknown) => {
-      const event = data as UserEventData;
-      if (event.userId === user.id) return;
-
-      if (shouldShowNotification('groupJoin')) {
-        const listName = listNames[event.listId] || '';
-        const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message);
-      }
-    });
-
-    // User left notification
-    const unsubUserLeft = socketService.on('user:left', (data: unknown) => {
-      const event = data as UserEventData;
-      if (event.userId === user.id) return;
-
-      if (shouldShowNotification('groupLeave')) {
-        const listName = listNames[event.listId] || '';
-        const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message);
-      }
-    });
+    // Note: user:joined and user:left socket events are for real-time presence tracking only
+    // They fire on every login/logout and socket reconnection, NOT for actual group membership changes
+    // Actual group join/leave notifications are stored in the list's notifications array
+    // and shown in the notifications modal, not as toasts
 
     return () => {
       unsubProductAdded();
       unsubProductUpdated();
       unsubProductDeleted();
       unsubProductToggled();
-      unsubUserJoined();
-      unsubUserLeft();
     };
   }, [user?.id, shouldShowNotification, showToast, t, listNames]);
 }

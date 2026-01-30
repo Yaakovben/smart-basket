@@ -81,8 +81,8 @@ interface SettingsPageProps {
 export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_CONFIG.adminEmail;
+  const { user, loading: authLoading } = useAuth();
+  const isAdmin = !authLoading && user?.email === ADMIN_CONFIG.adminEmail;
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,
@@ -116,17 +116,12 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
           </Box>
 
           <Collapse in={settings.notifications.enabled && notificationsExpanded}>
-            <Box sx={{ bgcolor: 'background.default', py: 1 }}>
-              <Typography sx={{ px: 2, py: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
-              <Box sx={subSettingRowSx}>
-                <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberJoined')}</Typography>
-                <Switch checked={settings.notifications.groupJoin} onChange={(e) => updateNotifications({ groupJoin: e.target.checked })} sx={smallSwitchSx} />
+            <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
+              {/* Product Notifications Section */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
               </Box>
-              <Box sx={{ ...subSettingRowSx, borderBottom: 'none' }}>
-                <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberLeft')}</Typography>
-                <Switch checked={settings.notifications.groupLeave} onChange={(e) => updateNotifications({ groupLeave: e.target.checked })} sx={smallSwitchSx} />
-              </Box>
-              <Typography sx={{ px: 2, py: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productAdded')}</Typography>
                 <Switch checked={settings.notifications.productAdd} onChange={(e) => updateNotifications({ productAdd: e.target.checked })} sx={smallSwitchSx} />

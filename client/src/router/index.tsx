@@ -1,4 +1,5 @@
-import { lazy, Suspense, useMemo, useEffect, useRef } from "react";
+import { lazy, Suspense, useMemo } from "react";
+import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
@@ -95,19 +96,6 @@ export const AppRouter = () => {
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast } = useToast();
 
-  // Track pending navigation after login
-  const pendingNavigationRef = useRef<string | null>(null);
-
-  // Navigate when user state changes (after login)
-  useEffect(() => {
-    if (user && pendingNavigationRef.current) {
-      console.log('[ROUTER DEBUG] User state updated, navigating to:', pendingNavigationRef.current);
-      const destination = pendingNavigationRef.current;
-      pendingNavigationRef.current = null;
-      navigate(destination);
-    }
-  }, [user, navigate]);
-
   // Create list names map for notifications
   const listNames = useMemo(() =>
     lists.reduce((acc, list) => ({ ...acc, [list.id]: list.name }), {} as Record<string, string>),
@@ -120,9 +108,13 @@ export const AppRouter = () => {
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
     console.log('[ROUTER DEBUG] handleLogin called with user:', u?.id, u?.name);
-    pendingNavigationRef.current = "/";
-    login(u, loginMethod);
-    console.log('[ROUTER DEBUG] login() called, pending navigation set');
+    // Use flushSync to ensure user state is updated before navigation
+    // This prevents race condition where navigation happens before state update
+    flushSync(() => {
+      login(u, loginMethod);
+    });
+    navigate("/");
+    console.log('[ROUTER DEBUG] login() and navigate() called');
   };
 
   const handleLogout = () => {

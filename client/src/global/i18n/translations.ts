@@ -288,7 +288,7 @@ export const translations: Record<Language, Translations> = {
     allRightsReserved: 'כל הזכויות שמורות',
     // Home
     hello: 'שלום,',
-    search: 'חפש...',
+    search: 'חיפוש רשימה...',
     all: 'הכל',
     myLists: 'שלי',
     groups: 'קבוצות',
