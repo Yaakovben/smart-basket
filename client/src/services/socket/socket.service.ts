@@ -3,6 +3,16 @@ import { getAccessToken } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
+// Reconnection config optimized for mobile
+const RECONNECTION_CONFIG = {
+  reconnection: true,
+  reconnectionAttempts: 20,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 10000,
+  randomizationFactor: 0.5,
+  timeout: 20000,
+};
+
 // Socket event types
 export interface UserEventData {
   listId: string;
@@ -57,6 +67,8 @@ type SocketEventHandler<T> = (data: T) => void;
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<SocketEventHandler<unknown>>> = new Map();
+  private joinedLists: Set<string> = new Set();
+  private visibilityHandler: (() => void) | null = null;
 
   connect() {
     const token = getAccessToken();
@@ -72,20 +84,30 @@ class SocketService {
     this.socket = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 15,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 10000,
-      randomizationFactor: 0.5,
-      timeout: 30000,
+      ...RECONNECTION_CONFIG,
     });
 
     this.socket.on('connect', () => {
       console.log('Socket connected');
+      // Rejoin all lists after reconnect
+      this.joinedLists.forEach((listId) => {
+        this.socket?.emit('join:list', listId);
+      });
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', reason);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error.message);
+      // If auth error, try reconnecting with fresh token
+      if (error.message.includes('auth') || error.message.includes('token')) {
+        const newToken = getAccessToken();
+        if (newToken && this.socket) {
+          this.socket.auth = { token: newToken };
+        }
+      }
     });
 
     this.socket.on('error', (error) => {
@@ -94,6 +116,35 @@ class SocketService {
 
     // Setup event forwarding
     this.setupEventForwarding();
+
+    // Setup visibility change handler for mobile
+    this.setupVisibilityHandler();
+  }
+
+  private setupVisibilityHandler() {
+    // Remove existing handler if any
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    this.visibilityHandler = () => {
+      if (document.visibilityState === 'visible') {
+        // App came to foreground - ensure connection
+        if (!this.socket?.connected) {
+          const token = getAccessToken();
+          if (token) {
+            if (this.socket) {
+              this.socket.auth = { token };
+              this.socket.connect();
+            } else {
+              this.connect();
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   private setupEventForwarding() {
@@ -116,17 +167,25 @@ class SocketService {
   }
 
   disconnect() {
+    // Cleanup visibility handler
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+    this.joinedLists.clear();
     this.socket?.disconnect();
     this.socket = null;
   }
 
   // Join a list room
   joinList(listId: string) {
+    this.joinedLists.add(listId);
     this.socket?.emit('join:list', listId);
   }
 
   // Leave a list room
   leaveList(listId: string) {
+    this.joinedLists.delete(listId);
     this.socket?.emit('leave:list', listId);
   }
 

@@ -6,12 +6,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-// Create axios instance
+// Create axios instance with timeout for mobile networks
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout for slow mobile networks
 });
 
 // Token helpers
@@ -83,7 +84,7 @@ apiClient.interceptors.response.use(
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
         clearTokens();
-        window.location.href = '/';
+        window.location.href = '/login';
         return Promise.reject(error);
       }
 
@@ -102,7 +103,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearTokens();
-        window.location.href = '/';
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

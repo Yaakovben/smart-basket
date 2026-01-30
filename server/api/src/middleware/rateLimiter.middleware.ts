@@ -12,10 +12,10 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Auth routes rate limiter (stricter)
+// Auth routes rate limiter (stricter but reasonable for mobile)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 requests per window
+  max: 20, // 20 requests per window (includes token refresh)
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later',
