@@ -115,10 +115,14 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       haptic('medium');
       onLogin(user, 'email');
     } catch (loginError: unknown) {
-      // If login fails with 401, try to register
-      const apiError = loginError as { response?: { status?: number; data?: { error?: string } } };
+      const apiError = loginError as { response?: { status?: number; data?: { error?: string; message?: string } } };
+      const errorMsg = apiError.response?.data?.message || apiError.response?.data?.error || '';
 
-      if (apiError.response?.status === 401) {
+      // Check if user registered with Google (400 Bad Request with specific message)
+      if (apiError.response?.status === 400 && errorMsg.toLowerCase().includes('google')) {
+        haptic('heavy');
+        setError(t('useGoogleSignIn'));
+      } else if (apiError.response?.status === 401) {
         // User doesn't exist or wrong password - try register if we have name
         if (name.trim()) {
           if (!validateRegisterForm()) {
@@ -135,9 +139,13 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
             onLogin(user, 'email');
           } catch (registerError: unknown) {
             haptic('heavy');
-            const regError = registerError as { response?: { data?: { error?: string } } };
-            const errorMsg = regError.response?.data?.error;
-            if (errorMsg === 'Email already exists') {
+            const regError = registerError as { response?: { status?: number; data?: { message?: string; error?: string } } };
+            const regErrorMsg = regError.response?.data?.message || regError.response?.data?.error;
+
+            // If email already exists (409 conflict), it means wrong password for existing user
+            if (regError.response?.status === 409 ||
+                regErrorMsg?.toLowerCase().includes('already exists') ||
+                regErrorMsg?.toLowerCase().includes('already registered')) {
               setError(t('wrongPassword'));
             } else {
               setError(t('unknownError'));

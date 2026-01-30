@@ -42,6 +42,37 @@ export class UserService {
     return user.toJSON() as IUserResponse;
   }
 
+  static async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    // Find user with password field
+    const user = await User.findById(userId).select('+password');
+
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    // Check if user has a password (Google users might not have one)
+    if (!user.password) {
+      throw ApiError.badRequest('Cannot change password for Google-authenticated accounts');
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      throw ApiError.unauthorized('Current password is incorrect');
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    // Invalidate all refresh tokens (force re-login on all devices)
+    await TokenService.invalidateAllUserTokens(userId);
+  }
+
   static async deleteAccount(userId: string): Promise<void> {
     // Delete user's owned lists
     await List.deleteMany({ owner: userId });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Tabs, Tab } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Tabs, Tab, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,9 @@ export const AdminDashboard = () => {
     setSelectedDate,
     setSelectedMonth,
     setSelectedHour,
-    refreshData
+    refreshData,
+    loading,
+    error
   } = useAdminDashboard();
 
   return (
@@ -156,7 +158,23 @@ export const AdminDashboard = () => {
 
       {/* Content */}
       <Box sx={{ p: 2 }}>
+        {/* Loading State */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress color="primary" />
+          </Box>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2 }}>
+            <Typography color="error">{error}</Typography>
+          </Paper>
+        )}
+
         {/* Tabs */}
+        {!loading && !error && (
+        <>
         <Tabs
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
@@ -202,6 +220,8 @@ export const AdminDashboard = () => {
 
         {activeTab === 1 && (
           <UsersTable users={usersWithLoginInfo} language={settings.language} />
+        )}
+        </>
         )}
       </Box>
     </Box>

@@ -73,8 +73,11 @@ class SocketService {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 15,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      randomizationFactor: 0.5,
+      timeout: 30000,
     });
 
     this.socket.on('connect', () => {

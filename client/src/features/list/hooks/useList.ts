@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { Product, List, User, Member } from '../../../global/types';
+import type { Product, List, User, Member, ToastType } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
@@ -51,7 +51,7 @@ interface UseListParams {
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   onBack: () => void;
-  showToast: (message: string) => void;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
 export const useList = ({
@@ -200,6 +200,29 @@ export const useList = ({
 
     setOpenItemId(null);
 
+    // Create optimistic product with temporary ID
+    const tempId = `temp_${Date.now()}`;
+    const optimisticProduct: Product = {
+      id: tempId,
+      name: newProduct.name.trim(),
+      quantity: newProduct.quantity,
+      unit: newProduct.unit,
+      category: newProduct.category,
+      isPurchased: false,
+      addedBy: user.id,
+      createdDate: new Date().toLocaleDateString('he-IL'),
+      createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    // Store current products for potential rollback
+    const previousProducts = [...list.products];
+
+    // Optimistic update - add product immediately to UI
+    updateProducts([...list.products, optimisticProduct]);
+    setNewProduct(DEFAULT_NEW_PRODUCT);
+    setShowAdd(false);
+    showToast(t('added'));
+
     try {
       // Call API to add product
       const updatedList = await productsApi.addProduct(list.id, {
@@ -221,22 +244,42 @@ export const useList = ({
         category: addedProduct.category,
       }, user.name);
 
-      // Update local state with the new products
+      // Update local state with real server data (replacing temp ID)
       updateProducts(updatedList.products.map(convertApiProduct));
-      setNewProduct(DEFAULT_NEW_PRODUCT);
-      setShowAdd(false);
-      showToast(t('added'));
     } catch (error) {
       console.error('Failed to add product:', error);
-      setAddError(t('unknownError'));
+      // Revert optimistic update on error
+      updateProducts(previousProducts);
+      showToast(t('unknownError'), 'error');
     }
-  }, [newProduct, list.id, user.name, updateProducts, showToast, t, validateProduct]);
+  }, [newProduct, list.id, list.products, user.id, user.name, updateProducts, showToast, t, validateProduct]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) return;
 
     setOpenItemId(null);
+
+    // Create optimistic product with temporary ID
+    const tempId = `temp_${Date.now()}`;
+    const optimisticProduct: Product = {
+      id: tempId,
+      name: trimmedName,
+      quantity: 1,
+      unit: 'יח׳',
+      category: 'אחר',
+      isPurchased: false,
+      addedBy: user.id,
+      createdDate: new Date().toLocaleDateString('he-IL'),
+      createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    // Store current products for potential rollback
+    const previousProducts = [...list.products];
+
+    // Optimistic update - add product immediately to UI
+    updateProducts([...list.products, optimisticProduct]);
+    showToast(t('added'));
 
     try {
       // Call API to add product
@@ -259,14 +302,15 @@ export const useList = ({
         category: addedProduct.category,
       }, user.name);
 
-      // Update local state with the new products
+      // Update local state with real server data (replacing temp ID)
       updateProducts(updatedList.products.map(convertApiProduct));
-      showToast(t('added'));
     } catch (error) {
       console.error('Failed to add product:', error);
-      showToast(t('unknownError'));
+      // Revert optimistic update on error
+      updateProducts(previousProducts);
+      showToast(t('unknownError'), 'error');
     }
-  }, [list.id, user.name, updateProducts, showToast, t]);
+  }, [list.id, list.products, user.id, user.name, updateProducts, showToast, t]);
 
   const toggleProduct = useCallback(async (productId: string) => {
     // Optimistic update for immediate UI response
@@ -297,7 +341,7 @@ export const useList = ({
           p.id === productId ? { ...p, isPurchased: product.isPurchased } : p
         )
       );
-      showToast(t('unknownError'));
+      showToast(t('unknownError'), 'error');
     }
   }, [list.id, list.products, user.name, updateProducts, showToast, t, dismissHint]);
 
@@ -322,7 +366,7 @@ export const useList = ({
         } catch (error) {
           console.error('Failed to delete product:', error);
           setConfirm(null);
-          showToast(t('unknownError'));
+          showToast(t('unknownError'), 'error');
         }
       }
     });
@@ -356,7 +400,7 @@ export const useList = ({
       showToast(t('saved'));
     } catch (error) {
       console.error('Failed to update product:', error);
-      showToast(t('unknownError'));
+      showToast(t('unknownError'), 'error');
     }
   }, [showEdit, hasProductChanges, list.id, user.name, updateProducts, showToast, t]);
 
@@ -445,7 +489,7 @@ export const useList = ({
         } catch (error) {
           console.error('Failed to remove member:', error);
           setConfirm(null);
-          showToast(t('unknownError'));
+          showToast(t('unknownError'), 'error');
         }
       }
     });

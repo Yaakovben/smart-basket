@@ -38,6 +38,13 @@ export const updateProfileSchema = z.object({
   }),
 });
 
+export const changePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(4, 'New password must be at least 4 characters'),
+  }),
+});
+
 // ===== List Schemas =====
 const productUnitEnum = z.enum(['יח׳', 'ק״ג', 'גרם', 'ליטר']);
 const productCategoryEnum = z.enum([
@@ -115,6 +122,7 @@ export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>['body'];
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>['body'];
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>['body'];
 export type CreateListInput = z.infer<typeof createListSchema>['body'];
 export type UpdateListInput = z.infer<typeof updateListSchema>['body'];
 export type JoinGroupInput = z.infer<typeof joinGroupSchema>['body'];

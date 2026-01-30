@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
-import type { User, List, LoginMethod } from "../global/types";
+import type { User, List, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
@@ -52,7 +52,7 @@ const ListPageWrapper = ({
   updateList: (list: List) => void;
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
-  showToast: (msg: string) => void;
+  showToast: (msg: string, type?: ToastType) => void;
 }) => {
   const navigate = useNavigate();
   const { listId } = useParams();
@@ -90,7 +90,7 @@ export const AppRouter = () => {
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
   const { lists, createList, updateList, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
-  const { message: toast, showToast } = useToast();
+  const { message: toast, toastType, showToast } = useToast();
 
   // Create list names map for notifications
   const listNames = useMemo(() =>
@@ -215,7 +215,7 @@ export const AppRouter = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
-      <Toast msg={toast} />
+      <Toast msg={toast} type={toastType} />
     </>
   );
 }

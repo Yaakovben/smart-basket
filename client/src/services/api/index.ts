@@ -3,3 +3,4 @@ export { authApi, type User, type AuthResponse, type LoginData, type RegisterDat
 export { listsApi, type CreateListData, type UpdateListData, type JoinGroupData } from './lists.api';
 export type { List as ApiList, Product as ApiProduct, Member as ApiMember, Notification as ApiNotification } from './lists.api';
 export { productsApi, type CreateProductData, type UpdateProductData } from './products.api';
+export { adminApi, type AdminUser, type AdminLoginActivity, type AdminStats, type PaginatedActivity } from './admin.api';

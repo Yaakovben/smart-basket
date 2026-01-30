@@ -152,6 +152,7 @@ type TranslationKey =
   | 'enterCodeAndPasswordHint'
   | 'groupNotFound'
   | 'wrongPassword'
+  | 'useGoogleSignIn'
   | 'alreadyInGroup'
   | 'userNotLoggedIn'
   | 'unknownError'
@@ -394,6 +395,7 @@ export const translations: Record<Language, Translations> = {
     enterCodeAndPasswordHint: 'הזן את הקוד והסיסמה שקיבלת',
     groupNotFound: 'קבוצה לא נמצאה',
     wrongPassword: 'סיסמה שגויה',
+    useGoogleSignIn: 'חשבון זה נוצר עם Google. יש להתחבר עם Google.',
     alreadyInGroup: 'אתה כבר בקבוצה',
     userNotLoggedIn: 'משתמש לא מחובר',
     unknownError: 'שגיאה לא ידועה',
@@ -633,6 +635,7 @@ export const translations: Record<Language, Translations> = {
     enterCodeAndPasswordHint: 'Enter the code and password you received',
     groupNotFound: 'Group not found',
     wrongPassword: 'Wrong password',
+    useGoogleSignIn: 'This account was created with Google. Please use Google Sign-In.',
     alreadyInGroup: 'You are already in this group',
     userNotLoggedIn: 'User not logged in',
     unknownError: 'Unknown error',
@@ -872,6 +875,7 @@ export const translations: Record<Language, Translations> = {
     enterCodeAndPasswordHint: 'Введите код и пароль, которые вы получили',
     groupNotFound: 'Группа не найдена',
     wrongPassword: 'Неверный пароль',
+    useGoogleSignIn: 'Этот аккаунт был создан через Google. Пожалуйста, войдите через Google.',
     alreadyInGroup: 'Вы уже в этой группе',
     userNotLoggedIn: 'Пользователь не авторизован',
     unknownError: 'Неизвестная ошибка',

@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { UserService } from '../services';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
-import type { UpdateProfileInput } from '../utils/validators';
+import type { UpdateProfileInput, ChangePasswordInput } from '../utils/validators';
 
 export class UserController {
   static getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -23,6 +23,17 @@ export class UserController {
     res.json({
       success: true,
       data: user,
+    });
+  });
+
+  static changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const data = req.body as ChangePasswordInput;
+    await UserService.changePassword(userId, data.currentPassword, data.newPassword);
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
     });
   });
 

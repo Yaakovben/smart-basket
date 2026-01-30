@@ -64,10 +64,19 @@ export class AuthService {
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
     // Find user with password
     const user = await User.findOne({ email: data.email.toLowerCase() }).select(
-      '+password'
+      '+password +googleId'
     );
 
-    if (!user || !user.password) {
+    if (!user) {
+      throw ApiError.unauthorized('Invalid email or password');
+    }
+
+    // Check if user registered with Google only (no password)
+    if (!user.password && user.googleId) {
+      throw ApiError.badRequest('This account was created with Google. Please use Google Sign-In.');
+    }
+
+    if (!user.password) {
       throw ApiError.unauthorized('Invalid email or password');
     }
 

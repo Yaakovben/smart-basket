@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
 import type { User, List, Member, LoginMethod } from "../types";
-import { ActivityTracker } from "../services";
 import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
@@ -38,18 +37,25 @@ export function useLocalStorage<T>(
 }
 
 // ===== useToast Hook =====
+import type { ToastType } from '../types';
+
+interface ToastState {
+  message: string;
+  type: ToastType;
+}
+
 export function useToast(duration = 1200) {
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState<ToastState>({ message: "", type: "success" });
 
   const showToast = useCallback(
-    (msg: string) => {
-      setMessage(msg);
-      setTimeout(() => setMessage(""), duration);
+    (msg: string, type: ToastType = "success") => {
+      setToast({ message: msg, type });
+      setTimeout(() => setToast({ message: "", type: "success" }), duration);
     },
     [duration],
   );
 
-  return { message, showToast };
+  return { message: toast.message, toastType: toast.type, showToast };
 }
 
 // ===== useAuth Hook =====
@@ -78,10 +84,9 @@ export function useAuth() {
   }, []);
 
   const login = useCallback(
-    (userData: User, loginMethod: LoginMethod = "email") => {
+    (userData: User, _loginMethod: LoginMethod = "email") => {
       setUser(userData);
-      // Track login activity for admin dashboard
-      ActivityTracker.trackLogin(userData, loginMethod);
+      // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
       socketService.connect();
     },

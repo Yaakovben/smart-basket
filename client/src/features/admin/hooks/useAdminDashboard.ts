@@ -1,8 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { ActivityFilters, LoginActivity, User } from "../../../global/types";
 import type { UseAdminDashboardReturn, DashboardStats, UserWithLastLogin } from "../types";
-import { ActivityTracker } from "../../../global/services";
-import { StorageService } from "../../../global/services/storage";
+import { adminApi, type AdminUser, type AdminLoginActivity } from "../../../services/api";
 
 const DEFAULT_FILTERS: ActivityFilters = {
   filterMode: "all",
@@ -11,13 +10,56 @@ const DEFAULT_FILTERS: ActivityFilters = {
   selectedHour: undefined,
 };
 
-export const useAdminDashboard = (): UseAdminDashboardReturn => {
-  const [filters, setFilters] = useState<ActivityFilters>(DEFAULT_FILTERS);
-  const [refreshKey, setRefreshKey] = useState(0);
+// Convert API activity to client LoginActivity type
+const convertApiActivity = (apiActivity: AdminLoginActivity): LoginActivity => ({
+  id: apiActivity.id,
+  userId: apiActivity.user,
+  userName: apiActivity.userName,
+  userEmail: apiActivity.userEmail,
+  loginMethod: apiActivity.loginMethod,
+  timestamp: apiActivity.createdAt,
+});
 
-  // Get all data - refreshKey triggers re-fetch
-  const activities = useMemo(() => ActivityTracker.getActivities(), [refreshKey]);
-  const allUsers = useMemo(() => StorageService.getUsers(), [refreshKey]);
+// Convert API user to client User type
+const convertApiUser = (apiUser: AdminUser): User => ({
+  id: apiUser.id,
+  name: apiUser.name,
+  email: apiUser.email,
+  avatarColor: apiUser.avatarColor,
+  avatarEmoji: apiUser.avatarEmoji,
+});
+
+export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolean; error: string | null } => {
+  const [filters, setFilters] = useState<ActivityFilters>(DEFAULT_FILTERS);
+  const [activities, setActivities] = useState<LoginActivity[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data from API
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [usersData, activityData] = await Promise.all([
+        adminApi.getUsers(),
+        adminApi.getLoginActivity(1, 500), // Get up to 500 activities
+      ]);
+
+      setAllUsers(usersData.map(convertApiUser));
+      setActivities(activityData.activities.map(convertApiActivity));
+    } catch (err) {
+      console.error('Failed to fetch admin data:', err);
+      setError('Failed to load admin data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load data on mount
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Compute users with their last login info
   const usersWithLoginInfo: UserWithLastLogin[] = useMemo(() => {
@@ -155,8 +197,8 @@ export const useAdminDashboard = (): UseAdminDashboardReturn => {
   }, []);
 
   const refreshData = useCallback(() => {
-    setRefreshKey((prev) => prev + 1);
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
   return {
     activities,
@@ -172,5 +214,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn => {
     setSelectedHour,
     resetFilters,
     refreshData,
+    loading,
+    error,
   };
 };

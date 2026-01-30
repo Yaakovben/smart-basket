@@ -6,7 +6,9 @@ import type { RegisterInput, LoginInput, GoogleAuthInput } from '../utils/valida
 export class AuthController {
   static register = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as RegisterInput;
-    const result = await AuthService.register(data);
+    const ipAddress = req.ip || req.socket.remoteAddress;
+    const userAgent = req.get('User-Agent');
+    const result = await AuthService.register(data, ipAddress, userAgent);
 
     res.status(201).json({
       success: true,
@@ -17,7 +19,8 @@ export class AuthController {
   static login = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as LoginInput;
     const ipAddress = req.ip || req.socket.remoteAddress;
-    const result = await AuthService.login(data, ipAddress);
+    const userAgent = req.get('User-Agent');
+    const result = await AuthService.login(data, ipAddress, userAgent);
 
     res.json({
       success: true,
@@ -28,7 +31,8 @@ export class AuthController {
   static googleAuth = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as GoogleAuthInput;
     const ipAddress = req.ip || req.socket.remoteAddress;
-    const result = await AuthService.googleAuth(data, ipAddress);
+    const userAgent = req.get('User-Agent');
+    const result = await AuthService.googleAuth(data, ipAddress, userAgent);
 
     res.json({
       success: true,
