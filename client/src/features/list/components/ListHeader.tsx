@@ -75,7 +75,8 @@ export const ListHeader = memo(({
     }
   }, [showSearch, onSearchChange]);
 
-  const handleQuickAdd = useCallback(() => {
+  // Handle button click - close keyboard after add
+  const handleQuickAddButton = useCallback(() => {
     const trimmed = quickAddValue.trim();
     if (trimmed.length < 2 || !onQuickAdd) return;
 
@@ -87,12 +88,19 @@ export const ListHeader = memo(({
     inputRef.current?.blur();
   }, [quickAddValue, onQuickAdd]);
 
+  // Handle Enter key - keep keyboard open for continuous adding
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleQuickAdd();
+      const trimmed = quickAddValue.trim();
+      if (trimmed.length < 2 || !onQuickAdd) return;
+
+      haptic('light');
+      onQuickAdd(trimmed);
+      setQuickAddValue('');
+      // Don't blur - keep keyboard open for next item
     }
-  }, [handleQuickAdd]);
+  }, [quickAddValue, onQuickAdd]);
 
   return (
     <Box sx={{
@@ -275,7 +283,7 @@ export const ListHeader = memo(({
               <InputAdornment position="end">
                 {/* Add button - always visible, disabled when < 2 chars */}
                 <IconButton
-                  onClick={handleQuickAdd}
+                  onClick={handleQuickAddButton}
                   disabled={quickAddValue.trim().length < 2}
                   sx={{
                     background: quickAddValue.trim().length >= 2

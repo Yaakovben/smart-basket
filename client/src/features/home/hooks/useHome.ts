@@ -71,6 +71,7 @@ export const useHome = ({
   const [joinPass, setJoinPass] = useState('');
   const [joinError, setJoinError] = useState('');
   const [createError, setCreateError] = useState('');
+  const [joiningGroup, setJoiningGroup] = useState(false);
 
   // ===== Computed Values =====
   const userLists = useMemo(() => lists.filter((l: List) => {
@@ -160,14 +161,20 @@ export const useHome = ({
       setJoinError(t('enterCodeAndPassword'));
       return;
     }
-    const result = await onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
-    if (result.success) {
-      setShowJoin(false);
-      setJoinCode('');
-      setJoinPass('');
-    } else {
-      // result.error is a translation key
-      setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
+
+    setJoiningGroup(true);
+    try {
+      const result = await onJoinGroup(joinCode.trim().toUpperCase(), joinPass.trim());
+      if (result.success) {
+        setShowJoin(false);
+        setJoinCode('');
+        setJoinPass('');
+      } else {
+        // result.error is a translation key
+        setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
+      }
+    } finally {
+      setJoiningGroup(false);
     }
   }, [joinCode, joinPass, onJoinGroup, t]);
 
@@ -254,6 +261,7 @@ export const useHome = ({
     joinPass,
     joinError,
     createError,
+    joiningGroup,
 
     // Computed values
     userLists,

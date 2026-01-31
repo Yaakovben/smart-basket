@@ -6,7 +6,7 @@ import { getAccessToken, clearTokens } from "../../services/api/client";
 
 // Re-export hooks
 export { useDebounce } from './useDebounce';
-export { useSocketNotifications } from './useSocketNotifications';
+export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
 
 // ===== useLocalStorage Hook =====

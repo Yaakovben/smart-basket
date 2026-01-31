@@ -34,6 +34,7 @@ export interface UseHomeReturn {
   joinPass: string;
   joinError: string;
   createError: string;
+  joiningGroup: boolean;
 
   // Computed values
   userLists: List[];

@@ -217,15 +217,16 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 <Collapse in={emailChecked && !isNewUser && !isGoogleAccount}>
                   <Box sx={{
                     mb: 2,
-                    p: 1.5,
-                    bgcolor: 'success.light',
-                    borderRadius: '10px',
+                    py: 1,
+                    px: 1.5,
+                    bgcolor: 'rgba(16, 185, 129, 0.08)',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1
+                    gap: 0.75
                   }}>
-                    <Box sx={{ fontSize: 18 }}>👋</Box>
-                    <Typography sx={{ fontSize: 13, color: 'success.dark', fontWeight: 500 }}>
+                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>👋</Box>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
                       {t('returningUserHint')}
                     </Typography>
                   </Box>
@@ -234,17 +235,17 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {/* Name Field - For new users, shown between email and password */}
                 <Collapse in={emailChecked && isNewUser}>
                   <Box sx={{
-                    mb: 2,
-                    p: 1.5,
-                    bgcolor: 'primary.light',
-                    borderRadius: '10px',
+                    mb: 1.5,
+                    py: 1,
+                    px: 1.5,
+                    bgcolor: 'rgba(20, 184, 166, 0.08)',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1,
-                    opacity: 0.9
+                    gap: 0.75
                   }}>
-                    <Box sx={{ fontSize: 18 }}>✨</Box>
-                    <Typography sx={{ fontSize: 13, color: 'primary.dark', fontWeight: 500 }}>
+                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>✨</Box>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
                       {t('newUserHint')}
                     </Typography>
                   </Box>

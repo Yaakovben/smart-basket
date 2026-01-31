@@ -1,9 +1,9 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, type LocalNotification } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -96,6 +96,27 @@ export const AppRouter = () => {
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast } = useToast();
 
+  // Local notifications from socket (product events, real-time join/leave)
+  const [localNotifications, setLocalNotifications] = useState<LocalNotification[]>([]);
+
+  const addLocalNotification = useCallback((notification: LocalNotification) => {
+    setLocalNotifications(prev => {
+      // Avoid duplicates
+      if (prev.some(n => n.id === notification.id)) return prev;
+      // Keep max 50 notifications, oldest first
+      const newList = [notification, ...prev];
+      return newList.slice(0, 50);
+    });
+  }, []);
+
+  const markLocalNotificationRead = useCallback((notificationId: string) => {
+    setLocalNotifications(prev => prev.filter(n => n.id !== notificationId));
+  }, []);
+
+  const clearAllLocalNotifications = useCallback(() => {
+    setLocalNotifications([]);
+  }, []);
+
   // Create list names map for notifications
   const listNames = useMemo(() =>
     lists.reduce((acc, list) => ({ ...acc, [list.id]: list.name }), {} as Record<string, string>),
@@ -103,7 +124,7 @@ export const AppRouter = () => {
   );
 
   // Subscribe to socket notifications (respects notification settings)
-  useSocketNotifications(user, showToast, listNames);
+  useSocketNotifications(user, showToast, listNames, addLocalNotification);
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
@@ -171,6 +192,9 @@ export const AppRouter = () => {
                 onMarkNotificationsRead={markNotificationsRead}
                 onMarkSingleNotificationRead={markSingleNotificationRead}
                 onLogout={handleLogout}
+                localNotifications={localNotifications}
+                onMarkLocalNotificationRead={markLocalNotificationRead}
+                onClearAllLocalNotifications={clearAllLocalNotifications}
               />
             </ProtectedRoute>
           }

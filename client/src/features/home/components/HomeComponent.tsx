@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -13,11 +13,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
 import type { List, Product, User } from '../../../global/types';
+import type { LocalNotification } from '../../../global/hooks';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
-import type { ExtendedNotification } from '../types/home-types';
 
 // ===== Animations =====
 const checkmarkPopKeyframes = {
@@ -38,9 +38,9 @@ const shakeKeyframes = {
 
 const notificationDismissKeyframes = {
   '@keyframes notificationDismiss': {
-    '0%': { transform: 'translateX(0) scale(1)', opacity: 1 },
-    '30%': { transform: 'translateX(10px) scale(1.02)', opacity: 1 },
-    '100%': { transform: 'translateX(100%) scale(0.8)', opacity: 0 }
+    '0%': { transform: 'translateX(0) translateY(0) rotate(0deg) scale(1)', opacity: 1 },
+    '20%': { transform: 'translateX(-8px) translateY(5px) rotate(-2deg) scale(1.02)', opacity: 1 },
+    '100%': { transform: 'translateX(80px) translateY(120px) rotate(12deg) scale(0.7)', opacity: 0 }
   }
 };
 
@@ -91,9 +91,16 @@ interface HomePageProps {
   onLogout: () => void;
   onMarkNotificationsRead: (listId: string) => void;
   onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
+  localNotifications?: LocalNotification[];
+  onMarkLocalNotificationRead?: (notificationId: string) => void;
+  onClearAllLocalNotifications?: () => void;
 }
 
-export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, onMarkNotificationsRead, onMarkSingleNotificationRead, user }: HomePageProps) => {
+export const HomeComponent = ({
+  lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout,
+  onMarkNotificationsRead, onMarkSingleNotificationRead, user,
+  localNotifications = [], onMarkLocalNotificationRead, onClearAllLocalNotifications
+}: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
 
@@ -101,7 +108,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
     // State
     tab, search, showMenu, showCreate, showCreateGroup, showJoin,
     showNotifications, confirmLogout, editList, confirmDeleteList,
-    newL, joinCode, joinPass, joinError, createError,
+    newL, joinCode, joinPass, joinError, createError, joiningGroup,
     // Computed
     userLists, my, groups, myNotifications, unreadCount, display,
     // Setters
@@ -118,20 +125,60 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   // Track which notifications are being dismissed (for animation)
   const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
 
-  const handleDismissNotification = useCallback((listId: string, notificationId: string) => {
+  // Combine server notifications with local notifications for display
+  const allNotifications = useMemo(() => {
+    // Convert server notifications to a common format
+    const serverNotifs = myNotifications.map(n => ({
+      id: n.id,
+      type: n.type as LocalNotification['type'],
+      listId: n.listId,
+      listName: n.listName,
+      userId: n.userId,
+      userName: n.userName,
+      timestamp: new Date(n.timestamp),
+      read: false,
+      isLocal: false,
+      productName: undefined as string | undefined,
+      isPurchased: undefined as boolean | undefined
+    }));
+
+    // Mark local notifications
+    const localNotifs = localNotifications.map(n => ({
+      ...n,
+      isLocal: true
+    }));
+
+    // Combine and sort by timestamp (newest first)
+    return [...serverNotifs, ...localNotifs].sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [myNotifications, localNotifications]);
+
+  const totalUnreadCount = unreadCount + localNotifications.filter(n => !n.read).length;
+
+  const handleDismissNotification = useCallback((listId: string, notificationId: string, isLocal: boolean) => {
     // Add to dismissing set to trigger animation
     setDismissingNotifications(prev => new Set(prev).add(notificationId));
 
     // After animation completes, actually mark as read
     setTimeout(() => {
-      markNotificationRead(listId, notificationId);
+      if (isLocal) {
+        onMarkLocalNotificationRead?.(notificationId);
+      } else {
+        markNotificationRead(listId, notificationId);
+      }
       setDismissingNotifications(prev => {
         const next = new Set(prev);
         next.delete(notificationId);
         return next;
       });
     }, 300);
-  }, [markNotificationRead]);
+  }, [markNotificationRead, onMarkLocalNotificationRead]);
+
+  const handleMarkAllRead = useCallback(() => {
+    markAllNotificationsRead();
+    onClearAllLocalNotifications?.();
+  }, [markAllNotificationsRead, onClearAllLocalNotifications]);
 
   // Ref for password field in Join Group modal
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -162,7 +209,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
-              <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
+              <Badge badgeContent={totalUnreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
                 <NotificationsIcon sx={{ color: 'white', fontSize: 22 }} />
               </Badge>
             </IconButton>
@@ -376,7 +423,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
 
       {/* Join Group Modal */}
       {showJoin && (
-        <Modal title={t('joinGroup')} onClose={closeJoinModal}>
+        <Modal title={t('joinGroup')} onClose={() => !joiningGroup && closeJoinModal()}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Box sx={{
               width: 72,
@@ -499,7 +546,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
             variant="contained"
             fullWidth
             onClick={handleJoin}
-            disabled={joinCode.length < 6 || joinPass.length < 4}
+            disabled={joinCode.length < 6 || joinPass.length < 4 || joiningGroup}
             sx={{
               py: 1.5,
               fontSize: 15,
@@ -509,7 +556,11 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               '&:disabled': { boxShadow: 'none' }
             }}
           >
-            {t('joinGroup')}
+            {joiningGroup ? (
+              <CircularProgress size={24} sx={{ color: 'white' }} />
+            ) : (
+              t('joinGroup')
+            )}
           </Button>
         </Modal>
       )}
@@ -563,19 +614,53 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
       {/* Notifications Modal */}
       {showNotifications && (
         <Modal title={t('notifications')} onClose={() => setShowNotifications(false)}>
-          {myNotifications.length === 0 ? (
+          {allNotifications.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4, px: 2.5 }}>
               <Typography sx={{ fontSize: 48 }}>🔔</Typography>
               <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>{t('noNotifications')}</Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden' }}>
-              {myNotifications.map((n: ExtendedNotification) => {
-                const isLeave = n.type === 'leave';
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden', maxHeight: '60vh', overflowY: 'auto' }}>
+              {allNotifications.map((n) => {
                 const isDismissing = dismissingNotifications.has(n.id);
                 const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
                 const dateStr = notificationDate ? notificationDate.toLocaleDateString('he-IL') : '';
                 const timeStr = notificationDate ? notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                // Determine notification style based on type
+                const getNotificationStyle = () => {
+                  switch (n.type) {
+                    case 'leave':
+                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '👋' };
+                    case 'join':
+                      return { bgcolor: '#F0FDF4', border: '#BBF7D0', textColor: '#166534', subColor: '#15803D', timeColor: '#16A34A', emoji: '🎉' };
+                    case 'product_add':
+                      return { bgcolor: '#EFF6FF', border: '#BFDBFE', textColor: '#1E40AF', subColor: '#2563EB', timeColor: '#3B82F6', emoji: '➕' };
+                    case 'product_edit':
+                      return { bgcolor: '#FEF3C7', border: '#FDE68A', textColor: '#92400E', subColor: '#B45309', timeColor: '#D97706', emoji: '✏️' };
+                    case 'product_delete':
+                      return { bgcolor: '#FEE2E2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🗑️' };
+                    case 'product_purchase':
+                      return { bgcolor: '#ECFDF5', border: '#A7F3D0', textColor: '#065F46', subColor: '#047857', timeColor: '#059669', emoji: n.isPurchased ? '✅' : '⬜' };
+                    default:
+                      return { bgcolor: '#F3F4F6', border: '#D1D5DB', textColor: '#374151', subColor: '#6B7280', timeColor: '#9CA3AF', emoji: '📢' };
+                  }
+                };
+
+                const getNotificationText = () => {
+                  switch (n.type) {
+                    case 'leave': return t('memberLeft');
+                    case 'join': return t('memberJoined');
+                    case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
+                    case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
+                    case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
+                    case 'product_purchase': return `${n.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif')} "${n.productName}"`;
+                    default: return '';
+                  }
+                };
+
+                const style = getNotificationStyle();
+
                 return (
                   <Box
                     key={n.id}
@@ -584,9 +669,9 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                       alignItems: 'center',
                       gap: 1.5,
                       p: 1.75,
-                      bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4',
+                      bgcolor: style.bgcolor,
                       borderRadius: '12px',
-                      border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}`,
+                      border: `1px solid ${style.border}`,
                       transition: 'all 0.3s ease',
                       ...(isDismissing && {
                         ...notificationDismissKeyframes,
@@ -594,28 +679,31 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                       }),
                     }}
                   >
-                    <Avatar sx={{ bgcolor: isLeave ? 'error.main' : 'success.main', width: 40, height: 40 }}>
-                      {isLeave ? '👋' : '🎉'}
+                    <Avatar sx={{ bgcolor: style.border, width: 40, height: 40, fontSize: 20 }}>
+                      {style.emoji}
                     </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontSize: 14, fontWeight: 600, color: isLeave ? '#991B1B' : '#166534' }}>
-                        {n.userName} {isLeave ? t('memberLeft') : t('memberJoined')}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 14, fontWeight: 600, color: style.textColor }}>
+                        {n.userName} {getNotificationText()}
                       </Typography>
-                      <Typography sx={{ fontSize: 13, color: isLeave ? '#B91C1C' : '#15803D' }}>{n.listName}</Typography>
+                      <Typography sx={{ fontSize: 13, color: style.subColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {n.listName}
+                      </Typography>
                       {notificationDate && (
-                        <Typography sx={{ fontSize: 11, color: isLeave ? '#DC2626' : '#16A34A', mt: 0.5 }}>
+                        <Typography sx={{ fontSize: 11, color: style.timeColor, mt: 0.5 }}>
                           {dateStr} • {timeStr}
                         </Typography>
                       )}
                     </Box>
                     <IconButton
                       size="small"
-                      onClick={() => handleDismissNotification(n.listId, n.id)}
+                      onClick={() => handleDismissNotification(n.listId, n.id, n.isLocal)}
                       disabled={isDismissing}
                       sx={{
-                        color: isLeave ? '#991B1B' : '#166534',
+                        color: style.textColor,
+                        flexShrink: 0,
                         '&:hover': {
-                          bgcolor: isLeave ? 'rgba(153, 27, 27, 0.1)' : 'rgba(22, 101, 52, 0.1)',
+                          bgcolor: `${style.textColor}15`,
                         },
                       }}
                     >
@@ -624,7 +712,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                   </Box>
                 );
               })}
-              <Button variant="contained" fullWidth sx={{ mt: 1 }} onClick={markAllNotificationsRead}>
+              <Button variant="contained" fullWidth sx={{ mt: 1 }} onClick={handleMarkAllRead}>
                 {t('markAllAsRead')}
               </Button>
             </Box>
