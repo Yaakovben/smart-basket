@@ -4,7 +4,7 @@ import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { isValidEmail, checkEmailDomainTypo } from '../helpers/auth-helpers';
 import type { UseAuthReturn } from '../types/auth-types';
-import { loginSchema, registerSchema, validateForm } from '../../../global/validation';
+import { registerSchema, validateForm } from '../../../global/validation';
 import { authApi } from '../../../services/api';
 
 // ===== Types =====
@@ -31,15 +31,6 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   // ===== Validation =====
-  const validateLoginForm = useCallback((): boolean => {
-    const result = validateForm(loginSchema, { email: email.trim(), password });
-    if (!result.success) {
-      setError(t(result.error as Parameters<typeof t>[0]));
-      return false;
-    }
-    return true;
-  }, [email, password, t]);
-
   const validateRegisterForm = useCallback((): boolean => {
     const result = validateForm(registerSchema, {
       name: name.trim(),
@@ -136,20 +127,20 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleEmailSubmit = useCallback(async () => {
     setError('');
 
-    // If email not checked yet, check it first
-    if (!emailChecked) {
-      await checkEmailExists();
+    // Validate email first
+    if (!isValidEmail(email.trim())) {
+      setError(t('invalidEmail'));
       return;
     }
 
-    // If this is a Google account, show error
-    if (isGoogleAccount) {
-      setError(t('useGoogleSignIn'));
+    // Validate password
+    if (!password || password.length < 6) {
+      setError(t('passwordTooShort'));
       return;
     }
 
-    // If new user, register
-    if (isNewUser) {
+    // If new user flow (name field is shown), register
+    if (isNewUser && emailChecked) {
       if (!validateRegisterForm()) return;
 
       setEmailLoading(true);
@@ -186,9 +177,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       return;
     }
 
-    // Existing user - login
-    if (!validateLoginForm()) return;
-
+    // First attempt - try to login
     setEmailLoading(true);
     try {
       const { user } = await authApi.login({ email: email.trim(), password });
@@ -198,25 +187,37 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const apiError = loginError as { response?: { status?: number; data?: { error?: string; message?: string } }; code?: string; message?: string };
       const errorMsg = apiError.response?.data?.message || apiError.response?.data?.error || '';
 
-      haptic('heavy');
-
       if (apiError.code === 'ERR_NETWORK') {
+        haptic('heavy');
         setError('שגיאת חיבור לשרת');
       } else if (apiError.message?.includes('localStorage')) {
+        haptic('heavy');
         setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
       } else if (apiError.response?.status === 400 && errorMsg.toLowerCase().includes('google')) {
+        haptic('heavy');
         setError(t('useGoogleSignIn'));
+        setIsGoogleAccount(true);
+        setEmailChecked(true);
       } else if (apiError.response?.status === 401) {
+        haptic('heavy');
         setError(t('wrongPassword'));
+      } else if (apiError.response?.status === 404 || errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('לא נמצא')) {
+        // User doesn't exist - show name field for registration
+        haptic('light');
+        setIsNewUser(true);
+        setEmailChecked(true);
+        setError('');
       } else if (errorMsg) {
+        haptic('heavy');
         setError(errorMsg);
       } else {
+        haptic('heavy');
         setError(apiError.message || t('unknownError'));
       }
     } finally {
       setEmailLoading(false);
     }
-  }, [email, password, name, emailChecked, isNewUser, isGoogleAccount, validateLoginForm, validateRegisterForm, onLogin, t, checkEmailExists]);
+  }, [email, password, name, emailChecked, isNewUser, validateRegisterForm, onLogin, t]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();

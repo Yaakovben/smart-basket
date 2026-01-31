@@ -379,27 +379,32 @@ export const useList = ({
     if (!showEdit || !hasProductChanges) return;
     haptic('medium');
 
+    // Store the edit data before closing modal
+    const editData = { ...showEdit };
+
+    // Close modal first for smooth animation
+    setShowEdit(null);
+    setOriginalEditProduct(null);
+
     try {
       // Call API to update product
-      const updatedList = await productsApi.updateProduct(list.id, showEdit.id, {
-        name: showEdit.name,
-        quantity: showEdit.quantity,
-        unit: showEdit.unit,
-        category: showEdit.category,
+      const updatedList = await productsApi.updateProduct(list.id, editData.id, {
+        name: editData.name,
+        quantity: editData.quantity,
+        unit: editData.unit,
+        category: editData.category,
       });
 
       // Emit socket event to notify other users
       socketService.emitProductUpdated(list.id, {
-        id: showEdit.id,
-        name: showEdit.name,
-        quantity: showEdit.quantity,
-        unit: showEdit.unit,
-        category: showEdit.category,
+        id: editData.id,
+        name: editData.name,
+        quantity: editData.quantity,
+        unit: editData.unit,
+        category: editData.category,
       }, user.name);
 
       updateProducts(updatedList.products.map(convertApiProduct));
-      setShowEdit(null);
-      setOriginalEditProduct(null);
       showToast(t('saved'));
     } catch (error) {
       console.error('Failed to update product:', error);

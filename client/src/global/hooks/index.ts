@@ -133,6 +133,7 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
   name: apiMember.user.name,
   email: apiMember.user.email,
   isAdmin: apiMember.isAdmin,
+  joinedAt: apiMember.joinedAt,
 });
 
 // Helper to convert API product to client Product type
@@ -268,9 +269,25 @@ export function useLists(user: User | null) {
         socketService.joinList(joinedList.id);
         return { success: true };
       } catch (error: unknown) {
-        const apiError = error as { response?: { data?: { error?: string } } };
-        const errorMessage = apiError.response?.data?.error || 'unknownError';
-        return { success: false, error: errorMessage };
+        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } } };
+        const status = apiError.response?.status;
+        const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
+
+        // Map specific errors to translation keys
+        if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
+          return { success: false, error: 'invalidGroupCode' };
+        }
+        if (status === 401 || errorMessage?.toLowerCase().includes('invalid password')) {
+          return { success: false, error: 'invalidGroupPassword' };
+        }
+        if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {
+          return { success: false, error: 'alreadyMember' };
+        }
+        if (errorMessage?.toLowerCase().includes('owner')) {
+          return { success: false, error: 'youAreOwner' };
+        }
+
+        return { success: false, error: 'unknownError' };
       }
     },
     [user],
@@ -350,25 +367,14 @@ export function useLists(user: User | null) {
       }).catch(console.error);
     });
 
-    const unsubscribeUserJoined = socketService.on('user:joined', (data: unknown) => {
-      const eventData = data as { listId: string };
-      // Refetch the list to get updated members
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
-    });
-
-    const unsubscribeUserLeft = socketService.on('user:left', (data: unknown) => {
-      const eventData = data as { listId: string };
-      // Refetch the list to get updated members
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
-    });
+    // Note: user:joined and user:left socket events are for PRESENCE tracking only
+    // (indicating when a user's socket connects/disconnects from the room).
+    // They fire on every app open, refresh, or network reconnect - NOT for actual
+    // group membership changes. Actual group joins/leaves go through the REST API
+    // and are stored as notifications in the database.
+    // We intentionally do NOT refetch list data on these events to avoid:
+    // 1. Unnecessary API calls on every reconnect
+    // 2. Confusing users with activity when someone just reconnects
 
     // Subscribe to product events
     const unsubscribeProductAdded = socketService.on('product:added', (data: unknown) => {
@@ -410,8 +416,6 @@ export function useLists(user: User | null) {
 
     return () => {
       unsubscribeListUpdated();
-      unsubscribeUserJoined();
-      unsubscribeUserLeft();
       unsubscribeProductAdded();
       unsubscribeProductUpdated();
       unsubscribeProductDeleted();

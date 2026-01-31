@@ -383,7 +383,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setJoinError(''); }}
               placeholder="_ _ _ _ _ _"
               size="small"
-              inputProps={{ maxLength: 6, style: { textAlign: 'center', textTransform: 'uppercase', letterSpacing: 8, fontWeight: 700, fontSize: 20 } }}
+              inputProps={{ maxLength: 6, dir: 'ltr', style: { textAlign: 'left', textTransform: 'uppercase', letterSpacing: 12, fontWeight: 700, fontSize: 20, paddingLeft: 16 } }}
               sx={{
                 ...shakeKeyframes,
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
@@ -398,7 +398,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               }}
               InputProps={{
                 startAdornment: joinError ? (
-                  <InputAdornment position="start"><Box sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700 }}>✕</Box></InputAdornment>
+                  <InputAdornment position="start">
+                    <Box
+                      onClick={() => { setJoinCode(''); setJoinError(''); }}
+                      sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700, cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+                    >✕</Box>
+                  </InputAdornment>
                 ) : joinCode.length === 6 ? (
                   <InputAdornment position="start">
                     <Box sx={{
@@ -426,7 +431,7 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               placeholder="_ _ _ _"
               size="small"
               inputRef={passwordInputRef}
-              inputProps={{ maxLength: 4, inputMode: 'numeric', style: { textAlign: 'center', letterSpacing: 12, fontWeight: 700, fontSize: 20 } }}
+              inputProps={{ maxLength: 4, inputMode: 'numeric', dir: 'ltr', style: { textAlign: 'left', letterSpacing: 16, fontWeight: 700, fontSize: 20, paddingLeft: 16 } }}
               sx={{
                 ...shakeKeyframes,
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
@@ -441,7 +446,12 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               }}
               InputProps={{
                 startAdornment: joinError ? (
-                  <InputAdornment position="start"><Box sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700 }}>✕</Box></InputAdornment>
+                  <InputAdornment position="start">
+                    <Box
+                      onClick={() => { setJoinPass(''); setJoinError(''); }}
+                      sx={{ color: '#EF4444', fontSize: 18, fontWeight: 700, cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+                    >✕</Box>
+                  </InputAdornment>
                 ) : joinPass.length === 4 ? (
                   <InputAdornment position="start">
                     <Box sx={{

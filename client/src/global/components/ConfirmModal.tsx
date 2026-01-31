@@ -1,6 +1,6 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Zoom } from '@mui/material';
 import type { TransitionProps } from '@mui/material/transitions';
-import { forwardRef } from 'react';
+import { forwardRef, useState, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
@@ -22,10 +22,29 @@ const Transition = forwardRef(function Transition(
 
 export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText }: ConfirmModalProps) => {
   const { t } = useSettings();
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleConfirm = useCallback(() => {
+    haptic('medium');
+    setIsClosing(true);
+    // Wait for animation to complete before calling onConfirm
+    setTimeout(() => {
+      onConfirm();
+    }, 200);
+  }, [onConfirm]);
+
+  const handleCancel = useCallback(() => {
+    haptic('light');
+    setIsClosing(true);
+    setTimeout(() => {
+      onCancel();
+    }, 200);
+  }, [onCancel]);
+
   return (
     <Dialog
-      open
-      onClose={onCancel}
+      open={!isClosing}
+      onClose={handleCancel}
       TransitionComponent={Transition}
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-description"
@@ -59,9 +78,10 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
       </DialogContent>
       <DialogActions sx={{ p: 0, gap: 1.5 }}>
         <Button
-          onClick={() => { haptic('light'); onCancel(); }}
+          onClick={handleCancel}
           variant="outlined"
           fullWidth
+          disabled={isClosing}
           sx={{
             borderColor: 'divider',
             borderWidth: 2,
@@ -72,10 +92,11 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           {t('cancel')}
         </Button>
         <Button
-          onClick={() => { haptic('medium'); onConfirm(); }}
+          onClick={handleConfirm}
           variant="contained"
           color="error"
           fullWidth
+          disabled={isClosing}
         >
           {confirmText || t('confirm')}
         </Button>

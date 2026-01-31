@@ -30,7 +30,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
   const {
     name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
-    emailChecked, isGoogleAccount, checkingEmail,
+    emailChecked, isGoogleAccount,
     setName, setPassword,
     handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
     toggleEmailForm, applySuggestion
@@ -213,7 +213,48 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   </Box>
                 )}
 
-                {/* Name Field - Only for new users after email check */}
+                {/* Password Field - Always visible */}
+                <TextField
+                  fullWidth
+                  type="password"
+                  label={t('password')}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete={isNewUser ? 'new-password' : 'current-password'}
+                  size="small"
+                  disabled={isGoogleAccount}
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
+                  }}
+                />
+
+                {/* Password Strength Indicator - Only for new users */}
+                {isNewUser && password.length > 0 && (() => {
+                  const strength = getPasswordStrength(password);
+                  const colors = ['#EF4444', '#F59E0B', '#10B981'];
+                  return (
+                    <Box sx={{
+                      mt: -1.5,
+                      mb: 2,
+                      height: 4,
+                      borderRadius: 2,
+                      bgcolor: 'action.disabledBackground',
+                      overflow: 'hidden'
+                    }}>
+                      <Box sx={{
+                        height: '100%',
+                        width: `${(strength.strength / 3) * 100}%`,
+                        bgcolor: colors[strength.strength - 1] || 'transparent',
+                        borderRadius: 2,
+                        transition: 'width 0.3s ease, background-color 0.3s ease'
+                      }} />
+                    </Box>
+                  );
+                })()}
+
+                {/* Name Field - Only for new users after login attempt */}
                 <Collapse in={emailChecked && isNewUser}>
                   <TextField
                     fullWidth
@@ -228,54 +269,10 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                       startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>👤</Box></InputAdornment>
                     }}
                   />
-                </Collapse>
-
-                {/* Password Field - Only after email check and not Google account */}
-                <Collapse in={emailChecked && !isGoogleAccount}>
-                  <TextField
-                    fullWidth
-                    type="password"
-                    label={t('password')}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    autoComplete={isNewUser ? 'new-password' : 'current-password'}
-                    size="small"
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>🔒</Box></InputAdornment>
-                    }}
-                  />
-
-                  {/* Password Strength Indicator - Only for new users */}
-                  {isNewUser && password.length > 0 && (() => {
-                    const strength = getPasswordStrength(password);
-                    const colors = ['#EF4444', '#F59E0B', '#10B981'];
-                    return (
-                      <Box sx={{
-                        mt: 1,
-                        height: 4,
-                        borderRadius: 2,
-                        bgcolor: 'action.disabledBackground',
-                        overflow: 'hidden'
-                      }}>
-                        <Box sx={{
-                          height: '100%',
-                          width: `${(strength.strength / 3) * 100}%`,
-                          bgcolor: colors[strength.strength - 1] || 'transparent',
-                          borderRadius: 2,
-                          transition: 'width 0.3s ease, background-color 0.3s ease'
-                        }} />
-                      </Box>
-                    );
-                  })()}
-                </Collapse>
-
-                {/* Helper text */}
-                {emailChecked && !isGoogleAccount && (
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
-                    {isNewUser ? `👋 ${t('newUserHint')}` : `👋 ${t('returningUserHint')}`}
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
+                    👋 {t('newUserHint')}
                   </Typography>
-                )}
+                </Collapse>
 
                 {error && showEmailForm && (
                   <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
@@ -287,13 +284,11 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={emailLoading || checkingEmail || (emailChecked && isGoogleAccount)}
+                  disabled={emailLoading || isGoogleAccount}
                   sx={{ mt: 2.5, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
                 >
-                  {emailLoading || checkingEmail ? (
+                  {emailLoading ? (
                     <CircularProgress size={20} sx={{ color: 'white' }} />
-                  ) : !emailChecked ? (
-                    t('continue')
                   ) : isNewUser ? (
                     t('register')
                   ) : (

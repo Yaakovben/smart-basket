@@ -48,7 +48,8 @@ export const useHome = ({
   onMarkNotificationsRead,
   onMarkSingleNotificationRead
 }: UseHomeParams): UseHomeReturn => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const notificationSettings = settings.notifications;
 
   // ===== UI State =====
   const [tab, setTab] = useState<HomeTab>('all');
@@ -82,12 +83,32 @@ export const useHome = ({
     groups: userLists.filter((l: List) => l.isGroup)
   }), [userLists]);
 
-  const myNotifications = useMemo((): ExtendedNotification[] => userLists
-    .filter((l: List) => l.isGroup && (l.notifications?.length ?? 0) > 0)
-    .flatMap((l: List) => (l.notifications || [])
-      .filter((n: Notification) => !n.read && n.userId !== user.id)
-      .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }))
-    ), [userLists, user.id]);
+  const myNotifications = useMemo((): ExtendedNotification[] => {
+    // If notifications are disabled globally, return empty
+    if (!notificationSettings.enabled) return [];
+
+    return userLists
+      .filter((l: List) => l.isGroup && (l.notifications?.length ?? 0) > 0)
+      .flatMap((l: List) => {
+        // Find when the current user joined this group
+        const myMembership = l.members.find((m: Member) => m.id === user.id);
+        const myJoinedAt = myMembership?.joinedAt ? new Date(myMembership.joinedAt).getTime() : 0;
+
+        return (l.notifications || [])
+          .filter((n: Notification) => {
+            // Skip read notifications and self-created notifications
+            if (n.read || n.userId === user.id) return false;
+            // Skip notifications that occurred before user joined
+            const notifTime = new Date(n.timestamp).getTime();
+            if (notifTime < myJoinedAt) return false;
+            // Filter based on notification type settings
+            if (n.type === 'join' && !notificationSettings.groupJoin) return false;
+            if (n.type === 'leave' && !notificationSettings.groupLeave) return false;
+            return true;
+          })
+          .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }));
+      });
+  }, [userLists, user.id, notificationSettings]);
 
   const unreadCount = myNotifications.length;
 

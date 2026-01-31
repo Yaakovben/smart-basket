@@ -134,9 +134,23 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productEdited')}</Typography>
                 <Switch checked={settings.notifications.productEdit} onChange={(e) => updateNotifications({ productEdit: e.target.checked })} sx={smallSwitchSx} />
               </Box>
-              <Box sx={{ ...subSettingRowSx, borderBottom: 'none' }}>
+              <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productPurchased')}</Typography>
                 <Switch checked={settings.notifications.productPurchase} onChange={(e) => updateNotifications({ productPurchase: e.target.checked })} sx={smallSwitchSx} />
+              </Box>
+
+              {/* Group Notifications Section */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 1.5, mb: 0.5 }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
+              </Box>
+              <Box sx={subSettingRowSx}>
+                <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberJoinedNotif')}</Typography>
+                <Switch checked={settings.notifications.groupJoin} onChange={(e) => updateNotifications({ groupJoin: e.target.checked })} sx={smallSwitchSx} />
+              </Box>
+              <Box sx={{ ...subSettingRowSx, borderBottom: 'none' }}>
+                <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberLeftNotif')}</Typography>
+                <Switch checked={settings.notifications.groupLeave} onChange={(e) => updateNotifications({ groupLeave: e.target.checked })} sx={smallSwitchSx} />
               </Box>
             </Box>
           </Collapse>

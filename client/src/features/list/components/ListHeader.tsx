@@ -83,8 +83,8 @@ export const ListHeader = memo(({
     onQuickAdd(trimmed);
     setQuickAddValue('');
 
-    // Keep focus on input for rapid additions
-    inputRef.current?.focus();
+    // Blur input to close keyboard on mobile
+    inputRef.current?.blur();
   }, [quickAddValue, onQuickAdd]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {

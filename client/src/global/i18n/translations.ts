@@ -26,6 +26,8 @@ type TranslationKey =
   | 'groupNotifications'
   | 'memberJoined'
   | 'memberLeft'
+  | 'memberJoinedNotif'
+  | 'memberLeftNotif'
   | 'productNotifications'
   | 'productAdded'
   | 'productDeleted'
@@ -156,6 +158,10 @@ type TranslationKey =
   | 'alreadyInGroup'
   | 'userNotLoggedIn'
   | 'unknownError'
+  | 'invalidGroupCode'
+  | 'invalidGroupPassword'
+  | 'alreadyMember'
+  | 'youAreOwner'
   | 'or'
   | 'enterEmail'
   | 'invalidEmail'
@@ -274,6 +280,8 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'התראות קבוצות',
     memberJoined: 'הצטרף/ה לקבוצה',
     memberLeft: 'עזב/ה את הקבוצה',
+    memberJoinedNotif: 'חבר הצטרף לקבוצה',
+    memberLeftNotif: 'חבר עזב את הקבוצה',
     productNotifications: 'התראות מוצרים',
     productAdded: 'מוצר נוסף',
     productDeleted: 'מוצר נמחק',
@@ -404,6 +412,10 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'אתה כבר בקבוצה',
     userNotLoggedIn: 'משתמש לא מחובר',
     unknownError: 'שגיאה לא ידועה',
+    invalidGroupCode: 'קוד קבוצה לא תקין',
+    invalidGroupPassword: 'סיסמת קבוצה שגויה',
+    alreadyMember: 'אתה כבר חבר בקבוצה זו',
+    youAreOwner: 'אתה הבעלים של קבוצה זו',
     or: 'או',
     enterEmail: 'נא להזין אימייל',
     invalidEmail: 'אימייל לא תקין',
@@ -519,6 +531,8 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'Group Notifications',
     memberJoined: 'Member Joined',
     memberLeft: 'Member Left',
+    memberJoinedNotif: 'Member joined the group',
+    memberLeftNotif: 'Member left the group',
     productNotifications: 'Product Notifications',
     productAdded: 'Product Added',
     productDeleted: 'Product Deleted',
@@ -649,6 +663,10 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'You are already in this group',
     userNotLoggedIn: 'User not logged in',
     unknownError: 'Unknown error',
+    invalidGroupCode: 'Invalid group code',
+    invalidGroupPassword: 'Invalid group password',
+    alreadyMember: 'You are already a member of this group',
+    youAreOwner: 'You are the owner of this group',
     or: 'or',
     enterEmail: 'Please enter email',
     invalidEmail: 'Invalid email',
@@ -764,6 +782,8 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'Уведомления группы',
     memberJoined: 'Участник присоединился',
     memberLeft: 'Участник вышел',
+    memberJoinedNotif: 'Участник присоединился к группе',
+    memberLeftNotif: 'Участник покинул группу',
     productNotifications: 'Уведомления о товарах',
     productAdded: 'Товар добавлен',
     productDeleted: 'Товар удалён',
@@ -894,6 +914,10 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'Вы уже в этой группе',
     userNotLoggedIn: 'Пользователь не авторизован',
     unknownError: 'Неизвестная ошибка',
+    invalidGroupCode: 'Неверный код группы',
+    invalidGroupPassword: 'Неверный пароль группы',
+    alreadyMember: 'Вы уже являетесь участником этой группы',
+    youAreOwner: 'Вы владелец этой группы',
     or: 'или',
     enterEmail: 'Введите email',
     invalidEmail: 'Неверный email',
