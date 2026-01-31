@@ -54,14 +54,10 @@ export const authApi = {
   // Register new user
   async register(data: RegisterData): Promise<AuthResponse> {
     setAuthInProgress(true);
-    console.log('[API DEBUG] register() called');
     try {
       const response = await apiClient.post<{ data: AuthResponse }>('/auth/register', data);
-      console.log('[API DEBUG] register response:', response.data);
       const { user, tokens } = response.data.data;
-      console.log('[API DEBUG] user:', user?.id, 'tokens exist:', !!tokens?.accessToken);
       saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
-      console.log('[API DEBUG] tokens saved and verified');
       return { user, tokens };
     } finally {
       // Small delay to ensure state updates complete before allowing redirects

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
@@ -67,18 +67,14 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = getAccessToken();
-      console.log('[HOOKS DEBUG] checkAuth running, token exists:', !!token);
       if (token) {
         try {
-          console.log('[HOOKS DEBUG] Fetching profile...');
           const profile = await authApi.getProfile();
-          console.log('[HOOKS DEBUG] Profile fetched:', profile?.id, profile?.name);
           setUser(profile);
           // Connect socket when authenticated
           socketService.connect();
-        } catch (err) {
+        } catch {
           // Token invalid, clear it
-          console.log('[HOOKS DEBUG] Profile fetch failed, clearing tokens:', err);
           clearTokens();
         }
       }
@@ -90,13 +86,10 @@ export function useAuth() {
   const login = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
-      console.log('[HOOKS DEBUG] login() called, setting user:', userData?.id, userData?.name);
       setUser(userData);
-      console.log('[HOOKS DEBUG] setUser completed');
       // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
       socketService.connect();
-      console.log('[HOOKS DEBUG] socket connect called');
     },
     [],
   );
@@ -176,16 +169,6 @@ export function useLists(user: User | null) {
   const [lists, setLists] = useState<List[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch lists when user changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only refetch when user.id changes
-  useEffect(() => {
-    if (user) {
-      fetchLists();
-    } else {
-      setLists([]);
-    }
-  }, [user?.id]);
-
   const fetchLists = useCallback(async () => {
     setLoading(true);
     try {
@@ -197,6 +180,16 @@ export function useLists(user: User | null) {
       setLoading(false);
     }
   }, []);
+
+  // Fetch lists when user changes
+  useEffect(() => {
+    if (user) {
+      fetchLists();
+    } else {
+      setLists([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes
+  }, [user?.id, fetchLists]);
 
   const createList = useCallback(
     async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'>) => {
@@ -351,13 +344,18 @@ export function useLists(user: User | null) {
     [],
   );
 
+  // Extract list IDs for stable dependency tracking
+  const listIds = useMemo(() => lists.map(l => l.id).join(','), [lists]);
+
   // Subscribe to socket events for real-time updates
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentional: only re-run when user or list IDs change
   useEffect(() => {
     if (!user) return;
 
+    // Parse list IDs from the memoized string
+    const currentIds = listIds ? listIds.split(',') : [];
+
     // Join all list rooms
-    lists.forEach((list) => socketService.joinList(list.id));
+    currentIds.forEach((id) => socketService.joinList(id));
 
     // Subscribe to list updates
     const unsubscribeListUpdated = socketService.on('list:updated', (data: unknown) => {
@@ -423,10 +421,11 @@ export function useLists(user: User | null) {
       unsubscribeProductUpdated();
       unsubscribeProductDeleted();
       unsubscribeProductToggled();
-      // Leave all rooms on cleanup
-      lists.forEach((list) => socketService.leaveList(list.id));
+      // Leave all rooms on cleanup (currentIds captured from closure)
+      currentIds.forEach((id) => socketService.leaveList(id));
     };
-  }, [user?.id, lists.map(l => l.id).join(',')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id or list IDs change
+  }, [user?.id, listIds]);
 
   return {
     lists,

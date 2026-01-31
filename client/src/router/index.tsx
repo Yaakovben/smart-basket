@@ -107,14 +107,12 @@ export const AppRouter = () => {
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
-    console.log('[ROUTER DEBUG] handleLogin called with user:', u?.id, u?.name);
     // Use flushSync to ensure user state is updated before navigation
     // This prevents race condition where navigation happens before state update
     flushSync(() => {
       login(u, loginMethod);
     });
     navigate("/");
-    console.log('[ROUTER DEBUG] login() and navigate() called');
   };
 
   const handleLogout = () => {

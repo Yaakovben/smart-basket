@@ -28,7 +28,6 @@ export function useSocketNotifications(
     return notificationSettings[eventType] ?? false;
   }, [notificationSettings]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id is needed, not the full user object
   useEffect(() => {
     if (!user) return;
 
@@ -94,5 +93,6 @@ export function useSocketNotifications(
       unsubProductDeleted();
       unsubProductToggled();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
   }, [user?.id, shouldShowNotification, showToast, t, listNames]);
 }
