@@ -213,6 +213,57 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   </Box>
                 )}
 
+                {/* Status text for existing users */}
+                <Collapse in={emailChecked && !isNewUser && !isGoogleAccount}>
+                  <Box sx={{
+                    mb: 2,
+                    p: 1.5,
+                    bgcolor: 'success.light',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}>
+                    <Box sx={{ fontSize: 18 }}>👋</Box>
+                    <Typography sx={{ fontSize: 13, color: 'success.dark', fontWeight: 500 }}>
+                      {t('returningUserHint')}
+                    </Typography>
+                  </Box>
+                </Collapse>
+
+                {/* Name Field - For new users, shown between email and password */}
+                <Collapse in={emailChecked && isNewUser}>
+                  <Box sx={{
+                    mb: 2,
+                    p: 1.5,
+                    bgcolor: 'primary.light',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    opacity: 0.9
+                  }}>
+                    <Box sx={{ fontSize: 18 }}>✨</Box>
+                    <Typography sx={{ fontSize: 13, color: 'primary.dark', fontWeight: 500 }}>
+                      {t('newUserHint')}
+                    </Typography>
+                  </Box>
+                  <TextField
+                    fullWidth
+                    label={t('name')}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder={t('name')}
+                    autoComplete="name"
+                    size="small"
+                    autoFocus
+                    sx={{ mb: 2 }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>👤</Box></InputAdornment>
+                    }}
+                  />
+                </Collapse>
+
                 {/* Password Field - Always visible */}
                 <TextField
                   fullWidth
@@ -253,26 +304,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     </Box>
                   );
                 })()}
-
-                {/* Name Field - Only for new users after login attempt */}
-                <Collapse in={emailChecked && isNewUser}>
-                  <TextField
-                    fullWidth
-                    label={t('name')}
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder={t('name')}
-                    autoComplete="name"
-                    size="small"
-                    sx={{ mb: 2 }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>👤</Box></InputAdornment>
-                    }}
-                  />
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1, textAlign: 'center' }}>
-                    👋 {t('newUserHint')}
-                  </Typography>
-                </Collapse>
 
                 {error && showEmailForm && (
                   <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">

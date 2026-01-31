@@ -228,6 +228,16 @@ class SocketService {
   emitProductToggled(listId: string, productId: string, productName: string, isPurchased: boolean, userName: string) {
     this.socket?.emit('product:toggle', { listId, productId, productName, isPurchased, userName });
   }
+
+  // Emit member joined event
+  emitMemberJoined(listId: string, listName: string, userName: string) {
+    this.socket?.emit('member:join', { listId, listName, userName });
+  }
+
+  // Emit member left event
+  emitMemberLeft(listId: string, listName: string, userName: string) {
+    this.socket?.emit('member:leave', { listId, listName, userName });
+  }
 }
 
 // Singleton instance

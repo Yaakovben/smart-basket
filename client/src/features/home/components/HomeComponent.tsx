@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert
@@ -33,6 +33,14 @@ const shakeKeyframes = {
     '0%, 100%': { transform: 'translateX(0)' },
     '25%, 75%': { transform: 'translateX(-2px)' },
     '50%': { transform: 'translateX(2px)' }
+  }
+};
+
+const notificationDismissKeyframes = {
+  '@keyframes notificationDismiss': {
+    '0%': { transform: 'translateX(0) scale(1)', opacity: 1 },
+    '30%': { transform: 'translateX(10px) scale(1.02)', opacity: 1 },
+    '100%': { transform: 'translateX(100%) scale(0.8)', opacity: 0 }
   }
 };
 
@@ -106,6 +114,24 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
   } = useHome({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, onMarkNotificationsRead, onMarkSingleNotificationRead
   });
+
+  // Track which notifications are being dismissed (for animation)
+  const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
+
+  const handleDismissNotification = useCallback((listId: string, notificationId: string) => {
+    // Add to dismissing set to trigger animation
+    setDismissingNotifications(prev => new Set(prev).add(notificationId));
+
+    // After animation completes, actually mark as read
+    setTimeout(() => {
+      markNotificationRead(listId, notificationId);
+      setDismissingNotifications(prev => {
+        const next = new Set(prev);
+        next.delete(notificationId);
+        return next;
+      });
+    }, 300);
+  }, [markNotificationRead]);
 
   // Ref for password field in Join Group modal
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -543,14 +569,31 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
               <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>{t('noNotifications')}</Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden' }}>
               {myNotifications.map((n: ExtendedNotification) => {
                 const isLeave = n.type === 'leave';
+                const isDismissing = dismissingNotifications.has(n.id);
                 const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
                 const dateStr = notificationDate ? notificationDate.toLocaleDateString('he-IL') : '';
                 const timeStr = notificationDate ? notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
                 return (
-                  <Box key={n.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.75, bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4', borderRadius: '12px', border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}` }}>
+                  <Box
+                    key={n.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      p: 1.75,
+                      bgcolor: isLeave ? '#FEF2F2' : '#F0FDF4',
+                      borderRadius: '12px',
+                      border: `1px solid ${isLeave ? '#FECACA' : '#BBF7D0'}`,
+                      transition: 'all 0.3s ease',
+                      ...(isDismissing && {
+                        ...notificationDismissKeyframes,
+                        animation: 'notificationDismiss 0.3s ease-out forwards',
+                      }),
+                    }}
+                  >
                     <Avatar sx={{ bgcolor: isLeave ? 'error.main' : 'success.main', width: 40, height: 40 }}>
                       {isLeave ? '👋' : '🎉'}
                     </Avatar>
@@ -567,8 +610,14 @@ export const HomeComponent = ({ lists, onSelectList, onCreateList, onDeleteList,
                     </Box>
                     <IconButton
                       size="small"
-                      onClick={() => markNotificationRead(n.listId, n.id)}
-                      sx={{ color: isLeave ? '#991B1B' : '#166534' }}
+                      onClick={() => handleDismissNotification(n.listId, n.id)}
+                      disabled={isDismissing}
+                      sx={{
+                        color: isLeave ? '#991B1B' : '#166534',
+                        '&:hover': {
+                          bgcolor: isLeave ? 'rgba(153, 27, 27, 0.1)' : 'rgba(22, 101, 52, 0.1)',
+                        },
+                      }}
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>

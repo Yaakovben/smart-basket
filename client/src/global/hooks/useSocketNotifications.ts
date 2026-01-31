@@ -13,6 +13,16 @@ interface ProductEventData {
   userName: string;
 }
 
+interface NotificationEventData {
+  id: string;
+  type: 'join' | 'leave';
+  listId: string;
+  userId: string;
+  userName: string;
+  message: string;
+  timestamp: Date;
+}
+
 export function useSocketNotifications(
   user: User | null,
   showToast: (message: string) => void,
@@ -82,16 +92,34 @@ export function useSocketNotifications(
       }
     });
 
-    // Note: user:joined and user:left socket events are for real-time presence tracking only
-    // They fire on every login/logout and socket reconnection, NOT for actual group membership changes
-    // Actual group join/leave notifications are stored in the list's notifications array
-    // and shown in the notifications modal, not as toasts
+    // Member join/leave notifications (real-time)
+    const unsubNotificationNew = socketService.on('notification:new', (data: unknown) => {
+      const event = data as NotificationEventData;
+      // Don't show notification for own actions
+      if (event.userId === user.id) return;
+
+      // Check if group notifications are enabled
+      if (!notificationSettings.enabled) return;
+
+      if (event.type === 'join' && notificationSettings.groupJoin) {
+        const listName = listNames[event.listId] || '';
+        const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+        showToast(message);
+      }
+
+      if (event.type === 'leave' && notificationSettings.groupLeave) {
+        const listName = listNames[event.listId] || '';
+        const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+        showToast(message);
+      }
+    });
 
     return () => {
       unsubProductAdded();
       unsubProductUpdated();
       unsubProductDeleted();
       unsubProductToggled();
+      unsubNotificationNew();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
   }, [user?.id, shouldShowNotification, showToast, t, listNames]);

@@ -21,6 +21,8 @@ export interface ClientToServerEvents {
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;
   'product:delete': (data: { listId: string; productId: string; productName: string; userName: string }) => void;
   'notification:read': (data: { listId: string; notificationId?: string }) => void;
+  'member:join': (data: { listId: string; listName: string; userName: string }) => void;
+  'member:leave': (data: { listId: string; listName: string; userName: string }) => void;
 }
 
 // Socket events from server to client

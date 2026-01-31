@@ -1,0 +1,56 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { registerSW } from 'virtual:pwa-register';
+
+interface UseServiceWorkerReturn {
+  needRefresh: boolean;
+  updateServiceWorker: () => void;
+}
+
+export function useServiceWorker(): UseServiceWorkerReturn {
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const updateSWRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
+
+  useEffect(() => {
+    const updateSW = registerSW({
+      immediate: true,
+      onNeedRefresh() {
+        // New content available, auto-reload for seamless update
+        setNeedRefresh(true);
+        // Auto-reload after a short delay to ensure SW is ready
+        setTimeout(() => {
+          if (updateSWRef.current) {
+            updateSWRef.current(true);
+          }
+        }, 1000);
+      },
+      onOfflineReady() {
+        console.log('App ready for offline use');
+      },
+      onRegisteredSW(swUrl, registration) {
+        // Check for updates periodically (every 1 hour)
+        if (registration) {
+          setInterval(() => {
+            registration.update();
+          }, 60 * 60 * 1000);
+        }
+        console.log('SW registered:', swUrl);
+      },
+      onRegisterError(error) {
+        console.error('SW registration error:', error);
+      },
+    });
+
+    updateSWRef.current = updateSW;
+  }, []);
+
+  const updateServiceWorker = useCallback(() => {
+    if (updateSWRef.current) {
+      updateSWRef.current(true);
+    }
+  }, []);
+
+  return {
+    needRefresh,
+    updateServiceWorker,
+  };
+}

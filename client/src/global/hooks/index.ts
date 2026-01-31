@@ -4,9 +4,10 @@ import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
 
-// Re-export useDebounce
+// Re-export hooks
 export { useDebounce } from './useDebounce';
 export { useSocketNotifications } from './useSocketNotifications';
+export { useServiceWorker } from './useServiceWorker';
 
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(
@@ -291,6 +292,8 @@ export function useLists(user: User | null) {
         setLists((prev) => [...prev, convertApiList(joinedList)]);
         // Join socket room for this list
         socketService.joinList(joinedList.id);
+        // Notify other members that someone joined
+        socketService.emitMemberJoined(joinedList.id, joinedList.name, user.name);
         return { success: true };
       } catch (error: unknown) {
         const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } } };
@@ -321,7 +324,14 @@ export function useLists(user: User | null) {
     async (listId: string) => {
       if (!user) return;
 
+      // Get list name before leaving for notification
+      const listToLeave = lists.find((l) => l.id === listId);
+
       try {
+        // Notify other members that someone is leaving (before actually leaving)
+        if (listToLeave) {
+          socketService.emitMemberLeft(listId, listToLeave.name, user.name);
+        }
         await listsApi.leaveGroup(listId);
         // Leave socket room
         socketService.leaveList(listId);
@@ -331,7 +341,7 @@ export function useLists(user: User | null) {
         throw error;
       }
     },
-    [user],
+    [user, lists],
   );
 
   const markNotificationsRead = useCallback(
