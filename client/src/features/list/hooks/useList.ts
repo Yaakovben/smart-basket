@@ -146,6 +146,7 @@ export const useList = ({
 
   // ===== Effects =====
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: hide FAB when items count drops
     if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
   }, [items.length]);
 
@@ -255,7 +256,7 @@ export const useList = ({
       updateProducts(previousProducts);
       showToast(t('unknownError'), 'error');
     }
-  }, [newProduct, list.id, list.products, user.id, user.name, updateProducts, showToast, t, validateProduct]);
+  }, [newProduct, list.id, list.products, user.name, updateProducts, showToast, t, validateProduct]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
@@ -313,7 +314,7 @@ export const useList = ({
       updateProducts(previousProducts);
       showToast(t('unknownError'), 'error');
     }
-  }, [list.id, list.products, user.id, user.name, updateProducts, showToast, t]);
+  }, [list.id, list.products, user.name, updateProducts, showToast, t]);
 
   const toggleProduct = useCallback(async (productId: string) => {
     // Optimistic update for immediate UI response

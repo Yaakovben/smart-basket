@@ -28,6 +28,7 @@ export function useSocketNotifications(
     return notificationSettings[eventType] ?? false;
   }, [notificationSettings]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id is needed, not the full user object
   useEffect(() => {
     if (!user) return;
 

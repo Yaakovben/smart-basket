@@ -46,6 +46,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   // Close this item when another item is opened
   useEffect(() => {
     if (!isOpen && offset > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: sync external isOpen state with internal offset
       setOffset(0);
     }
   }, [isOpen, offset]);

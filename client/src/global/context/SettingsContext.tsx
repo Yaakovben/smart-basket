@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { AppSettings, Language, ThemeMode, NotificationSettings } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../constants';

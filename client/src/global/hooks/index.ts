@@ -88,6 +88,7 @@ export function useAuth() {
   }, []);
 
   const login = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
       console.log('[HOOKS DEBUG] login() called, setting user:', userData?.id, userData?.name);
       setUser(userData);
@@ -176,6 +177,7 @@ export function useLists(user: User | null) {
   const [loading, setLoading] = useState(false);
 
   // Fetch lists when user changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only refetch when user.id changes
   useEffect(() => {
     if (user) {
       fetchLists();
@@ -350,6 +352,7 @@ export function useLists(user: User | null) {
   );
 
   // Subscribe to socket events for real-time updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentional: only re-run when user or list IDs change
   useEffect(() => {
     if (!user) return;
 

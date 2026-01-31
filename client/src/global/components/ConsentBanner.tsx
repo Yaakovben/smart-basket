@@ -13,6 +13,7 @@ export const ConsentBanner = memo(() => {
   // Re-check consent when location changes (e.g., after accepting on privacy page)
   useEffect(() => {
     const hasConsent = localStorage.getItem(STORAGE_KEYS.CONSENT_ACCEPTED);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: sync localStorage state on route change
     setShowBanner(!hasConsent);
   }, [location.pathname]);
 
