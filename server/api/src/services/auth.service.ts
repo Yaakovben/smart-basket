@@ -83,7 +83,7 @@ export class AuthService {
     );
 
     if (!user) {
-      throw ApiError.unauthorized('Invalid email or password');
+      throw ApiError.notFound('User not found');
     }
 
     // Check if user registered with Google only (no password)

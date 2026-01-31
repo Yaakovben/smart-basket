@@ -76,8 +76,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     }
   }, [email, t]);
 
-  // Debounce email suggestion to avoid showing while typing
+  // Debounce email suggestion and check to avoid while typing
   const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
@@ -90,9 +91,12 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     // Clear previous suggestion immediately when typing
     setEmailSuggestion(null);
 
-    // Clear existing timer
+    // Clear existing timers
     if (suggestionTimerRef.current) {
       clearTimeout(suggestionTimerRef.current);
+    }
+    if (emailCheckTimerRef.current) {
+      clearTimeout(emailCheckTimerRef.current);
     }
 
     // Check for domain typos after user stops typing (500ms delay)
@@ -100,13 +104,36 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const suggestion = checkEmailDomainTypo(newEmail);
       setEmailSuggestion(suggestion);
     }, 500);
-  }, []);
 
-  // Cleanup timer on unmount
+    // Auto-check email existence after user stops typing (800ms delay)
+    if (isValidEmail(newEmail.trim())) {
+      emailCheckTimerRef.current = setTimeout(async () => {
+        setCheckingEmail(true);
+        try {
+          const result = await authApi.checkEmail(newEmail.trim());
+          setEmailChecked(true);
+          setIsNewUser(!result.exists);
+          setIsGoogleAccount(result.isGoogleAccount);
+          if (result.isGoogleAccount) {
+            setError(t('useGoogleSignIn'));
+          }
+        } catch {
+          // Silent fail - will check again on submit
+        } finally {
+          setCheckingEmail(false);
+        }
+      }, 800);
+    }
+  }, [t]);
+
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (suggestionTimerRef.current) {
         clearTimeout(suggestionTimerRef.current);
+      }
+      if (emailCheckTimerRef.current) {
+        clearTimeout(emailCheckTimerRef.current);
       }
     };
   }, []);
@@ -134,7 +161,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     }
 
     // Validate password
-    if (!password || password.length < 6) {
+    if (!password || password.length < 4) {
       setError(t('passwordTooShort'));
       return;
     }
