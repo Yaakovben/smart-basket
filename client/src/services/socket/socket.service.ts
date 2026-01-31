@@ -73,7 +73,6 @@ class SocketService {
   connect() {
     const token = getAccessToken();
     if (!token) {
-      console.warn('No access token available for socket connection');
       return;
     }
 
@@ -88,19 +87,17 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('Socket connected');
       // Rejoin all lists after reconnect
       this.joinedLists.forEach((listId) => {
         this.socket?.emit('join:list', listId);
       });
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+    this.socket.on('disconnect', () => {
+      // Socket disconnected, will auto-reconnect
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
       // If auth error, try reconnecting with fresh token
       if (error.message.includes('auth') || error.message.includes('token')) {
         const newToken = getAccessToken();
@@ -110,8 +107,8 @@ class SocketService {
       }
     });
 
-    this.socket.on('error', (error) => {
-      console.error('Socket error:', error);
+    this.socket.on('error', () => {
+      // Socket error handled by reconnection logic
     });
 
     // Setup event forwarding

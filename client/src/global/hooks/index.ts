@@ -192,8 +192,29 @@ export function useLists(user: User | null) {
   }, [user?.id, fetchLists]);
 
   const createList = useCallback(
-    async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'>) => {
+    async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'> & { id?: string; owner?: User; members?: Member[]; products?: Product[] }) => {
+      // Generate temp ID for optimistic update
+      const tempId = list.id || `temp_${Date.now()}`;
+
+      // Create optimistic list immediately
+      const optimisticList: List = {
+        id: tempId,
+        name: list.name,
+        icon: list.icon,
+        color: list.color,
+        isGroup: list.isGroup,
+        owner: list.owner || { id: '', name: '', email: '' },
+        members: list.members || [],
+        products: list.products || [],
+        inviteCode: list.inviteCode || null,
+        password: list.password || null,
+      };
+
+      // Add to state immediately (optimistic)
+      setLists((prev) => [...prev, optimisticList]);
+
       try {
+        // Call API in background
         const newList = await listsApi.createList({
           name: list.name,
           icon: list.icon,
@@ -201,9 +222,17 @@ export function useLists(user: User | null) {
           isGroup: list.isGroup,
           password: list.password || undefined,
         });
-        setLists((prev) => [...prev, convertApiList(newList)]);
+
+        // Replace temp list with server response
+        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList) : l));
+
+        // Join socket room for the new list
+        socketService.joinList(newList.id);
+
         return convertApiList(newList);
       } catch (error) {
+        // Remove optimistic list on error
+        setLists((prev) => prev.filter((l) => l.id !== tempId));
         console.error('Failed to create list:', error);
         throw error;
       }

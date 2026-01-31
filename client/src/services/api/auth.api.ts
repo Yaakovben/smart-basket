@@ -61,7 +61,7 @@ export const authApi = {
       return { user, tokens };
     } finally {
       // Small delay to ensure state updates complete before allowing redirects
-      setTimeout(() => setAuthInProgress(false), 1000);
+      setTimeout(() => setAuthInProgress(false), 100);
     }
   },
 
@@ -74,7 +74,7 @@ export const authApi = {
       saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
       return { user, tokens };
     } finally {
-      setTimeout(() => setAuthInProgress(false), 1000);
+      setTimeout(() => setAuthInProgress(false), 100);
     }
   },
 
@@ -87,7 +87,7 @@ export const authApi = {
       saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
       return { user, tokens };
     } finally {
-      setTimeout(() => setAuthInProgress(false), 1000);
+      setTimeout(() => setAuthInProgress(false), 100);
     }
   },
 
