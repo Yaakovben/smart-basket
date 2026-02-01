@@ -246,7 +246,7 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 3 }}>{t('version')} 1.1.0</Typography>
             <Typography sx={{ fontSize: 15, color: 'text.secondary', mb: 3, px: 2 }}>{t('aboutDescription')}</Typography>
             <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', p: 2, mt: 2 }}>
-              <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>© 2025 {t('appName')}</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>© {new Date().getFullYear()} {t('appName')}</Typography>
               <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5 }}>{t('allRightsReserved')}</Typography>
             </Box>
           </Box>
