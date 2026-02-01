@@ -41,6 +41,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   const hasCalledOpen = useRef(false);
   const directionLocked = useRef<'horizontal' | 'vertical' | null>(null);
   const justSwiped = useRef(false);
+  // Velocity tracking for WhatsApp-like momentum
+  const lastX = useRef(0);
+  const lastTime = useRef(0);
+  const velocity = useRef(0);
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
   // Close this item when another item is opened
@@ -51,38 +55,55 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
   }, [isOpen, offset]);
 
-  // Rubber band effect - dampens movement beyond max width
+  // WhatsApp-like rubber band effect - works in both directions
   const calcOffset = (rawOffset: number) => {
-    if (rawOffset <= SWIPE_ACTIONS_WIDTH) {
-      return Math.max(0, rawOffset);
+    // Swiping right (negative) - gentle rubber band resistance
+    if (rawOffset < 0) {
+      return rawOffset * 0.25; // 25% resistance when swiping wrong direction
     }
-    // Beyond max: apply resistance (30% of extra distance)
+    // Normal range
+    if (rawOffset <= SWIPE_ACTIONS_WIDTH) {
+      return rawOffset;
+    }
+    // Beyond max: apply stronger resistance (20% of extra distance)
     const extra = rawOffset - SWIPE_ACTIONS_WIDTH;
-    return SWIPE_ACTIONS_WIDTH + extra * 0.3;
+    return SWIPE_ACTIONS_WIDTH + extra * 0.2;
   };
 
   const handlers = {
     onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => {
-      startX.current = e.touches[0].clientX;
-      startY.current = e.touches[0].clientY;
+      const touch = e.touches[0];
+      startX.current = touch.clientX;
+      startY.current = touch.clientY;
       startOff.current = offset;
+      lastX.current = touch.clientX;
+      lastTime.current = Date.now();
+      velocity.current = 0;
       setSwiping(false);
       hasCalledOpen.current = false;
       directionLocked.current = null;
     },
     onTouchMove: (e: React.TouchEvent<HTMLDivElement>) => {
-      const dx = startX.current - e.touches[0].clientX;
-      const dy = e.touches[0].clientY - startY.current;
+      const touch = e.touches[0];
+      const dx = startX.current - touch.clientX;
+      const dy = touch.clientY - startY.current;
       const absDx = Math.abs(dx);
       const absDy = Math.abs(dy);
 
-      // Lock direction after 10px movement with more aggressive horizontal detection
-      // Require horizontal to be at least 1.5x vertical to lock as horizontal (like WhatsApp)
-      if (!directionLocked.current && (absDx > 10 || absDy > 10)) {
-        // More strict: horizontal only if significantly more horizontal than vertical
-        directionLocked.current = absDx > absDy * 1.5 ? 'horizontal' : 'vertical';
+      // Calculate velocity for momentum
+      const now = Date.now();
+      const dt = now - lastTime.current;
+      if (dt > 0) {
+        velocity.current = (lastX.current - touch.clientX) / dt;
+      }
+      lastX.current = touch.clientX;
+      lastTime.current = now;
+
+      // Lock direction after 8px movement - more responsive
+      if (!directionLocked.current && (absDx > 8 || absDy > 8)) {
+        // WhatsApp-like: horizontal if ratio is > 1.2x (slightly more forgiving)
+        directionLocked.current = absDx > absDy * 1.2 ? 'horizontal' : 'vertical';
         if (directionLocked.current === 'horizontal') {
-          // Immediately prevent scroll when horizontal swipe detected
           e.preventDefault();
           document.body.style.overflow = 'hidden';
           document.body.style.touchAction = 'none';
@@ -94,34 +115,42 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
         return;
       }
 
-      // Handle horizontal swipe
+      // Handle horizontal swipe - always allow movement for fluid feel
       if (directionLocked.current === 'horizontal') {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!swiping && absDx > 8) {
+        if (!swiping) {
           setSwiping(true);
-          // Call onOpen early to close other items
-          if (!hasCalledOpen.current && dx > 0) {
-            hasCalledOpen.current = true;
-            onOpen();
-          }
         }
 
-        if (swiping) {
-          const rawOffset = startOff.current + dx;
-          setOffset(calcOffset(rawOffset));
+        // Call onOpen when swiping left to close other items
+        if (!hasCalledOpen.current && dx > 20) {
+          hasCalledOpen.current = true;
+          onOpen();
         }
+
+        const rawOffset = startOff.current + dx;
+        setOffset(calcOffset(rawOffset));
       }
     },
     onTouchEnd: () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
       directionLocked.current = null;
+
       if (swiping) {
         justSwiped.current = true;
         setTimeout(() => { justSwiped.current = false; }, SWIPE_CONFIG.debounceMs);
-        if (offset > SWIPE_CONFIG.openThreshold) {
+
+        // WhatsApp-like: use velocity + position to determine final state
+        // High velocity (> 0.5 px/ms) = snap based on direction regardless of position
+        // Low velocity = snap based on position threshold
+        const highVelocityThreshold = 0.5;
+        const shouldOpen = velocity.current > highVelocityThreshold ||
+          (velocity.current > -highVelocityThreshold && offset > SWIPE_CONFIG.openThreshold);
+
+        if (shouldOpen && offset > 0) {
           setOffset(SWIPE_ACTIONS_WIDTH);
           haptic('light');
         } else {
@@ -130,6 +159,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
         }
       }
       setSwiping(false);
+      velocity.current = 0;
     }
   };
 
@@ -186,8 +216,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           bgcolor: isPurchased ? 'action.disabledBackground' : 'background.paper',
           px: '14px',
           borderRadius: '14px',
-          transform: `translateX(-${offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transform: `translateX(${-offset}px)`,
+          // WhatsApp-like spring animation - fast start, smooth overshoot
+          transition: swiping ? 'none' : 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)',
+          willChange: swiping ? 'transform' : 'auto',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.7 ? 'none' : 'auto'
         }}
