@@ -174,7 +174,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   autoComplete="email"
                   size="small"
                   disabled={emailChecked && !isGoogleAccount}
-                  sx={{ mb: emailSuggestion ? 0.5 : 2, mt: 2 }}
+                  sx={{ mb: (emailSuggestion && !emailChecked) ? 0.5 : 2, mt: 2 }}
                   inputProps={{ dir: 'ltr' }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>,
@@ -249,28 +249,30 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 />
 
                 {/* Password Strength Indicator - Only for new users */}
-                {isNewUser && password.length > 0 && (() => {
-                  const strength = getPasswordStrength(password);
-                  const colors = ['#EF4444', '#F59E0B', '#10B981'];
-                  return (
-                    <Box sx={{
-                      mt: -1.5,
-                      mb: 2,
-                      height: 4,
-                      borderRadius: 2,
-                      bgcolor: 'action.disabledBackground',
-                      overflow: 'hidden'
-                    }}>
+                <Collapse in={isNewUser && password.length > 0}>
+                  {(() => {
+                    const strength = getPasswordStrength(password);
+                    const colors = ['#EF4444', '#F59E0B', '#10B981'];
+                    return (
                       <Box sx={{
-                        height: '100%',
-                        width: `${(strength.strength / 3) * 100}%`,
-                        bgcolor: colors[strength.strength - 1] || 'transparent',
+                        mt: -1,
+                        mb: 1,
+                        height: 4,
                         borderRadius: 2,
-                        transition: 'width 0.3s ease, background-color 0.3s ease'
-                      }} />
-                    </Box>
-                  );
-                })()}
+                        bgcolor: 'action.disabledBackground',
+                        overflow: 'hidden'
+                      }}>
+                        <Box sx={{
+                          height: '100%',
+                          width: `${(strength.strength / 3) * 100}%`,
+                          bgcolor: colors[strength.strength - 1] || 'transparent',
+                          borderRadius: 2,
+                          transition: 'width 0.3s ease, background-color 0.3s ease'
+                        }} />
+                      </Box>
+                    );
+                  })()}
+                </Collapse>
 
                 {error && showEmailForm && (
                   <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
