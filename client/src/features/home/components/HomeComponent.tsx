@@ -14,6 +14,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
 import type { List, Product, User } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
+import type { PersistedNotification } from '../../../services/api';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -91,15 +92,16 @@ interface HomePageProps {
   onLogout: () => void;
   onMarkNotificationsRead: (listId: string) => void;
   onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
-  localNotifications?: LocalNotification[];
-  onMarkLocalNotificationRead?: (notificationId: string) => void;
-  onClearAllLocalNotifications?: () => void;
+  // Persisted notifications from API (replaces localNotifications)
+  persistedNotifications?: PersistedNotification[];
+  onMarkPersistedNotificationRead?: (notificationId: string) => void;
+  onClearAllPersistedNotifications?: (listId?: string) => void;
 }
 
 export const HomeComponent = ({
   lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout,
   onMarkNotificationsRead, onMarkSingleNotificationRead, user,
-  localNotifications = [], onMarkLocalNotificationRead, onClearAllLocalNotifications
+  persistedNotifications = [], onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
@@ -110,7 +112,7 @@ export const HomeComponent = ({
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup,
     // Computed
-    userLists, my, groups, myNotifications, unreadCount, display,
+    userLists, my, groups, myNotifications, display,
     // Setters
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
@@ -125,10 +127,25 @@ export const HomeComponent = ({
   // Track which notifications are being dismissed (for animation)
   const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
 
-  // Combine server notifications with local notifications for display
+  // Convert persisted notifications to display format
   const allNotifications = useMemo(() => {
-    // Convert server notifications to a common format
-    const serverNotifs = myNotifications.map(n => ({
+    // Map persisted notifications to display format
+    const displayNotifs = persistedNotifications.map(n => ({
+      id: n.id,
+      type: (n.type === 'product_update' ? 'product_edit' : n.type) as LocalNotification['type'],
+      listId: n.listId,
+      listName: n.listName,
+      userId: n.actorId,
+      userName: n.actorName,
+      timestamp: new Date(n.createdAt),
+      read: n.read,
+      isLocal: false,
+      productName: n.productName,
+      isPurchased: n.type === 'product_purchase' ? true : undefined
+    }));
+
+    // Also include embedded notifications from lists (for backward compatibility)
+    const embeddedNotifs = myNotifications.map(n => ({
       id: n.id,
       type: n.type as LocalNotification['type'],
       listId: n.listId,
@@ -142,29 +159,39 @@ export const HomeComponent = ({
       isPurchased: undefined as boolean | undefined
     }));
 
-    // Mark local notifications
-    const localNotifs = localNotifications.map(n => ({
-      ...n,
-      isLocal: true
-    }));
+    // Combine, dedupe by id, and sort by timestamp (newest first)
+    const combined = [...displayNotifs];
+    for (const embedded of embeddedNotifs) {
+      if (!combined.some(n => n.id === embedded.id)) {
+        combined.push(embedded);
+      }
+    }
 
-    // Combine and sort by timestamp (newest first)
-    return [...serverNotifs, ...localNotifs].sort((a, b) =>
+    return combined.sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  }, [myNotifications, localNotifications]);
+  }, [myNotifications, persistedNotifications]);
 
-  const totalUnreadCount = unreadCount + localNotifications.filter(n => !n.read).length;
+  // Calculate total unread count from persisted notifications
+  const totalUnreadCount = useMemo(() => {
+    const persistedUnread = persistedNotifications.filter(n => !n.read).length;
+    // Also count embedded notifications that aren't in persisted (for backward compatibility)
+    const embeddedIds = new Set(persistedNotifications.map(n => n.id));
+    const embeddedUnread = myNotifications.filter(n => !embeddedIds.has(n.id)).length;
+    return persistedUnread + embeddedUnread;
+  }, [persistedNotifications, myNotifications]);
 
-  const handleDismissNotification = useCallback((listId: string, notificationId: string, isLocal: boolean) => {
+  const handleDismissNotification = useCallback((listId: string, notificationId: string, isPersisted: boolean) => {
     // Add to dismissing set to trigger animation
     setDismissingNotifications(prev => new Set(prev).add(notificationId));
 
     // After animation completes, actually mark as read
     setTimeout(() => {
-      if (isLocal) {
-        onMarkLocalNotificationRead?.(notificationId);
+      if (isPersisted || persistedNotifications.some(n => n.id === notificationId)) {
+        // Use persisted notification API
+        onMarkPersistedNotificationRead?.(notificationId);
       } else {
+        // Fall back to embedded notification API
         markNotificationRead(listId, notificationId);
       }
       setDismissingNotifications(prev => {
@@ -173,12 +200,14 @@ export const HomeComponent = ({
         return next;
       });
     }, 600);
-  }, [markNotificationRead, onMarkLocalNotificationRead]);
+  }, [markNotificationRead, onMarkPersistedNotificationRead, persistedNotifications]);
 
   const handleMarkAllRead = useCallback(() => {
+    // Mark all embedded notifications as read
     markAllNotificationsRead();
-    onClearAllLocalNotifications?.();
-  }, [markAllNotificationsRead, onClearAllLocalNotifications]);
+    // Mark all persisted notifications as read
+    onClearAllPersistedNotifications?.();
+  }, [markAllNotificationsRead, onClearAllPersistedNotifications]);
 
   // Ref for password field in Join Group modal
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -697,7 +726,7 @@ export const HomeComponent = ({
                     </Box>
                     <IconButton
                       size="small"
-                      onClick={() => handleDismissNotification(n.listId, n.id, n.isLocal)}
+                      onClick={() => handleDismissNotification(n.listId, n.id, !n.isLocal)}
                       disabled={isDismissing}
                       sx={{
                         color: style.textColor,

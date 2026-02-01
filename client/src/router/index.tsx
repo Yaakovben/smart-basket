@@ -1,12 +1,12 @@
-import { lazy, Suspense, useMemo, useState, useCallback, useEffect } from "react";
+import { lazy, Suspense, useMemo, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, type LocalNotification } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
-import { ADMIN_CONFIG, STORAGE_KEYS } from "../global/constants";
+import { ADMIN_CONFIG } from "../global/constants";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -96,63 +96,13 @@ export const AppRouter = () => {
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast } = useToast();
 
-  // Local notifications from socket (product events, real-time join/leave)
-  const [localNotifications, setLocalNotifications] = useState<LocalNotification[]>([]);
-
-  // Dismissed notification IDs (persisted in localStorage)
-  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.DISMISSED_NOTIFICATIONS);
-      if (stored) {
-        const parsed = JSON.parse(stored) as string[];
-        return new Set(parsed);
-      }
-    } catch {
-      // Ignore parse errors
-    }
-    return new Set();
-  });
-
-  // Save dismissed IDs to localStorage when they change
-  useEffect(() => {
-    try {
-      // Keep only the last 200 dismissed IDs to avoid unlimited growth
-      const idsArray = Array.from(dismissedNotificationIds).slice(-200);
-      localStorage.setItem(STORAGE_KEYS.DISMISSED_NOTIFICATIONS, JSON.stringify(idsArray));
-    } catch {
-      // Ignore storage errors
-    }
-  }, [dismissedNotificationIds]);
-
-  const addLocalNotification = useCallback((notification: LocalNotification) => {
-    // Don't add if this notification was previously dismissed
-    if (dismissedNotificationIds.has(notification.id)) return;
-
-    setLocalNotifications(prev => {
-      // Avoid duplicates
-      if (prev.some(n => n.id === notification.id)) return prev;
-      // Keep max 50 notifications, oldest first
-      const newList = [notification, ...prev];
-      return newList.slice(0, 50);
-    });
-  }, [dismissedNotificationIds]);
-
-  const markLocalNotificationRead = useCallback((notificationId: string) => {
-    // Add to dismissed set (persisted)
-    setDismissedNotificationIds(prev => new Set([...prev, notificationId]));
-    // Remove from current notifications
-    setLocalNotifications(prev => prev.filter(n => n.id !== notificationId));
-  }, []);
-
-  const clearAllLocalNotifications = useCallback(() => {
-    // Add all current notifications to dismissed set
-    setDismissedNotificationIds(prev => {
-      const newSet = new Set(prev);
-      localNotifications.forEach(n => newSet.add(n.id));
-      return newSet;
-    });
-    setLocalNotifications([]);
-  }, [localNotifications]);
+  // Persisted notifications (loaded from API, updated in real-time via socket)
+  const {
+    notifications: persistedNotifications,
+    markAsRead: markPersistedNotificationRead,
+    markAllAsRead: clearAllPersistedNotifications,
+    addNotification: addPersistedNotification,
+  } = useNotifications(user);
 
   // Create list names map for notifications
   const listNames = useMemo(() =>
@@ -170,7 +120,8 @@ export const AppRouter = () => {
   }, [removeListLocal, navigate]);
 
   // Subscribe to socket notifications (respects notification settings)
-  useSocketNotifications(user, showToast, listNames, addLocalNotification, handleMemberRemoved);
+  // The addPersistedNotification callback adds real-time notifications to the persisted list
+  useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved);
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
@@ -238,9 +189,9 @@ export const AppRouter = () => {
                 onMarkNotificationsRead={markNotificationsRead}
                 onMarkSingleNotificationRead={markSingleNotificationRead}
                 onLogout={handleLogout}
-                localNotifications={localNotifications}
-                onMarkLocalNotificationRead={markLocalNotificationRead}
-                onClearAllLocalNotifications={clearAllLocalNotifications}
+                persistedNotifications={persistedNotifications}
+                onMarkPersistedNotificationRead={markPersistedNotificationRead}
+                onClearAllPersistedNotifications={clearAllPersistedNotifications}
               />
             </ProtectedRoute>
           }

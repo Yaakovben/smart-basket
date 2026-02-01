@@ -123,6 +123,56 @@ export const reorderProductsSchema = z.object({
   }),
 });
 
+// ===== Notification Schemas =====
+const notificationTypeEnum = z.enum([
+  'join', 'leave', 'product_add', 'product_update',
+  'product_delete', 'product_purchase', 'member_removed'
+]);
+
+export const getNotificationsSchema = z.object({
+  query: z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+    listId: z.string().optional(),
+    unreadOnly: z.string().optional(),
+  }),
+});
+
+export const markNotificationReadSchema = z.object({
+  params: z.object({
+    id: z.string().min(1),
+  }),
+});
+
+export const markAllNotificationsReadSchema = z.object({
+  body: z.object({
+    listId: z.string().optional(),
+  }),
+});
+
+export const createNotificationSchema = z.object({
+  body: z.object({
+    type: notificationTypeEnum,
+    listId: z.string().min(1),
+    listName: z.string().min(1),
+    actorId: z.string().min(1),
+    actorName: z.string().min(1),
+    targetUserId: z.string().min(1),
+    productId: z.string().optional(),
+    productName: z.string().optional(),
+  }),
+});
+
+export const broadcastNotificationSchema = z.object({
+  body: z.object({
+    listId: z.string().min(1),
+    type: notificationTypeEnum,
+    actorId: z.string().min(1),
+    productId: z.string().optional(),
+    productName: z.string().optional(),
+  }),
+});
+
 // ===== Type exports =====
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];

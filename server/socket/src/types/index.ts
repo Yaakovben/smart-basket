@@ -4,6 +4,7 @@ export interface AuthenticatedSocket extends Socket {
   userId?: string;
   email?: string;
   userName?: string;
+  accessToken?: string;
 }
 
 export interface TokenPayload {

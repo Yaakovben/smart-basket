@@ -18,6 +18,7 @@ export const authenticateSocket = (
     (socket as AuthenticatedSocket).userId = decoded.userId;
     (socket as AuthenticatedSocket).email = decoded.email;
     (socket as AuthenticatedSocket).userName = decoded.name;
+    (socket as AuthenticatedSocket).accessToken = token;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

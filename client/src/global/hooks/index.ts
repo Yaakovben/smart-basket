@@ -8,6 +8,7 @@ import { getAccessToken, clearTokens } from "../../services/api/client";
 export { useDebounce } from './useDebounce';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
+export { useNotifications } from './useNotifications';
 
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(

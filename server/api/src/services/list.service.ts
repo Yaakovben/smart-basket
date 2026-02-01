@@ -3,6 +3,7 @@ import { List, User, type IList } from '../models';
 import { ApiError } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../utils/validators';
 import type { IListResponse } from '../types';
+import { NotificationService } from './notification.service';
 
 // Helper to generate invite code
 const generateInviteCode = (): string => {
@@ -155,6 +156,9 @@ export class ListService {
       throw ApiError.forbidden('Only the owner can delete this list');
     }
 
+    // Delete notifications for this list
+    await NotificationService.deleteNotificationsForList(listId);
+
     await list.deleteOne();
   }
 
@@ -195,7 +199,7 @@ export class ListService {
       joinedAt: new Date(),
     });
 
-    // Add notification
+    // Add notification to embedded (backward compatibility)
     list.notifications.push({
       _id: new mongoose.Types.ObjectId(),
       type: 'join',
@@ -206,6 +210,14 @@ export class ListService {
     });
 
     await list.save();
+
+    // Also save to new Notifications collection for all list members
+    await NotificationService.createNotificationsForListMembers(
+      list._id.toString(),
+      'join',
+      userId,
+      {}
+    );
 
     return transformList(list);
   }
@@ -240,7 +252,7 @@ export class ListService {
     // Remove member
     list.members.splice(memberIndex, 1);
 
-    // Add notification
+    // Add notification to embedded (backward compatibility)
     list.notifications.push({
       _id: new mongoose.Types.ObjectId(),
       type: 'leave',
@@ -251,6 +263,14 @@ export class ListService {
     });
 
     await list.save();
+
+    // Also save to new Notifications collection for all remaining list members
+    await NotificationService.createNotificationsForListMembers(
+      listId,
+      'leave',
+      userId,
+      {}
+    );
   }
 
   static async removeMember(
@@ -290,10 +310,11 @@ export class ListService {
 
     // Get member info for notification
     const member = await User.findById(memberId);
+    const actor = await User.findById(userId);
 
     list.members.splice(memberIndex, 1);
 
-    // Add notification
+    // Add notification to embedded (backward compatibility)
     if (member) {
       list.notifications.push({
         _id: new mongoose.Types.ObjectId(),
@@ -306,6 +327,28 @@ export class ListService {
     }
 
     await list.save();
+
+    // Send 'member_removed' notification to the removed member
+    if (member && actor) {
+      await NotificationService.createNotification({
+        type: 'member_removed',
+        listId,
+        listName: list.name,
+        actorId: userId,
+        actorName: actor.name,
+        targetUserId: memberId,
+      });
+    }
+
+    // Notify remaining list members about the removal
+    if (actor) {
+      await NotificationService.createNotificationsForListMembers(
+        listId,
+        'leave',
+        userId,
+        {}
+      );
+    }
 
     return transformList(list);
   }
@@ -357,12 +400,15 @@ export class ListService {
       throw ApiError.forbidden('You do not have access to this list');
     }
 
-    // Mark all as read
+    // Mark all as read in embedded (backward compatibility)
     list.notifications.forEach((n) => {
       n.read = true;
     });
 
     await list.save();
+
+    // Also mark as read in new Notifications collection
+    await NotificationService.markAllAsRead(userId, listId);
 
     return transformList(list);
   }

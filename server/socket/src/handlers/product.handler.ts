@@ -5,6 +5,7 @@ import type {
   ServerToClientEvents,
   ProductData,
 } from '../types';
+import { ApiService } from '../services/api.service';
 
 // Simple validation helpers
 const isValidString = (val: unknown): val is string =>
@@ -22,6 +23,7 @@ export const registerProductHandlers = (
   socket: AuthenticatedSocket
 ) => {
   const userId = socket.userId!;
+  const accessToken = socket.accessToken!;
 
   // Product added
   socket.on('product:add', (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => {
@@ -39,6 +41,15 @@ export const registerProductHandlers = (
       userName: data.userName,
       timestamp: new Date(),
     });
+
+    // Persist notification to database
+    ApiService.broadcastNotification({
+      listId: data.listId,
+      type: 'product_add',
+      actorId: userId,
+      productId: data.product.id,
+      productName: data.product.name,
+    }, accessToken);
   });
 
   // Product updated
@@ -56,9 +67,18 @@ export const registerProductHandlers = (
       userName: data.userName,
       timestamp: new Date(),
     });
+
+    // Persist notification to database
+    ApiService.broadcastNotification({
+      listId: data.listId,
+      type: 'product_update',
+      actorId: userId,
+      productId: data.product.id,
+      productName: data.product.name,
+    }, accessToken);
   });
 
-  // Product toggled
+  // Product toggled (purchased/unpurchased)
   socket.on('product:toggle', (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => {
     // Validate input
     if (!isValidString(data?.listId) || !isValidString(data?.productId) || !isValidBoolean(data?.isPurchased)) {
@@ -75,6 +95,17 @@ export const registerProductHandlers = (
       userName: data.userName || '',
       timestamp: new Date(),
     });
+
+    // Persist notification to database (only when purchased, not unpurchased)
+    if (data.isPurchased) {
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: 'product_purchase',
+        actorId: userId,
+        productId: data.productId,
+        productName: data.productName,
+      }, accessToken);
+    }
   });
 
   // Product deleted
@@ -93,6 +124,15 @@ export const registerProductHandlers = (
       userName: data.userName || '',
       timestamp: new Date(),
     });
+
+    // Persist notification to database
+    ApiService.broadcastNotification({
+      listId: data.listId,
+      type: 'product_delete',
+      actorId: userId,
+      productId: data.productId,
+      productName: data.productName,
+    }, accessToken);
   });
 };
 
