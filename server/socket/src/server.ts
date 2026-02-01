@@ -10,7 +10,17 @@ import {
 import { initRedis, closeRedis } from './services/redis.service';
 import type { AuthenticatedSocket, ClientToServerEvents, ServerToClientEvents } from './types';
 
-const httpServer = createServer();
+const httpServer = createServer((req, res) => {
+  // Health check endpoint for monitoring services
+  if (req.url === '/health' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
+    return;
+  }
+  // Default response for other requests
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Socket.io server');
+});
 
 // CORS configuration - supports multiple origins
 const allowedOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
