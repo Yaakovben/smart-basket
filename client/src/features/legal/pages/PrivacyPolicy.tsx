@@ -45,48 +45,55 @@ export const PrivacyPolicy = memo(() => {
           <>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>מדיניות פרטיות</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              עדכון אחרון: ינואר 2025
+              עדכון אחרון: פברואר 2025
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>1. מידע שאנו אוספים</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • שם ואימייל בעת ההרשמה{'\n'}
-              • רשימות קניות שאתה יוצר{'\n'}
-              • העדפות שפה ותצוגה{'\n'}
-              • במקרה של התחברות דרך Google - מידע בסיסי מחשבון Google שלך
+              • סיסמה מוצפנת (bcrypt){'\n'}
+              • רשימות קניות ומוצרים שאתה יוצר{'\n'}
+              • התראות על פעילות ברשימות משותפות{'\n'}
+              • העדפות שפה, תצוגה והתראות{'\n'}
+              • בהתחברות דרך Google - מידע בסיסי מחשבון Google
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>2. כיצד אנו משתמשים במידע</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • לספק את שירות רשימת הקניות{'\n'}
-              • לאפשר שיתוף רשימות עם אחרים{'\n'}
+              • לאפשר שיתוף רשימות בזמן אמת{'\n'}
+              • לשלוח התראות על פעילות ברשימות{'\n'}
               • לשמור את ההעדפות שלך{'\n'}
               • לשפר את השירות
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>3. אחסון מידע</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              המידע שלך נשמר באופן מקומי במכשיר שלך (localStorage).
-              אנחנו לא שולחים את המידע לשרתים חיצוניים למעט שירות ההזדהות של Google.
+              • המידע נשמר בשרתים מאובטחים (MongoDB Atlas){'\n'}
+              • הסיסמאות מוצפנות ולא ניתנות לשחזור{'\n'}
+              • העדפות מסוימות נשמרות במכשיר שלך{'\n'}
+              • התראות נמחקות אוטומטית לאחר 30 יום{'\n'}
+              • התקשורת מוצפנת (HTTPS)
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>4. שיתוף מידע</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              אנחנו לא מוכרים או משתפים את המידע האישי שלך עם צדדים שלישיים,
-              למעט כאשר נדרש על פי חוק.
+              • שמך מוצג לחברי הרשימות שלך{'\n'}
+              • אנחנו לא מוכרים או משתפים מידע עם צדדים שלישיים{'\n'}
+              • מידע יימסר לרשויות רק לפי דרישה חוקית
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>5. הזכויות שלך</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • לגשת למידע שלך{'\n'}
-              • למחוק את המידע שלך (דרך ההגדרות){'\n'}
-              • לייצא את המידע שלך{'\n'}
-              • לבטל את הסכמתך בכל עת
+              • למחוק את כל המידע שלך (דרך ההגדרות){'\n'}
+              • לעזוב רשימות משותפות בכל עת{'\n'}
+              • לשלוט בהתראות שאתה מקבל
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>6. יצירת קשר</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              לשאלות בנוגע למדיניות פרטיות זו, ניתן לפנות אלינו באימייל.
+              לשאלות בנוגע לפרטיות, ניתן לפנות בוואטסאפ: 058-696-3966
             </Typography>
 
             {!hasConsent && (
@@ -104,48 +111,55 @@ export const PrivacyPolicy = memo(() => {
           <>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Privacy Policy</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              Last updated: January 2025
+              Last updated: February 2025
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>1. Information We Collect</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • Name and email during registration{'\n'}
-              • Shopping lists you create{'\n'}
-              • Language and display preferences{'\n'}
-              • When signing in with Google - basic information from your Google account
+              • Encrypted password (bcrypt){'\n'}
+              • Shopping lists and products you create{'\n'}
+              • Notifications about shared list activity{'\n'}
+              • Language, display and notification preferences{'\n'}
+              • When signing in with Google - basic account info
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>2. How We Use Information</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • To provide the shopping list service{'\n'}
-              • To enable list sharing with others{'\n'}
+              • To enable real-time list sharing{'\n'}
+              • To send notifications about list activity{'\n'}
               • To save your preferences{'\n'}
               • To improve the service
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>3. Data Storage</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              Your data is stored locally on your device (localStorage).
-              We do not send data to external servers except for Google authentication service.
+              • Data is stored on secure servers (MongoDB Atlas){'\n'}
+              • Passwords are encrypted and cannot be recovered{'\n'}
+              • Some preferences are stored on your device{'\n'}
+              • Notifications are auto-deleted after 30 days{'\n'}
+              • Communication is encrypted (HTTPS)
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>4. Data Sharing</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              We do not sell or share your personal information with third parties,
-              except when required by law.
+              • Your name is visible to members of your lists{'\n'}
+              • We do not sell or share data with third parties{'\n'}
+              • Data may be disclosed only when legally required
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>5. Your Rights</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
               • Access your data{'\n'}
-              • Delete your data (via settings){'\n'}
-              • Export your data{'\n'}
-              • Withdraw consent at any time
+              • Delete all your data (via settings){'\n'}
+              • Leave shared lists at any time{'\n'}
+              • Control which notifications you receive
             </Typography>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>6. Contact Us</Typography>
             <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              For questions about this privacy policy, please contact us via email.
+              For privacy questions, contact us on WhatsApp: 058-696-3966
             </Typography>
 
             {!hasConsent && (
