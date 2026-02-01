@@ -8,7 +8,7 @@ export const emailSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(4, 'passwordTooShort');
+  .min(8, 'passwordTooShort');
 
 export const nameSchema = z
   .string()
