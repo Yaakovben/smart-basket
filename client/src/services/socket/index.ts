@@ -5,4 +5,5 @@ export {
   type ProductDeletedData,
   type ProductToggledData,
   type NotificationData,
+  type MemberRemovedData,
 } from './socket.service';

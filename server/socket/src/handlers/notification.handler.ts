@@ -4,6 +4,7 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
   NotificationData,
+  MemberRemovedData,
 } from '../types';
 
 // Simple validation helper
@@ -64,6 +65,41 @@ export const registerNotificationHandlers = (
     // Broadcast to all users in the list (including sender for confirmation, they're about to leave anyway)
     io.to(`list:${data.listId}`).emit('notification:new', notification);
     console.log(`User ${data.userName} left group ${data.listName}`);
+  });
+
+  // Member removed from group (by admin)
+  socket.on('member:remove', (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => {
+    if (!isValidString(data?.listId) || !isValidString(data?.removedUserId) || !isValidString(data?.adminName)) {
+      console.warn('Invalid member:remove data from user:', userId);
+      return;
+    }
+
+    const removedData: MemberRemovedData = {
+      listId: data.listId,
+      listName: data.listName,
+      removedUserId: data.removedUserId,
+      removedUserName: data.removedUserName,
+      adminId: userId,
+      adminName: data.adminName,
+      timestamp: new Date(),
+    };
+
+    // Send notification directly to the removed user
+    io.to(`user:${data.removedUserId}`).emit('member:removed', removedData);
+
+    // Also notify other members in the list
+    const leaveNotification: NotificationData = {
+      id: `notif_${Date.now()}_${data.removedUserId}`,
+      type: 'leave',
+      listId: data.listId,
+      userId: data.removedUserId,
+      userName: data.removedUserName,
+      message: `${data.removedUserName} was removed from ${data.listName}`,
+      timestamp: new Date(),
+    };
+    socket.to(`list:${data.listId}`).emit('notification:new', leaveNotification);
+
+    console.log(`User ${data.removedUserName} was removed from group ${data.listName} by ${data.adminName}`);
   });
 };
 

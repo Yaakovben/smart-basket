@@ -488,6 +488,10 @@ export const useList = ({
         try {
           // Call API to remove member
           await listsApi.removeMember(list.id, memberId);
+
+          // Emit socket event to notify the removed user
+          socketService.emitMemberRemoved(list.id, list.name, memberId, memberName, user.name);
+
           // Update local state (without API call since we already called the API)
           onUpdateListLocal({
             ...list,
@@ -502,7 +506,7 @@ export const useList = ({
         }
       }
     });
-  }, [list, onUpdateListLocal, showToast, t]);
+  }, [list, user.name, onUpdateListLocal, showToast, t]);
 
   const leaveList = useCallback(() => {
     setConfirm({

@@ -213,42 +213,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   </Box>
                 )}
 
-                {/* Status text for existing users */}
-                <Collapse in={emailChecked && !isNewUser && !isGoogleAccount}>
-                  <Box sx={{
-                    mb: 2,
-                    py: 1,
-                    px: 1.5,
-                    bgcolor: 'rgba(16, 185, 129, 0.08)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}>
-                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>👋</Box>
-                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
-                      {t('returningUserHint')}
-                    </Typography>
-                  </Box>
-                </Collapse>
-
                 {/* Name Field - For new users, shown between email and password */}
                 <Collapse in={emailChecked && isNewUser}>
-                  <Box sx={{
-                    mb: 1.5,
-                    py: 1,
-                    px: 1.5,
-                    bgcolor: 'rgba(20, 184, 166, 0.08)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.75
-                  }}>
-                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>✨</Box>
-                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
-                      {t('newUserHint')}
-                    </Typography>
-                  </Box>
                   <TextField
                     fullWidth
                     label={t('name')}
@@ -311,6 +277,44 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                     {error}
                   </Alert>
                 )}
+
+                {/* Status text for existing users - between password and button */}
+                <Collapse in={emailChecked && !isNewUser && !isGoogleAccount}>
+                  <Box sx={{
+                    mt: 2,
+                    py: 1,
+                    px: 1.5,
+                    bgcolor: 'rgba(16, 185, 129, 0.08)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}>
+                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>👋</Box>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
+                      {t('returningUserHint')}
+                    </Typography>
+                  </Box>
+                </Collapse>
+
+                {/* Status text for new users - between password and button */}
+                <Collapse in={emailChecked && isNewUser}>
+                  <Box sx={{
+                    mt: 2,
+                    py: 1,
+                    px: 1.5,
+                    bgcolor: 'rgba(20, 184, 166, 0.08)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75
+                  }}>
+                    <Box sx={{ fontSize: 14, opacity: 0.8 }}>✨</Box>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 400 }}>
+                      {t('newUserHint')}
+                    </Typography>
+                  </Box>
+                </Collapse>
 
                 <Button
                   type="submit"

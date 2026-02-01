@@ -39,8 +39,8 @@ const shakeKeyframes = {
 const notificationDismissKeyframes = {
   '@keyframes notificationDismiss': {
     '0%': { transform: 'translateX(0) translateY(0) rotate(0deg) scale(1)', opacity: 1 },
-    '20%': { transform: 'translateX(-8px) translateY(5px) rotate(-2deg) scale(1.02)', opacity: 1 },
-    '100%': { transform: 'translateX(80px) translateY(120px) rotate(12deg) scale(0.7)', opacity: 0 }
+    '15%': { transform: 'translateX(-8px) translateY(10px) rotate(-2deg) scale(1.02)', opacity: 1 },
+    '100%': { transform: 'translateX(100px) translateY(calc(100vh - 100px)) rotate(20deg) scale(0.5)', opacity: 0 }
   }
 };
 
@@ -172,7 +172,7 @@ export const HomeComponent = ({
         next.delete(notificationId);
         return next;
       });
-    }, 300);
+    }, 600);
   }, [markNotificationRead, onMarkLocalNotificationRead]);
 
   const handleMarkAllRead = useCallback(() => {
@@ -675,7 +675,7 @@ export const HomeComponent = ({
                       transition: 'all 0.3s ease',
                       ...(isDismissing && {
                         ...notificationDismissKeyframes,
-                        animation: 'notificationDismiss 0.3s ease-out forwards',
+                        animation: 'notificationDismiss 0.6s ease-in-out forwards',
                       }),
                     }}
                   >

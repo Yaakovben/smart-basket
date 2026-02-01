@@ -23,6 +23,7 @@ export interface ClientToServerEvents {
   'notification:read': (data: { listId: string; notificationId?: string }) => void;
   'member:join': (data: { listId: string; listName: string; userName: string }) => void;
   'member:leave': (data: { listId: string; listName: string; userName: string }) => void;
+  'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
 }
 
 // Socket events from server to client
@@ -35,6 +36,7 @@ export interface ServerToClientEvents {
   'product:toggled': (data: ProductToggledData) => void;
   'list:updated': (data: ListUpdatedData) => void;
   'notification:new': (data: NotificationData) => void;
+  'member:removed': (data: MemberRemovedData) => void;
   'error': (data: { message: string }) => void;
 }
 
@@ -93,5 +95,15 @@ export interface NotificationData {
   userId: string;
   userName: string;
   message: string;
+  timestamp: Date;
+}
+
+export interface MemberRemovedData {
+  listId: string;
+  listName: string;
+  removedUserId: string;
+  removedUserName: string;
+  adminId: string;
+  adminName: string;
   timestamp: Date;
 }

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, useCallback } from "react";
+import { lazy, Suspense, useMemo, useState, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
@@ -6,7 +6,7 @@ import type { User, List, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, type LocalNotification } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
-import { ADMIN_CONFIG } from "../global/constants";
+import { ADMIN_CONFIG, STORAGE_KEYS } from "../global/constants";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -93,13 +93,41 @@ export const AppRouter = () => {
 
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
-  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, markNotificationsRead, markSingleNotificationRead } = useLists(user);
+  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast } = useToast();
 
   // Local notifications from socket (product events, real-time join/leave)
   const [localNotifications, setLocalNotifications] = useState<LocalNotification[]>([]);
 
+  // Dismissed notification IDs (persisted in localStorage)
+  const [dismissedNotificationIds, setDismissedNotificationIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DISMISSED_NOTIFICATIONS);
+      if (stored) {
+        const parsed = JSON.parse(stored) as string[];
+        return new Set(parsed);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return new Set();
+  });
+
+  // Save dismissed IDs to localStorage when they change
+  useEffect(() => {
+    try {
+      // Keep only the last 200 dismissed IDs to avoid unlimited growth
+      const idsArray = Array.from(dismissedNotificationIds).slice(-200);
+      localStorage.setItem(STORAGE_KEYS.DISMISSED_NOTIFICATIONS, JSON.stringify(idsArray));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [dismissedNotificationIds]);
+
   const addLocalNotification = useCallback((notification: LocalNotification) => {
+    // Don't add if this notification was previously dismissed
+    if (dismissedNotificationIds.has(notification.id)) return;
+
     setLocalNotifications(prev => {
       // Avoid duplicates
       if (prev.some(n => n.id === notification.id)) return prev;
@@ -107,15 +135,24 @@ export const AppRouter = () => {
       const newList = [notification, ...prev];
       return newList.slice(0, 50);
     });
-  }, []);
+  }, [dismissedNotificationIds]);
 
   const markLocalNotificationRead = useCallback((notificationId: string) => {
+    // Add to dismissed set (persisted)
+    setDismissedNotificationIds(prev => new Set([...prev, notificationId]));
+    // Remove from current notifications
     setLocalNotifications(prev => prev.filter(n => n.id !== notificationId));
   }, []);
 
   const clearAllLocalNotifications = useCallback(() => {
+    // Add all current notifications to dismissed set
+    setDismissedNotificationIds(prev => {
+      const newSet = new Set(prev);
+      localNotifications.forEach(n => newSet.add(n.id));
+      return newSet;
+    });
     setLocalNotifications([]);
-  }, []);
+  }, [localNotifications]);
 
   // Create list names map for notifications
   const listNames = useMemo(() =>
@@ -123,8 +160,17 @@ export const AppRouter = () => {
     [lists]
   );
 
+  // Callback when current user is removed from a group
+  const handleMemberRemoved = useCallback((listId: string) => {
+    removeListLocal(listId);
+    // If currently viewing the removed list, navigate away
+    if (window.location.pathname.includes(listId)) {
+      navigate('/');
+    }
+  }, [removeListLocal, navigate]);
+
   // Subscribe to socket notifications (respects notification settings)
-  useSocketNotifications(user, showToast, listNames, addLocalNotification);
+  useSocketNotifications(user, showToast, listNames, addLocalNotification, handleMemberRemoved);
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {

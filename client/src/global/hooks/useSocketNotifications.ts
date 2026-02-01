@@ -23,6 +23,16 @@ interface NotificationEventData {
   timestamp: Date;
 }
 
+interface MemberRemovedEventData {
+  listId: string;
+  listName: string;
+  removedUserId: string;
+  removedUserName: string;
+  adminId: string;
+  adminName: string;
+  timestamp: Date;
+}
+
 // Local notification for the popup panel
 export interface LocalNotification {
   id: string;
@@ -41,7 +51,8 @@ export function useSocketNotifications(
   user: User | null,
   showToast: (message: string) => void,
   listNames: Record<string, string> = {},
-  addNotification?: (notification: LocalNotification) => void
+  addNotification?: (notification: LocalNotification) => void,
+  onMemberRemoved?: (listId: string, listName: string) => void
 ) {
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
@@ -209,13 +220,28 @@ export function useSocketNotifications(
       }
     });
 
+    // Member removed notification (when current user is removed from a group)
+    const unsubMemberRemoved = socketService.on('member:removed', (data: unknown) => {
+      const event = data as MemberRemovedEventData;
+      // Only handle if we are the removed user
+      if (event.removedUserId !== user.id) return;
+
+      // Show toast notification
+      const message = `${t('removedFromGroupNotif')} "${event.listName}"`;
+      showToast(message);
+
+      // Call callback to remove the list from state
+      onMemberRemoved?.(event.listId, event.listName);
+    });
+
     return () => {
       unsubProductAdded();
       unsubProductUpdated();
       unsubProductDeleted();
       unsubProductToggled();
       unsubNotificationNew();
+      unsubMemberRemoved();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
-  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification]);
+  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved]);
 }

@@ -15,8 +15,40 @@ interface EmptyStateProps {
 // ===== Component =====
 export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptyStateProps) => {
   const { t } = useSettings();
-  // Show "all done" only if there are products and we're on pending tab
+  // Determine state type:
+  // - 'allDone': pending tab with products (all purchased)
+  // - 'noPurchased': purchased tab with no purchased items
+  // - 'noProducts': no products at all
   const isAllDone = filter === 'pending' && totalProducts > 0;
+  const isPurchasedEmpty = filter === 'purchased';
+
+  // Get display config based on state
+  const getDisplayConfig = () => {
+    if (isAllDone) {
+      return {
+        icon: '🎉',
+        gradient: 'linear-gradient(135deg, #CCFBF1, #99F6E4)',
+        title: t('allDone'),
+        description: t('allDoneDesc')
+      };
+    }
+    if (isPurchasedEmpty) {
+      return {
+        icon: '🛒',
+        gradient: 'linear-gradient(135deg, #E0E7FF, #C7D2FE)',
+        title: t('noPurchasedProducts'),
+        description: t('noPurchasedProductsDesc')
+      };
+    }
+    return {
+      icon: '📦',
+      gradient: 'action.hover',
+      title: t('noProducts'),
+      description: t('noProductsDesc')
+    };
+  };
+
+  const config = getDisplayConfig();
 
   return (
     <Box sx={{
@@ -33,7 +65,7 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
           width: { xs: 80, sm: 100 },
           height: { xs: 80, sm: 100 },
           borderRadius: '50%',
-          background: isAllDone ? 'linear-gradient(135deg, #CCFBF1, #99F6E4)' : 'action.hover',
+          background: config.gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -41,15 +73,15 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
           fontSize: { xs: 44, sm: 56 }
         }}
         role="img"
-        aria-label={isAllDone ? t('allDone') : t('noProducts')}
+        aria-label={config.title}
       >
-        {isAllDone ? '🎉' : '📦'}
+        {config.icon}
       </Box>
       <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
-        {isAllDone ? t('allDone') : t('noProducts')}
+        {config.title}
       </Typography>
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 } }}>
-        {isAllDone ? t('allDoneDesc') : t('noProductsDesc')}
+        {config.description}
       </Typography>
       {/* Only show button on pending tab when no products at all (FAB handles purchased tab) */}
       {!isAllDone && filter === 'pending' && totalProducts === 0 && (

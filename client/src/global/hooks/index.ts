@@ -344,6 +344,15 @@ export function useLists(user: User | null) {
     [user, lists],
   );
 
+  // Remove list locally without API call (for when user is removed from group)
+  const removeListLocal = useCallback(
+    (listId: string) => {
+      socketService.leaveList(listId);
+      setLists((prev) => prev.filter((l) => l.id !== listId));
+    },
+    [],
+  );
+
   const markNotificationsRead = useCallback(
     (listId: string) => {
       // Update locally for now - can add API call later
@@ -475,6 +484,7 @@ export function useLists(user: User | null) {
     deleteList,
     joinGroup,
     leaveList,
+    removeListLocal,
     markNotificationsRead,
     markSingleNotificationRead,
     refetch: fetchLists,

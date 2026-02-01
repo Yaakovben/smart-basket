@@ -109,6 +109,8 @@ type TranslationKey =
   | 'allDoneDesc'
   | 'noProducts'
   | 'noProductsDesc'
+  | 'noPurchasedProducts'
+  | 'noPurchasedProductsDesc'
   | 'swipeHint'
   // Profile
   | 'profile'
@@ -193,6 +195,7 @@ type TranslationKey =
   | 'unmarkedPurchasedNotif'
   | 'joinedGroupNotif'
   | 'leftGroupNotif'
+  | 'removedFromGroupNotif'
   | 'inListNotif'
   | 'deleteGroupTitle'
   | 'deleteListTitle'
@@ -363,6 +366,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'כל המוצרים נקנו בהצלחה',
     noProducts: 'אין מוצרים',
     noProductsDesc: 'הוסף מוצרים חדשים לרשימה',
+    noPurchasedProducts: 'אין מוצרים שנקנו',
+    noPurchasedProductsDesc: 'מוצרים שתסמן כנקנו יופיעו כאן',
     swipeHint: 'טיפ: גרור שמאלה לפעולות • לחץ לפרטים',
     // Profile
     profile: 'פרופיל',
@@ -447,6 +452,7 @@ export const translations: Record<Language, Translations> = {
     unmarkedPurchasedNotif: 'ביטל/ה סימון',
     joinedGroupNotif: 'הצטרף/ה לקבוצה',
     leftGroupNotif: 'עזב/ה את הקבוצה',
+    removedFromGroupNotif: 'הוסרת מהקבוצה',
     inListNotif: 'ברשימה',
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
@@ -614,6 +620,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'All products have been purchased',
     noProducts: 'No products',
     noProductsDesc: 'Add new products to the list',
+    noPurchasedProducts: 'No purchased products',
+    noPurchasedProductsDesc: 'Items you mark as purchased will appear here',
     swipeHint: 'Tip: Swipe left for actions • Tap for details',
     // Profile
     profile: 'Profile',
@@ -698,6 +706,7 @@ export const translations: Record<Language, Translations> = {
     unmarkedPurchasedNotif: 'unmarked',
     joinedGroupNotif: 'joined the group',
     leftGroupNotif: 'left the group',
+    removedFromGroupNotif: 'You were removed from the group',
     inListNotif: 'in list',
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
@@ -865,6 +874,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'Все товары куплены',
     noProducts: 'Нет товаров',
     noProductsDesc: 'Добавьте новые товары в список',
+    noPurchasedProducts: 'Нет купленных товаров',
+    noPurchasedProductsDesc: 'Товары, отмеченные как купленные, появятся здесь',
     swipeHint: 'Совет: Свайп влево для действий • Нажмите для деталей',
     // Profile
     profile: 'Профиль',
@@ -949,6 +960,7 @@ export const translations: Record<Language, Translations> = {
     unmarkedPurchasedNotif: 'снял(а) отметку',
     joinedGroupNotif: 'присоединился(ась) к группе',
     leftGroupNotif: 'покинул(а) группу',
+    removedFromGroupNotif: 'Вы были удалены из группы',
     inListNotif: 'в списке',
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',

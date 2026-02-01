@@ -62,6 +62,16 @@ export interface NotificationData {
   timestamp: Date;
 }
 
+export interface MemberRemovedData {
+  listId: string;
+  listName: string;
+  removedUserId: string;
+  removedUserName: string;
+  adminId: string;
+  adminName: string;
+  timestamp: Date;
+}
+
 type SocketEventHandler<T> = (data: T) => void;
 
 class SocketService {
@@ -154,6 +164,7 @@ class SocketService {
       'product:toggled',
       'list:updated',
       'notification:new',
+      'member:removed',
     ];
 
     events.forEach((event) => {
@@ -237,6 +248,11 @@ class SocketService {
   // Emit member left event
   emitMemberLeft(listId: string, listName: string, userName: string) {
     this.socket?.emit('member:leave', { listId, listName, userName });
+  }
+
+  // Emit member removed event (by admin)
+  emitMemberRemoved(listId: string, listName: string, removedUserId: string, removedUserName: string, adminName: string) {
+    this.socket?.emit('member:remove', { listId, listName, removedUserId, removedUserName, adminName });
   }
 }
 
