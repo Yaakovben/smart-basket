@@ -9,6 +9,7 @@ export { useDebounce } from './useDebounce';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
+export { useVersion, type ChangelogEntry, type VersionInfo } from './useVersion';
 
 // ===== useLocalStorage Hook =====
 export function useLocalStorage<T>(

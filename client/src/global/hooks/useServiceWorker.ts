@@ -27,11 +27,17 @@ export function useServiceWorker(): UseServiceWorkerReturn {
         console.log('App ready for offline use');
       },
       onRegisteredSW(swUrl, registration) {
-        // Check for updates periodically (every 1 hour)
+        // Check for updates frequently (every 5 minutes) for faster update delivery
         if (registration) {
           setInterval(() => {
             registration.update();
-          }, 60 * 60 * 1000);
+          }, 5 * 60 * 1000);
+          // Also check immediately on visibility change (user returns to app)
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+              registration.update();
+            }
+          });
         }
         console.log('SW registered:', swUrl);
       },

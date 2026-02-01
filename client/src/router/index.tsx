@@ -3,8 +3,8 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications } from "../global/hooks";
-import { Toast } from "../global/components";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, useVersion } from "../global/hooks";
+import { Toast, WhatsNew } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 
@@ -122,6 +122,9 @@ export const AppRouter = () => {
   // Subscribe to socket notifications (respects notification settings)
   // The addPersistedNotification callback adds real-time notifications to the persisted list
   useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved);
+
+  // Version & WhatsNew
+  const { version, showWhatsNew, newChanges, dismissWhatsNew } = useVersion();
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
@@ -246,6 +249,15 @@ export const AppRouter = () => {
       </Routes>
       </Suspense>
       <Toast msg={toast} type={toastType} />
+      {/* What's New popup - shows after login when new version available */}
+      {user && (
+        <WhatsNew
+          open={showWhatsNew}
+          version={version}
+          changes={newChanges}
+          onClose={dismissWhatsNew}
+        />
+      )}
     </>
   );
 }
