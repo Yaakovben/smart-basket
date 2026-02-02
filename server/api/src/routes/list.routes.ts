@@ -21,5 +21,6 @@ router.delete('/:id/members/:memberId', ListController.removeMember);
 
 // Notifications
 router.put('/:id/notifications/read', ListController.markNotificationsRead);
+router.put('/:id/notifications/:notificationId/read', ListController.markNotificationRead);
 
 export default router;

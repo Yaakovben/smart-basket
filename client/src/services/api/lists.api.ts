@@ -122,9 +122,15 @@ export const listsApi = {
     return response.data.data;
   },
 
-  // Mark notifications as read
+  // Mark all notifications as read
   async markNotificationsRead(listId: string): Promise<List> {
     const response = await apiClient.put<{ data: List }>(`/lists/${listId}/notifications/read`);
+    return response.data.data;
+  },
+
+  // Mark single notification as read
+  async markNotificationRead(listId: string, notificationId: string): Promise<List> {
+    const response = await apiClient.put<{ data: List }>(`/lists/${listId}/notifications/${notificationId}/read`);
     return response.data.data;
   },
 };

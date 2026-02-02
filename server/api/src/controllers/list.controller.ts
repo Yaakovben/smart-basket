@@ -103,4 +103,15 @@ export class ListController {
       data: list,
     });
   });
+
+  static markNotificationRead = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { id, notificationId } = req.params;
+    const list = await ListService.markNotificationRead(id, userId, notificationId);
+
+    res.json({
+      success: true,
+      data: list,
+    });
+  });
 }

@@ -13,30 +13,6 @@ import type {
 // ===== Constants =====
 const DEFAULT_COLOR = '#14B8A6';
 const MIN_NAME_LENGTH = 2;
-const DISMISSED_NOTIFICATIONS_KEY = 'dismissed_notifications';
-
-// Helper to get dismissed notification IDs from localStorage
-const getDismissedNotifications = (): Set<string> => {
-  try {
-    const stored = localStorage.getItem(DISMISSED_NOTIFICATIONS_KEY);
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  } catch {
-    return new Set();
-  }
-};
-
-// Helper to save dismissed notification ID to localStorage
-const addDismissedNotification = (notificationId: string) => {
-  try {
-    const dismissed = getDismissedNotifications();
-    dismissed.add(notificationId);
-    // Keep only last 500 IDs to prevent localStorage from growing too large
-    const arr = Array.from(dismissed).slice(-500);
-    localStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(arr));
-  } catch {
-    // Ignore localStorage errors
-  }
-};
 
 const DEFAULT_NEW_LIST: NewListForm = {
   name: '',
@@ -108,8 +84,8 @@ export const useHome = ({
     groups: userLists.filter((l: List) => l.isGroup)
   }), [userLists]);
 
-  // Track dismissed notifications (persisted in localStorage)
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => getDismissedNotifications());
+  // Track dismissed notifications for optimistic UI updates (session only, persisted to DB)
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
 
   const myNotifications = useMemo((): ExtendedNotification[] => {
     // If notifications are disabled globally, return empty
@@ -263,25 +239,21 @@ export const useHome = ({
 
   // ===== Notifications Handlers =====
   const markAllNotificationsRead = useCallback(() => {
-    // Persist all notification IDs to localStorage
-    myNotifications.forEach((n) => {
-      addDismissedNotification(n.id);
-    });
+    // Optimistic UI update - mark as dismissed locally
     setDismissedIds(prev => {
       const next = new Set(prev);
       myNotifications.forEach(n => next.add(n.id));
       return next;
     });
-    // Also update list states
+    // Persist to database for each list
     myNotifications.forEach((n) => onMarkNotificationsRead(n.listId));
     setShowNotifications(false);
   }, [myNotifications, onMarkNotificationsRead]);
 
   const markNotificationRead = useCallback((listId: string, notificationId: string) => {
-    // Persist to localStorage so it stays dismissed even after refresh
-    addDismissedNotification(notificationId);
+    // Optimistic UI update - mark as dismissed locally
     setDismissedIds(prev => new Set(prev).add(notificationId));
-    // Also update the list state
+    // Persist to database
     onMarkSingleNotificationRead(listId, notificationId);
   }, [onMarkSingleNotificationRead]);
 
