@@ -81,8 +81,8 @@ interface SettingsPageProps {
 export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
-  const { user, loading: authLoading } = useAuth();
-  const isAdmin = !authLoading && user?.email === ADMIN_CONFIG.adminEmail;
+  const { user } = useAuth();
+  const isAdmin = user?.email === ADMIN_CONFIG.adminEmail;
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,

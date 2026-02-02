@@ -54,8 +54,14 @@ export function useNotifications(user: User | null) {
       // Persist to API
       await notificationsApi.markAsRead(notificationId);
     } catch (error) {
+      // Silently ignore 404 errors (notification doesn't exist in DB - just keep local state)
+      const apiError = error as { response?: { status?: number } };
+      if (apiError.response?.status === 404) {
+        // Notification doesn't exist in DB, but we already updated local state - that's fine
+        return;
+      }
       console.error('Failed to mark notification as read:', error);
-      // Revert on error
+      // Revert on other errors
       fetchNotifications();
     }
   }, [fetchNotifications]);

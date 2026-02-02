@@ -39,9 +39,8 @@ const shakeKeyframes = {
 
 const notificationDismissKeyframes = {
   '@keyframes notificationDismiss': {
-    '0%': { transform: 'translateY(0) rotate(0deg) scale(1)', opacity: 1 },
-    '30%': { transform: 'translateY(15px) rotate(2deg) scale(0.98)', opacity: 0.9 },
-    '100%': { transform: 'translateY(150px) rotate(8deg) scale(0.7)', opacity: 0 }
+    '0%': { transform: 'translateY(0) scale(1)', opacity: 1 },
+    '100%': { transform: 'translateY(500px) scale(0.9)', opacity: 0 }
   }
 };
 
