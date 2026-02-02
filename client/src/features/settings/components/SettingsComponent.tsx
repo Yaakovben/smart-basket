@@ -75,10 +75,11 @@ const smallSwitchSx = {
 // ===== Props Interface =====
 interface SettingsPageProps {
   user: User;
+  hasUpdate?: boolean;
   onDeleteAllData?: () => void;
 }
 
-export const SettingsComponent = ({ user, onDeleteAllData }: SettingsPageProps) => {
+export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
@@ -205,28 +206,31 @@ export const SettingsComponent = ({ user, onDeleteAllData }: SettingsPageProps) 
           </Box>
         </Paper>
 
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box
-            sx={{ ...settingRowSx, borderBottom: 'none', color: 'warning.dark' }}
-            onClick={async () => {
-              if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-              }
-              if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                await Promise.all(registrations.map(reg => reg.unregister()));
-              }
-              window.location.reload();
-            }}
-          >
-            <Box component="span" sx={{ fontSize: 22 }}>🔄</Box>
-            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>
-              {settings.language === 'he' ? 'נקה מטמון ועדכן' : settings.language === 'ru' ? 'Очистить кэш' : 'Clear cache & refresh'}
-            </Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
-          </Box>
-        </Paper>
+        {/* Show clear cache button only when there's an update available */}
+        {hasUpdate && (
+          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+            <Box
+              sx={{ ...settingRowSx, borderBottom: 'none', color: 'warning.dark' }}
+              onClick={async () => {
+                if ('caches' in window) {
+                  const cacheNames = await caches.keys();
+                  await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+                if ('serviceWorker' in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+                window.location.reload();
+              }}
+            >
+              <Box component="span" sx={{ fontSize: 22 }}>🔄</Box>
+              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>
+                {settings.language === 'he' ? 'נקה מטמון ועדכן' : settings.language === 'ru' ? 'Очистить кэш' : 'Clear cache & refresh'}
+              </Typography>
+              <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            </Box>
+          </Paper>
+        )}
 
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={{ ...settingRowSx, borderBottom: 'none', color: 'error.dark' }} onClick={() => setConfirmDelete(true)}>
