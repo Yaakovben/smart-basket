@@ -2,6 +2,17 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Debug mode - shows alerts on mobile for debugging (only errors)
+const DEBUG_MODE = true;
+const debugLog = (message: string, data?: unknown, isError = false) => {
+  console.log(`[API DEBUG] ${message}`, data);
+  // Only show alert for errors to avoid spam
+  if (DEBUG_MODE && isError && typeof window !== 'undefined') {
+    const dataStr = data ? `\n${JSON.stringify(data, null, 2)}` : '';
+    alert(`[DEBUG ERROR] ${message}${dataStr}`);
+  }
+};
+
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -33,16 +44,23 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Request interceptor - add auth token
+// Request interceptor - add auth token and debug
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    debugLog(`Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+      method: config.method,
+      url: `${config.baseURL}${config.url}`,
+    }, false);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    debugLog('Request Error', error, true);
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor - handle token refresh
@@ -64,8 +82,21 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    debugLog(`Response OK: ${response.status}`, { url: response.config.url }, false);
+    return response;
+  },
   async (error: AxiosError) => {
+    debugLog(`Response ERROR: ${error.response?.status || 'NO STATUS'}`, {
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      fullURL: `${error.config?.baseURL}${error.config?.url}`,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code,
+    }, true);
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // If 401 and not already retrying
