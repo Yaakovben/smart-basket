@@ -6,10 +6,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES, SIZES } from '../../../global/constants';
-import type { Language } from '../../../global/types';
+import type { Language, User } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
-import { useAuth } from '../../../global/hooks';
 
 // ===== Reusable Styles =====
 const glassButtonSx = {
@@ -75,14 +74,14 @@ const smallSwitchSx = {
 
 // ===== Props Interface =====
 interface SettingsPageProps {
+  user: User;
   onDeleteAllData?: () => void;
 }
 
-export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
+export const SettingsComponent = ({ user, onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
-  const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_CONFIG.adminEmail;
+  const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,

@@ -231,7 +231,7 @@ export const AppRouter = () => {
           path="/settings"
           element={
             <ProtectedRoute user={user}>
-              <SettingsPage />
+              <SettingsPage user={user!} />
             </ProtectedRoute>
           }
         />
