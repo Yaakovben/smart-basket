@@ -39,8 +39,9 @@ const shakeKeyframes = {
 
 const notificationDismissKeyframes = {
   '@keyframes notificationDismiss': {
-    '0%': { transform: 'translateY(0) scale(1)', opacity: 1 },
-    '100%': { transform: 'translateY(500px) scale(0.9)', opacity: 0 }
+    '0%': { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 1 },
+    '20%': { transform: 'translateY(20px) translateX(30px) rotate(5deg)', opacity: 0.9 },
+    '100%': { transform: 'translateY(400px) translateX(100px) rotate(15deg)', opacity: 0 }
   }
 };
 
@@ -731,9 +732,12 @@ export const HomeComponent = ({
                       sx={{
                         color: style.textColor,
                         flexShrink: 0,
-                        '&:hover': {
-                          bgcolor: `${style.textColor}15`,
-                        },
+                        opacity: isDismissing ? 0 : 1,
+                        transition: 'opacity 0.2s',
+                        '&:hover': { bgcolor: `${style.textColor}15` },
+                        '&:focus': { outline: 'none' },
+                        '&.Mui-focusVisible': { outline: 'none' },
+                        WebkitTapHighlightColor: 'transparent',
                       }}
                     >
                       <CloseIcon fontSize="small" />
