@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Tabs, Tab, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAdminDashboard } from '../hooks/admin-hooks';
@@ -10,10 +11,28 @@ import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
 import { COMMON_STYLES } from '../../../global/constants';
 
+// Skeleton component for loading state
+const LoadingSkeleton = () => (
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+    {[1, 2, 3, 4].map((i) => (
+      <Paper key={i} sx={{ p: 2, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: '14px' }} />
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="60%" height={24} />
+            <Skeleton variant="text" width="40%" height={18} />
+          </Box>
+        </Box>
+      </Paper>
+    ))}
+  </Box>
+);
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const [activeTab, setActiveTab] = useState(0);
+  const [userSearch, setUserSearch] = useState('');
   const {
     filteredActivities,
     usersWithLoginInfo,
@@ -158,23 +177,14 @@ export const AdminDashboard = () => {
 
       {/* Content */}
       <Box sx={{ p: 2 }}>
-        {/* Loading State */}
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress color="primary" />
-          </Box>
-        )}
-
         {/* Error State */}
         {error && !loading && (
-          <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2 }}>
+          <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2, mb: 2 }}>
             <Typography color="error">{error}</Typography>
           </Paper>
         )}
 
-        {/* Tabs */}
-        {!loading && !error && (
-        <>
+        {/* Tabs - Always visible */}
         <Tabs
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
@@ -187,10 +197,10 @@ export const AdminDashboard = () => {
             },
             '& .MuiTab-root': {
               fontWeight: 600,
-              fontSize: 14,
+              fontSize: { xs: 12, sm: 14 },
               textTransform: 'none',
               minWidth: 'auto',
-              px: 2,
+              px: { xs: 1.5, sm: 2 },
               color: 'text.secondary',
               '&.Mui-selected': {
                 color: '#14B8A6'
@@ -198,30 +208,63 @@ export const AdminDashboard = () => {
             }
           }}
         >
-          <Tab label={`${t('loginActivity')} (${filteredActivities.length})`} />
-          <Tab label={`${t('registeredUsers')} (${usersWithLoginInfo.length})`} />
+          <Tab label={loading ? t('loginActivity') : `${t('loginActivity')} (${filteredActivities.length})`} />
+          <Tab label={loading ? t('registeredUsers') : `${t('registeredUsers')} (${usersWithLoginInfo.length})`} />
         </Tabs>
 
         {activeTab === 0 && (
           <>
             {/* Filters */}
-            <ActivityFilters
-              filters={filters}
-              onFilterModeChange={setFilterMode}
-              onDateChange={setSelectedDate}
-              onMonthChange={setSelectedMonth}
-              onHourChange={setSelectedHour}
-            />
+            {!loading && (
+              <ActivityFilters
+                filters={filters}
+                onFilterModeChange={setFilterMode}
+                onDateChange={setSelectedDate}
+                onMonthChange={setSelectedMonth}
+                onHourChange={setSelectedHour}
+              />
+            )}
 
-            {/* Activity Table */}
-            <ActivityTable activities={filteredActivities} />
+            {/* Activity Table or Loading */}
+            {loading ? <LoadingSkeleton /> : <ActivityTable activities={filteredActivities} />}
           </>
         )}
 
         {activeTab === 1 && (
-          <UsersTable users={usersWithLoginInfo} language={settings.language} />
-        )}
-        </>
+          <>
+            {/* Search Users */}
+            {!loading && (
+              <TextField
+                fullWidth
+                size="small"
+                placeholder={settings.language === 'he' ? 'חיפוש לקוח...' : 'Search customer...'}
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'text.disabled' }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            )}
+
+            {/* Users Table or Loading */}
+            {loading ? (
+              <LoadingSkeleton />
+            ) : (
+              <UsersTable
+                users={usersWithLoginInfo.filter(u =>
+                  userSearch === '' ||
+                  u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+                  u.email.toLowerCase().includes(userSearch.toLowerCase())
+                )}
+                language={settings.language}
+              />
+            )}
+          </>
         )}
       </Box>
     </Box>

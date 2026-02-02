@@ -31,8 +31,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const {
     name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
     emailChecked, isGoogleAccount,
-    setName, setPassword,
-    handleEmailChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
+    setName,
+    handleEmailChange, handlePasswordChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
     toggleEmailForm, applySuggestion
   } = useAuth({ onLogin });
 
@@ -237,7 +237,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="password"
                   label={t('password')}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => handlePasswordChange(e.target.value)}
                   placeholder="••••••••"
                   autoComplete={isNewUser ? 'new-password' : 'current-password'}
                   size="small"

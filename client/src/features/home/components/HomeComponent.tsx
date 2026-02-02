@@ -39,9 +39,9 @@ const shakeKeyframes = {
 
 const notificationDismissKeyframes = {
   '@keyframes notificationDismiss': {
-    '0%': { transform: 'translateX(0) translateY(0) rotate(0deg) scale(1)', opacity: 1 },
-    '15%': { transform: 'translateX(-8px) translateY(10px) rotate(-2deg) scale(1.02)', opacity: 1 },
-    '100%': { transform: 'translateX(100px) translateY(calc(100vh - 100px)) rotate(20deg) scale(0.5)', opacity: 0 }
+    '0%': { transform: 'translateY(0) rotate(0deg) scale(1)', opacity: 1 },
+    '30%': { transform: 'translateY(15px) rotate(2deg) scale(0.98)', opacity: 0.9 },
+    '100%': { transform: 'translateY(150px) rotate(8deg) scale(0.7)', opacity: 0 }
   }
 };
 
@@ -167,9 +167,10 @@ export const HomeComponent = ({
       }
     }
 
-    return combined.sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    // Filter out read notifications and sort by timestamp (newest first)
+    return combined
+      .filter(n => !n.read)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [myNotifications, persistedNotifications]);
 
   // Calculate total unread count from persisted notifications

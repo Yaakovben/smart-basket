@@ -35,6 +35,7 @@ export interface UseAuthReturn {
 
   // Handlers
   handleEmailChange: (email: string) => void;
+  handlePasswordChange: (password: string) => void;
   handleEmailSubmit: () => void;
   handleSubmit: (e: React.FormEvent) => void;
   handleGoogleSuccess: (tokenResponse: { access_token: string }) => Promise<void>;

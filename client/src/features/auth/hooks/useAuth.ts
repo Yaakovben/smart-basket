@@ -160,8 +160,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       return;
     }
 
-    // Validate password
-    if (!password || password.length < 4) {
+    // Validate password (minimum 8 characters)
+    if (!password || password.length < 8) {
       setError(t('passwordTooShort'));
       return;
     }
@@ -287,6 +287,15 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     setGoogleLoading(false);
   }, []);
 
+  // ===== Password Handler =====
+  const handlePasswordChange = useCallback((newPassword: string) => {
+    setPassword(newPassword);
+    // Clear error when user types (fixing the issue)
+    if (error) {
+      setError('');
+    }
+  }, [error]);
+
   // ===== UI Handlers =====
   const toggleEmailForm = useCallback(() => {
     setShowEmailForm(prev => !prev);
@@ -318,6 +327,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
     // Handlers
     handleEmailChange,
+    handlePasswordChange,
     handleEmailSubmit,
     handleSubmit,
     handleGoogleSuccess,
