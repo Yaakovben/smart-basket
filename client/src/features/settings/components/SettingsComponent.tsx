@@ -102,6 +102,17 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
       </Box>
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', WebkitOverflowScrolling: 'touch' }}>
+        {/* Admin Dashboard - At top for admin users */}
+        {isAdmin && (
+          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mb: 2 }}>
+            <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
+              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
+              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
+              <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            </Box>
+          </Paper>
+        )}
+
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
           {/* Notifications Toggle */}
           <Box sx={settingRowSx} onClick={() => settings.notifications.enabled && toggleNotificationsExpanded()}>
@@ -181,17 +192,6 @@ export const SettingsComponent = ({ onDeleteAllData }: SettingsPageProps) => {
             <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
           </Box>
         </Paper>
-
-        {/* Admin Dashboard - Only visible to admin */}
-        {isAdmin && (
-          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-            <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
-              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
-              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
-              <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
-            </Box>
-          </Paper>
-        )}
 
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>
