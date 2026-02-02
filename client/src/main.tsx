@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.tsx'
 
 // App version - bump this to force cache clear for all users
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.0.1';
 const VERSION_KEY = 'app_version';
 
 // Auto-clear cache if version changed
