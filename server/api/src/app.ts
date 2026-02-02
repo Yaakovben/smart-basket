@@ -30,6 +30,10 @@ app.use(cors({
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 }));
 
 // Parse JSON bodies
@@ -44,6 +48,15 @@ app.use(compression());
 
 // Rate limiting for API routes
 app.use('/api', apiLimiter);
+
+// Prevent caching of API responses (fixes mobile browser caching issues)
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
 
 // Health check
 app.get('/health', (_req, res) => {
