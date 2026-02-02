@@ -3,7 +3,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Debug mode - shows alerts on mobile for debugging (only errors)
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 const debugLog = (message: string, data?: unknown, isError = false) => {
   console.log(`[API DEBUG] ${message}`, data);
   // Only show alert for errors to avoid spam
