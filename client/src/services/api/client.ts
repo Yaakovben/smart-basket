@@ -44,13 +44,22 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Request interceptor - add auth token and debug
+// Request interceptor - add auth token, cache busting, and debug
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Add cache busting timestamp to prevent browser caching (especially on iOS)
+    const timestamp = Date.now();
+    const separator = config.url?.includes('?') ? '&' : '?';
+    config.url = `${config.url}${separator}_t=${timestamp}`;
+
+    // Force fresh request headers
+    config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    config.headers['Pragma'] = 'no-cache';
+
     debugLog(`Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
       method: config.method,
       url: `${config.baseURL}${config.url}`,
