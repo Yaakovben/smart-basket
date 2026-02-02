@@ -382,8 +382,8 @@ export function useLists(user: User | null) {
   );
 
   const markSingleNotificationRead = useCallback(
-    (listId: string, notificationId: string) => {
-      // Update locally for now - can add API call later
+    async (listId: string, notificationId: string) => {
+      // Update locally first for immediate UI feedback (optimistic update)
       setLists((prev) =>
         prev.map((l) =>
           l.id === listId
@@ -396,6 +396,12 @@ export function useLists(user: User | null) {
             : l,
         ),
       );
+      // Persist to database
+      try {
+        await listsApi.markNotificationRead(listId, notificationId);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
     },
     [],
   );

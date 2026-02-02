@@ -165,8 +165,7 @@ export const STORAGE_KEYS = {
   HINT_SEEN: 'sb_hint_seen',
   SETTINGS: 'sb_settings',
   LOGIN_ACTIVITY: 'sb_login_activity',
-  CONSENT_ACCEPTED: 'sb_consent_accepted',
-  DISMISSED_NOTIFICATIONS: 'sb_dismissed_notifications'
+  CONSENT_ACCEPTED: 'sb_consent_accepted'
 } as const;
 
 // ===== Admin Configuration =====
