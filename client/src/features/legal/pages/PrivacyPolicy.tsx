@@ -43,85 +43,38 @@ export const PrivacyPolicy = memo(() => {
       <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
         {isHebrew ? (
           <>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>מדיניות פרטיות</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              עדכון אחרון: פברואר 2025
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>מדיניות פרטיות</Typography>
+
+            <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2, mb: 3 }}>
+              <Typography sx={{ fontWeight: 600, color: 'primary.main', mb: 1 }}>בקצרה:</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+                אנחנו שומרים רק את מה שצריך כדי שהאפליקציה תעבוד. לא מוכרים מידע, לא עוקבים אחריך.
+              </Typography>
+            </Box>
+
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>מה אנחנו שומרים?</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • השם והאימייל שלך (כדי להיכנס){'\n'}
+              • הרשימות והמוצרים שיצרת{'\n'}
+              • ההעדפות שלך (שפה, מצב כהה)
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>1. מבוא</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              מדיניות פרטיות זו מתארת כיצד Smart Basket ("אנחנו", "השירות") אוספת, משתמשת ומגנה על המידע האישי שלך.
-              השימוש בשירות מהווה הסכמה לאיסוף ושימוש במידע בהתאם למדיניות זו.
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>מה אנחנו לא עושים?</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • לא מוכרים או משתפים את המידע שלך{'\n'}
+              • לא עוקבים אחרי הפעילות שלך{'\n'}
+              • לא שולחים פרסומות
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>2. מידע שאנו אוספים</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              <strong>מידע שאתה מספק:</strong>{'\n'}
-              • פרטי הרשמה: שם ודוא"ל{'\n'}
-              • סיסמה (נשמרת בהצפנה בלתי הפיכה){'\n'}
-              • תוכן שאתה יוצר: רשימות קניות ומוצרים{'\n'}
-              {'\n'}
-              <strong>מידע שנאסף אוטומטית:</strong>{'\n'}
-              • התראות על פעילות ברשימות משותפות{'\n'}
-              • העדפות שימוש (שפה, תצוגה, התראות){'\n'}
-              • בהתחברות דרך Google: שם, דוא"ל ותמונת פרופיל
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>הזכויות שלך</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • אפשר למחוק את החשבון בכל רגע (בהגדרות){'\n'}
+              • אפשר לעזוב קבוצות בכל רגע{'\n'}
+              • אפשר לכבות התראות
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>3. מטרות השימוש במידע</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              אנו משתמשים במידע שלך אך ורק למטרות הבאות:{'\n'}
-              • אספקת שירות ניהול רשימות הקניות{'\n'}
-              • אפשור שיתוף רשימות בזמן אמת עם משתמשים מורשים{'\n'}
-              • שליחת התראות רלוונטיות על פעילות ברשימות{'\n'}
-              • שמירת העדפותיך האישיות{'\n'}
-              • שיפור ותחזוקת השירות
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>4. אחסון ואבטחת מידע</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              • המידע מאוחסן בשרתים מאובטחים של MongoDB Atlas{'\n'}
-              • סיסמאות מוצפנות באמצעות bcrypt ואינן ניתנות לשחזור{'\n'}
-              • כל התקשורת מוצפנת באמצעות HTTPS/TLS{'\n'}
-              • העדפות מסוימות נשמרות מקומית במכשירך{'\n'}
-              • התראות נמחקות אוטומטית לאחר 30 יום{'\n'}
-              • אנו מיישמים אמצעי אבטחה מקובלים בתעשייה
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>5. שיתוף מידע עם צדדים שלישיים</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              • שמך מוצג אך ורק לחברים ברשימות שאתה משתתף בהן{'\n'}
-              • איננו מוכרים, משכירים או משתפים מידע אישי עם צדדים שלישיים למטרות שיווק{'\n'}
-              • מידע עשוי להימסר לרשויות אכיפת החוק אך ורק בהתאם לצו שיפוטי או דרישה חוקית מחייבת
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>6. הזכויות שלך</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              בהתאם לחוקי הגנת הפרטיות, עומדות לך הזכויות הבאות:{'\n'}
-              • <strong>זכות גישה:</strong> לצפות במידע שנאסף אודותיך{'\n'}
-              • <strong>זכות מחיקה:</strong> למחוק את חשבונך וכל המידע הקשור (דרך ההגדרות){'\n'}
-              • <strong>זכות התנגדות:</strong> להתנגד לשימושים מסוימים במידע{'\n'}
-              • <strong>זכות יציאה:</strong> לעזוב רשימות משותפות בכל עת{'\n'}
-              • <strong>שליטה בהתראות:</strong> לנהל אילו התראות תקבל
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>7. שמירת מידע</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              המידע שלך נשמר כל עוד חשבונך פעיל.
-              לאחר מחיקת החשבון, כל המידע האישי יימחק תוך 30 יום,
-              למעט מידע שנדרש לשמור על פי חוק.
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>8. שינויים במדיניות</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              אנו עשויים לעדכן מדיניות זו מעת לעת.
-              שינויים מהותיים יפורסמו באפליקציה.
-              המשך השימוש בשירות לאחר פרסום השינויים מהווה הסכמה למדיניות המעודכנת.
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>9. יצירת קשר</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              לשאלות בנוגע לפרטיות או למימוש זכויותיך,
-              ניתן לפנות אלינו דרך אפשרות "עזרה ותמיכה" בהגדרות האפליקציה.
+            <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 4 }}>
+              שאלות? פנה אלינו דרך "עזרה ותמיכה" בהגדרות.
             </Typography>
 
             {!hasConsent && (
@@ -137,85 +90,38 @@ export const PrivacyPolicy = memo(() => {
           </>
         ) : (
           <>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Privacy Policy</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              Last updated: February 2025
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>Privacy Policy</Typography>
+
+            <Box sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2, mb: 3 }}>
+              <Typography sx={{ fontWeight: 600, color: 'primary.main', mb: 1 }}>In short:</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+                We only store what's needed for the app to work. We don't sell data or track you.
+              </Typography>
+            </Box>
+
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>What we store</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • Your name and email (to sign in){'\n'}
+              • Lists and products you create{'\n'}
+              • Your preferences (language, dark mode)
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>1. Introduction</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              This Privacy Policy describes how Smart Basket ("we", "the Service") collects, uses, and protects your personal information.
-              Use of the Service constitutes consent to the collection and use of information in accordance with this policy.
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>What we don't do</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • We don't sell or share your data{'\n'}
+              • We don't track your activity{'\n'}
+              • We don't show ads
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>2. Information We Collect</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              <strong>Information you provide:</strong>{'\n'}
-              • Registration details: name and email{'\n'}
-              • Password (stored with irreversible encryption){'\n'}
-              • Content you create: shopping lists and products{'\n'}
-              {'\n'}
-              <strong>Automatically collected information:</strong>{'\n'}
-              • Notifications about shared list activity{'\n'}
-              • Usage preferences (language, display, notifications){'\n'}
-              • When signing in with Google: name, email, and profile photo
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Your rights</Typography>
+            <Typography sx={{ mb: 3, color: 'text.secondary' }}>
+              • Delete your account anytime (in settings){'\n'}
+              • Leave groups anytime{'\n'}
+              • Turn off notifications
             </Typography>
 
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>3. Purposes of Use</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              We use your information solely for the following purposes:{'\n'}
-              • Providing the shopping list management service{'\n'}
-              • Enabling real-time list sharing with authorized users{'\n'}
-              • Sending relevant notifications about list activity{'\n'}
-              • Saving your personal preferences{'\n'}
-              • Improving and maintaining the Service
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>4. Data Storage and Security</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              • Data is stored on secure MongoDB Atlas servers{'\n'}
-              • Passwords are encrypted using bcrypt and cannot be recovered{'\n'}
-              • All communication is encrypted using HTTPS/TLS{'\n'}
-              • Some preferences are stored locally on your device{'\n'}
-              • Notifications are automatically deleted after 30 days{'\n'}
-              • We implement industry-standard security measures
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>5. Third-Party Data Sharing</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              • Your name is visible only to members of lists you participate in{'\n'}
-              • We do not sell, rent, or share personal information with third parties for marketing purposes{'\n'}
-              • Information may be disclosed to law enforcement only pursuant to a court order or binding legal requirement
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>6. Your Rights</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              Under privacy protection laws, you have the following rights:{'\n'}
-              • <strong>Right of access:</strong> View information collected about you{'\n'}
-              • <strong>Right to deletion:</strong> Delete your account and all associated data (via settings){'\n'}
-              • <strong>Right to object:</strong> Object to certain uses of your information{'\n'}
-              • <strong>Right to leave:</strong> Leave shared lists at any time{'\n'}
-              • <strong>Notification control:</strong> Manage which notifications you receive
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>7. Data Retention</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              Your information is retained as long as your account is active.
-              After account deletion, all personal data will be deleted within 30 days,
-              except for information required to be retained by law.
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>8. Policy Changes</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              We may update this policy from time to time.
-              Material changes will be posted in the app.
-              Continued use of the Service after posting of changes constitutes acceptance of the updated policy.
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600 }}>9. Contact Us</Typography>
-            <Typography sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.8 }}>
-              For privacy questions or to exercise your rights,
-              please contact us through the "Help & Support" option in the app settings.
+            <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 4 }}>
+              Questions? Contact us via "Help & Support" in settings.
             </Typography>
 
             {!hasConsent && (
