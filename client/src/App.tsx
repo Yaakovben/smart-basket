@@ -4,14 +4,14 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
-import { ConsentBanner, ErrorBoundary } from "./global/components";
+import { ConsentBanner, ErrorBoundary, UpdateBanner } from "./global/components";
 import { useServiceWorker } from './global/hooks';
 
 const ThemedApp = () => {
   const { settings } = useSettings();
 
-  // Register service worker and handle auto-updates
-  useServiceWorker();
+  // Register service worker and handle updates
+  const { needRefresh, updateServiceWorker } = useServiceWorker();
 
   const theme = useMemo(() =>
     createAppTheme(settings.theme, settings.language),
@@ -24,6 +24,7 @@ const ThemedApp = () => {
       <BrowserRouter>
         <AppRouter />
         <ConsentBanner />
+        <UpdateBanner show={needRefresh} onUpdate={updateServiceWorker} />
       </BrowserRouter>
     </ThemeProvider>
   );
