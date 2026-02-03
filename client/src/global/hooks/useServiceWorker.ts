@@ -14,14 +14,8 @@ export function useServiceWorker(): UseServiceWorkerReturn {
     const updateSW = registerSW({
       immediate: true,
       onNeedRefresh() {
-        // New content available, auto-reload for seamless update
+        // New content available - show update banner, don't auto-reload
         setNeedRefresh(true);
-        // Auto-reload after a short delay to ensure SW is ready
-        setTimeout(() => {
-          if (updateSWRef.current) {
-            updateSWRef.current(true);
-          }
-        }, 1000);
       },
       onOfflineReady() {
         console.log('App ready for offline use');
