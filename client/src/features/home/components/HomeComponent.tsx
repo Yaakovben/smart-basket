@@ -159,10 +159,17 @@ export const HomeComponent = ({
       isPurchased: undefined as boolean | undefined
     }));
 
-    // Combine, dedupe by id, and sort by timestamp (newest first)
+    // Combine and dedupe - embedded notifications may have different IDs than persisted
+    // So we dedupe by (listId, type, userId, timestamp within 30 seconds)
     const combined = [...displayNotifs];
     for (const embedded of embeddedNotifs) {
-      if (!combined.some(n => n.id === embedded.id)) {
+      const isDuplicate = combined.some(n =>
+        n.listId === embedded.listId &&
+        n.type === embedded.type &&
+        n.userId === embedded.userId &&
+        Math.abs(new Date(n.timestamp).getTime() - new Date(embedded.timestamp).getTime()) < 30000
+      );
+      if (!isDuplicate) {
         combined.push(embedded);
       }
     }
@@ -173,28 +180,23 @@ export const HomeComponent = ({
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [myNotifications, persistedNotifications]);
 
-  // Calculate total unread count from persisted notifications
-  const totalUnreadCount = useMemo(() => {
-    const persistedUnread = persistedNotifications.filter(n => !n.read).length;
-    // Also count embedded notifications that aren't in persisted (for backward compatibility)
-    const embeddedIds = new Set(persistedNotifications.map(n => n.id));
-    const embeddedUnread = myNotifications.filter(n => !embeddedIds.has(n.id)).length;
-    return persistedUnread + embeddedUnread;
-  }, [persistedNotifications, myNotifications]);
+  // Calculate total unread count - use allNotifications which is already deduped
+  const totalUnreadCount = allNotifications.length;
 
   const handleDismissNotification = useCallback((listId: string, notificationId: string, isPersisted: boolean) => {
     // Add to dismissing set to trigger animation
     setDismissingNotifications(prev => new Set(prev).add(notificationId));
 
-    // After animation completes, actually mark as read
+    // Mark as read immediately in both systems (don't wait for animation)
+    // This ensures the notification is properly dismissed even if duplicated
+    if (isPersisted || persistedNotifications.some(n => n.id === notificationId)) {
+      onMarkPersistedNotificationRead?.(notificationId);
+    }
+    // Always try to mark embedded notification as read too
+    markNotificationRead(listId, notificationId);
+
+    // Clear from dismissing set after animation completes
     setTimeout(() => {
-      if (isPersisted || persistedNotifications.some(n => n.id === notificationId)) {
-        // Use persisted notification API
-        onMarkPersistedNotificationRead?.(notificationId);
-      } else {
-        // Fall back to embedded notification API
-        markNotificationRead(listId, notificationId);
-      }
       setDismissingNotifications(prev => {
         const next = new Set(prev);
         next.delete(notificationId);
@@ -729,15 +731,20 @@ export const HomeComponent = ({
                       size="small"
                       onClick={() => handleDismissNotification(n.listId, n.id, !n.isLocal)}
                       disabled={isDismissing}
+                      disableRipple
+                      tabIndex={-1}
                       sx={{
                         color: style.textColor,
                         flexShrink: 0,
                         opacity: isDismissing ? 0 : 1,
                         transition: 'opacity 0.2s',
                         '&:hover': { bgcolor: `${style.textColor}15` },
-                        '&:focus': { outline: 'none' },
-                        '&.Mui-focusVisible': { outline: 'none' },
+                        '&:focus': { outline: 'none', boxShadow: 'none' },
+                        '&:focus-visible': { outline: 'none', boxShadow: 'none' },
+                        '&.Mui-focusVisible': { outline: 'none', boxShadow: 'none', bgcolor: 'transparent' },
+                        '&:active': { bgcolor: `${style.textColor}20` },
                         WebkitTapHighlightColor: 'transparent',
+                        userSelect: 'none',
                       }}
                     >
                       <CloseIcon fontSize="small" />
