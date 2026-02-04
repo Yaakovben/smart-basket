@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { env } from './config';
@@ -9,6 +10,20 @@ import {
 } from './handlers';
 import { initRedis, closeRedis } from './services/redis.service';
 import type { AuthenticatedSocket, ClientToServerEvents, ServerToClientEvents } from './types';
+
+// Initialize Sentry error monitoring (must be first)
+if (env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: env.SENTRY_DSN,
+    environment: env.NODE_ENV,
+    serverName: 'socket-server',
+    // Only send errors in production
+    enabled: env.NODE_ENV === 'production',
+    // Performance monitoring
+    tracesSampleRate: 0.1,
+  });
+  console.log('Sentry error monitoring initialized for Socket server');
+}
 
 const httpServer = createServer((req, res) => {
   // Health check endpoint for monitoring services
@@ -64,6 +79,9 @@ io.on('connection', (socket) => {
   // Error handling
   authSocket.on('error', (error) => {
     console.error(`Socket error for user ${authSocket.userId}:`, error);
+    Sentry.captureException(error, {
+      extra: { userId: authSocket.userId },
+    });
     authSocket.emit('error', { message: 'An error occurred' });
   });
 
@@ -92,5 +110,18 @@ const shutdown = () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  Sentry.captureException(reason);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  Sentry.captureException(error);
+  process.exit(1);
+});
 
 export { io };
