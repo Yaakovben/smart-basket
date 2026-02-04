@@ -122,6 +122,15 @@ export const registerNotificationHandlers = (
 
     // Broadcast to all users in the list except sender
     socket.to(`list:${data.listId}`).emit('notification:new', notification);
+
+    // Also emit list:updated so clients refetch the list data (name/icon/color changes)
+    socket.to(`list:${data.listId}`).emit('list:updated', {
+      listId: data.listId,
+      changes: {},
+      userId,
+      timestamp: new Date(),
+    });
+
     console.log(`User ${data.userName} updated list ${data.listName} settings`);
   });
 
