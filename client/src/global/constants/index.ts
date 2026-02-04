@@ -158,13 +158,10 @@ export const MENU_OPTIONS: MenuOption[] = [
 ];
 
 // ===== Storage Keys =====
+// Only keys that are actually used - keep minimal to avoid state sync bugs
 export const STORAGE_KEYS = {
-  USERS: 'sb_users',
-  CURRENT_USER: 'sb_current_user',
-  LISTS: 'sb_lists',
   HINT_SEEN: 'sb_hint_seen',
   SETTINGS: 'sb_settings',
-  LOGIN_ACTIVITY: 'sb_login_activity',
   CONSENT_ACCEPTED: 'sb_consent_accepted'
 } as const;
 
