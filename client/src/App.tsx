@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
@@ -7,8 +7,8 @@ import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
 import { useServiceWorker } from './global/hooks';
 
-// Hide initial loader when app is ready
-const hideInitialLoader = () => {
+// Hide initial loader - called by AppRouter when auth is ready
+export const hideInitialLoader = () => {
   const loader = document.getElementById('initial-loader');
   if (loader) {
     loader.style.opacity = '0';
@@ -27,16 +27,6 @@ const ThemedApp = () => {
     createAppTheme(settings.theme, settings.language),
     [settings.theme, settings.language]
   );
-
-  // Hide initial loader after app is mounted and ready
-  useEffect(() => {
-    // Small delay to ensure content is painted
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        hideInitialLoader();
-      });
-    });
-  }, []);
 
   return (
     <ThemeProvider theme={theme}>

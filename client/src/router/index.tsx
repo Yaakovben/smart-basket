@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback } from "react";
+import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
@@ -8,6 +8,7 @@ import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
+import { hideInitialLoader } from "../App";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -93,7 +94,23 @@ export const AppRouter = () => {
   const { t } = useSettings();
 
   // Hooks for state management
-  const { user, login, logout, updateUser } = useAuth();
+  const { user, login, logout, updateUser, loading: authLoading } = useAuth();
+
+  // Hide initial loader when auth check is complete
+  useEffect(() => {
+    if (!authLoading) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          hideInitialLoader();
+        });
+      });
+    }
+  }, [authLoading]);
+
+  // Show nothing while auth is loading (initial loader from HTML is visible)
+  if (authLoading) {
+    return null;
+  }
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
   const { message: toast, toastType, showToast, hideToast } = useToast();
 
