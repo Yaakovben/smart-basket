@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { List, type IProduct } from '../models';
-import { ApiError } from '../utils';
+import { ApiError, sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../utils/validators';
 import type { IListResponse } from '../types';
 
@@ -78,6 +78,7 @@ export class ProductService {
     list.products.push({
       _id: new mongoose.Types.ObjectId(),
       ...data,
+      name: sanitizeText(data.name), // Sanitize product name
       isPurchased: false,
       addedBy: new mongoose.Types.ObjectId(userId),
       createdAt: new Date(),
@@ -105,7 +106,7 @@ export class ProductService {
     }
 
     // Update product fields
-    if (data.name !== undefined) product.name = data.name;
+    if (data.name !== undefined) product.name = sanitizeText(data.name);
     if (data.quantity !== undefined) product.quantity = data.quantity;
     if (data.unit !== undefined) product.unit = data.unit;
     if (data.category !== undefined) product.category = data.category;

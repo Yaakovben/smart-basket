@@ -14,6 +14,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1, 'Google Client ID is required'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   ADMIN_EMAIL: z.string().email().default('yaakovbenyizchak1@gmail.com'),
+  // Optional Sentry DSN for error monitoring
+  SENTRY_DSN: z.string().optional(),
 });
 
 const parseEnv = () => {

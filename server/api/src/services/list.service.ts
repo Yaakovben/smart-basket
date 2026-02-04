@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { List, User, type IList } from '../models';
-import { ApiError } from '../utils';
+import { ApiError, sanitizeText } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../utils/validators';
 import type { IListResponse } from '../types';
 import { NotificationService } from './notification.service';
@@ -112,6 +112,7 @@ export class ListService {
 
     const list = await List.create({
       ...data,
+      name: sanitizeText(data.name), // Sanitize list name
       owner: userId,
       inviteCode,
       members: [],
@@ -138,7 +139,13 @@ export class ListService {
       throw ApiError.forbidden('Only the owner can update this list');
     }
 
-    Object.assign(list, data);
+    // Sanitize name if provided
+    const sanitizedData = { ...data };
+    if (sanitizedData.name) {
+      sanitizedData.name = sanitizeText(sanitizedData.name);
+    }
+
+    Object.assign(list, sanitizedData);
     await list.save();
 
     return transformList(list);

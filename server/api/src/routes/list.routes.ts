@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ListController } from '../controllers';
-import { authenticate, validate } from '../middleware';
+import { authenticate, validate, joinGroupLimiter } from '../middleware';
 import { createListSchema, updateListSchema, joinGroupSchema } from '../utils/validators';
 
 const router = Router();
@@ -15,7 +15,8 @@ router.put('/:id', validate(updateListSchema), ListController.updateList);
 router.delete('/:id', ListController.deleteList);
 
 // Group operations
-router.post('/join', validate(joinGroupSchema), ListController.joinGroup);
+// Strict rate limiting for joining groups - 10 attempts per 15 minutes (prevents code guessing)
+router.post('/join', joinGroupLimiter, validate(joinGroupSchema), ListController.joinGroup);
 router.post('/:id/leave', ListController.leaveGroup);
 router.delete('/:id/members/:memberId', ListController.removeMember);
 

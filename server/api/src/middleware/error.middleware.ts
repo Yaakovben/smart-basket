@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import * as Sentry from '@sentry/node';
 import { ApiError } from '../utils';
 import { env } from '../config';
 
@@ -48,6 +49,11 @@ export const errorHandler = (
   if (err instanceof mongoose.Error.CastError) {
     statusCode = 400;
     message = `Invalid ${err.path}: ${err.value}`;
+  }
+
+  // Report 500 errors to Sentry (skip expected client errors)
+  if (statusCode >= 500 && env.SENTRY_DSN) {
+    Sentry.captureException(err);
   }
 
   res.status(statusCode).json({

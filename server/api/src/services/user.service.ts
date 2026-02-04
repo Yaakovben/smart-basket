@@ -1,5 +1,5 @@
 import { User, List } from '../models';
-import { ApiError } from '../utils';
+import { ApiError, sanitizeText } from '../utils';
 import { TokenService } from './token.service';
 import type { UpdateProfileInput } from '../utils/validators';
 import type { IUserResponse } from '../types';
@@ -27,6 +27,11 @@ export class UserService {
         throw ApiError.conflict('Email already in use');
       }
       data.email = data.email.toLowerCase();
+    }
+
+    // Sanitize name if provided
+    if (data.name) {
+      data.name = sanitizeText(data.name);
     }
 
     const user = await User.findByIdAndUpdate(

@@ -1,5 +1,5 @@
 import { User, LoginActivity } from '../models';
-import { ApiError } from '../utils';
+import { ApiError, sanitizeText } from '../utils';
 import { TokenService } from './token.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../utils/validators';
@@ -41,9 +41,9 @@ export class AuthService {
     // Check if user should be admin
     const isAdmin = data.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
-    // Create user
+    // Create user with sanitized name
     const user = await User.create({
-      name: data.name,
+      name: sanitizeText(data.name),
       email: data.email.toLowerCase(),
       password: data.password,
       isAdmin,
@@ -156,9 +156,9 @@ export class AuthService {
       googleUser.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
     if (!user) {
-      // Create new user
+      // Create new user with sanitized name
       user = await User.create({
-        name: googleUser.name,
+        name: sanitizeText(googleUser.name),
         email: googleUser.email.toLowerCase(),
         googleId: googleUser.sub,
         avatarColor: '#4285F4', // Google blue

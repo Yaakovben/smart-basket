@@ -1,17 +1,20 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers';
-import { validate, authLimiter } from '../middleware';
+import { validate, authLimiter, loginLimiter, registerLimiter } from '../middleware';
 import { registerSchema, loginSchema, googleAuthSchema, refreshTokenSchema, checkEmailSchema } from '../utils/validators';
 
 const router = Router();
 
-// Apply rate limiting to auth routes
+// Apply general rate limiting to all auth routes
 router.use(authLimiter);
 
 router.post('/check-email', validate(checkEmailSchema), AuthController.checkEmail);
-router.post('/register', validate(registerSchema), AuthController.register);
-router.post('/login', validate(loginSchema), AuthController.login);
-router.post('/google', validate(googleAuthSchema), AuthController.googleAuth);
+// Strict rate limiting for registration - 3 attempts per hour
+router.post('/register', registerLimiter, validate(registerSchema), AuthController.register);
+// Strict rate limiting for login - 5 attempts per 15 minutes
+router.post('/login', loginLimiter, validate(loginSchema), AuthController.login);
+// Google auth uses same login limiter
+router.post('/google', loginLimiter, validate(googleAuthSchema), AuthController.googleAuth);
 router.post('/refresh', validate(refreshTokenSchema), AuthController.refreshToken);
 router.post('/logout', validate(refreshTokenSchema), AuthController.logout);
 
