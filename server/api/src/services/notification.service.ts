@@ -46,40 +46,43 @@ export interface PaginatedNotifications {
 }
 
 // Helper to generate push notification message based on type
-// Title = Smart Basket (top), Body = list name + action (below)
+// Title = list name, Body = action with actor name
+// Uses RLM (Right-to-Left Mark) for proper Hebrew display
+const RLM = '\u200F'; // Right-to-Left Mark for proper RTL display
+
 const generatePushMessage = (
   type: NotificationType,
   actorName: string,
   listName: string,
   productName?: string
 ): { title: string; body: string } => {
-  // Hebrew RTL: action first, then actor name (appears on right)
+  // Format: "actorName: action" - actor name first, then what they did
   const getAction = (): string => {
     switch (type) {
       case 'join':
-        return `הצטרף/ה לקבוצה - ${actorName}`;
+        return `${actorName} הצטרף/ה לקבוצה`;
       case 'leave':
-        return `עזב/ה את הקבוצה - ${actorName}`;
+        return `${actorName} עזב/ה את הקבוצה`;
       case 'removed':
-        return `הוסר/ה מהקבוצה - ${actorName}`;
+        return `${actorName} הוסר/ה מהקבוצה`;
       case 'list_deleted':
-        return `מחק/ה את הקבוצה - ${actorName}`;
+        return `${actorName} מחק/ה את הקבוצה`;
       case 'product_add':
-        return `הוסיף/ה "${productName}" - ${actorName}`;
+        return `${actorName} הוסיף/ה "${productName}"`;
       case 'product_update':
-        return `עדכן/ה "${productName}" - ${actorName}`;
+        return `${actorName} עדכן/ה "${productName}"`;
       case 'product_delete':
-        return `מחק/ה "${productName}" - ${actorName}`;
+        return `${actorName} מחק/ה "${productName}"`;
       case 'product_purchase':
-        return `סימן/ה "${productName}" כנקנה - ${actorName}`;
+        return `${actorName} סימן/ה "${productName}" כנקנה`;
       default:
         return `פעילות חדשה`;
     }
   };
 
   return {
-    title: 'Smart Basket',
-    body: `${listName}\n${getAction()}`,
+    title: `${RLM}${listName}`,
+    body: `${RLM}${getAction()}`,
   };
 };
 
