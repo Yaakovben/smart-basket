@@ -103,6 +103,28 @@ export const registerNotificationHandlers = (
     console.log(`User ${data.removedUserName} was removed from group ${data.listName} by ${data.adminName}`);
   });
 
+  // List settings updated by owner
+  socket.on('list:update', (data: { listId: string; listName: string; userName: string }) => {
+    if (!isValidString(data?.listId) || !isValidString(data?.userName)) {
+      console.warn('Invalid list:update data from user:', userId);
+      return;
+    }
+
+    const notification: NotificationData = {
+      id: `notif_${Date.now()}_${userId}`,
+      type: 'list_update',
+      listId: data.listId,
+      userId,
+      userName: data.userName,
+      message: `${data.userName} updated ${data.listName} settings`,
+      timestamp: new Date(),
+    };
+
+    // Broadcast to all users in the list except sender
+    socket.to(`list:${data.listId}`).emit('notification:new', notification);
+    console.log(`User ${data.userName} updated list ${data.listName} settings`);
+  });
+
   // List deleted by owner
   socket.on('list:delete', (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => {
     if (!isValidString(data?.listId) || !isValidString(data?.listName) || !isValidString(data?.ownerName)) {

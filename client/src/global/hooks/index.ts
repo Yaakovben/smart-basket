@@ -256,12 +256,16 @@ export function useLists(user: User | null) {
         setLists((prev) =>
           prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
         );
+        // Emit socket event for group lists to notify other members in real-time
+        if (updatedList.isGroup && user) {
+          socketService.emitListUpdated(updatedList.id, updatedList.name, user.name);
+        }
       } catch (error) {
         console.error('Failed to update list:', error);
         throw error;
       }
     },
-    [],
+    [user],
   );
 
   const deleteList = useCallback(

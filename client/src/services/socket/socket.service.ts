@@ -274,6 +274,11 @@ class SocketService {
   emitListDeleted(listId: string, listName: string, memberIds: string[], ownerName: string) {
     this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName });
   }
+
+  // Emit list settings updated event (by owner)
+  emitListUpdated(listId: string, listName: string, userName: string) {
+    this.socket?.emit('list:update', { listId, listName, userName });
+  }
 }
 
 // Singleton instance
