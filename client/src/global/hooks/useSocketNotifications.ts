@@ -33,10 +33,18 @@ interface MemberRemovedEventData {
   timestamp: Date;
 }
 
+interface ListDeletedEventData {
+  listId: string;
+  listName: string;
+  ownerId: string;
+  ownerName: string;
+  timestamp: Date;
+}
+
 // Local notification for the popup panel
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed';
+  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed' | 'list_deleted';
   listId: string;
   listName: string;
   userId: string;
@@ -52,7 +60,8 @@ export function useSocketNotifications(
   showToast: (message: string, type?: ToastType) => void,
   listNames: Record<string, string> = {},
   addNotification?: (notification: LocalNotification) => void,
-  onMemberRemoved?: (listId: string, listName: string) => void
+  onMemberRemoved?: (listId: string, listName: string) => void,
+  onListDeleted?: (listId: string, listName: string) => void
 ) {
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
@@ -252,6 +261,30 @@ export function useSocketNotifications(
       onMemberRemoved?.(event.listId, event.listName);
     });
 
+    // List deleted notification (when owner deletes a group)
+    const unsubListDeleted = socketService.on('list:deleted', (data: unknown) => {
+      const event = data as ListDeletedEventData;
+
+      // Show toast notification with warning type
+      const message = `${event.ownerName} ${t('deletedGroupNotif')} "${event.listName}"`;
+      showToast(message, 'warning');
+
+      // Add to notifications panel
+      addNotification?.({
+        id: `notif_${Date.now()}_${event.ownerId}`,
+        type: 'list_deleted',
+        listId: event.listId,
+        listName: event.listName,
+        userId: event.ownerId,
+        userName: event.ownerName,
+        timestamp: new Date(event.timestamp),
+        read: false
+      });
+
+      // Call callback to remove the list from state
+      onListDeleted?.(event.listId, event.listName);
+    });
+
     return () => {
       unsubProductAdded();
       unsubProductUpdated();
@@ -259,7 +292,8 @@ export function useSocketNotifications(
       unsubProductToggled();
       unsubNotificationNew();
       unsubMemberRemoved();
+      unsubListDeleted();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
-  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved]);
+  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved, onListDeleted]);
 }

@@ -144,7 +144,7 @@ export class ListService {
     return transformList(list);
   }
 
-  static async deleteList(listId: string, userId: string): Promise<void> {
+  static async deleteList(listId: string, userId: string): Promise<{ memberIds: string[]; listName: string }> {
     const list = await List.findById(listId);
 
     if (!list) {
@@ -156,10 +156,36 @@ export class ListService {
       throw ApiError.forbidden('Only the owner can delete this list');
     }
 
-    // Delete notifications for this list
+    // Get member IDs before deletion (for socket notification)
+    const memberIds = list.members.map(m => m.user.toString());
+    const listName = list.name;
+
+    // Get owner info for notification
+    const owner = await User.findById(userId);
+
+    // Create "list_deleted" notifications for all members before deleting the list
+    if (owner && list.isGroup && memberIds.length > 0) {
+      await Promise.all(
+        memberIds.map((memberId) =>
+          NotificationService.createNotification({
+            type: 'list_deleted',
+            listId,
+            listName,
+            actorId: userId,
+            actorName: owner.name,
+            targetUserId: memberId,
+          })
+        )
+      );
+    }
+
+    // Delete old notifications for this list
     await NotificationService.deleteNotificationsForList(listId);
 
     await list.deleteOne();
+
+    // Return member IDs and list name for socket notification
+    return { memberIds, listName };
   }
 
   static async joinGroup(
@@ -315,10 +341,11 @@ export class ListService {
     list.members.splice(memberIndex, 1);
 
     // Add notification to embedded (backward compatibility)
+    // Use 'removed' type to match socket event (not 'leave' which is for voluntary leaving)
     if (member) {
       list.notifications.push({
         _id: new mongoose.Types.ObjectId(),
-        type: 'leave',
+        type: 'removed',
         userId: new mongoose.Types.ObjectId(memberId),
         userName: member.name,
         timestamp: new Date(),
@@ -341,11 +368,12 @@ export class ListService {
     }
 
     // Notify remaining list members about the removal
-    if (actor) {
+    // Use 'removed' type and pass the removed member's ID (not admin's) to match socket event
+    if (member) {
       await NotificationService.createNotificationsForListMembers(
         listId,
-        'leave',
-        userId,
+        'removed',
+        memberId,
         {}
       );
     }

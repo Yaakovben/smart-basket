@@ -52,11 +52,12 @@ export class ListController {
   static deleteList = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { id } = req.params;
-    await ListService.deleteList(id, userId);
+    const { memberIds, listName } = await ListService.deleteList(id, userId);
 
     res.json({
       success: true,
       message: 'List deleted successfully',
+      data: { memberIds, listName },
     });
   });
 

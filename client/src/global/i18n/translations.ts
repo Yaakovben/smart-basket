@@ -197,6 +197,8 @@ type TranslationKey =
   | 'joinedGroupNotif'
   | 'leftGroupNotif'
   | 'removedFromGroupNotif'
+  | 'deletedGroupNotif'
+  | 'groupDeletedNotif'
   | 'inListNotif'
   | 'deleteGroupTitle'
   | 'deleteListTitle'
@@ -455,6 +457,8 @@ export const translations: Record<Language, Translations> = {
     joinedGroupNotif: 'הצטרף/ה לקבוצה',
     leftGroupNotif: 'עזב/ה את הקבוצה',
     removedFromGroupNotif: 'הוסרת מהקבוצה',
+    deletedGroupNotif: 'מחק/ה את הקבוצה',
+    groupDeletedNotif: 'הקבוצה נמחקה',
     inListNotif: 'ברשימה',
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
@@ -710,6 +714,8 @@ export const translations: Record<Language, Translations> = {
     joinedGroupNotif: 'joined the group',
     leftGroupNotif: 'left the group',
     removedFromGroupNotif: 'You were removed from the group',
+    deletedGroupNotif: 'deleted the group',
+    groupDeletedNotif: 'Group was deleted',
     inListNotif: 'in list',
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
@@ -965,6 +971,8 @@ export const translations: Record<Language, Translations> = {
     joinedGroupNotif: 'присоединился(ась) к группе',
     leftGroupNotif: 'покинул(а) группу',
     removedFromGroupNotif: 'Вы были удалены из группы',
+    deletedGroupNotif: 'удалил(а) группу',
+    groupDeletedNotif: 'Группа была удалена',
     inListNotif: 'в списке',
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',

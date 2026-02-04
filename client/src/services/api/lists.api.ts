@@ -101,8 +101,9 @@ export const listsApi = {
   },
 
   // Delete list
-  async deleteList(id: string): Promise<void> {
-    await apiClient.delete(`/lists/${id}`);
+  async deleteList(id: string): Promise<{ memberIds: string[]; listName: string }> {
+    const response = await apiClient.delete<{ data: { memberIds: string[]; listName: string } }>(`/lists/${id}`);
+    return response.data.data;
   },
 
   // Join group

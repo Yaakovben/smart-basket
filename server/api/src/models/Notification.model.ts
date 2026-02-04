@@ -3,11 +3,13 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export type NotificationType =
   | 'join'
   | 'leave'
+  | 'removed'  // When a member is removed by admin (different from 'leave' which is voluntary)
   | 'product_add'
   | 'product_update'
   | 'product_delete'
   | 'product_purchase'
-  | 'member_removed';
+  | 'member_removed'
+  | 'list_deleted';
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -27,7 +29,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'member_removed'],
+      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'member_removed', 'list_deleted'],
       required: true,
     },
     listId: {

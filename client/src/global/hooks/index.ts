@@ -23,8 +23,8 @@ interface ToastState {
 const TOAST_DURATIONS: Record<ToastType, number> = {
   success: 1500,
   error: 3000,
-  info: 3500,  // Longer for notification messages
-  warning: 3000
+  info: 5000,  // 5 seconds for notification messages - enough time to read
+  warning: 5000 // 5 seconds for important warnings
 };
 
 export function useToast() {
@@ -255,15 +255,23 @@ export function useLists(user: User | null) {
 
   const deleteList = useCallback(
     async (listId: string) => {
+      // Get the list before deleting to access member info
+      const listToDelete = lists.find((l) => l.id === listId);
+
       try {
-        await listsApi.deleteList(listId);
+        const { memberIds, listName } = await listsApi.deleteList(listId);
         setLists((prev) => prev.filter((l) => l.id !== listId));
+
+        // Emit socket event to notify members (only if it's a group with members)
+        if (listToDelete?.isGroup && memberIds.length > 0 && user) {
+          socketService.emitListDeleted(listId, listName, memberIds, user.name);
+        }
       } catch (error) {
         console.error('Failed to delete list:', error);
         throw error;
       }
     },
-    [],
+    [lists, user],
   );
 
   const joinGroup = useCallback(
@@ -284,6 +292,10 @@ export function useLists(user: User | null) {
         const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
 
         // Map specific errors to translation keys
+        // Check message content first before falling back to status codes
+        if (errorMessage?.toLowerCase().includes('owner')) {
+          return { success: false, error: 'youAreOwner' };
+        }
         if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
           return { success: false, error: 'invalidGroupCode' };
         }
@@ -292,9 +304,6 @@ export function useLists(user: User | null) {
         }
         if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {
           return { success: false, error: 'alreadyMember' };
-        }
-        if (errorMessage?.toLowerCase().includes('owner')) {
-          return { success: false, error: 'youAreOwner' };
         }
 
         return { success: false, error: 'unknownError' };

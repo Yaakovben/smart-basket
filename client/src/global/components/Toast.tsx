@@ -16,7 +16,7 @@ const TOAST_CONFIG: Record<ToastType, { icon: string; color: string; bg: string 
 export const Toast = ({ msg, type = 'success' }: ToastProps) => {
   if (!msg) return null;
   const config = TOAST_CONFIG[type];
-  const isLongText = msg.length > 40;
+  const isLongText = msg.length > 35;
 
   return (
     <Snackbar
@@ -27,6 +27,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
         left: '50%',
         right: 'auto',
         transform: 'translateX(-50%)',
+        width: 'auto',
         maxWidth: 'calc(100vw - 32px)'
       }}
       role="status"
@@ -36,7 +37,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: isLongText ? 'flex-start' : 'center',
           gap: 1.25,
           px: 2.5,
           py: 1.25,
@@ -49,7 +50,8 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
             from: { transform: 'translateY(-20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 }
           },
-          maxWidth: isLongText ? 320 : 'none'
+          maxWidth: 'calc(100vw - 48px)',
+          minWidth: isLongText ? 280 : 'auto'
         }}
       >
         <Box sx={{
@@ -63,7 +65,8 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
           color: config.color,
           fontSize: type === 'info' ? 14 : 13,
           fontWeight: 700,
-          flexShrink: 0
+          flexShrink: 0,
+          mt: isLongText ? 0.25 : 0
         }}>
           {config.icon}
         </Box>
@@ -71,9 +74,11 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
           fontSize: isLongText ? 13 : 14,
           fontWeight: 600,
           color: config.color,
-          whiteSpace: isLongText ? 'normal' : 'nowrap',
+          wordBreak: 'break-word',
+          whiteSpace: 'normal',
           letterSpacing: '-0.01em',
-          lineHeight: 1.4
+          lineHeight: 1.4,
+          flex: 1
         }}>
           {msg}
         </Typography>

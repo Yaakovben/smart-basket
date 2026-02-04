@@ -94,6 +94,7 @@ interface HomePageProps {
   onMarkSingleNotificationRead: (listId: string, notificationId: string) => void;
   // Persisted notifications from API (replaces localNotifications)
   persistedNotifications?: PersistedNotification[];
+  notificationsLoading?: boolean;
   onMarkPersistedNotificationRead?: (notificationId: string) => void;
   onClearAllPersistedNotifications?: (listId?: string) => void;
 }
@@ -101,7 +102,7 @@ interface HomePageProps {
 export const HomeComponent = ({
   lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout,
   onMarkNotificationsRead, onMarkSingleNotificationRead, user,
-  persistedNotifications = [], onMarkPersistedNotificationRead, onClearAllPersistedNotifications
+  persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useSettings();
@@ -241,7 +242,7 @@ export const HomeComponent = ({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
-              <Badge badgeContent={totalUnreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
+              <Badge badgeContent={notificationsLoading ? 0 : totalUnreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
                 <NotificationsIcon sx={{ color: 'white', fontSize: 22 }} />
               </Badge>
             </IconButton>
@@ -666,6 +667,8 @@ export const HomeComponent = ({
                       return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '👋' };
                     case 'removed':
                       return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🚫' };
+                    case 'list_deleted':
+                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🗑️' };
                     case 'join':
                       return { bgcolor: '#F0FDF4', border: '#BBF7D0', textColor: '#166534', subColor: '#15803D', timeColor: '#16A34A', emoji: '🎉' };
                     case 'product_add':
@@ -685,6 +688,7 @@ export const HomeComponent = ({
                   switch (n.type) {
                     case 'leave': return t('memberLeft');
                     case 'removed': return t('memberRemoved');
+                    case 'list_deleted': return t('deletedGroupNotif');
                     case 'join': return t('memberJoined');
                     case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
                     case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;

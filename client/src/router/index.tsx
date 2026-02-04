@@ -99,6 +99,7 @@ export const AppRouter = () => {
   // Persisted notifications (loaded from API, updated in real-time via socket)
   const {
     notifications: persistedNotifications,
+    loading: notificationsLoading,
     markAsRead: markPersistedNotificationRead,
     markAllAsRead: clearAllPersistedNotifications,
     addNotification: addPersistedNotification,
@@ -119,9 +120,18 @@ export const AppRouter = () => {
     }
   }, [removeListLocal, navigate]);
 
+  // Callback when a group is deleted by owner
+  const handleListDeleted = useCallback((listId: string) => {
+    removeListLocal(listId);
+    // If currently viewing the deleted list, navigate away
+    if (window.location.pathname.includes(listId)) {
+      navigate('/');
+    }
+  }, [removeListLocal, navigate]);
+
   // Subscribe to socket notifications (respects notification settings)
   // The addPersistedNotification callback adds real-time notifications to the persisted list
-  useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved);
+  useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted);
 
   // Version & WhatsNew
   const { version, showWhatsNew, newChanges, dismissWhatsNew } = useVersion();
@@ -193,6 +203,7 @@ export const AppRouter = () => {
                 onMarkSingleNotificationRead={markSingleNotificationRead}
                 onLogout={handleLogout}
                 persistedNotifications={persistedNotifications}
+                notificationsLoading={notificationsLoading}
                 onMarkPersistedNotificationRead={markPersistedNotificationRead}
                 onClearAllPersistedNotifications={clearAllPersistedNotifications}
               />

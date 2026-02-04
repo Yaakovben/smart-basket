@@ -25,6 +25,7 @@ export interface ClientToServerEvents {
   'member:join': (data: { listId: string; listName: string; userName: string }) => void;
   'member:leave': (data: { listId: string; listName: string; userName: string }) => void;
   'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
+  'list:delete': (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => void;
 }
 
 // Socket events from server to client
@@ -38,6 +39,7 @@ export interface ServerToClientEvents {
   'list:updated': (data: ListUpdatedData) => void;
   'notification:new': (data: NotificationData) => void;
   'member:removed': (data: MemberRemovedData) => void;
+  'list:deleted': (data: ListDeletedData) => void;
   'error': (data: { message: string }) => void;
 }
 
@@ -91,7 +93,7 @@ export interface ListUpdatedData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased';
+  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_deleted';
   listId: string;
   userId: string;
   userName: string;
@@ -106,5 +108,13 @@ export interface MemberRemovedData {
   removedUserName: string;
   adminId: string;
   adminName: string;
+  timestamp: Date;
+}
+
+export interface ListDeletedData {
+  listId: string;
+  listName: string;
+  ownerId: string;
+  ownerName: string;
   timestamp: Date;
 }

@@ -65,7 +65,8 @@ export interface IMemberResponse {
 }
 
 // ===== Notification Types =====
-export type NotificationType = 'join' | 'leave';
+// Types for embedded notifications in List model (backward compatibility)
+export type NotificationType = 'join' | 'leave' | 'removed';
 
 export interface INotificationResponse {
   id: string;

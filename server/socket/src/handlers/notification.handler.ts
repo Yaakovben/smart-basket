@@ -5,6 +5,7 @@ import type {
   ServerToClientEvents,
   NotificationData,
   MemberRemovedData,
+  ListDeletedData,
 } from '../types';
 
 // Simple validation helper
@@ -100,6 +101,29 @@ export const registerNotificationHandlers = (
     socket.to(`list:${data.listId}`).emit('notification:new', removedNotification);
 
     console.log(`User ${data.removedUserName} was removed from group ${data.listName} by ${data.adminName}`);
+  });
+
+  // List deleted by owner
+  socket.on('list:delete', (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => {
+    if (!isValidString(data?.listId) || !isValidString(data?.listName) || !isValidString(data?.ownerName)) {
+      console.warn('Invalid list:delete data from user:', userId);
+      return;
+    }
+
+    const deletedData: ListDeletedData = {
+      listId: data.listId,
+      listName: data.listName,
+      ownerId: userId,
+      ownerName: data.ownerName,
+      timestamp: new Date(),
+    };
+
+    // Send notification to each member individually (they might not be in the room anymore)
+    for (const memberId of data.memberIds) {
+      io.to(`user:${memberId}`).emit('list:deleted', deletedData);
+    }
+
+    console.log(`List ${data.listName} was deleted by ${data.ownerName}, notified ${data.memberIds.length} members`);
   });
 };
 

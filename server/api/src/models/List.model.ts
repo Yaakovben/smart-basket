@@ -126,7 +126,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave'],
+      enum: ['join', 'leave', 'removed'],
       required: true,
     },
     userId: {
