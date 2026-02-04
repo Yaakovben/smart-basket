@@ -46,6 +46,7 @@ export interface PaginatedNotifications {
 }
 
 // Helper to generate push notification message based on type
+// Title = list name, Body = what happened
 const generatePushMessage = (
   type: NotificationType,
   actorName: string,
@@ -55,48 +56,48 @@ const generatePushMessage = (
   switch (type) {
     case 'join':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} הצטרף/ה לקבוצה "${listName}"`,
+        title: listName,
+        body: `${actorName} הצטרף/ה לקבוצה`,
       };
     case 'leave':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} עזב/ה את הקבוצה "${listName}"`,
+        title: listName,
+        body: `${actorName} עזב/ה את הקבוצה`,
       };
     case 'removed':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} הוסר/ה מהקבוצה "${listName}"`,
+        title: listName,
+        body: `${actorName} הוסר/ה מהקבוצה`,
       };
     case 'list_deleted':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} מחק/ה את הקבוצה "${listName}"`,
+        title: listName,
+        body: `${actorName} מחק/ה את הקבוצה`,
       };
     case 'product_add':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} הוסיף/ה "${productName}" לרשימה "${listName}"`,
+        title: listName,
+        body: `${actorName} הוסיף/ה "${productName}"`,
       };
     case 'product_update':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} עדכן/ה "${productName}" ברשימה "${listName}"`,
+        title: listName,
+        body: `${actorName} עדכן/ה "${productName}"`,
       };
     case 'product_delete':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} מחק/ה "${productName}" מרשימה "${listName}"`,
+        title: listName,
+        body: `${actorName} מחק/ה "${productName}"`,
       };
     case 'product_purchase':
       return {
-        title: 'Smart Basket',
-        body: `${actorName} סימן/ה "${productName}" כנקנה ברשימה "${listName}"`,
+        title: listName,
+        body: `${actorName} סימן/ה "${productName}" כנקנה`,
       };
     default:
       return {
-        title: 'Smart Basket',
-        body: `פעילות חדשה ברשימה "${listName}"`,
+        title: listName,
+        body: `פעילות חדשה`,
       };
   }
 };
