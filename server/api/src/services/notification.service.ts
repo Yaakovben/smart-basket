@@ -81,11 +81,12 @@ const generatePushMessage = (
     }
   };
 
-  // Title: single space (prevents iOS from showing app name as separate title)
-  // Body: list emoji + list name + action
+  // Title: list emoji + list name
+  // Body: action only
+  // This prevents ugly empty gap above "from" line
   return {
-    title: ' ',
-    body: `📋 ${RLM}${listName}\n${RLM}${getAction()}`,
+    title: `📋 ${RLM}${listName}`,
+    body: `${RLM}${getAction()}`,
   };
 };
 
