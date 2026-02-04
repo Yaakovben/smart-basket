@@ -47,15 +47,24 @@ interface ToastState {
   type: ToastType;
 }
 
-export function useToast(duration = 1200) {
+// Toast duration by type - info/warning are longer for notification messages
+const TOAST_DURATIONS: Record<ToastType, number> = {
+  success: 1500,
+  error: 3000,
+  info: 3500,  // Longer for notification messages
+  warning: 3000
+};
+
+export function useToast() {
   const [toast, setToast] = useState<ToastState>({ message: "", type: "success" });
 
   const showToast = useCallback(
     (msg: string, type: ToastType = "success") => {
       setToast({ message: msg, type });
+      const duration = TOAST_DURATIONS[type];
       setTimeout(() => setToast({ message: "", type: "success" }), duration);
     },
-    [duration],
+    [],
   );
 
   return { message: toast.message, toastType: toast.type, showToast };

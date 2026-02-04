@@ -67,18 +67,18 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         </DialogTitle>
         <IconButton
           onClick={handleClose}
-          size="small"
           aria-label="Close"
           sx={{
             position: 'absolute',
             left: 12,
             bgcolor: 'action.hover',
-            width: 32,
-            height: 32,
-            '&:hover': { bgcolor: 'action.selected' }
+            width: 40,
+            height: 40,
+            '&:hover': { bgcolor: 'action.selected' },
+            '&:active': { transform: 'scale(0.95)' }
           }}
         >
-          <CloseIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+          <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
         </IconButton>
       </Box>
 

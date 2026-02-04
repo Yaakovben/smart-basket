@@ -348,8 +348,8 @@ export const HomeComponent = ({
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
-              <IconButton size="small" onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 32, height: 32 }}>
-                <CloseIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              <IconButton onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 40, height: 40, '&:active': { transform: 'scale(0.95)' } }}>
+                <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
               </IconButton>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

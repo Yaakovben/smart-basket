@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { socketService } from '../../services/socket';
 import { useSettings } from '../context/SettingsContext';
-import type { User } from '../types';
+import type { User, ToastType } from '../types';
 
 interface ProductEventData {
   listId: string;
@@ -49,7 +49,7 @@ export interface LocalNotification {
 
 export function useSocketNotifications(
   user: User | null,
-  showToast: (message: string) => void,
+  showToast: (message: string, type?: ToastType) => void,
   listNames: Record<string, string> = {},
   addNotification?: (notification: LocalNotification) => void,
   onMemberRemoved?: (listId: string, listName: string) => void
@@ -77,7 +77,7 @@ export function useSocketNotifications(
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || '';
         const message = `${event.userName} ${t('addedProductNotif')} "${productName}"${listName ? ` ${t('inListNotif')} ${listName}` : ''}`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -103,7 +103,7 @@ export function useSocketNotifications(
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || '';
         const message = `${event.userName} ${t('editedProductNotif')} "${productName}"`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -129,7 +129,7 @@ export function useSocketNotifications(
         const listName = listNames[event.listId] || '';
         const productName = event.productName || '';
         const message = `${event.userName} ${t('deletedProductNotif')} "${productName}"`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -156,7 +156,7 @@ export function useSocketNotifications(
         const productName = event.productName || '';
         const action = event.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif');
         const message = `${event.userName} ${action} "${productName}"`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -187,7 +187,7 @@ export function useSocketNotifications(
 
       if (event.type === 'join' && notificationSettings.groupJoin) {
         const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -204,7 +204,7 @@ export function useSocketNotifications(
 
       if (event.type === 'leave' && notificationSettings.groupLeave) {
         const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message);
+        showToast(message, 'info');
 
         // Add to notifications panel
         addNotification?.({
@@ -226,9 +226,9 @@ export function useSocketNotifications(
       // Only handle if we are the removed user
       if (event.removedUserId !== user.id) return;
 
-      // Show toast notification
+      // Show toast notification with warning type for important removal
       const message = `${t('removedFromGroupNotif')} "${event.listName}"`;
-      showToast(message);
+      showToast(message, 'warning');
 
       // Call callback to remove the list from state
       onMemberRemoved?.(event.listId, event.listName);
