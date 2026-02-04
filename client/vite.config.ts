@@ -7,10 +7,16 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.svg'],
       devOptions: {
         enabled: false
+      },
+      injectManifest: {
+        globPatterns: [], // No caching
       },
       manifest: {
         name: 'Smart Basket - רשימת קניות חכמה',
@@ -39,11 +45,6 @@ export default defineConfig({
           }
         ]
       },
-      // No caching - always fetch fresh from server
-      workbox: {
-        globPatterns: [],
-        runtimeCaching: []
-      }
     })
   ],
   build: {

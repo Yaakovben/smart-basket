@@ -4,3 +4,4 @@ export { UserService } from './user.service';
 export { ListService } from './list.service';
 export { ProductService } from './product.service';
 export { NotificationService } from './notification.service';
+export { PushService, type PushPayload } from './push.service';

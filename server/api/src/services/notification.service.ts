@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Notification, type INotification, type NotificationType } from '../models/Notification.model';
 import { List, User } from '../models';
 import { ApiError } from '../utils';
+import { PushService } from './push.service';
 
 export interface CreateNotificationInput {
   type: NotificationType;
@@ -44,6 +45,62 @@ export interface PaginatedNotifications {
   };
 }
 
+// Helper to generate push notification message based on type
+const generatePushMessage = (
+  type: NotificationType,
+  actorName: string,
+  listName: string,
+  productName?: string
+): { title: string; body: string } => {
+  switch (type) {
+    case 'join':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} הצטרף/ה לקבוצה "${listName}"`,
+      };
+    case 'leave':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} עזב/ה את הקבוצה "${listName}"`,
+      };
+    case 'removed':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} הוסר/ה מהקבוצה "${listName}"`,
+      };
+    case 'list_deleted':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} מחק/ה את הקבוצה "${listName}"`,
+      };
+    case 'product_add':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} הוסיף/ה "${productName}" לרשימה "${listName}"`,
+      };
+    case 'product_update':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} עדכן/ה "${productName}" ברשימה "${listName}"`,
+      };
+    case 'product_delete':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} מחק/ה "${productName}" מרשימה "${listName}"`,
+      };
+    case 'product_purchase':
+      return {
+        title: 'Smart Basket',
+        body: `${actorName} סימן/ה "${productName}" כנקנה ברשימה "${listName}"`,
+      };
+    default:
+      return {
+        title: 'Smart Basket',
+        body: `פעילות חדשה ברשימה "${listName}"`,
+      };
+  }
+};
+
 // Helper to transform notification to response format
 const transformNotification = (notification: INotification): NotificationResponse => {
   const json = notification.toJSON() as Record<string, unknown>;
@@ -79,6 +136,19 @@ export class NotificationService {
       productName: data.productName,
       read: false,
     });
+
+    // Send push notification (async, don't wait)
+    const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
+    PushService.sendToUser(data.targetUserId, {
+      ...pushMessage,
+      icon: '/icon-192.png',
+      badge: '/icon-72.png',
+      data: {
+        listId: data.listId,
+        type: data.type,
+        url: `/list/${data.listId}`,
+      },
+    }).catch(() => {}); // Ignore push errors
 
     return transformNotification(notification);
   }
@@ -145,6 +215,19 @@ export class NotificationService {
         read: false,
       }))
     );
+
+    // Send push notifications to all target users (async, don't wait)
+    const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
+    PushService.sendToUsers(targetUserIds, {
+      ...pushMessage,
+      icon: '/icon-192.png',
+      badge: '/icon-72.png',
+      data: {
+        listId,
+        type,
+        url: `/list/${listId}`,
+      },
+    }).catch(() => {}); // Ignore push errors
 
     return notifications.map((n) => transformNotification(n as INotification));
   }

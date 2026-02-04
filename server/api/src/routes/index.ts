@@ -5,6 +5,7 @@ import listRoutes from './list.routes';
 import productRoutes from './product.routes';
 import adminRoutes from './admin.routes';
 import notificationRoutes from './notification.routes';
+import pushRoutes from './push.routes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/lists', listRoutes);
 router.use('/lists/:listId/products', productRoutes);
 router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/push', pushRoutes);
 
 export default router;

@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, Paper, Switch, Button, Collapse } from '@mui/material';
+import { Box, Typography, IconButton, Paper, Switch, Button, Collapse, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { usePushNotifications } from '../../../global/hooks';
 import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES, SIZES } from '../../../global/constants';
 import type { Language, User } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
@@ -83,12 +84,21 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, loading: pushLoading, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,
     setShowLanguage, setShowAbout, setShowHelp, setConfirmDelete,
     handleLanguageSelect, toggleNotificationsExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData });
+
+  const handlePushToggle = async () => {
+    if (pushSubscribed) {
+      await unsubscribePush();
+    } else {
+      await subscribePush();
+    }
+  };
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
@@ -117,8 +127,37 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
           <Collapse in={settings.notifications.enabled && notificationsExpanded}>
             <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
+              {/* Push Notifications Toggle */}
+              {pushSupported && (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
+                    <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+                      {settings.language === 'he' ? 'התראות Push' : settings.language === 'ru' ? 'Push-уведомления' : 'Push Notifications'}
+                    </Typography>
+                  </Box>
+                  <Box sx={subSettingRowSx}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography sx={{ fontSize: 14 }}>
+                        {settings.language === 'he' ? 'קבל התראות גם כשהאפליקציה סגורה' : settings.language === 'ru' ? 'Получать уведомления когда приложение закрыто' : 'Receive notifications when app is closed'}
+                      </Typography>
+                      {!pushSubscribed && (
+                        <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5 }}>
+                          {settings.language === 'he' ? '* באייפון: הוסף למסך הבית תחילה' : settings.language === 'ru' ? '* iPhone: сначала добавьте на главный экран' : '* iPhone: Add to Home Screen first'}
+                        </Typography>
+                      )}
+                    </Box>
+                    {pushLoading ? (
+                      <CircularProgress size={24} sx={{ color: '#14B8A6' }} />
+                    ) : (
+                      <Switch checked={pushSubscribed} onChange={handlePushToggle} sx={smallSwitchSx} />
+                    )}
+                  </Box>
+                </>
+              )}
+
               {/* Group Notifications Section */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: pushSupported ? 1.5 : 0, mb: 0.5 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
               </Box>

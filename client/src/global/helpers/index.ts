@@ -1,7 +1,9 @@
 // ===== Haptic Feedback (shared across all features) =====
+// Note: Only works on Android. iOS Safari doesn't support Vibration API in PWAs.
 export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
+  // Try native vibration (Android only)
   if ('vibrate' in navigator) {
-    const patterns = { light: 10, medium: 20, heavy: 30 };
+    const patterns = { light: 25, medium: 50, heavy: 100 };
     navigator.vibrate(patterns[style]);
   }
 };
