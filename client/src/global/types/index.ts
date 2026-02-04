@@ -138,4 +138,5 @@ export interface ModalProps {
 export interface ToastProps {
   msg: string;
   type?: ToastType;
+  onDismiss?: () => void;
 }

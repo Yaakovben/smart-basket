@@ -95,7 +95,7 @@ export const AppRouter = () => {
   // Hooks for state management
   const { user, login, logout, updateUser } = useAuth();
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
-  const { message: toast, toastType, showToast } = useToast();
+  const { message: toast, toastType, showToast, hideToast } = useToast();
 
   // Persisted notifications (loaded from API, updated in real-time via socket)
   const {
@@ -286,7 +286,7 @@ export const AppRouter = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
-      <Toast msg={toast} type={toastType} />
+      <Toast msg={toast} type={toastType} onDismiss={hideToast} />
     </>
   );
 }

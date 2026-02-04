@@ -4,6 +4,7 @@ import type { ToastType } from '../types';
 interface ToastProps {
   msg: string;
   type?: ToastType;
+  onDismiss?: () => void;
 }
 
 const TOAST_CONFIG: Record<ToastType, { icon: string; color: string; bg: string }> = {
@@ -13,7 +14,7 @@ const TOAST_CONFIG: Record<ToastType, { icon: string; color: string; bg: string 
   warning: { icon: '⚠', color: '#D97706', bg: '#FFFBEB' }
 };
 
-export const Toast = ({ msg, type = 'success' }: ToastProps) => {
+export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
   if (!msg) return null;
   const config = TOAST_CONFIG[type];
   const isLongText = msg.length > 35;
@@ -35,6 +36,7 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
       aria-atomic="true"
     >
       <Box
+        onClick={onDismiss}
         sx={{
           display: 'flex',
           alignItems: isLongText ? 'flex-start' : 'center',
@@ -51,7 +53,10 @@ export const Toast = ({ msg, type = 'success' }: ToastProps) => {
             to: { transform: 'translateY(0)', opacity: 1 }
           },
           maxWidth: 'calc(100vw - 48px)',
-          minWidth: isLongText ? 280 : 'auto'
+          minWidth: isLongText ? 280 : 'auto',
+          cursor: onDismiss ? 'pointer' : 'default',
+          transition: 'transform 0.15s ease, opacity 0.15s ease',
+          '&:active': onDismiss ? { transform: 'scale(0.97)', opacity: 0.9 } : {}
         }}
       >
         <Box sx={{

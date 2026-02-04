@@ -38,7 +38,11 @@ export function useToast() {
     [],
   );
 
-  return { message: toast.message, toastType: toast.type, showToast };
+  const hideToast = useCallback(() => {
+    setToast({ message: "", type: "success" });
+  }, []);
+
+  return { message: toast.message, toastType: toast.type, showToast, hideToast };
 }
 
 // ===== useAuth Hook =====
