@@ -93,8 +93,10 @@ export const AppRouter = () => {
   const navigate = useNavigate();
   const { t } = useSettings();
 
-  // Hooks for state management
+  // Hooks for state management - ALL hooks must be called before any conditional returns
   const { user, login, logout, updateUser, loading: authLoading } = useAuth();
+  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
+  const { message: toast, toastType, showToast, hideToast } = useToast();
 
   // Hide initial loader when auth check is complete
   useEffect(() => {
@@ -106,13 +108,6 @@ export const AppRouter = () => {
       });
     }
   }, [authLoading]);
-
-  // Show nothing while auth is loading (initial loader from HTML is visible)
-  if (authLoading) {
-    return null;
-  }
-  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
-  const { message: toast, toastType, showToast, hideToast } = useToast();
 
   // Persisted notifications (loaded from API, updated in real-time via socket)
   const {
@@ -150,6 +145,40 @@ export const AppRouter = () => {
   // Subscribe to socket notifications (respects notification settings)
   // The addPersistedNotification callback adds real-time notifications to the persisted list
   useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted);
+
+  const handleDeleteAllData = useCallback(async () => {
+    try {
+      // 1. Delete user account from server (also clears tokens)
+      await authApi.deleteAccount();
+
+      // 2. Clear all localStorage
+      localStorage.clear();
+
+      // 3. Clear all browser caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // 4. Unregister service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+
+      // 5. Logout locally and navigate to login
+      logout();
+      navigate("/login");
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [logout, navigate, showToast, t]);
+
+  // Show nothing while auth is loading (initial loader from HTML is visible)
+  if (authLoading) {
+    return null;
+  }
 
   // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
@@ -191,35 +220,6 @@ export const AppRouter = () => {
     updateList(list);
     showToast(t('saved'));
   };
-
-  const handleDeleteAllData = useCallback(async () => {
-    try {
-      // 1. Delete user account from server (also clears tokens)
-      await authApi.deleteAccount();
-
-      // 2. Clear all localStorage
-      localStorage.clear();
-
-      // 3. Clear all browser caches
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-
-      // 4. Unregister service workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(reg => reg.unregister()));
-      }
-
-      // 5. Logout locally and navigate to login
-      logout();
-      navigate("/login");
-    } catch (error) {
-      console.error('Failed to delete account:', error);
-      showToast(t('errorOccurred'), 'error');
-    }
-  }, [logout, navigate, showToast, t]);
 
   return (
     <>
