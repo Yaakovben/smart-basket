@@ -142,8 +142,8 @@ export class NotificationService {
     const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
-      icon: '/icon-192.png',
-      badge: '/icon-72.png',
+      icon: '/apple-touch-icon.svg',
+      badge: '/favicon.svg',
       data: {
         listId: data.listId,
         type: data.type,
@@ -221,8 +221,8 @@ export class NotificationService {
     const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
     PushService.sendToUsers(targetUserIds, {
       ...pushMessage,
-      icon: '/icon-192.png',
-      badge: '/icon-72.png',
+      icon: '/apple-touch-icon.svg',
+      badge: '/favicon.svg',
       data: {
         listId,
         type,

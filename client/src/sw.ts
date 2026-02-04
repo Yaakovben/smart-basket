@@ -16,8 +16,8 @@ self.addEventListener('push', (event) => {
     // Extended notification options (some properties are non-standard but widely supported)
     const options = {
       body: data.body,
-      icon: data.icon || '/icon-192.png',
-      badge: data.badge || '/icon-72.png',
+      icon: data.icon || '/apple-touch-icon.svg',
+      badge: data.badge || '/favicon.svg',
       tag: data.data?.listId || 'smart-basket',
       renotify: true,
       data: data.data,
