@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { List, User, type IList } from '../models';
-import { ApiError, sanitizeText } from '../utils';
+import { ApiError, sanitizeText, convertProductsAddedBy } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../utils/validators';
 import type { IListResponse } from '../types';
 import { NotificationService } from './notification.service';
@@ -13,31 +13,6 @@ const generateInviteCode = (): string => {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
-};
-
-// Helper to check if a string looks like a MongoDB ObjectId
-const isObjectIdString = (str: string): boolean => {
-  return /^[a-f\d]{24}$/i.test(str);
-};
-
-// Helper to convert addedBy from object/ObjectId to string (name)
-const convertProductsAddedBy = (products: Record<string, unknown>[]): Record<string, unknown>[] => {
-  return products.map((p) => {
-    let addedByName: string;
-
-    if (typeof p.addedBy === 'object' && p.addedBy !== null) {
-      // Populated user object - extract name
-      addedByName = (p.addedBy as { name?: string }).name || 'Unknown';
-    } else if (typeof p.addedBy === 'string') {
-      // If it's a string that looks like an ObjectId, use 'Unknown'
-      // Otherwise, assume it's already a name
-      addedByName = isObjectIdString(p.addedBy) ? 'Unknown' : p.addedBy;
-    } else {
-      addedByName = 'Unknown';
-    }
-
-    return { ...p, addedBy: addedByName };
-  });
 };
 
 // Helper to transform list to response format
@@ -375,13 +350,14 @@ export class ListService {
     }
 
     // Notify remaining list members about the removal
-    // Use 'removed' type and pass the removed member's ID (not admin's) to match socket event
+    // actorId = removed member (for notification content)
+    // excludeUserId = the user who removed them (shouldn't get notified)
     if (member) {
       await NotificationService.createNotificationsForListMembers(
         listId,
         'removed',
         memberId,
-        {}
+        { excludeUserId: userId }
       );
     }
 

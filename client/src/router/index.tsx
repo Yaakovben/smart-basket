@@ -7,6 +7,7 @@ import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, 
 import { Toast, WhatsNew } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
+import { authApi } from "../services/api";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
@@ -177,6 +178,35 @@ export const AppRouter = () => {
     showToast(t('saved'));
   };
 
+  const handleDeleteAllData = useCallback(async () => {
+    try {
+      // 1. Delete user account from server (also clears tokens)
+      await authApi.deleteAccount();
+
+      // 2. Clear all localStorage
+      localStorage.clear();
+
+      // 3. Clear all browser caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // 4. Unregister service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+
+      // 5. Logout locally and navigate to login
+      logout();
+      navigate("/login");
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [logout, navigate, showToast, t]);
+
   return (
     <>
       <Suspense fallback={<PageLoader />}>
@@ -242,7 +272,7 @@ export const AppRouter = () => {
           path="/settings"
           element={
             <ProtectedRoute user={user}>
-              <SettingsPage user={user!} hasUpdate={newChanges.length > 0} />
+              <SettingsPage user={user!} hasUpdate={newChanges.length > 0} onDeleteAllData={handleDeleteAllData} />
             </ProtectedRoute>
           }
         />

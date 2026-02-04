@@ -84,7 +84,7 @@ export function useSocketNotifications(
 
       if (shouldShowNotification('productAdd')) {
         const listName = listNames[event.listId] || '';
-        const productName = event.product?.name || '';
+        const productName = event.product?.name || event.productName || '';
         const message = `${event.userName} ${t('addedProductNotif')} "${productName}"${listName ? ` ${t('inListNotif')} ${listName}` : ''}`;
         showToast(message, 'info');
 
@@ -110,7 +110,7 @@ export function useSocketNotifications(
 
       if (shouldShowNotification('productEdit')) {
         const listName = listNames[event.listId] || '';
-        const productName = event.product?.name || '';
+        const productName = event.product?.name || event.productName || '';
         const message = `${event.userName} ${t('editedProductNotif')} "${productName}"`;
         showToast(message, 'info');
 
@@ -136,7 +136,7 @@ export function useSocketNotifications(
 
       if (shouldShowNotification('productDelete')) {
         const listName = listNames[event.listId] || '';
-        const productName = event.productName || '';
+        const productName = event.product?.name || event.productName || '';
         const message = `${event.userName} ${t('deletedProductNotif')} "${productName}"`;
         showToast(message, 'info');
 
@@ -162,7 +162,7 @@ export function useSocketNotifications(
 
       if (shouldShowNotification('productPurchase')) {
         const listName = listNames[event.listId] || '';
-        const productName = event.productName || '';
+        const productName = event.product?.name || event.productName || '';
         const action = event.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif');
         const message = `${event.userName} ${action} "${productName}"`;
         showToast(message, 'info');

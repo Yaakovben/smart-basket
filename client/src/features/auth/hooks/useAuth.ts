@@ -67,7 +67,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     } catch (err: unknown) {
       const apiError = err as { code?: string; message?: string };
       if (apiError.code === 'ERR_NETWORK') {
-        setError('שגיאת חיבור לשרת');
+        setError(t('networkError'));
       } else {
         setError(apiError.message || t('unknownError'));
       }
@@ -178,7 +178,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           password
         });
         if (!result || !result.user) {
-          setError('שגיאה: לא התקבל מידע משתמש מהשרת');
+          setError(t('noUserData'));
           setEmailLoading(false);
           return;
         }
@@ -192,9 +192,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         const regErrorMsg = regApiError.response?.data?.message || regApiError.response?.data?.error || '';
 
         if (regApiError.code === 'ERR_NETWORK') {
-          setError('שגיאת חיבור לשרת');
+          setError(t('networkError'));
         } else if (regApiError.message?.includes('localStorage')) {
-          setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
+          setError(t('localStorageError'));
         } else {
           setError(regErrorMsg || regApiError.message || t('unknownError'));
         }
@@ -216,10 +216,10 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
       if (apiError.code === 'ERR_NETWORK') {
         haptic('heavy');
-        setError('שגיאת חיבור לשרת');
+        setError(t('networkError'));
       } else if (apiError.message?.includes('localStorage')) {
         haptic('heavy');
-        setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
+        setError(t('localStorageError'));
       } else if (apiError.response?.status === 400 && errorMsg.toLowerCase().includes('google')) {
         haptic('heavy');
         setError(t('useGoogleSignIn'));
@@ -266,9 +266,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const status = apiError.response?.status;
 
       if (apiError.code === 'ERR_NETWORK') {
-        setError('שגיאת חיבור לשרת');
+        setError(t('networkError'));
       } else if (apiError.message?.includes('localStorage')) {
-        setError('לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.');
+        setError(t('localStorageError'));
       } else if (errorMsg) {
         setError(errorMsg);
       } else if (status) {
@@ -283,9 +283,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
   const handleGoogleError = useCallback(() => {
     haptic('heavy');
-    setError('שגיאה בהתחברות עם Google');
+    setError(t('googleLoginError'));
     setGoogleLoading(false);
-  }, []);
+  }, [t]);
 
   // ===== Password Handler =====
   const handlePasswordChange = useCallback((newPassword: string) => {

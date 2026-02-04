@@ -93,6 +93,7 @@ export class NotificationService {
     data: {
       productId?: string;
       productName?: string;
+      excludeUserId?: string; // Additional user to exclude (e.g., the person who removed a member)
     } = {}
   ): Promise<NotificationResponse[]> {
     const list = await List.findById(listId);
@@ -105,17 +106,23 @@ export class NotificationService {
       throw ApiError.notFound('Actor not found');
     }
 
-    // Get all members who should receive the notification (everyone except the actor)
+    // Users to exclude: the actor and optionally another user (e.g., the remover)
+    const excludeIds = new Set([actorId]);
+    if (data.excludeUserId) {
+      excludeIds.add(data.excludeUserId);
+    }
+
+    // Get all members who should receive the notification (everyone except excluded users)
     const targetUserIds: string[] = [];
 
-    // Add owner if not the actor
-    if (list.owner.toString() !== actorId) {
+    // Add owner if not excluded
+    if (!excludeIds.has(list.owner.toString())) {
       targetUserIds.push(list.owner.toString());
     }
 
-    // Add members if not the actor
+    // Add members if not excluded
     for (const member of list.members) {
-      if (member.user.toString() !== actorId) {
+      if (!excludeIds.has(member.user.toString())) {
         targetUserIds.push(member.user.toString());
       }
     }

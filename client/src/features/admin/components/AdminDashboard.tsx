@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment } from '@mui/material';
+import { useState, useMemo } from 'react';
+import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
@@ -49,6 +49,16 @@ export const AdminDashboard = () => {
     loading,
     error
   } = useAdminDashboard();
+
+  // Memoized filtered users to avoid recalculating on every render
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return usersWithLoginInfo;
+    const searchLower = userSearch.toLowerCase();
+    return usersWithLoginInfo.filter(u =>
+      u.name.toLowerCase().includes(searchLower) ||
+      u.email.toLowerCase().includes(searchLower)
+    );
+  }, [usersWithLoginInfo, userSearch]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -183,7 +193,14 @@ export const AdminDashboard = () => {
         {/* Error State */}
         {error && !loading && (
           <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2, mb: 2 }}>
-            <Typography color="error">{error}</Typography>
+            <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+            <Button
+              variant="contained"
+              onClick={refreshData}
+              sx={{ bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' } }}
+            >
+              {t('tryAgain')}
+            </Button>
           </Paper>
         )}
 
@@ -240,7 +257,7 @@ export const AdminDashboard = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder={settings.language === 'he' ? 'חיפוש לקוח...' : 'Search customer...'}
+                placeholder={t('searchCustomer')}
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
@@ -259,11 +276,7 @@ export const AdminDashboard = () => {
               <LoadingSkeleton />
             ) : (
               <UsersTable
-                users={usersWithLoginInfo.filter(u =>
-                  userSearch === '' ||
-                  u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-                  u.email.toLowerCase().includes(userSearch.toLowerCase())
-                )}
+                users={filteredUsers}
                 language={settings.language}
               />
             )}

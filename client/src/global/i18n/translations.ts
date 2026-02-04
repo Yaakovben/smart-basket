@@ -203,6 +203,7 @@ type TranslationKey =
   | 'deleteGroupTitle'
   | 'deleteListTitle'
   | 'deleteConfirmMessage'
+  | 'errorOccurred'
   | 'noNotifications'
   | 'home'
   | 'new'
@@ -237,6 +238,7 @@ type TranslationKey =
   | 'lastLogin'
   | 'neverLoggedIn'
   | 'refreshData'
+  | 'searchCustomer'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -256,6 +258,8 @@ type TranslationKey =
   | 'change'
   | 'networkError'
   | 'googleLoginError'
+  | 'localStorageError'
+  | 'noUserData'
   // Share
   | 'shareListDescription'
   // Quick Add
@@ -471,6 +475,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
+    errorOccurred: 'אירעה שגיאה',
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
     new: 'חדש',
@@ -505,6 +510,7 @@ export const translations: Record<Language, Translations> = {
     lastLogin: 'התחברות אחרונה',
     neverLoggedIn: 'מעולם לא התחבר',
     refreshData: 'רענן נתונים',
+    searchCustomer: 'חיפוש לקוח...',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -524,6 +530,8 @@ export const translations: Record<Language, Translations> = {
     change: 'שנה',
     networkError: 'שגיאת חיבור לשרת',
     googleLoginError: 'שגיאה בהתחברות עם Google',
+    localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
+    noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
@@ -736,6 +744,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
     deleteConfirmMessage: 'This action cannot be undone',
+    errorOccurred: 'An error occurred',
     noNotifications: 'No new notifications',
     home: 'Home',
     new: 'New',
@@ -770,6 +779,7 @@ export const translations: Record<Language, Translations> = {
     lastLogin: 'Last Login',
     neverLoggedIn: 'Never logged in',
     refreshData: 'Refresh Data',
+    searchCustomer: 'Search customer...',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -789,6 +799,8 @@ export const translations: Record<Language, Translations> = {
     change: 'Change',
     networkError: 'Server connection error',
     googleLoginError: 'Error signing in with Google',
+    localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
+    noUserData: 'Error: No user data received from server',
     // Share
     shareListDescription: 'Share your shopping list',
     // Quick Add
@@ -1001,6 +1013,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',
     deleteConfirmMessage: 'Это действие нельзя отменить',
+    errorOccurred: 'Произошла ошибка',
     noNotifications: 'Нет новых уведомлений',
     home: 'Главная',
     new: 'Новый',
@@ -1035,6 +1048,7 @@ export const translations: Record<Language, Translations> = {
     lastLogin: 'Последний вход',
     neverLoggedIn: 'Никогда не входил',
     refreshData: 'Обновить данные',
+    searchCustomer: 'Поиск клиента...',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',
@@ -1054,6 +1068,8 @@ export const translations: Record<Language, Translations> = {
     change: 'Изменить',
     networkError: 'Ошибка подключения к серверу',
     googleLoginError: 'Ошибка входа через Google',
+    localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
+    noUserData: 'Ошибка: данные пользователя не получены от сервера',
     // Share
     shareListDescription: 'Поделитесь своим списком покупок',
     // Quick Add
