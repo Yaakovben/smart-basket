@@ -11,10 +11,13 @@ import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
 import { COMMON_STYLES } from '../../../global/constants';
 
+// Skeleton indices for loading state
+const SKELETON_INDICES = [1, 2, 3, 4] as const;
+
 // Skeleton component for loading state
 const LoadingSkeleton = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-    {[1, 2, 3, 4].map((i) => (
+    {SKELETON_INDICES.map((i) => (
       <Paper key={i} sx={{ p: 2, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: '14px' }} />

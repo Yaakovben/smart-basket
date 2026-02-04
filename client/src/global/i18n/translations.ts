@@ -242,6 +242,11 @@ type TranslationKey =
   | 'errorDescription'
   | 'tryAgain'
   | 'refreshPage'
+  | 'showErrorDetails'
+  | 'hideErrorDetails'
+  | 'copyErrorDetails'
+  | 'copiedToClipboard'
+  | 'copyAndSendToSupport'
   // Auth
   | 'continueWithGoogle'
   | 'newUserHint'
@@ -255,7 +260,10 @@ type TranslationKey =
   | 'shareListDescription'
   // Quick Add
   | 'quickAddPlaceholder'
-  | 'searchProducts';
+  | 'searchProducts'
+  // What's New
+  | 'whatsNewTitle'
+  | 'letsStart';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -502,6 +510,11 @@ export const translations: Record<Language, Translations> = {
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
     tryAgain: 'נסה שוב',
     refreshPage: 'רענן דף',
+    showErrorDetails: 'הצג פרטי שגיאה',
+    hideErrorDetails: 'הסתר פרטי שגיאה',
+    copyErrorDetails: 'העתק פרטי שגיאה',
+    copiedToClipboard: 'הועתק!',
+    copyAndSendToSupport: 'העתק ושלח את פרטי השגיאה לתמיכה',
     // Auth
     continueWithGoogle: 'המשך עם Google',
     newUserHint: 'משתמש חדש? הזן שם וסיסמה להרשמה',
@@ -515,7 +528,10 @@ export const translations: Record<Language, Translations> = {
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
     quickAddPlaceholder: 'הוספת מוצר מהירה...',
-    searchProducts: 'חיפוש מוצרים...'
+    searchProducts: 'חיפוש מוצרים...',
+    // What's New
+    whatsNewTitle: 'מה חדש?',
+    letsStart: 'מעולה, בואו נתחיל!'
   },
   en: {
     // General
@@ -759,6 +775,11 @@ export const translations: Record<Language, Translations> = {
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
     tryAgain: 'Try Again',
     refreshPage: 'Refresh Page',
+    showErrorDetails: 'Show error details',
+    hideErrorDetails: 'Hide error details',
+    copyErrorDetails: 'Copy error details',
+    copiedToClipboard: 'Copied!',
+    copyAndSendToSupport: 'Copy and send error details to support',
     // Auth
     continueWithGoogle: 'Continue with Google',
     newUserHint: 'New user? Enter name and password to register',
@@ -772,7 +793,10 @@ export const translations: Record<Language, Translations> = {
     shareListDescription: 'Share your shopping list',
     // Quick Add
     quickAddPlaceholder: 'Quick add product...',
-    searchProducts: 'Search products...'
+    searchProducts: 'Search products...',
+    // What's New
+    whatsNewTitle: "What's New?",
+    letsStart: "Great, let's start!"
   },
   ru: {
     // General
@@ -1016,6 +1040,11 @@ export const translations: Record<Language, Translations> = {
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',
     tryAgain: 'Попробовать снова',
     refreshPage: 'Обновить страницу',
+    showErrorDetails: 'Показать детали ошибки',
+    hideErrorDetails: 'Скрыть детали ошибки',
+    copyErrorDetails: 'Копировать детали ошибки',
+    copiedToClipboard: 'Скопировано!',
+    copyAndSendToSupport: 'Скопируйте и отправьте детали ошибки в поддержку',
     // Auth
     continueWithGoogle: 'Продолжить с Google',
     newUserHint: 'Новый пользователь? Введите имя и пароль для регистрации',
@@ -1029,7 +1058,10 @@ export const translations: Record<Language, Translations> = {
     shareListDescription: 'Поделитесь своим списком покупок',
     // Quick Add
     quickAddPlaceholder: 'Быстро добавить товар...',
-    searchProducts: 'Поиск товаров...'
+    searchProducts: 'Поиск товаров...',
+    // What's New
+    whatsNewTitle: 'Что нового?',
+    letsStart: 'Отлично, начнём!'
   }
 };
 

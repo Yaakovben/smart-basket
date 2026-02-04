@@ -2,14 +2,14 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Debug mode - shows alerts on mobile for debugging (only errors)
-const DEBUG_MODE = false;
+// Debug logging - only in development mode
 const debugLog = (message: string, data?: unknown, isError = false) => {
-  console.log(`[API DEBUG] ${message}`, data);
-  // Only show alert for errors to avoid spam
-  if (DEBUG_MODE && isError && typeof window !== 'undefined') {
-    const dataStr = data ? `\n${JSON.stringify(data, null, 2)}` : '';
-    alert(`[DEBUG ERROR] ${message}${dataStr}`);
+  if (import.meta.env.DEV) {
+    if (isError) {
+      console.error(`[API] ${message}`, data);
+    } else {
+      console.log(`[API] ${message}`, data);
+    }
   }
 };
 

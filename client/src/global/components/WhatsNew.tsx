@@ -5,6 +5,7 @@ import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef, useState, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
+import { useSettings } from '../context/SettingsContext';
 import type { ChangelogEntry } from '../hooks/useVersion';
 
 interface WhatsNewProps {
@@ -22,6 +23,7 @@ const Transition = forwardRef(function Transition(
 });
 
 export const WhatsNew = ({ open, version, changes, onClose }: WhatsNewProps) => {
+  const { t } = useSettings();
   const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -84,7 +86,7 @@ export const WhatsNew = ({ open, version, changes, onClose }: WhatsNewProps) => 
           <AutoAwesomeIcon sx={{ fontSize: 28, color: 'white' }} />
         </Box>
         <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 20, p: 0, color: 'text.primary' }}>
-          מה חדש? 🎉
+          {t('whatsNewTitle')} 🎉
         </DialogTitle>
         <Chip
           label={`גרסה ${version}`}
@@ -158,7 +160,7 @@ export const WhatsNew = ({ open, version, changes, onClose }: WhatsNewProps) => 
             },
           }}
         >
-          מעולה, בואו נתחיל! ✨
+          {t('letsStart')} ✨
         </Button>
       </DialogContent>
     </Dialog>

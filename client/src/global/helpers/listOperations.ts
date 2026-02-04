@@ -87,6 +87,7 @@ export interface JoinGroupResult {
 
 /**
  * Validates join group request
+ * Returns translation keys for errors (not translated strings)
  */
 export const validateJoinGroup = (
   lists: List[],
@@ -95,21 +96,21 @@ export const validateJoinGroup = (
   user: User | null
 ): JoinGroupResult => {
   if (!user) {
-    return { success: false, error: 'משתמש לא מחובר' };
+    return { success: false, error: 'userNotLoggedIn' };
   }
 
   const group = findGroupByCode(lists, code);
 
   if (!group) {
-    return { success: false, error: 'קבוצה לא נמצאה' };
+    return { success: false, error: 'groupNotFound' };
   }
 
   if (group.password !== password) {
-    return { success: false, error: 'סיסמה שגויה' };
+    return { success: false, error: 'wrongPassword' };
   }
 
   if (isUserInGroup(group, user.id)) {
-    return { success: false, error: 'אתה כבר בקבוצה' };
+    return { success: false, error: 'alreadyInGroup' };
   }
 
   return { success: true };

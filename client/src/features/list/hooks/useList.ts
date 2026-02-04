@@ -43,6 +43,15 @@ const DEFAULT_NEW_PRODUCT: NewProductForm = {
   category: 'אחר'
 };
 
+// Helper to create date/time strings
+const createDateTimeStrings = () => {
+  const now = new Date();
+  return {
+    createdDate: now.toLocaleDateString('he-IL'),
+    createdTime: now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+  };
+};
+
 // ===== Types =====
 interface UseListParams {
   list: List;
@@ -198,84 +207,25 @@ export const useList = ({
     return true;
   }, [newProduct, t]);
 
-  const handleAdd = useCallback(async () => {
-    setAddError('');
-    if (!validateProduct()) return;
-
+  // Shared helper for adding products with optimistic updates
+  const addProductWithOptimisticUpdate = useCallback(async (productData: {
+    name: string;
+    quantity: number;
+    unit: Product['unit'];
+    category: Product['category'];
+  }) => {
     setOpenItemId(null);
 
     // Create optimistic product with temporary ID
     const tempId = `temp_${Date.now()}`;
+    const { createdDate, createdTime } = createDateTimeStrings();
     const optimisticProduct: Product = {
       id: tempId,
-      name: newProduct.name.trim(),
-      quantity: newProduct.quantity,
-      unit: newProduct.unit,
-      category: newProduct.category,
+      ...productData,
       isPurchased: false,
       addedBy: user.name,
-      createdDate: new Date().toLocaleDateString('he-IL'),
-      createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    // Store current products for potential rollback
-    const previousProducts = [...list.products];
-
-    // Optimistic update - add product immediately to UI
-    updateProducts([...list.products, optimisticProduct]);
-    setNewProduct(DEFAULT_NEW_PRODUCT);
-    setShowAdd(false);
-    showToast(t('added'));
-
-    try {
-      // Call API to add product
-      const updatedList = await productsApi.addProduct(list.id, {
-        name: newProduct.name.trim(),
-        quantity: newProduct.quantity,
-        unit: newProduct.unit,
-        category: newProduct.category,
-      });
-
-      // Find the newly added product (last one in the list)
-      const addedProduct = updatedList.products[updatedList.products.length - 1];
-
-      // Emit socket event to notify other users
-      socketService.emitProductAdded(list.id, {
-        id: addedProduct.id,
-        name: addedProduct.name,
-        quantity: addedProduct.quantity,
-        unit: addedProduct.unit,
-        category: addedProduct.category,
-      }, user.name);
-
-      // Update local state with real server data (replacing temp ID)
-      updateProducts(updatedList.products.map(convertApiProduct));
-    } catch (error) {
-      console.error('Failed to add product:', error);
-      // Revert optimistic update on error
-      updateProducts(previousProducts);
-      showToast(t('unknownError'), 'error');
-    }
-  }, [newProduct, list.id, list.products, user.name, updateProducts, showToast, t, validateProduct]);
-
-  const handleQuickAdd = useCallback(async (name: string) => {
-    const trimmedName = name.trim();
-    if (trimmedName.length < 2) return;
-
-    setOpenItemId(null);
-
-    // Create optimistic product with temporary ID
-    const tempId = `temp_${Date.now()}`;
-    const optimisticProduct: Product = {
-      id: tempId,
-      name: trimmedName,
-      quantity: 1,
-      unit: 'יח׳',
-      category: 'אחר',
-      isPurchased: false,
-      addedBy: user.name,
-      createdDate: new Date().toLocaleDateString('he-IL'),
-      createdTime: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      createdDate,
+      createdTime,
     };
 
     // Store current products for potential rollback
@@ -287,12 +237,7 @@ export const useList = ({
 
     try {
       // Call API to add product
-      const updatedList = await productsApi.addProduct(list.id, {
-        name: trimmedName,
-        quantity: 1,
-        unit: 'יח׳',
-        category: 'אחר',
-      });
+      const updatedList = await productsApi.addProduct(list.id, productData);
 
       // Find the newly added product (last one in the list)
       const addedProduct = updatedList.products[updatedList.products.length - 1];
@@ -315,6 +260,33 @@ export const useList = ({
       showToast(t('unknownError'), 'error');
     }
   }, [list.id, list.products, user.name, updateProducts, showToast, t]);
+
+  const handleAdd = useCallback(async () => {
+    setAddError('');
+    if (!validateProduct()) return;
+
+    await addProductWithOptimisticUpdate({
+      name: newProduct.name.trim(),
+      quantity: newProduct.quantity,
+      unit: newProduct.unit,
+      category: newProduct.category,
+    });
+
+    setNewProduct(DEFAULT_NEW_PRODUCT);
+    setShowAdd(false);
+  }, [newProduct, validateProduct, addProductWithOptimisticUpdate]);
+
+  const handleQuickAdd = useCallback(async (name: string) => {
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) return;
+
+    await addProductWithOptimisticUpdate({
+      name: trimmedName,
+      quantity: 1,
+      unit: 'יח׳',
+      category: 'אחר',
+    });
+  }, [addProductWithOptimisticUpdate]);
 
   const toggleProduct = useCallback(async (productId: string) => {
     // Optimistic update for immediate UI response

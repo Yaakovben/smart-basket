@@ -158,7 +158,7 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
             onClick={this.toggleDetails}
             sx={{ color: 'text.secondary', fontSize: 13, mb: 1 }}
           >
-            {showDetails ? 'הסתר פרטי שגיאה' : 'הצג פרטי שגיאה'}
+            {showDetails ? t.hideErrorDetails : t.showErrorDetails}
           </Button>
 
           <Collapse in={showDetails}>
@@ -187,10 +187,10 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
                 onClick={this.copyErrorDetails}
                 sx={{ mt: 1.5, fontSize: 12, borderRadius: '8px' }}
               >
-                {copied ? 'הועתק!' : 'העתק פרטי שגיאה'}
+                {copied ? t.copiedToClipboard : t.copyErrorDetails}
               </Button>
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
-                העתק ושלח את פרטי השגיאה לתמיכה
+                {t.copyAndSendToSupport}
               </Typography>
             </Box>
           </Collapse>
