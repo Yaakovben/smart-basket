@@ -108,11 +108,13 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      // If auth error, try reconnecting with fresh token
-      if (error.message.includes('auth') || error.message.includes('token')) {
+      // If auth error (token expired/invalid), try reconnecting with fresh token
+      if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('expired')) {
         const newToken = getAccessToken();
         if (newToken && this.socket) {
           this.socket.auth = { token: newToken };
+          // Reconnect with the new token after a short delay
+          setTimeout(() => this.socket?.connect(), 100);
         }
       }
     });
@@ -163,6 +165,7 @@ class SocketService {
       'product:deleted',
       'product:toggled',
       'list:updated',
+      'list:deleted',
       'notification:new',
       'member:removed',
     ];
@@ -218,6 +221,18 @@ class SocketService {
   // Check if connected
   isConnected(): boolean {
     return this.socket?.connected ?? false;
+  }
+
+  // Update token (called when HTTP client refreshes the access token)
+  updateToken(newToken: string) {
+    if (this.socket) {
+      this.socket.auth = { token: newToken };
+      // If connected, reconnect with the new token
+      if (this.socket.connected) {
+        this.socket.disconnect();
+        this.socket.connect();
+      }
+    }
   }
 
   // Emit product added event

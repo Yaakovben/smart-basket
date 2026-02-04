@@ -161,8 +161,7 @@ export const MENU_OPTIONS: MenuOption[] = [
 // Only keys that are actually used - keep minimal to avoid state sync bugs
 export const STORAGE_KEYS = {
   HINT_SEEN: 'sb_hint_seen',
-  SETTINGS: 'sb_settings',
-  CONSENT_ACCEPTED: 'sb_consent_accepted'
+  SETTINGS: 'sb_settings'
 } as const;
 
 // ===== Admin Configuration =====

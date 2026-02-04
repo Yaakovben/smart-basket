@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { socketService } from '../socket/socket.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -139,6 +140,9 @@ apiClient.interceptors.response.use(
 
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         setTokens(accessToken, newRefreshToken);
+
+        // Sync the new token with the socket connection
+        socketService.updateToken(accessToken);
 
         processQueue(null, accessToken);
 

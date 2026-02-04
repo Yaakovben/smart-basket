@@ -9,7 +9,6 @@ export { useDebounce } from './useDebounce';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
-export { useVersion, type ChangelogEntry, type VersionInfo } from './useVersion';
 
 // ===== useToast Hook =====
 import type { ToastType } from '../types';
