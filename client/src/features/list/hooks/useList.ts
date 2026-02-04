@@ -264,22 +264,23 @@ export const useList = ({
     }
   }, [list.id, list.products, user.name, updateProducts, showToast, t]);
 
-  const handleAdd = useCallback(async () => {
+  const handleAdd = useCallback(() => {
     setAddError('');
     if (!validateProduct()) return;
 
-    // Don't show toast yet - wait until modal closes
-    await addProductWithOptimisticUpdate({
+    // Close modal immediately for better UX
+    const productData = {
       name: newProduct.name.trim(),
       quantity: newProduct.quantity,
       unit: newProduct.unit,
       category: newProduct.category,
-    }, false);
-
+    };
     setNewProduct(DEFAULT_NEW_PRODUCT);
     setShowAdd(false);
-    // Show toast after modal is closed
     showToast(t('added'));
+
+    // Add product in background (optimistic update already shows it)
+    addProductWithOptimisticUpdate(productData, false);
   }, [newProduct, validateProduct, addProductWithOptimisticUpdate, showToast, t]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
