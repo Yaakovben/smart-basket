@@ -664,6 +664,8 @@ export const HomeComponent = ({
                   switch (n.type) {
                     case 'leave':
                       return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '👋' };
+                    case 'removed':
+                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🚫' };
                     case 'join':
                       return { bgcolor: '#F0FDF4', border: '#BBF7D0', textColor: '#166534', subColor: '#15803D', timeColor: '#16A34A', emoji: '🎉' };
                     case 'product_add':
@@ -682,6 +684,7 @@ export const HomeComponent = ({
                 const getNotificationText = () => {
                   switch (n.type) {
                     case 'leave': return t('memberLeft');
+                    case 'removed': return t('memberRemoved');
                     case 'join': return t('memberJoined');
                     case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
                     case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;

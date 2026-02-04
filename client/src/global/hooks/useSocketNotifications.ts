@@ -15,7 +15,7 @@ interface ProductEventData {
 
 interface NotificationEventData {
   id: string;
-  type: 'join' | 'leave';
+  type: 'join' | 'leave' | 'removed';
   listId: string;
   userId: string;
   userName: string;
@@ -36,7 +36,7 @@ interface MemberRemovedEventData {
 // Local notification for the popup panel
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave';
+  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed';
   listId: string;
   listName: string;
   userId: string;
@@ -210,6 +210,24 @@ export function useSocketNotifications(
         addNotification?.({
           id: event.id,
           type: 'leave',
+          listId: event.listId,
+          listName,
+          userId: event.userId,
+          userName: event.userName,
+          timestamp: new Date(event.timestamp),
+          read: false
+        });
+      }
+
+      // Member was removed by admin (show to other group members)
+      if (event.type === 'removed' && notificationSettings.groupLeave) {
+        const message = `${event.userName} ${t('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
+        showToast(message, 'warning');
+
+        // Add to notifications panel
+        addNotification?.({
+          id: event.id,
+          type: 'removed',
           listId: event.listId,
           listName,
           userId: event.userId,

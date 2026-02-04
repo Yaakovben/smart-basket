@@ -87,17 +87,17 @@ export const registerNotificationHandlers = (
     // Send notification directly to the removed user
     io.to(`user:${data.removedUserId}`).emit('member:removed', removedData);
 
-    // Also notify other members in the list
-    const leaveNotification: NotificationData = {
+    // Also notify other members in the list (use 'removed' type, not 'leave')
+    const removedNotification: NotificationData = {
       id: `notif_${Date.now()}_${data.removedUserId}`,
-      type: 'leave',
+      type: 'removed',
       listId: data.listId,
       userId: data.removedUserId,
       userName: data.removedUserName,
       message: `${data.removedUserName} was removed from ${data.listName}`,
       timestamp: new Date(),
     };
-    socket.to(`list:${data.listId}`).emit('notification:new', leaveNotification);
+    socket.to(`list:${data.listId}`).emit('notification:new', removedNotification);
 
     console.log(`User ${data.removedUserName} was removed from group ${data.listName} by ${data.adminName}`);
   });

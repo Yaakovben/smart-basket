@@ -26,6 +26,7 @@ type TranslationKey =
   | 'groupNotifications'
   | 'memberJoined'
   | 'memberLeft'
+  | 'memberRemoved'
   | 'memberJoinedNotif'
   | 'memberLeftNotif'
   | 'productNotifications'
@@ -283,6 +284,7 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'התראות קבוצות',
     memberJoined: 'הצטרף/ה לקבוצה',
     memberLeft: 'עזב/ה את הקבוצה',
+    memberRemoved: 'הוסר/ה מהקבוצה',
     memberJoinedNotif: 'חבר הצטרף לקבוצה',
     memberLeftNotif: 'חבר עזב את הקבוצה',
     productNotifications: 'התראות מוצרים',
@@ -537,6 +539,7 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'Group Notifications',
     memberJoined: 'Member Joined',
     memberLeft: 'Member Left',
+    memberRemoved: 'Was removed from group',
     memberJoinedNotif: 'Member joined the group',
     memberLeftNotif: 'Member left the group',
     productNotifications: 'Product Notifications',
@@ -791,6 +794,7 @@ export const translations: Record<Language, Translations> = {
     groupNotifications: 'Уведомления группы',
     memberJoined: 'Участник присоединился',
     memberLeft: 'Участник вышел',
+    memberRemoved: 'Был удалён из группы',
     memberJoinedNotif: 'Участник присоединился к группе',
     memberLeftNotif: 'Участник покинул группу',
     productNotifications: 'Уведомления о товарах',

@@ -91,7 +91,7 @@ export interface ListUpdatedData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'product_added' | 'product_purchased';
+  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased';
   listId: string;
   userId: string;
   userName: string;

@@ -3,6 +3,7 @@ import apiClient from './client';
 export type NotificationType =
   | 'join'
   | 'leave'
+  | 'removed'
   | 'product_add'
   | 'product_update'
   | 'product_delete'
