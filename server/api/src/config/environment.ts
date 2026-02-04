@@ -56,7 +56,7 @@ const envSchema = z.object({
   // Web Push VAPID keys - generate with: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_EMAIL: z.string().email().default('mailto:yaakovbenyizchak1@gmail.com'),
+  VAPID_EMAIL: z.string().startsWith('mailto:').default('mailto:yaakovbenyizchak1@gmail.com'),
 });
 
 const parseEnv = () => {
