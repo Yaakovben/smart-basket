@@ -19,9 +19,9 @@ export default defineConfig({
         globPatterns: [], // No caching
       },
       manifest: {
-        name: 'Smart Basket - רשימת קניות חכמה',
+        name: 'Smart Basket',
         short_name: 'Smart Basket',
-        description: 'פשוט, נוח, משותף - רשימת קניות חכמה',
+        description: 'רשימת קניות חכמה - פשוט, נוח, משותף',
         theme_color: '#14B8A6',
         background_color: '#ffffff',
         display: 'standalone',
