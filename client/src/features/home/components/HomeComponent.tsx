@@ -766,18 +766,23 @@ export const HomeComponent = ({
                     <IconButton
                       size="small"
                       onClick={() => handleDismissNotification(n.listId, n.id, !n.isLocal)}
+                      onMouseDown={(e) => e.currentTarget.blur()}
                       disabled={isDismissing}
                       disableRipple
+                      disableFocusRipple
                       tabIndex={-1}
                       sx={{
                         color: style.textColor,
                         flexShrink: 0,
                         opacity: isDismissing ? 0 : 1,
                         transition: 'opacity 0.2s',
+                        border: 'none !important',
+                        outline: 'none !important',
+                        boxShadow: 'none !important',
                         '&:hover': { bgcolor: `${style.textColor}15` },
-                        '&:focus': { outline: 'none', boxShadow: 'none' },
-                        '&:focus-visible': { outline: 'none', boxShadow: 'none' },
-                        '&.Mui-focusVisible': { outline: 'none', boxShadow: 'none', bgcolor: 'transparent' },
+                        '&:focus': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
+                        '&:focus-visible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
+                        '&.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
                         '&:active': { bgcolor: `${style.textColor}20` },
                         WebkitTapHighlightColor: 'transparent',
                         userSelect: 'none',
