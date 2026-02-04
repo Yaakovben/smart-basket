@@ -81,10 +81,10 @@ const generatePushMessage = (
     }
   };
 
-  // Empty title so "from App Name" appears at the top
+  // Title: single space (prevents iOS from showing app name as separate title)
   // Body: list emoji + list name + action
   return {
-    title: '',
+    title: ' ',
     body: `📋 ${RLM}${listName}\n${RLM}${getAction()}`,
   };
 };
