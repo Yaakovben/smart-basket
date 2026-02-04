@@ -19,6 +19,7 @@ import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } fro
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
+import { usePushNotifications } from '../../../global/hooks';
 
 // ===== Animations =====
 const checkmarkPopKeyframes = {
@@ -105,7 +106,35 @@ export const HomeComponent = ({
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
+
+  // Push notification prompt state
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pushPromptDismissed, setPushPromptDismissed] = useState(() => {
+    return localStorage.getItem('pushPromptDismissed') === 'true';
+  });
+
+  // Show push prompt after a delay if supported and not subscribed
+  useEffect(() => {
+    if (pushSupported && !pushSubscribed && !pushPromptDismissed && !pushLoading) {
+      const timer = setTimeout(() => setShowPushPrompt(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [pushSupported, pushSubscribed, pushPromptDismissed, pushLoading]);
+
+  const handleEnablePush = async () => {
+    const success = await subscribePush();
+    if (success) {
+      setShowPushPrompt(false);
+    }
+  };
+
+  const handleDismissPushPrompt = () => {
+    setShowPushPrompt(false);
+    setPushPromptDismissed(true);
+    localStorage.setItem('pushPromptDismissed', 'true');
+  };
 
   const {
     // State
@@ -770,6 +799,61 @@ export const HomeComponent = ({
       {/* Confirm Logout */}
       {confirmLogout && (
         <ConfirmModal title="התנתקות" message="להתנתק?" confirmText="התנתק" onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />
+      )}
+
+      {/* Push Notification Prompt */}
+      {showPushPrompt && (
+        <>
+          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={handleDismissPushPrompt} />
+          <Box sx={{
+            position: 'fixed',
+            bottom: 100,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'calc(100% - 32px)',
+            maxWidth: 360,
+            bgcolor: 'background.paper',
+            borderRadius: '20px',
+            p: 3,
+            zIndex: 1001,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            textAlign: 'center'
+          }}>
+            <Box sx={{ width: 64, height: 64, borderRadius: '16px', background: 'linear-gradient(135deg, #14B8A6, #10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, mx: 'auto', mb: 2 }}>
+              🔔
+            </Box>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary', mb: 1 }}>
+              {settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить уведомления' : 'Enable Notifications'}
+            </Typography>
+            <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.6 }}>
+              {settings.language === 'he'
+                ? 'קבל התראות על שינויים ברשימות שלך גם כשהאפליקציה סגורה'
+                : settings.language === 'ru'
+                  ? 'Получайте уведомления об изменениях в списках, даже когда приложение закрыто'
+                  : 'Get notified about changes in your lists even when the app is closed'}
+            </Typography>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleEnablePush}
+              disabled={pushLoading}
+              sx={{ py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px', mb: 1.5 }}
+            >
+              {pushLoading ? (
+                <CircularProgress size={24} sx={{ color: 'white' }} />
+              ) : (
+                settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить' : 'Enable Notifications'
+              )}
+            </Button>
+            <Button
+              fullWidth
+              onClick={handleDismissPushPrompt}
+              sx={{ py: 1, fontSize: 14, color: 'text.secondary' }}
+            >
+              {settings.language === 'he' ? 'לא עכשיו' : settings.language === 'ru' ? 'Не сейчас' : 'Not now'}
+            </Button>
+          </Box>
+        </>
       )}
 
       {/* Bottom Navigation */}
