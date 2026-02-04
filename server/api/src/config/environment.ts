@@ -10,7 +10,7 @@ dotenv.config();
  * Required:
  * - NODE_ENV: Application environment (development/production/test)
  * - PORT: Server port number
- * - MONGODB_URI: MongoDB connection string (e.g., mongodb+srv://user:pass@cluster.mongodb.net/dbname)
+ * - MONGODB_URI: MongoDB connection string (e.g., mongodb+srv://...@cluster.mongodb.net/dbname)
  * - JWT_ACCESS_SECRET: Secret key for signing access tokens (min 32 chars)
  * - JWT_REFRESH_SECRET: Secret key for signing refresh tokens (min 32 chars)
  * - GOOGLE_CLIENT_ID: Google OAuth Client ID for authentication
