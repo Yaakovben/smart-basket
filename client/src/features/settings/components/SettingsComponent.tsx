@@ -169,6 +169,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberLeftNotif')}</Typography>
                 <Switch checked={settings.notifications.groupLeave} onChange={(e) => updateNotifications({ groupLeave: e.target.checked })} sx={smallSwitchSx} />
               </Box>
+              <Box sx={subSettingRowSx}>
+                <Typography sx={{ flex: 1, fontSize: 14 }}>{t('listUpdatedNotifSetting')}</Typography>
+                <Switch checked={settings.notifications.listUpdate} onChange={(e) => updateNotifications({ listUpdate: e.target.checked })} sx={smallSwitchSx} />
+              </Box>
 
               {/* Product Notifications Section */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 1.5, mb: 0.5 }}>

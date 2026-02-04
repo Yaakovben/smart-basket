@@ -44,7 +44,7 @@ export interface Member {
 
 export interface Notification {
   id: string;
-  type: "join" | "leave";
+  type: "join" | "leave" | "list_update";
   userId: string;
   userName: string;
   timestamp: string;
@@ -97,6 +97,7 @@ export interface NotificationSettings {
   enabled: boolean;
   groupJoin: boolean;
   groupLeave: boolean;
+  listUpdate: boolean;
   productAdd: boolean;
   productDelete: boolean;
   productEdit: boolean;

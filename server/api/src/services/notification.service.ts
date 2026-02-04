@@ -75,6 +75,8 @@ const generatePushMessage = (
         return `${actorName} מחק/ה "${productName}"`;
       case 'product_purchase':
         return `${actorName} סימן/ה "${productName}" כנקנה`;
+      case 'list_update':
+        return `${actorName} שינה/תה את הגדרות הרשימה`;
       default:
         return `פעילות חדשה`;
     }

@@ -15,7 +15,7 @@ interface ProductEventData {
 
 interface NotificationEventData {
   id: string;
-  type: 'join' | 'leave' | 'removed';
+  type: 'join' | 'leave' | 'removed' | 'list_update';
   listId: string;
   userId: string;
   userName: string;
@@ -44,7 +44,7 @@ interface ListDeletedEventData {
 // Local notification for the popup panel
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed' | 'list_deleted';
+  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed' | 'list_deleted' | 'list_update';
   listId: string;
   listName: string;
   userId: string;
@@ -237,6 +237,24 @@ export function useSocketNotifications(
         addNotification?.({
           id: event.id,
           type: 'removed',
+          listId: event.listId,
+          listName,
+          userId: event.userId,
+          userName: event.userName,
+          timestamp: new Date(event.timestamp),
+          read: false
+        });
+      }
+
+      // List settings were updated by owner
+      if (event.type === 'list_update' && notificationSettings.listUpdate) {
+        const message = `${event.userName} ${t('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
+        showToast(message, 'info');
+
+        // Add to notifications panel
+        addNotification?.({
+          id: event.id,
+          type: 'list_update',
           listId: event.listId,
           listName,
           userId: event.userId,

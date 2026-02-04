@@ -120,8 +120,23 @@ export class ListService {
       sanitizedData.name = sanitizeText(sanitizedData.name);
     }
 
+    // Check if anything actually changed (for notification)
+    const hasChanges = (sanitizedData.name && sanitizedData.name !== list.name) ||
+                       (sanitizedData.icon && sanitizedData.icon !== list.icon) ||
+                       (sanitizedData.color && sanitizedData.color !== list.color);
+
     Object.assign(list, sanitizedData);
     await list.save();
+
+    // Send notifications to group members if this is a group and something changed
+    if (list.isGroup && hasChanges && list.members.length > 0) {
+      // Create notifications for all members (not owner) in background
+      NotificationService.createNotificationsForListMembers(
+        listId,
+        'list_update',
+        userId
+      ).catch(() => {}); // Ignore notification errors
+    }
 
     return transformList(list);
   }

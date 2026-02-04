@@ -29,6 +29,7 @@ type TranslationKey =
   | 'memberRemoved'
   | 'memberJoinedNotif'
   | 'memberLeftNotif'
+  | 'listUpdatedNotifSetting'
   | 'productNotifications'
   | 'productAdded'
   | 'productDeleted'
@@ -198,6 +199,7 @@ type TranslationKey =
   | 'leftGroupNotif'
   | 'removedFromGroupNotif'
   | 'deletedGroupNotif'
+  | 'listUpdatedNotif'
   | 'groupDeletedNotif'
   | 'inListNotif'
   | 'deleteGroupTitle'
@@ -301,6 +303,7 @@ export const translations: Record<Language, Translations> = {
     memberRemoved: 'הוסר/ה מהקבוצה',
     memberJoinedNotif: 'חבר הצטרף לקבוצה',
     memberLeftNotif: 'חבר עזב את הקבוצה',
+    listUpdatedNotifSetting: 'שינוי הגדרות רשימה',
     productNotifications: 'התראות מוצרים',
     productAdded: 'מוצר נוסף',
     productDeleted: 'מוצר נמחק',
@@ -470,6 +473,7 @@ export const translations: Record<Language, Translations> = {
     leftGroupNotif: 'עזב/ה את הקבוצה',
     removedFromGroupNotif: 'הוסרת מהקבוצה',
     deletedGroupNotif: 'מחק/ה את הקבוצה',
+    listUpdatedNotif: 'עדכן/ה את הגדרות הרשימה',
     groupDeletedNotif: 'הקבוצה נמחקה',
     inListNotif: 'ברשימה',
     deleteGroupTitle: 'מחיקת קבוצה',
@@ -570,6 +574,7 @@ export const translations: Record<Language, Translations> = {
     memberRemoved: 'Was removed from group',
     memberJoinedNotif: 'Member joined the group',
     memberLeftNotif: 'Member left the group',
+    listUpdatedNotifSetting: 'List settings changed',
     productNotifications: 'Product Notifications',
     productAdded: 'Product Added',
     productDeleted: 'Product Deleted',
@@ -739,6 +744,7 @@ export const translations: Record<Language, Translations> = {
     leftGroupNotif: 'left the group',
     removedFromGroupNotif: 'You were removed from the group',
     deletedGroupNotif: 'deleted the group',
+    listUpdatedNotif: 'updated list settings',
     groupDeletedNotif: 'Group was deleted',
     inListNotif: 'in list',
     deleteGroupTitle: 'Delete Group',
@@ -839,6 +845,7 @@ export const translations: Record<Language, Translations> = {
     memberRemoved: 'Был удалён из группы',
     memberJoinedNotif: 'Участник присоединился к группе',
     memberLeftNotif: 'Участник покинул группу',
+    listUpdatedNotifSetting: 'Изменение настроек списка',
     productNotifications: 'Уведомления о товарах',
     productAdded: 'Товар добавлен',
     productDeleted: 'Товар удалён',
@@ -1008,6 +1015,7 @@ export const translations: Record<Language, Translations> = {
     leftGroupNotif: 'покинул(а) группу',
     removedFromGroupNotif: 'Вы были удалены из группы',
     deletedGroupNotif: 'удалил(а) группу',
+    listUpdatedNotif: 'обновил(а) настройки списка',
     groupDeletedNotif: 'Группа была удалена',
     inListNotif: 'в списке',
     deleteGroupTitle: 'Удалить группу',

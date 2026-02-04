@@ -9,7 +9,8 @@ export type NotificationType =
   | 'product_delete'
   | 'product_purchase'
   | 'member_removed'
-  | 'list_deleted';
+  | 'list_deleted'
+  | 'list_update';  // When list name/settings are changed
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -29,7 +30,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'member_removed', 'list_deleted'],
+      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'member_removed', 'list_deleted', 'list_update'],
       required: true,
     },
     listId: {

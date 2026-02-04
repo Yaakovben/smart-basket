@@ -108,6 +108,7 @@ export const useHome = ({
             // Filter based on notification type settings
             if (n.type === 'join' && !notificationSettings.groupJoin) return false;
             if (n.type === 'leave' && !notificationSettings.groupLeave) return false;
+            if (n.type === 'list_update' && !notificationSettings.listUpdate) return false;
             return true;
           })
           .map((n: Notification) => ({ ...n, listName: l.name, listId: l.id }));

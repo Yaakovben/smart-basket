@@ -708,6 +708,8 @@ export const HomeComponent = ({
                       return { bgcolor: '#FEE2E2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🗑️' };
                     case 'product_purchase':
                       return { bgcolor: '#ECFDF5', border: '#A7F3D0', textColor: '#065F46', subColor: '#047857', timeColor: '#059669', emoji: n.isPurchased ? '✅' : '⬜' };
+                    case 'list_update':
+                      return { bgcolor: '#F5F3FF', border: '#DDD6FE', textColor: '#5B21B6', subColor: '#7C3AED', timeColor: '#8B5CF6', emoji: '⚙️' };
                     default:
                       return { bgcolor: '#F3F4F6', border: '#D1D5DB', textColor: '#374151', subColor: '#6B7280', timeColor: '#9CA3AF', emoji: '📢' };
                   }
@@ -723,6 +725,7 @@ export const HomeComponent = ({
                     case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
                     case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
                     case 'product_purchase': return `${n.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif')} "${n.productName}"`;
+                    case 'list_update': return t('listUpdatedNotif');
                     default: return '';
                   }
                 };
