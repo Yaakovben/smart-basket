@@ -46,60 +46,40 @@ export interface PaginatedNotifications {
 }
 
 // Helper to generate push notification message based on type
-// Title = list name, Body = what happened
+// Title = Smart Basket (top), Body = list name + action (below)
 const generatePushMessage = (
   type: NotificationType,
   actorName: string,
   listName: string,
   productName?: string
 ): { title: string; body: string } => {
-  switch (type) {
-    case 'join':
-      return {
-        title: listName,
-        body: `${actorName} הצטרף/ה לקבוצה`,
-      };
-    case 'leave':
-      return {
-        title: listName,
-        body: `${actorName} עזב/ה את הקבוצה`,
-      };
-    case 'removed':
-      return {
-        title: listName,
-        body: `${actorName} הוסר/ה מהקבוצה`,
-      };
-    case 'list_deleted':
-      return {
-        title: listName,
-        body: `${actorName} מחק/ה את הקבוצה`,
-      };
-    case 'product_add':
-      return {
-        title: listName,
-        body: `${actorName} הוסיף/ה "${productName}"`,
-      };
-    case 'product_update':
-      return {
-        title: listName,
-        body: `${actorName} עדכן/ה "${productName}"`,
-      };
-    case 'product_delete':
-      return {
-        title: listName,
-        body: `${actorName} מחק/ה "${productName}"`,
-      };
-    case 'product_purchase':
-      return {
-        title: listName,
-        body: `${actorName} סימן/ה "${productName}" כנקנה`,
-      };
-    default:
-      return {
-        title: listName,
-        body: `פעילות חדשה`,
-      };
-  }
+  const getAction = (): string => {
+    switch (type) {
+      case 'join':
+        return `${actorName} הצטרף/ה לקבוצה`;
+      case 'leave':
+        return `${actorName} עזב/ה את הקבוצה`;
+      case 'removed':
+        return `${actorName} הוסר/ה מהקבוצה`;
+      case 'list_deleted':
+        return `${actorName} מחק/ה את הקבוצה`;
+      case 'product_add':
+        return `${actorName} הוסיף/ה "${productName}"`;
+      case 'product_update':
+        return `${actorName} עדכן/ה "${productName}"`;
+      case 'product_delete':
+        return `${actorName} מחק/ה "${productName}"`;
+      case 'product_purchase':
+        return `${actorName} סימן/ה "${productName}" כנקנה`;
+      default:
+        return `פעילות חדשה`;
+    }
+  };
+
+  return {
+    title: 'Smart Basket',
+    body: `${listName}\n${getAction()}`,
+  };
 };
 
 // Helper to transform notification to response format
