@@ -58,9 +58,38 @@ export const getPushStatus = async (): Promise<boolean> => {
   }
 };
 
+/**
+ * Unsubscribe from all push notifications (browser + server)
+ * Used during logout to stop receiving notifications
+ */
+export const unsubscribeAllPush = async (): Promise<void> => {
+  try {
+    // Check if push is supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return;
+    }
+
+    // Get current subscription from browser
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    if (subscription) {
+      // Unsubscribe locally from browser
+      await subscription.unsubscribe();
+
+      // Remove from server
+      await unsubscribeFromPush(subscription.endpoint);
+    }
+  } catch (error) {
+    console.error('Failed to unsubscribe from push:', error);
+    // Don't throw - logout should continue even if push unsubscribe fails
+  }
+};
+
 export const pushApi = {
   getVapidPublicKey,
   subscribeToPush,
   unsubscribeFromPush,
+  unsubscribeAllPush,
   getPushStatus,
 };

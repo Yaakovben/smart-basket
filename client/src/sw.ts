@@ -24,8 +24,11 @@ self.addEventListener('push', (event) => {
       vibrate: [100, 50, 100],
     };
 
+    // Use title from server, only fallback if undefined/null (not for empty string)
+    const title = data.title !== undefined && data.title !== null ? data.title : 'Smart Basket';
+
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Smart Basket', options)
+      self.registration.showNotification(title, options)
     );
   } catch (error) {
     console.error('Error showing push notification:', error);

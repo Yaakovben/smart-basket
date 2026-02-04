@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { User, List, Member, Product, LoginMethod } from "../types";
-import { authApi, listsApi, type ApiList, type ApiMember } from "../../services/api";
+import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
 
@@ -83,6 +83,13 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
+    try {
+      // Unsubscribe from push notifications BEFORE logging out
+      // This removes the subscription from server and browser
+      await pushApi.unsubscribeAllPush();
+    } catch {
+      // Continue with logout even if push unsubscribe fails
+    }
     try {
       await authApi.logout();
     } catch {

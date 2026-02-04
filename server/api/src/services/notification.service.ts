@@ -81,11 +81,11 @@ const generatePushMessage = (
     }
   };
 
-  // No title - so "from App Name" will be at the top
-  // Body: list name + newline + action
+  // Empty title so "from App Name" appears at the top
+  // Body: list emoji + list name + action
   return {
     title: '',
-    body: `${RLM}${listName}\n${RLM}${getAction()}`,
+    body: `📋 ${RLM}${listName}\n${RLM}${getAction()}`,
   };
 };
 
