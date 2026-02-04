@@ -46,7 +46,6 @@ export interface PaginatedNotifications {
 }
 
 // Helper to generate push notification message based on type
-// Title = list name, Body = action with actor name
 // Uses RLM (Right-to-Left Mark) for proper Hebrew display
 const RLM = '\u200F'; // Right-to-Left Mark for proper RTL display
 
@@ -56,7 +55,7 @@ const generatePushMessage = (
   listName: string,
   productName?: string
 ): { title: string; body: string } => {
-  // Format: "actorName: action" - actor name first, then what they did
+  // Format: action description with actor name
   const getAction = (): string => {
     switch (type) {
       case 'join':
@@ -82,9 +81,11 @@ const generatePushMessage = (
     }
   };
 
+  // No title - so "from App Name" will be at the top
+  // Body: list name + newline + action
   return {
-    title: `${RLM}${listName}`,
-    body: `${RLM}${getAction()}`,
+    title: '',
+    body: `${RLM}${listName}\n${RLM}${getAction()}`,
   };
 };
 
