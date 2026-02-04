@@ -1,11 +1,18 @@
 import { useEffect } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 
+const CACHE_CLEARED_KEY = 'sb_cache_cleared_v1';
+
 /**
- * Clear all caches from previous versions.
+ * Clear all caches from previous versions (runs only once).
  * This is needed because we removed caching but old users still have cached files.
  */
-async function clearAllCaches(): Promise<void> {
+async function clearAllCachesOnce(): Promise<void> {
+  // Skip if already cleared
+  if (localStorage.getItem(CACHE_CLEARED_KEY)) {
+    return;
+  }
+
   if ('caches' in window) {
     try {
       const cacheNames = await caches.keys();
@@ -16,6 +23,9 @@ async function clearAllCaches(): Promise<void> {
       // Ignore errors - cache clearing is best-effort
     }
   }
+
+  // Mark as cleared so we don't run again
+  localStorage.setItem(CACHE_CLEARED_KEY, '1');
 }
 
 /**
@@ -24,8 +34,8 @@ async function clearAllCaches(): Promise<void> {
  */
 export function useServiceWorker(): void {
   useEffect(() => {
-    // Clear old caches first
-    clearAllCaches();
+    // Clear old caches once (for users who had previous cached version)
+    clearAllCachesOnce();
 
     registerSW({
       immediate: true,
