@@ -53,24 +53,25 @@ const generatePushMessage = (
   listName: string,
   productName?: string
 ): { title: string; body: string } => {
+  // Hebrew RTL: action first, then actor name (appears on right)
   const getAction = (): string => {
     switch (type) {
       case 'join':
-        return `${actorName} הצטרף/ה לקבוצה`;
+        return `הצטרף/ה לקבוצה - ${actorName}`;
       case 'leave':
-        return `${actorName} עזב/ה את הקבוצה`;
+        return `עזב/ה את הקבוצה - ${actorName}`;
       case 'removed':
-        return `${actorName} הוסר/ה מהקבוצה`;
+        return `הוסר/ה מהקבוצה - ${actorName}`;
       case 'list_deleted':
-        return `${actorName} מחק/ה את הקבוצה`;
+        return `מחק/ה את הקבוצה - ${actorName}`;
       case 'product_add':
-        return `${actorName} הוסיף/ה "${productName}"`;
+        return `הוסיף/ה "${productName}" - ${actorName}`;
       case 'product_update':
-        return `${actorName} עדכן/ה "${productName}"`;
+        return `עדכן/ה "${productName}" - ${actorName}`;
       case 'product_delete':
-        return `${actorName} מחק/ה "${productName}"`;
+        return `מחק/ה "${productName}" - ${actorName}`;
       case 'product_purchase':
-        return `${actorName} סימן/ה "${productName}" כנקנה`;
+        return `סימן/ה "${productName}" כנקנה - ${actorName}`;
       default:
         return `פעילות חדשה`;
     }
