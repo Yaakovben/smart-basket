@@ -208,12 +208,13 @@ export const useList = ({
   }, [newProduct, t]);
 
   // Shared helper for adding products with optimistic updates
+  // showToastOnAdd: if false, caller is responsible for showing toast (e.g., after modal closes)
   const addProductWithOptimisticUpdate = useCallback(async (productData: {
     name: string;
     quantity: number;
     unit: Product['unit'];
     category: Product['category'];
-  }) => {
+  }, showToastOnAdd = true) => {
     setOpenItemId(null);
 
     // Create optimistic product with temporary ID
@@ -233,7 +234,9 @@ export const useList = ({
 
     // Optimistic update - add product immediately to UI
     updateProducts([...list.products, optimisticProduct]);
-    showToast(t('added'));
+    if (showToastOnAdd) {
+      showToast(t('added'));
+    }
 
     try {
       // Call API to add product
@@ -265,16 +268,19 @@ export const useList = ({
     setAddError('');
     if (!validateProduct()) return;
 
+    // Don't show toast yet - wait until modal closes
     await addProductWithOptimisticUpdate({
       name: newProduct.name.trim(),
       quantity: newProduct.quantity,
       unit: newProduct.unit,
       category: newProduct.category,
-    });
+    }, false);
 
     setNewProduct(DEFAULT_NEW_PRODUCT);
     setShowAdd(false);
-  }, [newProduct, validateProduct, addProductWithOptimisticUpdate]);
+    // Show toast after modal is closed
+    showToast(t('added'));
+  }, [newProduct, validateProduct, addProductWithOptimisticUpdate, showToast, t]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
