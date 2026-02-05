@@ -20,10 +20,16 @@ const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ 
 const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 
-// Loading fallback
+// Loading fallback - matches app theme, no white flash
 const PageLoader = () => (
-  <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-    <CircularProgress color="primary" />
+  <Box sx={{
+    height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    bgcolor: 'background.default'
+  }}>
+    <CircularProgress color="primary" size={32} />
   </Box>
 );
 

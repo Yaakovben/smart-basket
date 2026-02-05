@@ -76,21 +76,20 @@
       overflow: hidden;
     ">
       <!-- Animated Basket with flying items -->
-      <div style="position: relative; width: 140px; height: 140px;">
-        <!-- Flying items (groceries) -->
-        <div class="flying-item" style="--delay: 0s; --start-x: -50px; --color: #FF6B6B;">🍎</div>
-        <div class="flying-item" style="--delay: 0.4s; --start-x: 50px; --color: #4ECDC4;">🥕</div>
-        <div class="flying-item" style="--delay: 0.8s; --start-x: -40px; --color: #FFE66D;">🧀</div>
-        <div class="flying-item" style="--delay: 1.2s; --start-x: 45px; --color: #95E1D3;">🥛</div>
-        <div class="flying-item" style="--delay: 1.6s; --start-x: -55px; --color: #F38181;">🍞</div>
+      <div style="position: relative; width: 140px; height: 160px;">
+        <!-- Flying items (groceries) - arc motion from sides -->
+        <div class="flying-item item-left" style="--delay: 0s;">🍎</div>
+        <div class="flying-item item-right" style="--delay: 0.5s;">🥕</div>
+        <div class="flying-item item-left" style="--delay: 1s;">🧀</div>
+        <div class="flying-item item-right" style="--delay: 1.5s;">🥛</div>
 
         <!-- App Icon - Basket -->
         <svg width="120" height="120" viewBox="0 0 64 64" style="
           position: absolute;
-          top: 10px;
+          top: 20px;
           left: 10px;
           filter: drop-shadow(0 12px 32px rgba(0,0,0,0.2));
-          animation: basketBounce 2s ease-in-out infinite;
+          animation: basketWiggle 2s ease-in-out infinite;
         ">
           <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.25)"/>
           <g fill="white">
@@ -123,24 +122,52 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        @keyframes basketBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+        @keyframes basketWiggle {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-2deg); }
+          75% { transform: rotate(2deg); }
         }
 
-        @keyframes flyToBasket {
+        /* Arc motion from left side */
+        @keyframes arcFromLeft {
           0% {
-            transform: translate(var(--start-x), 80px) scale(1);
+            transform: translate(-80px, 60px) rotate(-20deg) scale(1);
             opacity: 0;
           }
-          20% {
+          15% {
             opacity: 1;
           }
-          80% {
+          50% {
+            transform: translate(-20px, -30px) rotate(10deg) scale(0.9);
+            opacity: 1;
+          }
+          85% {
             opacity: 1;
           }
           100% {
-            transform: translate(0, 0) scale(0.3);
+            transform: translate(0, 20px) rotate(0deg) scale(0.3);
+            opacity: 0;
+          }
+        }
+
+        /* Arc motion from right side */
+        @keyframes arcFromRight {
+          0% {
+            transform: translate(80px, 60px) rotate(20deg) scale(1);
+            opacity: 0;
+          }
+          15% {
+            opacity: 1;
+          }
+          50% {
+            transform: translate(20px, -30px) rotate(-10deg) scale(0.9);
+            opacity: 1;
+          }
+          85% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate(0, 20px) rotate(0deg) scale(0.3);
             opacity: 0;
           }
         }
@@ -149,12 +176,22 @@
           position: absolute;
           top: 50%;
           left: 50%;
-          font-size: 28px;
-          animation: flyToBasket 2s ease-in-out infinite;
+          font-size: 32px;
+          animation-duration: 2s;
+          animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          animation-iteration-count: infinite;
           animation-delay: var(--delay);
           opacity: 0;
           z-index: 10;
-          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+        }
+
+        .item-left {
+          animation-name: arcFromLeft;
+        }
+
+        .item-right {
+          animation-name: arcFromRight;
         }
       </style>
     </div>
