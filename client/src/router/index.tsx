@@ -174,8 +174,7 @@ export const AppRouter = () => {
       // 5. Logout locally and navigate to login
       logout();
       navigate("/login");
-    } catch (error) {
-      console.error('Failed to delete account:', error);
+    } catch {
       showToast(t('errorOccurred'), 'error');
     }
   }, [logout, navigate, showToast, t]);

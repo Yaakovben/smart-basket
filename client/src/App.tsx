@@ -19,11 +19,9 @@ const clearAllCaches = async () => {
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('[Cache] Cleared all caches for v2.0 migration');
     }
     localStorage.setItem('cache_cleared', CACHE_VERSION);
   } catch (error) {
-    console.error('[Cache] Failed to clear caches:', error);
     Sentry.captureException(error, { tags: { context: 'cache_clear' } });
   }
 };

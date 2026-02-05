@@ -167,7 +167,6 @@ export function useAuth() {
         localStorage.setItem('cached_user', JSON.stringify(updatedUser));
         setUser(updatedUser);
       } catch (error) {
-        console.error('Failed to update profile:', error);
         throw error;
       }
     },
@@ -235,8 +234,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     try {
       const apiLists = await listsApi.getLists();
       setLists(apiLists.map(convertApiList));
-    } catch (error) {
-      console.error('Failed to fetch lists:', error);
+    } catch {
+      // Silent fail - lists will be empty
     } finally {
       setLoading(false);
     }
@@ -299,7 +298,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       } catch (error) {
         // Remove optimistic list on error
         setLists((prev) => prev.filter((l) => l.id !== tempId));
-        console.error('Failed to create list:', error);
         throw error;
       }
     },
@@ -354,7 +352,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
           );
         }
       } catch (error) {
-        console.error('Failed to update list:', error);
         throw error;
       }
     },
@@ -375,7 +372,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
           socketService.emitListDeleted(listId, listName, memberIds, user.name);
         }
       } catch (error) {
-        console.error('Failed to delete list:', error);
         throw error;
       }
     },
@@ -442,7 +438,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         socketService.leaveList(listId);
         setLists((prev) => prev.filter((l) => l.id !== listId));
       } catch (error) {
-        console.error('Failed to leave list:', error);
         throw error;
       }
     },
@@ -477,8 +472,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Persist to database
       try {
         await listsApi.markNotificationsRead(listId);
-      } catch (error) {
-        console.error('Failed to mark notifications as read:', error);
+      } catch {
+        // Silent fail - UI already updated optimistically
       }
     },
     [],
@@ -502,8 +497,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Persist to database
       try {
         await listsApi.markNotificationRead(listId, notificationId);
-      } catch (error) {
-        console.error('Failed to mark notification as read:', error);
+      } catch {
+        // Silent fail - UI already updated optimistically
       }
     },
     [],
@@ -546,7 +541,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
             setLists((prev) =>
               prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
             );
-          }).catch(console.error);
+          }).catch(() => {});
         });
       }, 100);
     };

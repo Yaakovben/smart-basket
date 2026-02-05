@@ -91,7 +91,6 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Get VAPID public key from server
       const vapidPublicKey = await pushApi.getVapidPublicKey();
       if (!vapidPublicKey) {
-        console.error('Push notifications not configured on server');
         setLoading(false);
         return false;
       }
@@ -114,8 +113,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setLoading(false);
       return success;
-    } catch (error) {
-      console.error('Failed to subscribe to push:', error);
+    } catch {
       setLoading(false);
       return false;
     }
@@ -145,8 +143,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       setIsSubscribed(false);
       setLoading(false);
       return true;
-    } catch (error) {
-      console.error('Failed to unsubscribe from push:', error);
+    } catch {
       setLoading(false);
       return false;
     }

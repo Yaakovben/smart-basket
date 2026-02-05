@@ -80,8 +80,7 @@ export const unsubscribeAllPush = async (): Promise<void> => {
       // Remove from server
       await unsubscribeFromPush(subscription.endpoint);
     }
-  } catch (error) {
-    console.error('Failed to unsubscribe from push:', error);
+  } catch {
     // Don't throw - logout should continue even if push unsubscribe fails
   }
 };
