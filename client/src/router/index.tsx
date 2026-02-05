@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications } from "../global/hooks";
 import { Toast } from "../global/components";
@@ -10,9 +10,11 @@ import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
 import { hideInitialLoader } from "../App";
 
-// Lazy load pages
-const LoginPage = lazy(() => import("../features/auth/auth").then(m => ({ default: m.LoginPage })));
-const HomePage = lazy(() => import("../features/home/home").then(m => ({ default: m.HomePage })));
+// Load main pages directly (no lazy) for instant display after auth
+import { LoginPage } from "../features/auth/auth";
+import { HomePage } from "../features/home/home";
+
+// Lazy load secondary pages
 const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
@@ -20,17 +22,12 @@ const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ 
 const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 
-// Loading fallback - matches app theme, no white flash
+// Loading fallback - same green gradient as initial loader, seamless transition
 const PageLoader = () => (
   <Box sx={{
     height: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    bgcolor: 'background.default'
-  }}>
-    <CircularProgress color="primary" size={32} />
-  </Box>
+    background: 'linear-gradient(135deg, #2DD4BF, #34D399)'
+  }} />
 );
 
 // Protected Route wrapper

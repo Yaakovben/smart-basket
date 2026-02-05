@@ -1,24 +1,25 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.tsx'
 
-// Initialize Sentry error monitoring (only in production with DSN)
+// Initialize Sentry AFTER app renders (deferred to not block initial paint)
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
 if (SENTRY_DSN && import.meta.env.PROD) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: import.meta.env.MODE,
-    // Only send errors in production
-    enabled: import.meta.env.PROD,
-    // Performance monitoring
-    tracesSampleRate: 0.1,
-    // Session replay for debugging
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 0.1,
-  })
+  // Defer Sentry initialization until after first paint
+  requestIdleCallback(() => {
+    import('@sentry/react').then((Sentry) => {
+      Sentry.init({
+        dsn: SENTRY_DSN,
+        environment: import.meta.env.MODE,
+        enabled: import.meta.env.PROD,
+        tracesSampleRate: 0.1,
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 0.1,
+      })
+    })
+  }, { timeout: 3000 })
 }
 
 // Google OAuth Client ID (public client ID - security is enforced via redirect URIs in Google Cloud Console)
