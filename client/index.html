@@ -146,9 +146,10 @@
         <span></span>
       </div>
 
-      <!-- Fallback error message (hidden by default, shown after 15s) -->
+      <!-- Fallback error message (hidden by default, shown after 15s or on error) -->
       <div id="load-error" style="display: none; margin-top: 20px; text-align: center;">
-        <p style="color: white; font-size: 14px; margin-bottom: 12px;">הטעינה נכשלה</p>
+        <p style="color: white; font-size: 14px; margin-bottom: 8px;">הטעינה נכשלה</p>
+        <p id="error-text" style="color: rgba(255,255,255,0.7); font-size: 11px; margin-bottom: 12px; direction: ltr; word-break: break-all;"></p>
         <button onclick="location.href='/clear.html'" style="
           background: white;
           color: #14B8A6;
@@ -162,6 +163,16 @@
       </div>
 
       <script>
+        // Global error handler - catch any JS errors
+        window.onerror = function(msg, url, line) {
+          var error = document.getElementById('load-error');
+          var errorText = document.getElementById('error-text');
+          if (error && errorText) {
+            errorText.textContent = msg + ' (line ' + line + ')';
+            error.style.display = 'block';
+          }
+          return false;
+        };
         // Show error message after 15 seconds if app hasn't loaded
         setTimeout(function() {
           var loader = document.getElementById('initial-loader');

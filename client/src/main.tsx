@@ -7,8 +7,8 @@ import App from './App.tsx'
 // Initialize Sentry AFTER app renders (deferred to not block initial paint)
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
 if (SENTRY_DSN && import.meta.env.PROD) {
-  // Defer Sentry initialization until after first paint
-  requestIdleCallback(() => {
+  // Defer Sentry initialization - use requestIdleCallback if available, else setTimeout
+  const deferInit = () => {
     import('@sentry/react').then((Sentry) => {
       Sentry.init({
         dsn: SENTRY_DSN,
@@ -19,7 +19,12 @@ if (SENTRY_DSN && import.meta.env.PROD) {
         replaysOnErrorSampleRate: 0.1,
       })
     })
-  }, { timeout: 3000 })
+  }
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(deferInit, { timeout: 3000 })
+  } else {
+    setTimeout(deferInit, 1000)
+  }
 }
 
 // Google OAuth Client ID (public client ID - security is enforced via redirect URIs in Google Cloud Console)
