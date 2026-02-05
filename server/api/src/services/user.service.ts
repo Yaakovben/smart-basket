@@ -1,4 +1,4 @@
-import { User, List } from '../models';
+import { User, List, PushSubscription } from '../models';
 import { ApiError, sanitizeText } from '../utils';
 import { TokenService } from './token.service';
 import type { UpdateProfileInput } from '../utils/validators';
@@ -79,19 +79,46 @@ export class UserService {
   }
 
   static async deleteAccount(userId: string): Promise<void> {
-    // Delete user's owned lists
-    await List.deleteMany({ owner: userId });
+    // 1. Delete only PRIVATE lists (not groups) that the user owns
+    await List.deleteMany({ owner: userId, isGroup: false });
 
-    // Remove user from group lists
+    // 2. Handle GROUP lists where user is owner
+    const ownedGroups = await List.find({ owner: userId, isGroup: true });
+
+    for (const group of ownedGroups) {
+      // Find other members (excluding the owner)
+      const otherMembers = group.members.filter(
+        (m) => m.user.toString() !== userId
+      );
+
+      if (otherMembers.length > 0) {
+        // Transfer ownership to the first member (prefer admin if exists)
+        const newOwner = otherMembers.find((m) => m.isAdmin) || otherMembers[0];
+
+        await List.findByIdAndUpdate(group._id, {
+          $set: { owner: newOwner.user },
+          // Remove the new owner from members (owner is not in members array)
+          $pull: { members: { user: newOwner.user } }
+        });
+      } else {
+        // No other members - safe to delete the empty group
+        await List.findByIdAndDelete(group._id);
+      }
+    }
+
+    // 3. Remove user from group lists where they are a member (not owner)
     await List.updateMany(
       { 'members.user': userId },
       { $pull: { members: { user: userId } } }
     );
 
-    // Delete user's refresh tokens
+    // 4. Delete user's push subscriptions
+    await PushSubscription.deleteMany({ userId });
+
+    // 5. Delete user's refresh tokens
     await TokenService.invalidateAllUserTokens(userId);
 
-    // Delete user
+    // 6. Delete user
     const user = await User.findByIdAndDelete(userId);
     if (!user) {
       throw ApiError.notFound('User not found');
