@@ -157,7 +157,8 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               )}
 
               {/* Group Notifications Section */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: pushSupported ? 1.5 : 0, mb: 0.5 }}>
+              {pushSupported && <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
               </Box>
@@ -175,7 +176,8 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               </Box>
 
               {/* Product Notifications Section */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 1.5, mb: 0.5 }}>
+              <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
               </Box>
