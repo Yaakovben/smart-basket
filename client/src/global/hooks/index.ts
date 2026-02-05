@@ -91,15 +91,24 @@ export function useAuth() {
         socketService.connect();
       }
 
+      // Timeout promise - don't hang forever if API is down
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 10000)
+      );
+
       try {
-        // Fetch profile, lists, and notifications in PARALLEL
-        const [profile, listsResult, notificationsResult] = await Promise.all([
-          authApi.getProfile(),
-          listsApi.getLists().catch(() => null),
-          import('../../services/api').then(({ notificationsApi }) =>
-            notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
-          ),
-        ]);
+        // Fetch profile, lists, and notifications in PARALLEL (with 10s timeout)
+        const [profile, listsResult, notificationsResult] = await Promise.race([
+          Promise.all([
+            authApi.getProfile(),
+            listsApi.getLists().catch(() => null),
+            import('../../services/api').then(({ notificationsApi }) =>
+              notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
+            ),
+          ]),
+          timeout.then(() => { throw new Error('timeout'); }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ]) as any;
 
         // Cache user for next load
         localStorage.setItem('cached_user', JSON.stringify(profile));
@@ -110,14 +119,14 @@ export function useAuth() {
           lists: listsResult,
           notifications: notificationsResult ? {
             notifications: notificationsResult.notifications,
-            unreadCount: notificationsResult.notifications.filter(n => !n.read).length,
+            unreadCount: notificationsResult.notifications.filter((n: { read: boolean }) => !n.read).length,
           } : null,
         });
 
         // Connect socket when authenticated (if not already connected)
         socketService.connect();
       } catch {
-        // Token invalid, clear everything
+        // Token invalid or timeout, clear everything
         clearTokens();
         localStorage.removeItem('cached_user');
         setUser(null);
