@@ -60,21 +60,35 @@
   <!-- Force unregister old service workers (v2.0 migration) -->
   <script>
     (function() {
+      var forceReset = location.search.indexOf('force-reset') > -1;
       var migrated = localStorage.getItem('sw_migrated_v2');
-      if (!migrated && 'serviceWorker' in navigator) {
+      if ((forceReset || !migrated) && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(regs) {
-          if (regs.length > 0) {
-            Promise.all(regs.map(function(r) { return r.unregister(); })).then(function() {
+          if (regs.length > 0 || forceReset) {
+            var unregisterAll = regs.length > 0
+              ? Promise.all(regs.map(function(r) { return r.unregister(); }))
+              : Promise.resolve();
+            unregisterAll.then(function() {
               if ('caches' in window) {
                 caches.keys().then(function(names) {
                   Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
+                    localStorage.clear();
                     localStorage.setItem('sw_migrated_v2', '1');
-                    location.reload();
+                    if (forceReset) {
+                      location.href = '/';
+                    } else {
+                      location.reload();
+                    }
                   });
                 });
               } else {
+                localStorage.clear();
                 localStorage.setItem('sw_migrated_v2', '1');
-                location.reload();
+                if (forceReset) {
+                  location.href = '/';
+                } else {
+                  location.reload();
+                }
               }
             });
           }
