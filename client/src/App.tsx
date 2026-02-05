@@ -13,7 +13,11 @@ export const hideInitialLoader = () => {
   if (loader) {
     loader.style.opacity = '0';
     loader.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => loader.remove(), 300);
+    setTimeout(() => {
+      loader.remove();
+      // Remove green background from body once app is loaded
+      document.body.classList.add('app-loaded');
+    }, 300);
   }
 };
 

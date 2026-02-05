@@ -44,8 +44,21 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <!-- Instant background to prevent white flash -->
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #2DD4BF, #34D399);
+      min-height: 100%;
+    }
+    /* Remove background once app loads (set by React) */
+    body.app-loaded {
+      background: none;
+    }
+  </style>
   </head>
-  <body style="margin: 0;">
+  <body>
     <!-- Initial loading state - WhatsApp style: icon first, spinner after 5s -->
     <div id="initial-loader" style="
       position: fixed;
