@@ -1,6 +1,13 @@
 {
   "headers": [
     {
+      "source": "/clear.html",
+      "headers": [
+        { "key": "Clear-Site-Data", "value": "\"cache\", \"storage\"" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
       "source": "/index.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
