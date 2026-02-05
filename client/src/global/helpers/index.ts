@@ -29,22 +29,12 @@ export {
 
 // List operations helpers
 export {
-  createNotification,
-  userToMember,
-  addMemberToList,
-  removeMemberFromList,
-  markListNotificationsRead,
-  findGroupByCode,
-  isUserInGroup,
-  validateJoinGroup,
   generateInviteMessage,
   generateShareListMessage
 } from './listOperations';
-export type { JoinGroupResult } from './listOperations';
 
 // Re-export feature helpers for backward compatibility
 export { isValidEmail, getPasswordStrength } from '../../features/auth/helpers/auth-helpers';
-export { formatDate, formatTime } from '../../features/list/helpers/list-helpers';
 export { generateInviteCode, generatePassword } from '../../features/home/helpers/home-helpers';
 
 // Date formatting utilities
