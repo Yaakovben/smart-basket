@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import type { List, Product, User } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
+import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -81,6 +82,46 @@ const colorSelectSx = (isSelected: boolean) => ({
   '&:hover': { transform: 'scale(1.1)' }
 });
 
+// ===== Memoized List Card Component =====
+interface ListCardProps {
+  list: List;
+  user: User;
+  onSelect: (list: List) => void;
+  onEdit: (list: List) => void;
+  t: (key: TranslationKeys) => string;
+}
+
+const ListCard = memo(({ list: l, user, onSelect, onEdit, t }: ListCardProps) => {
+  const count = l.products.filter((p: Product) => !p.isPurchased).length;
+  const isOwner = l.owner.id === user.id;
+
+  return (
+    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelect(l)}>
+        <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+          {l.icon}
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
+            <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
+          </Box>
+          <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
+            {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
+          </Typography>
+        </Box>
+      </Box>
+      {isOwner && (
+        <IconButton onClick={(e) => { e.stopPropagation(); onEdit(l); }} sx={{ bgcolor: 'action.hover', width: SIZES.iconButton.sm.width, height: SIZES.iconButton.sm.height }}>
+          <EditIcon sx={{ fontSize: SIZES.icon.sm, color: 'text.secondary' }} />
+        </IconButton>
+      )}
+    </Card>
+  );
+});
+
+ListCard.displayName = 'ListCard';
+
 // ===== Props Interface =====
 interface HomePageProps {
   lists: List[];
@@ -100,7 +141,7 @@ interface HomePageProps {
   onClearAllPersistedNotifications?: (listId?: string) => void;
 }
 
-export const HomeComponent = ({
+export const HomeComponent = memo(({
   lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout,
   onMarkNotificationsRead, onMarkSingleNotificationRead, user,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
@@ -341,33 +382,9 @@ export const HomeComponent = ({
               <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
             </Button>
           </Box>
-        ) : display.map((l: List) => {
-          const count = l.products.filter((p: Product) => !p.isPurchased).length;
-          const isOwner = l.owner.id === user.id;
-          return (
-            <Card key={l.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelectList(l)}>
-                <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                  {l.icon}
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-                    <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
-                  </Box>
-                  <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
-                    {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
-                  </Typography>
-                </Box>
-              </Box>
-              {isOwner && (
-                <IconButton onClick={(e) => { e.stopPropagation(); setEditList(l); }} sx={{ bgcolor: 'action.hover', width: SIZES.iconButton.sm.width, height: SIZES.iconButton.sm.height }}>
-                  <EditIcon sx={{ fontSize: SIZES.icon.sm, color: 'text.secondary' }} />
-                </IconButton>
-              )}
-            </Card>
-          );
-        })}
+        ) : display.map((l: List) => (
+          <ListCard key={l.id} list={l} user={user} onSelect={onSelectList} onEdit={setEditList} t={t} />
+        ))}
       </Box>
 
       {/* Menu Bottom Sheet */}
@@ -926,4 +943,6 @@ export const HomeComponent = ({
       </Box>
     </Box>
   );
-};
+});
+
+HomeComponent.displayName = 'HomeComponent';
