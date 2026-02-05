@@ -1,25 +1,31 @@
 import mongoose from 'mongoose';
-import { ListDAL, UserDAL } from '../dal';
+import { ListDAL, UserDAL, ProductDAL } from '../dal';
 import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
 import { NotificationService } from './notification.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import type { IList } from '../models';
-import { convertProductsAddedBy } from '../utils';
 
-// Helper to transform list to response format
+// Helper to transform list to response format (with products from separate collection)
 const transformList = async (list: IList): Promise<IListResponse> => {
   await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
     list.populate('members.user', 'name email avatarColor avatarEmoji'),
-    list.populate('products.addedBy', 'name'),
   ]);
+
+  // Fetch products from separate collection
+  const products = await ProductDAL.findByListId(list._id.toString());
 
   const json = list.toJSON() as Record<string, unknown>;
 
-  if (json.products && Array.isArray(json.products)) {
-    json.products = convertProductsAddedBy(json.products as Record<string, unknown>[]);
-  }
+  // Add products to the response (transform addedBy to just the name string)
+  json.products = products.map((p) => {
+    const pJson = p.toJSON() as Record<string, unknown>;
+    if (pJson.addedBy && typeof pJson.addedBy === 'object') {
+      pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
+    }
+    return pJson;
+  });
 
   return json as unknown as IListResponse;
 };
@@ -44,9 +50,12 @@ export class ListMembershipService {
       throw ConflictError.alreadyMember();
     }
 
-    // Check password if required
-    if (list.password && list.password !== data.password) {
-      throw AuthError.invalidGroupPassword();
+    // Check password if required (using bcrypt comparison)
+    if (list.password) {
+      const isValidPassword = await list.comparePassword(data.password || '');
+      if (!isValidPassword) {
+        throw AuthError.invalidGroupPassword();
+      }
     }
 
     // Get user info for notification
@@ -60,16 +69,6 @@ export class ListMembershipService {
       user: new mongoose.Types.ObjectId(userId),
       isAdmin: false,
       joinedAt: new Date(),
-    });
-
-    // Add notification to embedded (backward compatibility)
-    list.notifications.push({
-      _id: new mongoose.Types.ObjectId(),
-      type: 'join',
-      userId: new mongoose.Types.ObjectId(userId),
-      userName: user.name,
-      timestamp: new Date(),
-      read: false,
     });
 
     await list.save();
@@ -114,16 +113,6 @@ export class ListMembershipService {
 
     // Remove member
     list.members.splice(memberIndex, 1);
-
-    // Add notification to embedded (backward compatibility)
-    list.notifications.push({
-      _id: new mongoose.Types.ObjectId(),
-      type: 'leave',
-      userId: new mongoose.Types.ObjectId(userId),
-      userName: user.name,
-      timestamp: new Date(),
-      read: false,
-    });
 
     await list.save();
 
@@ -178,18 +167,6 @@ export class ListMembershipService {
     ]);
 
     list.members.splice(memberIndex, 1);
-
-    // Add notification to embedded (backward compatibility)
-    if (member) {
-      list.notifications.push({
-        _id: new mongoose.Types.ObjectId(),
-        type: 'removed',
-        userId: new mongoose.Types.ObjectId(memberId),
-        userName: member.name,
-        timestamp: new Date(),
-        read: false,
-      });
-    }
 
     await list.save();
 

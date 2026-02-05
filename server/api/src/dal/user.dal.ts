@@ -22,10 +22,6 @@ class UserDALClass extends BaseDAL<IUser> {
     return this.model.findById(id).select('+password');
   }
 
-  async updateLastLogin(userId: string): Promise<void> {
-    await this.model.findByIdAndUpdate(userId, { lastLogin: new Date() });
-  }
-
   async updateProfile(userId: string, updates: Partial<Pick<IUser, 'name' | 'email' | 'avatarColor' | 'avatarEmoji'>>): Promise<IUser | null> {
     return this.model.findByIdAndUpdate(userId, updates, { new: true });
   }

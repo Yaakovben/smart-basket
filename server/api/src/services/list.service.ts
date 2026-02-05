@@ -1,28 +1,54 @@
 import mongoose from 'mongoose';
-import { ListDAL, UserDAL } from '../dal';
+import { ListDAL, UserDAL, ProductDAL } from '../dal';
 import { NotFoundError, ForbiddenError } from '../errors';
-import { sanitizeText, convertProductsAddedBy } from '../utils';
+import { sanitizeText } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import type { IList } from '../models';
 import { NotificationService } from './notification.service';
 import { ListMembershipService } from './list-membership.service';
 
-// Helper to transform list to response format
+// Helper to transform list to response format (with products from separate collection)
 const transformList = async (list: IList): Promise<IListResponse> => {
   await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
     list.populate('members.user', 'name email avatarColor avatarEmoji'),
-    list.populate('products.addedBy', 'name'),
   ]);
+
+  // Fetch products from separate collection
+  const products = await ProductDAL.findByListId(list._id.toString());
 
   const json = list.toJSON() as Record<string, unknown>;
 
-  if (json.products && Array.isArray(json.products)) {
-    json.products = convertProductsAddedBy(json.products as Record<string, unknown>[]);
-  }
+  // Add products to the response (transform addedBy to just the name string)
+  json.products = products.map((p) => {
+    const pJson = p.toJSON() as Record<string, unknown>;
+    if (pJson.addedBy && typeof pJson.addedBy === 'object') {
+      pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
+    }
+    return pJson;
+  });
 
   return json as unknown as IListResponse;
+};
+
+// Helper to transform multiple lists with their products
+const transformListsWithProducts = async (lists: IList[]): Promise<IListResponse[]> => {
+  // Process each list
+  return Promise.all(lists.map(async (list) => {
+    const products = await ProductDAL.findByListId(list._id.toString());
+    const json = list.toJSON() as Record<string, unknown>;
+
+    json.products = products.map((p) => {
+      const pJson = p.toJSON() as Record<string, unknown>;
+      if (pJson.addedBy && typeof pJson.addedBy === 'object') {
+        pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
+      }
+      return pJson;
+    });
+
+    return json as unknown as IListResponse;
+  }));
 };
 
 export class ListService {
@@ -30,14 +56,7 @@ export class ListService {
 
   static async getUserLists(userId: string): Promise<IListResponse[]> {
     const lists = await ListDAL.findUserListsPopulated(userId);
-
-    return lists.map((list) => {
-      const json = list.toJSON() as Record<string, unknown>;
-      if (json.products && Array.isArray(json.products)) {
-        json.products = convertProductsAddedBy(json.products as Record<string, unknown>[]);
-      }
-      return json as unknown as IListResponse;
-    });
+    return transformListsWithProducts(lists);
   }
 
   static async getList(listId: string, userId: string): Promise<IListResponse> {
@@ -72,7 +91,6 @@ export class ListService {
       owner: new mongoose.Types.ObjectId(userId),
       inviteCode,
       members: [],
-      products: [],
       notifications: [],
     } as Partial<IList>);
 
@@ -155,6 +173,8 @@ export class ListService {
       );
     }
 
+    // Delete all products for this list
+    await ProductDAL.deleteByListId(listId);
     await NotificationService.deleteNotificationsForList(listId);
     await ListDAL.deleteById(listId);
 
@@ -179,7 +199,7 @@ export class ListService {
     return ListMembershipService.toggleMemberAdmin(listId, userId, memberId);
   }
 
-  // ==================== Embedded Notifications (backward compatibility) ====================
+  // ==================== Notifications ====================
 
   static async markNotificationsRead(
     listId: string,
@@ -197,11 +217,6 @@ export class ListService {
       throw ForbiddenError.noAccess();
     }
 
-    list.notifications.forEach((n) => {
-      n.read = true;
-    });
-
-    await list.save();
     await NotificationService.markAllAsRead(userId, listId);
 
     return transformList(list);
@@ -224,16 +239,8 @@ export class ListService {
       throw ForbiddenError.noAccess();
     }
 
-    const notification = list.notifications.find(
-      (n) => n._id.toString() === notificationId
-    );
-
-    if (!notification) {
-      throw NotFoundError.notification();
-    }
-
-    notification.read = true;
-    await list.save();
+    // Mark the notification as read in the Notification collection
+    await NotificationService.markAsReadById(notificationId);
 
     return transformList(list);
   }

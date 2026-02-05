@@ -17,7 +17,6 @@ const pushSubscriptionSchema = new Schema<IPushSubscription>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
     },
     endpoint: {
       type: String,

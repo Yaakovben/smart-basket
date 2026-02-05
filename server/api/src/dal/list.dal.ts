@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { List, type IList, type IProduct } from '../models';
+import { List, type IList } from '../models';
 import { BaseDAL } from './base.dal';
 
 class ListDALClass extends BaseDAL<IList> {
@@ -26,7 +26,6 @@ class ListDALClass extends BaseDAL<IList> {
       .find({ $or: [{ owner: userId }, { 'members.user': userId }] })
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
       .populate('members.user', 'name email avatarColor avatarEmoji')
-      .populate('products.addedBy', 'name')
       .sort({ updatedAt: -1 });
   }
 
@@ -34,8 +33,7 @@ class ListDALClass extends BaseDAL<IList> {
     return this.model
       .findById(listId)
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
-      .populate('members.user', 'name email avatarColor avatarEmoji')
-      .populate('products.addedBy', 'name');
+      .populate('members.user', 'name email avatarColor avatarEmoji');
   }
 
   async findByInviteCode(inviteCode: string): Promise<IList | null> {
@@ -70,81 +68,6 @@ class ListDALClass extends BaseDAL<IList> {
     return this.model.findOneAndUpdate(
       { _id: listId, 'members.user': memberId },
       { $set: { 'members.$.isAdmin': isAdmin } },
-      { new: true }
-    );
-  }
-
-  async addProduct(listId: string, product: Partial<IProduct>): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
-      listId,
-      { $push: { products: product } },
-      { new: true }
-    );
-  }
-
-  async updateProduct(listId: string, productId: string, updates: Partial<IProduct>): Promise<IList | null> {
-    const setFields: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(updates)) {
-      setFields[`products.$.${key}`] = value;
-    }
-
-    return this.model.findOneAndUpdate(
-      { _id: listId, 'products._id': productId },
-      { $set: setFields },
-      { new: true }
-    );
-  }
-
-  async removeProduct(listId: string, productId: string): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
-      listId,
-      { $pull: { products: { _id: new mongoose.Types.ObjectId(productId) } } },
-      { new: true }
-    );
-  }
-
-  async reorderProducts(listId: string, productIds: string[]): Promise<IList | null> {
-    const list = await this.model.findById(listId);
-    if (!list) return null;
-
-    const productMap = new Map(list.products.map((p) => [p._id.toString(), p]));
-    const reorderedProducts = productIds
-      .map((id) => productMap.get(id))
-      .filter((p): p is IProduct => p !== undefined);
-
-    list.products = reorderedProducts;
-    await list.save();
-    return list;
-  }
-
-  async clearPurchasedProducts(listId: string): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
-      listId,
-      { $pull: { products: { isPurchased: true } } },
-      { new: true }
-    );
-  }
-
-  async addNotification(listId: string, notification: Partial<IList['notifications'][0]>): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
-      listId,
-      { $push: { notifications: notification } },
-      { new: true }
-    );
-  }
-
-  async markNotificationsRead(listId: string): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
-      listId,
-      { $set: { 'notifications.$[].read': true } },
-      { new: true }
-    );
-  }
-
-  async markNotificationRead(listId: string, notificationId: string): Promise<IList | null> {
-    return this.model.findOneAndUpdate(
-      { _id: listId, 'notifications._id': notificationId },
-      { $set: { 'notifications.$.read': true } },
       { new: true }
     );
   }

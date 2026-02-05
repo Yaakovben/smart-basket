@@ -1,17 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import type { ProductUnit, ProductCategory, NotificationType } from '../types';
-
-// Product subdocument interface
-export interface IProduct {
-  _id: Types.ObjectId;
-  name: string;
-  quantity: number;
-  unit: ProductUnit;
-  category: ProductCategory;
-  isPurchased: boolean;
-  addedBy: Types.ObjectId;
-  createdAt: Date;
-}
+import bcrypt from 'bcrypt';
+import type { NotificationType } from '../types';
 
 // Member subdocument interface
 export interface IMember {
@@ -20,7 +9,7 @@ export interface IMember {
   joinedAt: Date;
 }
 
-// Notification subdocument interface
+// Notification subdocument interface (legacy - kept for backward compatibility)
 export interface INotification {
   _id: Types.ObjectId;
   type: NotificationType;
@@ -39,69 +28,13 @@ export interface IList extends Document {
   isGroup: boolean;
   owner: Types.ObjectId;
   members: IMember[];
-  products: IProduct[];
   inviteCode?: string;
   password?: string;
   notifications: INotification[];
   createdAt: Date;
   updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
-
-const productSchema = new Schema<IProduct>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      minlength: 2,
-      maxlength: 100,
-    },
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1,
-      default: 1,
-    },
-    unit: {
-      type: String,
-      enum: ['יח׳', 'ק״ג', 'גרם', 'ליטר'],
-      default: 'יח׳',
-    },
-    category: {
-      type: String,
-      enum: [
-        'מוצרי חלב',
-        'מאפים',
-        'ירקות',
-        'פירות',
-        'בשר',
-        'משקאות',
-        'ממתקים',
-        'ניקיון',
-        'אחר',
-      ],
-      default: 'אחר',
-    },
-    isPurchased: {
-      type: Boolean,
-      default: false,
-    },
-    addedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-    toJSON: {
-      transform: (_, ret) => {
-        const { _id, ...rest } = ret;
-        return { ...rest, id: _id.toString() };
-      },
-    },
-  }
-);
 
 const memberSchema = new Schema<IMember>(
   {
@@ -184,7 +117,6 @@ const listSchema = new Schema<IList>(
       required: true,
     },
     members: [memberSchema],
-    products: [productSchema],
     inviteCode: {
       type: String,
       sparse: true,
@@ -192,8 +124,7 @@ const listSchema = new Schema<IList>(
     },
     password: {
       type: String,
-      minlength: 4,
-      maxlength: 4,
+      // Password is hashed with bcrypt (input is 4 chars, stored hash is ~60 chars)
     },
     notifications: [notificationSchema],
   },
@@ -201,7 +132,7 @@ const listSchema = new Schema<IList>(
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        const { _id, __v, ...rest } = ret;
+        const { _id, __v, password, ...rest } = ret;
         return { ...rest, id: _id.toString() };
       },
     },
@@ -211,5 +142,28 @@ const listSchema = new Schema<IList>(
 // Indexes (inviteCode index created by unique: true in schema)
 listSchema.index({ owner: 1 });
 listSchema.index({ 'members.user': 1 });
+
+// Hash password before saving (only if password is modified and is a short plaintext password)
+listSchema.pre('save', async function (next) {
+  // Skip if password not modified or doesn't exist
+  if (!this.isModified('password') || !this.password) return next();
+
+  // Only hash if it looks like a plaintext password (4 chars)
+  // Already hashed passwords start with $2b$ and are ~60 chars
+  if (this.password.length <= 10 && !this.password.startsWith('$2b$')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  next();
+});
+
+// Compare password method
+listSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
+  if (!this.password) return true; // No password set = no protection
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 export const List = mongoose.model<IList>('List', listSchema);
