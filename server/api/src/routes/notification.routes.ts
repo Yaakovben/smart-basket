@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { NotificationController } from '../controllers/notification.controller';
-import { authenticate } from '../middleware';
+import { authenticate, validate } from '../middleware';
+import { notificationValidator } from '../validators';
 
 const router = Router();
 
@@ -8,13 +9,13 @@ const router = Router();
 router.use(authenticate);
 
 // User-facing routes
-router.get('/', NotificationController.getNotifications);
+router.get('/', validate({ query: notificationValidator.getAll }), NotificationController.getNotifications);
 router.get('/unread-count', NotificationController.getUnreadCount);
-router.put('/read-all', NotificationController.markAllAsRead);
-router.put('/:id/read', NotificationController.markAsRead);
+router.put('/read-all', validate(notificationValidator.markAllRead), NotificationController.markAllAsRead);
+router.put('/:id/read', validate({ params: notificationValidator.params }), NotificationController.markAsRead);
 
 // Internal routes (for Socket server) - still require auth
-router.post('/', NotificationController.createNotification);
-router.post('/broadcast', NotificationController.createNotificationsForListMembers);
+router.post('/', validate(notificationValidator.create), NotificationController.createNotification);
+router.post('/broadcast', validate(notificationValidator.broadcast), NotificationController.createNotificationsForListMembers);
 
 export default router;

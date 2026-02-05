@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { UserService } from '../services';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
-import type { UpdateProfileInput, ChangePasswordInput } from '../utils/validators';
+import type { UpdateProfileInput, ChangePasswordInput } from '../validators';
 
 export class UserController {
   static getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {

@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import * as Sentry from '@sentry/node';
-import { ApiError } from '../utils';
 import { AppError } from '../errors';
 import { env, logger } from '../config';
 
@@ -20,7 +19,7 @@ export const errorHandler = (
   let errors: { field: string; message: string }[] | undefined;
   let code: string | undefined;
 
-  // New AppError (from errors/ directory)
+  // AppError (and all subclasses: ValidationError, AuthError, etc.)
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
@@ -28,12 +27,6 @@ export const errorHandler = (
     if (Array.isArray(err.details)) {
       errors = err.details as { field: string; message: string }[];
     }
-  }
-  // Legacy ApiError (from utils/)
-  else if (err instanceof ApiError) {
-    statusCode = err.statusCode;
-    message = err.message;
-    errors = err.errors;
   }
 
   // Mongoose validation error

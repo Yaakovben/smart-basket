@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { ListService } from '../services';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
-import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../utils/validators';
+import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 
 export class ListController {
   static getLists = asyncHandler(async (req: AuthRequest, res: Response) => {

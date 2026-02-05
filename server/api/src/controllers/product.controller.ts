@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { ProductService } from '../services';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
-import type { CreateProductInput, UpdateProductInput, ReorderProductsInput } from '../utils/validators';
+import type { CreateProductInput, UpdateProductInput, ReorderProductsInput } from '../validators';
 
 export class ProductController {
   static addProduct = asyncHandler(async (req: AuthRequest, res: Response) => {

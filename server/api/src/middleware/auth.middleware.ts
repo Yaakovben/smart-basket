@@ -1,7 +1,8 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models';
-import { ApiError, asyncHandler } from '../utils';
+import { asyncHandler } from '../utils';
+import { AuthError, ForbiddenError, NotFoundError } from '../errors';
 import { env } from '../config';
 import type { AuthRequest, TokenPayload } from '../types';
 
@@ -10,7 +11,7 @@ export const authenticate = asyncHandler(
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
-      throw ApiError.unauthorized('Access token required');
+      throw AuthError.unauthorized('Access token required');
     }
 
     const token = authHeader.split(' ')[1];
@@ -21,7 +22,7 @@ export const authenticate = asyncHandler(
       const user = await User.findById(decoded.userId).select('email isAdmin');
 
       if (!user) {
-        throw ApiError.unauthorized('User not found');
+        throw NotFoundError.user();
       }
 
       req.user = {
@@ -33,10 +34,10 @@ export const authenticate = asyncHandler(
       next();
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw ApiError.unauthorized('Access token expired');
+        throw AuthError.tokenExpired();
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw ApiError.unauthorized('Invalid access token');
+        throw AuthError.invalidToken();
       }
       throw error;
     }
@@ -45,7 +46,7 @@ export const authenticate = asyncHandler(
 
 export const isAdmin = (req: AuthRequest, _res: Response, next: NextFunction) => {
   if (!req.user?.isAdmin) {
-    throw ApiError.forbidden('Admin access required');
+    throw ForbiddenError.notAdmin();
   }
   next();
 };
