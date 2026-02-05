@@ -1,11 +1,35 @@
 import { useMemo } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from '@mui/material';
+import * as Sentry from '@sentry/react';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
 import { useServiceWorker } from './global/hooks';
+
+// Clear all caches on app load (one-time cleanup for v2.0 migration)
+const CACHE_VERSION = 'v2.0';
+const clearAllCaches = async () => {
+  const cacheCleared = localStorage.getItem('cache_cleared');
+  if (cacheCleared === CACHE_VERSION) return; // Already cleared for this version
+
+  try {
+    // Clear all browser caches
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      console.log('[Cache] Cleared all caches for v2.0 migration');
+    }
+    localStorage.setItem('cache_cleared', CACHE_VERSION);
+  } catch (error) {
+    console.error('[Cache] Failed to clear caches:', error);
+    Sentry.captureException(error, { tags: { context: 'cache_clear' } });
+  }
+};
+
+// Run immediately on module load
+clearAllCaches();
 
 // Hide initial loader - called by AppRouter when auth is ready
 export const hideInitialLoader = () => {
