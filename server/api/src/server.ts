@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import app from './app';
-import { env, connectDatabase } from './config';
+import { env, connectDatabase, logger } from './config';
 
 // Initialize Sentry error monitoring (must be first)
 if (env.SENTRY_DSN) {
@@ -12,35 +12,35 @@ if (env.SENTRY_DSN) {
     // Performance monitoring
     tracesSampleRate: 0.1, // 10% of transactions
   });
-  console.log('Sentry error monitoring initialized');
+  logger.info('Sentry error monitoring initialized');
 }
 
 const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDatabase();
-    console.log('Connected to MongoDB');
+    logger.info('Connected to MongoDB');
 
     // Start the server
     app.listen(env.PORT, () => {
-      console.log(`Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+      logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     Sentry.captureException(error);
     process.exit(1);
   }
 };
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections - log and continue
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled Rejection at:', { promise, reason });
   Sentry.captureException(reason);
 });
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions - log and exit (state may be corrupted)
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception - server will restart:', error);
   Sentry.captureException(error);
   process.exit(1);
 });

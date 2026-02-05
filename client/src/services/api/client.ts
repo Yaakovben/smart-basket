@@ -125,6 +125,8 @@ apiClient.interceptors.response.use(
 
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
+        // Reset isRefreshing flag before returning (prevents future requests from getting stuck)
+        isRefreshing = false;
         // Don't redirect if we're in the middle of authentication
         if (!isAuthInProgress) {
           clearTokens();

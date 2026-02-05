@@ -1,19 +1,11 @@
 import mongoose from 'mongoose';
-import { List, User, type IList } from '../models';
-import { ApiError, sanitizeText, convertProductsAddedBy } from '../utils';
-import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../utils/validators';
+import { ListDAL, UserDAL } from '../dal';
+import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
+import { sanitizeText, convertProductsAddedBy } from '../utils';
+import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
+import type { IList } from '../models';
 import { NotificationService } from './notification.service';
-
-// Helper to generate invite code
-const generateInviteCode = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-};
 
 // Helper to transform list to response format
 const transformList = async (list: IList): Promise<IListResponse> => {
@@ -36,13 +28,7 @@ const transformList = async (list: IList): Promise<IListResponse> => {
 
 export class ListService {
   static async getUserLists(userId: string): Promise<IListResponse[]> {
-    const lists = await List.find({
-      $or: [{ owner: userId }, { 'members.user': userId }],
-    })
-      .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
-      .populate('members.user', 'name email avatarColor avatarEmoji')
-      .populate('products.addedBy', 'name')
-      .sort({ updatedAt: -1 });
+    const lists = await ListDAL.findUserListsPopulated(userId);
 
     return lists.map((list) => {
       const json = list.toJSON() as Record<string, unknown>;
@@ -54,19 +40,17 @@ export class ListService {
   }
 
   static async getList(listId: string, userId: string): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Check access
-    const hasAccess =
-      list.owner.toString() === userId ||
-      list.members.some((m) => m.user.toString() === userId);
+    const hasAccess = await ListDAL.isMember(listId, userId);
 
     if (!hasAccess) {
-      throw ApiError.forbidden('You do not have access to this list');
+      throw ForbiddenError.noAccess();
     }
 
     return transformList(list);
@@ -80,23 +64,18 @@ export class ListService {
 
     // Generate invite code for group lists
     if (data.isGroup) {
-      let isUnique = false;
-      while (!isUnique) {
-        inviteCode = generateInviteCode();
-        const existing = await List.findOne({ inviteCode });
-        if (!existing) isUnique = true;
-      }
+      inviteCode = await ListDAL.generateUniqueInviteCode();
     }
 
-    const list = await List.create({
+    const list = await ListDAL.create({
       ...data,
       name: sanitizeText(data.name), // Sanitize list name
-      owner: userId,
+      owner: new mongoose.Types.ObjectId(userId),
       inviteCode,
       members: [],
       products: [],
       notifications: [],
-    });
+    } as Partial<IList>);
 
     return transformList(list);
   }
@@ -106,15 +85,15 @@ export class ListService {
     userId: string,
     data: UpdateListInput
   ): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Only owner can update list
     if (list.owner.toString() !== userId) {
-      throw ApiError.forbidden('Only the owner can update this list');
+      throw ForbiddenError.notOwner();
     }
 
     // Sanitize name if provided
@@ -123,10 +102,11 @@ export class ListService {
       sanitizedData.name = sanitizeText(sanitizedData.name);
     }
 
-    // Check if anything actually changed (for notification)
-    const hasChanges = (sanitizedData.name && sanitizedData.name !== list.name) ||
-                       (sanitizedData.icon && sanitizedData.icon !== list.icon) ||
-                       (sanitizedData.color && sanitizedData.color !== list.color);
+    // Track what changed for notification
+    const nameChanged = sanitizedData.name && sanitizedData.name !== list.name;
+    const iconChanged = sanitizedData.icon && sanitizedData.icon !== list.icon;
+    const colorChanged = sanitizedData.color && sanitizedData.color !== list.color;
+    const hasChanges = nameChanged || iconChanged || colorChanged;
 
     Object.assign(list, sanitizedData);
     await list.save();
@@ -134,10 +114,19 @@ export class ListService {
     // Send notifications to group members if this is a group and something changed
     if (list.isGroup && hasChanges && list.members.length > 0) {
       // Create notifications for all members (not owner) in background
+      // Pass what changed for more specific notification message
       NotificationService.createNotificationsForListMembers(
         listId,
         'list_update',
-        userId
+        userId,
+        {
+          // Use productName field to pass the new list name (or change type)
+          productName: nameChanged ? list.name : undefined,
+          // Use productId field to indicate what changed: 'name', 'design', or 'both'
+          productId: nameChanged && (iconChanged || colorChanged) ? 'both'
+                   : nameChanged ? 'name'
+                   : 'design',
+        }
       ).catch(() => {}); // Ignore notification errors
     }
 
@@ -145,15 +134,15 @@ export class ListService {
   }
 
   static async deleteList(listId: string, userId: string): Promise<{ memberIds: string[]; listName: string }> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Only owner can delete list
     if (list.owner.toString() !== userId) {
-      throw ApiError.forbidden('Only the owner can delete this list');
+      throw ForbiddenError.notOwner();
     }
 
     // Get member IDs before deletion (for socket notification)
@@ -161,7 +150,7 @@ export class ListService {
     const listName = list.name;
 
     // Get owner info for notification
-    const owner = await User.findById(userId);
+    const owner = await UserDAL.findById(userId);
 
     // Create "list_deleted" notifications for all members before deleting the list
     if (owner && list.isGroup && memberIds.length > 0) {
@@ -182,7 +171,7 @@ export class ListService {
     // Delete old notifications for this list
     await NotificationService.deleteNotificationsForList(listId);
 
-    await list.deleteOne();
+    await ListDAL.deleteById(listId);
 
     // Return member IDs and list name for socket notification
     return { memberIds, listName };
@@ -192,30 +181,30 @@ export class ListService {
     userId: string,
     data: JoinGroupInput
   ): Promise<IListResponse> {
-    const list = await List.findOne({ inviteCode: data.inviteCode.toUpperCase() });
+    const list = await ListDAL.findByInviteCode(data.inviteCode);
 
     if (!list) {
-      throw ApiError.notFound('Invalid invite code');
+      throw NotFoundError.inviteCode();
     }
 
     // Check if already a member or owner
     if (list.owner.toString() === userId) {
-      throw ApiError.conflict('You are the owner of this list');
+      throw ConflictError.isOwner();
     }
 
     if (list.members.some((m) => m.user.toString() === userId)) {
-      throw ApiError.conflict('You are already a member of this list');
+      throw ConflictError.alreadyMember();
     }
 
     // Check password if required
     if (list.password && list.password !== data.password) {
-      throw ApiError.unauthorized('Invalid password');
+      throw AuthError.invalidGroupPassword();
     }
 
     // Get user info for notification
-    const user = await User.findById(userId);
+    const user = await UserDAL.findById(userId);
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
 
     // Add member
@@ -249,15 +238,15 @@ export class ListService {
   }
 
   static async leaveGroup(listId: string, userId: string): Promise<void> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Owner cannot leave
     if (list.owner.toString() === userId) {
-      throw ApiError.forbidden('Owner cannot leave the list. Delete it instead.');
+      throw new ForbiddenError('Owner cannot leave the list. Delete it instead.');
     }
 
     // Check if member
@@ -266,13 +255,13 @@ export class ListService {
     );
 
     if (memberIndex === -1) {
-      throw ApiError.notFound('You are not a member of this list');
+      throw new NotFoundError('You are not a member of this list');
     }
 
     // Get user info for notification
-    const user = await User.findById(userId);
+    const user = await UserDAL.findById(userId);
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
 
     // Remove member
@@ -304,10 +293,10 @@ export class ListService {
     userId: string,
     memberId: string
   ): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Check if user is owner or admin
@@ -317,12 +306,12 @@ export class ListService {
     );
 
     if (!isOwner && !isAdmin) {
-      throw ApiError.forbidden('Only owner or admin can remove members');
+      throw new ForbiddenError('Only owner or admin can remove members');
     }
 
     // Cannot remove owner
     if (list.owner.toString() === memberId) {
-      throw ApiError.forbidden('Cannot remove the owner');
+      throw new ForbiddenError('Cannot remove the owner');
     }
 
     // Remove member
@@ -331,13 +320,13 @@ export class ListService {
     );
 
     if (memberIndex === -1) {
-      throw ApiError.notFound('Member not found');
+      throw new NotFoundError('Member');
     }
 
     // Get member and actor info for notification (parallel queries)
     const [member, actor] = await Promise.all([
-      User.findById(memberId),
-      User.findById(userId),
+      UserDAL.findById(memberId),
+      UserDAL.findById(userId),
     ]);
 
     list.members.splice(memberIndex, 1);
@@ -389,21 +378,21 @@ export class ListService {
     userId: string,
     memberId: string
   ): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Only owner can toggle admin
     if (list.owner.toString() !== userId) {
-      throw ApiError.forbidden('Only owner can change admin status');
+      throw new ForbiddenError('Only owner can change admin status');
     }
 
     const member = list.members.find((m) => m.user.toString() === memberId);
 
     if (!member) {
-      throw ApiError.notFound('Member not found');
+      throw new NotFoundError('Member');
     }
 
     member.isAdmin = !member.isAdmin;
@@ -416,19 +405,17 @@ export class ListService {
     listId: string,
     userId: string
   ): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Check access
-    const hasAccess =
-      list.owner.toString() === userId ||
-      list.members.some((m) => m.user.toString() === userId);
+    const hasAccess = await ListDAL.isMember(listId, userId);
 
     if (!hasAccess) {
-      throw ApiError.forbidden('You do not have access to this list');
+      throw ForbiddenError.noAccess();
     }
 
     // Mark all as read in embedded (backward compatibility)
@@ -449,19 +436,17 @@ export class ListService {
     userId: string,
     notificationId: string
   ): Promise<IListResponse> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
 
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
     // Check access
-    const hasAccess =
-      list.owner.toString() === userId ||
-      list.members.some((m) => m.user.toString() === userId);
+    const hasAccess = await ListDAL.isMember(listId, userId);
 
     if (!hasAccess) {
-      throw ApiError.forbidden('You do not have access to this list');
+      throw ForbiddenError.noAccess();
     }
 
     const notification = list.notifications.find(
@@ -469,7 +454,7 @@ export class ListService {
     );
 
     if (!notification) {
-      throw ApiError.notFound('Notification not found');
+      throw NotFoundError.notification();
     }
 
     notification.read = true;

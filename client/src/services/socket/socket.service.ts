@@ -54,12 +54,15 @@ export interface ProductToggledData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'product_added' | 'product_purchased';
+  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_update';
   listId: string;
   userId: string;
   userName: string;
   message: string;
   timestamp: Date;
+  // For list_update notifications
+  changeType?: 'name' | 'design' | 'both';
+  newName?: string;
 }
 
 export interface MemberRemovedData {
@@ -278,8 +281,14 @@ class SocketService {
   }
 
   // Emit list settings updated event (by owner)
-  emitListUpdated(listId: string, listName: string, userName: string) {
-    this.socket?.emit('list:update', { listId, listName, userName });
+  emitListUpdated(
+    listId: string,
+    listName: string,
+    userName: string,
+    changeType?: 'name' | 'design' | 'both',
+    newName?: string
+  ) {
+    this.socket?.emit('list:update', { listId, listName, userName, changeType, newName });
   }
 }
 

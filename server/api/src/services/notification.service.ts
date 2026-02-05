@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import { Notification, type INotification, type NotificationType } from '../models/Notification.model';
-import { List, User } from '../models';
-import { ApiError } from '../utils';
+import { NotificationDAL, ListDAL, UserDAL } from '../dal';
+import { NotFoundError } from '../errors';
+import type { INotificationDoc, NotificationType } from '../models';
 import { PushService } from './push.service';
 
 export interface CreateNotificationInput {
@@ -53,7 +53,8 @@ const generatePushMessage = (
   type: NotificationType,
   actorName: string,
   listName: string,
-  productName?: string
+  productName?: string,
+  productId?: string
 ): { title: string; body: string } => {
   // Format: action description with actor name
   const getAction = (): string => {
@@ -75,7 +76,16 @@ const generatePushMessage = (
       case 'product_purchase':
         return `${actorName} סימן/ה "${productName}" כנקנה`;
       case 'list_update':
-        return `${actorName} שינה/תה את הגדרות הרשימה`;
+        // productId indicates what changed: 'name', 'design', or 'both'
+        // productName contains the new list name if name changed
+        if (productId === 'name' && productName) {
+          return `${actorName} שינה/תה את שם הרשימה ל-"${productName}"`;
+        } else if (productId === 'design') {
+          return `${actorName} שינה/תה את עיצוב הרשימה`;
+        } else if (productId === 'both' && productName) {
+          return `${actorName} עדכן/ה את הרשימה ל-"${productName}"`;
+        }
+        return `${actorName} עדכן/ה את הרשימה`;
       default:
         return `פעילות חדשה`;
     }
@@ -91,7 +101,7 @@ const generatePushMessage = (
 };
 
 // Helper to transform notification to response format
-const transformNotification = (notification: INotification): NotificationResponse => {
+const transformNotification = (notification: INotificationDoc): NotificationResponse => {
   const json = notification.toJSON() as Record<string, unknown>;
   return {
     id: json.id as string,
@@ -114,20 +124,19 @@ export class NotificationService {
   static async createNotification(
     data: CreateNotificationInput
   ): Promise<NotificationResponse> {
-    const notification = await Notification.create({
+    const notification = await NotificationDAL.createNotification({
       type: data.type,
-      listId: new mongoose.Types.ObjectId(data.listId),
+      listId: data.listId,
       listName: data.listName,
-      actorId: new mongoose.Types.ObjectId(data.actorId),
+      actorId: data.actorId,
       actorName: data.actorName,
-      targetUserId: new mongoose.Types.ObjectId(data.targetUserId),
-      productId: data.productId ? new mongoose.Types.ObjectId(data.productId) : undefined,
+      targetUserId: data.targetUserId,
+      productId: data.productId,
       productName: data.productName,
-      read: false,
     });
 
     // Send push notification (async, don't wait)
-    const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
+    const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName, data.productId);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
       icon: '/apple-touch-icon.svg',
@@ -155,14 +164,14 @@ export class NotificationService {
       excludeUserId?: string; // Additional user to exclude (e.g., the person who removed a member)
     } = {}
   ): Promise<NotificationResponse[]> {
-    const list = await List.findById(listId);
+    const list = await ListDAL.findById(listId);
     if (!list) {
-      throw ApiError.notFound('List not found');
+      throw NotFoundError.list();
     }
 
-    const actor = await User.findById(actorId);
+    const actor = await UserDAL.findById(actorId);
     if (!actor) {
-      throw ApiError.notFound('Actor not found');
+      throw NotFoundError.user();
     }
 
     // Users to exclude: the actor and optionally another user (e.g., the remover)
@@ -191,22 +200,21 @@ export class NotificationService {
     }
 
     // Create notifications for all target users
-    const notifications = await Notification.insertMany(
-      targetUserIds.map((targetUserId) => ({
-        type,
-        listId: new mongoose.Types.ObjectId(listId),
-        listName: list.name,
-        actorId: new mongoose.Types.ObjectId(actorId),
-        actorName: actor.name,
-        targetUserId: new mongoose.Types.ObjectId(targetUserId),
-        productId: data.productId ? new mongoose.Types.ObjectId(data.productId) : undefined,
-        productName: data.productName,
-        read: false,
-      }))
-    );
+    const notificationsData = targetUserIds.map((targetUserId) => ({
+      type,
+      listId,
+      listName: list.name,
+      actorId,
+      actorName: actor.name,
+      targetUserId,
+      productId: data.productId,
+      productName: data.productName,
+    }));
+
+    const notifications = await NotificationDAL.createMany(notificationsData);
 
     // Send push notifications to all target users (async, don't wait)
-    const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
+    const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName, data.productId);
     PushService.sendToUsers(targetUserIds, {
       ...pushMessage,
       icon: '/apple-touch-icon.svg',
@@ -218,7 +226,7 @@ export class NotificationService {
       },
     }).catch(() => {}); // Ignore push errors
 
-    return notifications.map((n) => transformNotification(n as INotification));
+    return notifications.map((n) => transformNotification(n));
   }
 
   /**
@@ -229,37 +237,21 @@ export class NotificationService {
     options: GetNotificationsOptions = {}
   ): Promise<PaginatedNotifications> {
     const { page = 1, limit = 50, listId, unreadOnly = false } = options;
-    const skip = (page - 1) * limit;
 
-    // Build query
-    const query: Record<string, unknown> = {
-      targetUserId: new mongoose.Types.ObjectId(userId),
-    };
-
-    if (listId) {
-      query.listId = new mongoose.Types.ObjectId(listId);
-    }
-
-    if (unreadOnly) {
-      query.read = false;
-    }
-
-    // Get total count
-    const total = await Notification.countDocuments(query);
-
-    // Get notifications
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const result = await NotificationDAL.findByUser(userId, {
+      page,
+      limit,
+      listId,
+      unreadOnly,
+    });
 
     return {
-      notifications: notifications.map(transformNotification),
+      notifications: result.notifications.map(transformNotification),
       pagination: {
-        total,
+        total: result.total,
         page,
         limit,
-        pages: Math.ceil(total / limit),
+        pages: result.pages,
       },
     };
   }
@@ -268,16 +260,7 @@ export class NotificationService {
    * Get unread notification count for a user
    */
   static async getUnreadCount(userId: string, listId?: string): Promise<number> {
-    const query: Record<string, unknown> = {
-      targetUserId: new mongoose.Types.ObjectId(userId),
-      read: false,
-    };
-
-    if (listId) {
-      query.listId = new mongoose.Types.ObjectId(listId);
-    }
-
-    return Notification.countDocuments(query);
+    return NotificationDAL.countUnread(userId, listId);
   }
 
   /**
@@ -287,13 +270,14 @@ export class NotificationService {
     notificationId: string,
     userId: string
   ): Promise<NotificationResponse> {
-    const notification = await Notification.findOne({
+    // First verify the notification belongs to the user
+    const notification = await NotificationDAL.findOne({
       _id: new mongoose.Types.ObjectId(notificationId),
       targetUserId: new mongoose.Types.ObjectId(userId),
     });
 
     if (!notification) {
-      throw ApiError.notFound('Notification not found');
+      throw NotFoundError.notification();
     }
 
     notification.read = true;
@@ -306,42 +290,20 @@ export class NotificationService {
    * Mark all notifications as read for a user
    */
   static async markAllAsRead(userId: string, listId?: string): Promise<number> {
-    const query: Record<string, unknown> = {
-      targetUserId: new mongoose.Types.ObjectId(userId),
-      read: false,
-    };
-
-    if (listId) {
-      query.listId = new mongoose.Types.ObjectId(listId);
-    }
-
-    const result = await Notification.updateMany(query, { read: true });
-
-    return result.modifiedCount;
+    return NotificationDAL.markAllAsRead(userId, listId);
   }
 
   /**
    * Delete notifications for a specific list (used when list is deleted)
    */
   static async deleteNotificationsForList(listId: string): Promise<number> {
-    const result = await Notification.deleteMany({
-      listId: new mongoose.Types.ObjectId(listId),
-    });
-
-    return result.deletedCount;
+    return NotificationDAL.deleteByListId(listId);
   }
 
   /**
    * Delete old notifications (manual cleanup if needed, TTL index handles this automatically)
    */
   static async deleteOldNotifications(days: number): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const result = await Notification.deleteMany({
-      createdAt: { $lt: cutoffDate },
-    });
-
-    return result.deletedCount;
+    return NotificationDAL.deleteOldNotifications(days);
   }
 }

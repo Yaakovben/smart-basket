@@ -3,9 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
+import morgan from 'morgan';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
-import { env } from './config';
+import { env, morganStream } from './config';
 
 const app = express();
 
@@ -45,6 +46,14 @@ app.use(mongoSanitize());
 
 // Compression
 app.use(compression());
+
+// HTTP Request logging
+// Format: "POST /api/auth/login 200 45ms"
+morgan.token('body-size', (req) => {
+  const size = req.headers['content-length'];
+  return size ? `${size}b` : '-';
+});
+app.use(morgan(':method :url :status :response-time ms :body-size', { stream: morganStream }));
 
 // Rate limiting for API routes
 app.use('/api', apiLimiter);

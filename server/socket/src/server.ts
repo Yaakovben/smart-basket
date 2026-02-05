@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { env } from './config';
+import { env, logger } from './config';
 import { authenticateSocket } from './middleware/auth.middleware';
 import {
   registerListHandlers,
@@ -22,7 +22,7 @@ if (env.SENTRY_DSN) {
     // Performance monitoring
     tracesSampleRate: 0.1,
   });
-  console.log('Sentry error monitoring initialized for Socket server');
+  logger.info('Sentry error monitoring initialized for Socket server');
 }
 
 const httpServer = createServer((req, res) => {
@@ -66,7 +66,7 @@ io.use(authenticateSocket);
 // Connection handler
 io.on('connection', (socket) => {
   const authSocket = socket as AuthenticatedSocket;
-  console.log(`User connected: ${authSocket.userId}`);
+  logger.info(`User connected: ${authSocket.userId}`);
 
   // Join user's personal room for direct notifications
   authSocket.join(`user:${authSocket.userId}`);
@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
 
   // Error handling
   authSocket.on('error', (error) => {
-    console.error(`Socket error for user ${authSocket.userId}:`, error);
+    logger.error(`Socket error for user ${authSocket.userId}:`, error);
     Sentry.captureException(error, {
       extra: { userId: authSocket.userId },
     });
@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
   });
 
   authSocket.on('disconnect', (reason) => {
-    console.log(`User disconnected: ${authSocket.userId} - ${reason}`);
+    logger.info(`User disconnected: ${authSocket.userId} - ${reason}`);
   });
 });
 
@@ -95,15 +95,15 @@ initRedis(io);
 
 // Start server
 httpServer.listen(env.PORT, () => {
-  console.log(`Socket.io server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+  logger.info(`Socket.io server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
 });
 
 // Graceful shutdown
 const shutdown = () => {
-  console.log('Shutting down socket server...');
+  logger.info('Shutting down socket server...');
   closeRedis();
   io.close(() => {
-    console.log('Socket server closed');
+    logger.info('Socket server closed');
     process.exit(0);
   });
 };
@@ -113,13 +113,13 @@ process.on('SIGINT', shutdown);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled Rejection at:', { promise, reason });
   Sentry.captureException(reason);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception:', error);
   Sentry.captureException(error);
   process.exit(1);
 });

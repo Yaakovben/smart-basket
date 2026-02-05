@@ -1,33 +1,33 @@
 import mongoose from 'mongoose';
-import { List, type IProduct } from '../models';
-import { ApiError, sanitizeText, convertProductsAddedBy } from '../utils';
-import type { CreateProductInput, UpdateProductInput } from '../utils/validators';
+import { type IProduct, type IList } from '../models';
+import { ListDAL } from '../dal';
+import { NotFoundError, ForbiddenError } from '../errors';
+import { sanitizeText, convertProductsAddedBy } from '../utils';
+import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IListResponse } from '../types';
 
 // Helper to check list access
 const checkListAccess = async (
   listId: string,
   userId: string
-): Promise<typeof List.prototype> => {
-  const list = await List.findById(listId);
+): Promise<IList> => {
+  const list = await ListDAL.findById(listId);
 
   if (!list) {
-    throw ApiError.notFound('List not found');
+    throw NotFoundError.list();
   }
 
-  const hasAccess =
-    list.owner.toString() === userId ||
-    list.members.some((m) => m.user.toString() === userId);
+  const hasAccess = await ListDAL.isMember(listId, userId);
 
   if (!hasAccess) {
-    throw ApiError.forbidden('You do not have access to this list');
+    throw ForbiddenError.noAccess();
   }
 
   return list;
 };
 
 // Helper to transform list
-const transformList = async (list: typeof List.prototype): Promise<IListResponse> => {
+const transformList = async (list: IList): Promise<IListResponse> => {
   // Run all populate queries in parallel for better performance
   await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
@@ -60,7 +60,7 @@ export class ProductService {
       isPurchased: false,
       addedBy: new mongoose.Types.ObjectId(userId),
       createdAt: new Date(),
-    });
+    } as IProduct);
 
     await list.save();
 
@@ -80,7 +80,7 @@ export class ProductService {
     );
 
     if (!product) {
-      throw ApiError.notFound('Product not found');
+      throw NotFoundError.product();
     }
 
     // Update product fields
@@ -107,7 +107,7 @@ export class ProductService {
     );
 
     if (productIndex === -1) {
-      throw ApiError.notFound('Product not found');
+      throw NotFoundError.product();
     }
 
     list.products.splice(productIndex, 1);
@@ -128,7 +128,7 @@ export class ProductService {
     );
 
     if (!product) {
-      throw ApiError.notFound('Product not found');
+      throw NotFoundError.product();
     }
 
     product.isPurchased = !product.isPurchased;

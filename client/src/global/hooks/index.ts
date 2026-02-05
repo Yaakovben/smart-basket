@@ -54,8 +54,23 @@ export interface InitialData {
 
 // ===== useAuth Hook =====
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Check for cached user in localStorage for instant render
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('cached_user');
+      if (cached && getAccessToken()) {
+        return JSON.parse(cached);
+      }
+    } catch { /* ignore */ }
+    return null;
+  });
+  // Only show loading briefly if we have a token but no cached user
+  const [loading, setLoading] = useState(() => {
+    const hasToken = !!getAccessToken();
+    const hasCachedUser = !!localStorage.getItem('cached_user');
+    // Only loading if we have token but no cached user (need to validate)
+    return hasToken && !hasCachedUser;
+  });
   // Pre-fetched data for faster initial load (fetched in parallel with profile)
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
 
@@ -63,43 +78,61 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       const token = getAccessToken();
-      if (token) {
-        try {
-          // Fetch profile, lists, and notifications in PARALLEL for faster initial load
-          const [profile, listsResult, notificationsResult] = await Promise.all([
-            authApi.getProfile(),
-            listsApi.getLists().catch(() => null), // Don't fail auth if lists fail
-            import('../../services/api').then(({ notificationsApi }) =>
-              notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
-            ),
-          ]);
+      if (!token) {
+        // No token - clear any cached user and stop loading
+        localStorage.removeItem('cached_user');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
-          setUser(profile);
+      // If we have a cached user, connect socket immediately while we validate
+      if (user) {
+        socketService.connect();
+      }
 
-          // Store pre-fetched data for hooks to consume
-          setInitialData({
-            lists: listsResult,
-            notifications: notificationsResult ? {
-              notifications: notificationsResult.notifications,
-              unreadCount: notificationsResult.notifications.filter(n => !n.read).length,
-            } : null,
-          });
+      try {
+        // Fetch profile, lists, and notifications in PARALLEL
+        const [profile, listsResult, notificationsResult] = await Promise.all([
+          authApi.getProfile(),
+          listsApi.getLists().catch(() => null),
+          import('../../services/api').then(({ notificationsApi }) =>
+            notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
+          ),
+        ]);
 
-          // Connect socket when authenticated
-          socketService.connect();
-        } catch {
-          // Token invalid, clear it
-          clearTokens();
-        }
+        // Cache user for next load
+        localStorage.setItem('cached_user', JSON.stringify(profile));
+        setUser(profile);
+
+        // Store pre-fetched data for hooks to consume
+        setInitialData({
+          lists: listsResult,
+          notifications: notificationsResult ? {
+            notifications: notificationsResult.notifications,
+            unreadCount: notificationsResult.notifications.filter(n => !n.read).length,
+          } : null,
+        });
+
+        // Connect socket when authenticated (if not already connected)
+        socketService.connect();
+      } catch {
+        // Token invalid, clear everything
+        clearTokens();
+        localStorage.removeItem('cached_user');
+        setUser(null);
       }
       setLoading(false);
     };
     checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
+      // Cache user for instant load on next visit
+      localStorage.setItem('cached_user', JSON.stringify(userData));
       setUser(userData);
       // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
@@ -122,6 +155,7 @@ export function useAuth() {
       // Ignore errors, just clear local state
     }
     socketService.disconnect();
+    localStorage.removeItem('cached_user');
     setUser(null);
   }, []);
 
@@ -130,6 +164,7 @@ export function useAuth() {
       if (!user) return;
       try {
         const updatedUser = await authApi.updateProfile(updates);
+        localStorage.setItem('cached_user', JSON.stringify(updatedUser));
         setUser(updatedUser);
       } catch (error) {
         console.error('Failed to update profile:', error);
@@ -283,6 +318,9 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
 
   const updateList = useCallback(
     async (updatedList: List) => {
+      // Find old list to compare what changed
+      const oldList = lists.find((l) => l.id === updatedList.id);
+
       try {
         const updated = await listsApi.updateList(updatedList.id, {
           name: updatedList.name,
@@ -293,15 +331,34 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
           prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
         );
         // Emit socket event for group lists to notify other members in real-time
-        if (updatedList.isGroup && user) {
-          socketService.emitListUpdated(updatedList.id, updatedList.name, user.name);
+        if (updatedList.isGroup && user && oldList) {
+          // Determine what changed
+          const nameChanged = oldList.name !== updatedList.name;
+          const designChanged = oldList.icon !== updatedList.icon || oldList.color !== updatedList.color;
+
+          let changeType: 'name' | 'design' | 'both' | undefined;
+          if (nameChanged && designChanged) {
+            changeType = 'both';
+          } else if (nameChanged) {
+            changeType = 'name';
+          } else if (designChanged) {
+            changeType = 'design';
+          }
+
+          socketService.emitListUpdated(
+            updatedList.id,
+            oldList.name, // Send old name for context
+            user.name,
+            changeType,
+            nameChanged ? updatedList.name : undefined
+          );
         }
       } catch (error) {
         console.error('Failed to update list:', error);
         throw error;
       }
     },
-    [user],
+    [user, lists],
   );
 
   const deleteList = useCallback(
@@ -338,9 +395,14 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         socketService.emitMemberJoined(joinedList.id, joinedList.name, user.name);
         return { success: true };
       } catch (error: unknown) {
-        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } } };
+        const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string };
         const status = apiError.response?.status;
         const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
+
+        // Check for network error first
+        if (apiError.code === 'ERR_NETWORK') {
+          return { success: false, error: 'networkError' };
+        }
 
         // Map specific errors to translation keys
         // Check message content first before falling back to status codes
@@ -350,7 +412,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
           return { success: false, error: 'invalidGroupCode' };
         }
-        if (status === 401 || errorMessage?.toLowerCase().includes('invalid password')) {
+        if (status === 400 || status === 401 || errorMessage?.toLowerCase().includes('invalid password')) {
           return { success: false, error: 'invalidGroupPassword' };
         }
         if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {

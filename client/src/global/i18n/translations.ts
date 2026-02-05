@@ -205,6 +205,7 @@ type TranslationKey =
   | 'deleteGroupTitle'
   | 'deleteListTitle'
   | 'deleteConfirmMessage'
+  | 'deleteDataWarning'
   | 'errorOccurred'
   | 'noNotifications'
   | 'home'
@@ -479,6 +480,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'מחיקת קבוצה',
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
+    deleteDataWarning: 'פעולה זו תמחק:\n• כל הרשימות הפרטיות שלך\n• קבוצות שיצרת יועברו לחבר אחר\n• תוסר מקבוצות שהצטרפת אליהן\n• כל ההגדרות וההעדפות\n• חשבונך לצמיתות\n\nפעולה זו לא ניתנת לביטול!',
     errorOccurred: 'אירעה שגיאה',
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
@@ -532,7 +534,7 @@ export const translations: Record<Language, Translations> = {
     loginOrRegisterHint: 'אם אתה משתמש חדש, הזן את שמך. אם יש לך חשבון, בדוק את הסיסמה.',
     continue: 'המשך',
     change: 'שנה',
-    networkError: 'שגיאת חיבור לשרת',
+    networkError: 'בדוק את חיבור האינטרנט',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
@@ -750,6 +752,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Delete Group',
     deleteListTitle: 'Delete List',
     deleteConfirmMessage: 'This action cannot be undone',
+    deleteDataWarning: 'This will:\n• Delete all your private lists\n• Transfer groups you own to another member\n• Remove you from groups you joined\n• Delete all settings and preferences\n• Delete your account permanently\n\nThis action cannot be undone!',
     errorOccurred: 'An error occurred',
     noNotifications: 'No new notifications',
     home: 'Home',
@@ -803,7 +806,7 @@ export const translations: Record<Language, Translations> = {
     loginOrRegisterHint: 'If you\'re a new user, enter your name. If you have an account, check your password.',
     continue: 'Continue',
     change: 'Change',
-    networkError: 'Server connection error',
+    networkError: 'Check your internet connection',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
     noUserData: 'Error: No user data received from server',
@@ -1021,6 +1024,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'Удалить группу',
     deleteListTitle: 'Удалить список',
     deleteConfirmMessage: 'Это действие нельзя отменить',
+    deleteDataWarning: 'Это действие:\n• Удалит все ваши личные списки\n• Передаст ваши группы другому участнику\n• Удалит вас из групп, в которых вы состоите\n• Удалит все настройки и предпочтения\n• Удалит ваш аккаунт навсегда\n\nЭто действие нельзя отменить!',
     errorOccurred: 'Произошла ошибка',
     noNotifications: 'Нет новых уведомлений',
     home: 'Главная',
@@ -1074,7 +1078,7 @@ export const translations: Record<Language, Translations> = {
     loginOrRegisterHint: 'Если вы новый пользователь, введите имя. Если у вас есть аккаунт, проверьте пароль.',
     continue: 'Продолжить',
     change: 'Изменить',
-    networkError: 'Ошибка подключения к серверу',
+    networkError: 'Проверьте подключение к интернету',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',

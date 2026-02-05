@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import * as Sentry from '@sentry/node';
 import { ApiError } from '../utils';
-import { env } from '../config';
+import { AppError } from '../errors';
+import { env, logger } from '../config';
 
 export const errorHandler = (
   err: Error,
@@ -10,18 +11,26 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  // Log error in development
-  if (env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  }
+  // Log all errors with logger
+  logger.error(`${err.name}: ${err.message}`, { stack: err.stack });
 
   // Default error
   let statusCode = 500;
   let message = 'Internal server error';
   let errors: { field: string; message: string }[] | undefined;
+  let code: string | undefined;
 
-  // Custom ApiError
-  if (err instanceof ApiError) {
+  // New AppError (from errors/ directory)
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+    code = err.code;
+    if (Array.isArray(err.details)) {
+      errors = err.details as { field: string; message: string }[];
+    }
+  }
+  // Legacy ApiError (from utils/)
+  else if (err instanceof ApiError) {
     statusCode = err.statusCode;
     message = err.message;
     errors = err.errors;
@@ -59,7 +68,8 @@ export const errorHandler = (
   res.status(statusCode).json({
     success: false,
     message,
-    errors,
+    ...(code && { code }),
+    ...(errors && { errors }),
     ...(env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
