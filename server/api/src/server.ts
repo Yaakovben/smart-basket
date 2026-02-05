@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/node';
+import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
+import { initRedis, closeRedis } from './services';
 
 // Initialize Sentry error monitoring (must be first)
 if (env.SENTRY_DSN) {
@@ -15,14 +17,19 @@ if (env.SENTRY_DSN) {
   logger.info('Sentry error monitoring initialized');
 }
 
+let server: ReturnType<typeof app.listen>;
+
 const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDatabase();
     logger.info('Connected to MongoDB');
 
+    // Initialize Redis for caching (optional - continues without it)
+    initRedis();
+
     // Start the server
-    app.listen(env.PORT, () => {
+    server = app.listen(env.PORT, () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
   } catch (error) {
@@ -31,6 +38,45 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// Graceful shutdown handler
+const shutdown = async (signal: string) => {
+  logger.info(`${signal} received. Starting graceful shutdown...`);
+
+  // Stop accepting new connections
+  if (server) {
+    server.close(async () => {
+      logger.info('HTTP server closed');
+
+      try {
+        // Close Redis connection
+        await closeRedis();
+
+        // Close MongoDB connection
+        await mongoose.connection.close();
+        logger.info('MongoDB connection closed');
+
+        logger.info('Graceful shutdown completed');
+        process.exit(0);
+      } catch (error) {
+        logger.error('Error during shutdown:', error);
+        process.exit(1);
+      }
+    });
+
+    // Force shutdown after 10 seconds if graceful shutdown fails
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+};
+
+// Handle shutdown signals
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 // Handle unhandled promise rejections - log and continue
 process.on('unhandledRejection', (reason, promise) => {

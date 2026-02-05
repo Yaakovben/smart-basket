@@ -67,6 +67,9 @@ const envSchema = Joi.object({
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
   VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:yaakovbenyizchak1@gmail.com'),
+
+  // Redis URL for caching (optional) - format: redis://[[username][:password]@][host][:port][/db-number]
+  REDIS_URL: Joi.string().optional(),
 }).unknown(true); // Allow other env variables
 
 const parseEnv = () => {
@@ -101,6 +104,7 @@ export interface Environment {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_EMAIL: string;
+  REDIS_URL?: string;
 }
 
 export const env = parseEnv();
