@@ -59,7 +59,7 @@
   </style>
   </head>
   <body>
-    <!-- Initial loading state - WhatsApp style: icon first, spinner after 5s -->
+    <!-- Initial loading state - Animated basket with items flying in -->
     <div id="initial-loader" style="
       position: fixed;
       top: 0;
@@ -75,15 +75,31 @@
       z-index: 9999;
       overflow: hidden;
     ">
-      <!-- App Icon - Basket with checkmark (inline SVG for instant display) -->
-      <svg width="120" height="120" viewBox="0 0 64 64" style="filter: drop-shadow(0 12px 32px rgba(0,0,0,0.2)); animation: pulse 2s ease-in-out infinite;">
-        <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.25)"/>
-        <g fill="white">
-          <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
-          <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <path d="M26 32 L30 36 L38 28" stroke="#2DD4BF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-      </svg>
+      <!-- Animated Basket with flying items -->
+      <div style="position: relative; width: 140px; height: 140px;">
+        <!-- Flying items (groceries) -->
+        <div class="flying-item" style="--delay: 0s; --start-x: -50px; --color: #FF6B6B;">🍎</div>
+        <div class="flying-item" style="--delay: 0.4s; --start-x: 50px; --color: #4ECDC4;">🥕</div>
+        <div class="flying-item" style="--delay: 0.8s; --start-x: -40px; --color: #FFE66D;">🧀</div>
+        <div class="flying-item" style="--delay: 1.2s; --start-x: 45px; --color: #95E1D3;">🥛</div>
+        <div class="flying-item" style="--delay: 1.6s; --start-x: -55px; --color: #F38181;">🍞</div>
+
+        <!-- App Icon - Basket -->
+        <svg width="120" height="120" viewBox="0 0 64 64" style="
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          filter: drop-shadow(0 12px 32px rgba(0,0,0,0.2));
+          animation: basketBounce 2s ease-in-out infinite;
+        ">
+          <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.25)"/>
+          <g fill="white">
+            <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
+            <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M26 32 L30 36 L38 28" stroke="#2DD4BF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+        </svg>
+      </div>
 
       <!-- App Name -->
       <div style="color: white; font-size: 24px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -106,7 +122,40 @@
       <style>
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+        @keyframes basketBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+
+        @keyframes flyToBasket {
+          0% {
+            transform: translate(var(--start-x), 80px) scale(1);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate(0, 0) scale(0.3);
+            opacity: 0;
+          }
+        }
+
+        .flying-item {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          font-size: 28px;
+          animation: flyToBasket 2s ease-in-out infinite;
+          animation-delay: var(--delay);
+          opacity: 0;
+          z-index: 10;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+        }
       </style>
     </div>
     <div id="root"></div>
