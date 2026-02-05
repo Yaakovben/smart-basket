@@ -6,4 +6,3 @@ export { ListMembershipService } from './list-membership.service';
 export { ProductService } from './product.service';
 export { NotificationService } from './notification.service';
 export { PushService, type PushPayload } from './push.service';
-export { CacheService, CacheTTL, CachePrefix, initRedis, closeRedis } from './cache.service';

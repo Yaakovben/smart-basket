@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/node';
 import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
-import { initRedis, closeRedis } from './services';
 
 // Initialize Sentry error monitoring (must be first)
 if (env.SENTRY_DSN) {
@@ -25,9 +24,6 @@ const startServer = async () => {
     await connectDatabase();
     logger.info('Connected to MongoDB');
 
-    // Initialize Redis for caching (optional - continues without it)
-    initRedis();
-
     // Start the server
     server = app.listen(env.PORT, () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
@@ -49,9 +45,6 @@ const shutdown = async (signal: string) => {
       logger.info('HTTP server closed');
 
       try {
-        // Close Redis connection
-        await closeRedis();
-
         // Close MongoDB connection
         await mongoose.connection.close();
         logger.info('MongoDB connection closed');
