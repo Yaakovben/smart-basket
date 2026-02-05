@@ -3,9 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
+import morgan from 'morgan';
+import swaggerUi from 'swagger-ui-express';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
-import { env } from './config';
+import { env, morganStream, swaggerSpec } from './config';
 
 const app = express();
 
@@ -46,6 +48,14 @@ app.use(mongoSanitize());
 // Compression
 app.use(compression());
 
+// HTTP Request logging
+// Format: "POST /api/auth/login 200 45ms"
+morgan.token('body-size', (req) => {
+  const size = req.headers['content-length'];
+  return size ? `${size}b` : '-';
+});
+app.use(morgan(':method :url :status :response-time ms :body-size', { stream: morganStream }));
+
 // Rate limiting for API routes
 app.use('/api', apiLimiter);
 
@@ -62,6 +72,17 @@ app.use('/api', (_req, res, next) => {
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Swagger API Documentation (only in development)
+if (env.NODE_ENV !== 'production') {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'SmartBasket API Docs',
+  }));
+  app.get('/api/docs.json', (_req, res) => {
+    res.json(swaggerSpec);
+  });
+}
 
 // API routes
 app.use('/api', routes);

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers';
 import { authenticate, validate } from '../middleware';
-import { updateProfileSchema } from '../utils/validators';
+import { userValidator } from '../validators';
 
 const router = Router();
 
@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/me', UserController.getProfile);
-router.put('/me', validate(updateProfileSchema), UserController.updateProfile);
+router.put('/me', validate(userValidator.updateProfile), UserController.updateProfile);
 router.delete('/me', UserController.deleteAccount);
 
 export default router;

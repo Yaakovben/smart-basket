@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Divider
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -700,7 +700,10 @@ export const HomeComponent = memo(({
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden', maxHeight: '60vh', overflowY: 'auto' }}>
-              {allNotifications.map((n) => {
+              {allNotifications.map((n, index) => {
+                // Check if type changed from previous notification
+                const prevNotification = index > 0 ? allNotifications[index - 1] : null;
+                const showDivider = prevNotification && prevNotification.type !== n.type;
                 const isDismissing = dismissingNotifications.has(n.id);
                 const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
                 const dateStr = notificationDate ? notificationDate.toLocaleDateString('he-IL') : '';
@@ -750,23 +753,26 @@ export const HomeComponent = memo(({
                 const style = getNotificationStyle();
 
                 return (
-                  <Box
-                    key={n.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1.5,
-                      p: 1.75,
-                      bgcolor: style.bgcolor,
-                      borderRadius: '12px',
-                      border: `1px solid ${style.border}`,
-                      transition: 'all 0.3s ease',
-                      ...(isDismissing && {
-                        ...notificationDismissKeyframes,
-                        animation: 'notificationDismiss 0.6s ease-in-out forwards',
-                      }),
-                    }}
-                  >
+                  <Box key={n.id}>
+                    {showDivider && (
+                      <Divider sx={{ my: 1, borderColor: 'divider', opacity: 0.6 }} />
+                    )}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        p: 1.75,
+                        bgcolor: style.bgcolor,
+                        borderRadius: '12px',
+                        border: `1px solid ${style.border}`,
+                        transition: 'all 0.3s ease',
+                        ...(isDismissing && {
+                          ...notificationDismissKeyframes,
+                          animation: 'notificationDismiss 0.6s ease-in-out forwards',
+                        }),
+                      }}
+                    >
                     <Avatar sx={{ bgcolor: style.border, width: 40, height: 40, fontSize: 20 }}>
                       {style.emoji}
                     </Avatar>
@@ -810,6 +816,7 @@ export const HomeComponent = memo(({
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>
+                    </Box>
                   </Box>
                 );
               })}

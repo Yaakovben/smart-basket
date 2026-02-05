@@ -1,14 +1,16 @@
-import { User, List, PushSubscription } from '../models';
-import { ApiError, sanitizeText } from '../utils';
+import { List, PushSubscription } from '../models';
+import { UserDAL } from '../dal';
+import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
+import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
-import type { UpdateProfileInput } from '../utils/validators';
+import type { UpdateProfileInput } from '../validators';
 import type { IUserResponse } from '../types';
 
 export class UserService {
   static async getProfile(userId: string): Promise<IUserResponse> {
-    const user = await User.findById(userId);
+    const user = await UserDAL.findById(userId);
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
     return user.toJSON() as IUserResponse;
   }
@@ -19,12 +21,9 @@ export class UserService {
   ): Promise<IUserResponse> {
     // Check if email is being changed and if it's already taken
     if (data.email) {
-      const existingUser = await User.findOne({
-        email: data.email.toLowerCase(),
-        _id: { $ne: userId },
-      });
-      if (existingUser) {
-        throw ApiError.conflict('Email already in use');
+      const existingUser = await UserDAL.findByEmail(data.email);
+      if (existingUser && existingUser._id.toString() !== userId) {
+        throw new ConflictError('Email already in use');
       }
       data.email = data.email.toLowerCase();
     }
@@ -34,14 +33,10 @@ export class UserService {
       data.name = sanitizeText(data.name);
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: data },
-      { new: true, runValidators: true }
-    );
+    const user = await UserDAL.updateProfile(userId, data);
 
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
 
     return user.toJSON() as IUserResponse;
@@ -53,21 +48,21 @@ export class UserService {
     newPassword: string
   ): Promise<void> {
     // Find user with password field
-    const user = await User.findById(userId).select('+password');
+    const user = await UserDAL.findByIdWithPassword(userId);
 
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
 
     // Check if user has a password (Google users might not have one)
     if (!user.password) {
-      throw ApiError.badRequest('Cannot change password for Google-authenticated accounts');
+      throw ValidationError.single('password', 'Cannot change password for Google-authenticated accounts');
     }
 
     // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
-      throw ApiError.unauthorized('Current password is incorrect');
+      throw AuthError.invalidCredentials();
     }
 
     // Update password (will be hashed by pre-save hook)
@@ -119,9 +114,9 @@ export class UserService {
     await TokenService.invalidateAllUserTokens(userId);
 
     // 6. Delete user
-    const user = await User.findByIdAndDelete(userId);
+    const user = await UserDAL.deleteById(userId);
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
   }
 }

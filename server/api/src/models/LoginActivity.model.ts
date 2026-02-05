@@ -43,6 +43,9 @@ loginActivitySchema.index({ user: 1 });
 loginActivitySchema.index({ createdAt: -1 });
 loginActivitySchema.index({ loginMethod: 1 });
 
+// TTL index - auto-delete records older than 90 days
+loginActivitySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+
 export const LoginActivity = mongoose.model<ILoginActivity>(
   'LoginActivity',
   loginActivitySchema

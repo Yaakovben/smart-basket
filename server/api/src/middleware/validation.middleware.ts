@@ -1,25 +1,62 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
-import { ApiError } from '../utils';
+import Joi from 'joi';
+import { ValidationError } from '../errors';
 
-export const validate = (schema: ZodSchema) => {
+type ValidationTarget = 'body' | 'params' | 'query';
+
+interface ValidateOptions {
+  body?: Joi.Schema;
+  params?: Joi.Schema;
+  query?: Joi.Schema;
+}
+
+/**
+ * Validation middleware using JOI
+ * Can validate body, params, and/or query separately
+ *
+ * Usage:
+ *   validate({ body: schema })
+ *   validate({ body: schema, params: paramsSchema })
+ *   validate(bodySchema) // shorthand for body only
+ */
+export function validate(schema: Joi.Schema | ValidateOptions) {
+  // Support shorthand: validate(schema) means validate body
+  const options: ValidateOptions =
+    'body' in schema || 'params' in schema || 'query' in schema
+      ? (schema as ValidateOptions)
+      : { body: schema as Joi.Schema };
+
   return (req: Request, _res: Response, next: NextFunction) => {
-    try {
-      schema.parse({
-        body: req.body,
-        params: req.params,
-        query: req.query,
+    const errors: Array<{ field: string; message: string }> = [];
+
+    const targets: ValidationTarget[] = ['body', 'params', 'query'];
+
+    for (const target of targets) {
+      const targetSchema = options[target];
+      if (!targetSchema) continue;
+
+      const { error, value } = targetSchema.validate(req[target], {
+        abortEarly: false,
+        stripUnknown: true,
       });
-      next();
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const errors = error.errors.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-        }));
-        throw ApiError.badRequest('Validation error', errors);
+
+      if (error) {
+        for (const detail of error.details) {
+          errors.push({
+            field: target === 'body' ? detail.path.join('.') : `${target}.${detail.path.join('.')}`,
+            message: detail.message,
+          });
+        }
+      } else {
+        // Replace with validated/sanitized values
+        req[target] = value;
       }
-      throw error;
     }
+
+    if (errors.length > 0) {
+      throw new ValidationError(errors);
+    }
+
+    next();
   };
-};
+}

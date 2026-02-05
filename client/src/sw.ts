@@ -3,7 +3,7 @@ import { precacheAndRoute } from 'workbox-precaching';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Precache assets (injected by VitePWA)
+// VitePWA requires this - globPatterns is empty so nothing is actually cached
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Push notification handler
@@ -72,7 +72,18 @@ self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate event - claim clients immediately
+// Activate event - clear all caches, notify clients to reload, and claim
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys()
+      .then((cacheNames) => Promise.all(cacheNames.map((name) => caches.delete(name))))
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((clients) => {
+        // Tell all open windows to reload for fresh content
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
+        });
+      })
+      .then(() => self.clients.claim())
+  );
 });

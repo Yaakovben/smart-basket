@@ -37,8 +37,8 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
       // Update unread count
       const count = result.notifications.filter(n => !n.read).length;
       setUnreadCount(count);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+    } catch {
+      // Silent fail
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,6 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
         // Notification doesn't exist in DB, but we already updated local state - that's fine
         return;
       }
-      console.error('Failed to mark notification as read:', error);
       // Revert on other errors
       fetchNotifications();
     }
@@ -94,8 +93,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
       // Persist to API
       await notificationsApi.markAllAsRead(listId);
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+    } catch {
       // Revert on error
       fetchNotifications();
     }

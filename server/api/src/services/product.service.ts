@@ -1,46 +1,51 @@
-import mongoose from 'mongoose';
-import { List, type IProduct } from '../models';
-import { ApiError, sanitizeText, convertProductsAddedBy } from '../utils';
-import type { CreateProductInput, UpdateProductInput } from '../utils/validators';
+import { ListDAL, ProductDAL } from '../dal';
+import { NotFoundError, ForbiddenError } from '../errors';
+import { sanitizeText } from '../utils';
+import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IListResponse } from '../types';
+import type { IList } from '../models';
 
 // Helper to check list access
 const checkListAccess = async (
   listId: string,
   userId: string
-): Promise<typeof List.prototype> => {
-  const list = await List.findById(listId);
+): Promise<IList> => {
+  const list = await ListDAL.findById(listId);
 
   if (!list) {
-    throw ApiError.notFound('List not found');
+    throw NotFoundError.list();
   }
 
-  const hasAccess =
-    list.owner.toString() === userId ||
-    list.members.some((m) => m.user.toString() === userId);
+  const hasAccess = await ListDAL.isMember(listId, userId);
 
   if (!hasAccess) {
-    throw ApiError.forbidden('You do not have access to this list');
+    throw ForbiddenError.noAccess();
   }
 
   return list;
 };
 
-// Helper to transform list
-const transformList = async (list: typeof List.prototype): Promise<IListResponse> => {
-  // Run all populate queries in parallel for better performance
+// Helper to transform list with products from separate collection
+const transformListWithProducts = async (list: IList): Promise<IListResponse> => {
+  // Populate list fields
   await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
     list.populate('members.user', 'name email avatarColor avatarEmoji'),
-    list.populate('products.addedBy', 'name'),
   ]);
+
+  // Fetch products separately from Product collection
+  const products = await ProductDAL.findByListId(list._id.toString());
 
   const json = list.toJSON() as Record<string, unknown>;
 
-  // Convert products.addedBy from object to string (just the name)
-  if (json.products && Array.isArray(json.products)) {
-    json.products = convertProductsAddedBy(json.products as Record<string, unknown>[]);
-  }
+  // Add products to the response (transform addedBy to just the name string)
+  json.products = products.map((p) => {
+    const pJson = p.toJSON() as Record<string, unknown>;
+    if (pJson.addedBy && typeof pJson.addedBy === 'object') {
+      pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
+    }
+    return pJson;
+  });
 
   return json as unknown as IListResponse;
 };
@@ -53,18 +58,16 @@ export class ProductService {
   ): Promise<IListResponse> {
     const list = await checkListAccess(listId, userId);
 
-    list.products.push({
-      _id: new mongoose.Types.ObjectId(),
-      ...data,
-      name: sanitizeText(data.name), // Sanitize product name
-      isPurchased: false,
-      addedBy: new mongoose.Types.ObjectId(userId),
-      createdAt: new Date(),
+    await ProductDAL.createProduct({
+      listId,
+      name: sanitizeText(data.name),
+      quantity: data.quantity ?? 1,
+      unit: data.unit ?? 'יח׳',
+      category: data.category ?? 'אחר',
+      addedBy: userId,
     });
 
-    await list.save();
-
-    return transformList(list);
+    return transformListWithProducts(list);
   }
 
   static async updateProduct(
@@ -75,24 +78,21 @@ export class ProductService {
   ): Promise<IListResponse> {
     const list = await checkListAccess(listId, userId);
 
-    const product = list.products.find(
-      (p: IProduct) => p._id.toString() === productId
-    );
-
-    if (!product) {
-      throw ApiError.notFound('Product not found');
+    const product = await ProductDAL.findById(productId);
+    if (!product || product.listId.toString() !== listId) {
+      throw NotFoundError.product();
     }
 
-    // Update product fields
-    if (data.name !== undefined) product.name = sanitizeText(data.name);
-    if (data.quantity !== undefined) product.quantity = data.quantity;
-    if (data.unit !== undefined) product.unit = data.unit;
-    if (data.category !== undefined) product.category = data.category;
-    if (data.isPurchased !== undefined) product.isPurchased = data.isPurchased;
+    const updates: Record<string, unknown> = {};
+    if (data.name !== undefined) updates.name = sanitizeText(data.name);
+    if (data.quantity !== undefined) updates.quantity = data.quantity;
+    if (data.unit !== undefined) updates.unit = data.unit;
+    if (data.category !== undefined) updates.category = data.category;
+    if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
 
-    await list.save();
+    await ProductDAL.updateProduct(productId, updates);
 
-    return transformList(list);
+    return transformListWithProducts(list);
   }
 
   static async deleteProduct(
@@ -102,18 +102,14 @@ export class ProductService {
   ): Promise<IListResponse> {
     const list = await checkListAccess(listId, userId);
 
-    const productIndex = list.products.findIndex(
-      (p: IProduct) => p._id.toString() === productId
-    );
-
-    if (productIndex === -1) {
-      throw ApiError.notFound('Product not found');
+    const product = await ProductDAL.findById(productId);
+    if (!product || product.listId.toString() !== listId) {
+      throw NotFoundError.product();
     }
 
-    list.products.splice(productIndex, 1);
-    await list.save();
+    await ProductDAL.deleteProduct(productId);
 
-    return transformList(list);
+    return transformListWithProducts(list);
   }
 
   static async togglePurchased(
@@ -123,18 +119,14 @@ export class ProductService {
   ): Promise<IListResponse> {
     const list = await checkListAccess(listId, userId);
 
-    const product = list.products.find(
-      (p: IProduct) => p._id.toString() === productId
-    );
-
-    if (!product) {
-      throw ApiError.notFound('Product not found');
+    const product = await ProductDAL.findById(productId);
+    if (!product || product.listId.toString() !== listId) {
+      throw NotFoundError.product();
     }
 
-    product.isPurchased = !product.isPurchased;
-    await list.save();
+    await ProductDAL.togglePurchased(productId);
 
-    return transformList(list);
+    return transformListWithProducts(list);
   }
 
   static async reorderProducts(
@@ -144,26 +136,8 @@ export class ProductService {
   ): Promise<IListResponse> {
     const list = await checkListAccess(listId, userId);
 
-    // Create a map of products by ID
-    const productMap = new Map(
-      list.products.map((p: IProduct) => [p._id.toString(), p])
-    );
+    await ProductDAL.reorderProducts(listId, productIds);
 
-    // Reorder products based on provided order
-    const reorderedProducts = productIds
-      .map((id) => productMap.get(id))
-      .filter((p): p is IProduct => p !== undefined);
-
-    // Add any products that weren't in the provided order
-    list.products.forEach((p: IProduct) => {
-      if (!productIds.includes(p._id.toString())) {
-        reorderedProducts.push(p);
-      }
-    });
-
-    list.products = reorderedProducts;
-    await list.save();
-
-    return transformList(list);
+    return transformListWithProducts(list);
   }
 }

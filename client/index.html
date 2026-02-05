@@ -57,9 +57,58 @@
       background: none;
     }
   </style>
+  <!-- Force unregister old service workers (v2.0 migration) -->
+  <script>
+    (function() {
+      var forceReset = location.search.indexOf('force-reset') > -1;
+      var migrated = localStorage.getItem('sw_migrated_v2');
+      if ((forceReset || !migrated) && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          if (regs.length > 0 || forceReset) {
+            var unregisterAll = regs.length > 0
+              ? Promise.all(regs.map(function(r) { return r.unregister(); }))
+              : Promise.resolve();
+            unregisterAll.then(function() {
+              if ('caches' in window) {
+                caches.keys().then(function(names) {
+                  Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
+                    localStorage.clear();
+                    localStorage.setItem('sw_migrated_v2', '1');
+                    if (forceReset) {
+                      location.href = '/';
+                    } else {
+                      location.reload();
+                    }
+                  });
+                });
+              } else {
+                localStorage.clear();
+                localStorage.setItem('sw_migrated_v2', '1');
+                if (forceReset) {
+                  location.href = '/';
+                } else {
+                  location.reload();
+                }
+              }
+            });
+          }
+        });
+      }
+    })();
+  </script>
+  <!-- Listen for SW activation to reload with fresh content -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'SW_ACTIVATED') {
+          location.reload();
+        }
+      });
+    }
+  </script>
   </head>
   <body>
-    <!-- Initial loading state - WhatsApp style: icon first, spinner after 5s -->
+    <!-- Initial loading state - Animated basket with items flying in -->
     <div id="initial-loader" style="
       position: fixed;
       top: 0;
@@ -75,9 +124,9 @@
       z-index: 9999;
       overflow: hidden;
     ">
-      <!-- App Icon - Basket with checkmark (inline SVG for instant display) -->
-      <svg width="120" height="120" viewBox="0 0 64 64" style="filter: drop-shadow(0 12px 32px rgba(0,0,0,0.2)); animation: pulse 2s ease-in-out infinite;">
-        <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.25)"/>
+      <!-- Basket icon - static -->
+      <svg width="100" height="100" viewBox="0 0 64 64" style="filter: drop-shadow(0 8px 24px rgba(0,0,0,0.15));">
+        <rect width="64" height="64" rx="16" fill="rgba(255,255,255,0.2)"/>
         <g fill="white">
           <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
           <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
@@ -86,27 +135,47 @@
       </svg>
 
       <!-- App Name -->
-      <div style="color: white; font-size: 24px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <div style="color: white; font-size: 22px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0.5px;">
         SmartBasket
       </div>
 
-      <!-- Delayed spinner - only shows after 5 seconds -->
-      <div id="delayed-spinner" style="
-        width: 28px;
-        height: 28px;
-        border: 3px solid rgba(255,255,255,0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        opacity: 0;
-        margin-top: 8px;
-        animation: spin 0.8s linear infinite, fadeIn 0.3s ease forwards;
-        animation-delay: 0s, 5s;
-      "></div>
+      <!-- Loading dots -->
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
 
       <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        .loading-dots {
+          display: flex;
+          gap: 6px;
+          margin-top: 8px;
+          opacity: 0;
+          animation: showDots 0.3s ease-out 3s forwards;
+        }
+
+        .loading-dots span {
+          width: 8px;
+          height: 8px;
+          background: rgba(255,255,255,0.8);
+          border-radius: 50%;
+          animation: dot 1.4s ease-in-out infinite;
+          animation-delay: calc(3s + var(--i) * 0.2s);
+        }
+
+        .loading-dots span:nth-child(1) { --i: 0; }
+        .loading-dots span:nth-child(2) { --i: 1; }
+        .loading-dots span:nth-child(3) { --i: 2; }
+
+        @keyframes showDots {
+          to { opacity: 1; }
+        }
+
+        @keyframes dot {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+          40% { transform: scale(1); opacity: 1; }
+        }
       </style>
     </div>
     <div id="root"></div>

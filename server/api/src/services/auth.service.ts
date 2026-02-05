@@ -1,8 +1,10 @@
-import { User, LoginActivity } from '../models';
-import { ApiError, sanitizeText } from '../utils';
+import { LoginActivity } from '../models';
+import { UserDAL } from '../dal';
+import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
+import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
 import { env } from '../config';
-import type { RegisterInput, LoginInput } from '../utils/validators';
+import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
 
 interface GoogleUserInfo {
@@ -15,7 +17,7 @@ interface GoogleUserInfo {
 export class AuthService {
   // Check if email exists in the database
   static async checkEmail(email: string): Promise<{ exists: boolean; isGoogleAccount: boolean }> {
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+googleId');
+    const user = await UserDAL.findByEmail(email);
 
     if (!user) {
       return { exists: false, isGoogleAccount: false };
@@ -33,16 +35,16 @@ export class AuthService {
     userAgent?: string
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
     // Check if email already exists
-    const existingUser = await User.findOne({ email: data.email.toLowerCase() });
+    const existingUser = await UserDAL.findByEmail(data.email);
     if (existingUser) {
-      throw ApiError.conflict('Email already registered');
+      throw ConflictError.emailExists();
     }
 
     // Check if user should be admin
     const isAdmin = data.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
     // Create user with sanitized name
-    const user = await User.create({
+    const user = await UserDAL.create({
       name: sanitizeText(data.name),
       email: data.email.toLowerCase(),
       password: data.password,
@@ -78,27 +80,25 @@ export class AuthService {
     userAgent?: string
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
     // Find user with password
-    const user = await User.findOne({ email: data.email.toLowerCase() }).select(
-      '+password +googleId'
-    );
+    const user = await UserDAL.findByEmailWithPassword(data.email);
 
     if (!user) {
-      throw ApiError.notFound('User not found');
+      throw NotFoundError.user();
     }
 
     // Check if user registered with Google only (no password)
     if (!user.password && user.googleId) {
-      throw ApiError.badRequest('This account was created with Google. Please use Google Sign-In.');
+      throw ValidationError.single('email', 'This account was created with Google. Please use Google Sign-In.');
     }
 
     if (!user.password) {
-      throw ApiError.unauthorized('Invalid email or password');
+      throw AuthError.invalidCredentials();
     }
 
     // Check password
     const isMatch = await user.comparePassword(data.password);
     if (!isMatch) {
-      throw ApiError.unauthorized('Invalid email or password');
+      throw AuthError.invalidCredentials();
     }
 
     // Generate tokens
@@ -139,25 +139,24 @@ export class AuthService {
     );
 
     if (!response.ok) {
-      throw ApiError.unauthorized('Invalid Google access token');
+      throw AuthError.googleAuthFailed();
     }
 
     const googleUser = (await response.json()) as GoogleUserInfo;
 
     // Find or create user
-    let user = await User.findOne({
-      $or: [
-        { googleId: googleUser.sub },
-        { email: googleUser.email.toLowerCase() },
-      ],
-    });
+    let user = await UserDAL.findByGoogleId(googleUser.sub);
+
+    if (!user) {
+      user = await UserDAL.findByEmail(googleUser.email);
+    }
 
     const isAdmin =
       googleUser.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
     if (!user) {
       // Create new user with sanitized name
-      user = await User.create({
+      user = await UserDAL.create({
         name: sanitizeText(googleUser.name),
         email: googleUser.email.toLowerCase(),
         googleId: googleUser.sub,

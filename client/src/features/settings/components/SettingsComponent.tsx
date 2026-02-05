@@ -346,7 +346,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
       )}
 
       {confirmDelete && (
-        <ConfirmModal title={t('deleteAllData')} message={t('deleteConfirmMessage')} confirmText={t('delete')} onConfirm={handleDeleteData} onCancel={() => setConfirmDelete(false)} />
+        <ConfirmModal title={t('deleteAllData')} message={t('deleteDataWarning')} confirmText={t('delete')} onConfirm={handleDeleteData} onCancel={() => setConfirmDelete(false)} />
       )}
     </Box>
   );

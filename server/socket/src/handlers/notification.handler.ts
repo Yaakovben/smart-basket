@@ -104,10 +104,22 @@ export const registerNotificationHandlers = (
   });
 
   // List settings updated by owner
-  socket.on('list:update', (data: { listId: string; listName: string; userName: string }) => {
+  socket.on('list:update', (data: { listId: string; listName: string; userName: string; changeType?: 'name' | 'design' | 'both'; newName?: string }) => {
     if (!isValidString(data?.listId) || !isValidString(data?.userName)) {
       console.warn('Invalid list:update data from user:', userId);
       return;
+    }
+
+    // Build appropriate message based on what changed
+    let message: string;
+    if (data.changeType === 'name' && data.newName) {
+      message = `${data.userName} שינה/תה את שם הרשימה ל-"${data.newName}"`;
+    } else if (data.changeType === 'design') {
+      message = `${data.userName} שינה/תה את עיצוב הרשימה`;
+    } else if (data.changeType === 'both' && data.newName) {
+      message = `${data.userName} עדכן/ה את הרשימה ל-"${data.newName}"`;
+    } else {
+      message = `${data.userName} עדכן/ה את הרשימה`;
     }
 
     const notification: NotificationData = {
@@ -116,8 +128,10 @@ export const registerNotificationHandlers = (
       listId: data.listId,
       userId,
       userName: data.userName,
-      message: `${data.userName} updated ${data.listName} settings`,
+      message,
       timestamp: new Date(),
+      changeType: data.changeType,
+      newName: data.newName,
     };
 
     // Broadcast to all users in the list except sender
@@ -131,7 +145,7 @@ export const registerNotificationHandlers = (
       timestamp: new Date(),
     });
 
-    console.log(`User ${data.userName} updated list ${data.listName} settings`);
+    console.log(`User ${data.userName} updated list ${data.listName} (${data.changeType || 'general'})`);
   });
 
   // List deleted by owner

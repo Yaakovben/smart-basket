@@ -55,6 +55,10 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           // MUI and Emotion must be together (MUI depends on Emotion)
           'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          // Socket.io in separate chunk (loaded after auth)
+          'vendor-socket': ['socket.io-client'],
+          // Sentry in separate chunk (monitoring can load late)
+          'vendor-sentry': ['@sentry/react'],
         }
       }
     }

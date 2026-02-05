@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express';
 import { AuthService, TokenService } from '../services';
-import { asyncHandler, ApiError } from '../utils';
-import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../utils/validators';
+import { asyncHandler } from '../utils';
+import { AuthError } from '../errors';
+import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 
 export class AuthController {
   // Check if email exists
@@ -56,7 +57,7 @@ export class AuthController {
     const result = await TokenService.refreshAccessToken(refreshToken);
 
     if (!result) {
-      throw ApiError.unauthorized('Invalid or expired refresh token');
+      throw AuthError.invalidToken();
     }
 
     res.json({
