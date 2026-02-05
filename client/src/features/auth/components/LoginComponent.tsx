@@ -12,7 +12,7 @@ import { getPasswordStrength } from '../helpers/auth-helpers';
 
 // ===== App Logo SVG (Basket with checkmark) =====
 const AppLogo = () => (
-  <svg width="48" height="48" viewBox="0 0 64 64">
+  <svg width="56" height="56" viewBox="0 0 64 64">
     <g fill="white">
       <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
       <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
