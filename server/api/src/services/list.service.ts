@@ -17,9 +17,12 @@ const generateInviteCode = (): string => {
 
 // Helper to transform list to response format
 const transformList = async (list: IList): Promise<IListResponse> => {
-  await list.populate('owner', 'name email avatarColor avatarEmoji isAdmin');
-  await list.populate('members.user', 'name email avatarColor avatarEmoji');
-  await list.populate('products.addedBy', 'name');
+  // Run all populate queries in parallel for better performance
+  await Promise.all([
+    list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
+    list.populate('members.user', 'name email avatarColor avatarEmoji'),
+    list.populate('products.addedBy', 'name'),
+  ]);
 
   const json = list.toJSON() as Record<string, unknown>;
 
@@ -331,9 +334,11 @@ export class ListService {
       throw ApiError.notFound('Member not found');
     }
 
-    // Get member info for notification
-    const member = await User.findById(memberId);
-    const actor = await User.findById(userId);
+    // Get member and actor info for notification (parallel queries)
+    const [member, actor] = await Promise.all([
+      User.findById(memberId),
+      User.findById(userId),
+    ]);
 
     list.members.splice(memberIndex, 1);
 

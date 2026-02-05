@@ -28,9 +28,12 @@ const checkListAccess = async (
 
 // Helper to transform list
 const transformList = async (list: typeof List.prototype): Promise<IListResponse> => {
-  await list.populate('owner', 'name email avatarColor avatarEmoji isAdmin');
-  await list.populate('members.user', 'name email avatarColor avatarEmoji');
-  await list.populate('products.addedBy', 'name');
+  // Run all populate queries in parallel for better performance
+  await Promise.all([
+    list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
+    list.populate('members.user', 'name email avatarColor avatarEmoji'),
+    list.populate('products.addedBy', 'name'),
+  ]);
 
   const json = list.toJSON() as Record<string, unknown>;
 

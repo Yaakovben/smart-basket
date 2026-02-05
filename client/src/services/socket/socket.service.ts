@@ -184,6 +184,8 @@ class SocketService {
       this.visibilityHandler = null;
     }
     this.joinedLists.clear();
+    // Clear all listeners to prevent memory leaks
+    this.listeners.clear();
     this.socket?.disconnect();
     this.socket = null;
   }

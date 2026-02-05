@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
@@ -414,6 +414,10 @@ export function useLists(user: User | null) {
   // Extract list IDs for stable dependency tracking
   const listIds = useMemo(() => lists.map(l => l.id).join(','), [lists]);
 
+  // Refs for debounced list refetching (prevents multiple API calls for same list)
+  const pendingRefetchIds = useRef<Set<string>>(new Set());
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Subscribe to socket events for real-time updates
   useEffect(() => {
     if (!user) return;
@@ -424,15 +428,35 @@ export function useLists(user: User | null) {
     // Join all list rooms
     currentIds.forEach((id) => socketService.joinList(id));
 
+    // Debounced refetch function - batches multiple refetch requests for same list
+    const scheduleRefetch = (listId: string) => {
+      pendingRefetchIds.current.add(listId);
+
+      // Clear existing timeout
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
+
+      // Schedule refetch after 100ms of no new events
+      refetchTimeoutRef.current = setTimeout(() => {
+        const idsToRefetch = Array.from(pendingRefetchIds.current);
+        pendingRefetchIds.current.clear();
+
+        // Refetch each list only once
+        idsToRefetch.forEach((id) => {
+          listsApi.getList(id).then((updated) => {
+            setLists((prev) =>
+              prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+            );
+          }).catch(console.error);
+        });
+      }, 100);
+    };
+
     // Subscribe to list updates
     const unsubscribeListUpdated = socketService.on('list:updated', (data: unknown) => {
       const listData = data as { listId: string };
-      // Refetch the specific list
-      listsApi.getList(listData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
+      scheduleRefetch(listData.listId);
     });
 
     // Note: user:joined and user:left socket events are for PRESENCE tracking only
@@ -444,45 +468,32 @@ export function useLists(user: User | null) {
     // 1. Unnecessary API calls on every reconnect
     // 2. Confusing users with activity when someone just reconnects
 
-    // Subscribe to product events
+    // Subscribe to product events - all use debounced refetch
     const unsubscribeProductAdded = socketService.on('product:added', (data: unknown) => {
       const eventData = data as { listId: string };
-      // Refetch the list to get updated products
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
+      scheduleRefetch(eventData.listId);
     });
 
     const unsubscribeProductUpdated = socketService.on('product:updated', (data: unknown) => {
       const eventData = data as { listId: string };
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
+      scheduleRefetch(eventData.listId);
     });
 
     const unsubscribeProductDeleted = socketService.on('product:deleted', (data: unknown) => {
       const eventData = data as { listId: string };
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
+      scheduleRefetch(eventData.listId);
     });
 
     const unsubscribeProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const eventData = data as { listId: string };
-      listsApi.getList(eventData.listId).then((updated) => {
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
-        );
-      }).catch(console.error);
+      scheduleRefetch(eventData.listId);
     });
 
     return () => {
+      // Clear pending refetch timeout
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
       unsubscribeListUpdated();
       unsubscribeProductAdded();
       unsubscribeProductUpdated();
