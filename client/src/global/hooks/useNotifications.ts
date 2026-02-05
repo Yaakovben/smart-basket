@@ -1,18 +1,30 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { notificationsApi, type PersistedNotification } from '../../services/api';
 import type { User } from '../types';
 import type { LocalNotification } from './useSocketNotifications';
+
+// Initial notifications data type for parallel loading optimization
+export interface InitialNotificationsData {
+  notifications: PersistedNotification[];
+  unreadCount: number;
+}
 
 /**
  * Hook to manage notifications from both API and real-time socket events.
  * - Loads persisted notifications from API on mount
  * - Merges with real-time socket notifications
  * - Provides functions to mark as read
+ * - Accepts pre-fetched data for faster initial load
  */
-export function useNotifications(user: User | null) {
-  const [persistedNotifications, setPersistedNotifications] = useState<PersistedNotification[]>([]);
+export function useNotifications(user: User | null, initialData?: InitialNotificationsData | null) {
+  // Use pre-fetched data if available for instant render
+  const [persistedNotifications, setPersistedNotifications] = useState<PersistedNotification[]>(
+    () => initialData?.notifications || []
+  );
   const [loading, setLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(() => initialData?.unreadCount || 0);
+  // Track if we've initialized from pre-fetched data
+  const initializedRef = useRef(!!initialData);
 
   // Load notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -32,9 +44,14 @@ export function useNotifications(user: User | null) {
     }
   }, [user]);
 
-  // Load on mount and when user changes
+  // Load on mount and when user changes (skip if already initialized with pre-fetched data)
   useEffect(() => {
     if (user) {
+      // Skip fetch if we already have pre-fetched data
+      if (initializedRef.current) {
+        initializedRef.current = false; // Reset for future refetches
+        return;
+      }
       fetchNotifications();
     } else {
       setPersistedNotifications([]);

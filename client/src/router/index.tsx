@@ -94,8 +94,9 @@ export const AppRouter = () => {
   const { t } = useSettings();
 
   // Hooks for state management - ALL hooks must be called before any conditional returns
-  const { user, login, logout, updateUser, loading: authLoading } = useAuth();
-  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user);
+  const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
+  // Pass pre-fetched data for faster initial load (fetched in parallel with auth)
+  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
 
   // Hide initial loader when auth check is complete
@@ -110,13 +111,14 @@ export const AppRouter = () => {
   }, [authLoading]);
 
   // Persisted notifications (loaded from API, updated in real-time via socket)
+  // Pass pre-fetched data for faster initial load
   const {
     notifications: persistedNotifications,
     loading: notificationsLoading,
     markAsRead: markPersistedNotificationRead,
     markAllAsRead: clearAllPersistedNotifications,
     addNotification: addPersistedNotification,
-  } = useNotifications(user);
+  } = useNotifications(user, initialData.notifications);
 
   // Create list names map for notifications
   const listNames = useMemo(() =>

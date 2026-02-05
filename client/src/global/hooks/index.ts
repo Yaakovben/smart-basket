@@ -46,10 +46,18 @@ export function useToast() {
   return { message: toast.message, toastType: toast.type, showToast, hideToast };
 }
 
+// Initial data type for parallel loading optimization
+export interface InitialData {
+  lists: ApiList[] | null;
+  notifications: { notifications: import('../../services/api').PersistedNotification[]; unreadCount: number } | null;
+}
+
 // ===== useAuth Hook =====
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Pre-fetched data for faster initial load (fetched in parallel with profile)
+  const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
 
   // Check for existing session on mount
   useEffect(() => {
@@ -57,8 +65,26 @@ export function useAuth() {
       const token = getAccessToken();
       if (token) {
         try {
-          const profile = await authApi.getProfile();
+          // Fetch profile, lists, and notifications in PARALLEL for faster initial load
+          const [profile, listsResult, notificationsResult] = await Promise.all([
+            authApi.getProfile(),
+            listsApi.getLists().catch(() => null), // Don't fail auth if lists fail
+            import('../../services/api').then(({ notificationsApi }) =>
+              notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
+            ),
+          ]);
+
           setUser(profile);
+
+          // Store pre-fetched data for hooks to consume
+          setInitialData({
+            lists: listsResult,
+            notifications: notificationsResult ? {
+              notifications: notificationsResult.notifications,
+              unreadCount: notificationsResult.notifications.filter(n => !n.read).length,
+            } : null,
+          });
+
           // Connect socket when authenticated
           socketService.connect();
         } catch {
@@ -113,7 +139,7 @@ export function useAuth() {
     [user],
   );
 
-  return { user, login, logout, updateUser, isAuthenticated: !!user, loading };
+  return { user, login, logout, updateUser, isAuthenticated: !!user, loading, initialData };
 }
 
 // Helper to convert API member to client Member type
@@ -160,9 +186,14 @@ const convertApiList = (apiList: ApiList): List => ({
 });
 
 // ===== useLists Hook =====
-export function useLists(user: User | null) {
-  const [lists, setLists] = useState<List[]>([]);
+export function useLists(user: User | null, initialLists?: ApiList[] | null) {
+  // Use pre-fetched lists if available for instant render
+  const [lists, setLists] = useState<List[]>(() =>
+    initialLists ? initialLists.map(convertApiList) : []
+  );
   const [loading, setLoading] = useState(false);
+  // Track if we've initialized from pre-fetched data
+  const initializedRef = useRef(!!initialLists);
 
   const fetchLists = useCallback(async () => {
     setLoading(true);
@@ -176,9 +207,14 @@ export function useLists(user: User | null) {
     }
   }, []);
 
-  // Fetch lists when user changes
+  // Fetch lists when user changes (skip if already initialized with pre-fetched data)
   useEffect(() => {
     if (user) {
+      // Skip fetch if we already have pre-fetched data
+      if (initializedRef.current) {
+        initializedRef.current = false; // Reset for future refetches
+        return;
+      }
       fetchLists();
     } else {
       setLists([]);
@@ -416,7 +452,7 @@ export function useLists(user: User | null) {
 
   // Refs for debounced list refetching (prevents multiple API calls for same list)
   const pendingRefetchIds = useRef<Set<string>>(new Set());
-  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Subscribe to socket events for real-time updates
   useEffect(() => {
