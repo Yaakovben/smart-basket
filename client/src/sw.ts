@@ -72,13 +72,18 @@ self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate event - clear all caches and claim clients
+// Activate event - clear all caches, notify clients to reload, and claim
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => caches.delete(cacheName))
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((cacheNames) => Promise.all(cacheNames.map((name) => caches.delete(name))))
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((clients) => {
+        // Tell all open windows to reload for fresh content
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
+        });
+      })
+      .then(() => self.clients.claim())
   );
 });

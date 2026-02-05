@@ -96,6 +96,16 @@
       }
     })();
   </script>
+  <!-- Listen for SW activation to reload with fresh content -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'SW_ACTIVATED') {
+          location.reload();
+        }
+      });
+    }
+  </script>
   </head>
   <body>
     <!-- Initial loading state - Animated basket with items flying in -->
