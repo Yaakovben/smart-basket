@@ -10,6 +10,17 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../hooks/useAuth';
 import { getPasswordStrength } from '../helpers/auth-helpers';
 
+// ===== App Logo SVG (Basket with checkmark) =====
+const AppLogo = () => (
+  <svg width="48" height="48" viewBox="0 0 64 64">
+    <g fill="white">
+      <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
+      <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M26 32 L30 36 L38 28" stroke="#14B8A6" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </g>
+  </svg>
+);
+
 // ===== Google Logo SVG =====
 const GoogleLogo = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -80,10 +91,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
             justifyContent: 'center',
             mx: 'auto',
             mb: { xs: 2.5, sm: 3 },
-            boxShadow: '0 12px 32px rgba(20, 184, 166, 0.3)',
-            fontSize: { xs: 40, sm: 48 }
+            boxShadow: '0 12px 32px rgba(20, 184, 166, 0.3)'
           }}>
-            🛒
+            <AppLogo />
           </Box>
           <Typography sx={{ mb: 1, color: 'text.primary', fontSize: { xs: 24, sm: 28 }, fontWeight: 700 }}>
             {t('appName')}
