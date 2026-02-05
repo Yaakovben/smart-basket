@@ -30,6 +30,7 @@ export interface IList extends Document {
   members: IMember[];
   inviteCode?: string;
   password?: string;
+  displayPassword?: string; // Plaintext password for display (not hashed)
   notifications: INotification[];
   createdAt: Date;
   updatedAt: Date;
@@ -126,14 +127,19 @@ const listSchema = new Schema<IList>(
       type: String,
       // Password is hashed with bcrypt (input is 4 chars, stored hash is ~60 chars)
     },
+    displayPassword: {
+      type: String,
+      // Plaintext password for display purposes (not hashed)
+    },
     notifications: [notificationSchema],
   },
   {
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        const { _id, __v, password, ...rest } = ret;
-        return { ...rest, id: _id.toString() };
+        const { _id, __v, password, displayPassword, ...rest } = ret;
+        // Return displayPassword as "password" for client (plaintext for display)
+        return { ...rest, id: _id.toString(), password: displayPassword || null };
       },
     },
   }
@@ -151,6 +157,8 @@ listSchema.pre('save', async function (next) {
   // Only hash if it looks like a plaintext password (4 chars)
   // Already hashed passwords start with $2b$ and are ~60 chars
   if (this.password.length <= 10 && !this.password.startsWith('$2b$')) {
+    // Save plaintext password for display before hashing
+    this.displayPassword = this.password;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
