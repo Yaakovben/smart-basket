@@ -1,0 +1,6 @@
+# SmartBasket - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://smart-basket.vercel.app/sitemap.xml
