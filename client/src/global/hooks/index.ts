@@ -525,6 +525,15 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       scheduleRefetch(eventData.listId);
     });
 
+    // Subscribe to member change events (join/leave/removed) to update members list
+    const unsubscribeNotificationNew = socketService.on('notification:new', (data: unknown) => {
+      const eventData = data as { type: string; listId: string; userId: string };
+      // Only refetch on member changes, not on other notification types
+      if (['join', 'leave', 'removed'].includes(eventData.type)) {
+        scheduleRefetch(eventData.listId);
+      }
+    });
+
     return () => {
       // Clear pending refetch timeout
       if (refetchTimeoutRef.current) {
@@ -535,6 +544,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       unsubscribeProductUpdated();
       unsubscribeProductDeleted();
       unsubscribeProductToggled();
+      unsubscribeNotificationNew();
       // Leave all rooms on cleanup (currentIds captured from closure)
       currentIds.forEach((id) => socketService.leaveList(id));
     };
