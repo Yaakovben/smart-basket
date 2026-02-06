@@ -50,7 +50,7 @@ export class ListMembershipService {
       throw ConflictError.alreadyMember();
     }
 
-    // Check password if required (using bcrypt comparison)
+    // Check password if required
     if (list.password) {
       const isValidPassword = await list.comparePassword(data.password || '');
       if (!isValidPassword) {
