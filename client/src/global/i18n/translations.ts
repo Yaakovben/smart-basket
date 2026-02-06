@@ -264,6 +264,16 @@ type TranslationKey =
   | 'localStorageError'
   | 'cacheError'
   | 'noUserData'
+  // Clear Cache Page
+  | 'clearCacheTitle'
+  | 'clearCacheSubtitle'
+  | 'clearCacheDone'
+  | 'clearCacheRedirect'
+  | 'clearCacheStepSW'
+  | 'clearCacheStepCaches'
+  | 'clearCacheStepStorage'
+  | 'clearCacheStepSession'
+  | 'clearCacheStepCookies'
   // Share
   | 'shareListDescription'
   // Quick Add
@@ -540,6 +550,16 @@ export const translations: Record<Language, Translations> = {
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
     cacheError: 'יש בעיית חיבור. נסה לנקות את המטמון דרך /clear-cache',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
+    // Clear Cache Page
+    clearCacheTitle: 'ניקוי מטמון',
+    clearCacheSubtitle: 'מנקה נתונים שמורים...',
+    clearCacheDone: 'הניקוי הושלם!',
+    clearCacheRedirect: 'מעביר לדף הבית בעוד',
+    clearCacheStepSW: 'ביטול רישום Service Workers',
+    clearCacheStepCaches: 'ניקוי מטמון דפדפן',
+    clearCacheStepStorage: 'ניקוי אחסון מקומי',
+    clearCacheStepSession: 'ניקוי אחסון סשן',
+    clearCacheStepCookies: 'ניקוי עוגיות',
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
     // Quick Add
@@ -813,6 +833,16 @@ export const translations: Record<Language, Translations> = {
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
     cacheError: 'Connection issue. Try clearing cache at /clear-cache',
     noUserData: 'Error: No user data received from server',
+    // Clear Cache Page
+    clearCacheTitle: 'Clear Cache',
+    clearCacheSubtitle: 'Clearing saved data...',
+    clearCacheDone: 'Cleanup Complete!',
+    clearCacheRedirect: 'Redirecting to home in',
+    clearCacheStepSW: 'Unregistering Service Workers',
+    clearCacheStepCaches: 'Clearing browser caches',
+    clearCacheStepStorage: 'Clearing local storage',
+    clearCacheStepSession: 'Clearing session storage',
+    clearCacheStepCookies: 'Clearing cookies',
     // Share
     shareListDescription: 'Share your shopping list',
     // Quick Add
@@ -1086,6 +1116,16 @@ export const translations: Record<Language, Translations> = {
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
     cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
+    // Clear Cache Page
+    clearCacheTitle: 'Очистка кэша',
+    clearCacheSubtitle: 'Очистка сохранённых данных...',
+    clearCacheDone: 'Очистка завершена!',
+    clearCacheRedirect: 'Переход на главную через',
+    clearCacheStepSW: 'Отмена регистрации Service Workers',
+    clearCacheStepCaches: 'Очистка кэша браузера',
+    clearCacheStepStorage: 'Очистка локального хранилища',
+    clearCacheStepSession: 'Очистка сессионного хранилища',
+    clearCacheStepCookies: 'Очистка cookies',
     // Share
     shareListDescription: 'Поделитесь своим списком покупок',
     // Quick Add
