@@ -3,7 +3,7 @@
 export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
   // Try native vibration (Android only)
   if ('vibrate' in navigator) {
-    const patterns = { light: 25, medium: 50, heavy: 100 };
+    const patterns = { light: 10, medium: 20, heavy: 40 };
     navigator.vibrate(patterns[style]);
   }
 };
