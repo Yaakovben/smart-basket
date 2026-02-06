@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Divider
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -655,39 +655,36 @@ export const HomeComponent = memo(({
               <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>{t('noNotifications')}</Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, overflow: 'hidden', maxHeight: '60vh', overflowY: 'auto' }}>
-              {allNotifications.map((n, index) => {
-                // Check if type changed from previous notification
-                const prevNotification = index > 0 ? allNotifications[index - 1] : null;
-                const showDivider = prevNotification && prevNotification.type !== n.type;
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, maxHeight: '60vh', overflowY: 'auto', px: 0.5 }}>
+              {allNotifications.map((n) => {
                 const isDismissing = dismissingNotifications.has(n.id);
                 const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
-                const dateStr = notificationDate ? notificationDate.toLocaleDateString('he-IL') : '';
                 const timeStr = notificationDate ? notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
 
-                // Determine notification style based on type
-                const getNotificationStyle = () => {
+                const getEmoji = () => {
                   switch (n.type) {
-                    case 'leave':
-                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '👋' };
-                    case 'removed':
-                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🚫' };
-                    case 'list_deleted':
-                      return { bgcolor: '#FEF2F2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🗑️' };
-                    case 'join':
-                      return { bgcolor: '#F0FDF4', border: '#BBF7D0', textColor: '#166534', subColor: '#15803D', timeColor: '#16A34A', emoji: '🎉' };
-                    case 'product_add':
-                      return { bgcolor: '#EFF6FF', border: '#BFDBFE', textColor: '#1E40AF', subColor: '#2563EB', timeColor: '#3B82F6', emoji: '➕' };
-                    case 'product_edit':
-                      return { bgcolor: '#FEF3C7', border: '#FDE68A', textColor: '#92400E', subColor: '#B45309', timeColor: '#D97706', emoji: '✏️' };
-                    case 'product_delete':
-                      return { bgcolor: '#FEE2E2', border: '#FECACA', textColor: '#991B1B', subColor: '#B91C1C', timeColor: '#DC2626', emoji: '🗑️' };
-                    case 'product_purchase':
-                      return { bgcolor: '#ECFDF5', border: '#A7F3D0', textColor: '#065F46', subColor: '#047857', timeColor: '#059669', emoji: n.isPurchased ? '✅' : '⬜' };
-                    case 'list_update':
-                      return { bgcolor: '#F5F3FF', border: '#DDD6FE', textColor: '#5B21B6', subColor: '#7C3AED', timeColor: '#8B5CF6', emoji: '⚙️' };
-                    default:
-                      return { bgcolor: '#F3F4F6', border: '#D1D5DB', textColor: '#374151', subColor: '#6B7280', timeColor: '#9CA3AF', emoji: '📢' };
+                    case 'leave': return '👋';
+                    case 'removed': return '🚫';
+                    case 'list_deleted': return '🗑️';
+                    case 'join': return '🎉';
+                    case 'product_add': return '➕';
+                    case 'product_edit': return '✏️';
+                    case 'product_delete': return '🗑️';
+                    case 'product_purchase': return n.isPurchased ? '✅' : '⬜';
+                    case 'list_update': return '⚙️';
+                    default: return '📢';
+                  }
+                };
+
+                const getAccentColor = () => {
+                  switch (n.type) {
+                    case 'leave': case 'removed': case 'list_deleted': case 'product_delete': return '#EF4444';
+                    case 'join': return '#10B981';
+                    case 'product_add': return '#3B82F6';
+                    case 'product_edit': return '#F59E0B';
+                    case 'product_purchase': return '#14B8A6';
+                    case 'list_update': return '#8B5CF6';
+                    default: return '#6B7280';
                   }
                 };
 
@@ -706,45 +703,62 @@ export const HomeComponent = memo(({
                   }
                 };
 
-                const style = getNotificationStyle();
+                const accent = getAccentColor();
 
                 return (
-                  <Box key={n.id}>
-                    {showDivider && (
-                      <Divider sx={{ my: 1, borderColor: 'divider', opacity: 0.6 }} />
-                    )}
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.5,
-                        p: 1.75,
-                        bgcolor: style.bgcolor,
-                        borderRadius: '12px',
-                        border: `1px solid ${style.border}`,
-                        transition: 'all 0.3s ease',
-                        ...(isDismissing && {
-                          ...notificationDismissKeyframes,
-                          animation: 'notificationDismiss 0.6s ease-in-out forwards',
-                        }),
-                      }}
-                    >
-                    <Avatar sx={{ bgcolor: style.border, width: 40, height: 40, fontSize: 20 }}>
-                      {style.emoji}
-                    </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontSize: 14, fontWeight: 600, color: style.textColor }}>
-                        {n.userName} {getNotificationText()}
-                      </Typography>
-                      <Typography sx={{ fontSize: 13, color: style.subColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {n.listName}
-                      </Typography>
-                      {notificationDate && (
-                        <Typography sx={{ fontSize: 11, color: style.timeColor, mt: 0.5 }}>
-                          {dateStr} • {timeStr}
-                        </Typography>
-                      )}
+                  <Box
+                    key={n.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1.25,
+                      p: 1.5,
+                      bgcolor: 'background.paper',
+                      borderRadius: '10px',
+                      borderRight: `3px solid ${accent}`,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                      transition: 'all 0.3s ease',
+                      ...(isDismissing && {
+                        ...notificationDismissKeyframes,
+                        animation: 'notificationDismiss 0.6s ease-in-out forwards',
+                      }),
+                    }}
+                  >
+                    {/* Emoji */}
+                    <Box sx={{ fontSize: 20, lineHeight: 1, mt: 0.25, flexShrink: 0 }}>
+                      {getEmoji()}
                     </Box>
+
+                    {/* Content */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 13, color: 'text.primary', lineHeight: 1.4 }}>
+                        <strong>{n.userName}</strong> {getNotificationText()}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5 }}>
+                        <Typography sx={{
+                          fontSize: 11,
+                          color: accent,
+                          bgcolor: `${accent}12`,
+                          px: 0.75,
+                          py: 0.15,
+                          borderRadius: '4px',
+                          fontWeight: 500,
+                          maxWidth: 120,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {n.listName}
+                        </Typography>
+                        {notificationDate && (
+                          <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
+                            {timeStr}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Dismiss */}
                     <IconButton
                       size="small"
                       onClick={() => handleDismissNotification(n.listId, n.id)}
@@ -754,29 +768,32 @@ export const HomeComponent = memo(({
                       disableFocusRipple
                       tabIndex={-1}
                       sx={{
-                        color: style.textColor,
+                        color: 'text.disabled',
                         flexShrink: 0,
-                        opacity: isDismissing ? 0 : 1,
+                        width: 28,
+                        height: 28,
+                        mt: -0.25,
+                        opacity: isDismissing ? 0 : 0.5,
                         transition: 'opacity 0.2s',
+                        '&:hover': { opacity: 1, bgcolor: 'action.hover' },
                         border: 'none !important',
                         outline: 'none !important',
                         boxShadow: 'none !important',
-                        '&:hover': { bgcolor: `${style.textColor}15` },
-                        '&:focus': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
-                        '&:focus-visible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
-                        '&.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
-                        '&:active': { bgcolor: `${style.textColor}20` },
+                        '&:focus, &:focus-visible, &.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
                         WebkitTapHighlightColor: 'transparent',
-                        userSelect: 'none',
                       }}
                     >
-                      <CloseIcon fontSize="small" />
+                      <CloseIcon sx={{ fontSize: 16 }} />
                     </IconButton>
-                    </Box>
                   </Box>
                 );
               })}
-              <Button variant="contained" fullWidth sx={{ mt: 1 }} onClick={handleMarkAllRead}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleMarkAllRead}
+                sx={{ mt: 1.5, mb: 0.5, borderRadius: '10px', py: 1, fontSize: 13, fontWeight: 600 }}
+              >
                 {t('markAllAsRead')}
               </Button>
             </Box>
