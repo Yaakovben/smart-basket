@@ -84,7 +84,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
-  const { isSupported: pushSupported, isSubscribed: pushSubscribed, loading: pushLoading, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, currentLanguageName,
@@ -113,36 +113,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: { xs: 2, sm: 2.5 }, pb: 'calc(24px + env(safe-area-inset-bottom))', WebkitOverflowScrolling: 'touch' }}>
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden' }}>
-          {/* Push Notifications Toggle - Always visible at top */}
-          <Box sx={settingRowSx}>
-            <Box component="span" sx={{ fontSize: 22 }}>📲</Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontWeight: 500, fontSize: 15 }}>
-                {settings.language === 'he' ? 'התראות Push' : settings.language === 'ru' ? 'Push-уведомления' : 'Push Notifications'}
-              </Typography>
-              {!pushSupported ? (
-                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                  {settings.language === 'he' ? 'לא נתמך בדפדפן זה. באייפון: הוסף למסך הבית' : settings.language === 'ru' ? 'Не поддерживается. iPhone: добавьте на экран' : 'Not supported. iPhone: Add to Home Screen'}
-                </Typography>
-              ) : !pushSubscribed && (
-                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                  {settings.language === 'he' ? 'קבל התראות גם כשהאפליקציה סגורה' : settings.language === 'ru' ? 'Уведомления когда приложение закрыто' : 'Get notified when app is closed'}
-                </Typography>
-              )}
-            </Box>
-            {pushLoading ? (
-              <CircularProgress size={24} sx={{ color: '#14B8A6' }} />
-            ) : (
-              <Switch
-                checked={pushSubscribed}
-                onChange={handlePushToggle}
-                disabled={!pushSupported}
-                sx={switchSx}
-              />
-            )}
-          </Box>
-
-          {/* In-App Notifications Toggle */}
+          {/* Notifications Toggle */}
           <Box sx={settingRowSx} onClick={() => settings.notifications.enabled && toggleNotificationsExpanded()}>
             <Box component="span" sx={{ fontSize: 22 }}>🔔</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('notifications')}</Typography>
@@ -156,7 +127,38 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
           <Collapse in={settings.notifications.enabled && notificationsExpanded}>
             <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
+              {/* Push Notifications Section */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+                  {settings.language === 'he' ? 'התראות Push' : settings.language === 'ru' ? 'Push-уведомления' : 'Push Notifications'}
+                </Typography>
+              </Box>
+              <Box sx={subSettingRowSx}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 14 }}>
+                    {settings.language === 'he' ? 'קבל התראות גם כשהאפליקציה סגורה' : settings.language === 'ru' ? 'Получать уведомления когда приложение закрыто' : 'Receive notifications when app is closed'}
+                  </Typography>
+                  {!pushSupported && (
+                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
+                      {settings.language === 'he' ? '* לא נתמך בדפדפן זה. באייפון: הוסף למסך הבית תחילה' : settings.language === 'ru' ? '* Не поддерживается. iPhone: сначала добавьте на экран' : '* Not supported. iPhone: Add to Home Screen first'}
+                    </Typography>
+                  )}
+                  {pushError && (
+                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
+                      {settings.language === 'he' ? `* שגיאה: ${pushError}` : settings.language === 'ru' ? `* Ошибка: ${pushError}` : `* Error: ${pushError}`}
+                    </Typography>
+                  )}
+                </Box>
+                {pushLoading ? (
+                  <CircularProgress size={24} sx={{ color: '#14B8A6' }} />
+                ) : (
+                  <Switch checked={pushSubscribed} onChange={handlePushToggle} disabled={!pushSupported} sx={smallSwitchSx} />
+                )}
+              </Box>
+
               {/* Group Notifications Section */}
+              <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
