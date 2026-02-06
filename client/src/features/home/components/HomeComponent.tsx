@@ -650,152 +650,205 @@ export const HomeComponent = memo(({
       {showNotifications && (
         <Modal title={t('notifications')} onClose={() => setShowNotifications(false)}>
           {allNotifications.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4, px: 2.5 }}>
-              <Typography sx={{ fontSize: 48 }}>🔔</Typography>
-              <Typography sx={{ color: 'text.secondary', fontSize: 15, mt: 1.5 }}>{t('noNotifications')}</Typography>
+            <Box sx={{ textAlign: 'center', py: 5, px: 2.5 }}>
+              <Box sx={{ fontSize: 56, mb: 1, filter: 'grayscale(0.3)' }}>🔔</Box>
+              <Typography sx={{ color: 'text.secondary', fontSize: 15 }}>{t('noNotifications')}</Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, maxHeight: '60vh', overflowY: 'auto', px: 0.5 }}>
-              {allNotifications.map((n) => {
-                const isDismissing = dismissingNotifications.has(n.id);
-                const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
-                const timeStr = notificationDate ? notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {/* Notification list */}
+              <Box sx={{ maxHeight: '55vh', overflowY: 'auto', mx: -0.5, px: 0.5 }}>
+                {allNotifications.map((n, index) => {
+                  const isDismissing = dismissingNotifications.has(n.id);
+                  const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
 
-                const getEmoji = () => {
-                  switch (n.type) {
-                    case 'leave': return '👋';
-                    case 'removed': return '🚫';
-                    case 'list_deleted': return '🗑️';
-                    case 'join': return '🎉';
-                    case 'product_add': return '➕';
-                    case 'product_edit': return '✏️';
-                    case 'product_delete': return '🗑️';
-                    case 'product_purchase': return n.isPurchased ? '✅' : '⬜';
-                    case 'list_update': return '⚙️';
-                    default: return '📢';
-                  }
-                };
+                  // Smart time display: today = time, yesterday = "yesterday", older = date
+                  const getTimeDisplay = () => {
+                    if (!notificationDate) return '';
+                    const now = new Date();
+                    const isToday = notificationDate.toDateString() === now.toDateString();
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const isYesterday = notificationDate.toDateString() === yesterday.toDateString();
 
-                const getAccentColor = () => {
-                  switch (n.type) {
-                    case 'leave': case 'removed': case 'list_deleted': case 'product_delete': return '#EF4444';
-                    case 'join': return '#10B981';
-                    case 'product_add': return '#3B82F6';
-                    case 'product_edit': return '#F59E0B';
-                    case 'product_purchase': return '#14B8A6';
-                    case 'list_update': return '#8B5CF6';
-                    default: return '#6B7280';
-                  }
-                };
+                    if (isToday) {
+                      return notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                    } else if (isYesterday) {
+                      return settings.language === 'he' ? 'אתמול' : settings.language === 'ru' ? 'Вчера' : 'Yesterday';
+                    }
+                    return notificationDate.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+                  };
 
-                const getNotificationText = () => {
-                  switch (n.type) {
-                    case 'leave': return t('memberLeft');
-                    case 'removed': return t('memberRemoved');
-                    case 'list_deleted': return t('deletedGroupNotif');
-                    case 'join': return t('memberJoined');
-                    case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
-                    case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
-                    case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
-                    case 'product_purchase': return `${n.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif')} "${n.productName}"`;
-                    case 'list_update': return t('listUpdatedNotif');
-                    default: return '';
-                  }
-                };
+                  const getEmoji = () => {
+                    switch (n.type) {
+                      case 'leave': return '👋';
+                      case 'removed': return '🚫';
+                      case 'list_deleted': return '🗑️';
+                      case 'join': return '🎉';
+                      case 'product_add': return '🛒';
+                      case 'product_edit': return '✏️';
+                      case 'product_delete': return '❌';
+                      case 'product_purchase': return '✅';
+                      case 'list_update': return '⚙️';
+                      default: return '📢';
+                    }
+                  };
 
-                const accent = getAccentColor();
+                  const getAccentColor = () => {
+                    switch (n.type) {
+                      case 'leave': case 'removed': case 'list_deleted': case 'product_delete': return '#EF4444';
+                      case 'join': return '#10B981';
+                      case 'product_add': return '#3B82F6';
+                      case 'product_edit': return '#F59E0B';
+                      case 'product_purchase': return '#14B8A6';
+                      case 'list_update': return '#8B5CF6';
+                      default: return '#6B7280';
+                    }
+                  };
 
-                return (
-                  <Box
-                    key={n.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 1.25,
-                      p: 1.5,
-                      bgcolor: 'background.paper',
-                      borderRadius: '10px',
-                      borderRight: `3px solid ${accent}`,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                      transition: 'all 0.3s ease',
-                      ...(isDismissing && {
-                        ...notificationDismissKeyframes,
-                        animation: 'notificationDismiss 0.6s ease-in-out forwards',
-                      }),
-                    }}
-                  >
-                    {/* Emoji */}
-                    <Box sx={{ fontSize: 20, lineHeight: 1, mt: 0.25, flexShrink: 0 }}>
-                      {getEmoji()}
-                    </Box>
+                  const getNotificationText = () => {
+                    switch (n.type) {
+                      case 'leave': return t('memberLeft');
+                      case 'removed': return t('memberRemoved');
+                      case 'list_deleted': return t('deletedGroupNotif');
+                      case 'join': return t('memberJoined');
+                      case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
+                      case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
+                      case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
+                      case 'product_purchase': return `${n.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif')} "${n.productName}"`;
+                      case 'list_update': return t('listUpdatedNotif');
+                      default: return '';
+                    }
+                  };
 
-                    {/* Content */}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontSize: 13, color: 'text.primary', lineHeight: 1.4 }}>
-                        <strong>{n.userName}</strong> {getNotificationText()}
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5 }}>
-                        <Typography sx={{
-                          fontSize: 11,
-                          color: accent,
-                          bgcolor: `${accent}12`,
-                          px: 0.75,
-                          py: 0.15,
-                          borderRadius: '4px',
-                          fontWeight: 500,
-                          maxWidth: 120,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {n.listName}
-                        </Typography>
-                        {notificationDate && (
-                          <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
-                            {timeStr}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
+                  const accent = getAccentColor();
+                  const isLast = index === allNotifications.length - 1;
 
-                    {/* Dismiss */}
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDismissNotification(n.listId, n.id)}
-                      onMouseDown={(e) => e.currentTarget.blur()}
-                      disabled={isDismissing}
-                      disableRipple
-                      disableFocusRipple
-                      tabIndex={-1}
+                  return (
+                    <Box
+                      key={n.id}
                       sx={{
-                        color: 'text.disabled',
-                        flexShrink: 0,
-                        width: 28,
-                        height: 28,
-                        mt: -0.25,
-                        opacity: isDismissing ? 0 : 0.5,
-                        transition: 'opacity 0.2s',
-                        '&:hover': { opacity: 1, bgcolor: 'action.hover' },
-                        border: 'none !important',
-                        outline: 'none !important',
-                        boxShadow: 'none !important',
-                        '&:focus, &:focus-visible, &.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
-                        WebkitTapHighlightColor: 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        py: 1.25,
+                        px: 1,
+                        borderBottom: isLast ? 'none' : '1px solid',
+                        borderColor: 'divider',
+                        transition: 'all 0.3s ease',
+                        borderRadius: '8px',
+                        '&:active': { bgcolor: 'action.hover' },
+                        ...(isDismissing && {
+                          ...notificationDismissKeyframes,
+                          animation: 'notificationDismiss 0.5s ease-out forwards',
+                        }),
                       }}
                     >
-                      <CloseIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Box>
-                );
-              })}
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={handleMarkAllRead}
-                sx={{ mt: 1.5, mb: 0.5, borderRadius: '10px', py: 1, fontSize: 13, fontWeight: 600 }}
-              >
-                {t('markAllAsRead')}
-              </Button>
+                      {/* Icon circle */}
+                      <Box sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '12px',
+                        bgcolor: `${accent}14`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 18,
+                        flexShrink: 0,
+                      }}>
+                        {getEmoji()}
+                      </Box>
+
+                      {/* Content */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {/* Main text */}
+                        <Typography sx={{
+                          fontSize: 13.5,
+                          color: 'text.primary',
+                          lineHeight: 1.45,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                        }}>
+                          <Box component="span" sx={{ fontWeight: 600 }}>{n.userName}</Box>
+                          {' '}
+                          {getNotificationText()}
+                        </Typography>
+                        {/* Meta row: list name + time */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.35 }}>
+                          <Typography sx={{
+                            fontSize: 11.5,
+                            color: 'text.secondary',
+                            fontWeight: 500,
+                            maxWidth: 140,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {n.listName}
+                          </Typography>
+                          <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'text.disabled', flexShrink: 0 }} />
+                          <Typography sx={{ fontSize: 11.5, color: 'text.disabled', whiteSpace: 'nowrap' }}>
+                            {getTimeDisplay()}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Dismiss - swipe-like X */}
+                      <IconButton
+                        size="small"
+                        onClick={(e) => { e.stopPropagation(); handleDismissNotification(n.listId, n.id); }}
+                        disabled={isDismissing}
+                        disableRipple
+                        tabIndex={-1}
+                        sx={{
+                          color: 'text.disabled',
+                          flexShrink: 0,
+                          width: 30,
+                          height: 30,
+                          opacity: isDismissing ? 0 : 0.4,
+                          transition: 'opacity 0.2s, background-color 0.2s',
+                          '&:hover': { opacity: 0.8, bgcolor: 'rgba(0,0,0,0.04)' },
+                          border: 'none !important',
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                          '&:focus, &:focus-visible, &.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
+                          WebkitTapHighlightColor: 'transparent',
+                        }}
+                      >
+                        <CloseIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
+              </Box>
+
+              {/* Clear all button - sticky at bottom */}
+              <Box sx={{ pt: 1.5, pb: 0.5 }}>
+                <Button
+                  fullWidth
+                  onClick={handleMarkAllRead}
+                  sx={{
+                    borderRadius: '12px',
+                    py: 1.2,
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    color: 'white',
+                    background: 'linear-gradient(135deg, #14B8A6 0%, #10B981 100%)',
+                    boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
+                    textTransform: 'none',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0D9488 0%, #059669 100%)',
+                      boxShadow: '0 4px 12px rgba(20, 184, 166, 0.4)',
+                    },
+                    '&:active': { transform: 'scale(0.98)' },
+                  }}
+                >
+                  {t('markAllAsRead')}
+                </Button>
+              </Box>
             </Box>
           )}
         </Modal>
