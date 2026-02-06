@@ -273,16 +273,16 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const errorMsg = apiError.response?.data?.message || apiError.response?.data?.error;
       const status = apiError.response?.status;
 
-      if (apiError.code === 'ERR_NETWORK') {
-        setError(t('networkError'));
+      if (apiError.code === 'ERR_NETWORK' || status === 405) {
+        setError(t('cacheError'));
       } else if (apiError.message?.includes('localStorage')) {
         setError(t('localStorageError'));
       } else if (errorMsg) {
         setError(errorMsg);
       } else if (status) {
-        setError(`${t('unknownError')} (${status})`);
+        setError(t('cacheError'));
       } else {
-        setError(apiError.message || t('unknownError'));
+        setError(t('cacheError'));
       }
     } finally {
       setGoogleLoading(false);
@@ -291,7 +291,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
 
   const handleGoogleError = useCallback(() => {
     haptic('heavy');
-    setError(t('googleLoginError'));
+    setError(t('cacheError'));
     setGoogleLoading(false);
   }, [t]);
 
