@@ -206,8 +206,8 @@ export const AppRouter = () => {
     return result;
   };
 
-  const handleUpdateUser = (updates: Partial<User>) => {
-    updateUser(updates);
+  const handleUpdateUser = async (updates: Partial<User>) => {
+    await updateUser(updates);
     showToast(t('profileUpdated'));
   };
 

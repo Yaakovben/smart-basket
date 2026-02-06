@@ -19,7 +19,7 @@ export interface UseProfileReturn {
 
   // Handlers
   openEditProfile: () => void;
-  handleSave: () => void;
+  handleSave: () => Promise<void>;
   handleLogout: () => void;
   updateEditField: <K extends keyof EditProfileForm>(field: K, value: EditProfileForm[K]) => void;
   closeEdit: () => void;

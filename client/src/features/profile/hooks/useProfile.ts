@@ -8,7 +8,7 @@ const DEFAULT_AVATAR_COLOR = '#14B8A6';
 
 interface UseProfileParams {
   user: User;
-  onUpdateUser: (user: Partial<User>) => void;
+  onUpdateUser: (user: Partial<User>) => Promise<void>;
   onLogout: () => void;
 }
 
@@ -40,10 +40,14 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     });
   }, [user.name, user.email, user.avatarColor, user.avatarEmoji]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (editProfile && hasChanges) {
-      onUpdateUser(editProfile);
-      setEditProfile(null);
+      try {
+        await onUpdateUser(editProfile);
+        setEditProfile(null);
+      } catch {
+        // Error handled by parent - keep form open
+      }
     }
   }, [editProfile, hasChanges, onUpdateUser]);
 

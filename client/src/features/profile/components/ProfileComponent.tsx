@@ -27,7 +27,7 @@ const labelSx = {
 // ===== Props Interface =====
 interface ProfilePageProps {
   user: User;
-  onUpdateUser: (user: Partial<User>) => void;
+  onUpdateUser: (user: Partial<User>) => Promise<void>;
   onLogout: () => void;
 }
 
