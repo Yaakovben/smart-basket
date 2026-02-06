@@ -662,21 +662,34 @@ export const HomeComponent = memo(({
                   const isDismissing = dismissingNotifications.has(n.id);
                   const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
 
-                  // Smart time display: today = time, yesterday = "yesterday", older = date
+                  // Relative time display
                   const getTimeDisplay = () => {
                     if (!notificationDate) return '';
                     const now = new Date();
+                    const diffMs = now.getTime() - notificationDate.getTime();
+                    const diffMin = Math.floor(diffMs / 60000);
+                    const diffDays = Math.floor(diffMs / 86400000);
+                    const lang = settings.language;
+
                     const isToday = notificationDate.toDateString() === now.toDateString();
                     const yesterday = new Date(now);
                     yesterday.setDate(yesterday.getDate() - 1);
                     const isYesterday = notificationDate.toDateString() === yesterday.toDateString();
 
+                    if (diffMin < 1) return lang === 'he' ? 'עכשיו' : lang === 'ru' ? 'Сейчас' : 'Now';
+                    if (diffMin < 60 && isToday) return lang === 'he' ? `לפני ${diffMin} דק׳` : lang === 'ru' ? `${diffMin} мин. назад` : `${diffMin}m ago`;
                     if (isToday) {
-                      return notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                    } else if (isYesterday) {
-                      return settings.language === 'he' ? 'אתמול' : settings.language === 'ru' ? 'Вчера' : 'Yesterday';
+                      const time = notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                      return lang === 'he' ? `היום ${time}` : lang === 'ru' ? `Сегодня ${time}` : `Today ${time}`;
                     }
-                    return notificationDate.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+                    if (isYesterday) return lang === 'he' ? 'אתמול' : lang === 'ru' ? 'Вчера' : 'Yesterday';
+                    if (diffDays < 7) return lang === 'he' ? `לפני ${diffDays} ימים` : lang === 'ru' ? `${diffDays} дн. назад` : `${diffDays}d ago`;
+                    if (diffDays < 30) {
+                      const weeks = Math.floor(diffDays / 7);
+                      return lang === 'he' ? `לפני ${weeks === 1 ? 'שבוע' : `${weeks} שבועות`}` : lang === 'ru' ? `${weeks} нед. назад` : `${weeks}w ago`;
+                    }
+                    const months = Math.floor(diffDays / 30);
+                    return lang === 'he' ? `לפני ${months === 1 ? 'חודש' : `${months} חודשים`}` : lang === 'ru' ? `${months} мес. назад` : `${months}mo ago`;
                   };
 
                   const getEmoji = () => {

@@ -10,7 +10,7 @@ export const userValidator = {
       .messages({
         'string.pattern.base': 'Avatar color must be a valid hex color',
       }),
-    avatarEmoji: Joi.string().max(10),
+    avatarEmoji: Joi.string().allow('').max(10),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
   }),
