@@ -154,7 +154,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
 
     justSwiped.current = true;
-    setTimeout(() => { justSwiped.current = false; }, 200);
+    setTimeout(() => { justSwiped.current = false; }, 100);
 
     // Determine final state based on velocity and position
     const currentVelocity = velocity.current;
@@ -258,7 +258,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           overflow: 'hidden',
           opacity: buttonOpacity,
           visibility: offset > 5 ? 'visible' : 'hidden',
-          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.5 ? 'auto' : 'none'
+          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'auto' : 'none'
         }}
       >
         <Box onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
@@ -292,10 +292,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           px: '14px',
           borderRadius: '14px',
           transform: `translateX(${-offset}px)`,
-          transition: swiping ? 'none' : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
+          transition: swiping ? 'none' : 'transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)',
           willChange: swiping ? 'transform' : 'auto',
           boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.5 ? 'none' : 'auto',
+          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent'
         }}
       >
