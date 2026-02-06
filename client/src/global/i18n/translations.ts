@@ -262,6 +262,7 @@ type TranslationKey =
   | 'networkError'
   | 'googleLoginError'
   | 'localStorageError'
+  | 'cacheError'
   | 'noUserData'
   // Share
   | 'shareListDescription'
@@ -537,6 +538,7 @@ export const translations: Record<Language, Translations> = {
     networkError: 'בדוק את חיבור האינטרנט',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
+    cacheError: 'יש בעיית חיבור. נסה לנקות את המטמון דרך /clear-cache',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     // Share
     shareListDescription: 'שתף את רשימת הקניות שלך',
@@ -809,6 +811,7 @@ export const translations: Record<Language, Translations> = {
     networkError: 'Check your internet connection',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
+    cacheError: 'Connection issue. Try clearing cache at /clear-cache',
     noUserData: 'Error: No user data received from server',
     // Share
     shareListDescription: 'Share your shopping list',
@@ -1081,6 +1084,7 @@ export const translations: Record<Language, Translations> = {
     networkError: 'Проверьте подключение к интернету',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
+    cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     // Share
     shareListDescription: 'Поделитесь своим списком покупок',

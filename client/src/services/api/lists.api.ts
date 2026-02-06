@@ -23,15 +23,6 @@ export interface Product {
   createdAt: string;
 }
 
-export interface Notification {
-  id: string;
-  type: 'join' | 'leave';
-  userId: string;
-  userName: string;
-  timestamp: string;
-  read: boolean;
-}
-
 export interface List {
   id: string;
   name: string;
@@ -50,7 +41,6 @@ export interface List {
   products: Product[];
   inviteCode?: string;
   password?: string;
-  notifications: Notification[];
   createdAt: string;
   updatedAt: string;
 }

@@ -21,6 +21,7 @@ const SettingsPage = lazy(() => import("../features/settings/settings").then(m =
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
+const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 
 // Loading fallback - same green gradient as initial loader, seamless transition
 const PageLoader = () => (
@@ -99,7 +100,7 @@ export const AppRouter = () => {
   // Hooks for state management - ALL hooks must be called before any conditional returns
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // Pass pre-fetched data for faster initial load (fetched in parallel with auth)
-  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal, markNotificationsRead, markSingleNotificationRead } = useLists(user, initialData.lists);
+  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
 
   // Hide initial loader when auth check is complete
@@ -247,8 +248,6 @@ export const AppRouter = () => {
                 onDeleteList={handleDeleteList}
                 onEditList={handleEditList}
                 onJoinGroup={handleJoinGroup}
-                onMarkNotificationsRead={markNotificationsRead}
-                onMarkSingleNotificationRead={markSingleNotificationRead}
                 onLogout={handleLogout}
                 persistedNotifications={persistedNotifications}
                 notificationsLoading={notificationsLoading}
@@ -296,6 +295,7 @@ export const AppRouter = () => {
         />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/clear-cache" element={<ClearCachePage />} />
         <Route
           path="/admin"
           element={

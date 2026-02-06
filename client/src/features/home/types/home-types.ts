@@ -1,4 +1,4 @@
-import type { List, Notification } from '../../../global/types';
+import type { List } from '../../../global/types';
 
 // ===== Form State Types =====
 export interface NewListForm {
@@ -9,12 +9,6 @@ export interface NewListForm {
 
 // ===== Tab Type =====
 export type HomeTab = 'all' | 'my' | 'groups';
-
-// ===== Extended Notification Type =====
-export interface ExtendedNotification extends Notification {
-  listName: string;
-  listId: string;
-}
 
 // ===== Hook Return Types =====
 export interface UseHomeReturn {
@@ -40,8 +34,6 @@ export interface UseHomeReturn {
   userLists: List[];
   my: List[];
   groups: List[];
-  myNotifications: ExtendedNotification[];
-  unreadCount: number;
   display: List[];
 
   // Setters
@@ -72,6 +64,4 @@ export interface UseHomeReturn {
   updateEditListField: <K extends keyof List>(field: K, value: List[K]) => void;
   saveEditList: () => void;
   deleteList: () => void;
-  markAllNotificationsRead: () => void;
-  markNotificationRead: (listId: string, notificationId: string) => void;
 }

@@ -117,8 +117,16 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           if (result.isGoogleAccount) {
             setError(t('useGoogleSignIn'));
           }
-        } catch {
-          // Silent fail - will check again on submit
+        } catch (err: unknown) {
+          // Show error for network/server issues
+          const apiError = err as { response?: { status?: number }; code?: string };
+          if (apiError.code === 'ERR_NETWORK') {
+            setError(t('networkError'));
+          } else if (apiError.response?.status === 405) {
+            // 405 usually means cached response or server routing issue
+            setError(t('cacheError'));
+          }
+          // For other errors, continue silently - will check on submit
         } finally {
           setCheckingEmail(false);
         }

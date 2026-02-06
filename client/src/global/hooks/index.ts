@@ -225,7 +225,6 @@ const convertApiList = (apiList: ApiList): List => ({
   products: apiList.products.map(convertApiProduct),
   inviteCode: apiList.inviteCode,
   password: apiList.password,
-  notifications: apiList.notifications,
 });
 
 // ===== useLists Hook =====
@@ -462,57 +461,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     [],
   );
 
-  const markNotificationsRead = useCallback(
-    async (listId: string) => {
-      // Update locally first for immediate UI feedback
-      setLists((prev) =>
-        prev.map((l) =>
-          l.id === listId
-            ? {
-                ...l,
-                notifications: (l.notifications || []).map((n) => ({
-                  ...n,
-                  read: true,
-                })),
-              }
-            : l,
-        ),
-      );
-      // Persist to database
-      try {
-        await listsApi.markNotificationsRead(listId);
-      } catch {
-        // Silent fail - UI already updated optimistically
-      }
-    },
-    [],
-  );
-
-  const markSingleNotificationRead = useCallback(
-    async (listId: string, notificationId: string) => {
-      // Update locally first for immediate UI feedback (optimistic update)
-      setLists((prev) =>
-        prev.map((l) =>
-          l.id === listId
-            ? {
-                ...l,
-                notifications: (l.notifications || []).map((n) =>
-                  n.id === notificationId ? { ...n, read: true } : n
-                ),
-              }
-            : l,
-        ),
-      );
-      // Persist to database
-      try {
-        await listsApi.markNotificationRead(listId, notificationId);
-      } catch {
-        // Silent fail - UI already updated optimistically
-      }
-    },
-    [],
-  );
-
   // Extract list IDs for stable dependency tracking
   const listIds = useMemo(() => lists.map(l => l.id).join(','), [lists]);
 
@@ -627,8 +575,6 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     joinGroup,
     leaveList,
     removeListLocal,
-    markNotificationsRead,
-    markSingleNotificationRead,
     refetch: fetchLists,
   };
 }

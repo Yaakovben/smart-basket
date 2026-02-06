@@ -91,7 +91,6 @@ export class ListService {
       owner: new mongoose.Types.ObjectId(userId),
       inviteCode,
       members: [],
-      notifications: [],
     } as Partial<IList>);
 
     return transformList(list);

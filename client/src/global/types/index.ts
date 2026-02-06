@@ -42,15 +42,6 @@ export interface Member {
   joinedAt?: string;
 }
 
-export interface Notification {
-  id: string;
-  type: "join" | "leave" | "list_update";
-  userId: string;
-  userName: string;
-  timestamp: string;
-  read: boolean;
-}
-
 export interface List {
   id: string;
   name: string;
@@ -62,7 +53,6 @@ export interface List {
   products: Product[];
   inviteCode?: string | null;
   password?: string | null;
-  notifications?: Notification[];
 }
 
 // ===== Toast =====
