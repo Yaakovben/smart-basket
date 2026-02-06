@@ -11,6 +11,5 @@ export { generateInviteCode, generatePassword, generateListId } from './helpers/
 export type {
   NewListForm,
   HomeTab,
-  ExtendedNotification,
   UseHomeReturn
 } from './types/home-types';

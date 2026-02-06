@@ -41,7 +41,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
   const {
     name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
-    emailChecked, isGoogleAccount,
+    emailChecked, isGoogleAccount, checkingEmail,
     setName,
     handleEmailChange, handlePasswordChange, handleSubmit, handleGoogleSuccess, handleGoogleError,
     toggleEmailForm, applySuggestion
@@ -188,7 +188,11 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   inputProps={{ dir: 'ltr' }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Box sx={{ fontSize: 16 }}>📧</Box></InputAdornment>,
-                    endAdornment: emailChecked && !isGoogleAccount ? (
+                    endAdornment: checkingEmail ? (
+                      <InputAdornment position="end">
+                        <CircularProgress size={18} sx={{ color: 'primary.main' }} />
+                      </InputAdornment>
+                    ) : emailChecked && !isGoogleAccount ? (
                       <InputAdornment position="end">
                         <Box
                           onClick={() => handleEmailChange('')}

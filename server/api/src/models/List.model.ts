@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
-import type { NotificationType } from '../types';
 
 // Member subdocument interface
 export interface IMember {
@@ -9,15 +8,6 @@ export interface IMember {
   joinedAt: Date;
 }
 
-// Notification subdocument interface (legacy - kept for backward compatibility)
-export interface INotification {
-  _id: Types.ObjectId;
-  type: NotificationType;
-  userId: Types.ObjectId;
-  userName: string;
-  timestamp: Date;
-  read: boolean;
-}
 
 // List document interface
 export interface IList extends Document {
@@ -30,7 +20,6 @@ export interface IList extends Document {
   members: IMember[];
   inviteCode?: string;
   password?: string; // Plaintext password (4 chars)
-  notifications: INotification[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -53,41 +42,6 @@ const memberSchema = new Schema<IMember>(
     },
   },
   { _id: false }
-);
-
-const notificationSchema = new Schema<INotification>(
-  {
-    type: {
-      type: String,
-      enum: ['join', 'leave', 'removed'],
-      required: true,
-    },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    userName: {
-      type: String,
-      required: true,
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-    },
-    read: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  {
-    toJSON: {
-      transform: (_, ret) => {
-        const { _id, ...rest } = ret;
-        return { ...rest, id: _id.toString() };
-      },
-    },
-  }
 );
 
 const listSchema = new Schema<IList>(
@@ -126,7 +80,6 @@ const listSchema = new Schema<IList>(
       type: String,
       // Simple 4-character password stored as plaintext
     },
-    notifications: [notificationSchema],
   },
   {
     timestamps: true,
