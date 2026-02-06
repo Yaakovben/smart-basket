@@ -143,7 +143,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
           {error && !showEmailForm && (
             <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 13 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-              {error}
+              {error.includes('/clear-cache') ? (
+                <span>
+                  {error.replace('/clear-cache', '')}
+                  <a href="/clear-cache" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>/clear-cache</a>
+                </span>
+              ) : error}
             </Alert>
           )}
 
@@ -290,7 +295,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
                 {error && showEmailForm && (
                   <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-                    {error}
+                    {error.includes('/clear-cache') ? (
+                      <span>
+                        {error.replace('/clear-cache', '')}
+                        <a href="/clear-cache" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>/clear-cache</a>
+                      </span>
+                    ) : error}
                   </Alert>
                 )}
 
