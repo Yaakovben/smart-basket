@@ -64,19 +64,6 @@ export interface IMemberResponse {
   joinedAt: Date;
 }
 
-// ===== Notification Types =====
-// Types for embedded notifications in List model (backward compatibility)
-export type NotificationType = 'join' | 'leave' | 'removed';
-
-export interface INotificationResponse {
-  id: string;
-  type: NotificationType;
-  userId: string;
-  userName: string;
-  timestamp: Date;
-  read: boolean;
-}
-
 // ===== List Types =====
 export interface IListResponse {
   id: string;
@@ -88,7 +75,7 @@ export interface IListResponse {
   members: IMemberResponse[];
   products: IProductResponse[];
   inviteCode?: string;
-  notifications: INotificationResponse[];
+  password?: string;
   createdAt: Date;
   updatedAt: Date;
 }

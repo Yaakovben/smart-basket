@@ -33,10 +33,6 @@ export {
   generateShareListMessage
 } from './listOperations';
 
-// Re-export feature helpers for backward compatibility
-export { isValidEmail, getPasswordStrength } from '../../features/auth/helpers/auth-helpers';
-export { generateInviteCode, generatePassword } from '../../features/home/helpers/home-helpers';
-
 // Date formatting utilities
 export {
   formatDateLong,
