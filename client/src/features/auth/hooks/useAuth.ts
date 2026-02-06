@@ -123,9 +123,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           if (apiError.code === 'ERR_NETWORK') {
             setError(t('networkError'));
           } else if (apiError.response?.status === 405) {
-            // 405 = Method Not Allowed - show debug info
-            const apiUrl = apiError.config?.baseURL || import.meta.env.VITE_API_URL || 'unknown';
-            setError(`405 Error | API: ${apiUrl}`);
+            // 405 = Method Not Allowed - cache issue, show link to clear cache
+            setError(t('cacheError'));
           }
           // For other errors, continue silently - will check on submit
         } finally {
