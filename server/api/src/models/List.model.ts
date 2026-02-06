@@ -29,8 +29,7 @@ export interface IList extends Document {
   owner: Types.ObjectId;
   members: IMember[];
   inviteCode?: string;
-  password?: string;
-  displayPassword?: string; // Plaintext password for display (not hashed)
+  password?: string; // Plaintext password (4 chars)
   notifications: INotification[];
   createdAt: Date;
   updatedAt: Date;
@@ -125,11 +124,7 @@ const listSchema = new Schema<IList>(
     },
     password: {
       type: String,
-      // Password is hashed with bcrypt (input is 4 chars, stored hash is ~60 chars)
-    },
-    displayPassword: {
-      type: String,
-      // Plaintext password for display purposes (not hashed)
+      // Simple 4-character password stored as plaintext
     },
     notifications: [notificationSchema],
   },
@@ -137,9 +132,8 @@ const listSchema = new Schema<IList>(
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        const { _id, __v, password, displayPassword, ...rest } = ret;
-        // Return displayPassword as "password" for client (plaintext for display)
-        return { ...rest, id: _id.toString(), password: displayPassword || null };
+        const { _id, __v, ...rest } = ret;
+        return { ...rest, id: _id.toString() };
       },
     },
   }
@@ -149,29 +143,20 @@ const listSchema = new Schema<IList>(
 listSchema.index({ owner: 1 });
 listSchema.index({ 'members.user': 1 });
 
-// Hash password before saving (only if password is modified and is a short plaintext password)
-listSchema.pre('save', async function (next) {
-  // Skip if password not modified or doesn't exist
-  if (!this.isModified('password') || !this.password) return next();
-
-  // Only hash if it looks like a plaintext password (4 chars)
-  // Already hashed passwords start with $2b$ and are ~60 chars
-  if (this.password.length <= 10 && !this.password.startsWith('$2b$')) {
-    // Save plaintext password for display before hashing
-    this.displayPassword = this.password;
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  }
-
-  next();
-});
-
 // Compare password method
+// Handles both legacy bcrypt hashed passwords and new plaintext passwords
 listSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
   if (!this.password) return true; // No password set = no protection
-  return bcrypt.compare(candidatePassword, this.password);
+
+  // Legacy: hashed passwords start with $2b$
+  if (this.password.startsWith('$2b$')) {
+    return bcrypt.compare(candidatePassword, this.password);
+  }
+
+  // New: simple plaintext comparison
+  return this.password === candidatePassword;
 };
 
 export const List = mongoose.model<IList>('List', listSchema);
