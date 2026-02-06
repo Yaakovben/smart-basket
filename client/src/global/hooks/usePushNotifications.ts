@@ -6,6 +6,7 @@ interface UsePushNotificationsReturn {
   isSubscribed: boolean;
   permission: NotificationPermission | 'unsupported';
   loading: boolean;
+  error: string | null;
   subscribe: () => Promise<boolean>;
   unsubscribe: () => Promise<boolean>;
 }
@@ -36,6 +37,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check if push notifications are supported
   useEffect(() => {
@@ -74,9 +76,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
    * Subscribe to push notifications
    */
   const subscribe = useCallback(async (): Promise<boolean> => {
-    if (!isSupported) return false;
+    if (!isSupported) {
+      setError('Push not supported in this browser');
+      return false;
+    }
 
     setLoading(true);
+    setError(null);
 
     try {
       // Request permission
@@ -84,6 +90,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       setPermission(permissionResult);
 
       if (permissionResult !== 'granted') {
+        setError('Permission denied');
         setLoading(false);
         return false;
       }
@@ -91,6 +98,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Get VAPID public key from server
       const vapidPublicKey = await pushApi.getVapidPublicKey();
       if (!vapidPublicKey) {
+        setError('Push notifications not configured on server');
         setLoading(false);
         return false;
       }
@@ -109,11 +117,16 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (success) {
         setIsSubscribed(true);
+        setError(null);
+      } else {
+        setError('Failed to save subscription to server');
       }
 
       setLoading(false);
       return success;
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
       setLoading(false);
       return false;
     }
@@ -126,6 +139,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     if (!isSupported) return false;
 
     setLoading(true);
+    setError(null);
 
     try {
       // Get current subscription
@@ -143,7 +157,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       setIsSubscribed(false);
       setLoading(false);
       return true;
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
       setLoading(false);
       return false;
     }
@@ -154,6 +170,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     isSubscribed,
     permission,
     loading,
+    error,
     subscribe,
     unsubscribe,
   };
