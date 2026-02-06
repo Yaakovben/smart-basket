@@ -125,16 +125,18 @@ export class ListService {
     await list.save();
 
     if (list.isGroup && hasChanges && list.members.length > 0) {
+      // Encode change type and new name in productName (string field)
+      // productId is ObjectId and can't hold string values like 'name'/'design'
+      const changeType = nameChanged && (iconChanged || colorChanged) ? 'both'
+                       : nameChanged ? 'name'
+                       : 'design';
+      const productName = nameChanged ? `${changeType}:${list.name}` : changeType;
+
       NotificationService.createNotificationsForListMembers(
         listId,
         'list_update',
         userId,
-        {
-          productName: nameChanged ? list.name : undefined,
-          productId: nameChanged && (iconChanged || colorChanged) ? 'both'
-                   : nameChanged ? 'name'
-                   : 'design',
-        }
+        { productName }
       ).catch(() => {});
     }
 

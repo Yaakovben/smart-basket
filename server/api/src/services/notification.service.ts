@@ -54,7 +54,6 @@ const generatePushMessage = (
   actorName: string,
   listName: string,
   productName?: string,
-  productId?: string
 ): { title: string; body: string } => {
   // Format: action description with actor name
   const getAction = (): string => {
@@ -75,17 +74,20 @@ const generatePushMessage = (
         return `${actorName} מחק/ה "${productName}"`;
       case 'product_purchase':
         return `${actorName} סימן/ה "${productName}" כנקנה`;
-      case 'list_update':
-        // productId indicates what changed: 'name', 'design', or 'both'
-        // productName contains the new list name if name changed
-        if (productId === 'name' && productName) {
-          return `${actorName} שינה/תה את שם הרשימה ל-"${productName}"`;
-        } else if (productId === 'design') {
+      case 'list_update': {
+        // productName encodes change type and optional new name as "changeType:newName" or just "changeType"
+        const [changeType, newName] = productName?.includes(':')
+          ? [productName.split(':')[0], productName.split(':').slice(1).join(':')]
+          : [productName, undefined];
+        if (changeType === 'name' && newName) {
+          return `${actorName} שינה/תה את שם הרשימה ל-"${newName}"`;
+        } else if (changeType === 'design') {
           return `${actorName} שינה/תה את עיצוב הרשימה`;
-        } else if (productId === 'both' && productName) {
-          return `${actorName} עדכן/ה את הרשימה ל-"${productName}"`;
+        } else if (changeType === 'both' && newName) {
+          return `${actorName} עדכן/ה את הרשימה ל-"${newName}"`;
         }
         return `${actorName} עדכן/ה את הרשימה`;
+      }
       default:
         return `פעילות חדשה`;
     }
@@ -136,7 +138,7 @@ export class NotificationService {
     });
 
     // Send push notification (async, don't wait)
-    const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName, data.productId);
+    const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
       icon: '/apple-touch-icon.svg',
@@ -214,7 +216,7 @@ export class NotificationService {
     const notifications = await NotificationDAL.createMany(notificationsData);
 
     // Send push notifications to all target users (async, don't wait)
-    const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName, data.productId);
+    const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
     PushService.sendToUsers(targetUserIds, {
       ...pushMessage,
       icon: '/apple-touch-icon.svg',
