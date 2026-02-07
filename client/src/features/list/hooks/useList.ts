@@ -104,6 +104,11 @@ export const useList = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<DragState | null>(null);
 
+  // ===== Toggle Race Condition Prevention =====
+  const toggleVersions = useRef(new Map<string, number>());
+  const productsRef = useRef(list.products);
+  productsRef.current = list.products;
+
   // ===== Computed Values =====
   const pending = useMemo(
     () => list.products.filter((p: Product) => !p.isPurchased),
@@ -296,13 +301,16 @@ export const useList = ({
   }, [addProductWithOptimisticUpdate]);
 
   const toggleProduct = useCallback(async (productId: string) => {
-    // Optimistic update for immediate UI response
     const product = list.products.find((p: Product) => p.id === productId);
     if (!product) return;
 
     const newIsPurchased = !product.isPurchased;
-    const previousProducts = [...list.products];
 
+    // Track concurrent toggles to prevent stale server responses
+    const version = (toggleVersions.current.get(productId) || 0) + 1;
+    toggleVersions.current.set(productId, version);
+
+    // Optimistic update - immediate UI response
     updateProducts(
       list.products.map((p: Product) =>
         p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
@@ -312,19 +320,27 @@ export const useList = ({
     dismissHint();
 
     try {
-      // Call API to toggle product
-      const updatedList = await productsApi.togglePurchased(list.id, productId);
+      await productsApi.togglePurchased(list.id, productId);
 
-      // Update with server response to ensure consistency
-      updateProducts(updatedList.products.map(convertApiProduct));
+      // Don't overwrite with server response - trust optimistic update
+      // This prevents out-of-order responses from causing visual glitches
+      if (toggleVersions.current.get(productId) === version) {
+        toggleVersions.current.delete(productId);
+      }
 
-      // Emit socket event to notify other users
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
       console.error('Failed to toggle product:', error);
-      // Revert optimistic update on error
-      updateProducts(previousProducts);
-      showToast(t('unknownError'), 'error');
+      // Only rollback if no newer toggle superseded this one
+      if (toggleVersions.current.get(productId) === version) {
+        updateProducts(
+          productsRef.current.map((p: Product) =>
+            p.id === productId ? { ...p, isPurchased: !newIsPurchased } : p
+          )
+        );
+        showToast(t('unknownError'), 'error');
+        toggleVersions.current.delete(productId);
+      }
     }
   }, [list.id, list.products, user.name, updateProducts, showToast, t, dismissHint]);
 

@@ -47,6 +47,13 @@ const notificationDismissKeyframes = {
   }
 };
 
+const notificationSlideInKeyframes = {
+  '@keyframes notificationSlideIn': {
+    '0%': { opacity: 0, transform: 'translateY(10px)' },
+    '100%': { opacity: 1, transform: 'translateY(0)' }
+  }
+};
+
 // ===== Reusable Styles =====
 const glassButtonSx = {
   bgcolor: 'rgba(255,255,255,0.2)',
@@ -650,19 +657,54 @@ export const HomeComponent = memo(({
       {showNotifications && (
         <Modal title={t('notifications')} onClose={() => setShowNotifications(false)}>
           {allNotifications.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 5, px: 2.5 }}>
-              <Box sx={{ fontSize: 56, mb: 1, filter: 'grayscale(0.3)' }}>🔔</Box>
-              <Typography sx={{ color: 'text.secondary', fontSize: 15 }}>{t('noNotifications')}</Typography>
+            <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '24px',
+                background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(16,185,129,0.06))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 38,
+                mx: 'auto',
+                mb: 2.5,
+              }}>
+                🔔
+              </Box>
+              <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>
+                {t('noNotifications')}
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                {settings.language === 'he' ? 'כשיהיו עדכונים חדשים ברשימות שלך,\nהם יופיעו כאן'
+                  : settings.language === 'ru' ? 'Когда появятся обновления\nв ваших списках, они будут здесь'
+                  : "When there are new updates\nin your lists, they'll appear here"}
+              </Typography>
             </Box>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              {/* Count sub-header */}
+              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1.5, px: 0.5 }}>
+                {allNotifications.length}{' '}
+                {settings.language === 'he' ? (allNotifications.length === 1 ? 'התראה חדשה' : 'התראות חדשות')
+                  : settings.language === 'ru' ? (allNotifications.length === 1 ? 'новое уведомление' : 'новых уведомлений')
+                  : (allNotifications.length === 1 ? 'new notification' : 'new notifications')}
+              </Typography>
+
               {/* Notification list */}
-              <Box sx={{ maxHeight: '55vh', overflowY: 'auto', mx: -0.5, px: 0.5 }}>
+              <Box sx={{
+                maxHeight: '55vh',
+                overflowY: 'auto',
+                mx: -0.5,
+                px: 0.5,
+                pb: 1,
+                maskImage: 'linear-gradient(to bottom, black 0%, black 94%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 94%, transparent 100%)',
+              }}>
                 {allNotifications.map((n, index) => {
                   const isDismissing = dismissingNotifications.has(n.id);
                   const notificationDate = n.timestamp ? new Date(n.timestamp) : null;
 
-                  // Relative time display
                   const getTimeDisplay = () => {
                     if (!notificationDate) return '';
                     const now = new Date();
@@ -735,7 +777,6 @@ export const HomeComponent = memo(({
                   };
 
                   const accent = getAccentColor();
-                  const isLast = index === allNotifications.length - 1;
 
                   return (
                     <Box
@@ -745,28 +786,31 @@ export const HomeComponent = memo(({
                         alignItems: 'center',
                         gap: 1.5,
                         py: 1.25,
-                        px: 1,
-                        borderBottom: isLast ? 'none' : '1px solid',
-                        borderColor: 'divider',
-                        transition: 'all 0.3s ease',
-                        borderRadius: '8px',
-                        '&:active': { bgcolor: 'action.hover' },
-                        ...(isDismissing && {
-                          ...notificationDismissKeyframes,
-                          animation: 'notificationDismiss 0.5s ease-out forwards',
-                        }),
+                        px: 1.5,
+                        mb: 0.75,
+                        borderRadius: '12px',
+                        bgcolor: 'rgba(0,0,0,0.02)',
+                        borderInlineStart: `3.5px solid ${accent}`,
+                        transition: 'background-color 0.2s',
+                        ...notificationSlideInKeyframes,
+                        ...(isDismissing
+                          ? { ...notificationDismissKeyframes, animation: 'notificationDismiss 0.5s ease-out forwards' }
+                          : { animation: `notificationSlideIn 0.35s ease-out ${index * 0.05}s both` }
+                        ),
+                        '&:active': { bgcolor: 'rgba(0,0,0,0.04)' },
+                        '&:last-child': { mb: 0 },
                       }}
                     >
-                      {/* Icon circle */}
+                      {/* Icon */}
                       <Box sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '12px',
+                        width: 44,
+                        height: 44,
+                        borderRadius: '14px',
                         bgcolor: `${accent}14`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 18,
+                        fontSize: 20,
                         flexShrink: 0,
                       }}>
                         {getEmoji()}
@@ -774,7 +818,6 @@ export const HomeComponent = memo(({
 
                       {/* Content */}
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        {/* Main text */}
                         <Typography sx={{
                           fontSize: 13.5,
                           color: 'text.primary',
@@ -785,12 +828,10 @@ export const HomeComponent = memo(({
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
                         }}>
-                          <Box component="span" sx={{ fontWeight: 600 }}>{n.userName}</Box>
-                          {' '}
-                          {getNotificationText()}
+                          <Box component="span" sx={{ fontWeight: 700 }}>{n.userName}</Box>
+                          {' '}{getNotificationText()}
                         </Typography>
-                        {/* Meta row: list name + time */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.35 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.4 }}>
                           <Typography sx={{
                             fontSize: 11.5,
                             color: 'text.secondary',
@@ -809,7 +850,7 @@ export const HomeComponent = memo(({
                         </Box>
                       </Box>
 
-                      {/* Dismiss - swipe-like X */}
+                      {/* Dismiss */}
                       <IconButton
                         size="small"
                         onClick={(e) => { e.stopPropagation(); handleDismissNotification(n.listId, n.id); }}
@@ -819,11 +860,11 @@ export const HomeComponent = memo(({
                         sx={{
                           color: 'text.disabled',
                           flexShrink: 0,
-                          width: 30,
-                          height: 30,
-                          opacity: isDismissing ? 0 : 0.4,
-                          transition: 'opacity 0.2s, background-color 0.2s',
-                          '&:hover': { opacity: 0.8, bgcolor: 'rgba(0,0,0,0.04)' },
+                          width: 28,
+                          height: 28,
+                          opacity: isDismissing ? 0 : 0.35,
+                          transition: 'opacity 0.2s',
+                          '&:hover': { opacity: 0.7 },
                           border: 'none !important',
                           outline: 'none !important',
                           boxShadow: 'none !important',
@@ -831,14 +872,14 @@ export const HomeComponent = memo(({
                           WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        <CloseIcon sx={{ fontSize: 15 }} />
+                        <CloseIcon sx={{ fontSize: 14 }} />
                       </IconButton>
                     </Box>
                   );
                 })}
               </Box>
 
-              {/* Clear all button - sticky at bottom */}
+              {/* Clear all button */}
               <Box sx={{ pt: 1.5, pb: 0.5 }}>
                 <Button
                   fullWidth
