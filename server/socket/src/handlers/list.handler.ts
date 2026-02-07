@@ -5,8 +5,50 @@ import type {
   ServerToClientEvents,
 } from '../types';
 
-// Track which users are in which lists
-const listUsers = new Map<string, Set<string>>();
+// Track socket connections per user per list
+// Structure: listId → userId → Set<socketId>
+// This correctly handles multiple connections (tabs/devices) per user
+const listUserSockets = new Map<string, Map<string, Set<string>>>();
+
+// Add a socket connection for a user in a list
+// Returns true if this is the user's first connection to this list
+const addUserSocket = (listId: string, userId: string, socketId: string): boolean => {
+  if (!listUserSockets.has(listId)) {
+    listUserSockets.set(listId, new Map());
+  }
+  const userMap = listUserSockets.get(listId)!;
+  const isNewUser = !userMap.has(userId);
+  if (isNewUser) {
+    userMap.set(userId, new Set());
+  }
+  userMap.get(userId)!.add(socketId);
+  return isNewUser;
+};
+
+// Remove a socket connection for a user in a list
+// Returns true if the user has no more connections (fully offline from this list)
+const removeUserSocket = (listId: string, userId: string, socketId: string): boolean => {
+  const userMap = listUserSockets.get(listId);
+  if (!userMap) return false;
+  const sockets = userMap.get(userId);
+  if (!sockets) return false;
+  sockets.delete(socketId);
+  if (sockets.size === 0) {
+    userMap.delete(userId);
+    // Clean up empty list entries to prevent memory leaks
+    if (userMap.size === 0) {
+      listUserSockets.delete(listId);
+    }
+    return true;
+  }
+  return false;
+};
+
+// Get online user IDs for a list
+const getOnlineUserIds = (listId: string): string[] => {
+  const userMap = listUserSockets.get(listId);
+  return userMap ? Array.from(userMap.keys()) : [];
+};
 
 export const registerListHandlers = (
   io: Server<ClientToServerEvents, ServerToClientEvents>,
@@ -16,65 +58,69 @@ export const registerListHandlers = (
 
   // Join a list room
   socket.on('join:list', (listId: string) => {
+    if (typeof listId !== 'string' || !listId) return;
+
     socket.join(`list:${listId}`);
+    const isNewUser = addUserSocket(listId, userId, socket.id);
 
-    // Track user in list
-    if (!listUsers.has(listId)) {
-      listUsers.set(listId, new Set());
-    }
-    listUsers.get(listId)!.add(userId);
-
-    console.log(`User ${userId} joined list ${listId}`);
+    console.log(`User ${userId} joined list ${listId} (socket ${socket.id})`);
 
     // Send current online users to the joining socket
     socket.emit('presence:online', {
       listId,
-      userIds: Array.from(listUsers.get(listId)!),
+      userIds: getOnlineUserIds(listId),
     });
 
-    // Notify others in the list
-    socket.to(`list:${listId}`).emit('user:joined', {
-      listId,
-      userId,
-      userName: socket.userName || 'Unknown',
-      timestamp: new Date(),
-    });
+    // Notify others only if this is a new user (not a second tab/reconnection)
+    if (isNewUser) {
+      socket.to(`list:${listId}`).emit('user:joined', {
+        listId,
+        userId,
+        userName: socket.userName || 'Unknown',
+        timestamp: new Date(),
+      });
+    }
   });
 
   // Leave a list room
   socket.on('leave:list', (listId: string) => {
+    if (typeof listId !== 'string' || !listId) return;
+
     socket.leave(`list:${listId}`);
+    const isFullyOffline = removeUserSocket(listId, userId, socket.id);
 
-    // Remove user from tracking
-    listUsers.get(listId)?.delete(userId);
+    console.log(`User ${userId} left list ${listId} (socket ${socket.id})`);
 
-    console.log(`User ${userId} left list ${listId}`);
-
-    // Notify others
-    socket.to(`list:${listId}`).emit('user:left', {
-      listId,
-      userId,
-      userName: socket.userName || 'Unknown',
-      timestamp: new Date(),
-    });
+    // Notify others only if user has no more active connections
+    if (isFullyOffline) {
+      socket.to(`list:${listId}`).emit('user:left', {
+        listId,
+        userId,
+        userName: socket.userName || 'Unknown',
+        timestamp: new Date(),
+      });
+    }
   });
 
   // Request presence for specific lists
   socket.on('get:presence', (listIds: string[]) => {
-    listIds.forEach((listId) => {
+    if (!Array.isArray(listIds)) return;
+    for (const listId of listIds) {
+      if (typeof listId !== 'string' || !listId) continue;
       socket.emit('presence:online', {
         listId,
-        userIds: Array.from(listUsers.get(listId) || []),
+        userIds: getOnlineUserIds(listId),
       });
-    });
+    }
   });
 
-  // Handle disconnect
+  // Handle disconnect - remove this socket from all lists
   socket.on('disconnect', () => {
-    // Remove user from all lists they were in
-    listUsers.forEach((users, listId) => {
-      if (users.has(userId)) {
-        users.delete(userId);
+    // Copy entries to safely modify the Map during iteration
+    const entries = Array.from(listUserSockets.entries());
+    for (const [listId] of entries) {
+      const isFullyOffline = removeUserSocket(listId, userId, socket.id);
+      if (isFullyOffline) {
         socket.to(`list:${listId}`).emit('user:left', {
           listId,
           userId,
@@ -82,11 +128,11 @@ export const registerListHandlers = (
           timestamp: new Date(),
         });
       }
-    });
+    }
   });
 };
 
 // Helper to get active users in a list
 export const getListUsers = (listId: string): string[] => {
-  return Array.from(listUsers.get(listId) || []);
+  return getOnlineUserIds(listId);
 };

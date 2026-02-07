@@ -150,7 +150,7 @@ export const registerNotificationHandlers = (
 
   // List deleted by owner
   socket.on('list:delete', (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => {
-    if (!isValidString(data?.listId) || !isValidString(data?.listName) || !isValidString(data?.ownerName)) {
+    if (!isValidString(data?.listId) || !isValidString(data?.listName) || !isValidString(data?.ownerName) || !Array.isArray(data?.memberIds)) {
       console.warn('Invalid list:delete data from user:', userId);
       return;
     }

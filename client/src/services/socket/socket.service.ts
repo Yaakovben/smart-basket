@@ -82,6 +82,7 @@ class SocketService {
   private listeners: Map<string, Set<SocketEventHandler<unknown>>> = new Map();
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
+  private onlineHandler: (() => void) | null = null;
 
   connect() {
     const token = getAccessToken();
@@ -91,6 +92,11 @@ class SocketService {
 
     if (this.socket?.connected) {
       return;
+    }
+
+    // Clean up existing disconnected/reconnecting socket to prevent connection leaks
+    if (this.socket) {
+      this.socket.disconnect();
     }
 
     this.socket = io(SOCKET_URL, {
@@ -116,8 +122,6 @@ class SocketService {
         const newToken = getAccessToken();
         if (newToken && this.socket) {
           this.socket.auth = { token: newToken };
-          // Reconnect with the new token after a short delay
-          setTimeout(() => this.socket?.connect(), 100);
         }
       }
     });
@@ -131,6 +135,9 @@ class SocketService {
 
     // Setup visibility change handler for mobile
     this.setupVisibilityHandler();
+
+    // Setup network recovery handler
+    this.setupOnlineHandler();
   }
 
   private setupVisibilityHandler() {
@@ -157,6 +164,25 @@ class SocketService {
     };
 
     document.addEventListener('visibilitychange', this.visibilityHandler);
+  }
+
+  private setupOnlineHandler() {
+    if (this.onlineHandler) {
+      window.removeEventListener('online', this.onlineHandler);
+    }
+
+    this.onlineHandler = () => {
+      // Network came back online - ensure socket is connected
+      if (this.socket && !this.socket.connected) {
+        const token = getAccessToken();
+        if (token) {
+          this.socket.auth = { token };
+          this.socket.connect();
+        }
+      }
+    };
+
+    window.addEventListener('online', this.onlineHandler);
   }
 
   private setupEventForwarding() {
@@ -186,6 +212,11 @@ class SocketService {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    // Cleanup network recovery handler
+    if (this.onlineHandler) {
+      window.removeEventListener('online', this.onlineHandler);
+      this.onlineHandler = null;
     }
     this.joinedLists.clear();
     // Clear all listeners to prevent memory leaks
