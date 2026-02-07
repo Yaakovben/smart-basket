@@ -84,9 +84,9 @@ export interface PasswordStrength {
   color: string;
 }
 
-export const getPasswordStrength = (password: string): PasswordStrength => {
+export const getPasswordStrength = (password: string, t?: (key: 'passwordWeak' | 'passwordMedium' | 'passwordStrong') => string): PasswordStrength => {
   if (password.length === 0) return { strength: 0, text: '', color: '' };
-  if (password.length < 8) return { strength: 1, text: 'חלשה', color: '#EF4444' };
-  if (password.length < 10) return { strength: 2, text: 'בינונית', color: '#F59E0B' };
-  return { strength: 3, text: 'חזקה', color: '#10B981' };
+  if (password.length < 8) return { strength: 1, text: t?.('passwordWeak') || 'חלשה', color: '#EF4444' };
+  if (password.length < 10) return { strength: 2, text: t?.('passwordMedium') || 'בינונית', color: '#F59E0B' };
+  return { strength: 3, text: t?.('passwordStrong') || 'חזקה', color: '#10B981' };
 };

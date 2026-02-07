@@ -6,6 +6,7 @@ import { SettingsProvider, useSettings } from './global/context/SettingsContext'
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
+import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 
 // Clear all the  caches on app load (one-time cleanup for v2.0 migration)
@@ -57,6 +58,7 @@ const ThemedApp = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <OfflineBanner />
       <BrowserRouter>
         <AppRouter />
       </BrowserRouter>

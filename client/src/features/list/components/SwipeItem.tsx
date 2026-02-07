@@ -58,6 +58,14 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
   }, [isOpen, offset]);
 
+  // Cleanup body styles on unmount to prevent locked scrolling
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
+
   // Rubber band effect calculation
   const calcOffset = useCallback((rawOffset: number): number => {
     // Swiping right (wrong direction) - strong resistance with rubber band

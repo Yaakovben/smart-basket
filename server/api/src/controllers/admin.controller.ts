@@ -1,5 +1,6 @@
 import type { Response } from 'express';
-import { User, List, LoginActivity } from '../models';
+import { User, List, Product, LoginActivity } from '../models';
+import { UserService } from '../services/user.service';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
@@ -61,12 +62,8 @@ export class AdminController {
       }),
     ]);
 
-    // Get products count
-    const listsWithProducts = await List.aggregate([
-      { $unwind: '$products' },
-      { $count: 'totalProducts' },
-    ]);
-    const totalProducts = listsWithProducts[0]?.totalProducts || 0;
+    // Get products count from Product collection
+    const totalProducts = await Product.countDocuments();
 
     res.json({
       success: true,
@@ -84,19 +81,10 @@ export class AdminController {
   static deleteUser = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
 
-    // Delete user's owned lists
-    await List.deleteMany({ owner: userId });
+    // Use the same comprehensive cleanup as user self-deletion
+    await UserService.deleteAccount(userId);
 
-    // Remove user from group lists
-    await List.updateMany(
-      { 'members.user': userId },
-      { $pull: { members: { user: userId } } }
-    );
-
-    // Delete user
-    await User.findByIdAndDelete(userId);
-
-    // Delete login activities
+    // Delete login activities (not included in deleteAccount)
     await LoginActivity.deleteMany({ user: userId });
 
     res.json({

@@ -915,7 +915,7 @@ export const HomeComponent = memo(({
 
       {/* Confirm Logout */}
       {confirmLogout && (
-        <ConfirmModal title="התנתקות" message="להתנתק?" confirmText="התנתק" onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />
+        <ConfirmModal title={t('logout')} message={t('logoutConfirm')} confirmText={t('logout')} onConfirm={() => { setConfirmLogout(false); onLogout(); }} onCancel={() => setConfirmLogout(false)} />
       )}
 
       {/* Push Notification Prompt */}

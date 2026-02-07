@@ -262,9 +262,13 @@ type TranslationKey =
   | 'change'
   | 'networkError'
   | 'googleLoginError'
+  | 'passwordWeak'
+  | 'passwordMedium'
+  | 'passwordStrong'
   | 'localStorageError'
   | 'cacheError'
   | 'noUserData'
+  | 'offlineMessage'
   // Clear Cache Page
   | 'clearCacheTitle'
   | 'clearCacheSubtitle'
@@ -548,10 +552,14 @@ export const translations: Record<Language, Translations> = {
     continue: 'המשך',
     change: 'שנה',
     networkError: 'בדוק את חיבור האינטרנט',
+    passwordWeak: 'חלשה',
+    passwordMedium: 'בינונית',
+    passwordStrong: 'חזקה',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
     cacheError: 'יש בעיית חיבור. נסה לנקות את המטמון דרך /clear-cache',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
+    offlineMessage: 'אין חיבור לאינטרנט',
     // Clear Cache Page
     clearCacheTitle: 'ניקוי מטמון',
     clearCacheSubtitle: 'מנקה נתונים שמורים...',
@@ -832,10 +840,14 @@ export const translations: Record<Language, Translations> = {
     continue: 'Continue',
     change: 'Change',
     networkError: 'Check your internet connection',
+    passwordWeak: 'Weak',
+    passwordMedium: 'Medium',
+    passwordStrong: 'Strong',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
     cacheError: 'Connection issue. Try clearing cache at /clear-cache',
     noUserData: 'Error: No user data received from server',
+    offlineMessage: 'No internet connection',
     // Clear Cache Page
     clearCacheTitle: 'Clear Cache',
     clearCacheSubtitle: 'Clearing saved data...',
@@ -1116,10 +1128,14 @@ export const translations: Record<Language, Translations> = {
     continue: 'Продолжить',
     change: 'Изменить',
     networkError: 'Проверьте подключение к интернету',
+    passwordWeak: 'Слабый',
+    passwordMedium: 'Средний',
+    passwordStrong: 'Сильный',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
     cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
+    offlineMessage: 'Нет подключения к интернету',
     // Clear Cache Page
     clearCacheTitle: 'Очистка кэша',
     clearCacheSubtitle: 'Очистка сохранённых данных...',

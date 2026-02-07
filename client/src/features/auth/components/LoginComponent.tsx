@@ -270,7 +270,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {/* Password Strength Indicator - Only for new users */}
                 <Collapse in={isNewUser && password.length > 0}>
                   {(() => {
-                    const strength = getPasswordStrength(password);
+                    const strength = getPasswordStrength(password, t);
                     const colors = ['#EF4444', '#F59E0B', '#10B981'];
                     return (
                       <Box sx={{
