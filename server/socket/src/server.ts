@@ -11,6 +11,10 @@ import {
 import { initRedis, closeRedis } from './services/redis.service';
 import type { AuthenticatedSocket, ClientToServerEvents, ServerToClientEvents } from './types';
 
+// Global tracking of connected users: userId → Set<socketId>
+// Handles multiple tabs/devices per user correctly
+const connectedUsers = new Map<string, Set<string>>();
+
 // Initialize Sentry error monitoring (must be first)
 if (env.SENTRY_DSN) {
   Sentry.init({
@@ -66,10 +70,36 @@ io.use(authenticateSocket);
 // Connection handler
 io.on('connection', (socket) => {
   const authSocket = socket as AuthenticatedSocket;
-  logger.info(`User connected: ${authSocket.userId}`);
+  const userId = authSocket.userId!;
+  logger.info(`User connected: ${userId}`);
 
   // Join user's personal room for direct notifications
-  authSocket.join(`user:${authSocket.userId}`);
+  authSocket.join(`user:${userId}`);
+
+  // Track global connection
+  const isNewUser = !connectedUsers.has(userId);
+  if (isNewUser) {
+    connectedUsers.set(userId, new Set());
+  }
+  connectedUsers.get(userId)!.add(authSocket.id);
+
+  // Notify admin presence subscribers if this is a new user coming online
+  if (isNewUser) {
+    io.to('admin:presence').emit('admin:user-connected', { userId });
+  }
+
+  // Admin presence: get all online users and subscribe to updates
+  authSocket.on('get:online-users', () => {
+    authSocket.join('admin:presence');
+    authSocket.emit('admin:online-users', {
+      userIds: Array.from(connectedUsers.keys()),
+    });
+  });
+
+  // Admin presence: unsubscribe from updates
+  authSocket.on('leave:online-users', () => {
+    authSocket.leave('admin:presence');
+  });
 
   // Register event handlers
   registerListHandlers(io, authSocket);
@@ -78,15 +108,26 @@ io.on('connection', (socket) => {
 
   // Error handling
   authSocket.on('error', (error) => {
-    logger.error(`Socket error for user ${authSocket.userId}:`, error);
+    logger.error(`Socket error for user ${userId}:`, error);
     Sentry.captureException(error, {
-      extra: { userId: authSocket.userId },
+      extra: { userId },
     });
     authSocket.emit('error', { message: 'An error occurred' });
   });
 
   authSocket.on('disconnect', (reason) => {
-    logger.info(`User disconnected: ${authSocket.userId} - ${reason}`);
+    logger.info(`User disconnected: ${userId} - ${reason}`);
+
+    // Remove socket from global tracking
+    const sockets = connectedUsers.get(userId);
+    if (sockets) {
+      sockets.delete(authSocket.id);
+      if (sockets.size === 0) {
+        connectedUsers.delete(userId);
+        // Notify admin presence subscribers that user went fully offline
+        io.to('admin:presence').emit('admin:user-disconnected', { userId });
+      }
+    }
   });
 });
 

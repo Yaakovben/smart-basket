@@ -198,6 +198,9 @@ class SocketService {
       'list:deleted',
       'notification:new',
       'member:removed',
+      'admin:online-users',
+      'admin:user-connected',
+      'admin:user-disconnected',
     ];
 
     events.forEach((event) => {
@@ -242,6 +245,16 @@ class SocketService {
     if (listIds.length > 0) {
       this.socket?.emit('get:presence', listIds);
     }
+  }
+
+  // Request all online users (for admin page)
+  requestOnlineUsers() {
+    this.socket?.emit('get:online-users');
+  }
+
+  // Stop receiving online user updates (when leaving admin page)
+  leaveOnlineUsers() {
+    this.socket?.emit('leave:online-users');
   }
 
   // Subscribe to events

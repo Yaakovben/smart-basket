@@ -12,9 +12,10 @@ import type { Language } from '../../../global/types';
 interface UsersTableProps {
   users: UserWithLastLogin[];
   language: Language;
+  onlineUserIds: Set<string>;
 }
 
-export const UsersTable = ({ users, language }: UsersTableProps) => {
+export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) => {
   const { t } = useSettings();
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {users.map((user, index) => {
+        const isOnline = onlineUserIds.has(user.id);
         const activeToday = isActiveToday(user.lastLoginAt);
         const activeThisWeek = isActiveThisWeek(user.lastLoginAt);
         const isExpanded = expandedUserId === user.id;
@@ -47,8 +49,8 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
             sx={{
               borderRadius: '14px',
               border: '1px solid',
-              borderColor: activeToday ? 'rgba(20, 184, 166, 0.3)' : 'divider',
-              bgcolor: activeToday ? 'rgba(20, 184, 166, 0.03)' : 'background.paper',
+              borderColor: isOnline ? 'rgba(34, 197, 94, 0.4)' : activeToday ? 'rgba(20, 184, 166, 0.3)' : 'divider',
+              bgcolor: isOnline ? 'rgba(34, 197, 94, 0.04)' : activeToday ? 'rgba(20, 184, 166, 0.03)' : 'background.paper',
               overflow: 'hidden',
               transition: 'all 0.2s ease',
             }}
@@ -102,7 +104,7 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
                 }}
               >
                 {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
-                {activeToday && (
+                {isOnline && (
                   <Box
                     sx={{
                       position: 'absolute',
@@ -111,7 +113,7 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
                       width: 10,
                       height: 10,
                       borderRadius: '50%',
-                      bgcolor: '#10B981',
+                      bgcolor: '#22C55E',
                       border: '2px solid white'
                     }}
                   />
@@ -133,12 +135,12 @@ export const UsersTable = ({ users, language }: UsersTableProps) => {
                   >
                     {user.name}
                   </Typography>
-                  {activeToday && (
+                  {isOnline && (
                     <Box sx={{
                       width: 6,
                       height: 6,
                       borderRadius: '50%',
-                      bgcolor: '#10B981',
+                      bgcolor: '#22C55E',
                       flexShrink: 0
                     }} />
                   )}

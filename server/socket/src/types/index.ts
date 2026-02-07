@@ -28,6 +28,8 @@ export interface ClientToServerEvents {
   'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
   'list:delete': (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => void;
   'list:update': (data: { listId: string; listName: string; userName: string; changeType?: 'name' | 'design' | 'both'; newName?: string }) => void;
+  'get:online-users': () => void;
+  'leave:online-users': () => void;
 }
 
 // Socket events from server to client
@@ -43,6 +45,9 @@ export interface ServerToClientEvents {
   'notification:new': (data: NotificationData) => void;
   'member:removed': (data: MemberRemovedData) => void;
   'list:deleted': (data: ListDeletedData) => void;
+  'admin:online-users': (data: { userIds: string[] }) => void;
+  'admin:user-connected': (data: { userId: string }) => void;
+  'admin:user-disconnected': (data: { userId: string }) => void;
   'error': (data: { message: string }) => void;
 }
 

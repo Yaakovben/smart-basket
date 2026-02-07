@@ -5,7 +5,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { useAdminDashboard } from '../hooks/admin-hooks';
+import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { ActivityFilters } from './ActivityFilters';
 import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
@@ -49,6 +49,7 @@ export const AdminDashboard = () => {
     loading,
     error
   } = useAdminDashboard();
+  const onlineUserIds = useOnlineUsers();
 
   // Memoized filtered users to avoid recalculating on every render
   const filteredUsers = useMemo(() => {
@@ -185,6 +186,24 @@ export const AdminDashboard = () => {
               {t('loginsThisMonth')}
             </Typography>
           </Paper>
+
+          <Paper
+            sx={{
+              flex: '1 0 auto',
+              minWidth: 90,
+              p: 1.5,
+              borderRadius: '14px',
+              textAlign: 'center',
+              bgcolor: 'rgba(255,255,255,0.95)'
+            }}
+          >
+            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#22C55E' }}>
+              {onlineUserIds.size}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+              {t('onlineNow')}
+            </Typography>
+          </Paper>
         </Box>
       </Box>
 
@@ -278,6 +297,7 @@ export const AdminDashboard = () => {
               <UsersTable
                 users={filteredUsers}
                 language={settings.language}
+                onlineUserIds={onlineUserIds}
               />
             )}
           </>

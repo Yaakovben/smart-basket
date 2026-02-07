@@ -225,6 +225,7 @@ type TranslationKey =
   | 'totalUsers'
   | 'loginsToday'
   | 'loginsThisMonth'
+  | 'onlineNow'
   | 'allActivity'
   | 'dailyView'
   | 'monthlyView'
@@ -516,6 +517,7 @@ export const translations: Record<Language, Translations> = {
     totalUsers: 'סה״כ משתמשים',
     loginsToday: 'התחברויות היום',
     loginsThisMonth: 'התחברויות החודש',
+    onlineNow: 'מחוברים עכשיו',
     allActivity: 'כל הפעילות',
     dailyView: 'יומי',
     monthlyView: 'חודשי',
@@ -804,6 +806,7 @@ export const translations: Record<Language, Translations> = {
     totalUsers: 'Total Users',
     loginsToday: 'Logins Today',
     loginsThisMonth: 'Logins This Month',
+    onlineNow: 'Online Now',
     allActivity: 'All Activity',
     dailyView: 'Daily',
     monthlyView: 'Monthly',
@@ -1092,6 +1095,7 @@ export const translations: Record<Language, Translations> = {
     totalUsers: 'Всего пользователей',
     loginsToday: 'Входов сегодня',
     loginsThisMonth: 'Входов в этом месяце',
+    onlineNow: 'Онлайн сейчас',
     allActivity: 'Вся активность',
     dailyView: 'По дням',
     monthlyView: 'По месяцам',
