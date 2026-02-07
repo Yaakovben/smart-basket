@@ -8,22 +8,24 @@ class ListDALClass extends BaseDAL<IList> {
   }
 
   async findByOwner(ownerId: string): Promise<IList[]> {
-    return this.model.find({ owner: ownerId });
+    return this.model.find({ owner: new mongoose.Types.ObjectId(ownerId) });
   }
 
   async findByMember(userId: string): Promise<IList[]> {
-    return this.model.find({ 'members.user': userId });
+    return this.model.find({ 'members.user': new mongoose.Types.ObjectId(userId) });
   }
 
   async findUserLists(userId: string): Promise<IList[]> {
+    const uid = new mongoose.Types.ObjectId(userId);
     return this.model.find({
-      $or: [{ owner: userId }, { 'members.user': userId }],
+      $or: [{ owner: uid }, { 'members.user': uid }],
     }).sort({ updatedAt: -1 });
   }
 
   async findUserListsPopulated(userId: string): Promise<IList[]> {
+    const uid = new mongoose.Types.ObjectId(userId);
     return this.model
-      .find({ $or: [{ owner: userId }, { 'members.user': userId }] })
+      .find({ $or: [{ owner: uid }, { 'members.user': uid }] })
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
       .populate('members.user', 'name email avatarColor avatarEmoji')
       .sort({ updatedAt: -1 });
@@ -66,7 +68,7 @@ class ListDALClass extends BaseDAL<IList> {
 
   async setMemberAdmin(listId: string, memberId: string, isAdmin: boolean): Promise<IList | null> {
     return this.model.findOneAndUpdate(
-      { _id: listId, 'members.user': memberId },
+      { _id: listId, 'members.user': new mongoose.Types.ObjectId(memberId) },
       { $set: { 'members.$.isAdmin': isAdmin } },
       { new: true }
     );

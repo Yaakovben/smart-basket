@@ -1,34 +1,10 @@
 import mongoose from 'mongoose';
-import { ListDAL, UserDAL, ProductDAL } from '../dal';
+import { ListDAL, UserDAL } from '../dal';
 import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
 import { NotificationService } from './notification.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
-import type { IList } from '../models';
-
-// Helper to transform list to response format (with products from separate collection)
-const transformList = async (list: IList): Promise<IListResponse> => {
-  await Promise.all([
-    list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
-    list.populate('members.user', 'name email avatarColor avatarEmoji'),
-  ]);
-
-  // Fetch products from separate collection
-  const products = await ProductDAL.findByListId(list._id.toString());
-
-  const json = list.toJSON() as Record<string, unknown>;
-
-  // Add products to the response (transform addedBy to just the name string)
-  json.products = products.map((p) => {
-    const pJson = p.toJSON() as Record<string, unknown>;
-    if (pJson.addedBy && typeof pJson.addedBy === 'object') {
-      pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
-    }
-    return pJson;
-  });
-
-  return json as unknown as IListResponse;
-};
+import { transformList } from './list-transform.helper';
 
 export class ListMembershipService {
   static async joinGroup(
@@ -64,24 +40,41 @@ export class ListMembershipService {
       throw NotFoundError.user();
     }
 
-    // Add member
-    list.members.push({
-      user: new mongoose.Types.ObjectId(userId),
-      isAdmin: false,
-      joinedAt: new Date(),
-    });
+    // Atomic add member - prevents duplicate members from concurrent requests.
+    // The condition ensures the user isn't already in the members array.
+    const updated = await ListDAL.updateOne(
+      {
+        _id: list._id,
+        'members.user': { $ne: new mongoose.Types.ObjectId(userId) },
+      },
+      {
+        $push: {
+          members: {
+            user: new mongoose.Types.ObjectId(userId),
+            isAdmin: false,
+            joinedAt: new Date(),
+          },
+        },
+      }
+    );
 
-    await list.save();
+    if (!updated) {
+      throw ConflictError.alreadyMember();
+    }
+
+    // Re-read for populated response
+    const updatedList = await ListDAL.findById(list._id.toString());
+    if (!updatedList) throw NotFoundError.list();
 
     // Also save to new Notifications collection for all list members
     await NotificationService.createNotificationsForListMembers(
-      list._id.toString(),
+      updatedList._id.toString(),
       'join',
       userId,
       {}
     );
 
-    return transformList(list);
+    return transformList(updatedList);
   }
 
   static async leaveGroup(listId: string, userId: string): Promise<void> {

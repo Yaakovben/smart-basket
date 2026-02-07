@@ -503,6 +503,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
             setLists((prev) =>
               prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
             );
+          }).catch(() => {
+            // Refetch failed - stale data will be shown until next sync
           });
         });
       }, 100);

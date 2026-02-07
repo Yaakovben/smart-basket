@@ -8,7 +8,7 @@ let subscriber: Redis | null = null;
 let publisher: Redis | null = null;
 
 interface RedisEvent {
-  type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification';
+  type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted';
   listId: string;
   userId: string;
   userName: string;
@@ -84,6 +84,13 @@ const handleRedisEvent = (
     case 'notification':
       io.to(`list:${listId}`).emit('notification:new', data as NotificationData);
       break;
+
+    case 'user:deleted': {
+      // Force disconnect all sockets for the deleted user
+      const room = `user:${userId}`;
+      io.in(room).disconnectSockets(true);
+      break;
+    }
   }
 };
 

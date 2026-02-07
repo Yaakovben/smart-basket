@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { List, PushSubscription } from '../models';
 import { UserDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
@@ -74,49 +75,57 @@ export class UserService {
   }
 
   static async deleteAccount(userId: string): Promise<void> {
-    // 1. Delete only PRIVATE lists (not groups) that the user owns
-    await List.deleteMany({ owner: userId, isGroup: false });
+    // Use a session to ensure all operations succeed or fail together.
+    // If transactions aren't supported (no replica set), operations run individually.
+    const session = await mongoose.startSession();
 
-    // 2. Handle GROUP lists where user is owner
-    const ownedGroups = await List.find({ owner: userId, isGroup: true });
+    try {
+      const uid = new mongoose.Types.ObjectId(userId);
 
-    for (const group of ownedGroups) {
-      // Find other members (excluding the owner)
-      const otherMembers = group.members.filter(
-        (m) => m.user.toString() !== userId
-      );
+      await session.withTransaction(async () => {
+        // 1. Delete only PRIVATE lists (not groups) that the user owns
+        await List.deleteMany({ owner: uid, isGroup: false }, { session });
 
-      if (otherMembers.length > 0) {
-        // Transfer ownership to the first member (prefer admin if exists)
-        const newOwner = otherMembers.find((m) => m.isAdmin) || otherMembers[0];
+        // 2. Handle GROUP lists where user is owner
+        const ownedGroups = await List.find({ owner: uid, isGroup: true }).session(session);
 
-        await List.findByIdAndUpdate(group._id, {
-          $set: { owner: newOwner.user },
-          // Remove the new owner from members (owner is not in members array)
-          $pull: { members: { user: newOwner.user } }
-        });
-      } else {
-        // No other members - safe to delete the empty group
-        await List.findByIdAndDelete(group._id);
-      }
-    }
+        for (const group of ownedGroups) {
+          const otherMembers = group.members.filter(
+            (m) => m.user.toString() !== userId
+          );
 
-    // 3. Remove user from group lists where they are a member (not owner)
-    await List.updateMany(
-      { 'members.user': userId },
-      { $pull: { members: { user: userId } } }
-    );
+          if (otherMembers.length > 0) {
+            const newOwner = otherMembers.find((m) => m.isAdmin) || otherMembers[0];
+            await List.findByIdAndUpdate(group._id, {
+              $set: { owner: newOwner.user },
+              $pull: { members: { user: newOwner.user } }
+            }, { session });
+          } else {
+            await List.findByIdAndDelete(group._id, { session });
+          }
+        }
 
-    // 4. Delete user's push subscriptions
-    await PushSubscription.deleteMany({ userId });
+        // 3. Remove user from group lists where they are a member (not owner)
+        await List.updateMany(
+          { 'members.user': uid },
+          { $pull: { members: { user: uid } } },
+          { session }
+        );
 
-    // 5. Delete user's refresh tokens
-    await TokenService.invalidateAllUserTokens(userId);
+        // 4. Delete user's push subscriptions
+        await PushSubscription.deleteMany({ userId: uid }, { session });
 
-    // 6. Delete user
-    const user = await UserDAL.deleteById(userId);
-    if (!user) {
-      throw NotFoundError.user();
+        // 5. Delete user's refresh tokens
+        await TokenService.invalidateAllUserTokens(userId);
+
+        // 6. Delete user
+        const user = await UserDAL.deleteById(userId);
+        if (!user) {
+          throw NotFoundError.user();
+        }
+      });
+    } finally {
+      await session.endSession();
     }
   }
 }

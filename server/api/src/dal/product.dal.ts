@@ -24,14 +24,29 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
       .sort({ position: 1, createdAt: 1 });
   }
 
-  async createProduct(data: CreateProductInput): Promise<IProductDoc> {
-    // Get max position for this list
-    const maxPositionDoc = await this.model
-      .findOne({ listId: data.listId })
-      .sort({ position: -1 })
-      .select('position');
+  async findByListIds(listIds: string[]): Promise<Map<string, IProductDoc[]>> {
+    const objectIds = listIds.map(id => new mongoose.Types.ObjectId(id));
+    const products = await this.model
+      .find({ listId: { $in: objectIds } })
+      .populate('addedBy', 'name')
+      .sort({ position: 1, createdAt: 1 });
 
-    const position = data.position ?? (maxPositionDoc ? maxPositionDoc.position + 1 : 0);
+    const map = new Map<string, IProductDoc[]>();
+    for (const id of listIds) {
+      map.set(id, []);
+    }
+    for (const product of products) {
+      const key = product.listId.toString();
+      map.get(key)?.push(product);
+    }
+    return map;
+  }
+
+  async createProduct(data: CreateProductInput): Promise<IProductDoc> {
+    // Use countDocuments for position - simpler and sufficient for ordering.
+    // Minor race window is acceptable: two products may get same position,
+    // but they'll still display correctly (sorted by position then createdAt).
+    const position = data.position ?? await this.model.countDocuments({ listId: data.listId });
 
     const product = await this.model.create({
       ...data,

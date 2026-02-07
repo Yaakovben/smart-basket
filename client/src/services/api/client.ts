@@ -138,7 +138,7 @@ apiClient.interceptors.response.use(
       try {
         const response = await axios.post(`${API_URL}/auth/refresh`, {
           refreshToken,
-        });
+        }, { timeout: 10000 });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         setTokens(accessToken, newRefreshToken);

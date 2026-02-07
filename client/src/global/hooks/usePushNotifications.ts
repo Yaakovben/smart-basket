@@ -29,6 +29,13 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+// Shared subscription state across all hook instances.
+// When Settings page toggles push, the router's instance also updates.
+const subscriptionListeners = new Set<(subscribed: boolean) => void>();
+function notifySubscriptionChange(subscribed: boolean) {
+  subscriptionListeners.forEach(fn => fn(subscribed));
+}
+
 /**
  * Hook for managing push notifications
  */
@@ -38,6 +45,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync subscription state across all hook instances
+  useEffect(() => {
+    const listener = (subscribed: boolean) => setIsSubscribed(subscribed);
+    subscriptionListeners.add(listener);
+    return () => { subscriptionListeners.delete(listener); };
+  }, []);
 
   // Check if push notifications are supported
   useEffect(() => {
@@ -61,7 +75,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        setIsSubscribed(!!subscription);
+        const subscribed = !!subscription;
+        setIsSubscribed(subscribed);
+        notifySubscriptionChange(subscribed);
       } catch {
         setIsSubscribed(false);
       }
@@ -117,6 +133,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (success) {
         setIsSubscribed(true);
+        notifySubscriptionChange(true);
         setError(null);
       } else {
         setError('Failed to save subscription to server');
@@ -155,6 +172,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }
 
       setIsSubscribed(false);
+      notifySubscriptionChange(false);
       setLoading(false);
       return true;
     } catch (err) {

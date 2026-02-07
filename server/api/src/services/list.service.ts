@@ -1,55 +1,14 @@
 import mongoose from 'mongoose';
 import { ListDAL, UserDAL, ProductDAL } from '../dal';
 import { NotFoundError, ForbiddenError } from '../errors';
+import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import type { IList } from '../models';
 import { NotificationService } from './notification.service';
 import { ListMembershipService } from './list-membership.service';
-
-// Helper to transform list to response format (with products from separate collection)
-const transformList = async (list: IList): Promise<IListResponse> => {
-  await Promise.all([
-    list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
-    list.populate('members.user', 'name email avatarColor avatarEmoji'),
-  ]);
-
-  // Fetch products from separate collection
-  const products = await ProductDAL.findByListId(list._id.toString());
-
-  const json = list.toJSON() as Record<string, unknown>;
-
-  // Add products to the response (transform addedBy to just the name string)
-  json.products = products.map((p) => {
-    const pJson = p.toJSON() as Record<string, unknown>;
-    if (pJson.addedBy && typeof pJson.addedBy === 'object') {
-      pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
-    }
-    return pJson;
-  });
-
-  return json as unknown as IListResponse;
-};
-
-// Helper to transform multiple lists with their products
-const transformListsWithProducts = async (lists: IList[]): Promise<IListResponse[]> => {
-  // Process each list
-  return Promise.all(lists.map(async (list) => {
-    const products = await ProductDAL.findByListId(list._id.toString());
-    const json = list.toJSON() as Record<string, unknown>;
-
-    json.products = products.map((p) => {
-      const pJson = p.toJSON() as Record<string, unknown>;
-      if (pJson.addedBy && typeof pJson.addedBy === 'object') {
-        pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
-      }
-      return pJson;
-    });
-
-    return json as unknown as IListResponse;
-  }));
-};
+import { transformList, transformListsWithProducts } from './list-transform.helper';
 
 export class ListService {
   // ==================== Core CRUD ====================
@@ -137,7 +96,7 @@ export class ListService {
         'list_update',
         userId,
         { productName }
-      ).catch(() => {});
+      ).catch((err) => logger.warn('List update notification failed:', err));
     }
 
     return transformList(list);

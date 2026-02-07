@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { NotificationDAL, ListDAL, UserDAL } from '../dal';
 import { NotFoundError } from '../errors';
+import { logger } from '../config';
 import type { INotificationDoc, NotificationType } from '../models';
 import { PushService } from './push.service';
 
@@ -148,7 +149,7 @@ export class NotificationService {
         type: data.type,
         url: `/list/${data.listId}`,
       },
-    }).catch(() => {}); // Ignore push errors
+    }).catch((err) => logger.warn('Push notification failed:', err));
 
     return transformNotification(notification);
   }
@@ -226,7 +227,7 @@ export class NotificationService {
         type,
         url: `/list/${listId}`,
       },
-    }).catch(() => {}); // Ignore push errors
+    }).catch((err) => logger.warn('Push notification failed:', err));
 
     return notifications.map((n) => transformNotification(n));
   }
