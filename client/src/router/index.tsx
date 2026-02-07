@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -54,6 +54,7 @@ const ListPageWrapper = ({
   leaveList,
   deleteList,
   showToast,
+  onlineUsers,
 }: {
   lists: List[];
   user: User;
@@ -62,11 +63,16 @@ const ListPageWrapper = ({
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
   showToast: (msg: string, type?: ToastType) => void;
+  onlineUsers: Record<string, string[]>;
 }) => {
   const navigate = useNavigate();
   const { listId } = useParams();
   const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
+
+  // Derive a stable Set for the current list's online users
+  const onlineArr = listId ? onlineUsers[listId] : undefined;
+  const onlineUserIds = useMemo(() => new Set(onlineArr || []), [onlineArr]);
 
   if (!list) return <Navigate to="/" replace />;
 
@@ -88,6 +94,7 @@ const ListPageWrapper = ({
         navigate("/");
       }}
       showToast={showToast}
+      onlineUserIds={onlineUserIds}
     />
   );
 };
@@ -102,6 +109,8 @@ export const AppRouter = () => {
   // Pass pre-fetched data for faster initial load (fetched in parallel with auth)
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
+  const { isSubscribed: isPushSubscribed } = usePushNotifications();
+  const onlineUsers = usePresence();
 
   // Hide initial loader when auth check is complete
   useEffect(() => {
@@ -150,7 +159,7 @@ export const AppRouter = () => {
 
   // Subscribe to socket notifications (respects notification settings)
   // The addPersistedNotification callback adds real-time notifications to the persisted list
-  useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted);
+  useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted, isPushSubscribed);
 
   const handleDeleteAllData = useCallback(async () => {
     try {
@@ -269,6 +278,7 @@ export const AppRouter = () => {
                 leaveList={leaveList}
                 deleteList={deleteList}
                 showToast={showToast}
+                onlineUsers={onlineUsers}
               />
             </ProtectedRoute>
           }

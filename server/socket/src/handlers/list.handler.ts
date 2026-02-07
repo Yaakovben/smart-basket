@@ -26,6 +26,12 @@ export const registerListHandlers = (
 
     console.log(`User ${userId} joined list ${listId}`);
 
+    // Send current online users to the joining socket
+    socket.emit('presence:online', {
+      listId,
+      userIds: Array.from(listUsers.get(listId)!),
+    });
+
     // Notify others in the list
     socket.to(`list:${listId}`).emit('user:joined', {
       listId,

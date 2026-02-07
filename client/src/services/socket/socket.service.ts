@@ -163,6 +163,7 @@ class SocketService {
     const events = [
       'user:joined',
       'user:left',
+      'presence:online',
       'product:added',
       'product:updated',
       'product:deleted',

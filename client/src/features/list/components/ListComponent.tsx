@@ -24,10 +24,11 @@ interface ListPageProps {
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   showToast: (message: string) => void;
+  onlineUserIds?: Set<string>;
 }
 
 // ===== Main Component =====
-export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user }: ListPageProps) => {
+export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t } = useSettings();
 
   const {
@@ -82,6 +83,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onShowMembers={() => setShowMembers(true)}
         onShowInvite={() => setShowInvite(true)}
         onQuickAdd={handleQuickAdd}
+        onlineUserIds={onlineUserIds}
       />
 
       {/* Content */}
@@ -182,6 +184,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onClose={() => setShowMembers(false)}
         onRemoveMember={removeMember}
         onLeaveGroup={leaveList}
+        onlineUserIds={onlineUserIds}
+        currentUserId={user.id}
       />
 
       <ShareListModal

@@ -96,6 +96,7 @@ type TranslationKey =
   | 'copied'
   | 'members'
   | 'admin'
+  | 'online'
   | 'removeMember'
   | 'leaveGroup'
   | 'deleteGroup'
@@ -382,6 +383,7 @@ export const translations: Record<Language, Translations> = {
     copied: 'הועתק!',
     members: 'חברים',
     admin: 'מנהל',
+    online: 'מחובר',
     removeMember: 'הסר חבר',
     leaveGroup: 'עזוב רשימה',
     deleteGroup: 'מחק קבוצה',
@@ -665,6 +667,7 @@ export const translations: Record<Language, Translations> = {
     copied: 'Copied!',
     members: 'Members',
     admin: 'Admin',
+    online: 'Online',
     removeMember: 'Remove Member',
     leaveGroup: 'Leave Group',
     deleteGroup: 'Delete Group',
@@ -948,6 +951,7 @@ export const translations: Record<Language, Translations> = {
     copied: 'Скопировано!',
     members: 'Участники',
     admin: 'Админ',
+    online: 'В сети',
     removeMember: 'Удалить участника',
     leaveGroup: 'Покинуть группу',
     deleteGroup: 'Удалить группу',

@@ -33,6 +33,7 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   'user:joined': (data: UserEventData) => void;
   'user:left': (data: UserEventData) => void;
+  'presence:online': (data: PresenceData) => void;
   'product:added': (data: ProductEventData) => void;
   'product:updated': (data: ProductEventData) => void;
   'product:deleted': (data: ProductDeletedData) => void;
@@ -121,4 +122,9 @@ export interface ListDeletedData {
   ownerId: string;
   ownerName: string;
   timestamp: Date;
+}
+
+export interface PresenceData {
+  listId: string;
+  userIds: string[];
 }

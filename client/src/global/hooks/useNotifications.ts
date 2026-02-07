@@ -44,6 +44,15 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
     }
   }, [user]);
 
+  // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
+  useEffect(() => {
+    if (initialData && !initializedRef.current) {
+      setPersistedNotifications(initialData.notifications);
+      setUnreadCount(initialData.unreadCount);
+      initializedRef.current = true;
+    }
+  }, [initialData]);
+
   // Load on mount and when user changes (skip if already initialized with pre-fetched data)
   useEffect(() => {
     if (user) {

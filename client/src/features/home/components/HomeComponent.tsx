@@ -152,26 +152,31 @@ export const HomeComponent = memo(({
 }: HomePageProps) => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
-  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
   // Push notification prompt state
   const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pushPromptError, setPushPromptError] = useState(false);
   const [pushPromptDismissed, setPushPromptDismissed] = useState(() => {
     return localStorage.getItem('pushPromptDismissed') === 'true';
   });
 
-  // Show push prompt after a delay if supported and not subscribed
+  // Show push prompt after a delay if supported and not subscribed (and not denied)
   useEffect(() => {
-    if (pushSupported && !pushSubscribed && !pushPromptDismissed && !pushLoading) {
+    if (pushSupported && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
       const timer = setTimeout(() => setShowPushPrompt(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [pushSupported, pushSubscribed, pushPromptDismissed, pushLoading]);
+  }, [pushSupported, pushSubscribed, pushPromptDismissed, pushLoading, pushPermission]);
 
   const handleEnablePush = async () => {
+    setPushPromptError(false);
     const success = await subscribePush();
     if (success) {
       setShowPushPrompt(false);
+    } else {
+      // Show error state in prompt
+      setPushPromptError(true);
     }
   };
 
@@ -931,38 +936,50 @@ export const HomeComponent = memo(({
             boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
             textAlign: 'center'
           }}>
-            <Box sx={{ width: 64, height: 64, borderRadius: '16px', background: 'linear-gradient(135deg, #14B8A6, #10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, mx: 'auto', mb: 2 }}>
-              🔔
+            <Box sx={{ width: 64, height: 64, borderRadius: '16px', background: pushPromptError ? 'linear-gradient(135deg, #F59E0B, #EAB308)' : 'linear-gradient(135deg, #14B8A6, #10B981)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, mx: 'auto', mb: 2 }}>
+              {pushPromptError ? '⚠️' : '🔔'}
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary', mb: 1 }}>
-              {settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить уведомления' : 'Enable Notifications'}
+              {pushPromptError
+                ? (settings.language === 'he' ? 'ההתראות נחסמו' : settings.language === 'ru' ? 'Уведомления заблокированы' : 'Notifications Blocked')
+                : (settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить уведомления' : 'Enable Notifications')}
             </Typography>
-            <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.6 }}>
-              {settings.language === 'he'
-                ? 'קבל התראות על שינויים ברשימות שלך גם כשהאפליקציה סגורה'
-                : settings.language === 'ru'
-                  ? 'Получайте уведомления об изменениях в списках, даже когда приложение закрыто'
-                  : 'Get notified about changes in your lists even when the app is closed'}
+            <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+              {pushPromptError
+                ? (settings.language === 'he'
+                  ? 'כדי להפעיל התראות, יש לאפשר אותן\nבהגדרות הדפדפן → הרשאות → התראות'
+                  : settings.language === 'ru'
+                    ? 'Чтобы включить уведомления, разрешите их\nв настройках браузера → Разрешения → Уведомления'
+                    : 'To enable notifications, allow them in\nBrowser Settings → Permissions → Notifications')
+                : (settings.language === 'he'
+                  ? 'קבל התראות על שינויים ברשימות שלך גם כשהאפליקציה סגורה'
+                  : settings.language === 'ru'
+                    ? 'Получайте уведомления об изменениях в списках, даже когда приложение закрыто'
+                    : 'Get notified about changes in your lists even when the app is closed')}
             </Typography>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleEnablePush}
-              disabled={pushLoading}
-              sx={{ py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px', mb: 1.5 }}
-            >
-              {pushLoading ? (
-                <CircularProgress size={24} sx={{ color: 'white' }} />
-              ) : (
-                settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить' : 'Enable Notifications'
-              )}
-            </Button>
+            {!pushPromptError && (
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleEnablePush}
+                disabled={pushLoading}
+                sx={{ py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px', mb: 1.5 }}
+              >
+                {pushLoading ? (
+                  <CircularProgress size={24} sx={{ color: 'white' }} />
+                ) : (
+                  settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить' : 'Enable Notifications'
+                )}
+              </Button>
+            )}
             <Button
               fullWidth
               onClick={handleDismissPushPrompt}
               sx={{ py: 1, fontSize: 14, color: 'text.secondary' }}
             >
-              {settings.language === 'he' ? 'לא עכשיו' : settings.language === 'ru' ? 'Не сейчас' : 'Not now'}
+              {pushPromptError
+                ? (settings.language === 'he' ? 'הבנתי' : settings.language === 'ru' ? 'Понятно' : 'Got it')
+                : (settings.language === 'he' ? 'לא עכשיו' : settings.language === 'ru' ? 'Не сейчас' : 'Not now')}
             </Button>
           </Box>
         </>

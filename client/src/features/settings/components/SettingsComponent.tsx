@@ -133,6 +133,14 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
                   {settings.language === 'he' ? 'התראות Push' : settings.language === 'ru' ? 'Push-уведомления' : 'Push Notifications'}
                 </Typography>
+                {pushSubscribed && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto', bgcolor: '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981' }} />
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>
+                      {settings.language === 'he' ? 'פעיל' : settings.language === 'ru' ? 'Активно' : 'Active'}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
               <Box sx={subSettingRowSx}>
                 <Box sx={{ flex: 1 }}>
@@ -140,15 +148,23 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                     {settings.language === 'he' ? 'קבל התראות גם כשהאפליקציה סגורה' : settings.language === 'ru' ? 'Получать уведомления когда приложение закрыто' : 'Receive notifications when app is closed'}
                   </Typography>
                   {!pushSupported && (
-                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
-                      {settings.language === 'he' ? '* לא נתמך בדפדפן זה. באייפון: הוסף למסך הבית תחילה' : settings.language === 'ru' ? '* Не поддерживается. iPhone: сначала добавьте на экран' : '* Not supported. iPhone: Add to Home Screen first'}
+                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                      {settings.language === 'he' ? '* לא נתמך בדפדפן זה.\nבאייפון: לחץ על ״שתף״ ← ״הוסף למסך הבית״ ופתח משם'
+                        : settings.language === 'ru' ? '* Не поддерживается.\niPhone: нажмите "Поделиться" → "На экран Домой"'
+                        : '* Not supported.\niPhone: Tap Share → "Add to Home Screen" and open from there'}
                     </Typography>
                   )}
-                  {pushError && (
+                  {pushError && pushError.includes('denied') ? (
+                    <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                      {settings.language === 'he' ? '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר'
+                        : settings.language === 'ru' ? '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления'
+                        : '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow'}
+                    </Typography>
+                  ) : pushError ? (
                     <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
                       {settings.language === 'he' ? `* שגיאה: ${pushError}` : settings.language === 'ru' ? `* Ошибка: ${pushError}` : `* Error: ${pushError}`}
                     </Typography>
-                  )}
+                  ) : null}
                 </Box>
                 {pushLoading ? (
                   <CircularProgress size={24} sx={{ color: '#14B8A6' }} />

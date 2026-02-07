@@ -146,6 +146,8 @@ interface MembersModalProps {
   onClose: () => void;
   onRemoveMember: (id: string, name: string) => void;
   onLeaveGroup: () => void;
+  onlineUserIds?: Set<string>;
+  currentUserId?: string;
 }
 
 export const MembersModal = memo(({
@@ -155,7 +157,9 @@ export const MembersModal = memo(({
   isOwner,
   onClose,
   onRemoveMember,
-  onLeaveGroup
+  onLeaveGroup,
+  onlineUserIds,
+  currentUserId
 }: MembersModalProps) => {
   const { t } = useSettings();
 
@@ -175,12 +179,19 @@ export const MembersModal = memo(({
             borderColor: 'divider'
           }}
         >
-          <MemberAvatar member={m} size={44} index={i} />
+          <MemberAvatar member={m} size={44} index={i} isOnline={m.id !== currentUserId && onlineUserIds?.has(m.id)} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>{m.name}</Typography>
               {m.id === list.owner.id && (
                 <Chip label={t('admin')} size="small" sx={{ bgcolor: 'warning.light', color: 'warning.dark', height: 22 }} />
+              )}
+              {m.id !== currentUserId && onlineUserIds?.has(m.id) && (
+                <Chip
+                  label={t('online')}
+                  size="small"
+                  sx={{ bgcolor: '#ECFDF5', color: '#059669', height: 22, fontSize: 11, fontWeight: 600 }}
+                />
               )}
             </Box>
             <Typography sx={{ fontSize: 13, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email}</Typography>

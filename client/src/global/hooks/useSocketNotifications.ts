@@ -61,7 +61,8 @@ export function useSocketNotifications(
   listNames: Record<string, string> = {},
   addNotification?: (notification: LocalNotification) => void,
   onMemberRemoved?: (listId: string, listName: string) => void,
-  onListDeleted?: (listId: string, listName: string) => void
+  onListDeleted?: (listId: string, listName: string) => void,
+  isPushSubscribed = false
 ) {
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
@@ -85,8 +86,11 @@ export function useSocketNotifications(
       if (shouldShowNotification('productAdd')) {
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
-        const message = `${event.userName} ${t('addedProductNotif')} "${productName}"${listName ? ` ${t('inListNotif')} ${listName}` : ''}`;
-        showToast(message, 'info');
+
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('addedProductNotif')} "${productName}"${listName ? ` ${t('inListNotif')} ${listName}` : ''}`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -111,8 +115,11 @@ export function useSocketNotifications(
       if (shouldShowNotification('productEdit')) {
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
-        const message = `${event.userName} ${t('editedProductNotif')} "${productName}"`;
-        showToast(message, 'info');
+
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('editedProductNotif')} "${productName}"`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -137,8 +144,11 @@ export function useSocketNotifications(
       if (shouldShowNotification('productDelete')) {
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
-        const message = `${event.userName} ${t('deletedProductNotif')} "${productName}"`;
-        showToast(message, 'info');
+
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('deletedProductNotif')} "${productName}"`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -163,9 +173,12 @@ export function useSocketNotifications(
       if (shouldShowNotification('productPurchase')) {
         const listName = listNames[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
-        const action = event.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif');
-        const message = `${event.userName} ${action} "${productName}"`;
-        showToast(message, 'info');
+
+        if (!isPushSubscribed) {
+          const action = event.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif');
+          const message = `${event.userName} ${action} "${productName}"`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -195,8 +208,10 @@ export function useSocketNotifications(
       const listName = listNames[event.listId] || '';
 
       if (event.type === 'join' && notificationSettings.groupJoin) {
-        const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message, 'info');
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -212,8 +227,10 @@ export function useSocketNotifications(
       }
 
       if (event.type === 'leave' && notificationSettings.groupLeave) {
-        const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message, 'info');
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -230,8 +247,10 @@ export function useSocketNotifications(
 
       // Member was removed by admin (show to other group members)
       if (event.type === 'removed' && notificationSettings.groupLeave) {
-        const message = `${event.userName} ${t('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message, 'warning');
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
+          showToast(message, 'warning');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -248,8 +267,10 @@ export function useSocketNotifications(
 
       // List settings were updated by owner
       if (event.type === 'list_update' && notificationSettings.listUpdate) {
-        const message = `${event.userName} ${t('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
-        showToast(message, 'info');
+        if (!isPushSubscribed) {
+          const message = `${event.userName} ${t('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToast(message, 'info');
+        }
 
         // Add to notifications panel
         addNotification?.({
@@ -313,5 +334,5 @@ export function useSocketNotifications(
       unsubListDeleted();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
-  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved, onListDeleted]);
+  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved, onListDeleted, isPushSubscribed]);
 }

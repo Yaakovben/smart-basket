@@ -6,13 +6,14 @@ interface MembersButtonProps {
   members: (Member | User)[];
   currentUserId?: string;
   onClick: () => void;
+  onlineUserIds?: Set<string>;
 }
 
 const MAX_VISIBLE = 3;
 const AVATAR_SIZE = 28;
 const AVATAR_OVERLAP = 10; // How much each avatar overlaps the previous one
 
-export const MembersButton = ({ members, currentUserId, onClick }: MembersButtonProps) => {
+export const MembersButton = ({ members, currentUserId, onClick, onlineUserIds }: MembersButtonProps) => {
   // Sort members so current user is FIRST (appears on left, on top)
   const sortedMembers = currentUserId
     ? [...members].sort((a, b) => {
@@ -70,7 +71,12 @@ export const MembersButton = ({ members, currentUserId, onClick }: MembersButton
               zIndex: MAX_VISIBLE - index
             }}
           >
-            <MemberAvatar member={member} size={AVATAR_SIZE} index={index} />
+            <MemberAvatar
+              member={member}
+              size={AVATAR_SIZE}
+              index={index}
+              isOnline={member.id !== currentUserId && onlineUserIds?.has(member.id)}
+            />
           </Box>
         ))}
       </Box>

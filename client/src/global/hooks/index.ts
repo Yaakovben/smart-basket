@@ -10,6 +10,7 @@ export { useSocketNotifications, type LocalNotification } from './useSocketNotif
 export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
 export { usePushNotifications } from './usePushNotifications';
+export { usePresence } from './usePresence';
 
 // ===== useToast Hook =====
 import type { ToastType } from '../types';
@@ -64,13 +65,9 @@ export function useAuth() {
     } catch { /* ignore */ }
     return null;
   });
-  // Only show loading briefly if we have a token but no cached user
-  const [loading, setLoading] = useState(() => {
-    const hasToken = !!getAccessToken();
-    const hasCachedUser = !!localStorage.getItem('cached_user');
-    // Only loading if we have token but no cached user (need to validate)
-    return hasToken && !hasCachedUser;
-  });
+  // Show loading while we validate token and fetch initial data
+  // This keeps the HTML loader visible until data is ready, preventing empty page flash
+  const [loading, setLoading] = useState(() => !!getAccessToken());
   // Pre-fetched data for faster initial load (fetched in parallel with profile)
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
 
@@ -248,6 +245,14 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       setLoading(false);
     }
   }, []);
+
+  // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
+  useEffect(() => {
+    if (initialLists && !initializedRef.current) {
+      setLists(initialLists.map(convertApiList));
+      initializedRef.current = true;
+    }
+  }, [initialLists]);
 
   // Fetch lists when user changes (skip if already initialized with pre-fetched data)
   useEffect(() => {

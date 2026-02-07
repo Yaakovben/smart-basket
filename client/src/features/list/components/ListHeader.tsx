@@ -38,6 +38,7 @@ interface ListHeaderProps {
   onShowMembers: () => void;
   onShowInvite: () => void;
   onQuickAdd?: (name: string) => void;
+  onlineUserIds?: Set<string>;
 }
 
 // ===== Component =====
@@ -57,7 +58,8 @@ export const ListHeader = memo(({
   onShareList,
   onShowMembers,
   onShowInvite,
-  onQuickAdd
+  onQuickAdd,
+  onlineUserIds
 }: ListHeaderProps) => {
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
@@ -145,7 +147,7 @@ export const ListHeader = memo(({
       {/* Members Row (Group Only) */}
       {list.isGroup && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} />
+          <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton
             onClick={onShowInvite}
             sx={glassButtonSx}
