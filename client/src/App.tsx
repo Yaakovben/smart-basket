@@ -8,7 +8,7 @@ import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
 import { useServiceWorker } from './global/hooks';
 
-// Clear all caches on app load (one-time cleanup for v2.0 migration)
+// Clear all the  caches on app load (one-time cleanup for v2.0 migration)
 const CACHE_VERSION = 'v2.0';
 const clearAllCaches = async () => {
   const cacheCleared = localStorage.getItem('cache_cleared');
