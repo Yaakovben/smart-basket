@@ -29,11 +29,18 @@ export const OfflineBanner = () => {
       right: 0,
       zIndex: 9999,
       bgcolor: '#EF4444',
-      py: 0.8,
+      pt: 'max(env(safe-area-inset-top), 6px)',
+      pb: '6px',
+      px: 2,
       textAlign: 'center',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
-      <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600 }}>
+      <Typography sx={{
+        color: 'white',
+        fontSize: 13,
+        fontWeight: 600,
+        lineHeight: 1.4,
+      }}>
         📡 {t('offlineMessage')}
       </Typography>
     </Box>
