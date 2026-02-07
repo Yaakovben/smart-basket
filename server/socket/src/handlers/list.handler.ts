@@ -59,6 +59,16 @@ export const registerListHandlers = (
     });
   });
 
+  // Request presence for specific lists
+  socket.on('get:presence', (listIds: string[]) => {
+    listIds.forEach((listId) => {
+      socket.emit('presence:online', {
+        listId,
+        userIds: Array.from(listUsers.get(listId) || []),
+      });
+    });
+  });
+
   // Handle disconnect
   socket.on('disconnect', () => {
     // Remove user from all lists they were in

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { socketService } from '../../services/socket';
 
 interface PresenceData {
@@ -16,11 +16,16 @@ interface UserEventData {
 /**
  * Hook to track online presence of users across lists.
  * Listens to presence:online (initial state on join), user:joined, and user:left events.
+ * Explicitly requests presence when list IDs change to handle timing issues.
  * Returns a record of listId → array of online userIds.
  */
-export function usePresence(): Record<string, string[]> {
+export function usePresence(listIds: string[] = []): Record<string, string[]> {
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string[]>>({});
 
+  // Stable string key for listIds to avoid unnecessary effect re-runs
+  const listIdsKey = useMemo(() => listIds.join(','), [listIds]);
+
+  // Register socket event listeners
   useEffect(() => {
     // Initial state when joining a list room
     const unsubPresence = socketService.on<PresenceData>('presence:online', (data) => {
@@ -52,6 +57,20 @@ export function usePresence(): Record<string, string[]> {
       unsubLeft();
     };
   }, []);
+
+  // Explicitly request presence when list IDs change
+  // This handles timing issues where join:list's presence:online may be missed
+  useEffect(() => {
+    if (!listIdsKey) return;
+    const ids = listIdsKey.split(',');
+
+    // Small delay to ensure socket is connected and rooms are joined
+    const timer = setTimeout(() => {
+      socketService.requestPresence(ids);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [listIdsKey]);
 
   return onlineUsers;
 }

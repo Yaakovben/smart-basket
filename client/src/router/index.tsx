@@ -110,7 +110,8 @@ export const AppRouter = () => {
   const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
-  const onlineUsers = usePresence();
+  const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
+  const onlineUsers = usePresence(listIdsForPresence);
 
   // Hide initial loader when auth check is complete
   useEffect(() => {

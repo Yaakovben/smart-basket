@@ -17,6 +17,7 @@ export interface TokenPayload {
 export interface ClientToServerEvents {
   'join:list': (listId: string) => void;
   'leave:list': (listId: string) => void;
+  'get:presence': (listIds: string[]) => void;
   'product:add': (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => void;
   'product:update': (data: { listId: string; product: ProductData & { id: string }; userName: string }) => void;
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;

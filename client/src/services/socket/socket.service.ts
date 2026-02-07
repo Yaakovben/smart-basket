@@ -206,6 +206,13 @@ class SocketService {
     this.socket?.emit('leave:list', listId);
   }
 
+  // Request presence for specific lists
+  requestPresence(listIds: string[]) {
+    if (listIds.length > 0) {
+      this.socket?.emit('get:presence', listIds);
+    }
+  }
+
   // Subscribe to events
   on<T>(event: string, handler: SocketEventHandler<T>) {
     if (!this.listeners.has(event)) {
