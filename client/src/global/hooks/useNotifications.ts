@@ -23,8 +23,8 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   );
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(() => initialData?.unreadCount || 0);
-  // Track if we've initialized from pre-fetched data
-  const initializedRef = useRef(!!initialData);
+  // Track which user we've initialized pre-fetched data for
+  const initializedForRef = useRef<string | null>(initialData ? '__initial__' : null);
 
   // Load notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -46,23 +46,27 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
   // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
   useEffect(() => {
-    if (initialData && !initializedRef.current) {
+    if (initialData && !initializedForRef.current) {
       setPersistedNotifications(initialData.notifications);
       setUnreadCount(initialData.unreadCount);
-      initializedRef.current = true;
+      initializedForRef.current = '__initial__';
     }
   }, [initialData]);
 
-  // Load on mount and when user changes (skip if already initialized with pre-fetched data)
+  // Load on mount and when user changes (skip if already initialized with pre-fetched data for this user)
   useEffect(() => {
     if (user) {
-      // Skip fetch if we already have pre-fetched data
-      if (initializedRef.current) {
-        initializedRef.current = false; // Reset for future refetches
+      if (initializedForRef.current && initializedForRef.current !== user.id) {
+        initializedForRef.current = null;
+      }
+      if (initializedForRef.current) {
+        initializedForRef.current = user.id;
         return;
       }
+      initializedForRef.current = user.id;
       fetchNotifications();
     } else {
+      initializedForRef.current = null;
       setPersistedNotifications([]);
       setUnreadCount(0);
     }

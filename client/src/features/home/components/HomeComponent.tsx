@@ -700,6 +700,7 @@ export const HomeComponent = memo(({
               <Box sx={{
                 maxHeight: '55vh',
                 overflowY: 'auto',
+                overscrollBehavior: 'contain',
                 mx: -0.5,
                 px: 0.5,
                 pb: 1,
@@ -794,7 +795,8 @@ export const HomeComponent = memo(({
                         px: 1.5,
                         mb: 0.75,
                         borderRadius: '12px',
-                        bgcolor: 'rgba(0,0,0,0.02)',
+                        bgcolor: 'action.hover',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                         borderInlineStart: `3.5px solid ${accent}`,
                         transition: 'background-color 0.2s',
                         ...notificationSlideInKeyframes,
@@ -865,19 +867,21 @@ export const HomeComponent = memo(({
                         sx={{
                           color: 'text.disabled',
                           flexShrink: 0,
-                          width: 28,
-                          height: 28,
-                          opacity: isDismissing ? 0 : 0.35,
+                          width: 30,
+                          height: 30,
+                          bgcolor: 'action.hover',
+                          borderRadius: '50%',
+                          opacity: isDismissing ? 0 : 0.5,
                           transition: 'opacity 0.2s',
                           '&:hover': { opacity: 0.7 },
                           border: 'none !important',
                           outline: 'none !important',
                           boxShadow: 'none !important',
-                          '&:focus, &:focus-visible, &.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'transparent' },
+                          '&:focus, &:focus-visible, &.Mui-focusVisible': { outline: 'none !important', boxShadow: 'none !important', border: 'none !important', bgcolor: 'action.hover' },
                           WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        <CloseIcon sx={{ fontSize: 14 }} />
+                        <CloseIcon sx={{ fontSize: 15 }} />
                       </IconButton>
                     </Box>
                   );

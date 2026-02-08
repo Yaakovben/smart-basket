@@ -162,6 +162,7 @@ export function useAuth() {
     }
     socketService.disconnect();
     localStorage.removeItem('cached_user');
+    setInitialData({ lists: null, notifications: null });
     setUser(null);
   }, []);
 
@@ -231,8 +232,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     initialLists ? initialLists.map(convertApiList) : []
   );
   const [loading, setLoading] = useState(false);
-  // Track if we've initialized from pre-fetched data
-  const initializedRef = useRef(!!initialLists);
+  // Track which user we've initialized pre-fetched data for
+  const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);
 
   const fetchLists = useCallback(async () => {
     setLoading(true);
@@ -248,22 +249,28 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
 
   // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
   useEffect(() => {
-    if (initialLists && !initializedRef.current) {
+    if (initialLists && !initializedForRef.current) {
       setLists(initialLists.map(convertApiList));
-      initializedRef.current = true;
+      initializedForRef.current = '__initial__';
     }
   }, [initialLists]);
 
-  // Fetch lists when user changes (skip if already initialized with pre-fetched data)
+  // Fetch lists when user changes (skip if already initialized with pre-fetched data for this user)
   useEffect(() => {
     if (user) {
-      // Skip fetch if we already have pre-fetched data
-      if (initializedRef.current) {
-        initializedRef.current = false; // Reset for future refetches
+      // User changed since last initialization — must fetch fresh data
+      if (initializedForRef.current && initializedForRef.current !== user.id) {
+        initializedForRef.current = null;
+      }
+      // Skip fetch if we already have pre-fetched data for this user
+      if (initializedForRef.current) {
+        initializedForRef.current = user.id;
         return;
       }
+      initializedForRef.current = user.id;
       fetchLists();
     } else {
+      initializedForRef.current = null;
       setLists([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes

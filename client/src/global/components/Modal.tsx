@@ -82,7 +82,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         </IconButton>
       </Box>
 
-      <DialogContent sx={{ px: 2.5, pb: 3, pt: 1.5, overflowY: 'auto' }}>
+      <DialogContent sx={{ px: 2.5, pb: 3, pt: 1.5, overflowY: 'auto', overscrollBehavior: 'contain' }}>
         {children}
       </DialogContent>
     </Dialog>
