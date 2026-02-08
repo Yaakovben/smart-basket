@@ -189,6 +189,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleGroupExpanded}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
+                  {[settings.notifications.groupJoin, settings.notifications.groupLeave, settings.notifications.groupRemoved ?? true, settings.notifications.groupDelete ?? true, settings.notifications.listUpdate].filter(Boolean).length}/5
+                </Typography>
+                {groupExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
                 <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Switch
                     checked={settings.notifications.groupJoin && settings.notifications.groupLeave && (settings.notifications.groupRemoved ?? true) && (settings.notifications.groupDelete ?? true) && settings.notifications.listUpdate}
@@ -199,7 +203,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                     sx={smallSwitchSx}
                   />
                 </Box>
-                {groupExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
               </Box>
               <Collapse in={groupExpanded}>
                 <Box sx={subSettingRowSx}>
@@ -229,6 +232,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleProductExpanded}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
+                  {[settings.notifications.productAdd, settings.notifications.productDelete, settings.notifications.productEdit, settings.notifications.productPurchase].filter(Boolean).length}/4
+                </Typography>
+                {productExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
                 <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Switch
                     checked={settings.notifications.productAdd && settings.notifications.productDelete && settings.notifications.productEdit && settings.notifications.productPurchase}
@@ -239,7 +246,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                     sx={smallSwitchSx}
                   />
                 </Box>
-                {productExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
               </Box>
               <Collapse in={productExpanded}>
                 <Box sx={subSettingRowSx}>
