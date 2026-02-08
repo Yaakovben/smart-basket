@@ -1,35 +1,58 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching';
+import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
 // VitePWA requires this - globPatterns is empty so nothing is actually cached
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Push notification handler
+// Push notification handler — filters based on user notification preferences
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   try {
     const data = event.data.json();
 
-    // Extended notification options (some properties are non-standard but widely supported)
-    const options = {
-      body: data.body,
-      icon: data.icon || '/apple-touch-icon.svg',
-      badge: data.badge || '/favicon.svg',
-      tag: data.data?.listId || 'smart-basket',
-      renotify: true,
-      data: data.data,
-      vibrate: [100, 50, 100],
+    const showNotification = async () => {
+      // Read user notification settings from IndexedDB
+      const settings = await getNotifSettingsFromIDB();
+
+      if (settings) {
+        // Master toggle — block all notifications
+        if (!settings.enabled) return;
+
+        const notifType = data.data?.type as string | undefined;
+        const listId = data.data?.listId as string | undefined;
+
+        // Check if this notification type is disabled
+        if (notifType) {
+          const settingsKey = getSettingsKeyForType(notifType);
+          if (settingsKey && settingsKey !== 'enabled' && settingsKey !== 'mutedGroupIds') {
+            if (!(settings[settingsKey] ?? true)) return;
+          }
+        }
+
+        // Check if this group is muted
+        if (listId && settings.mutedGroupIds?.includes(listId)) return;
+      }
+
+      // All filters passed — show the notification
+      const options = {
+        body: data.body,
+        icon: data.icon || '/apple-touch-icon.svg',
+        badge: data.badge || '/favicon.svg',
+        tag: data.data?.listId || 'smart-basket',
+        renotify: true,
+        data: data.data,
+        vibrate: [100, 50, 100],
+      };
+
+      const title = data.title !== undefined && data.title !== null ? data.title : 'Smart Basket';
+      await self.registration.showNotification(title, options);
     };
 
-    // Use title from server, only fallback if undefined/null (not for empty string)
-    const title = data.title !== undefined && data.title !== null ? data.title : 'Smart Basket';
-
-    event.waitUntil(
-      self.registration.showNotification(title, options)
-    );
+    event.waitUntil(showNotification());
   } catch (error) {
     console.error('Error showing push notification:', error);
   }

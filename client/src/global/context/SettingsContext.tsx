@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, useMemo, type ReactNo
 import type { AppSettings, Language, ThemeMode, NotificationSettings } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../constants';
 import { translations, type TranslationKeys } from '../i18n/translations';
+import { saveNotifSettingsToIDB } from '../../settingsIDB';
 
 interface SettingsContextType {
   settings: AppSettings;
@@ -32,10 +33,17 @@ const loadSettings = (): AppSettings => {
 
 const saveSettings = (settings: AppSettings) => {
   localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+  // Sync notification settings to IndexedDB for service worker access
+  saveNotifSettingsToIDB(settings.notifications).catch(() => {/* ignore */});
 };
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<AppSettings>(loadSettings);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const loaded = loadSettings();
+    // Sync to IndexedDB on initial load so SW has current settings
+    saveNotifSettingsToIDB(loaded.notifications).catch(() => {/* ignore */});
+    return loaded;
+  });
 
   const updateTheme = useCallback((theme: ThemeMode) => {
     setSettings(prev => {

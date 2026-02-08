@@ -17,6 +17,8 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
   const [showHelp, setShowHelp] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [notificationsExpanded, setNotificationsExpanded] = useState(false);
+  const [groupExpanded, setGroupExpanded] = useState(false);
+  const [productExpanded, setProductExpanded] = useState(false);
 
   // ===== Computed =====
   const currentLanguage = LANGUAGES.find(l => l.code === settings.language);
@@ -32,6 +34,14 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     setNotificationsExpanded(prev => !prev);
   }, []);
 
+  const toggleGroupExpanded = useCallback(() => {
+    setGroupExpanded(prev => !prev);
+  }, []);
+
+  const toggleProductExpanded = useCallback(() => {
+    setProductExpanded(prev => !prev);
+  }, []);
+
   const handleDeleteData = useCallback(() => {
     setConfirmDelete(false);
     onDeleteAllData?.();
@@ -44,6 +54,8 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     showHelp,
     confirmDelete,
     notificationsExpanded,
+    groupExpanded,
+    productExpanded,
     currentLanguageName,
 
     // Setters
@@ -56,6 +68,8 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     // Handlers
     handleLanguageSelect,
     toggleNotificationsExpanded,
+    toggleGroupExpanded,
+    toggleProductExpanded,
     handleDeleteData
   };
 };

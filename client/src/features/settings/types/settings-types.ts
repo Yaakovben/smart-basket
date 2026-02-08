@@ -8,6 +8,8 @@ export interface UseSettingsPageReturn {
   showHelp: boolean;
   confirmDelete: boolean;
   notificationsExpanded: boolean;
+  groupExpanded: boolean;
+  productExpanded: boolean;
   currentLanguageName: string;
 
   // Setters
@@ -20,5 +22,7 @@ export interface UseSettingsPageReturn {
   // Handlers
   handleLanguageSelect: (lang: Language) => void;
   toggleNotificationsExpanded: () => void;
+  toggleGroupExpanded: () => void;
+  toggleProductExpanded: () => void;
   handleDeleteData: () => void;
 }
