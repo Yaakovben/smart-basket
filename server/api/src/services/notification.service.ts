@@ -203,12 +203,18 @@ export class NotificationService {
     }
 
     // Filter out users who have muted this group (skip push + DB notifications)
-    const mutedUserIds = await UserDAL.findUserIdsWhoMutedGroup(listId, targetUserIds);
-    const mutedSet = new Set(mutedUserIds);
-    const activeTargetIds = targetUserIds.filter(id => !mutedSet.has(id));
+    // Critical events (deletion, removal) are always sent regardless of mute status
+    const criticalTypes: NotificationType[] = ['list_deleted', 'removed'];
+    let activeTargetIds = targetUserIds;
 
-    if (activeTargetIds.length === 0) {
-      return [];
+    if (!criticalTypes.includes(type)) {
+      const mutedUserIds = await UserDAL.findUserIdsWhoMutedGroup(listId, targetUserIds);
+      const mutedSet = new Set(mutedUserIds);
+      activeTargetIds = targetUserIds.filter(id => !mutedSet.has(id));
+
+      if (activeTargetIds.length === 0) {
+        return [];
+      }
     }
 
     // Create notifications for all target users
