@@ -10,6 +10,7 @@ export interface UseSettingsPageReturn {
   notificationsExpanded: boolean;
   groupExpanded: boolean;
   productExpanded: boolean;
+  pushExpanded: boolean;
   currentLanguageName: string;
 
   // Setters
@@ -18,11 +19,15 @@ export interface UseSettingsPageReturn {
   setShowHelp: (show: boolean) => void;
   setConfirmDelete: (show: boolean) => void;
   setNotificationsExpanded: (expanded: boolean) => void;
+  setGroupExpanded: (expanded: boolean) => void;
+  setProductExpanded: (expanded: boolean) => void;
+  setPushExpanded: (expanded: boolean) => void;
 
   // Handlers
   handleLanguageSelect: (lang: Language) => void;
   toggleNotificationsExpanded: () => void;
   toggleGroupExpanded: () => void;
   toggleProductExpanded: () => void;
+  togglePushExpanded: () => void;
   handleDeleteData: () => void;
 }

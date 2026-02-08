@@ -87,9 +87,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   const {
-    showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, groupExpanded, productExpanded, currentLanguageName,
-    setShowLanguage, setShowAbout, setShowHelp, setConfirmDelete,
-    handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, handleDeleteData
+    showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, groupExpanded, productExpanded, pushExpanded, currentLanguageName,
+    setShowLanguage, setShowAbout, setShowHelp, setConfirmDelete, setGroupExpanded, setProductExpanded, setPushExpanded,
+    handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, togglePushExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData });
 
   const handleMainNotificationsToggle = async (enabled: boolean) => {
@@ -139,46 +139,59 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
           <Collapse in={settings.notifications.enabled && notificationsExpanded}>
             <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
               {/* Push Notifications Section */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5, cursor: 'pointer' }} onClick={togglePushExpanded}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+                <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
                   {t('pushNotifications')}
                 </Typography>
                 {pushSubscribed && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto', bgcolor: '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981' }} />
                     <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>
                       {t('pushActive')}
                     </Typography>
                   </Box>
                 )}
-              </Box>
-              <Box sx={subSettingRowSx}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontSize: 14 }}>
-                    {t('pushDescription')}
-                  </Typography>
-                  {!pushSupported && (
-                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                      {t('pushNotSupported')}
-                    </Typography>
+                {pushExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
+                <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
+                  {pushLoading ? (
+                    <CircularProgress size={20} sx={{ color: '#14B8A6' }} />
+                  ) : (
+                    <Switch
+                      checked={pushSubscribed}
+                      onChange={(e) => {
+                        handlePushToggle();
+                        if (!e.target.checked) setPushExpanded(false);
+                      }}
+                      disabled={!pushSupported}
+                      sx={smallSwitchSx}
+                    />
                   )}
-                  {pushError && pushError.includes('denied') ? (
-                    <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                      {t('pushBlocked')}
-                    </Typography>
-                  ) : pushError ? (
-                    <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
-                      {t('pushErrorMessage').replace('{error}', pushError)}
-                    </Typography>
-                  ) : null}
                 </Box>
-                {pushLoading ? (
-                  <CircularProgress size={24} sx={{ color: '#14B8A6' }} />
-                ) : (
-                  <Switch checked={pushSubscribed} onChange={handlePushToggle} disabled={!pushSupported} sx={smallSwitchSx} />
-                )}
               </Box>
+              <Collapse in={pushExpanded}>
+                <Box sx={subSettingRowSx}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ fontSize: 14 }}>
+                      {t('pushDescription')}
+                    </Typography>
+                    {!pushSupported && (
+                      <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                        {t('pushNotSupported')}
+                      </Typography>
+                    )}
+                    {pushError && pushError.includes('denied') ? (
+                      <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                        {t('pushBlocked')}
+                      </Typography>
+                    ) : pushError ? (
+                      <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
+                        {t('pushErrorMessage').replace('{error}', pushError)}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                </Box>
+              </Collapse>
 
               {/* Group Notifications Section */}
               <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
@@ -195,6 +208,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                     onChange={(e) => {
                       const value = e.target.checked;
                       updateNotifications({ groupJoin: value, groupLeave: value, groupRemoved: value, groupDelete: value, listUpdate: value });
+                      if (!value) setGroupExpanded(false);
                     }}
                     sx={smallSwitchSx}
                   />
@@ -238,6 +252,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                     onChange={(e) => {
                       const value = e.target.checked;
                       updateNotifications({ productAdd: value, productDelete: value, productEdit: value, productPurchase: value });
+                      if (!value) setProductExpanded(false);
                     }}
                     sx={smallSwitchSx}
                   />
