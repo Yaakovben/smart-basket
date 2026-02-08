@@ -186,29 +186,18 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
               {/* Group Notifications Section */}
               <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
-              {(() => {
-                const gAllOn = settings.notifications.groupJoin && settings.notifications.groupLeave && (settings.notifications.groupRemoved ?? true) && (settings.notifications.groupDelete ?? true) && settings.notifications.listUpdate;
-                return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
-                    <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
-                    <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
-                    <Box
-                      onClick={() => {
-                        const value = !gAllOn;
-                        updateNotifications({ groupJoin: value, groupLeave: value, groupRemoved: value, groupDelete: value, listUpdate: value });
-                      }}
-                      sx={{
-                        fontSize: 11, fontWeight: 600, color: gAllOn ? 'error.main' : 'primary.main',
-                        bgcolor: gAllOn ? 'rgba(239,68,68,0.08)' : 'rgba(20,184,166,0.08)',
-                        px: 1.25, py: 0.4, borderRadius: '8px', cursor: 'pointer',
-                        transition: 'all 0.15s', '&:active': { transform: 'scale(0.95)' }
-                      }}
-                    >
-                      {gAllOn ? t('disableAll') : t('enableAll')}
-                    </Box>
-                  </Box>
-                );
-              })()}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
+                <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
+                <Switch
+                  checked={settings.notifications.groupJoin && settings.notifications.groupLeave && (settings.notifications.groupRemoved ?? true) && (settings.notifications.groupDelete ?? true) && settings.notifications.listUpdate}
+                  onChange={(e) => {
+                    const value = e.target.checked;
+                    updateNotifications({ groupJoin: value, groupLeave: value, groupRemoved: value, groupDelete: value, listUpdate: value });
+                  }}
+                  sx={smallSwitchSx}
+                />
+              </Box>
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('memberJoinedNotif')}</Typography>
                 <Switch checked={settings.notifications.groupJoin} onChange={(e) => updateNotifications({ groupJoin: e.target.checked })} sx={smallSwitchSx} />
@@ -232,29 +221,18 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
               {/* Product Notifications Section */}
               <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
-              {(() => {
-                const pAllOn = settings.notifications.productAdd && settings.notifications.productDelete && settings.notifications.productEdit && settings.notifications.productPurchase;
-                return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
-                    <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
-                    <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
-                    <Box
-                      onClick={() => {
-                        const value = !pAllOn;
-                        updateNotifications({ productAdd: value, productDelete: value, productEdit: value, productPurchase: value });
-                      }}
-                      sx={{
-                        fontSize: 11, fontWeight: 600, color: pAllOn ? 'error.main' : 'primary.main',
-                        bgcolor: pAllOn ? 'rgba(239,68,68,0.08)' : 'rgba(20,184,166,0.08)',
-                        px: 1.25, py: 0.4, borderRadius: '8px', cursor: 'pointer',
-                        transition: 'all 0.15s', '&:active': { transform: 'scale(0.95)' }
-                      }}
-                    >
-                      {pAllOn ? t('disableAll') : t('enableAll')}
-                    </Box>
-                  </Box>
-                );
-              })()}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5 }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
+                <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
+                <Switch
+                  checked={settings.notifications.productAdd && settings.notifications.productDelete && settings.notifications.productEdit && settings.notifications.productPurchase}
+                  onChange={(e) => {
+                    const value = e.target.checked;
+                    updateNotifications({ productAdd: value, productDelete: value, productEdit: value, productPurchase: value });
+                  }}
+                  sx={smallSwitchSx}
+                />
+              </Box>
               <Box sx={subSettingRowSx}>
                 <Typography sx={{ flex: 1, fontSize: 14 }}>{t('productAdded')}</Typography>
                 <Switch checked={settings.notifications.productAdd} onChange={(e) => updateNotifications({ productAdd: e.target.checked })} sx={smallSwitchSx} />
