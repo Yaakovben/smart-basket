@@ -181,7 +181,8 @@ export const DEFAULT_SETTINGS = {
     productAdd: true,
     productDelete: true,
     productEdit: true,
-    productPurchase: true
+    productPurchase: true,
+    mutedGroupIds: [] as string[]
   }
 };
 

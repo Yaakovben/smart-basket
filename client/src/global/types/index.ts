@@ -94,6 +94,7 @@ export interface NotificationSettings {
   productDelete: boolean;
   productEdit: boolean;
   productPurchase: boolean;
+  mutedGroupIds: string[];
 }
 
 export interface AppSettings {

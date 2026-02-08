@@ -35,6 +35,9 @@ type TranslationKey =
   | 'productDeleted'
   | 'productEdited'
   | 'productPurchased'
+  | 'muteGroup'
+  | 'unmuteGroup'
+  | 'groupMuted'
   // Help & Support
   | 'contactUs'
   | 'sendEmail'
@@ -327,6 +330,9 @@ export const translations: Record<Language, Translations> = {
     productDeleted: 'מוצר נמחק',
     productEdited: 'מוצר נערך',
     productPurchased: 'מוצר נקנה',
+    muteGroup: 'השתק קבוצה',
+    unmuteGroup: 'בטל השתקה',
+    groupMuted: 'הקבוצה מושתקת',
     // Help & Support
     contactUs: 'צור קשר',
     sendEmail: 'שלח אימייל',
@@ -616,6 +622,9 @@ export const translations: Record<Language, Translations> = {
     productDeleted: 'Product Deleted',
     productEdited: 'Product Edited',
     productPurchased: 'Product Purchased',
+    muteGroup: 'Mute Group',
+    unmuteGroup: 'Unmute Group',
+    groupMuted: 'Group Muted',
     // Help & Support
     contactUs: 'Contact Us',
     sendEmail: 'Send Email',
@@ -905,6 +914,9 @@ export const translations: Record<Language, Translations> = {
     productDeleted: 'Товар удалён',
     productEdited: 'Товар изменён',
     productPurchased: 'Товар куплен',
+    muteGroup: 'Отключить уведомления',
+    unmuteGroup: 'Включить уведомления',
+    groupMuted: 'Уведомления отключены',
     // Help & Support
     contactUs: 'Связаться с нами',
     sendEmail: 'Отправить email',

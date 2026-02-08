@@ -9,6 +9,8 @@ interface SettingsContextType {
   updateTheme: (theme: ThemeMode) => void;
   updateLanguage: (language: Language) => void;
   updateNotifications: (notifications: Partial<NotificationSettings>) => void;
+  toggleGroupMute: (groupId: string) => void;
+  isGroupMuted: (groupId: string) => boolean;
   toggleDarkMode: () => void;
   t: (key: TranslationKeys) => string;
 }
@@ -59,6 +61,22 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const toggleGroupMute = useCallback((groupId: string) => {
+    setSettings(prev => {
+      const muted = prev.notifications.mutedGroupIds || [];
+      const updatedMuted = muted.includes(groupId)
+        ? muted.filter(id => id !== groupId)
+        : [...muted, groupId];
+      const updated = { ...prev, notifications: { ...prev.notifications, mutedGroupIds: updatedMuted } };
+      saveSettings(updated);
+      return updated;
+    });
+  }, []);
+
+  const isGroupMuted = useCallback((groupId: string): boolean => {
+    return (settings.notifications.mutedGroupIds || []).includes(groupId);
+  }, [settings.notifications.mutedGroupIds]);
+
   const toggleDarkMode = useCallback(() => {
     setSettings(prev => {
       const updated = { ...prev, theme: prev.theme === 'light' ? 'dark' : 'light' as ThemeMode };
@@ -76,9 +94,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     updateTheme,
     updateLanguage,
     updateNotifications,
+    toggleGroupMute,
+    isGroupMuted,
     toggleDarkMode,
     t
-  }), [settings, updateTheme, updateLanguage, updateNotifications, toggleDarkMode, t]);
+  }), [settings, updateTheme, updateLanguage, updateNotifications, toggleGroupMute, isGroupMuted, toggleDarkMode, t]);
 
   return (
     <SettingsContext.Provider value={value}>

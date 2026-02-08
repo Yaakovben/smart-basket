@@ -82,6 +82,8 @@ export function useSocketNotifications(
       const event = data as ProductEventData;
       // Don't show notification for own actions
       if (event.userId === user.id) return;
+      // Skip muted groups
+      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productAdd')) {
         const listName = listNames[event.listId] || '';
@@ -111,6 +113,7 @@ export function useSocketNotifications(
     const unsubProductUpdated = socketService.on('product:updated', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
+      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productEdit')) {
         const listName = listNames[event.listId] || '';
@@ -140,6 +143,7 @@ export function useSocketNotifications(
     const unsubProductDeleted = socketService.on('product:deleted', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
+      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productDelete')) {
         const listName = listNames[event.listId] || '';
@@ -169,6 +173,7 @@ export function useSocketNotifications(
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
+      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productPurchase')) {
         const listName = listNames[event.listId] || '';
@@ -201,6 +206,8 @@ export function useSocketNotifications(
       const event = data as NotificationEventData;
       // Don't show notification for own actions
       if (event.userId === user.id) return;
+      // Skip muted groups
+      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
 
       // Check if group notifications are enabled
       if (!notificationSettings.enabled) return;

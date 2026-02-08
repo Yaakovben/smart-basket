@@ -3,6 +3,8 @@ import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@m
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import type { List, User, Member, Product } from '../../../global/types';
 import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, SIZES, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
@@ -161,12 +163,34 @@ export const MembersModal = memo(({
   onlineUserIds,
   currentUserId
 }: MembersModalProps) => {
-  const { t } = useSettings();
+  const { t, toggleGroupMute, isGroupMuted } = useSettings();
+  const muted = list.isGroup ? isGroupMuted(list.id) : false;
 
   if (!isOpen) return null;
 
   return (
     <Modal title={t('members')} onClose={onClose}>
+      {list.isGroup && (
+        <Button
+          fullWidth
+          onClick={() => toggleGroupMute(list.id)}
+          startIcon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+          sx={{
+            mb: 2,
+            py: 1,
+            borderRadius: '10px',
+            bgcolor: muted ? 'rgba(239, 68, 68, 0.08)' : 'rgba(20, 184, 166, 0.08)',
+            color: muted ? 'error.main' : 'primary.main',
+            fontWeight: 600,
+            fontSize: 13,
+            '&:hover': {
+              bgcolor: muted ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 184, 166, 0.15)',
+            }
+          }}
+        >
+          {muted ? t('unmuteGroup') : t('muteGroup')}
+        </Button>
+      )}
       {members.map((m, i) => (
         <Box
           key={m.id}
