@@ -17,9 +17,10 @@ const checkListAccess = async (
     throw NotFoundError.list();
   }
 
-  const hasAccess = await ListDAL.isMember(listId, userId);
+  const isOwner = list.owner.toString() === userId;
+  const isMember = list.members.some((m) => m.user.toString() === userId);
 
-  if (!hasAccess) {
+  if (!isOwner && !isMember) {
     throw ForbiddenError.noAccess();
   }
 

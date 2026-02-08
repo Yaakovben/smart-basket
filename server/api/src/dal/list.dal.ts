@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { List, type IList } from '../models';
 import { BaseDAL } from './base.dal';
@@ -112,9 +113,10 @@ class ListDALClass extends BaseDAL<IList> {
     let isUnique = false;
 
     do {
+      const bytes = crypto.randomBytes(6);
       code = '';
       for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
+        code += chars.charAt(bytes[i] % chars.length);
       }
       const existing = await this.model.findOne({ inviteCode: code });
       isUnique = !existing;

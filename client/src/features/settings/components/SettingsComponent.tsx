@@ -142,13 +142,13 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
-                  {settings.language === 'he' ? 'התראות Push' : settings.language === 'ru' ? 'Push-уведомления' : 'Push Notifications'}
+                  {t('pushNotifications')}
                 </Typography>
                 {pushSubscribed && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto', bgcolor: '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981' }} />
                     <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>
-                      {settings.language === 'he' ? 'פעיל' : settings.language === 'ru' ? 'Активно' : 'Active'}
+                      {t('pushActive')}
                     </Typography>
                   </Box>
                 )}
@@ -156,24 +156,20 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               <Box sx={subSettingRowSx}>
                 <Box sx={{ flex: 1 }}>
                   <Typography sx={{ fontSize: 14 }}>
-                    {settings.language === 'he' ? 'קבל התראות גם כשהאפליקציה סגורה' : settings.language === 'ru' ? 'Получать уведомления когда приложение закрыто' : 'Receive notifications when app is closed'}
+                    {t('pushDescription')}
                   </Typography>
                   {!pushSupported && (
                     <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                      {settings.language === 'he' ? '* לא נתמך בדפדפן זה.\nבאייפון: לחץ על ״שתף״ ← ״הוסף למסך הבית״ ופתח משם'
-                        : settings.language === 'ru' ? '* Не поддерживается.\niPhone: нажмите "Поделиться" → "На экран Домой"'
-                        : '* Not supported.\niPhone: Tap Share → "Add to Home Screen" and open from there'}
+                      {t('pushNotSupported')}
                     </Typography>
                   )}
                   {pushError && pushError.includes('denied') ? (
                     <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                      {settings.language === 'he' ? '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר'
-                        : settings.language === 'ru' ? '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления'
-                        : '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow'}
+                      {t('pushBlocked')}
                     </Typography>
                   ) : pushError ? (
                     <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
-                      {settings.language === 'he' ? `* שגיאה: ${pushError}` : settings.language === 'ru' ? `* Ошибка: ${pushError}` : `* Error: ${pushError}`}
+                      {t('pushErrorMessage').replace('{error}', pushError)}
                     </Typography>
                   ) : null}
                 </Box>
@@ -338,7 +334,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
             >
               <Box component="span" sx={{ fontSize: 22 }}>🔄</Box>
               <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>
-                {settings.language === 'he' ? 'נקה מטמון ועדכן' : settings.language === 'ru' ? 'Очистить кэш' : 'Clear cache & refresh'}
+                {t('clearCacheRefresh')}
               </Typography>
               <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
             </Box>

@@ -71,6 +71,10 @@ class UserDALClass extends BaseDAL<IUser> {
 
     return { users, total };
   }
+
+  async findAllSorted(): Promise<IUser[]> {
+    return this.model.find().sort({ createdAt: -1 });
+  }
 }
 
 export const UserDAL = new UserDALClass();

@@ -105,20 +105,3 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// ===== Admin Types =====
-export interface ILoginActivityResponse {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  loginMethod: 'email' | 'google';
-  timestamp: Date;
-}
-
-export interface IDashboardStats {
-  totalUsers: number;
-  loginsToday: number;
-  loginsThisMonth: number;
-  uniqueUsersToday: number;
-  uniqueUsersThisMonth: number;
-}

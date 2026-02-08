@@ -487,7 +487,7 @@ export const HomeComponent = memo(({
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>6 תווים</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
             </Box>
             <TextField
               fullWidth
@@ -534,7 +534,7 @@ export const HomeComponent = memo(({
           <Box sx={{ mb: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>4 ספרות</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('fourDigits')}</Typography>
             </Box>
             <TextField
               fullWidth
@@ -673,9 +673,7 @@ export const HomeComponent = memo(({
                 {t('noNotifications')}
               </Typography>
               <Typography sx={{ fontSize: 13, color: 'text.secondary', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
-                {settings.language === 'he' ? 'כשיהיו עדכונים חדשים ברשימות שלך,\nהם יופיעו כאן'
-                  : settings.language === 'ru' ? 'Когда появятся обновления\nв ваших списках, они будут здесь'
-                  : "When there are new updates\nin your lists, they'll appear here"}
+                {t('noNotificationsYet')}
               </Typography>
             </Box>
           ) : (
@@ -683,9 +681,7 @@ export const HomeComponent = memo(({
               {/* Count sub-header */}
               <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1.5, px: 0.5 }}>
                 {allNotifications.length}{' '}
-                {settings.language === 'he' ? (allNotifications.length === 1 ? 'התראה חדשה' : 'התראות חדשות')
-                  : settings.language === 'ru' ? (allNotifications.length === 1 ? 'новое уведомление' : 'новых уведомлений')
-                  : (allNotifications.length === 1 ? 'new notification' : 'new notifications')}
+                {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
               </Typography>
 
               {/* Notification list */}
@@ -716,20 +712,20 @@ export const HomeComponent = memo(({
                     yesterday.setDate(yesterday.getDate() - 1);
                     const isYesterday = notificationDate.toDateString() === yesterday.toDateString();
 
-                    if (diffMin < 1) return lang === 'he' ? 'עכשיו' : lang === 'ru' ? 'Сейчас' : 'Now';
-                    if (diffMin < 60 && isToday) return lang === 'he' ? `לפני ${diffMin} דק׳` : lang === 'ru' ? `${diffMin} мин. назад` : `${diffMin}m ago`;
+                    if (diffMin < 1) return t('timeNow');
+                    if (diffMin < 60 && isToday) return t('timeMinutesAgo').replace('{count}', String(diffMin));
                     if (isToday) {
-                      const time = notificationDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-                      return lang === 'he' ? `היום ${time}` : lang === 'ru' ? `Сегодня ${time}` : `Today ${time}`;
+                      const time = notificationDate.toLocaleTimeString(lang === 'he' ? 'he-IL' : lang === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                      return t('timeHoursAgo').replace('{time}', time);
                     }
-                    if (isYesterday) return lang === 'he' ? 'אתמול' : lang === 'ru' ? 'Вчера' : 'Yesterday';
-                    if (diffDays < 7) return lang === 'he' ? `לפני ${diffDays} ימים` : lang === 'ru' ? `${diffDays} дн. назад` : `${diffDays}d ago`;
+                    if (isYesterday) return t('timeYesterday');
+                    if (diffDays < 7) return t('timeDaysAgo').replace('{count}', String(diffDays));
                     if (diffDays < 30) {
                       const weeks = Math.floor(diffDays / 7);
-                      return lang === 'he' ? `לפני ${weeks === 1 ? 'שבוע' : `${weeks} שבועות`}` : lang === 'ru' ? `${weeks} нед. назад` : `${weeks}w ago`;
+                      return t('timeWeeksAgo').replace('{count}', lang === 'he' ? (weeks === 1 ? 'שבוע' : `${weeks} שבועות`) : String(weeks));
                     }
                     const months = Math.floor(diffDays / 30);
-                    return lang === 'he' ? `לפני ${months === 1 ? 'חודש' : `${months} חודשים`}` : lang === 'ru' ? `${months} мес. назад` : `${months}mo ago`;
+                    return t('timeMonthsAgo').replace('{count}', lang === 'he' ? (months === 1 ? 'חודש' : `${months} חודשים`) : String(months));
                   };
 
                   const getEmoji = () => {
@@ -860,8 +856,8 @@ export const HomeComponent = memo(({
                         sx={{
                           color: 'text.disabled',
                           flexShrink: 0,
-                          width: 30,
-                          height: 30,
+                          width: 36,
+                          height: 36,
                           bgcolor: 'action.hover',
                           borderRadius: '50%',
                           opacity: isDismissing ? 0 : 0.5,
@@ -874,7 +870,7 @@ export const HomeComponent = memo(({
                           WebkitTapHighlightColor: 'transparent',
                         }}
                       >
-                        <CloseIcon sx={{ fontSize: 15 }} />
+                        <CloseIcon sx={{ fontSize: 16 }} />
                       </IconButton>
                     </Box>
                   );
@@ -937,22 +933,10 @@ export const HomeComponent = memo(({
               {pushPromptError ? '⚠️' : '🔔'}
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary', mb: 1 }}>
-              {pushPromptError
-                ? (settings.language === 'he' ? 'ההתראות נחסמו' : settings.language === 'ru' ? 'Уведомления заблокированы' : 'Notifications Blocked')
-                : (settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить уведомления' : 'Enable Notifications')}
+              {pushPromptError ? t('pushNotifBlocked') : t('enableNotifications')}
             </Typography>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-              {pushPromptError
-                ? (settings.language === 'he'
-                  ? 'כדי להפעיל התראות, יש לאפשר אותן\nבהגדרות הדפדפן → הרשאות → התראות'
-                  : settings.language === 'ru'
-                    ? 'Чтобы включить уведомления, разрешите их\nв настройках браузера → Разрешения → Уведомления'
-                    : 'To enable notifications, allow them in\nBrowser Settings → Permissions → Notifications')
-                : (settings.language === 'he'
-                  ? 'קבל התראות על שינויים ברשימות שלך גם כשהאפליקציה סגורה'
-                  : settings.language === 'ru'
-                    ? 'Получайте уведомления об изменениях в списках, даже когда приложение закрыто'
-                    : 'Get notified about changes in your lists even when the app is closed')}
+              {pushPromptError ? t('pushNotifBlockedDesc') : t('pushNotifBenefits')}
             </Typography>
             {!pushPromptError && (
               <Button
@@ -965,7 +949,7 @@ export const HomeComponent = memo(({
                 {pushLoading ? (
                   <CircularProgress size={24} sx={{ color: 'white' }} />
                 ) : (
-                  settings.language === 'he' ? 'הפעל התראות' : settings.language === 'ru' ? 'Включить' : 'Enable Notifications'
+                  t('enableNotifications')
                 )}
               </Button>
             )}
@@ -974,9 +958,7 @@ export const HomeComponent = memo(({
               onClick={handleDismissPushPrompt}
               sx={{ py: 1, fontSize: 14, color: 'text.secondary' }}
             >
-              {pushPromptError
-                ? (settings.language === 'he' ? 'הבנתי' : settings.language === 'ru' ? 'Понятно' : 'Got it')
-                : (settings.language === 'he' ? 'לא עכשיו' : settings.language === 'ru' ? 'Не сейчас' : 'Not now')}
+              {pushPromptError ? t('gotIt') : t('notNow')}
             </Button>
           </Box>
         </>

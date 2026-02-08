@@ -297,7 +297,38 @@ type TranslationKey =
   | 'searchProducts'
   // What's New
   | 'whatsNewTitle'
-  | 'letsStart';
+  | 'letsStart'
+  // Time formatting
+  | 'timeNow'
+  | 'timeMinutesAgo'
+  | 'timeHoursAgo'
+  | 'timeYesterday'
+  | 'timeDaysAgo'
+  | 'timeWeeksAgo'
+  | 'timeMonthsAgo'
+  // Push notification prompt
+  | 'pushNotifBlocked'
+  | 'pushNotifBlockedDesc'
+  | 'pushNotifBenefits'
+  | 'gotIt'
+  | 'notNow'
+  // Join group hints
+  | 'sixChars'
+  | 'fourDigits'
+  // Push settings
+  | 'pushNotifications'
+  | 'pushActive'
+  | 'pushDescription'
+  | 'pushNotSupported'
+  | 'pushBlocked'
+  | 'pushErrorMessage'
+  // Notification counts
+  | 'newNotification'
+  | 'newNotifications'
+  // Empty notification state
+  | 'noNotificationsYet'
+  // Clear cache
+  | 'clearCacheRefresh';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -599,7 +630,38 @@ export const translations: Record<Language, Translations> = {
     searchProducts: 'חיפוש מוצרים...',
     // What's New
     whatsNewTitle: 'מה חדש?',
-    letsStart: 'מעולה, בואו נתחיל!'
+    letsStart: 'מעולה, בואו נתחיל!',
+    // Time formatting
+    timeNow: 'עכשיו',
+    timeMinutesAgo: 'לפני {count} דק׳',
+    timeHoursAgo: 'היום {time}',
+    timeYesterday: 'אתמול',
+    timeDaysAgo: 'לפני {count} ימים',
+    timeWeeksAgo: 'לפני {count}',
+    timeMonthsAgo: 'לפני {count}',
+    // Push notification prompt
+    pushNotifBlocked: 'ההתראות נחסמו',
+    pushNotifBlockedDesc: 'כדי להפעיל התראות, יש לאפשר אותן\nבהגדרות הדפדפן → הרשאות → התראות',
+    pushNotifBenefits: 'קבל התראות על שינויים ברשימות שלך גם כשהאפליקציה סגורה',
+    gotIt: 'הבנתי',
+    notNow: 'לא עכשיו',
+    // Join group hints
+    sixChars: '6 תווים',
+    fourDigits: '4 ספרות',
+    // Push settings
+    pushNotifications: 'התראות Push',
+    pushActive: 'פעיל',
+    pushDescription: 'קבל התראות גם כשהאפליקציה סגורה',
+    pushNotSupported: '* לא נתמך בדפדפן זה.\nבאייפון: לחץ על ״שתף״ ← ״הוסף למסך הבית״ ופתח משם',
+    pushBlocked: '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר',
+    pushErrorMessage: '* שגיאה: {error}',
+    // Notification counts
+    newNotification: 'התראה חדשה',
+    newNotifications: 'התראות חדשות',
+    // Empty notification state
+    noNotificationsYet: 'כשיהיו עדכונים חדשים ברשימות שלך,\nהם יופיעו כאן',
+    // Clear cache
+    clearCacheRefresh: 'נקה מטמון ועדכן'
   },
   en: {
     // General
@@ -898,7 +960,38 @@ export const translations: Record<Language, Translations> = {
     searchProducts: 'Search products...',
     // What's New
     whatsNewTitle: "What's New?",
-    letsStart: "Great, let's start!"
+    letsStart: "Great, let's start!",
+    // Time formatting
+    timeNow: 'Now',
+    timeMinutesAgo: '{count}m ago',
+    timeHoursAgo: 'Today {time}',
+    timeYesterday: 'Yesterday',
+    timeDaysAgo: '{count}d ago',
+    timeWeeksAgo: '{count}w ago',
+    timeMonthsAgo: '{count}mo ago',
+    // Push notification prompt
+    pushNotifBlocked: 'Notifications Blocked',
+    pushNotifBlockedDesc: 'To enable notifications, allow them in\nBrowser Settings → Permissions → Notifications',
+    pushNotifBenefits: 'Get notified about changes in your lists even when the app is closed',
+    gotIt: 'Got it',
+    notNow: 'Not now',
+    // Join group hints
+    sixChars: '6 characters',
+    fourDigits: '4 digits',
+    // Push settings
+    pushNotifications: 'Push Notifications',
+    pushActive: 'Active',
+    pushDescription: 'Receive notifications when app is closed',
+    pushNotSupported: '* Not supported.\niPhone: Tap Share → "Add to Home Screen" and open from there',
+    pushBlocked: '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow',
+    pushErrorMessage: '* Error: {error}',
+    // Notification counts
+    newNotification: 'new notification',
+    newNotifications: 'new notifications',
+    // Empty notification state
+    noNotificationsYet: "When there are new updates\nin your lists, they'll appear here",
+    // Clear cache
+    clearCacheRefresh: 'Clear cache & refresh'
   },
   ru: {
     // General
@@ -1197,7 +1290,38 @@ export const translations: Record<Language, Translations> = {
     searchProducts: 'Поиск товаров...',
     // What's New
     whatsNewTitle: 'Что нового?',
-    letsStart: 'Отлично, начнём!'
+    letsStart: 'Отлично, начнём!',
+    // Time formatting
+    timeNow: 'Сейчас',
+    timeMinutesAgo: '{count} мин. назад',
+    timeHoursAgo: 'Сегодня {time}',
+    timeYesterday: 'Вчера',
+    timeDaysAgo: '{count} дн. назад',
+    timeWeeksAgo: '{count} нед. назад',
+    timeMonthsAgo: '{count} мес. назад',
+    // Push notification prompt
+    pushNotifBlocked: 'Уведомления заблокированы',
+    pushNotifBlockedDesc: 'Чтобы включить уведомления, разрешите их\nв настройках браузера → Разрешения → Уведомления',
+    pushNotifBenefits: 'Получайте уведомления об изменениях в списках, даже когда приложение закрыто',
+    gotIt: 'Понятно',
+    notNow: 'Не сейчас',
+    // Join group hints
+    sixChars: '6 символов',
+    fourDigits: '4 цифры',
+    // Push settings
+    pushNotifications: 'Push-уведомления',
+    pushActive: 'Активно',
+    pushDescription: 'Получать уведомления когда приложение закрыто',
+    pushNotSupported: '* Не поддерживается.\niPhone: нажмите "Поделиться" → "На экран Домой"',
+    pushBlocked: '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления',
+    pushErrorMessage: '* Ошибка: {error}',
+    // Notification counts
+    newNotification: 'новое уведомление',
+    newNotifications: 'новых уведомлений',
+    // Empty notification state
+    noNotificationsYet: 'Когда появятся обновления\nв ваших списках, они будут здесь',
+    // Clear cache
+    clearCacheRefresh: 'Очистить кэш'
   }
 };
 
