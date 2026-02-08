@@ -390,6 +390,7 @@ export const EditListModal = memo(({
           sx={{
             mb: 2.5,
             py: 1,
+            gap: 1,
             borderRadius: '10px',
             bgcolor: muted ? 'rgba(239, 68, 68, 0.08)' : 'rgba(20, 184, 166, 0.08)',
             color: muted ? 'error.main' : 'primary.main',
