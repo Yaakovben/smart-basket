@@ -38,6 +38,7 @@ type TranslationKey =
   | 'muteGroup'
   | 'unmuteGroup'
   | 'groupMuted'
+  | 'notificationsOff'
   // Help & Support
   | 'contactUs'
   | 'sendEmail'
@@ -334,6 +335,7 @@ export const translations: Record<Language, Translations> = {
     muteGroup: 'השתק קבוצה',
     unmuteGroup: 'בטל השתקה',
     groupMuted: 'הקבוצה מושתקת',
+    notificationsOff: 'ההתראות כבויות בהגדרות הראשיות',
     // Help & Support
     contactUs: 'צור קשר',
     sendEmail: 'שלח אימייל',
@@ -627,6 +629,7 @@ export const translations: Record<Language, Translations> = {
     muteGroup: 'Mute Group',
     unmuteGroup: 'Unmute Group',
     groupMuted: 'Group Muted',
+    notificationsOff: 'Notifications are off in main settings',
     // Help & Support
     contactUs: 'Contact Us',
     sendEmail: 'Send Email',
@@ -920,6 +923,7 @@ export const translations: Record<Language, Translations> = {
     muteGroup: 'Отключить уведомления',
     unmuteGroup: 'Включить уведомления',
     groupMuted: 'Уведомления отключены',
+    notificationsOff: 'Уведомления отключены в основных настройках',
     // Help & Support
     contactUs: 'Связаться с нами',
     sendEmail: 'Отправить email',

@@ -1,5 +1,5 @@
 import { memo, useEffect } from 'react';
-import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@mui/material';
+import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, Switch } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
@@ -371,8 +371,9 @@ export const EditListModal = memo(({
   onDelete,
   onUpdateData
 }: EditListModalProps) => {
-  const { t, toggleGroupMute, isGroupMuted } = useSettings();
+  const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
   const muted = list.isGroup ? isGroupMuted(list.id) : false;
+  const mainNotificationsOff = !settings.notifications.enabled;
 
   if (!isOpen || (!editData && !list.isGroup)) return null;
 
@@ -383,26 +384,44 @@ export const EditListModal = memo(({
     <Modal title={title} onClose={onClose}>
       {/* Mute toggle - visible to all group members */}
       {list.isGroup && (
-        <Button
-          fullWidth
-          onClick={() => toggleGroupMute(list.id)}
-          startIcon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-          sx={{
-            mb: 2.5,
-            py: 1,
-            gap: 1,
-            borderRadius: '10px',
-            bgcolor: muted ? 'rgba(239, 68, 68, 0.08)' : 'rgba(20, 184, 166, 0.08)',
-            color: muted ? 'error.main' : 'primary.main',
-            fontWeight: 600,
-            fontSize: 13,
-            '&:hover': {
-              bgcolor: muted ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-            }
-          }}
-        >
-          {muted ? t('unmuteGroup') : t('muteGroup')}
-        </Button>
+        <Box sx={{
+          mb: 2.5,
+          p: 1.5,
+          borderRadius: '12px',
+          border: '1px solid',
+          borderColor: mainNotificationsOff ? 'action.disabledBackground' : muted ? 'error.light' : 'divider',
+          bgcolor: mainNotificationsOff ? 'action.hover' : 'background.paper',
+          opacity: mainNotificationsOff ? 0.6 : 1,
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {muted || mainNotificationsOff
+                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'text.disabled' : 'error.main', fontSize: 22 }} />
+                : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+              }
+              <Box>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: mainNotificationsOff ? 'text.disabled' : 'text.primary' }}>
+                  {muted ? t('groupMuted') : t('muteGroup')}
+                </Typography>
+                {mainNotificationsOff && (
+                  <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.25 }}>
+                    {t('notificationsOff')}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+            <Switch
+              checked={!muted && !mainNotificationsOff}
+              onChange={() => toggleGroupMute(list.id)}
+              disabled={mainNotificationsOff}
+              size="small"
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': { color: 'primary.main' },
+                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'primary.main' },
+              }}
+            />
+          </Box>
+        </Box>
       )}
 
       {/* Edit fields - owner only for groups, always for private lists */}
