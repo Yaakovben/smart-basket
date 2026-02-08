@@ -107,7 +107,7 @@ export const AppRouter = () => {
   // Hooks for state management - ALL hooks must be called before any conditional returns
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // Pass pre-fetched data for faster initial load (fetched in parallel with auth)
-  const { lists, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
+  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
@@ -129,10 +129,18 @@ export const AppRouter = () => {
   const {
     notifications: persistedNotifications,
     loading: notificationsLoading,
+    fetchError: notificationsFetchError,
     markAsRead: markPersistedNotificationRead,
     markAllAsRead: clearAllPersistedNotifications,
     addNotification: addPersistedNotification,
   } = useNotifications(user, initialData.notifications);
+
+  // Show error toast when list or notification fetch fails
+  useEffect(() => {
+    if (listsFetchError || notificationsFetchError) {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [listsFetchError, notificationsFetchError, showToast, t]);
 
   // Create list names map for notifications
   const listNames = useMemo(() =>

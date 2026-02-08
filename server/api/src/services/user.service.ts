@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { List, PushSubscription } from '../models';
+import { List, Notification, PushSubscription } from '../models';
 import { UserDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
@@ -115,10 +115,16 @@ export class UserService {
         // 4. Delete user's push subscriptions
         await PushSubscription.deleteMany({ userId: uid }, { session });
 
-        // 5. Delete user's refresh tokens
+        // 5. Delete user's notifications (as actor or target)
+        await Notification.deleteMany(
+          { $or: [{ actorId: uid }, { targetUserId: uid }] },
+          { session }
+        );
+
+        // 6. Delete user's refresh tokens
         await TokenService.invalidateAllUserTokens(userId);
 
-        // 6. Delete user
+        // 7. Delete user
         const user = await UserDAL.deleteById(userId);
         if (!user) {
           throw NotFoundError.user();

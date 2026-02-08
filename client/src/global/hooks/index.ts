@@ -234,16 +234,18 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     initialLists ? initialLists.map(convertApiList) : []
   );
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   // Track which user we've initialized pre-fetched data for
   const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);
 
   const fetchLists = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const apiLists = await listsApi.getLists();
       setLists(apiLists.map(convertApiList));
     } catch {
-      // Silent fail - lists will be empty
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -584,6 +586,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
   return {
     lists,
     loading,
+    fetchError,
     createList,
     updateList,
     updateListLocal,

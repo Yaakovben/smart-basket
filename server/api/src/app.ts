@@ -5,6 +5,7 @@ import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
+import mongoose from 'mongoose';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
 import { env, morganStream, swaggerSpec } from './config';
@@ -70,7 +71,9 @@ app.use('/api', (_req, res, next) => {
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const dbConnected = mongoose.connection.readyState === 1;
+  const status = dbConnected ? 'ok' : 'degraded';
+  res.status(dbConnected ? 200 : 503).json({ status, db: dbConnected, timestamp: new Date().toISOString() });
 });
 
 // Swagger API Documentation (only in development)

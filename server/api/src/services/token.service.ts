@@ -43,7 +43,13 @@ export class TokenService {
       return null;
     }
 
-    const user = tokenDoc.user as unknown as { _id: string; email: string; name: string };
+    const user = tokenDoc.user as unknown as { _id: string; email: string; name: string } | null;
+
+    // User was deleted — clean up the orphaned token
+    if (!user) {
+      await tokenDoc.deleteOne();
+      return null;
+    }
     const userId = user._id.toString();
     const email = user.email;
     const name = user.name;

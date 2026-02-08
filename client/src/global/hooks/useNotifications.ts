@@ -22,6 +22,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
     () => initialData?.notifications || []
   );
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [unreadCount, setUnreadCount] = useState(() => initialData?.unreadCount || 0);
   // Track which user we've initialized pre-fetched data for
   const initializedForRef = useRef<string | null>(initialData ? '__initial__' : null);
@@ -31,6 +32,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
     if (!user) return;
 
     setLoading(true);
+    setFetchError(false);
     try {
       const result = await notificationsApi.getNotifications({ limit: 50 });
       setPersistedNotifications(result.notifications);
@@ -38,7 +40,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
       const count = result.notifications.filter(n => !n.read).length;
       setUnreadCount(count);
     } catch {
-      // Silent fail
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -154,6 +156,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   return {
     notifications: persistedNotifications,
     loading,
+    fetchError,
     unreadCount,
     fetchNotifications,
     markAsRead,
