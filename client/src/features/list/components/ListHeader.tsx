@@ -138,15 +138,6 @@ export const ListHeader = memo(({
           {list.name}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.75 }}>
-          {!list.isGroup && isOwner && (
-            <IconButton
-              onClick={onEditList}
-              sx={glassButtonSx}
-              aria-label={t('editList')}
-            >
-              <EditIcon sx={{ color: 'white', fontSize: 22 }} />
-            </IconButton>
-          )}
           <IconButton
             onClick={onShareList}
             sx={glassButtonSx}
@@ -154,19 +145,17 @@ export const ListHeader = memo(({
           >
             <ShareIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
-          {list.isGroup && (
-            <IconButton
-              onClick={(e) => setMenuAnchor(e.currentTarget)}
-              sx={glassButtonSx}
-              aria-label={t('groupSettings')}
-            >
-              <MoreVertIcon sx={{ color: 'white', fontSize: 22 }} />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
+            sx={glassButtonSx}
+            aria-label={t('groupSettings')}
+          >
+            <MoreVertIcon sx={{ color: 'white', fontSize: 22 }} />
+          </IconButton>
         </Box>
       </Box>
 
-      {/* Group Options Menu */}
+      {/* Options Menu */}
       <Menu
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
@@ -186,45 +175,47 @@ export const ListHeader = memo(({
           }
         }}
       >
-        {/* Mute Toggle — styled button */}
-        <Box sx={{ px: 1.5, py: 1 }}>
-          <Box
-            onClick={() => { if (!mainNotificationsOff) { setMenuAnchor(null); onToggleMute(); } }}
-            sx={{
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              px: 2, py: 1.5,
-              borderRadius: '12px',
-              bgcolor: isMuted || mainNotificationsOff
-                ? 'rgba(239,68,68,0.08)'
-                : 'rgba(20,184,166,0.08)',
-              border: '1px solid',
-              borderColor: isMuted || mainNotificationsOff
-                ? 'rgba(239,68,68,0.15)'
-                : 'rgba(20,184,166,0.15)',
-              cursor: mainNotificationsOff ? 'default' : 'pointer',
-              opacity: mainNotificationsOff ? 0.5 : 1,
-              transition: 'all 0.15s ease',
-              '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
-            }}
-          >
-            {isMuted || mainNotificationsOff
-              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
-              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-            }
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
-                {isMuted ? t('unmuteGroup') : t('muteGroup')}
-              </Typography>
-              {mainNotificationsOff && (
-                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                  {t('notificationsOff')}
+        {/* Mute Toggle — only for groups */}
+        {list.isGroup && (
+          <Box sx={{ px: 1.5, py: 1 }}>
+            <Box
+              onClick={() => { if (!mainNotificationsOff) { setMenuAnchor(null); onToggleMute(); } }}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                px: 2, py: 1.5,
+                borderRadius: '12px',
+                bgcolor: isMuted || mainNotificationsOff
+                  ? 'rgba(239,68,68,0.08)'
+                  : 'rgba(20,184,166,0.08)',
+                border: '1px solid',
+                borderColor: isMuted || mainNotificationsOff
+                  ? 'rgba(239,68,68,0.15)'
+                  : 'rgba(20,184,166,0.15)',
+                cursor: mainNotificationsOff ? 'default' : 'pointer',
+                opacity: mainNotificationsOff ? 0.5 : 1,
+                transition: 'all 0.15s ease',
+                '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
+              }}
+            >
+              {isMuted || mainNotificationsOff
+                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
+                : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+              }
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
+                  {isMuted ? t('unmuteGroup') : t('muteGroup')}
                 </Typography>
-              )}
+                {mainNotificationsOff && (
+                  <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                    {t('notificationsOff')}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
-        </Box>
+        )}
 
-        {isOwner && <Divider />}
+        {list.isGroup && isOwner && <Divider />}
 
         {isOwner && (
           <MenuItem
@@ -233,7 +224,7 @@ export const ListHeader = memo(({
           >
             <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
             <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-              {t('editGroup')}
+              {list.isGroup ? t('editGroup') : t('editList')}
             </Typography>
           </MenuItem>
         )}
@@ -245,7 +236,7 @@ export const ListHeader = memo(({
           >
             <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
             <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
-              {t('deleteGroup')}
+              {list.isGroup ? t('deleteGroup') : t('deleteList')}
             </Typography>
           </MenuItem>
         )}

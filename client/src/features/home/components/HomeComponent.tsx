@@ -7,7 +7,7 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
-import EditIcon from '@mui/icons-material/Edit';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -92,37 +92,29 @@ const colorSelectSx = (isSelected: boolean) => ({
 // ===== Memoized List Card Component =====
 interface ListCardProps {
   list: List;
-  user: User;
+  isMuted: boolean;
   onSelect: (list: List) => void;
-  onEdit: (list: List) => void;
   t: (key: TranslationKeys) => string;
 }
 
-const ListCard = memo(({ list: l, user, onSelect, onEdit, t }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
-  const isOwner = l.owner.id === user.id;
 
   return (
-    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, flex: 1 }} onClick={() => onSelect(l)}>
-        <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-          {l.icon}
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-            <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
-          </Box>
-          <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
-            {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
-          </Typography>
-        </Box>
+    <Card onClick={() => onSelect(l)} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
+      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+        {l.icon}
       </Box>
-      {isOwner && (
-        <IconButton onClick={(e) => { e.stopPropagation(); onEdit(l); }} sx={{ bgcolor: 'action.hover', width: SIZES.iconButton.sm.width, height: SIZES.iconButton.sm.height }}>
-          <EditIcon sx={{ fontSize: SIZES.icon.sm, color: 'text.secondary' }} />
-        </IconButton>
-      )}
+      <Box sx={{ flex: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
+          <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
+          {isMuted && <VolumeOffIcon sx={{ fontSize: 15, color: 'text.disabled' }} />}
+        </Box>
+        <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
+          {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
+        </Typography>
+      </Box>
     </Card>
   );
 });
@@ -151,7 +143,7 @@ export const HomeComponent = memo(({
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
-  const { t, settings } = useSettings();
+  const { t, settings, isGroupMuted } = useSettings();
   const { isSupported: pushSupported, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
   // Push notification prompt state
@@ -351,7 +343,7 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : display.map((l: List) => (
-          <ListCard key={l.id} list={l} user={user} onSelect={onSelectList} onEdit={setEditList} t={t} />
+          <ListCard key={l.id} list={l} isMuted={isGroupMuted(l.id)} onSelect={onSelectList} t={t} />
         ))}
       </Box>
 
