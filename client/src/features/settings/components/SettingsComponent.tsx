@@ -92,6 +92,17 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
     handleLanguageSelect, toggleNotificationsExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData });
 
+  const handleMainNotificationsToggle = async (enabled: boolean) => {
+    updateNotifications({ enabled });
+    if (!enabled && pushSubscribed) {
+      // Main notifications off → also unsubscribe from push
+      await unsubscribePush();
+    } else if (enabled && pushSupported && !pushSubscribed && Notification.permission === 'granted') {
+      // Main notifications on → re-subscribe to push if permission was already granted
+      await subscribePush();
+    }
+  };
+
   const handlePushToggle = async () => {
     if (pushSubscribed) {
       await unsubscribePush();
@@ -122,7 +133,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                 {notificationsExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF' }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF' }} />}
               </Box>
             )}
-            <Switch checked={settings.notifications.enabled} onChange={(e) => { e.stopPropagation(); updateNotifications({ enabled: e.target.checked }); }} onClick={(e) => e.stopPropagation()} sx={switchSx} />
+            <Switch checked={settings.notifications.enabled} onChange={(e) => { e.stopPropagation(); handleMainNotificationsToggle(e.target.checked); }} onClick={(e) => e.stopPropagation()} sx={switchSx} />
           </Box>
 
           <Collapse in={settings.notifications.enabled && notificationsExpanded}>
