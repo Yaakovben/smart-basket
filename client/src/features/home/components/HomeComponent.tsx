@@ -7,7 +7,7 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -109,12 +109,12 @@ const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
           <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
-          {isMuted && <VolumeOffIcon sx={{ fontSize: 15, color: 'text.disabled' }} />}
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
           {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
         </Typography>
       </Box>
+      {isMuted && <NotificationsOffIcon sx={{ fontSize: 22, color: 'text.disabled' }} />}
     </Card>
   );
 });
