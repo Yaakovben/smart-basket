@@ -34,6 +34,31 @@ class UserDALClass extends BaseDAL<IUser> {
     return this.model.findByIdAndUpdate(userId, { isAdmin }, { new: true });
   }
 
+  async toggleMutedGroup(userId: string, groupId: string): Promise<IUser | null> {
+    // Try to remove (if already muted)
+    const pulled = await this.model.findOneAndUpdate(
+      { _id: userId, mutedGroupIds: groupId },
+      { $pull: { mutedGroupIds: groupId } },
+      { new: true }
+    );
+    if (pulled) return pulled;
+
+    // Not muted yet — add it
+    return this.model.findByIdAndUpdate(
+      userId,
+      { $addToSet: { mutedGroupIds: groupId } },
+      { new: true }
+    );
+  }
+
+  async findUserIdsWhoMutedGroup(groupId: string, userIds: string[]): Promise<string[]> {
+    const users = await this.model.find({
+      _id: { $in: userIds },
+      mutedGroupIds: groupId
+    }).select('_id').lean();
+    return users.map(u => u._id.toString());
+  }
+
   async getAllUsers(options?: { page?: number; limit?: number }): Promise<{ users: IUser[]; total: number }> {
     const page = options?.page || 1;
     const limit = options?.limit || 50;

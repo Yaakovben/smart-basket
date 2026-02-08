@@ -37,6 +37,17 @@ export class UserController {
     });
   });
 
+  static toggleMuteGroup = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { groupId } = req.body as { groupId: string };
+    const mutedGroupIds = await UserService.toggleMutedGroup(userId, groupId);
+
+    res.json({
+      success: true,
+      data: { mutedGroupIds },
+    });
+  });
+
   static deleteAccount = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     await UserService.deleteAccount(userId);

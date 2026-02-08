@@ -202,8 +202,17 @@ export class NotificationService {
       return [];
     }
 
+    // Filter out users who have muted this group (skip push + DB notifications)
+    const mutedUserIds = await UserDAL.findUserIdsWhoMutedGroup(listId, targetUserIds);
+    const mutedSet = new Set(mutedUserIds);
+    const activeTargetIds = targetUserIds.filter(id => !mutedSet.has(id));
+
+    if (activeTargetIds.length === 0) {
+      return [];
+    }
+
     // Create notifications for all target users
-    const notificationsData = targetUserIds.map((targetUserId) => ({
+    const notificationsData = activeTargetIds.map((targetUserId) => ({
       type,
       listId,
       listName: list.name,
@@ -218,7 +227,7 @@ export class NotificationService {
 
     // Send push notifications to all target users (async, don't wait)
     const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
-    PushService.sendToUsers(targetUserIds, {
+    PushService.sendToUsers(activeTargetIds, {
       ...pushMessage,
       icon: '/apple-touch-icon.svg',
       badge: '/favicon.svg',

@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import type { Product, List, User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 
 // ===== Sub-components =====
@@ -80,7 +81,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onSearchChange={setSearch}
         onEditList={handleEditList}
         onDeleteList={() => setConfirmDeleteList(true)}
-        onToggleMute={() => toggleGroupMute(list.id)}
+        onToggleMute={() => { toggleGroupMute(list.id); authApi.toggleMuteGroup(list.id).catch(() => {}); }}
         isMuted={isGroupMuted(list.id)}
         mainNotificationsOff={!settings.notifications.enabled}
         onShareList={() => setShowShareList(true)}

@@ -10,6 +10,7 @@ export interface IUser extends Document {
   avatarEmoji: string;
   googleId?: string;
   isAdmin: boolean;
+  mutedGroupIds: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -54,6 +55,10 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    mutedGroupIds: [{
+      type: Schema.Types.ObjectId,
+      ref: 'List',
+    }],
   },
   {
     timestamps: true,

@@ -15,6 +15,10 @@ export const userValidator = {
     'object.min': 'At least one field must be provided',
   }),
 
+  toggleMuteGroup: Joi.object({
+    groupId: commonSchemas.objectId.required(),
+  }),
+
   changePassword: Joi.object({
     currentPassword: Joi.string().min(1).required().messages({
       'string.min': 'Current password is required',

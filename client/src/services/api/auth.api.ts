@@ -116,6 +116,12 @@ export const authApi = {
     return response.data.data;
   },
 
+  // Toggle mute for a group (server-side for push filtering)
+  async toggleMuteGroup(groupId: string): Promise<{ mutedGroupIds: string[] }> {
+    const response = await apiClient.post<{ data: { mutedGroupIds: string[] } }>('/users/me/muted-groups/toggle', { groupId });
+    return response.data.data;
+  },
+
   // Delete account
   async deleteAccount(): Promise<void> {
     await apiClient.delete('/users/me');

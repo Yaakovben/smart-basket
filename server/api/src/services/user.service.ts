@@ -74,6 +74,14 @@ export class UserService {
     await TokenService.invalidateAllUserTokens(userId);
   }
 
+  static async toggleMutedGroup(userId: string, groupId: string): Promise<string[]> {
+    const updated = await UserDAL.toggleMutedGroup(userId, groupId);
+    if (!updated) {
+      throw NotFoundError.user();
+    }
+    return (updated.mutedGroupIds || []).map(id => id.toString());
+  }
+
   static async deleteAccount(userId: string): Promise<void> {
     // Use a session to ensure all operations succeed or fail together.
     // If transactions aren't supported (no replica set), operations run individually.

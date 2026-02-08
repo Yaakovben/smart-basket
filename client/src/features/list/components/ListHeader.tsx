@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Drawer, Divider } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -76,7 +76,7 @@ export const ListHeader = memo(({
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [showMenu, setShowMenu] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -156,7 +156,7 @@ export const ListHeader = memo(({
           </IconButton>
           {list.isGroup && (
             <IconButton
-              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              onClick={() => setShowMenu(true)}
               sx={glassButtonSx}
               aria-label={t('groupSettings')}
             >
@@ -166,44 +166,116 @@ export const ListHeader = memo(({
         </Box>
       </Box>
 
-      {/* Group Options Menu */}
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-        slotProps={{ paper: { sx: { borderRadius: '12px', minWidth: 200, mt: 0.5 } } }}
+      {/* Group Options Bottom Sheet */}
+      <Drawer
+        anchor="bottom"
+        open={showMenu}
+        onClose={() => setShowMenu(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '24px 24px 0 0',
+            pb: 'max(16px, env(safe-area-inset-bottom))',
+            maxWidth: 500,
+            mx: 'auto',
+            bgcolor: 'background.paper'
+          }
+        }}
       >
-        <MenuItem
-          onClick={() => { setMenuAnchor(null); onToggleMute(); }}
-          disabled={mainNotificationsOff}
-          sx={{ py: 1.25, opacity: mainNotificationsOff ? 0.5 : 1 }}
+        {/* Handle */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 1 }}>
+          <Box sx={{ width: 36, height: 4, borderRadius: 2, bgcolor: 'grey.300' }} />
+        </Box>
+
+        <Typography sx={{ px: 3, pb: 1.5, fontSize: 17, fontWeight: 700, color: 'text.primary' }}>
+          {t('groupSettings')}
+        </Typography>
+
+        <Divider />
+
+        {/* Mute Toggle */}
+        <Box
+          onClick={() => { if (!mainNotificationsOff) { setShowMenu(false); onToggleMute(); } }}
+          sx={{
+            display: 'flex', alignItems: 'center', gap: 2,
+            px: 3, py: 2,
+            cursor: mainNotificationsOff ? 'default' : 'pointer',
+            opacity: mainNotificationsOff ? 0.5 : 1,
+            transition: 'background 0.15s',
+            '&:active': mainNotificationsOff ? {} : { bgcolor: 'action.hover' }
+          }}
         >
-          <ListItemIcon>
+          <Box sx={{
+            width: 44, height: 44, borderRadius: '14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            bgcolor: isMuted || mainNotificationsOff ? 'rgba(239,68,68,0.1)' : 'rgba(20,184,166,0.1)'
+          }}>
             {isMuted || mainNotificationsOff
-              ? <VolumeOffIcon fontSize="small" color={mainNotificationsOff ? 'disabled' : 'error'} />
-              : <VolumeUpIcon fontSize="small" color="primary" />
+              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 24 }} />
+              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 24 }} />
             }
-          </ListItemIcon>
-          <ListItemText
-            primary={isMuted ? t('unmuteGroup') : t('muteGroup')}
-            secondary={mainNotificationsOff ? t('notificationsOff') : undefined}
-            primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
-            secondaryTypographyProps={{ fontSize: 11 }}
-          />
-        </MenuItem>
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>
+              {isMuted ? t('unmuteGroup') : t('muteGroup')}
+            </Typography>
+            {mainNotificationsOff && (
+              <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                {t('notificationsOff')}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
         {isOwner && (
-          <MenuItem onClick={() => { setMenuAnchor(null); onEditList(); }} sx={{ py: 1.25 }}>
-            <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t('editGroup')} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
-          </MenuItem>
+          <>
+            <Divider sx={{ mx: 3 }} />
+
+            <Box
+              onClick={() => { setShowMenu(false); onEditList(); }}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 2,
+                px: 3, py: 2, cursor: 'pointer',
+                transition: 'background 0.15s',
+                '&:active': { bgcolor: 'action.hover' }
+              }}
+            >
+              <Box sx={{
+                width: 44, height: 44, borderRadius: '14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: 'rgba(20,184,166,0.1)'
+              }}>
+                <EditIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+              </Box>
+              <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>
+                {t('editGroup')}
+              </Typography>
+            </Box>
+
+            <Divider sx={{ mx: 3 }} />
+
+            <Box
+              onClick={() => { setShowMenu(false); onDeleteList(); }}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 2,
+                px: 3, py: 2, cursor: 'pointer',
+                transition: 'background 0.15s',
+                '&:active': { bgcolor: 'action.hover' }
+              }}
+            >
+              <Box sx={{
+                width: 44, height: 44, borderRadius: '14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: 'rgba(239,68,68,0.1)'
+              }}>
+                <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 24 }} />
+              </Box>
+              <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'error.main' }}>
+                {t('deleteGroup')}
+              </Typography>
+            </Box>
+          </>
         )}
-        {isOwner && (
-          <MenuItem onClick={() => { setMenuAnchor(null); onDeleteList(); }} sx={{ py: 1.25 }}>
-            <ListItemIcon><DeleteOutlineIcon fontSize="small" color="error" /></ListItemIcon>
-            <ListItemText primary={t('deleteGroup')} primaryTypographyProps={{ fontSize: 14, fontWeight: 500, color: 'error.main' }} />
-          </MenuItem>
-        )}
-      </Menu>
+      </Drawer>
 
       {/* Members Row (Group Only) */}
       {list.isGroup && (
