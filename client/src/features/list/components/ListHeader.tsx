@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Drawer, Divider } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Menu, MenuItem, Divider } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -76,7 +76,7 @@ export const ListHeader = memo(({
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -156,7 +156,7 @@ export const ListHeader = memo(({
           </IconButton>
           {list.isGroup && (
             <IconButton
-              onClick={() => setShowMenu(true)}
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
               sx={glassButtonSx}
               aria-label={t('groupSettings')}
             >
@@ -166,116 +166,90 @@ export const ListHeader = memo(({
         </Box>
       </Box>
 
-      {/* Group Options Bottom Sheet */}
-      <Drawer
-        anchor="bottom"
-        open={showMenu}
-        onClose={() => setShowMenu(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: '24px 24px 0 0',
-            pb: 'max(16px, env(safe-area-inset-bottom))',
-            maxWidth: 500,
-            mx: 'auto',
-            bgcolor: 'background.paper'
+      {/* Group Options Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: '16px',
+              minWidth: 240,
+              mt: 1,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)',
+              py: 0.5,
+              overflow: 'visible'
+            }
           }
         }}
       >
-        {/* Handle */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 1 }}>
-          <Box sx={{ width: 36, height: 4, borderRadius: 2, bgcolor: 'grey.300' }} />
-        </Box>
-
-        <Typography sx={{ px: 3, pb: 1.5, fontSize: 17, fontWeight: 700, color: 'text.primary' }}>
-          {t('groupSettings')}
-        </Typography>
-
-        <Divider />
-
-        {/* Mute Toggle */}
-        <Box
-          onClick={() => { if (!mainNotificationsOff) { setShowMenu(false); onToggleMute(); } }}
-          sx={{
-            display: 'flex', alignItems: 'center', gap: 2,
-            px: 3, py: 2,
-            cursor: mainNotificationsOff ? 'default' : 'pointer',
-            opacity: mainNotificationsOff ? 0.5 : 1,
-            transition: 'background 0.15s',
-            '&:active': mainNotificationsOff ? {} : { bgcolor: 'action.hover' }
-          }}
-        >
-          <Box sx={{
-            width: 44, height: 44, borderRadius: '14px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            bgcolor: isMuted || mainNotificationsOff ? 'rgba(239,68,68,0.1)' : 'rgba(20,184,166,0.1)'
-          }}>
+        {/* Mute Toggle — styled button */}
+        <Box sx={{ px: 1.5, py: 1 }}>
+          <Box
+            onClick={() => { if (!mainNotificationsOff) { setMenuAnchor(null); onToggleMute(); } }}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 1.5,
+              px: 2, py: 1.5,
+              borderRadius: '12px',
+              bgcolor: isMuted || mainNotificationsOff
+                ? 'rgba(239,68,68,0.08)'
+                : 'rgba(20,184,166,0.08)',
+              border: '1px solid',
+              borderColor: isMuted || mainNotificationsOff
+                ? 'rgba(239,68,68,0.15)'
+                : 'rgba(20,184,166,0.15)',
+              cursor: mainNotificationsOff ? 'default' : 'pointer',
+              opacity: mainNotificationsOff ? 0.5 : 1,
+              transition: 'all 0.15s ease',
+              '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
+            }}
+          >
             {isMuted || mainNotificationsOff
-              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 24 }} />
-              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
+              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
             }
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>
-              {isMuted ? t('unmuteGroup') : t('muteGroup')}
-            </Typography>
-            {mainNotificationsOff && (
-              <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                {t('notificationsOff')}
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
+                {isMuted ? t('unmuteGroup') : t('muteGroup')}
               </Typography>
-            )}
+              {mainNotificationsOff && (
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                  {t('notificationsOff')}
+                </Typography>
+              )}
+            </Box>
           </Box>
         </Box>
+
+        {isOwner && <Divider />}
 
         {isOwner && (
-          <>
-            <Divider sx={{ mx: 3 }} />
-
-            <Box
-              onClick={() => { setShowMenu(false); onEditList(); }}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 2,
-                px: 3, py: 2, cursor: 'pointer',
-                transition: 'background 0.15s',
-                '&:active': { bgcolor: 'action.hover' }
-              }}
-            >
-              <Box sx={{
-                width: 44, height: 44, borderRadius: '14px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: 'rgba(20,184,166,0.1)'
-              }}>
-                <EditIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              </Box>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>
-                {t('editGroup')}
-              </Typography>
-            </Box>
-
-            <Divider sx={{ mx: 3 }} />
-
-            <Box
-              onClick={() => { setShowMenu(false); onDeleteList(); }}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 2,
-                px: 3, py: 2, cursor: 'pointer',
-                transition: 'background 0.15s',
-                '&:active': { bgcolor: 'action.hover' }
-              }}
-            >
-              <Box sx={{
-                width: 44, height: 44, borderRadius: '14px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: 'rgba(239,68,68,0.1)'
-              }}>
-                <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 24 }} />
-              </Box>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'error.main' }}>
-                {t('deleteGroup')}
-              </Typography>
-            </Box>
-          </>
+          <MenuItem
+            onClick={() => { setMenuAnchor(null); onEditList(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {t('editGroup')}
+            </Typography>
+          </MenuItem>
         )}
-      </Drawer>
+
+        {isOwner && (
+          <MenuItem
+            onClick={() => { setMenuAnchor(null); onDeleteList(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
+              {t('deleteGroup')}
+            </Typography>
+          </MenuItem>
+        )}
+      </Menu>
 
       {/* Members Row (Group Only) */}
       {list.isGroup && (
