@@ -1,8 +1,11 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShareIcon from '@mui/icons-material/Share';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -35,6 +38,10 @@ interface ListHeaderProps {
   onFilterChange: (filter: ListFilter) => void;
   onSearchChange: (search: string) => void;
   onEditList: () => void;
+  onDeleteList: () => void;
+  onToggleMute: () => void;
+  isMuted: boolean;
+  mainNotificationsOff: boolean;
   onShareList: () => void;
   onShowMembers: () => void;
   onShowInvite: () => void;
@@ -56,6 +63,10 @@ export const ListHeader = memo(({
   onFilterChange,
   onSearchChange,
   onEditList,
+  onDeleteList,
+  onToggleMute,
+  isMuted,
+  mainNotificationsOff,
   onShareList,
   onShowMembers,
   onShowInvite,
@@ -65,6 +76,7 @@ export const ListHeader = memo(({
   const { t } = useSettings();
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -144,7 +156,7 @@ export const ListHeader = memo(({
           </IconButton>
           {list.isGroup && (
             <IconButton
-              onClick={onEditList}
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
               sx={glassButtonSx}
               aria-label={t('groupSettings')}
             >
@@ -153,6 +165,45 @@ export const ListHeader = memo(({
           )}
         </Box>
       </Box>
+
+      {/* Group Options Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+        slotProps={{ paper: { sx: { borderRadius: '12px', minWidth: 200, mt: 0.5 } } }}
+      >
+        <MenuItem
+          onClick={() => { setMenuAnchor(null); onToggleMute(); }}
+          disabled={mainNotificationsOff}
+          sx={{ py: 1.25, opacity: mainNotificationsOff ? 0.5 : 1 }}
+        >
+          <ListItemIcon>
+            {isMuted || mainNotificationsOff
+              ? <VolumeOffIcon fontSize="small" color={mainNotificationsOff ? 'disabled' : 'error'} />
+              : <VolumeUpIcon fontSize="small" color="primary" />
+            }
+          </ListItemIcon>
+          <ListItemText
+            primary={isMuted ? t('unmuteGroup') : t('muteGroup')}
+            secondary={mainNotificationsOff ? t('notificationsOff') : undefined}
+            primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+            secondaryTypographyProps={{ fontSize: 11 }}
+          />
+        </MenuItem>
+        {isOwner && (
+          <MenuItem onClick={() => { setMenuAnchor(null); onEditList(); }} sx={{ py: 1.25 }}>
+            <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary={t('editGroup')} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />
+          </MenuItem>
+        )}
+        {isOwner && (
+          <MenuItem onClick={() => { setMenuAnchor(null); onDeleteList(); }} sx={{ py: 1.25 }}>
+            <ListItemIcon><DeleteOutlineIcon fontSize="small" color="error" /></ListItemIcon>
+            <ListItemText primary={t('deleteGroup')} primaryTypographyProps={{ fontSize: 14, fontWeight: 500, color: 'error.main' }} />
+          </MenuItem>
+        )}
+      </Menu>
 
       {/* Members Row (Group Only) */}
       {list.isGroup && (

@@ -29,7 +29,7 @@ interface ListPageProps {
 
 // ===== Main Component =====
 export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
-  const { t } = useSettings();
+  const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
 
   const {
     // State
@@ -79,6 +79,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onFilterChange={setFilter}
         onSearchChange={setSearch}
         onEditList={handleEditList}
+        onDeleteList={() => setConfirmDeleteList(true)}
+        onToggleMute={() => toggleGroupMute(list.id)}
+        isMuted={isGroupMuted(list.id)}
+        mainNotificationsOff={!settings.notifications.enabled}
         onShareList={() => setShowShareList(true)}
         onShowMembers={() => setShowMembers(true)}
         onShowInvite={() => setShowInvite(true)}
@@ -201,10 +205,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         list={list}
         editData={editListData}
         hasChanges={hasListChanges}
-        isOwner={isOwner}
         onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
-        onDelete={() => { setShowEditList(false); setConfirmDeleteList(true); }}
         onUpdateData={setEditListData}
       />
 
