@@ -188,6 +188,8 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
   id: apiMember.user.id,
   name: apiMember.user.name,
   email: apiMember.user.email,
+  avatarColor: apiMember.user.avatarColor,
+  avatarEmoji: apiMember.user.avatarEmoji,
   isAdmin: apiMember.isAdmin,
   joinedAt: apiMember.joinedAt,
 });

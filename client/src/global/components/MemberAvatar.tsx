@@ -11,6 +11,8 @@ interface MemberAvatarProps {
 
 export const MemberAvatar = ({ member, size = 36, index = 0, isOnline = false }: MemberAvatarProps) => {
   const dotSize = Math.max(size * 0.3, 8);
+  const avatarColor = member.avatarColor;
+  const avatarEmoji = member.avatarEmoji;
 
   return (
     <Box sx={{ position: 'relative', width: size, height: size }}>
@@ -18,8 +20,8 @@ export const MemberAvatar = ({ member, size = 36, index = 0, isOnline = false }:
         sx={{
           width: size,
           height: size,
-          bgcolor: MEMBER_COLORS[index % MEMBER_COLORS.length],
-          fontSize: size * 0.4,
+          bgcolor: avatarColor || MEMBER_COLORS[index % MEMBER_COLORS.length],
+          fontSize: avatarEmoji ? size * 0.5 : size * 0.4,
           fontWeight: 700,
           lineHeight: 1,
           border: '2px solid white',
@@ -27,7 +29,7 @@ export const MemberAvatar = ({ member, size = 36, index = 0, isOnline = false }:
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         }}
       >
-        {member.name.charAt(0)}
+        {avatarEmoji || member.name.charAt(0)}
       </Avatar>
       {isOnline && (
         <Box

@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@m
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
-import type { List, User, Product } from '../../../global/types';
+import type { List, User, Member, Product } from '../../../global/types';
 import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, SIZES, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -141,7 +141,7 @@ InviteModal.displayName = 'InviteModal';
 interface MembersModalProps {
   isOpen: boolean;
   list: List;
-  members: User[];
+  members: (Member | User)[];
   isOwner: boolean;
   onClose: () => void;
   onRemoveMember: (id: string, name: string) => void;

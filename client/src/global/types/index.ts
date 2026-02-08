@@ -38,6 +38,8 @@ export interface Member {
   id: string;
   name: string;
   email: string;
+  avatarColor?: string;
+  avatarEmoji?: string;
   isAdmin?: boolean;
   joinedAt?: string;
 }
