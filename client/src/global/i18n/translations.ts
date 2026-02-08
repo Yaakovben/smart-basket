@@ -111,6 +111,7 @@ type TranslationKey =
   | 'saveChanges'
   | 'editList'
   | 'editGroup'
+  | 'groupSettings'
   | 'allDone'
   | 'allDoneDesc'
   | 'noProducts'
@@ -406,6 +407,7 @@ export const translations: Record<Language, Translations> = {
     saveChanges: 'שמור שינויים',
     editList: 'עריכת רשימה',
     editGroup: 'עריכת קבוצה',
+    groupSettings: 'הגדרות קבוצה',
     allDone: 'כל הכבוד!',
     allDoneDesc: 'כל המוצרים נקנו בהצלחה',
     noProducts: 'אין מוצרים',
@@ -698,6 +700,7 @@ export const translations: Record<Language, Translations> = {
     saveChanges: 'Save Changes',
     editList: 'Edit List',
     editGroup: 'Edit Group',
+    groupSettings: 'Group Settings',
     allDone: 'Great job!',
     allDoneDesc: 'All products have been purchased',
     noProducts: 'No products',
@@ -990,6 +993,7 @@ export const translations: Record<Language, Translations> = {
     saveChanges: 'Сохранить изменения',
     editList: 'Редактировать список',
     editGroup: 'Редактировать группу',
+    groupSettings: 'Настройки группы',
     allDone: 'Отлично!',
     allDoneDesc: 'Все товары куплены',
     noProducts: 'Нет товаров',

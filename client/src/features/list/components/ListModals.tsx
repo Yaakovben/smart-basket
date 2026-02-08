@@ -163,34 +163,12 @@ export const MembersModal = memo(({
   onlineUserIds,
   currentUserId
 }: MembersModalProps) => {
-  const { t, toggleGroupMute, isGroupMuted } = useSettings();
-  const muted = list.isGroup ? isGroupMuted(list.id) : false;
+  const { t } = useSettings();
 
   if (!isOpen) return null;
 
   return (
     <Modal title={t('members')} onClose={onClose}>
-      {list.isGroup && (
-        <Button
-          fullWidth
-          onClick={() => toggleGroupMute(list.id)}
-          startIcon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-          sx={{
-            mb: 2,
-            py: 1,
-            borderRadius: '10px',
-            bgcolor: muted ? 'rgba(239, 68, 68, 0.08)' : 'rgba(20, 184, 166, 0.08)',
-            color: muted ? 'error.main' : 'primary.main',
-            fontWeight: 600,
-            fontSize: 13,
-            '&:hover': {
-              bgcolor: muted ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-            }
-          }}
-        >
-          {muted ? t('unmuteGroup') : t('muteGroup')}
-        </Button>
-      )}
       {members.map((m, i) => (
         <Box
           key={m.id}
@@ -375,6 +353,7 @@ interface EditListModalProps {
   list: List;
   editData: EditListForm | null;
   hasChanges: boolean;
+  isOwner: boolean;
   onClose: () => void;
   onSave: () => void;
   onDelete: () => void;
@@ -386,89 +365,120 @@ export const EditListModal = memo(({
   list,
   editData,
   hasChanges,
+  isOwner,
   onClose,
   onSave,
   onDelete,
   onUpdateData
 }: EditListModalProps) => {
-  const { t } = useSettings();
+  const { t, toggleGroupMute, isGroupMuted } = useSettings();
+  const muted = list.isGroup ? isGroupMuted(list.id) : false;
 
-  if (!isOpen || !editData) return null;
+  if (!isOpen || (!editData && !list.isGroup)) return null;
 
   const icons = list.isGroup ? GROUP_ICONS : LIST_ICONS;
+  const title = list.isGroup ? t('groupSettings') : t('editList');
 
   return (
-    <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={onClose}>
-      <Box sx={{ mb: 2 }}>
-        <Typography component="label" htmlFor="list-name" sx={labelSx}>{t('name')}</Typography>
-        <TextField
-          id="list-name"
+    <Modal title={title} onClose={onClose}>
+      {/* Mute toggle - visible to all group members */}
+      {list.isGroup && (
+        <Button
           fullWidth
-          value={editData.name}
-          onChange={e => onUpdateData({ ...editData, name: e.target.value })}
-          aria-required="true"
-        />
-      </Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography sx={labelSx}>{t('icon')}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('icon')}>
-          {icons.map(i => (
-            <Button
-              key={i}
-              onClick={() => onUpdateData({ ...editData, icon: i })}
-              sx={{
-                width: 48,
-                height: 48,
-                minWidth: 48,
-                borderRadius: '12px',
-                border: editData.icon === i ? '2px solid' : '1.5px solid',
-                borderColor: editData.icon === i ? 'primary.main' : 'divider',
-                bgcolor: editData.icon === i ? 'primary.light' : 'background.paper',
-                fontSize: 22
-              }}
-              role="radio"
-              aria-checked={editData.icon === i}
-              aria-label={i}
-            >
-              {i}
-            </Button>
-          ))}
-        </Box>
-      </Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography sx={labelSx}>{t('color')}</Typography>
-        <Box sx={{ display: 'flex', gap: 1.25 }} role="radiogroup" aria-label={t('color')}>
-          {LIST_COLORS.map(c => (
-            <Box
-              key={c}
-              onClick={() => onUpdateData({ ...editData, color: c })}
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                bgcolor: c,
-                border: editData.color === c ? '3px solid' : 'none',
-                borderColor: 'text.primary',
-                cursor: 'pointer'
-              }}
-              role="radio"
-              aria-checked={editData.color === c}
-              aria-label={c}
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && onUpdateData({ ...editData, color: c })}
+          onClick={() => toggleGroupMute(list.id)}
+          startIcon={muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+          sx={{
+            mb: 2.5,
+            py: 1,
+            borderRadius: '10px',
+            bgcolor: muted ? 'rgba(239, 68, 68, 0.08)' : 'rgba(20, 184, 166, 0.08)',
+            color: muted ? 'error.main' : 'primary.main',
+            fontWeight: 600,
+            fontSize: 13,
+            '&:hover': {
+              bgcolor: muted ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 184, 166, 0.15)',
+            }
+          }}
+        >
+          {muted ? t('unmuteGroup') : t('muteGroup')}
+        </Button>
+      )}
+
+      {/* Edit fields - owner only for groups, always for private lists */}
+      {(isOwner || !list.isGroup) && editData && (
+        <>
+          <Box sx={{ mb: 2 }}>
+            <Typography component="label" htmlFor="list-name" sx={labelSx}>{t('name')}</Typography>
+            <TextField
+              id="list-name"
+              fullWidth
+              value={editData.name}
+              onChange={e => onUpdateData({ ...editData, name: e.target.value })}
+              aria-required="true"
             />
-          ))}
-        </Box>
-      </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('saveChanges')}</Button>
-      <Button
-        fullWidth
-        onClick={onDelete}
-        sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}
-        aria-label={list.isGroup ? t('deleteGroup') : t('deleteList')}
-      >
-        {list.isGroup ? t('deleteGroup') : t('deleteList')}
-      </Button>
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={labelSx}>{t('icon')}</Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('icon')}>
+              {icons.map(i => (
+                <Button
+                  key={i}
+                  onClick={() => onUpdateData({ ...editData, icon: i })}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    minWidth: 48,
+                    borderRadius: '12px',
+                    border: editData.icon === i ? '2px solid' : '1.5px solid',
+                    borderColor: editData.icon === i ? 'primary.main' : 'divider',
+                    bgcolor: editData.icon === i ? 'primary.light' : 'background.paper',
+                    fontSize: 22
+                  }}
+                  role="radio"
+                  aria-checked={editData.icon === i}
+                  aria-label={i}
+                >
+                  {i}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={labelSx}>{t('color')}</Typography>
+            <Box sx={{ display: 'flex', gap: 1.25 }} role="radiogroup" aria-label={t('color')}>
+              {LIST_COLORS.map(c => (
+                <Box
+                  key={c}
+                  onClick={() => onUpdateData({ ...editData, color: c })}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    bgcolor: c,
+                    border: editData.color === c ? '3px solid' : 'none',
+                    borderColor: 'text.primary',
+                    cursor: 'pointer'
+                  }}
+                  role="radio"
+                  aria-checked={editData.color === c}
+                  aria-label={c}
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && onUpdateData({ ...editData, color: c })}
+                />
+              ))}
+            </Box>
+          </Box>
+          <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('saveChanges')}</Button>
+          <Button
+            fullWidth
+            onClick={onDelete}
+            sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}
+            aria-label={list.isGroup ? t('deleteGroup') : t('deleteList')}
+          >
+            {list.isGroup ? t('deleteGroup') : t('deleteList')}
+          </Button>
+        </>
+      )}
     </Modal>
   );
 });

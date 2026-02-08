@@ -201,6 +201,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         list={list}
         editData={editListData}
         hasChanges={hasListChanges}
+        isOwner={isOwner}
         onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
         onDelete={() => { setShowEditList(false); setConfirmDeleteList(true); }}

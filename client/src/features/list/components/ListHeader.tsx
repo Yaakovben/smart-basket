@@ -2,6 +2,7 @@ import { memo, useState, useCallback, useRef } from 'react';
 import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
+import TuneIcon from '@mui/icons-material/Tune';
 import ShareIcon from '@mui/icons-material/Share';
 import AddIcon from '@mui/icons-material/Add';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -125,7 +126,15 @@ export const ListHeader = memo(({
           {list.name}
         </Typography>
         <Box sx={{ display: 'flex', gap: 0.75 }}>
-          {isOwner && (
+          {list.isGroup ? (
+            <IconButton
+              onClick={onEditList}
+              sx={glassButtonSx}
+              aria-label={t('groupSettings')}
+            >
+              <TuneIcon sx={{ color: 'white', fontSize: 22 }} />
+            </IconButton>
+          ) : isOwner ? (
             <IconButton
               onClick={onEditList}
               sx={glassButtonSx}
@@ -133,7 +142,7 @@ export const ListHeader = memo(({
             >
               <EditIcon sx={{ color: 'white', fontSize: 22 }} />
             </IconButton>
-          )}
+          ) : null}
           <IconButton
             onClick={onShareList}
             sx={glassButtonSx}
