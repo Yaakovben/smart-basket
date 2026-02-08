@@ -735,7 +735,7 @@ export const HomeComponent = memo(({
                   const getEmoji = () => {
                     switch (n.type) {
                       case 'leave': return '👋';
-                      case 'removed': return '🚫';
+                      case 'removed': case 'member_removed': return '🚫';
                       case 'list_deleted': return '🗑️';
                       case 'join': return '🎉';
                       case 'product_add': return '🛒';
@@ -749,7 +749,7 @@ export const HomeComponent = memo(({
 
                   const getAccentColor = () => {
                     switch (n.type) {
-                      case 'leave': case 'removed': case 'list_deleted': case 'product_delete': return '#EF4444';
+                      case 'leave': case 'removed': case 'member_removed': case 'list_deleted': case 'product_delete': return '#EF4444';
                       case 'join': return '#10B981';
                       case 'product_add': return '#3B82F6';
                       case 'product_edit': return '#F59E0B';
@@ -763,6 +763,7 @@ export const HomeComponent = memo(({
                     switch (n.type) {
                       case 'leave': return t('memberLeft');
                       case 'removed': return t('memberRemoved');
+                      case 'member_removed': return t('removedYouNotif');
                       case 'list_deleted': return t('deletedGroupNotif');
                       case 'join': return t('memberJoined');
                       case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;

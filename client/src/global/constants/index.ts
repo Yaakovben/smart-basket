@@ -177,6 +177,8 @@ export const DEFAULT_SETTINGS = {
     enabled: true,
     groupJoin: true,
     groupLeave: true,
+    groupRemoved: true,
+    groupDelete: true,
     listUpdate: true,
     productAdd: true,
     productDelete: true,

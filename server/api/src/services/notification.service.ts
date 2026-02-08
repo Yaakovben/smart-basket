@@ -65,6 +65,8 @@ const generatePushMessage = (
         return `${actorName} עזב/ה את הקבוצה`;
       case 'removed':
         return `${actorName} הוסר/ה מהקבוצה`;
+      case 'member_removed':
+        return `הוסרת מהקבוצה על ידי ${actorName}`;
       case 'list_deleted':
         return `${actorName} מחק/ה את הקבוצה`;
       case 'product_add':
@@ -204,7 +206,7 @@ export class NotificationService {
 
     // Filter out users who have muted this group (skip push + DB notifications)
     // Critical events (deletion, removal) are always sent regardless of mute status
-    const criticalTypes: NotificationType[] = ['list_deleted', 'removed'];
+    const criticalTypes: NotificationType[] = ['list_deleted', 'removed', 'member_removed'];
     let activeTargetIds = targetUserIds;
 
     if (!criticalTypes.includes(type)) {

@@ -44,7 +44,7 @@ interface ListDeletedEventData {
 // Local notification for the popup panel
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed' | 'list_deleted' | 'list_update';
+  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update';
   listId: string;
   listName: string;
   userId: string;
@@ -253,7 +253,7 @@ export function useSocketNotifications(
       }
 
       // Member was removed by admin (show to other group members)
-      if (event.type === 'removed' && notificationSettings.groupLeave) {
+      if (event.type === 'removed' && (notificationSettings.groupRemoved ?? true)) {
         if (!isPushSubscribed) {
           const message = `${event.userName} ${t('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
           showToast(message, 'warning');
@@ -299,21 +299,34 @@ export function useSocketNotifications(
       // Only handle if we are the removed user
       if (event.removedUserId !== user.id) return;
 
-      // Show toast notification with warning type for important removal
-      const message = `${t('removedFromGroupNotif')} "${event.listName}"`;
-      showToast(message, 'warning');
-
-      // Call callback to remove the list from state
+      // Always remove list from state (even if notifications disabled)
       onMemberRemoved?.(event.listId, event.listName);
+
+      // Only show toast if notifications are enabled and groupRemoved is on
+      if (!notificationSettings.enabled) return;
+      if (!(notificationSettings.groupRemoved ?? true)) return;
+
+      if (!isPushSubscribed) {
+        const message = `${t('removedFromGroupNotif')} "${event.listName}"`;
+        showToast(message, 'warning');
+      }
     });
 
     // List deleted notification (when owner deletes a group)
     const unsubListDeleted = socketService.on('list:deleted', (data: unknown) => {
       const event = data as ListDeletedEventData;
 
-      // Show toast notification with warning type
-      const message = `${event.ownerName} ${t('deletedGroupNotif')} "${event.listName}"`;
-      showToast(message, 'warning');
+      // Always remove list from state (even if notifications disabled)
+      onListDeleted?.(event.listId, event.listName);
+
+      // Only show toast/notification if notifications are enabled and groupDelete is on
+      if (!notificationSettings.enabled) return;
+      if (!(notificationSettings.groupDelete ?? true)) return;
+
+      if (!isPushSubscribed) {
+        const message = `${event.ownerName} ${t('deletedGroupNotif')} "${event.listName}"`;
+        showToast(message, 'warning');
+      }
 
       // Add to notifications panel
       addNotification?.({
@@ -326,9 +339,6 @@ export function useSocketNotifications(
         timestamp: new Date(event.timestamp),
         read: false
       });
-
-      // Call callback to remove the list from state
-      onListDeleted?.(event.listId, event.listName);
     });
 
     return () => {

@@ -89,6 +89,8 @@ export interface NotificationSettings {
   enabled: boolean;
   groupJoin: boolean;
   groupLeave: boolean;
+  groupRemoved: boolean;
+  groupDelete: boolean;
   listUpdate: boolean;
   productAdd: boolean;
   productDelete: boolean;
