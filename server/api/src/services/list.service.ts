@@ -116,6 +116,11 @@ export class ListService {
     const memberIds = list.members.map(m => m.user.toString());
     const listName = list.name;
 
+    // Delete all products and old notifications for this list first
+    await ProductDAL.deleteByListId(listId);
+    await NotificationService.deleteNotificationsForList(listId);
+
+    // Then create list_deleted notifications (after cleanup so they aren't deleted)
     const owner = await UserDAL.findById(userId);
 
     if (owner && list.isGroup && memberIds.length > 0) {
@@ -133,9 +138,6 @@ export class ListService {
       );
     }
 
-    // Delete all products for this list
-    await ProductDAL.deleteByListId(listId);
-    await NotificationService.deleteNotificationsForList(listId);
     await ListDAL.deleteById(listId);
 
     return { memberIds, listName };
