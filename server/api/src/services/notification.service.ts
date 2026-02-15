@@ -77,6 +77,8 @@ const generatePushMessage = (
         return `${actorName} מחק/ה "${productName}"`;
       case 'product_purchase':
         return `${actorName} סימן/ה "${productName}" כנקנה`;
+      case 'product_unpurchase':
+        return `${actorName} החזיר/ה "${productName}" לרשימה`;
       case 'list_update': {
         // productName encodes change type and optional new name as "changeType:newName" or just "changeType"
         const [changeType, newName] = productName?.includes(':')
@@ -144,8 +146,8 @@ export class NotificationService {
     const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
-      icon: '/apple-touch-icon.svg',
-      badge: '/favicon.svg',
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
       data: {
         listId: data.listId,
         type: data.type,
@@ -237,8 +239,8 @@ export class NotificationService {
     const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
     PushService.sendToUsers(activeTargetIds, {
       ...pushMessage,
-      icon: '/apple-touch-icon.svg',
-      badge: '/favicon.svg',
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
       data: {
         listId,
         type,

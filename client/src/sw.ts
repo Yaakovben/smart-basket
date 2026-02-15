@@ -40,8 +40,8 @@ self.addEventListener('push', (event) => {
       // All filters passed — show the notification
       const options = {
         body: data.body,
-        icon: data.icon || '/apple-touch-icon.svg',
-        badge: data.badge || '/favicon.svg',
+        icon: data.icon || '/icon-192x192.png',
+        badge: data.badge || '/icon-192x192.png',
         tag: data.data?.listId || 'smart-basket',
         renotify: true,
         data: data.data,

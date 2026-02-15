@@ -124,7 +124,8 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
             notification.type === 'product_add' ? 'product_add' :
             notification.type === 'product_delete' ? 'product_delete' :
             notification.type === 'product_purchase' ? 'product_purchase' :
-            notification.type, // join or leave
+            notification.type === 'product_unpurchase' ? 'product_unpurchase' :
+            notification.type, // join, leave, etc.
       listId: notification.listId,
       listName: notification.listName,
       actorId: notification.userId,

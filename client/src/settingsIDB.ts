@@ -75,6 +75,7 @@ export function getSettingsKeyForType(type: string): keyof NotifSettingsIDB | nu
     case 'product_update': return 'productEdit';
     case 'product_delete': return 'productDelete';
     case 'product_purchase': return 'productPurchase';
+    case 'product_unpurchase': return 'productPurchase';
     default: return null;
   }
 }

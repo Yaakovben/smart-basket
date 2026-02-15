@@ -214,7 +214,7 @@ export const HomeComponent = memo(({
         read: n.read,
         isLocal: false,
         productName: n.productName,
-        isPurchased: n.type === 'product_purchase' ? true : undefined
+        isPurchased: n.type === 'product_purchase' ? true : n.type === 'product_unpurchase' ? false : undefined
       }))
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [persistedNotifications]);
@@ -738,6 +738,7 @@ export const HomeComponent = memo(({
                       case 'product_edit': return '✏️';
                       case 'product_delete': return '❌';
                       case 'product_purchase': return '✅';
+                      case 'product_unpurchase': return '↩️';
                       case 'list_update': return '⚙️';
                       default: return '📢';
                     }
@@ -749,7 +750,7 @@ export const HomeComponent = memo(({
                       case 'join': return '#10B981';
                       case 'product_add': return '#3B82F6';
                       case 'product_edit': return '#F59E0B';
-                      case 'product_purchase': return '#14B8A6';
+                      case 'product_purchase': case 'product_unpurchase': return '#14B8A6';
                       case 'list_update': return '#8B5CF6';
                       default: return '#6B7280';
                     }
@@ -765,7 +766,8 @@ export const HomeComponent = memo(({
                       case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
                       case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
                       case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
-                      case 'product_purchase': return `${n.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif')} "${n.productName}"`;
+                      case 'product_purchase': return `${t('purchasedNotif')} "${n.productName}"`;
+                      case 'product_unpurchase': return `${t('unmarkedPurchasedNotif')} "${n.productName}"`;
                       case 'list_update': return t('listUpdatedNotif');
                       default: return '';
                     }

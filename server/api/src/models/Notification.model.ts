@@ -8,6 +8,7 @@ export type NotificationType =
   | 'product_update'
   | 'product_delete'
   | 'product_purchase'
+  | 'product_unpurchase'  // When a purchased product is returned to the list
   | 'member_removed'
   | 'list_deleted'
   | 'list_update';  // When list name/settings are changed
@@ -30,7 +31,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'member_removed', 'list_deleted', 'list_update'],
+      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'product_unpurchase', 'member_removed', 'list_deleted', 'list_update'],
       required: true,
     },
     listId: {

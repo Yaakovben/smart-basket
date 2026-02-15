@@ -89,15 +89,13 @@ export const registerProductHandlers = (
       timestamp: new Date(),
     });
 
-    if (data.isPurchased) {
-      ApiService.broadcastNotification({
-        listId: data.listId,
-        type: 'product_purchase',
-        actorId: userId,
-        productId: data.productId,
-        productName: data.productName,
-      }, accessToken);
-    }
+    ApiService.broadcastNotification({
+      listId: data.listId,
+      type: data.isPurchased ? 'product_purchase' : 'product_unpurchase',
+      actorId: userId,
+      productId: data.productId,
+      productName: data.productName,
+    }, accessToken);
   });
 
   // Product deleted
