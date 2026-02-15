@@ -74,6 +74,8 @@ export const registerNotificationHandlers = (
       console.warn('Invalid member:remove data from user:', userId);
       return;
     }
+    // Verify sender is in the list room (must be admin/owner)
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     const removedData: MemberRemovedData = {
       listId: data.listId,
@@ -109,6 +111,8 @@ export const registerNotificationHandlers = (
       console.warn('Invalid list:update data from user:', userId);
       return;
     }
+    // Verify sender is in the list room
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     // Build appropriate message based on what changed
     let message: string;
@@ -154,6 +158,8 @@ export const registerNotificationHandlers = (
       console.warn('Invalid list:delete data from user:', userId);
       return;
     }
+    // Verify sender is in the list room (must be owner)
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     const deletedData: ListDeletedData = {
       listId: data.listId,

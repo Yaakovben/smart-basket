@@ -4,6 +4,7 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
 } from '../types';
+import { ApiService } from '../services/api.service';
 
 // Track socket connections per user per list
 // Structure: listId → userId → Set<socketId>
@@ -56,14 +57,18 @@ export const registerListHandlers = (
 ) => {
   const userId = socket.userId!;
 
-  // Join a list room
-  socket.on('join:list', (listId: string) => {
+  // Join a list room (with membership verification)
+  socket.on('join:list', async (listId: string) => {
     if (typeof listId !== 'string' || !listId) return;
+
+    // Verify user is a member of this list via API
+    const isMember = await ApiService.verifyMembership(listId, socket.accessToken!);
+    if (!isMember) {
+      return;
+    }
 
     socket.join(`list:${listId}`);
     const isNewUser = addUserSocket(listId, userId, socket.id);
-
-    console.log(`User ${userId} joined list ${listId} (socket ${socket.id})`);
 
     // Send current online users to the joining socket
     socket.emit('presence:online', {

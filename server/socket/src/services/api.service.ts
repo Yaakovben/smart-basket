@@ -19,10 +19,31 @@ interface BroadcastNotificationData {
 
 /**
  * Service for making API calls to the main API server
- * Used primarily for persisting notifications
+ * Used primarily for persisting notifications and authorization checks
  */
 export class ApiService {
   private static baseUrl = env.API_URL;
+
+  /**
+   * Verify that a user is a member of a list by calling the API.
+   * Returns true if the user has access (owner or member), false otherwise.
+   */
+  static async verifyMembership(
+    listId: string,
+    accessToken: string
+  ): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/lists/${listId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
 
   /**
    * Create notifications for all list members (except the actor)

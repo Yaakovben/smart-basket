@@ -225,23 +225,39 @@ export const AppRouter = () => {
   };
 
   const handleUpdateUser = async (updates: Partial<User>) => {
-    await updateUser(updates);
-    showToast(t('profileUpdated'));
+    try {
+      await updateUser(updates);
+      showToast(t('profileUpdated'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
   };
 
-  const handleCreateList = (list: List) => {
-    createList(list);
-    showToast(t('created'));
+  const handleCreateList = async (list: List) => {
+    try {
+      await createList(list);
+      showToast(t('created'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
   };
 
-  const handleDeleteList = (id: string) => {
-    deleteList(id);
-    showToast(t('deleted'));
+  const handleDeleteList = async (id: string) => {
+    try {
+      await deleteList(id);
+      showToast(t('deleted'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
   };
 
-  const handleEditList = (list: List) => {
-    updateList(list);
-    showToast(t('saved'));
+  const handleEditList = async (list: List) => {
+    try {
+      await updateList(list);
+      showToast(t('saved'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
   };
 
   return (

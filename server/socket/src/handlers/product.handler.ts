@@ -32,6 +32,8 @@ export const registerProductHandlers = (
       console.warn('Invalid product:add data from user:', userId);
       return;
     }
+    // Verify sender is in the list room (passed join:list authorization)
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     // Broadcast to all users in the list except sender
     socket.to(`list:${data.listId}`).emit('product:added', {
@@ -59,6 +61,8 @@ export const registerProductHandlers = (
       console.warn('Invalid product:update data from user:', userId);
       return;
     }
+    // Verify sender is in the list room
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:updated', {
       listId: data.listId,
@@ -85,6 +89,8 @@ export const registerProductHandlers = (
       console.warn('Invalid product:toggle data from user:', userId);
       return;
     }
+    // Verify sender is in the list room
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:toggled', {
       listId: data.listId,
@@ -115,6 +121,8 @@ export const registerProductHandlers = (
       console.warn('Invalid product:delete data from user:', userId);
       return;
     }
+    // Verify sender is in the list room
+    if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:deleted', {
       listId: data.listId,
