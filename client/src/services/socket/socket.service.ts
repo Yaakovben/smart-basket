@@ -228,10 +228,14 @@ class SocketService {
     this.socket = null;
   }
 
-  // Join a list room
-  joinList(listId: string) {
+  // Join a list room (with optional callback after server confirms join)
+  joinList(listId: string, onJoined?: () => void) {
     this.joinedLists.add(listId);
-    this.socket?.emit('join:list', listId);
+    if (onJoined) {
+      this.socket?.emit('join:list', listId, onJoined);
+    } else {
+      this.socket?.emit('join:list', listId);
+    }
   }
 
   // Leave a list room

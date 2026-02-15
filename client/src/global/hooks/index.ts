@@ -384,20 +384,20 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
 
   const deleteList = useCallback(
     async (listId: string) => {
-      // Get the list before deleting to access member info
       const listToDelete = lists.find((l) => l.id === listId);
 
-      try {
-        const { memberIds, listName } = await listsApi.deleteList(listId);
-        setLists((prev) => prev.filter((l) => l.id !== listId));
-
-        // Emit socket event to notify members (only if it's a group with members)
-        if (listToDelete?.isGroup && memberIds.length > 0 && user) {
-          socketService.emitListDeleted(listId, listName, memberIds, user.name);
+      // Emit socket event BEFORE API delete (server needs to verify ownership while list still exists)
+      if (listToDelete?.isGroup && user) {
+        const memberIds = listToDelete.members
+          .map((m) => m.id)
+          .filter((id) => id !== user.id);
+        if (memberIds.length > 0) {
+          socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name);
         }
-      } catch (error) {
-        throw error;
       }
+
+      await listsApi.deleteList(listId);
+      setLists((prev) => prev.filter((l) => l.id !== listId));
     },
     [lists, user],
   );
@@ -409,10 +409,10 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       try {
         const joinedList = await listsApi.joinGroup({ inviteCode: code, password });
         setLists((prev) => [...prev, convertApiList(joinedList)]);
-        // Join socket room for this list
-        socketService.joinList(joinedList.id);
-        // Notify other members that someone joined
-        socketService.emitMemberJoined(joinedList.id, joinedList.name, user.name);
+        // Join socket room, then notify members after server confirms join
+        socketService.joinList(joinedList.id, () => {
+          socketService.emitMemberJoined(joinedList.id, joinedList.name, user!.name);
+        });
         return { success: true };
       } catch (error: unknown) {
         const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string };

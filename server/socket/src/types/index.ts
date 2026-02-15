@@ -15,7 +15,7 @@ export interface TokenPayload {
 
 // Socket events from client to server
 export interface ClientToServerEvents {
-  'join:list': (listId: string) => void;
+  'join:list': (listId: string, callback?: () => void) => void;
   'leave:list': (listId: string) => void;
   'get:presence': (listIds: string[]) => void;
   'product:add': (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => void;

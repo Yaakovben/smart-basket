@@ -59,7 +59,7 @@ export const registerListHandlers = (
   const userId = socket.userId!;
 
   // Join a list room (with membership verification)
-  socket.on('join:list', async (listId: string) => {
+  socket.on('join:list', async (listId: string, callback?: () => void) => {
     try {
       if (!checkRateLimit(socket.id)) return;
       if (typeof listId !== 'string' || !listId) return;
@@ -88,6 +88,9 @@ export const registerListHandlers = (
           timestamp: new Date(),
         });
       }
+
+      // Acknowledge join completion so client can safely emit follow-up events
+      if (typeof callback === 'function') callback();
     } catch (error) {
       logger.error('Error in join:list handler:', error);
     }
