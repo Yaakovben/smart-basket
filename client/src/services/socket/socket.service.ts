@@ -331,9 +331,13 @@ class SocketService {
     this.socket?.emit('member:remove', { listId, listName, removedUserId, removedUserName, adminName });
   }
 
-  // Emit list deleted event (by owner)
-  emitListDeleted(listId: string, listName: string, memberIds: string[], ownerName: string) {
-    this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName });
+  // Emit list deleted event (by owner) - with optional callback for ack
+  emitListDeleted(listId: string, listName: string, memberIds: string[], ownerName: string, onDone?: () => void) {
+    if (onDone) {
+      this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName }, onDone);
+    } else {
+      this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName });
+    }
   }
 
   // Emit list settings updated event (by owner)

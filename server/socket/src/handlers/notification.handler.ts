@@ -183,7 +183,7 @@ export const registerNotificationHandlers = (
   });
 
   // List deleted by owner
-  socket.on('list:delete', async (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }) => {
+  socket.on('list:delete', async (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }, callback?: () => void) => {
     try {
       if (!checkRateLimit(socket.id)) return;
       if (!isValidString(data?.listId) || !isValidString(data?.listName) || !Array.isArray(data?.memberIds)) {
@@ -222,8 +222,13 @@ export const registerNotificationHandlers = (
       cleanupListSockets(data.listId);
 
       logger.info(`List ${data.listName} was deleted by ${userName}, notified ${data.memberIds.length} members`);
+
+      // Acknowledge completion so client can safely proceed with API delete
+      if (typeof callback === 'function') callback();
     } catch (error) {
       logger.error('Error in list:delete handler:', error);
+      // Still acknowledge so client doesn't hang forever
+      if (typeof callback === 'function') callback();
     }
   });
 };

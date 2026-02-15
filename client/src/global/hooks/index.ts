@@ -386,13 +386,20 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     async (listId: string) => {
       const listToDelete = lists.find((l) => l.id === listId);
 
-      // Emit socket event BEFORE API delete (server needs to verify ownership while list still exists)
+      // For group lists: emit socket event and WAIT for server ack before API delete
+      // Server needs to verify ownership and notify members while the list still exists
       if (listToDelete?.isGroup && user) {
         const memberIds = listToDelete.members
           .map((m) => m.id)
           .filter((id) => id !== user.id);
         if (memberIds.length > 0) {
-          socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name);
+          await new Promise<void>((resolve) => {
+            socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
+              resolve();
+            });
+            // Timeout fallback - don't hang forever if socket is disconnected
+            setTimeout(resolve, 5000);
+          });
         }
       }
 
