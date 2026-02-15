@@ -15,10 +15,15 @@ const isValidString = (val: unknown): val is string =>
 
 const isValidBoolean = (val: unknown): val is boolean => typeof val === 'boolean';
 
-const isValidProduct = (product: unknown): product is ProductData =>
-  product !== null &&
-  typeof product === 'object' &&
-  isValidString((product as ProductData).name);
+const isValidProduct = (product: unknown): product is ProductData => {
+  if (product === null || typeof product !== 'object') return false;
+  const p = product as ProductData;
+  if (!isValidString(p.name)) return false;
+  if (p.quantity !== undefined && (typeof p.quantity !== 'number' || p.quantity < 0)) return false;
+  if (p.unit !== undefined && typeof p.unit !== 'string') return false;
+  if (p.category !== undefined && typeof p.category !== 'string') return false;
+  return true;
+};
 
 export const registerProductHandlers = (
   io: Server<ClientToServerEvents, ServerToClientEvents>,

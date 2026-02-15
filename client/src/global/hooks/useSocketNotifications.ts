@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { socketService } from '../../services/socket';
 import { useSettings } from '../context/SettingsContext';
 import type { User, ToastType } from '../types';
@@ -67,12 +67,33 @@ export function useSocketNotifications(
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
 
+  // Use refs for frequently-changing values to avoid re-subscribing listeners
+  const showToastRef = useRef(showToast);
+  const tRef = useRef(t);
+  const listNamesRef = useRef(listNames);
+  const addNotificationRef = useRef(addNotification);
+  const onMemberRemovedRef = useRef(onMemberRemoved);
+  const onListDeletedRef = useRef(onListDeleted);
+  const notificationSettingsRef = useRef(notificationSettings);
+  const isPushSubscribedRef = useRef(isPushSubscribed);
+
+  // Keep refs up to date
+  showToastRef.current = showToast;
+  tRef.current = t;
+  listNamesRef.current = listNames;
+  addNotificationRef.current = addNotification;
+  onMemberRemovedRef.current = onMemberRemoved;
+  onListDeletedRef.current = onListDeleted;
+  notificationSettingsRef.current = notificationSettings;
+  isPushSubscribedRef.current = isPushSubscribed;
+
   const shouldShowNotification = useCallback((
     eventType: 'productAdd' | 'productDelete' | 'productEdit' | 'productPurchase'
   ): boolean => {
-    if (!notificationSettings.enabled) return false;
-    return notificationSettings[eventType] ?? false;
-  }, [notificationSettings]);
+    const ns = notificationSettingsRef.current;
+    if (!ns.enabled) return false;
+    return ns[eventType] ?? false;
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -80,22 +101,19 @@ export function useSocketNotifications(
     // Product added notification
     const unsubProductAdded = socketService.on('product:added', (data: unknown) => {
       const event = data as ProductEventData;
-      // Don't show notification for own actions
       if (event.userId === user.id) return;
-      // Skip muted groups
-      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
+      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productAdd')) {
-        const listName = listNames[event.listId] || '';
+        const listName = listNamesRef.current[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
 
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('addedProductNotif')} "${productName}"${listName ? ` ${t('inListNotif')} ${listName}` : ''}`;
-          showToast(message, 'info');
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('addedProductNotif')} "${productName}"${listName ? ` ${tRef.current('inListNotif')} ${listName}` : ''}`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: `notif_${Date.now()}_${event.userId}`,
           type: 'product_add',
           listId: event.listId,
@@ -113,19 +131,18 @@ export function useSocketNotifications(
     const unsubProductUpdated = socketService.on('product:updated', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
-      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
+      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productEdit')) {
-        const listName = listNames[event.listId] || '';
+        const listName = listNamesRef.current[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
 
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('editedProductNotif')} "${productName}"`;
-          showToast(message, 'info');
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('editedProductNotif')} "${productName}"`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: `notif_${Date.now()}_${event.userId}`,
           type: 'product_edit',
           listId: event.listId,
@@ -143,19 +160,18 @@ export function useSocketNotifications(
     const unsubProductDeleted = socketService.on('product:deleted', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
-      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
+      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productDelete')) {
-        const listName = listNames[event.listId] || '';
+        const listName = listNamesRef.current[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
 
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('deletedProductNotif')} "${productName}"`;
-          showToast(message, 'info');
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('deletedProductNotif')} "${productName}"`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: `notif_${Date.now()}_${event.userId}`,
           type: 'product_delete',
           listId: event.listId,
@@ -173,20 +189,19 @@ export function useSocketNotifications(
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
-      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
+      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
 
       if (shouldShowNotification('productPurchase')) {
-        const listName = listNames[event.listId] || '';
+        const listName = listNamesRef.current[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
 
-        if (!isPushSubscribed) {
-          const action = event.isPurchased ? t('purchasedNotif') : t('unmarkedPurchasedNotif');
+        if (!isPushSubscribedRef.current) {
+          const action = event.isPurchased ? tRef.current('purchasedNotif') : tRef.current('unmarkedPurchasedNotif');
           const message = `${event.userName} ${action} "${productName}"`;
-          showToast(message, 'info');
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: `notif_${Date.now()}_${event.userId}`,
           type: 'product_purchase',
           listId: event.listId,
@@ -204,24 +219,20 @@ export function useSocketNotifications(
     // Member join/leave notifications (real-time)
     const unsubNotificationNew = socketService.on('notification:new', (data: unknown) => {
       const event = data as NotificationEventData;
-      // Don't show notification for own actions
       if (event.userId === user.id) return;
-      // Skip muted groups
-      if (notificationSettings.mutedGroupIds?.includes(event.listId)) return;
+      const ns = notificationSettingsRef.current;
+      if (ns.mutedGroupIds?.includes(event.listId)) return;
+      if (!ns.enabled) return;
 
-      // Check if group notifications are enabled
-      if (!notificationSettings.enabled) return;
+      const listName = listNamesRef.current[event.listId] || '';
 
-      const listName = listNames[event.listId] || '';
-
-      if (event.type === 'join' && notificationSettings.groupJoin) {
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-          showToast(message, 'info');
+      if (event.type === 'join' && ns.groupJoin) {
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: event.id,
           type: 'join',
           listId: event.listId,
@@ -233,14 +244,13 @@ export function useSocketNotifications(
         });
       }
 
-      if (event.type === 'leave' && notificationSettings.groupLeave) {
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-          showToast(message, 'info');
+      if (event.type === 'leave' && ns.groupLeave) {
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: event.id,
           type: 'leave',
           listId: event.listId,
@@ -253,14 +263,13 @@ export function useSocketNotifications(
       }
 
       // Member was removed by admin (show to other group members)
-      if (event.type === 'removed' && (notificationSettings.groupRemoved ?? true)) {
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
-          showToast(message, 'warning');
+      if (event.type === 'removed' && (ns.groupRemoved ?? true)) {
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
+          showToastRef.current(message, 'warning');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: event.id,
           type: 'removed',
           listId: event.listId,
@@ -273,14 +282,13 @@ export function useSocketNotifications(
       }
 
       // List settings were updated by owner
-      if (event.type === 'list_update' && notificationSettings.listUpdate) {
-        if (!isPushSubscribed) {
-          const message = `${event.userName} ${t('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
-          showToast(message, 'info');
+      if (event.type === 'list_update' && ns.listUpdate) {
+        if (!isPushSubscribedRef.current) {
+          const message = `${event.userName} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
+          showToastRef.current(message, 'info');
         }
 
-        // Add to notifications panel
-        addNotification?.({
+        addNotificationRef.current?.({
           id: event.id,
           type: 'list_update',
           listId: event.listId,
@@ -296,19 +304,17 @@ export function useSocketNotifications(
     // Member removed notification (when current user is removed from a group)
     const unsubMemberRemoved = socketService.on('member:removed', (data: unknown) => {
       const event = data as MemberRemovedEventData;
-      // Only handle if we are the removed user
       if (event.removedUserId !== user.id) return;
 
-      // Always remove list from state (even if notifications disabled)
-      onMemberRemoved?.(event.listId, event.listName);
+      onMemberRemovedRef.current?.(event.listId, event.listName);
 
-      // Only show toast if notifications are enabled and groupRemoved is on
-      if (!notificationSettings.enabled) return;
-      if (!(notificationSettings.groupRemoved ?? true)) return;
+      const ns = notificationSettingsRef.current;
+      if (!ns.enabled) return;
+      if (!(ns.groupRemoved ?? true)) return;
 
-      if (!isPushSubscribed) {
-        const message = `${t('removedFromGroupNotif')} "${event.listName}"`;
-        showToast(message, 'warning');
+      if (!isPushSubscribedRef.current) {
+        const message = `${tRef.current('removedFromGroupNotif')} "${event.listName}"`;
+        showToastRef.current(message, 'warning');
       }
     });
 
@@ -316,20 +322,18 @@ export function useSocketNotifications(
     const unsubListDeleted = socketService.on('list:deleted', (data: unknown) => {
       const event = data as ListDeletedEventData;
 
-      // Always remove list from state (even if notifications disabled)
-      onListDeleted?.(event.listId, event.listName);
+      onListDeletedRef.current?.(event.listId, event.listName);
 
-      // Only show toast/notification if notifications are enabled and groupDelete is on
-      if (!notificationSettings.enabled) return;
-      if (!(notificationSettings.groupDelete ?? true)) return;
+      const ns = notificationSettingsRef.current;
+      if (!ns.enabled) return;
+      if (!(ns.groupDelete ?? true)) return;
 
-      if (!isPushSubscribed) {
-        const message = `${event.ownerName} ${t('deletedGroupNotif')} "${event.listName}"`;
-        showToast(message, 'warning');
+      if (!isPushSubscribedRef.current) {
+        const message = `${event.ownerName} ${tRef.current('deletedGroupNotif')} "${event.listName}"`;
+        showToastRef.current(message, 'warning');
       }
 
-      // Add to notifications panel
-      addNotification?.({
+      addNotificationRef.current?.({
         id: `notif_${Date.now()}_${event.ownerId}`,
         type: 'list_deleted',
         listId: event.listId,
@@ -350,6 +354,5 @@ export function useSocketNotifications(
       unsubMemberRemoved();
       unsubListDeleted();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only user.id needed, not the full user object
-  }, [user?.id, shouldShowNotification, showToast, t, listNames, notificationSettings, addNotification, onMemberRemoved, onListDeleted, isPushSubscribed]);
+  }, [user?.id, shouldShowNotification]);
 }

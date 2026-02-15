@@ -60,32 +60,36 @@ export const registerListHandlers = (
 
   // Join a list room (with membership verification)
   socket.on('join:list', async (listId: string) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (typeof listId !== 'string' || !listId) return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (typeof listId !== 'string' || !listId) return;
 
-    // Verify user is a member of this list via API
-    const isMember = await ApiService.verifyMembership(listId, socket.accessToken!);
-    if (!isMember) {
-      return;
-    }
+      // Verify user is a member of this list via API
+      const isMember = await ApiService.verifyMembership(listId, socket.accessToken!);
+      if (!isMember) {
+        return;
+      }
 
-    socket.join(`list:${listId}`);
-    const isNewUser = addUserSocket(listId, userId, socket.id);
+      socket.join(`list:${listId}`);
+      const isNewUser = addUserSocket(listId, userId, socket.id);
 
-    // Send current online users to the joining socket
-    socket.emit('presence:online', {
-      listId,
-      userIds: getOnlineUserIds(listId),
-    });
-
-    // Notify others only if this is a new user (not a second tab/reconnection)
-    if (isNewUser) {
-      socket.to(`list:${listId}`).emit('user:joined', {
+      // Send current online users to the joining socket
+      socket.emit('presence:online', {
         listId,
-        userId,
-        userName: socket.userName || 'Unknown',
-        timestamp: new Date(),
+        userIds: getOnlineUserIds(listId),
       });
+
+      // Notify others only if this is a new user (not a second tab/reconnection)
+      if (isNewUser) {
+        socket.to(`list:${listId}`).emit('user:joined', {
+          listId,
+          userId,
+          userName: socket.userName || 'Unknown',
+          timestamp: new Date(),
+        });
+      }
+    } catch (error) {
+      logger.error('Error in join:list handler:', error);
     }
   });
 

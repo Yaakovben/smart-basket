@@ -1,6 +1,7 @@
 import webPush from 'web-push';
 import { PushSubscription, type IPushSubscription } from '../models';
 import { env } from '../config/environment';
+import { logger } from '../config';
 
 // Initialize web-push with VAPID keys
 if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
@@ -97,6 +98,8 @@ export class PushService {
         // Remove invalid subscriptions (410 Gone or 404 Not Found)
         if (pushError.statusCode === 410 || pushError.statusCode === 404) {
           await PushSubscription.deleteOne({ _id: sub._id });
+        } else {
+          logger.warn('Push notification failed for endpoint %s: %s', sub.endpoint, (error as Error).message);
         }
       }
     });

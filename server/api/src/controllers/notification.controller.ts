@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { NotificationService } from '../services/notification.service';
+import { ForbiddenError } from '../errors';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
@@ -84,6 +85,11 @@ export class NotificationController {
   static createNotification = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { type, listId, listName, actorId, actorName, targetUserId, productId, productName } = req.body;
 
+    // Prevent impersonation: actorId must match the authenticated user
+    if (String(actorId) !== req.user!.id) {
+      throw new ForbiddenError('Cannot create notifications on behalf of another user');
+    }
+
     const notification = await NotificationService.createNotification({
       type,
       listId,
@@ -107,6 +113,11 @@ export class NotificationController {
    */
   static createNotificationsForListMembers = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { listId, type, actorId, productId, productName } = req.body;
+
+    // Prevent impersonation: actorId must match the authenticated user
+    if (String(actorId) !== req.user!.id) {
+      throw new ForbiddenError('Cannot broadcast notifications on behalf of another user');
+    }
 
     const notifications = await NotificationService.createNotificationsForListMembers(
       listId,

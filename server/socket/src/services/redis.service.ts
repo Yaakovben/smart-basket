@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 import type { Server } from 'socket.io';
-import { env } from '../config';
+import { env, logger } from '../config';
 import type { ClientToServerEvents, ServerToClientEvents, NotificationData } from '../types';
 import { broadcastProductAdded, broadcastProductToggled, broadcastProductDeleted } from '../handlers';
 
@@ -17,7 +17,7 @@ interface RedisEvent {
 
 export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
   if (!env.REDIS_URL) {
-    console.log('Redis URL not configured - running without Redis');
+    logger.info('Redis URL not configured - running without Redis');
     return;
   }
 
@@ -27,10 +27,10 @@ export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>
 
     subscriber.subscribe('smart-basket:events', (err) => {
       if (err) {
-        console.error('Failed to subscribe to Redis channel:', err);
+        logger.error('Failed to subscribe to Redis channel:', err);
         return;
       }
-      console.log('Subscribed to Redis channel: smart-basket:events');
+      logger.info('Subscribed to Redis channel: smart-basket:events');
     });
 
     subscriber.on('message', (channel, message) => {
@@ -40,17 +40,17 @@ export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>
         const event: RedisEvent = JSON.parse(message);
         handleRedisEvent(io, event);
       } catch (error) {
-        console.error('Failed to parse Redis message:', error);
+        logger.error('Failed to parse Redis message:', error);
       }
     });
 
     subscriber.on('error', (err) => {
-      console.error('Redis subscriber error:', err);
+      logger.error('Redis subscriber error:', err);
     });
 
-    console.log('Redis connection established');
+    logger.info('Redis connection established');
   } catch (error) {
-    console.error('Failed to connect to Redis:', error);
+    logger.error('Failed to connect to Redis:', error);
   }
 };
 
@@ -97,7 +97,7 @@ const handleRedisEvent = (
 // Publish event (for use by API server if needed)
 export const publishEvent = (event: RedisEvent) => {
   if (!publisher) {
-    console.warn('Redis not available - event not published');
+    logger.warn('Redis not available - event not published');
     return;
   }
 

@@ -5,7 +5,7 @@ import sanitizeHtml from 'sanitize-html';
  * Use this for plain text fields like names, product names, etc.
  */
 export const sanitizeText = (input: string): string => {
-  if (!input || typeof input !== 'string') return input;
+  if (!input || typeof input !== 'string') return '';
 
   return sanitizeHtml(input, {
     allowedTags: [], // No HTML tags allowed
