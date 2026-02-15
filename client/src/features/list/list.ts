@@ -5,7 +5,7 @@ export { ListPage } from './pages/ListPage';
 export { SwipeItem } from './components/SwipeItem';
 
 // Hooks
-export { useSwipe, useList } from './hooks/list-hooks';
+export { useList } from './hooks/list-hooks';
 
 // Types
 export type {

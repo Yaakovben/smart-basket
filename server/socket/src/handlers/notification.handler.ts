@@ -11,11 +11,8 @@ import type {
 import { ApiService } from '../services/api.service';
 import { logger } from '../config';
 import { checkRateLimit } from '../middleware/rateLimiter.middleware';
+import { isValidString } from '../utils/validation';
 import { cleanupListSockets } from './list.handler';
-
-// Simple validation helper
-const isValidString = (val: unknown): val is string =>
-  typeof val === 'string' && val.length > 0 && val.length < 500;
 
 const generateNotificationId = (userId: string): string =>
   `notif_${crypto.randomUUID()}_${userId}`;

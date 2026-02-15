@@ -58,10 +58,15 @@ export class TokenService {
     const newAccessToken = this.generateAccessToken({ userId, email, name });
     const newRefreshToken = this.generateRefreshToken();
 
-    // Update refresh token in database
-    tokenDoc.token = newRefreshToken;
-    tokenDoc.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await tokenDoc.save();
+    // Atomic update: only succeeds if the old token still exists (prevents race conditions)
+    const updated = await RefreshToken.findOneAndUpdate(
+      { _id: tokenDoc._id, token: refreshToken },
+      { token: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+      { new: true }
+    );
+
+    // Another request already rotated this token
+    if (!updated) return null;
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
