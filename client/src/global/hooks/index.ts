@@ -460,9 +460,16 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       const listToLeave = lists.find((l) => l.id === listId);
 
       try {
-        // Notify other members that someone is leaving (before actually leaving)
+        // Notify other members and WAIT for server ack before API leave
+        // This ensures the notification is broadcast while the user is still a member
         if (listToLeave) {
-          socketService.emitMemberLeft(listId, listToLeave.name, user.name);
+          await new Promise<void>((resolve) => {
+            socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
+              resolve();
+            });
+            // Timeout fallback - don't hang forever if socket is disconnected
+            setTimeout(resolve, 5000);
+          });
         }
         await listsApi.leaveGroup(listId);
         // Leave socket room

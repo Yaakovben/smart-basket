@@ -55,14 +55,18 @@ export const registerNotificationHandlers = (
   });
 
   // Member left group
-  socket.on('member:leave', (data: { listId: string; listName: string; userName: string }) => {
+  socket.on('member:leave', (data: { listId: string; listName: string; userName: string }, callback?: () => void) => {
     if (!checkRateLimit(socket.id)) return;
     if (!isValidString(data?.listId) || !isValidString(data?.listName)) {
       logger.warn('Invalid member:leave data from user:', userId);
+      if (typeof callback === 'function') callback();
       return;
     }
     // Verify sender is in the list room
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
+    if (!socket.rooms.has(`list:${data.listId}`)) {
+      if (typeof callback === 'function') callback();
+      return;
+    }
 
     const notification: NotificationData = {
       id: generateNotificationId(userId),
@@ -77,6 +81,9 @@ export const registerNotificationHandlers = (
     // Broadcast to all users in the list (including sender - they're about to leave anyway)
     io.to(`list:${data.listId}`).emit('notification:new', notification);
     logger.info(`User ${userName} left group ${data.listName}`);
+
+    // Acknowledge so client can safely proceed with API leave
+    if (typeof callback === 'function') callback();
   });
 
   // Member removed from group (by admin/owner)

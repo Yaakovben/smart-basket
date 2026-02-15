@@ -321,9 +321,13 @@ class SocketService {
     this.socket?.emit('member:join', { listId, listName, userName });
   }
 
-  // Emit member left event
-  emitMemberLeft(listId: string, listName: string, userName: string) {
-    this.socket?.emit('member:leave', { listId, listName, userName });
+  // Emit member left event - with optional callback for ack
+  emitMemberLeft(listId: string, listName: string, userName: string, onDone?: () => void) {
+    if (onDone) {
+      this.socket?.emit('member:leave', { listId, listName, userName }, onDone);
+    } else {
+      this.socket?.emit('member:leave', { listId, listName, userName });
+    }
   }
 
   // Emit member removed event (by admin)
