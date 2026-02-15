@@ -1,7 +1,7 @@
 import type { Language } from '../types';
 
 // ===== Locale Mapping =====
-const getLocale = (language: Language): string => {
+export const getLocale = (language: Language): string => {
   const locales: Record<Language, string> = {
     he: 'he-IL',
     en: 'en-US',
@@ -30,9 +30,9 @@ export const formatDateShort = (timestamp: string, language: Language): string =
   });
 };
 
-export const formatTimeShort = (timestamp: string): string => {
+export const formatTimeShort = (timestamp: string, language: Language = 'he'): string => {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString('he-IL', {
+  return date.toLocaleTimeString(getLocale(language), {
     hour: '2-digit',
     minute: '2-digit'
   });

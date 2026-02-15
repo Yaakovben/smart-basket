@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member, ToastType } from '../../../global/types';
-import { haptic } from '../../../global/helpers';
+import { haptic, getLocale } from '../../../global/helpers';
+import type { TranslationKeys } from '../../../global/i18n/translations';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
@@ -19,7 +20,7 @@ import type {
 } from '../types/list-types';
 
 // Helper to convert API product to client Product type
-const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }): Product => ({
+const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }, locale: string): Product => ({
   id: apiProduct.id,
   name: apiProduct.name,
   quantity: apiProduct.quantity,
@@ -27,8 +28,8 @@ const convertApiProduct = (apiProduct: { id: string; name: string; quantity: num
   category: apiProduct.category as Product['category'],
   isPurchased: apiProduct.isPurchased,
   addedBy: apiProduct.addedBy,
-  createdDate: new Date(apiProduct.createdAt).toLocaleDateString('he-IL'),
-  createdTime: new Date(apiProduct.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+  createdDate: new Date(apiProduct.createdAt).toLocaleDateString(locale),
+  createdTime: new Date(apiProduct.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
 });
 
 // ===== Constants =====
@@ -36,19 +37,19 @@ const FAB_VISIBILITY_THRESHOLD = 3;
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 };
 const DEFAULT_FAB_BOTTOM_OFFSET = 90;
 
-const DEFAULT_NEW_PRODUCT: NewProductForm = {
+const getDefaultNewProduct = (t: (key: TranslationKeys) => string): NewProductForm => ({
   name: '',
   quantity: 1,
-  unit: 'יח׳',
-  category: 'אחר'
-};
+  unit: t('unitPiece') as Product['unit'],
+  category: t('catOther') as Product['category'],
+});
 
 // Helper to create date/time strings
-const createDateTimeStrings = () => {
+const createDateTimeStrings = (locale: string) => {
   const now = new Date();
   return {
-    createdDate: now.toLocaleDateString('he-IL'),
-    createdTime: now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    createdDate: now.toLocaleDateString(locale),
+    createdTime: now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
   };
 };
 
@@ -74,7 +75,8 @@ export const useList = ({
   onBack,
   showToast
 }: UseListParams): UseListReturn => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const locale = getLocale(settings.language);
 
   // ===== Filter & Search State =====
   const [filter, setFilter] = useState<ListFilter>('pending');
@@ -95,7 +97,7 @@ export const useList = ({
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
   // ===== Form State =====
-  const [newProduct, setNewProduct] = useState<NewProductForm>(DEFAULT_NEW_PRODUCT);
+  const [newProduct, setNewProduct] = useState<NewProductForm>(() => getDefaultNewProduct(t));
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
 
@@ -124,7 +126,9 @@ export const useList = ({
   const debouncedSearch = useDebounce(search, 300);
 
   const items = useMemo(
-    () => (filter === 'pending' ? pending : purchased).filter((p: Product) => p.name.includes(debouncedSearch)),
+    () => (filter === 'pending' ? pending : purchased).filter((p: Product) =>
+      p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ),
     [filter, pending, purchased, debouncedSearch]
   );
 
@@ -224,7 +228,7 @@ export const useList = ({
 
     // Create optimistic product with temporary ID
     const tempId = `temp_${Date.now()}`;
-    const { createdDate, createdTime } = createDateTimeStrings();
+    const { createdDate, createdTime } = createDateTimeStrings(locale);
     const optimisticProduct: Product = {
       id: tempId,
       ...productData,
@@ -260,7 +264,7 @@ export const useList = ({
       }, user.name);
 
       // Update local state with real server data (replacing temp ID)
-      updateProducts(updatedList.products.map(convertApiProduct));
+      updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
     } catch (error) {
       console.error('Failed to add product:', error);
       // Revert optimistic update on error
@@ -280,7 +284,7 @@ export const useList = ({
       unit: newProduct.unit,
       category: newProduct.category,
     };
-    setNewProduct(DEFAULT_NEW_PRODUCT);
+    setNewProduct(getDefaultNewProduct(t));
     setShowAdd(false);
     showToast(t('added'));
 
@@ -295,8 +299,8 @@ export const useList = ({
     await addProductWithOptimisticUpdate({
       name: trimmedName,
       quantity: 1,
-      unit: 'יח׳',
-      category: 'אחר',
+      unit: t('unitPiece') as Product['unit'],
+      category: t('catOther') as Product['category'],
     });
   }, [addProductWithOptimisticUpdate]);
 
@@ -320,7 +324,7 @@ export const useList = ({
     dismissHint();
 
     try {
-      await productsApi.togglePurchased(list.id, productId);
+      await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
 
       // Don't overwrite with server response - trust optimistic update
       // This prevents out-of-order responses from causing visual glitches
@@ -359,7 +363,7 @@ export const useList = ({
           // Emit socket event to notify other users
           socketService.emitProductDeleted(list.id, productId, product.name, user.name);
 
-          updateProducts(updatedList.products.map(convertApiProduct));
+          updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
           setConfirm(null);
           showToast(t('deleted'));
         } catch (error) {
@@ -372,24 +376,27 @@ export const useList = ({
   }, [list.id, list.products, user.name, updateProducts, showToast, t]);
 
   const saveEditedProduct = useCallback(async () => {
-    if (!showEdit || !hasProductChanges) return;
+    if (!showEdit || !originalEditProduct || !hasProductChanges) return;
     haptic('medium');
 
     // Store the edit data before closing modal
     const editData = { ...showEdit };
+    const original = { ...originalEditProduct };
 
     // Close modal first for smooth animation
     setShowEdit(null);
     setOriginalEditProduct(null);
 
+    // Build diff - only send fields that actually changed
+    const changes: Record<string, unknown> = {};
+    if (editData.name !== original.name) changes.name = editData.name;
+    if (editData.quantity !== original.quantity) changes.quantity = editData.quantity;
+    if (editData.unit !== original.unit) changes.unit = editData.unit;
+    if (editData.category !== original.category) changes.category = editData.category;
+
     try {
-      // Call API to update product
-      const updatedList = await productsApi.updateProduct(list.id, editData.id, {
-        name: editData.name,
-        quantity: editData.quantity,
-        unit: editData.unit,
-        category: editData.category,
-      });
+      // Call API with only changed fields
+      const updatedList = await productsApi.updateProduct(list.id, editData.id, changes);
 
       // Emit socket event to notify other users
       socketService.emitProductUpdated(list.id, {
@@ -400,13 +407,13 @@ export const useList = ({
         category: editData.category,
       }, user.name);
 
-      updateProducts(updatedList.products.map(convertApiProduct));
+      updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
       showToast(t('saved'));
     } catch (error) {
       console.error('Failed to update product:', error);
       showToast(t('unknownError'), 'error');
     }
-  }, [showEdit, hasProductChanges, list.id, user.name, updateProducts, showToast, t]);
+  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, updateProducts, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
     setShowEdit({ ...product });
@@ -492,13 +499,12 @@ export const useList = ({
             ...list,
             members: list.members.filter((m: Member) => m.id !== memberId)
           });
-          setConfirm(null);
           showToast(t('removed'));
         } catch (error) {
           console.error('Failed to remove member:', error);
-          setConfirm(null);
           showToast(t('unknownError'), 'error');
         }
+        setConfirm(null);
       }
     });
   }, [list, user.name, onUpdateListLocal, showToast, t]);

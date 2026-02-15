@@ -1,3 +1,4 @@
+import mongoose, { type ClientSession } from 'mongoose';
 import { Notification, type INotificationDoc, type NotificationType } from '../models';
 import { BaseDAL } from './base.dal';
 
@@ -86,6 +87,15 @@ class NotificationDALClass extends BaseDAL<INotificationDoc> {
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     const result = await this.model.deleteMany({ createdAt: { $lt: cutoffDate } });
+    return result.deletedCount;
+  }
+
+  async deleteByUserId(userId: string, session: ClientSession): Promise<number> {
+    const uid = new mongoose.Types.ObjectId(userId);
+    const result = await this.model.deleteMany(
+      { $or: [{ actorId: uid }, { targetUserId: uid }] },
+      { session }
+    );
     return result.deletedCount;
   }
 }

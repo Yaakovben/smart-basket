@@ -35,6 +35,7 @@ export {
 
 // Date formatting utilities
 export {
+  getLocale,
   formatDateLong,
   formatDateShort,
   formatTimeShort,

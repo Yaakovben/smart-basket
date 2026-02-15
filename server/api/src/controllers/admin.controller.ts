@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL } from '../dal';
 import { UserService } from '../services/user.service';
+import { ForbiddenError } from '../errors';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
@@ -69,6 +70,11 @@ export class AdminController {
 
   static deleteUser = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
+
+    // Prevent admin from deleting themselves
+    if (userId === req.user!.id) {
+      throw ForbiddenError.notOwner();
+    }
 
     // Use the same comprehensive cleanup as user self-deletion
     await UserService.deleteAccount(userId);

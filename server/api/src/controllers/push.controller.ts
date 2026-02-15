@@ -30,14 +30,6 @@ export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): P
   const userId = req.user!.id;
   const { subscription } = req.body;
 
-  if (!subscription || !subscription.endpoint || !subscription.keys) {
-    res.status(400).json({
-      success: false,
-      message: 'Invalid subscription data',
-    });
-    return;
-  }
-
   await PushService.subscribe(userId, subscription);
 
   res.json({

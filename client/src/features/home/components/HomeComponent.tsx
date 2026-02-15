@@ -144,7 +144,7 @@ export const HomeComponent = memo(({
 }: HomePageProps) => {
   const navigate = useNavigate();
   const { t, settings, isGroupMuted } = useSettings();
-  const { isSupported: pushSupported, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
+  const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
   // Push notification prompt state
   const [showPushPrompt, setShowPushPrompt] = useState(false);
@@ -155,11 +155,11 @@ export const HomeComponent = memo(({
 
   // Show push prompt after a delay if supported and not subscribed (and not denied)
   useEffect(() => {
-    if (pushSupported && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
+    if (pushSupported && isPwaInstalled && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
       const timer = setTimeout(() => setShowPushPrompt(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [pushSupported, pushSubscribed, pushPromptDismissed, pushLoading, pushPermission]);
+  }, [pushSupported, isPwaInstalled, pushSubscribed, pushPromptDismissed, pushLoading, pushPermission]);
 
   const handleEnablePush = async () => {
     setPushPromptError(false);
@@ -272,7 +272,7 @@ export const HomeComponent = memo(({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
-              <Badge badgeContent={notificationsLoading ? 0 : totalUnreadCount} color="error" sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
+              <Badge badgeContent={notificationsLoading ? 0 : totalUnreadCount} color="error" invisible={notificationsLoading} sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
                 <NotificationsIcon sx={{ color: 'white', fontSize: 22 }} />
               </Badge>
             </IconButton>

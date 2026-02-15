@@ -1,5 +1,4 @@
-import { LoginActivity } from '../models';
-import { UserDAL } from '../dal';
+import { UserDAL, LoginActivityDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
@@ -60,8 +59,8 @@ export class AuthService {
     );
 
     // Log activity
-    await LoginActivity.create({
-      user: user._id,
+    await LoginActivityDAL.logActivity({
+      userId: user._id.toString(),
       userName: user.name,
       userEmail: user.email,
       loginMethod: 'email',
@@ -110,8 +109,8 @@ export class AuthService {
     );
 
     // Log activity
-    await LoginActivity.create({
-      user: user._id,
+    await LoginActivityDAL.logActivity({
+      userId: user._id.toString(),
       userName: user.name,
       userEmail: user.email,
       loginMethod: 'email',
@@ -188,8 +187,8 @@ export class AuthService {
     );
 
     // Log activity
-    await LoginActivity.create({
-      user: user._id,
+    await LoginActivityDAL.logActivity({
+      userId: user._id.toString(),
       userName: user.name,
       userEmail: user.email,
       loginMethod: 'google',

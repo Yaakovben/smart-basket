@@ -3,6 +3,8 @@ import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
+import { useSettings } from "../context/SettingsContext";
+import { getLocale } from "../helpers";
 
 // Re-export hooks
 export { useDebounce } from './useDebounce';
@@ -30,17 +32,23 @@ const TOAST_DURATIONS: Record<ToastType, number> = {
 
 export function useToast() {
   const [toast, setToast] = useState<ToastState>({ message: "", type: "success" });
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback(
     (msg: string, type: ToastType = "success") => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setToast({ message: msg, type });
       const duration = TOAST_DURATIONS[type];
-      setTimeout(() => setToast({ message: "", type: "success" }), duration);
+      timeoutRef.current = setTimeout(() => {
+        setToast({ message: "", type: "success" });
+        timeoutRef.current = null;
+      }, duration);
     },
     [],
   );
 
   const hideToast = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setToast({ message: "", type: "success" });
   }, []);
 
@@ -89,9 +97,10 @@ export function useAuth() {
       }
 
       // Timeout promise - don't hang forever if API is down
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 10000)
-      );
+      let timeoutId: ReturnType<typeof setTimeout>;
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('timeout')), 10000);
+      });
 
       try {
         // Fetch profile, lists, and notifications in PARALLEL (with 10s timeout)
@@ -106,6 +115,8 @@ export function useAuth() {
           timeout.then(() => { throw new Error('timeout'); }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ]) as any;
+
+        clearTimeout(timeoutId!);
 
         // Cache user for next load
         localStorage.setItem('cached_user', JSON.stringify(profile));
@@ -123,7 +134,9 @@ export function useAuth() {
         // Connect socket when authenticated (if not already connected)
         socketService.connect();
       } catch {
+        clearTimeout(timeoutId!);
         // Token invalid or timeout, clear everything
+        socketService.disconnect();
         clearTokens();
         localStorage.removeItem('cached_user');
         setUser(null);
@@ -195,7 +208,7 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
 });
 
 // Helper to convert API product to client Product type
-const convertApiProduct = (p: ApiList['products'][0]): Product => ({
+const convertApiProduct = (p: ApiList['products'][0], locale: string): Product => ({
   id: p.id,
   name: p.name,
   quantity: p.quantity,
@@ -203,12 +216,12 @@ const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   category: p.category,
   isPurchased: p.isPurchased,
   addedBy: p.addedBy,
-  createdDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString('he-IL') : undefined,
-  createdTime: p.createdAt ? new Date(p.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : undefined,
+  createdDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString(locale) : undefined,
+  createdTime: p.createdAt ? new Date(p.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : undefined,
 });
 
 // Helper to convert API list to client List type
-const convertApiList = (apiList: ApiList): List => ({
+const convertApiList = (apiList: ApiList, locale: string): List => ({
   id: apiList.id,
   name: apiList.name,
   icon: apiList.icon,
@@ -222,16 +235,19 @@ const convertApiList = (apiList: ApiList): List => ({
     avatarEmoji: apiList.owner.avatarEmoji,
   },
   members: apiList.members.map(convertApiMember),
-  products: apiList.products.map(convertApiProduct),
+  products: apiList.products.map(p => convertApiProduct(p, locale)),
   inviteCode: apiList.inviteCode,
   password: apiList.password,
 });
 
 // ===== useLists Hook =====
 export function useLists(user: User | null, initialLists?: ApiList[] | null) {
+  const { settings } = useSettings();
+  const locale = getLocale(settings.language);
+
   // Use pre-fetched lists if available for instant render
   const [lists, setLists] = useState<List[]>(() =>
-    initialLists ? initialLists.map(convertApiList) : []
+    initialLists ? initialLists.map(l => convertApiList(l, locale)) : []
   );
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
@@ -243,18 +259,18 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     setFetchError(false);
     try {
       const apiLists = await listsApi.getLists();
-      setLists(apiLists.map(convertApiList));
+      setLists(apiLists.map(l => convertApiList(l, locale)));
     } catch {
       setFetchError(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
   useEffect(() => {
     if (initialLists && !initializedForRef.current) {
-      setLists(initialLists.map(convertApiList));
+      setLists(initialLists.map(l => convertApiList(l, locale)));
       initializedForRef.current = '__initial__';
     }
   }, [initialLists]);
@@ -313,12 +329,12 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         });
 
         // Replace temp list with server response
-        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList) : l));
+        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList, locale) : l));
 
         // Join socket room for the new list
         socketService.joinList(newList.id);
 
-        return convertApiList(newList);
+        return convertApiList(newList, locale);
       } catch (error) {
         // Remove optimistic list on error
         setLists((prev) => prev.filter((l) => l.id !== tempId));
@@ -350,7 +366,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
           color: updatedList.color,
         });
         setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+          prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
         );
         // Emit socket event for group lists to notify other members in real-time
         if (updatedList.isGroup && user && oldList) {
@@ -415,7 +431,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
 
       try {
         const joinedList = await listsApi.joinGroup({ inviteCode: code, password });
-        setLists((prev) => [...prev, convertApiList(joinedList)]);
+        setLists((prev) => [...prev, convertApiList(joinedList, locale)]);
         // Join socket room, then notify members after server confirms join
         socketService.joinList(joinedList.id, () => {
           socketService.emitMemberJoined(joinedList.id, joinedList.name, user!.name);
@@ -526,7 +542,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         idsToRefetch.forEach((id) => {
           listsApi.getList(id).then((updated) => {
             setLists((prev) =>
-              prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
+              prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
             );
           }).catch(() => {
             // Refetch failed - stale data will be shown until next sync

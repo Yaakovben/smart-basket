@@ -90,24 +90,13 @@ export class ListMembershipService {
     }
 
     // Check if member
-    const memberIndex = list.members.findIndex(
-      (m) => m.user.toString() === userId
-    );
-
-    if (memberIndex === -1) {
+    const isMember = list.members.some((m) => m.user.toString() === userId);
+    if (!isMember) {
       throw new NotFoundError('You are not a member of this list');
     }
 
-    // Get user info for notification
-    const user = await UserDAL.findById(userId);
-    if (!user) {
-      throw NotFoundError.user();
-    }
-
-    // Remove member
-    list.members.splice(memberIndex, 1);
-
-    await list.save();
+    // Atomic remove member
+    await ListDAL.removeMember(listId, userId);
 
     // Also save to new Notifications collection for all remaining list members
     await NotificationService.createNotificationsForListMembers(
@@ -144,24 +133,18 @@ export class ListMembershipService {
       throw new ForbiddenError('Cannot remove the owner');
     }
 
-    // Remove member
-    const memberIndex = list.members.findIndex(
-      (m) => m.user.toString() === memberId
-    );
-
-    if (memberIndex === -1) {
+    // Check member exists
+    const memberExists = list.members.some((m) => m.user.toString() === memberId);
+    if (!memberExists) {
       throw new NotFoundError('Member');
     }
 
-    // Get member and actor info for notification (parallel queries)
+    // Get member and actor info for notification (parallel with atomic removal)
     const [member, actor] = await Promise.all([
       UserDAL.findById(memberId),
       UserDAL.findById(userId),
+      ListDAL.removeMember(listId, memberId),
     ]);
-
-    list.members.splice(memberIndex, 1);
-
-    await list.save();
 
     // Send 'member_removed' notification to the removed member
     if (member && actor) {
@@ -185,7 +168,10 @@ export class ListMembershipService {
       );
     }
 
-    return transformList(list);
+    // Re-read for fresh data
+    const updatedList = await ListDAL.findById(listId);
+    if (!updatedList) throw NotFoundError.list();
+    return transformList(updatedList);
   }
 
   static async toggleMemberAdmin(
@@ -210,9 +196,10 @@ export class ListMembershipService {
       throw new NotFoundError('Member');
     }
 
-    member.isAdmin = !member.isAdmin;
-    await list.save();
+    // Atomic toggle admin
+    const updatedList = await ListDAL.setMemberAdmin(listId, memberId, !member.isAdmin);
+    if (!updatedList) throw NotFoundError.list();
 
-    return transformList(list);
+    return transformList(updatedList);
   }
 }

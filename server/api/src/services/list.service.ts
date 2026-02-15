@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { ListDAL, UserDAL, ProductDAL } from '../dal';
-import { NotFoundError, ForbiddenError } from '../errors';
 import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
@@ -9,6 +8,7 @@ import type { IList } from '../models';
 import { NotificationService } from './notification.service';
 import { ListMembershipService } from './list-membership.service';
 import { transformList, transformListsWithProducts } from './list-transform.helper';
+import { checkListAccess, checkListOwner } from './list-access.helper';
 
 export class ListService {
   // ==================== Core CRUD ====================
@@ -19,18 +19,7 @@ export class ListService {
   }
 
   static async getList(listId: string, userId: string): Promise<IListResponse> {
-    const list = await ListDAL.findById(listId);
-
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    const hasAccess = await ListDAL.isMember(listId, userId);
-
-    if (!hasAccess) {
-      throw ForbiddenError.noAccess();
-    }
-
+    const list = await checkListAccess(listId, userId);
     return transformList(list);
   }
 
@@ -60,15 +49,7 @@ export class ListService {
     userId: string,
     data: UpdateListInput
   ): Promise<IListResponse> {
-    const list = await ListDAL.findById(listId);
-
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    if (list.owner.toString() !== userId) {
-      throw ForbiddenError.notOwner();
-    }
+    const list = await checkListOwner(listId, userId);
 
     const sanitizedData = { ...data };
     if (sanitizedData.name) {
@@ -103,15 +84,7 @@ export class ListService {
   }
 
   static async deleteList(listId: string, userId: string): Promise<{ memberIds: string[]; listName: string }> {
-    const list = await ListDAL.findById(listId);
-
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    if (list.owner.toString() !== userId) {
-      throw ForbiddenError.notOwner();
-    }
+    const list = await checkListOwner(listId, userId);
 
     const memberIds = list.members.map(m => m.user.toString());
     const listName = list.name;
@@ -167,20 +140,8 @@ export class ListService {
     listId: string,
     userId: string
   ): Promise<IListResponse> {
-    const list = await ListDAL.findById(listId);
-
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    const hasAccess = await ListDAL.isMember(listId, userId);
-
-    if (!hasAccess) {
-      throw ForbiddenError.noAccess();
-    }
-
+    const list = await checkListAccess(listId, userId);
     await NotificationService.markAllAsRead(userId, listId);
-
     return transformList(list);
   }
 
@@ -189,21 +150,8 @@ export class ListService {
     userId: string,
     notificationId: string
   ): Promise<IListResponse> {
-    const list = await ListDAL.findById(listId);
-
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    const hasAccess = await ListDAL.isMember(listId, userId);
-
-    if (!hasAccess) {
-      throw ForbiddenError.noAccess();
-    }
-
-    // Mark the notification as read in the Notification collection
+    const list = await checkListAccess(listId, userId);
     await NotificationService.markAsReadById(notificationId);
-
     return transformList(list);
   }
 }

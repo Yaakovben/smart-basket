@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import mongoose from 'mongoose';
+import mongoose, { type ClientSession } from 'mongoose';
 import { List, type IList } from '../models';
 import { BaseDAL } from './base.dal';
 
@@ -122,6 +122,38 @@ class ListDALClass extends BaseDAL<IList> {
     }
 
     throw new Error('Failed to generate unique invite code after maximum retries');
+  }
+
+  // Session-aware methods for transactions
+  async deletePrivateLists(ownerId: string, session: ClientSession): Promise<number> {
+    const uid = new mongoose.Types.ObjectId(ownerId);
+    const result = await this.model.deleteMany({ owner: uid, isGroup: false }, { session });
+    return result.deletedCount;
+  }
+
+  async findOwnedGroups(ownerId: string, session: ClientSession): Promise<IList[]> {
+    const uid = new mongoose.Types.ObjectId(ownerId);
+    return this.model.find({ owner: uid, isGroup: true }).session(session);
+  }
+
+  async transferOwnership(listId: string, newOwnerId: mongoose.Types.ObjectId, session: ClientSession): Promise<IList | null> {
+    return this.model.findByIdAndUpdate(listId, {
+      $set: { owner: newOwnerId },
+      $pull: { members: { user: newOwnerId } }
+    }, { session, new: true });
+  }
+
+  async deleteByIdWithSession(listId: string, session: ClientSession): Promise<IList | null> {
+    return this.model.findByIdAndDelete(listId, { session });
+  }
+
+  async removeUserFromAllLists(userId: string, session: ClientSession): Promise<void> {
+    const uid = new mongoose.Types.ObjectId(userId);
+    await this.model.updateMany(
+      { 'members.user': uid },
+      { $pull: { members: { user: uid } } },
+      { session }
+    );
   }
 }
 

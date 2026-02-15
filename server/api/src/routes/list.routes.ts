@@ -138,6 +138,6 @@ router.delete('/:id/members/:memberId', validate({ params: listValidator.memberP
 
 // Notifications
 router.put('/:id/notifications/read', validate({ params: listValidator.params }), ListController.markNotificationsRead);
-router.put('/:id/notifications/:notificationId/read', validate({ params: listValidator.params }), ListController.markNotificationRead);
+router.put('/:id/notifications/:notificationId/read', validate({ params: listValidator.notificationParams }), ListController.markNotificationRead);
 
 export default router;

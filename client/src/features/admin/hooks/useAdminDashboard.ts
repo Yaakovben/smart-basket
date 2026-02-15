@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import type { ActivityFilters, LoginActivity, User } from "../../../global/types";
 import type { UseAdminDashboardReturn, DashboardStats, UserWithLastLogin } from "../types";
 import { adminApi, type AdminUser, type AdminLoginActivity } from "../../../services/api";
+import { useSettings } from "../../../global/context/SettingsContext";
 
 const DEFAULT_FILTERS: ActivityFilters = {
   filterMode: "all",
@@ -30,6 +31,7 @@ const convertApiUser = (apiUser: AdminUser): User => ({
 });
 
 export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolean; error: string | null } => {
+  const { t } = useSettings();
   const [filters, setFilters] = useState<ActivityFilters>(DEFAULT_FILTERS);
   const [activities, setActivities] = useState<LoginActivity[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -50,7 +52,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       setActivities(activityData.activities.map(convertApiActivity));
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
-      setError('Failed to load admin data');
+      setError(t('adminLoadError'));
     } finally {
       setLoading(false);
     }

@@ -44,6 +44,18 @@ class TokenDALClass extends BaseDAL<IRefreshToken> {
     });
     return tokenDoc !== null;
   }
+
+  async findByTokenPopulated(token: string): Promise<IRefreshToken | null> {
+    return this.model.findOne({ token }).populate('user');
+  }
+
+  async rotateToken(tokenId: string, oldToken: string, newToken: string, expiresAt: Date): Promise<IRefreshToken | null> {
+    return this.model.findOneAndUpdate(
+      { _id: tokenId, token: oldToken },
+      { token: newToken, expiresAt },
+      { new: true }
+    );
+  }
 }
 
 export const TokenDAL = new TokenDALClass();

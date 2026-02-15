@@ -132,7 +132,7 @@ export const ClearCachePage = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+      bgcolor: 'background.default',
       p: 2
     }}>
       <Paper sx={{
@@ -171,7 +171,7 @@ export const ClearCachePage = () => {
 
         {/* Steps List */}
         <List sx={{
-          bgcolor: 'rgba(0,0,0,0.02)',
+          bgcolor: 'action.hover',
           borderRadius: 2,
           py: 1,
           mb: 2

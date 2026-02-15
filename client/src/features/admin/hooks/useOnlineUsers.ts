@@ -38,10 +38,16 @@ export function useOnlineUsers(): Set<string> {
       });
     });
 
+    // Re-request full list on reconnect
+    const unsubReconnect = socketService.on('connect', () => {
+      socketService.requestOnlineUsers();
+    });
+
     return () => {
       unsubAll();
       unsubConnected();
       unsubDisconnected();
+      unsubReconnect();
       socketService.leaveOnlineUsers();
     };
   }, []);

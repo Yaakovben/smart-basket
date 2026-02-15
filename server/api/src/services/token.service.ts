@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { RefreshToken } from '../models';
+import { TokenDAL } from '../dal';
 import { env } from '../config';
 import type { TokenPayload, AuthTokens } from '../types';
 
@@ -25,17 +25,13 @@ export class TokenService {
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     // Save refresh token to database
-    await RefreshToken.create({
-      token: refreshToken,
-      user: userId,
-      expiresAt,
-    });
+    await TokenDAL.createToken(userId, refreshToken, expiresAt);
 
     return { accessToken, refreshToken };
   }
 
   static async refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
-    const tokenDoc = await RefreshToken.findOne({ token: refreshToken }).populate('user');
+    const tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
 
     if (!tokenDoc || tokenDoc.expiresAt < new Date()) {
       // Delete expired or invalid token
@@ -59,10 +55,11 @@ export class TokenService {
     const newRefreshToken = this.generateRefreshToken();
 
     // Atomic update: only succeeds if the old token still exists (prevents race conditions)
-    const updated = await RefreshToken.findOneAndUpdate(
-      { _id: tokenDoc._id, token: refreshToken },
-      { token: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
-      { new: true }
+    const updated = await TokenDAL.rotateToken(
+      tokenDoc._id.toString(),
+      refreshToken,
+      newRefreshToken,
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     );
 
     // Another request already rotated this token
@@ -72,11 +69,11 @@ export class TokenService {
   }
 
   static async invalidateRefreshToken(refreshToken: string): Promise<void> {
-    await RefreshToken.deleteOne({ token: refreshToken });
+    await TokenDAL.deleteByToken(refreshToken);
   }
 
   static async invalidateAllUserTokens(userId: string): Promise<void> {
-    await RefreshToken.deleteMany({ user: userId });
+    await TokenDAL.deleteByUser(userId);
   }
 
   static verifyAccessToken(token: string): TokenPayload | null {

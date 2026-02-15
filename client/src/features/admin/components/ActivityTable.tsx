@@ -18,12 +18,8 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
   const { t, settings } = useSettings();
 
   const getDateLabel = (dateStr: string) => {
-    if (isToday(dateStr)) {
-      return settings.language === 'he' ? 'היום' : settings.language === 'ru' ? 'Сегодня' : 'Today';
-    }
-    if (isYesterday(dateStr)) {
-      return settings.language === 'he' ? 'אתמול' : settings.language === 'ru' ? 'Вчера' : 'Yesterday';
-    }
+    if (isToday(dateStr)) return t('today');
+    if (isYesterday(dateStr)) return t('yesterday');
     return formatDateLong(dateStr + 'T00:00:00', settings.language);
   };
 
@@ -128,7 +124,7 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
                     fontWeight: 700,
                     color: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6'
                   }}>
-                    {formatTimeShort(activity.timestamp)}
+                    {formatTimeShort(activity.timestamp, settings.language)}
                   </Typography>
                 </Box>
 

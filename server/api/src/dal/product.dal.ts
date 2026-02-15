@@ -73,16 +73,6 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
     return result.deletedCount;
   }
 
-  async togglePurchased(productId: string): Promise<IProductDoc | null> {
-    const product = await this.model.findById(productId);
-    if (!product) return null;
-
-    product.isPurchased = !product.isPurchased;
-    await product.save();
-
-    return product.populate('addedBy', 'name');
-  }
-
   async reorderProducts(listId: string, productIds: string[]): Promise<void> {
     const bulkOps = productIds.map((id, index) => ({
       updateOne: {

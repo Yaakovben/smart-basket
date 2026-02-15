@@ -40,17 +40,6 @@ export class ProductController {
     });
   });
 
-  static togglePurchased = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
-    const { listId, productId } = req.params;
-    const list = await ProductService.togglePurchased(listId, productId, userId);
-
-    res.json({
-      success: true,
-      data: list,
-    });
-  });
-
   static reorderProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.params;

@@ -84,7 +84,16 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
-  const { isSupported: pushSupported, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+  const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+
+  // Detect device type for install instructions
+  const getDeviceType = (): 'ios' | 'android' | 'desktop' => {
+    const ua = navigator.userAgent;
+    if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+    if (/Android/.test(ua)) return 'android';
+    return 'desktop';
+  };
+  const deviceType = getDeviceType();
 
   const {
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, groupExpanded, productExpanded, pushExpanded, currentLanguageName,
@@ -97,8 +106,8 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
     if (!enabled && pushSubscribed) {
       // Main notifications off → also unsubscribe from push
       await unsubscribePush();
-    } else if (enabled && pushSupported && !pushSubscribed && Notification.permission === 'granted') {
-      // Main notifications on → re-subscribe to push if permission was already granted
+    } else if (enabled && pushSupported && isPwaInstalled && !pushSubscribed && Notification.permission === 'granted') {
+      // Main notifications on → re-subscribe to push if permission was already granted and PWA is installed
       await subscribePush();
     }
   };
@@ -163,7 +172,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                         handlePushToggle();
                         if (!e.target.checked) setPushExpanded(false);
                       }}
-                      disabled={!pushSupported}
+                      disabled={!pushSupported || !isPwaInstalled}
                       sx={smallSwitchSx}
                     />
                   )}
@@ -180,11 +189,21 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                         {t('pushNotSupported')}
                       </Typography>
                     )}
+                    {pushSupported && !isPwaInstalled && (
+                      <Box sx={{ mt: 1, p: 1.5, bgcolor: '#FEF3C7', borderRadius: '10px' }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#92400E', mb: 0.5 }}>
+                          {t('pushRequiresInstall')}
+                        </Typography>
+                        <Typography sx={{ fontSize: 12, color: '#92400E', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                          {deviceType === 'ios' ? t('pushInstallIOS') : deviceType === 'android' ? t('pushInstallAndroid') : t('pushInstallDesktop')}
+                        </Typography>
+                      </Box>
+                    )}
                     {pushError && pushError.includes('denied') ? (
                       <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                         {t('pushBlocked')}
                       </Typography>
-                    ) : pushError ? (
+                    ) : pushError && !pushError.includes('PWA') ? (
                       <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
                         {t('pushErrorMessage').replace('{error}', pushError)}
                       </Typography>

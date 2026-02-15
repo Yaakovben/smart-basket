@@ -41,7 +41,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.product.id,
       productName: data.product.name,
-    }, accessToken);
+    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product updated
@@ -67,7 +67,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.product.id,
       productName: data.product.name,
-    }, accessToken);
+    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product toggled (purchased/unpurchased)
@@ -95,7 +95,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.productId,
       productName: data.productName,
-    }, accessToken);
+    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product deleted
@@ -122,7 +122,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.productId,
       productName: data.productName,
-    }, accessToken);
+    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 };
 

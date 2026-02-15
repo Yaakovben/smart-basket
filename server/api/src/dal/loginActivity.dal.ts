@@ -1,4 +1,4 @@
-import { LoginActivity, type ILoginActivity } from '../models';
+import { LoginActivity, type ILoginActivity, type LoginMethod } from '../models';
 import { BaseDAL } from './base.dal';
 
 class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
@@ -29,6 +29,24 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
   async deleteByUser(userId: string): Promise<number> {
     const result = await this.model.deleteMany({ user: userId });
     return result.deletedCount;
+  }
+
+  async logActivity(data: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    loginMethod: LoginMethod;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<ILoginActivity> {
+    return this.model.create({
+      user: data.userId,
+      userName: data.userName,
+      userEmail: data.userEmail,
+      loginMethod: data.loginMethod,
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent,
+    }) as Promise<ILoginActivity>;
   }
 }
 

@@ -35,12 +35,6 @@ export const productsApi = {
     return response.data.data;
   },
 
-  // Toggle purchased status
-  async togglePurchased(listId: string, productId: string): Promise<List> {
-    const response = await apiClient.put<{ data: List }>(`/lists/${listId}/products/${productId}/toggle`);
-    return response.data.data;
-  },
-
   // Reorder products
   async reorderProducts(listId: string, productIds: string[]): Promise<List> {
     const response = await apiClient.put<{ data: List }>(`/lists/${listId}/products/reorder`, { productIds });

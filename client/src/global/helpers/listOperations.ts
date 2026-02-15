@@ -1,14 +1,17 @@
 import type { List, Product } from '../types';
+import type { TranslationKeys } from '../i18n/translations';
+
+type TranslateFn = (key: TranslationKeys) => string;
 
 /**
  * Generates a formatted WhatsApp message for inviting members to a group
  */
-export const generateInviteMessage = (list: List): string => {
+export const generateInviteMessage = (list: List, t: TranslateFn): string => {
   const lines = [
-    `🛒 הצטרף לקבוצה *${list.name}*`,
+    `🛒 ${t('joinGroup')} *${list.name}*`,
     ``,
-    `קוד: ${list.inviteCode}`,
-    `סיסמה: ${list.password}`,
+    `${t('groupCode')}: ${list.inviteCode}`,
+    `${t('password')}: ${list.password}`,
     ``,
     `SmartBasket`
   ];
@@ -18,7 +21,7 @@ export const generateInviteMessage = (list: List): string => {
 /**
  * Generates a formatted WhatsApp message for sharing a shopping list
  */
-export const generateShareListMessage = (list: List): string => {
+export const generateShareListMessage = (list: List, t: TranslateFn): string => {
   const pendingProducts = list.products.filter((p: Product) => !p.isPurchased);
 
   const lines: string[] = [
@@ -31,7 +34,7 @@ export const generateShareListMessage = (list: List): string => {
       lines.push(`• ${p.name} - ${p.quantity} ${p.unit}`);
     });
   } else {
-    lines.push(`✅ הרשימה הושלמה`);
+    lines.push(`✅ ${t('listCompleted')}`);
   }
 
   lines.push(``);

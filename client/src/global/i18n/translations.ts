@@ -322,13 +322,25 @@ type TranslationKey =
   | 'pushNotSupported'
   | 'pushBlocked'
   | 'pushErrorMessage'
+  | 'pushRequiresInstall'
+  | 'pushInstallAndroid'
+  | 'pushInstallIOS'
+  | 'pushInstallDesktop'
   // Notification counts
   | 'newNotification'
   | 'newNotifications'
   // Empty notification state
   | 'noNotificationsYet'
   // Clear cache
-  | 'clearCacheRefresh';
+  | 'clearCacheRefresh'
+  // Admin inline
+  | 'today'
+  | 'yesterday'
+  | 'logins'
+  | 'loginMethodLabel'
+  | 'adminLoadError'
+  // WhatsApp share
+  | 'listCompleted';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -655,13 +667,25 @@ export const translations: Record<Language, Translations> = {
     pushNotSupported: '* לא נתמך בדפדפן זה.\nבאייפון: לחץ על ״שתף״ ← ״הוסף למסך הבית״ ופתח משם',
     pushBlocked: '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר',
     pushErrorMessage: '* שגיאה: {error}',
+    pushRequiresInstall: 'כדי לקבל התראות Push, יש להתקין את האפליקציה למסך הבית',
+    pushInstallAndroid: 'בתפריט הדפדפן (⋮) → "התקן אפליקציה" או "הוסף למסך הבית"',
+    pushInstallIOS: 'לחץ על כפתור השיתוף (⎋) → "הוסף למסך הבית"',
+    pushInstallDesktop: 'לחץ על סמל ההתקנה (⊕) בשורת הכתובת של הדפדפן',
     // Notification counts
     newNotification: 'התראה חדשה',
     newNotifications: 'התראות חדשות',
     // Empty notification state
     noNotificationsYet: 'כשיהיו עדכונים חדשים ברשימות שלך,\nהם יופיעו כאן',
     // Clear cache
-    clearCacheRefresh: 'נקה מטמון ועדכן'
+    clearCacheRefresh: 'נקה מטמון ועדכן',
+    // Admin inline
+    today: 'היום',
+    yesterday: 'אתמול',
+    logins: 'כניסות',
+    loginMethodLabel: 'שיטת התחברות:',
+    adminLoadError: 'שגיאה בטעינת נתוני הניהול',
+    // WhatsApp share
+    listCompleted: 'הרשימה הושלמה'
   },
   en: {
     // General
@@ -985,13 +1009,25 @@ export const translations: Record<Language, Translations> = {
     pushNotSupported: '* Not supported.\niPhone: Tap Share → "Add to Home Screen" and open from there',
     pushBlocked: '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow',
     pushErrorMessage: '* Error: {error}',
+    pushRequiresInstall: 'To receive Push notifications, install the app to your home screen',
+    pushInstallAndroid: 'In browser menu (⋮) → "Install app" or "Add to Home Screen"',
+    pushInstallIOS: 'Tap the Share button (⎋) → "Add to Home Screen"',
+    pushInstallDesktop: 'Click the install icon (⊕) in the browser address bar',
     // Notification counts
     newNotification: 'new notification',
     newNotifications: 'new notifications',
     // Empty notification state
     noNotificationsYet: "When there are new updates\nin your lists, they'll appear here",
     // Clear cache
-    clearCacheRefresh: 'Clear cache & refresh'
+    clearCacheRefresh: 'Clear cache & refresh',
+    // Admin inline
+    today: 'Today',
+    yesterday: 'Yesterday',
+    logins: 'Logins',
+    loginMethodLabel: 'Login method:',
+    adminLoadError: 'Failed to load admin data',
+    // WhatsApp share
+    listCompleted: 'List completed'
   },
   ru: {
     // General
@@ -1315,13 +1351,25 @@ export const translations: Record<Language, Translations> = {
     pushNotSupported: '* Не поддерживается.\niPhone: нажмите "Поделиться" → "На экран Домой"',
     pushBlocked: '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления',
     pushErrorMessage: '* Ошибка: {error}',
+    pushRequiresInstall: 'Для Push-уведомлений установите приложение на главный экран',
+    pushInstallAndroid: 'В меню браузера (⋮) → "Установить приложение" или "На главный экран"',
+    pushInstallIOS: 'Нажмите кнопку "Поделиться" (⎋) → "На экран Домой"',
+    pushInstallDesktop: 'Нажмите значок установки (⊕) в адресной строке браузера',
     // Notification counts
     newNotification: 'новое уведомление',
     newNotifications: 'новых уведомлений',
     // Empty notification state
     noNotificationsYet: 'Когда появятся обновления\nв ваших списках, они будут здесь',
     // Clear cache
-    clearCacheRefresh: 'Очистить кэш'
+    clearCacheRefresh: 'Очистить кэш',
+    // Admin inline
+    today: 'Сегодня',
+    yesterday: 'Вчера',
+    logins: 'Входы',
+    loginMethodLabel: 'Способ входа:',
+    adminLoadError: 'Ошибка загрузки данных',
+    // WhatsApp share
+    listCompleted: 'Список завершён'
   }
 };
 

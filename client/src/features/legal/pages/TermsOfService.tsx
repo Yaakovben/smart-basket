@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, IconButton, Paper } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -19,7 +20,7 @@ const SectionText = ({ children }: { children: React.ReactNode }) => (
 export const TermsOfService = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
-  const isHebrew = settings.language === 'he';
+  const { language } = settings;
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
@@ -35,7 +36,7 @@ export const TermsOfService = memo(() => {
             sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
             aria-label={t('back')}
           >
-            <ArrowForwardIcon />
+            {language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
           </IconButton>
           <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
             {t('termsOfService')}
@@ -46,7 +47,7 @@ export const TermsOfService = memo(() => {
       {/* Content */}
       <Box sx={{ p: 2, maxWidth: 600, mx: 'auto' }}>
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
-          {isHebrew ? (
+          {language === 'he' ? (
             <>
               <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>
                 עודכן לאחרונה: פברואר 2026
@@ -100,6 +101,62 @@ export const TermsOfService = memo(() => {
               <SectionTitle>8. יצירת קשר</SectionTitle>
               <SectionText>
                 לשאלות, פנה אלינו דרך "עזרה ותמיכה" בהגדרות.
+              </SectionText>
+            </>
+          ) : language === 'ru' ? (
+            <>
+              <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>
+                Последнее обновление: февраль 2026
+              </Typography>
+
+              <SectionText>
+                Добро пожаловать в Smart Basket. Используя приложение, вы соглашаетесь с этими условиями.
+              </SectionText>
+
+              <SectionTitle>1. Сервис</SectionTitle>
+              <SectionText>
+                Smart Basket позволяет управлять личными списками покупок и делиться ими с другими. Сервис предоставляется бесплатно для личного и семейного использования.
+              </SectionText>
+
+              <SectionTitle>2. Аккаунт пользователя</SectionTitle>
+              <SectionText>
+                • Вы несёте ответственность за сохранение конфиденциальности данных для входа{'\n'}
+                • Вы должны предоставить точную информацию при регистрации{'\n'}
+                • Немедленно сообщите нам о несанкционированном использовании вашего аккаунта
+              </SectionText>
+
+              <SectionTitle>3. Допустимое использование</SectionTitle>
+              <SectionText>
+                Используйте приложение только в законных целях. <strong>Запрещено:</strong>{'\n'}
+                • Наносить вред сервису или другим пользователям{'\n'}
+                • Загружать оскорбительный, незаконный или вредоносный контент{'\n'}
+                • Пытаться получить несанкционированный доступ к системам
+              </SectionText>
+
+              <SectionTitle>4. Интеллектуальная собственность</SectionTitle>
+              <SectionText>
+                Приложение, включая дизайн и код, принадлежит Smart Basket. Контент, который вы создаёте (списки, товары), остаётся вашим.
+              </SectionText>
+
+              <SectionTitle>5. Ограничение ответственности</SectionTitle>
+              <SectionText>
+                Сервис предоставляется «как есть» (AS IS). Мы не несём ответственности за косвенные или побочные убытки, возникающие в результате использования сервиса. Мы стремимся поддерживать доступность сервиса, но не гарантируем непрерывный доступ.
+              </SectionText>
+
+              <SectionTitle>6. Прекращение использования</SectionTitle>
+              <SectionText>
+                • Вы можете удалить свой аккаунт в любое время через настройки{'\n'}
+                • Мы можем заблокировать аккаунты, нарушающие эти условия
+              </SectionText>
+
+              <SectionTitle>7. Изменения условий</SectionTitle>
+              <SectionText>
+                Мы можем обновлять эти условия по мере необходимости. Продолжение использования после обновления означает согласие с новыми условиями.
+              </SectionText>
+
+              <SectionTitle>8. Контакты</SectionTitle>
+              <SectionText>
+                По вопросам свяжитесь с нами через «Помощь и поддержка» в настройках.
               </SectionText>
             </>
           ) : (

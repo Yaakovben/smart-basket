@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Zoom } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Zoom, CircularProgress } from '@mui/material';
 import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef, useState, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
@@ -8,7 +8,7 @@ import { useSettings } from '../context/SettingsContext';
 interface ConfirmModalProps {
   title: string;
   message: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   confirmText?: string;
 }
@@ -22,24 +22,31 @@ const Transition = forwardRef(function Transition(
 
 export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText }: ConfirmModalProps) => {
   const { t } = useSettings();
+  const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     haptic('medium');
-    setIsClosing(true);
-    // Wait for animation to complete before calling onConfirm
-    setTimeout(() => {
-      onConfirm();
-    }, 200);
-  }, [onConfirm]);
+    setLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setLoading(false);
+      setIsClosing(true);
+      setTimeout(() => {
+        onCancel();
+      }, 200);
+    }
+  }, [onConfirm, onCancel]);
 
   const handleCancel = useCallback(() => {
+    if (loading) return;
     haptic('light');
     setIsClosing(true);
     setTimeout(() => {
       onCancel();
     }, 200);
-  }, [onCancel]);
+  }, [onCancel, loading]);
 
   return (
     <Dialog
@@ -81,7 +88,7 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           onClick={handleCancel}
           variant="outlined"
           fullWidth
-          disabled={isClosing}
+          disabled={isClosing || loading}
           sx={{
             borderColor: 'divider',
             borderWidth: 2,
@@ -96,9 +103,9 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           variant="contained"
           color="error"
           fullWidth
-          disabled={isClosing}
+          disabled={isClosing || loading}
         >
-          {confirmText || t('confirm')}
+          {loading ? <CircularProgress size={20} color="inherit" /> : (confirmText || t('confirm'))}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models';
+import { UserDAL } from '../dal';
 import { asyncHandler } from '../utils';
 import { AuthError, ForbiddenError, NotFoundError } from '../errors';
 import { env } from '../config';
@@ -19,7 +19,7 @@ export const authenticate = asyncHandler(
     try {
       const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
 
-      const user = await User.findById(decoded.userId).select('email isAdmin');
+      const user = await UserDAL.findById(decoded.userId);
 
       if (!user) {
         throw NotFoundError.user();

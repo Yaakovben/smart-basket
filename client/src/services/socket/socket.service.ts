@@ -288,10 +288,9 @@ class SocketService {
   updateToken(newToken: string) {
     if (this.socket) {
       this.socket.auth = { token: newToken };
-      // If connected, reconnect with the new token
+      // If connected, send new token to server without reconnecting
       if (this.socket.connected) {
-        this.socket.disconnect();
-        this.socket.connect();
+        this.socket.emit('token:refresh', newToken);
       }
     }
   }

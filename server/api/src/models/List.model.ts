@@ -93,7 +93,7 @@ const listSchema = new Schema<IList>(
 );
 
 // Indexes (inviteCode index created by unique: true in schema)
-listSchema.index({ owner: 1 });
+listSchema.index({ owner: 1, isGroup: 1 });
 listSchema.index({ 'members.user': 1 });
 
 // Compare password method

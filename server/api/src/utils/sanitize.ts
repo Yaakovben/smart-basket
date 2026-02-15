@@ -13,22 +13,3 @@ export const sanitizeText = (input: string): string => {
   }).trim();
 };
 
-/**
- * Sanitize an object's string properties
- * Useful for sanitizing entire request bodies
- */
-export const sanitizeObject = <T extends Record<string, unknown>>(
-  obj: T,
-  keysToSanitize: (keyof T)[]
-): T => {
-  const sanitized = { ...obj };
-
-  for (const key of keysToSanitize) {
-    const value = sanitized[key];
-    if (typeof value === 'string') {
-      sanitized[key] = sanitizeText(value) as T[keyof T];
-    }
-  }
-
-  return sanitized;
-};

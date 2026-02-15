@@ -106,6 +106,13 @@ io.on('connection', (socket) => {
     authSocket.leave('admin:presence');
   });
 
+  // Allow clients to refresh their access token on the socket connection
+  authSocket.on('token:refresh', (token: string) => {
+    if (token && typeof token === 'string') {
+      authSocket.accessToken = token;
+    }
+  });
+
   // Register event handlers
   registerListHandlers(io, authSocket);
   registerNotificationHandlers(io, authSocket);

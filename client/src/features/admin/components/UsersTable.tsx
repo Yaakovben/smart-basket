@@ -155,7 +155,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
                   }}
                 >
                   <LoginIcon sx={{ fontSize: 12 }} />
-                  {user.totalLogins} {language === 'he' ? 'כניסות' : 'logins'}
+                  {user.totalLogins} {t('logins')}
                 </Typography>
               </Box>
 
@@ -226,7 +226,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
                           {getRelativeTime(user.lastLoginAt, language)}
                         </Typography>
                         <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                          {formatDateShort(user.lastLoginAt, language)} {formatTimeShort(user.lastLoginAt)}
+                          {formatDateShort(user.lastLoginAt, language)} {formatTimeShort(user.lastLoginAt, language)}
                         </Typography>
                       </>
                     ) : (
@@ -241,7 +241,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                       <LoginIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
                       <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
-                        {language === 'he' ? 'כניסות' : 'Logins'}
+                        {t('logins')}
                       </Typography>
                     </Box>
                     <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#8B5CF6', mb: 0.5 }}>
@@ -267,7 +267,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
                 {user.lastLoginMethod && (
                   <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                      {language === 'he' ? 'שיטת התחברות:' : 'Login method:'}
+                      {t('loginMethodLabel')}
                     </Typography>
                     <Chip
                       label={user.lastLoginMethod === 'google' ? 'Google' : 'Email'}

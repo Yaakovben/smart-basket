@@ -1,31 +1,10 @@
-import { ListDAL, ProductDAL } from '../dal';
-import { NotFoundError, ForbiddenError } from '../errors';
+import { ProductDAL } from '../dal';
+import { NotFoundError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IListResponse } from '../types';
-import type { IList } from '../models';
 import { transformList } from './list-transform.helper';
-
-// Helper to check list access
-const checkListAccess = async (
-  listId: string,
-  userId: string
-): Promise<IList> => {
-  const list = await ListDAL.findById(listId);
-
-  if (!list) {
-    throw NotFoundError.list();
-  }
-
-  const isOwner = list.owner.toString() === userId;
-  const isMember = list.members.some((m) => m.user.toString() === userId);
-
-  if (!isOwner && !isMember) {
-    throw ForbiddenError.noAccess();
-  }
-
-  return list;
-};
+import { checkListAccess } from './list-access.helper';
 
 export class ProductService {
   static async addProduct(
@@ -85,23 +64,6 @@ export class ProductService {
     }
 
     await ProductDAL.deleteProduct(productId);
-
-    return transformList(list);
-  }
-
-  static async togglePurchased(
-    listId: string,
-    productId: string,
-    userId: string
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
-
-    const product = await ProductDAL.findById(productId);
-    if (!product || product.listId.toString() !== listId) {
-      throw NotFoundError.product();
-    }
-
-    await ProductDAL.togglePurchased(productId);
 
     return transformList(list);
   }

@@ -21,7 +21,6 @@ const productSchema = new Schema<IProductDoc>(
       type: Schema.Types.ObjectId,
       ref: 'List',
       required: true,
-      index: true,
     },
     name: {
       type: String,

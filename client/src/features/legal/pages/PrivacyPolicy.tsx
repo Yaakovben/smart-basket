@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, IconButton, Paper } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -19,7 +20,7 @@ const SectionText = ({ children }: { children: React.ReactNode }) => (
 export const PrivacyPolicy = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
-  const isHebrew = settings.language === 'he';
+  const { language } = settings;
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
@@ -35,7 +36,7 @@ export const PrivacyPolicy = memo(() => {
             sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
             aria-label={t('back')}
           >
-            <ArrowForwardIcon />
+            {language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
           </IconButton>
           <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
             {t('privacyPolicy')}
@@ -46,7 +47,7 @@ export const PrivacyPolicy = memo(() => {
       {/* Content */}
       <Box sx={{ p: 2, maxWidth: 600, mx: 'auto' }}>
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
-          {isHebrew ? (
+          {language === 'he' ? (
             <>
               <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>
                 עודכן לאחרונה: פברואר 2026
@@ -99,6 +100,61 @@ export const PrivacyPolicy = memo(() => {
               <SectionTitle>7. יצירת קשר</SectionTitle>
               <SectionText>
                 לשאלות בנוגע לפרטיות, פנה אלינו דרך "עזרה ותמיכה" בהגדרות.
+              </SectionText>
+            </>
+          ) : language === 'ru' ? (
+            <>
+              <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>
+                Последнее обновление: февраль 2026
+              </Typography>
+
+              <SectionText>
+                Smart Basket («Приложение») стремится защитить вашу конфиденциальность. Эта политика объясняет, как мы собираем, используем и защищаем вашу информацию.
+              </SectionText>
+
+              <SectionTitle>1. Информация, которую мы собираем</SectionTitle>
+              <SectionText>
+                • <strong>Данные аккаунта:</strong> имя, адрес электронной почты и зашифрованный пароль{'\n'}
+                • <strong>Контент пользователя:</strong> списки покупок, товары и общие группы{'\n'}
+                • <strong>Настройки:</strong> язык, тема оформления и уведомления{'\n'}
+                • <strong>Данные об использовании:</strong> время входа для целей безопасности
+              </SectionText>
+
+              <SectionTitle>2. Как мы используем информацию</SectionTitle>
+              <SectionText>
+                • Работа приложения и его функций{'\n'}
+                • Совместное использование списков с приглашёнными пользователями{'\n'}
+                • Отправка уведомлений об активности в общих списках{'\n'}
+                • Улучшение и обеспечение безопасности сервиса
+              </SectionText>
+
+              <SectionTitle>3. Передача информации</SectionTitle>
+              <SectionText>
+                <strong>Мы не продаём ваши данные.</strong> Информация передаётся только:{'\n'}
+                • Другим пользователям в общих списках (только имя){'\n'}
+                • Необходимым поставщикам услуг (хостинг, аутентификация)
+              </SectionText>
+
+              <SectionTitle>4. Безопасность данных</SectionTitle>
+              <SectionText>
+                Мы применяем стандартные отраслевые меры безопасности, включая шифрование паролей, защищённое соединение (HTTPS) и ограниченный доступ к данным.
+              </SectionText>
+
+              <SectionTitle>5. Ваши права</SectionTitle>
+              <SectionText>
+                • <strong>Доступ:</strong> просмотр информации вашего аккаунта{'\n'}
+                • <strong>Исправление:</strong> обновление личных данных{'\n'}
+                • <strong>Удаление:</strong> удаление аккаунта навсегда удаляет все данные
+              </SectionText>
+
+              <SectionTitle>6. Изменения политики</SectionTitle>
+              <SectionText>
+                Мы можем обновлять эту политику по мере необходимости. Существенные изменения будут опубликованы в приложении.
+              </SectionText>
+
+              <SectionTitle>7. Контакты</SectionTitle>
+              <SectionText>
+                По вопросам конфиденциальности свяжитесь с нами через «Помощь и поддержка» в настройках.
               </SectionText>
             </>
           ) : (

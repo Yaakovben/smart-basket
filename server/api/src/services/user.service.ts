@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import { List, Notification, PushSubscription } from '../models';
-import { UserDAL } from '../dal';
+import { UserDAL, ListDAL, NotificationDAL, PushSubscriptionDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
@@ -88,14 +87,12 @@ export class UserService {
     const session = await mongoose.startSession();
 
     try {
-      const uid = new mongoose.Types.ObjectId(userId);
-
       await session.withTransaction(async () => {
         // 1. Delete only PRIVATE lists (not groups) that the user owns
-        await List.deleteMany({ owner: uid, isGroup: false }, { session });
+        await ListDAL.deletePrivateLists(userId, session);
 
         // 2. Handle GROUP lists where user is owner
-        const ownedGroups = await List.find({ owner: uid, isGroup: true }).session(session);
+        const ownedGroups = await ListDAL.findOwnedGroups(userId, session);
 
         for (const group of ownedGroups) {
           const otherMembers = group.members.filter(
@@ -104,42 +101,32 @@ export class UserService {
 
           if (otherMembers.length > 0) {
             const newOwner = otherMembers.find((m) => m.isAdmin) || otherMembers[0];
-            await List.findByIdAndUpdate(group._id, {
-              $set: { owner: newOwner.user },
-              $pull: { members: { user: newOwner.user } }
-            }, { session });
+            await ListDAL.transferOwnership(group._id.toString(), newOwner.user, session);
           } else {
-            await List.findByIdAndDelete(group._id, { session });
+            await ListDAL.deleteByIdWithSession(group._id.toString(), session);
           }
         }
 
         // 3. Remove user from group lists where they are a member (not owner)
-        await List.updateMany(
-          { 'members.user': uid },
-          { $pull: { members: { user: uid } } },
-          { session }
-        );
+        await ListDAL.removeUserFromAllLists(userId, session);
 
         // 4. Delete user's push subscriptions
-        await PushSubscription.deleteMany({ userId: uid }, { session });
+        await PushSubscriptionDAL.deleteByUserId(userId, session);
 
         // 5. Delete user's notifications (as actor or target)
-        await Notification.deleteMany(
-          { $or: [{ actorId: uid }, { targetUserId: uid }] },
-          { session }
-        );
-
-        // 6. Delete user's refresh tokens
-        await TokenService.invalidateAllUserTokens(userId);
-
-        // 7. Delete user
-        const user = await UserDAL.deleteById(userId);
-        if (!user) {
-          throw NotFoundError.user();
-        }
+        await NotificationDAL.deleteByUserId(userId, session);
       });
     } finally {
       await session.endSession();
+    }
+
+    // These run after the transaction commits successfully.
+    // Tokens and user deletion don't need transactional rollback.
+    await TokenService.invalidateAllUserTokens(userId);
+
+    const user = await UserDAL.deleteById(userId);
+    if (!user) {
+      throw NotFoundError.user();
     }
   }
 }

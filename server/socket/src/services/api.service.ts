@@ -3,12 +3,15 @@ import { env, logger } from '../config';
 type NotificationType =
   | 'join'
   | 'leave'
+  | 'removed'
   | 'product_add'
   | 'product_update'
   | 'product_delete'
   | 'product_purchase'
   | 'product_unpurchase'
-  | 'member_removed';
+  | 'member_removed'
+  | 'list_deleted'
+  | 'list_update';
 
 interface BroadcastNotificationData {
   listId: string;
@@ -67,19 +70,19 @@ export class ApiService {
       });
       if (!response.ok) return null;
 
-      const body = (await response.json()) as { data?: { owner?: { _id?: string } | string; members?: Array<{ user?: { _id?: string } | string; isAdmin?: boolean }> } };
+      const body = (await response.json()) as { data?: { owner?: { id?: string } | string; members?: Array<{ user?: { id?: string } | string; isAdmin?: boolean }> } };
       const list = body.data;
       if (!list) return null;
 
-      // Check owner (populated or raw ObjectId)
+      // Check owner (populated object with id, or raw string)
       const owner = list.owner;
-      const ownerId = typeof owner === 'object' ? owner?._id : owner;
+      const ownerId = typeof owner === 'object' ? owner?.id : owner;
       if (ownerId?.toString() === userId) return 'owner';
 
       // Check members
       const member = list.members?.find((m) => {
         const memberUser = m.user;
-        const memberId = typeof memberUser === 'object' ? memberUser?._id : memberUser;
+        const memberId = typeof memberUser === 'object' ? memberUser?.id : memberUser;
         return memberId?.toString() === userId;
       });
       if (member?.isAdmin) return 'admin';

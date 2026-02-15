@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { socketService } from '../../services/socket';
 
 interface PresenceData {
@@ -24,6 +24,12 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
 
   // Stable string key for listIds to avoid unnecessary effect re-runs
   const listIdsKey = useMemo(() => listIds.join(','), [listIds]);
+
+  const requestPresenceIfConnected = useCallback((ids: string[]) => {
+    if (socketService.isConnected()) {
+      socketService.requestPresence(ids);
+    }
+  }, []);
 
   // Register socket event listeners
   useEffect(() => {
@@ -58,19 +64,21 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
     };
   }, []);
 
-  // Explicitly request presence when list IDs change
-  // This handles timing issues where join:list's presence:online may be missed
+  // Request presence when list IDs change or socket reconnects
   useEffect(() => {
     if (!listIdsKey) return;
     const ids = listIdsKey.split(',');
 
-    // Small delay to ensure socket is connected and rooms are joined
-    const timer = setTimeout(() => {
-      socketService.requestPresence(ids);
-    }, 500);
+    // Request immediately if already connected
+    requestPresenceIfConnected(ids);
 
-    return () => clearTimeout(timer);
-  }, [listIdsKey]);
+    // Also request on reconnect to handle timing issues
+    const unsubConnect = socketService.on('connect', () => {
+      requestPresenceIfConnected(ids);
+    });
+
+    return () => { unsubConnect(); };
+  }, [listIdsKey, requestPresenceIfConnected]);
 
   return onlineUsers;
 }

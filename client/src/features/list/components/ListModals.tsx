@@ -74,7 +74,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    navigator.clipboard?.writeText(generateInviteMessage(list))
+    navigator.clipboard?.writeText(generateInviteMessage(list, t))
       .then(() => { showToast(t('copied')); onClose(); })
       .catch(() => showToast(t('copyError')));
   };
@@ -117,7 +117,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
             component="a"
-            href={`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list))}`}
+            href={`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list, t))}`}
             target="_blank"
             rel="noopener noreferrer"
             fullWidth
@@ -265,7 +265,7 @@ export const ShareListModal = memo(({
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    navigator.clipboard?.writeText(generateShareListMessage(list))
+    navigator.clipboard?.writeText(generateShareListMessage(list, t))
       .then(() => { showToast(t('copied')); onClose(); })
       .catch(() => showToast(t('copyError')));
   };
@@ -325,7 +325,7 @@ export const ShareListModal = memo(({
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
             component="a"
-            href={`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list))}`}
+            href={`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list, t))}`}
             target="_blank"
             rel="noopener noreferrer"
             fullWidth

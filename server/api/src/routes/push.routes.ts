@@ -1,15 +1,30 @@
 import { Router } from 'express';
+import Joi from 'joi';
 import { getVapidPublicKey, subscribe, unsubscribe, getStatus } from '../controllers/push.controller';
-import { authenticate } from '../middleware';
+import { authenticate, validate } from '../middleware';
 
 const router = Router();
+
+const subscribeSchema = Joi.object({
+  subscription: Joi.object({
+    endpoint: Joi.string().uri().required(),
+    keys: Joi.object({
+      p256dh: Joi.string().required(),
+      auth: Joi.string().required(),
+    }).required(),
+  }).required(),
+});
+
+const unsubscribeSchema = Joi.object({
+  endpoint: Joi.string().uri().required(),
+});
 
 // Public route - get VAPID public key
 router.get('/vapid-public-key', getVapidPublicKey);
 
 // Protected routes
-router.post('/subscribe', authenticate, subscribe);
-router.post('/unsubscribe', authenticate, unsubscribe);
+router.post('/subscribe', authenticate, validate(subscribeSchema), subscribe);
+router.post('/unsubscribe', authenticate, validate(unsubscribeSchema), unsubscribe);
 router.get('/status', authenticate, getStatus);
 
 export default router;

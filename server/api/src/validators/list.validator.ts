@@ -55,6 +55,11 @@ export const listValidator = {
     id: commonSchemas.objectId.required(),
     memberId: commonSchemas.objectId.required(),
   }),
+
+  notificationParams: Joi.object({
+    id: commonSchemas.objectId.required(),
+    notificationId: commonSchemas.objectId.required(),
+  }),
 };
 
 // Type exports

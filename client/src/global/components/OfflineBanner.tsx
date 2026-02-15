@@ -7,13 +7,21 @@ export const OfflineBanner = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
-    const handleOffline = () => setIsOffline(true);
-    const handleOnline = () => setIsOffline(false);
+    let offlineTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleOffline = () => {
+      offlineTimer = setTimeout(() => setIsOffline(true), 2000);
+    };
+    const handleOnline = () => {
+      if (offlineTimer) { clearTimeout(offlineTimer); offlineTimer = null; }
+      setIsOffline(false);
+    };
 
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
 
     return () => {
+      if (offlineTimer) clearTimeout(offlineTimer);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('online', handleOnline);
     };

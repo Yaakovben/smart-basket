@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
@@ -78,7 +79,7 @@ export const AdminDashboard = () => {
               onClick={() => navigate('/settings')}
               sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)' }}
             >
-              <ArrowForwardIcon />
+              {settings.language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
             </IconButton>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
               {t('adminDashboard')}
@@ -101,7 +102,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#14B8A6' }}>
@@ -119,7 +120,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#8B5CF6' }}>
@@ -137,7 +138,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#EC4899' }}>
@@ -158,7 +159,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#F59E0B' }}>
@@ -176,7 +177,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#3B82F6' }}>
@@ -194,7 +195,7 @@ export const AdminDashboard = () => {
               p: 1.5,
               borderRadius: '14px',
               textAlign: 'center',
-              bgcolor: 'rgba(255,255,255,0.95)'
+              bgcolor: 'background.paper'
             }}
           >
             <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#22C55E' }}>

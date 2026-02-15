@@ -1,5 +1,5 @@
 import webPush from 'web-push';
-import { PushSubscription, type IPushSubscription } from '../models';
+import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
@@ -45,18 +45,16 @@ export class PushService {
   static async subscribe(
     userId: string,
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } }
-  ): Promise<IPushSubscription> {
+  ): Promise<void> {
     // Remove existing subscription for this endpoint (in case of re-subscribe)
-    await PushSubscription.deleteOne({ endpoint: subscription.endpoint });
+    await PushSubscriptionDAL.deleteByEndpoint(subscription.endpoint);
 
     // Create new subscription
-    const pushSub = new PushSubscription({
+    await PushSubscriptionDAL.create({
       userId,
       endpoint: subscription.endpoint,
       keys: subscription.keys,
-    });
-
-    return pushSub.save();
+    } as Record<string, unknown>);
   }
 
   /**
@@ -64,10 +62,10 @@ export class PushService {
    */
   static async unsubscribe(userId: string, endpoint?: string): Promise<void> {
     if (endpoint) {
-      await PushSubscription.deleteOne({ userId, endpoint });
+      await PushSubscriptionDAL.deleteByUserAndEndpoint(userId, endpoint);
     } else {
       // Remove all subscriptions for this user
-      await PushSubscription.deleteMany({ userId });
+      await PushSubscriptionDAL.deleteByUserId(userId);
     }
   }
 
@@ -79,7 +77,7 @@ export class PushService {
       return;
     }
 
-    const subscriptions = await PushSubscription.find({ userId });
+    const subscriptions = await PushSubscriptionDAL.findByUserId(userId);
 
     const sendPromises = subscriptions.map(async (sub) => {
       try {
@@ -91,13 +89,17 @@ export class PushService {
               auth: sub.keys.auth,
             },
           },
-          JSON.stringify(payload)
+          JSON.stringify(payload),
+          {
+            urgency: 'high',
+            TTL: 60 * 60, // 1 hour
+          }
         );
       } catch (error: unknown) {
         const pushError = error as { statusCode?: number };
         // Remove invalid subscriptions (410 Gone or 404 Not Found)
         if (pushError.statusCode === 410 || pushError.statusCode === 404) {
-          await PushSubscription.deleteOne({ _id: sub._id });
+          await PushSubscriptionDAL.deleteById(sub._id.toString());
         } else {
           logger.warn('Push notification failed for endpoint %s: %s', sub.endpoint, (error as Error).message);
         }
@@ -123,7 +125,7 @@ export class PushService {
    * Check if user has any push subscriptions
    */
   static async hasSubscription(userId: string): Promise<boolean> {
-    const count = await PushSubscription.countDocuments({ userId });
+    const count = await PushSubscriptionDAL.countByUserId(userId);
     return count > 0;
   }
 }

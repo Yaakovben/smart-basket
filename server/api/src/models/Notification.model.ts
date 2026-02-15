@@ -81,10 +81,9 @@ const notificationSchema = new Schema<INotification>(
 );
 
 // Indexes for efficient querying
-notificationSchema.index({ targetUserId: 1, createdAt: -1 });
-notificationSchema.index({ targetUserId: 1, read: 1 });
+notificationSchema.index({ targetUserId: 1, read: 1, createdAt: -1 });
 notificationSchema.index({ listId: 1 });
-notificationSchema.index({ createdAt: -1 });
+notificationSchema.index({ actorId: 1 });
 
 // TTL index - auto-delete notifications older than 30 days
 notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });

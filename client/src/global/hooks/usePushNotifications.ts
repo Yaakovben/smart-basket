@@ -3,12 +3,32 @@ import { pushApi } from '../../services/api';
 
 interface UsePushNotificationsReturn {
   isSupported: boolean;
+  isPwaInstalled: boolean;
   isSubscribed: boolean;
   permission: NotificationPermission | 'unsupported';
   loading: boolean;
   error: string | null;
   subscribe: () => Promise<boolean>;
   unsubscribe: () => Promise<boolean>;
+}
+
+/**
+ * Check if the app is running as an installed PWA (added to home screen)
+ */
+function checkPwaInstalled(): boolean {
+  // iOS Safari standalone mode
+  if ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone) {
+    return true;
+  }
+  // Standard display-mode: standalone (Android Chrome, Desktop)
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    return true;
+  }
+  // display-mode: fullscreen (some PWAs)
+  if (window.matchMedia('(display-mode: fullscreen)').matches) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -41,6 +61,7 @@ function notifySubscriptionChange(subscribed: boolean) {
  */
 export function usePushNotifications(): UsePushNotificationsReturn {
   const [isSupported, setIsSupported] = useState(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [loading, setLoading] = useState(true);
@@ -62,6 +83,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
                        'Notification' in window;
 
       setIsSupported(supported);
+      setIsPwaInstalled(checkPwaInstalled());
 
       if (!supported) {
         setLoading(false);
@@ -94,6 +116,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       setError('Push not supported in this browser');
+      return false;
+    }
+
+    if (!checkPwaInstalled()) {
+      setError('PWA not installed');
       return false;
     }
 
@@ -185,6 +212,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   return {
     isSupported,
+    isPwaInstalled,
     isSubscribed,
     permission,
     loading,

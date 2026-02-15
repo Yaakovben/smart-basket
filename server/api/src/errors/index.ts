@@ -5,6 +5,5 @@ export {
   ForbiddenError,
   NotFoundError,
   ConflictError,
-  InternalError,
   type ValidationErrorDetail,
 } from './AppError';

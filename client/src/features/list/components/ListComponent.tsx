@@ -81,7 +81,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onSearchChange={setSearch}
         onEditList={handleEditList}
         onDeleteList={() => setConfirmDeleteList(true)}
-        onToggleMute={() => { toggleGroupMute(list.id); authApi.toggleMuteGroup(list.id).catch(() => {}); }}
+        onToggleMute={() => { toggleGroupMute(list.id); authApi.toggleMuteGroup(list.id).catch(() => { toggleGroupMute(list.id); showToast(t('unknownError')); }); }}
         isMuted={isGroupMuted(list.id)}
         mainNotificationsOff={!settings.notifications.enabled}
         onShareList={() => setShowShareList(true)}
