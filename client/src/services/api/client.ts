@@ -1,7 +1,10 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { socketService } from '../socket/socket.service';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
+if (!API_URL) {
+  console.error('CRITICAL: VITE_API_URL is not configured for production!');
+}
 
 // Debug logging - only in development mode
 const debugLog = (message: string, data?: unknown, isError = false) => {

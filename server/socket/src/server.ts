@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { env, logger } from './config';
 import { authenticateSocket } from './middleware/auth.middleware';
+import { clearRateLimit } from './middleware/rateLimiter.middleware';
 import {
   registerListHandlers,
   registerNotificationHandlers,
@@ -88,8 +89,12 @@ io.on('connection', (socket) => {
     io.to('admin:presence').emit('admin:user-connected', { userId });
   }
 
-  // Admin presence: get all online users and subscribe to updates
+  // Admin presence: get all online users and subscribe to updates (admin only)
   authSocket.on('get:online-users', () => {
+    if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL) {
+      logger.warn(`Non-admin user ${userId} attempted get:online-users`);
+      return;
+    }
     authSocket.join('admin:presence');
     authSocket.emit('admin:online-users', {
       userIds: Array.from(connectedUsers.keys()),
@@ -117,6 +122,9 @@ io.on('connection', (socket) => {
 
   authSocket.on('disconnect', (reason) => {
     logger.info(`User disconnected: ${userId} - ${reason}`);
+
+    // Clean up rate limiter tracking
+    clearRateLimit(authSocket.id);
 
     // Remove socket from global tracking
     const sockets = connectedUsers.get(userId);

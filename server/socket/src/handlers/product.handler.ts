@@ -6,6 +6,8 @@ import type {
   ProductData,
 } from '../types';
 import { ApiService } from '../services/api.service';
+import { logger } from '../config';
+import { checkRateLimit } from '../middleware/rateLimiter.middleware';
 
 // Simple validation helpers
 const isValidString = (val: unknown): val is string =>
@@ -23,28 +25,26 @@ export const registerProductHandlers = (
   socket: AuthenticatedSocket
 ) => {
   const userId = socket.userId!;
+  const userName = socket.userName || 'Unknown';
   const accessToken = socket.accessToken!;
 
   // Product added
   socket.on('product:add', (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => {
-    // Validate input
-    if (!isValidString(data?.listId) || !isValidProduct(data?.product) || !isValidString(data?.userName)) {
-      console.warn('Invalid product:add data from user:', userId);
+    if (!checkRateLimit(socket.id)) return;
+    if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
+      logger.warn('Invalid product:add data from user:', userId);
       return;
     }
-    // Verify sender is in the list room (passed join:list authorization)
     if (!socket.rooms.has(`list:${data.listId}`)) return;
 
-    // Broadcast to all users in the list except sender
     socket.to(`list:${data.listId}`).emit('product:added', {
       listId: data.listId,
       product: { ...data.product, id: data.product.id || '' },
       userId,
-      userName: data.userName,
+      userName, // from token
       timestamp: new Date(),
     });
 
-    // Persist notification to database
     ApiService.broadcastNotification({
       listId: data.listId,
       type: 'product_add',
@@ -56,23 +56,21 @@ export const registerProductHandlers = (
 
   // Product updated
   socket.on('product:update', (data: { listId: string; product: ProductData & { id: string }; userName: string }) => {
-    // Validate input
-    if (!isValidString(data?.listId) || !isValidProduct(data?.product) || !isValidString(data?.userName)) {
-      console.warn('Invalid product:update data from user:', userId);
+    if (!checkRateLimit(socket.id)) return;
+    if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
+      logger.warn('Invalid product:update data from user:', userId);
       return;
     }
-    // Verify sender is in the list room
     if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:updated', {
       listId: data.listId,
       product: { ...data.product, id: data.product.id },
       userId,
-      userName: data.userName,
+      userName, // from token
       timestamp: new Date(),
     });
 
-    // Persist notification to database
     ApiService.broadcastNotification({
       listId: data.listId,
       type: 'product_update',
@@ -84,12 +82,11 @@ export const registerProductHandlers = (
 
   // Product toggled (purchased/unpurchased)
   socket.on('product:toggle', (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => {
-    // Validate input
+    if (!checkRateLimit(socket.id)) return;
     if (!isValidString(data?.listId) || !isValidString(data?.productId) || !isValidBoolean(data?.isPurchased)) {
-      console.warn('Invalid product:toggle data from user:', userId);
+      logger.warn('Invalid product:toggle data from user:', userId);
       return;
     }
-    // Verify sender is in the list room
     if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:toggled', {
@@ -98,11 +95,10 @@ export const registerProductHandlers = (
       productName: data.productName || '',
       isPurchased: data.isPurchased,
       userId,
-      userName: data.userName || '',
+      userName, // from token
       timestamp: new Date(),
     });
 
-    // Persist notification to database (only when purchased, not unpurchased)
     if (data.isPurchased) {
       ApiService.broadcastNotification({
         listId: data.listId,
@@ -116,12 +112,11 @@ export const registerProductHandlers = (
 
   // Product deleted
   socket.on('product:delete', (data: { listId: string; productId: string; productName: string; userName: string }) => {
-    // Validate input
+    if (!checkRateLimit(socket.id)) return;
     if (!isValidString(data?.listId) || !isValidString(data?.productId)) {
-      console.warn('Invalid product:delete data from user:', userId);
+      logger.warn('Invalid product:delete data from user:', userId);
       return;
     }
-    // Verify sender is in the list room
     if (!socket.rooms.has(`list:${data.listId}`)) return;
 
     socket.to(`list:${data.listId}`).emit('product:deleted', {
@@ -129,11 +124,10 @@ export const registerProductHandlers = (
       productId: data.productId,
       productName: data.productName || '',
       userId,
-      userName: data.userName || '',
+      userName, // from token
       timestamp: new Date(),
     });
 
-    // Persist notification to database
     ApiService.broadcastNotification({
       listId: data.listId,
       type: 'product_delete',
@@ -144,7 +138,7 @@ export const registerProductHandlers = (
   });
 };
 
-// Helper functions to broadcast events (called from API server)
+// Helper functions to broadcast events (called from API server via Redis)
 export const broadcastProductAdded = (
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   listId: string,

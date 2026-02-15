@@ -109,20 +109,19 @@ class ListDALClass extends BaseDAL<IList> {
 
   async generateUniqueInviteCode(): Promise<string> {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code: string;
-    let isUnique = false;
+    const MAX_RETRIES = 10;
 
-    do {
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const bytes = crypto.randomBytes(6);
-      code = '';
+      let code = '';
       for (let i = 0; i < 6; i++) {
         code += chars.charAt(bytes[i] % chars.length);
       }
       const existing = await this.model.findOne({ inviteCode: code });
-      isUnique = !existing;
-    } while (!isUnique);
+      if (!existing) return code;
+    }
 
-    return code;
+    throw new Error('Failed to generate unique invite code after maximum retries');
   }
 }
 

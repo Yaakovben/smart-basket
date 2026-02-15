@@ -1,4 +1,4 @@
-import { env } from '../config';
+import { env, logger } from '../config';
 
 type NotificationType =
   | 'join'
@@ -16,6 +16,8 @@ interface BroadcastNotificationData {
   productId?: string;
   productName?: string;
 }
+
+export type UserRole = 'owner' | 'admin' | 'member' | null;
 
 /**
  * Service for making API calls to the main API server
@@ -40,8 +42,52 @@ export class ApiService {
         },
       });
       return response.ok;
-    } catch {
+    } catch (error) {
+      logger.error('verifyMembership failed:', error);
       return false;
+    }
+  }
+
+  /**
+   * Check user's role in a list (owner/admin/member).
+   * Returns the role or null if user has no access.
+   */
+  static async checkRole(
+    listId: string,
+    userId: string,
+    accessToken: string
+  ): Promise<UserRole> {
+    try {
+      const response = await fetch(`${this.baseUrl}/lists/${listId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) return null;
+
+      const body = (await response.json()) as { data?: { owner?: { _id?: string } | string; members?: Array<{ user?: { _id?: string } | string; isAdmin?: boolean }> } };
+      const list = body.data;
+      if (!list) return null;
+
+      // Check owner (populated or raw ObjectId)
+      const owner = list.owner;
+      const ownerId = typeof owner === 'object' ? owner?._id : owner;
+      if (ownerId?.toString() === userId) return 'owner';
+
+      // Check members
+      const member = list.members?.find((m) => {
+        const memberUser = m.user;
+        const memberId = typeof memberUser === 'object' ? memberUser?._id : memberUser;
+        return memberId?.toString() === userId;
+      });
+      if (member?.isAdmin) return 'admin';
+      if (member) return 'member';
+
+      return null;
+    } catch (error) {
+      logger.error('checkRole failed:', error);
+      return null;
     }
   }
 
@@ -65,10 +111,10 @@ export class ApiService {
 
       if (!response.ok) {
         const error = await response.text();
-        console.error('Failed to broadcast notification:', error);
+        logger.error('Failed to broadcast notification:', error);
       }
     } catch (error) {
-      console.error('Error broadcasting notification:', error);
+      logger.error('Error broadcasting notification:', error);
       // Don't throw - notification persistence failure shouldn't break real-time events
     }
   }

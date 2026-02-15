@@ -5,10 +5,11 @@ import type {
   ServerToClientEvents,
 } from '../types';
 import { ApiService } from '../services/api.service';
+import { logger } from '../config';
+import { checkRateLimit } from '../middleware/rateLimiter.middleware';
 
 // Track socket connections per user per list
 // Structure: listId → userId → Set<socketId>
-// This correctly handles multiple connections (tabs/devices) per user
 const listUserSockets = new Map<string, Map<string, Set<string>>>();
 
 // Add a socket connection for a user in a list
@@ -59,6 +60,7 @@ export const registerListHandlers = (
 
   // Join a list room (with membership verification)
   socket.on('join:list', async (listId: string) => {
+    if (!checkRateLimit(socket.id)) return;
     if (typeof listId !== 'string' || !listId) return;
 
     // Verify user is a member of this list via API
@@ -94,8 +96,6 @@ export const registerListHandlers = (
     socket.leave(`list:${listId}`);
     const isFullyOffline = removeUserSocket(listId, userId, socket.id);
 
-    console.log(`User ${userId} left list ${listId} (socket ${socket.id})`);
-
     // Notify others only if user has no more active connections
     if (isFullyOffline) {
       socket.to(`list:${listId}`).emit('user:left', {
@@ -107,11 +107,13 @@ export const registerListHandlers = (
     }
   });
 
-  // Request presence for specific lists
+  // Request presence for specific lists - only for rooms the user has joined
   socket.on('get:presence', (listIds: string[]) => {
     if (!Array.isArray(listIds)) return;
     for (const listId of listIds) {
       if (typeof listId !== 'string' || !listId) continue;
+      // Only return presence for lists the user is actually in
+      if (!socket.rooms.has(`list:${listId}`)) continue;
       socket.emit('presence:online', {
         listId,
         userIds: getOnlineUserIds(listId),
@@ -140,4 +142,9 @@ export const registerListHandlers = (
 // Helper to get active users in a list
 export const getListUsers = (listId: string): string[] => {
   return getOnlineUserIds(listId);
+};
+
+// Clean up tracking data when a list is deleted
+export const cleanupListSockets = (listId: string): void => {
+  listUserSockets.delete(listId);
 };

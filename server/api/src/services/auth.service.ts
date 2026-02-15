@@ -11,6 +11,7 @@ interface GoogleUserInfo {
   sub: string;
   name: string;
   email: string;
+  email_verified?: boolean;
   picture?: string;
 }
 
@@ -143,6 +144,16 @@ export class AuthService {
     }
 
     const googleUser = (await response.json()) as GoogleUserInfo;
+
+    // Validate required fields from Google
+    if (!googleUser.sub || !googleUser.email || !googleUser.name) {
+      throw AuthError.googleAuthFailed();
+    }
+
+    // Ensure email is verified by Google
+    if (googleUser.email_verified === false) {
+      throw AuthError.googleAuthFailed();
+    }
 
     // Find or create user
     let user = await UserDAL.findByGoogleId(googleUser.sub);

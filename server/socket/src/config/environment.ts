@@ -38,6 +38,9 @@ export const env = {
   // API server URL - Socket server calls this to persist notifications to MongoDB
   API_URL: process.env.API_URL || 'http://localhost:5000/api',
 
+  // Admin email - must match the API server's ADMIN_EMAIL for admin-only socket features
+  ADMIN_EMAIL: (process.env.ADMIN_EMAIL || '').toLowerCase(),
+
   // Sentry error monitoring - get DSN from sentry.io project settings
   // Use the same DSN as API server (serverName differentiates them)
   SENTRY_DSN: process.env.SENTRY_DSN,
