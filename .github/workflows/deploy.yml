@@ -33,5 +33,5 @@ jobs:
 
             # Restart PM2 processes
             cd ~/smart-basket
-            pm2 restart ecosystem.config.js
+            pm2 restart ecosystem.config.js --update-env
             pm2 save
