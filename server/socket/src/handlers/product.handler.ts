@@ -16,7 +16,6 @@ export const registerProductHandlers = (
 ) => {
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
-  const accessToken = socket.accessToken!;
 
   // Product added
   socket.on('product:add', (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => {
@@ -41,7 +40,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.product.id,
       productName: data.product.name,
-    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
+    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product updated
@@ -67,7 +66,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.product.id,
       productName: data.product.name,
-    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
+    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product toggled (purchased/unpurchased)
@@ -95,7 +94,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.productId,
       productName: data.productName,
-    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
+    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product deleted
@@ -122,7 +121,7 @@ export const registerProductHandlers = (
       actorId: userId,
       productId: data.productId,
       productName: data.productName,
-    }, accessToken).catch((err) => logger.error('broadcastNotification failed:', err));
+    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 };
 

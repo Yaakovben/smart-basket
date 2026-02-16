@@ -11,6 +11,7 @@ export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
 // Re-export constants for backward compatibility
 export {
   CATEGORY_ICONS,
+  CATEGORY_TRANSLATION_KEYS,
   MEMBER_COLORS,
   LIST_ICONS,
   GROUP_ICONS,

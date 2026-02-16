@@ -12,6 +12,9 @@ import { checkRateLimit } from '../middleware/rateLimiter.middleware';
 // Structure: listId → userId → Set<socketId>
 const listUserSockets = new Map<string, Map<string, Set<string>>>();
 
+// Reverse map: socketId → Set<listId> for O(k) disconnect cleanup
+const socketToLists = new Map<string, Set<string>>();
+
 // Add a socket connection for a user in a list
 // Returns true if this is the user's first connection to this list
 const addUserSocket = (listId: string, userId: string, socketId: string): boolean => {
@@ -24,6 +27,11 @@ const addUserSocket = (listId: string, userId: string, socketId: string): boolea
     userMap.set(userId, new Set());
   }
   userMap.get(userId)!.add(socketId);
+  // Maintain reverse map
+  if (!socketToLists.has(socketId)) {
+    socketToLists.set(socketId, new Set());
+  }
+  socketToLists.get(socketId)!.add(listId);
   return isNewUser;
 };
 
@@ -102,6 +110,8 @@ export const registerListHandlers = (
 
     socket.leave(`list:${listId}`);
     const isFullyOffline = removeUserSocket(listId, userId, socket.id);
+    // Clean reverse map for this list
+    socketToLists.get(socket.id)?.delete(listId);
 
     // Notify others only if user has no more active connections
     if (isFullyOffline) {
@@ -128,20 +138,22 @@ export const registerListHandlers = (
     }
   });
 
-  // Handle disconnect - remove this socket from all lists
+  // Handle disconnect - remove this socket from its lists only (O(k) via reverse map)
   socket.on('disconnect', () => {
-    // Copy entries to safely modify the Map during iteration
-    const entries = Array.from(listUserSockets.entries());
-    for (const [listId] of entries) {
-      const isFullyOffline = removeUserSocket(listId, userId, socket.id);
-      if (isFullyOffline) {
-        socket.to(`list:${listId}`).emit('user:left', {
-          listId,
-          userId,
-          userName: socket.userName || 'Unknown',
-          timestamp: new Date(),
-        });
+    const lists = socketToLists.get(socket.id);
+    if (lists) {
+      for (const listId of lists) {
+        const isFullyOffline = removeUserSocket(listId, userId, socket.id);
+        if (isFullyOffline) {
+          socket.to(`list:${listId}`).emit('user:left', {
+            listId,
+            userId,
+            userName: socket.userName || 'Unknown',
+            timestamp: new Date(),
+          });
+        }
       }
+      socketToLists.delete(socket.id);
     }
   });
 };

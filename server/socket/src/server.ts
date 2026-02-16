@@ -162,6 +162,11 @@ const shutdown = () => {
     logger.info('Socket server closed');
     process.exit(0);
   });
+  // Force exit if graceful shutdown takes too long
+  setTimeout(() => {
+    logger.warn('Forced shutdown after timeout');
+    process.exit(1);
+  }, 5000).unref();
 };
 
 process.on('SIGTERM', shutdown);

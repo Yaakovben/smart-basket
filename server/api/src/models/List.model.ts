@@ -75,6 +75,8 @@ const listSchema = new Schema<IList>(
       type: String,
       sparse: true,
       unique: true,
+      minlength: 6,
+      maxlength: 6,
     },
     password: {
       type: String,

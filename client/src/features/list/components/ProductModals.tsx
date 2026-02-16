@@ -1,7 +1,7 @@
 import { memo, useRef, useCallback } from 'react';
 import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
-import { haptic, CATEGORY_ICONS, SIZES } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, SIZES } from '../../../global/helpers';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NewProductForm } from '../types/list-types';
@@ -162,7 +162,7 @@ export const AddProductModal = memo(({
             aria-label={t('category')}
           >
             {Object.keys(CATEGORY_ICONS).map(c => (
-              <MenuItem key={c} value={c}>{c}</MenuItem>
+              <MenuItem key={c} value={c}>{t(CATEGORY_TRANSLATION_KEYS[c as ProductCategory])}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -287,7 +287,7 @@ export const EditProductModal = memo(({
           {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
             <Chip
               key={cat}
-              label={`${icon} ${cat}`}
+              label={`${icon} ${t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}`}
               onClick={() => onUpdateField('category', cat as ProductCategory)}
               variant={product.category === cat ? 'filled' : 'outlined'}
               color={product.category === cat ? 'primary' : 'default'}
@@ -322,7 +322,7 @@ export const ProductDetailsModal = memo(({
   if (!product) return null;
 
   const detailRows = [
-    { label: t('category'), value: product.category },
+    { label: t('category'), value: t(CATEGORY_TRANSLATION_KEYS[product.category]) },
     { label: t('addedBy'), value: product.addedBy === currentUserName ? t('you') : product.addedBy, highlight: product.addedBy === currentUserName },
     { label: t('date'), value: product.createdDate || '-' },
     { label: t('time'), value: product.createdTime || '-' }

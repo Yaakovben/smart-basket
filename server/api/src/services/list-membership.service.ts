@@ -139,12 +139,13 @@ export class ListMembershipService {
       throw new NotFoundError('Member');
     }
 
-    // Get member and actor info for notification (parallel with atomic removal)
+    // Get member and actor info for notification first, then remove
     const [member, actor] = await Promise.all([
       UserDAL.findById(memberId),
       UserDAL.findById(userId),
-      ListDAL.removeMember(listId, memberId),
     ]);
+
+    await ListDAL.removeMember(listId, memberId);
 
     // Send 'member_removed' notification to the removed member
     if (member && actor) {

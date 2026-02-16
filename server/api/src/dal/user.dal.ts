@@ -65,7 +65,7 @@ class UserDALClass extends BaseDAL<IUser> {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
-      this.model.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
+      this.model.find().skip(skip).limit(limit).sort({ createdAt: -1 }).lean() as unknown as IUser[],
       this.model.countDocuments(),
     ]);
 
@@ -73,7 +73,7 @@ class UserDALClass extends BaseDAL<IUser> {
   }
 
   async findAllSorted(): Promise<IUser[]> {
-    return this.model.find().sort({ createdAt: -1 });
+    return this.model.find().sort({ createdAt: -1 }).lean() as unknown as IUser[];
   }
 }
 

@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member, ToastType } from '../../../global/types';
 import { haptic, getLocale } from '../../../global/helpers';
-import type { TranslationKeys } from '../../../global/i18n/translations';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
@@ -37,11 +36,11 @@ const FAB_VISIBILITY_THRESHOLD = 3;
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 };
 const DEFAULT_FAB_BOTTOM_OFFSET = 90;
 
-const getDefaultNewProduct = (t: (key: TranslationKeys) => string): NewProductForm => ({
+const getDefaultNewProduct = (): NewProductForm => ({
   name: '',
   quantity: 1,
-  unit: t('unitPiece') as Product['unit'],
-  category: t('catOther') as Product['category'],
+  unit: 'יח׳' as Product['unit'],
+  category: 'אחר' as Product['category'],
 });
 
 // Helper to create date/time strings
@@ -97,7 +96,7 @@ export const useList = ({
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
   // ===== Form State =====
-  const [newProduct, setNewProduct] = useState<NewProductForm>(() => getDefaultNewProduct(t));
+  const [newProduct, setNewProduct] = useState<NewProductForm>(() => getDefaultNewProduct());
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
 
@@ -284,7 +283,7 @@ export const useList = ({
       unit: newProduct.unit,
       category: newProduct.category,
     };
-    setNewProduct(getDefaultNewProduct(t));
+    setNewProduct(getDefaultNewProduct());
     setShowAdd(false);
     showToast(t('added'));
 
@@ -299,8 +298,8 @@ export const useList = ({
     await addProductWithOptimisticUpdate({
       name: trimmedName,
       quantity: 1,
-      unit: t('unitPiece') as Product['unit'],
-      category: t('catOther') as Product['category'],
+      unit: 'יח׳' as Product['unit'],
+      category: 'אחר' as Product['category'],
     });
   }, [addProductWithOptimisticUpdate]);
 

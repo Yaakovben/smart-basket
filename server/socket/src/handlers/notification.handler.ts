@@ -239,21 +239,3 @@ export const registerNotificationHandlers = (
     }
   });
 };
-
-// Helper to broadcast notification to a list
-export const broadcastNotification = (
-  io: Server<ClientToServerEvents, ServerToClientEvents>,
-  listId: string,
-  notification: NotificationData
-) => {
-  io.to(`list:${listId}`).emit('notification:new', notification);
-};
-
-// Helper to send notification to specific user
-export const sendNotificationToUser = (
-  io: Server<ClientToServerEvents, ServerToClientEvents>,
-  userId: string,
-  notification: NotificationData
-) => {
-  io.to(`user:${userId}`).emit('notification:new', notification);
-};

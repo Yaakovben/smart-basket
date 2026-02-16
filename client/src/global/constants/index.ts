@@ -14,6 +14,19 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'אחר': '📦'
 };
 
+// ===== Category Translation Keys =====
+export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys> = {
+  'מוצרי חלב': 'catDairy',
+  'מאפים': 'catBakery',
+  'ירקות': 'catVegetables',
+  'פירות': 'catFruits',
+  'בשר': 'catMeat',
+  'משקאות': 'catBeverages',
+  'ממתקים': 'catSweets',
+  'ניקיון': 'catCleaning',
+  'אחר': 'catOther',
+};
+
 // ===== UI Constants =====
 export const MEMBER_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
 export const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅', '🛒', '🛍️'];

@@ -33,6 +33,7 @@ const productSchema = new Schema<IProductDoc>(
       type: Number,
       required: true,
       min: 1,
+      max: 99999,
       default: 1,
     },
     unit: {

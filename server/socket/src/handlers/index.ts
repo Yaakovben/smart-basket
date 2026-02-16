@@ -1,5 +1,5 @@
 export { registerListHandlers, getListUsers, cleanupListSockets } from './list.handler';
-export { registerNotificationHandlers, broadcastNotification, sendNotificationToUser } from './notification.handler';
+export { registerNotificationHandlers } from './notification.handler';
 export {
   registerProductHandlers,
   broadcastProductAdded,
