@@ -56,9 +56,12 @@ export const authApi = {
     setAuthInProgress(true);
     try {
       const response = await apiClient.post<{ data: AuthResponse }>('/auth/register', data);
-      const { user, tokens } = response.data.data;
-      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
-      return { user, tokens };
+      const responseData = response.data?.data;
+      if (!responseData?.user || !responseData?.tokens) {
+        throw new Error('Invalid server response');
+      }
+      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       // Small delay to ensure state updates complete before allowing redirects
       setTimeout(() => setAuthInProgress(false), 100);
@@ -70,9 +73,12 @@ export const authApi = {
     setAuthInProgress(true);
     try {
       const response = await apiClient.post<{ data: AuthResponse }>('/auth/login', data);
-      const { user, tokens } = response.data.data;
-      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
-      return { user, tokens };
+      const responseData = response.data?.data;
+      if (!responseData?.user || !responseData?.tokens) {
+        throw new Error('Invalid server response');
+      }
+      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       setTimeout(() => setAuthInProgress(false), 100);
     }
@@ -83,9 +89,12 @@ export const authApi = {
     setAuthInProgress(true);
     try {
       const response = await apiClient.post<{ data: AuthResponse }>('/auth/google', { accessToken });
-      const { user, tokens } = response.data.data;
-      saveAndVerifyTokens(tokens.accessToken, tokens.refreshToken);
-      return { user, tokens };
+      const responseData = response.data?.data;
+      if (!responseData?.user || !responseData?.tokens) {
+        throw new Error('Invalid server response');
+      }
+      saveAndVerifyTokens(responseData.tokens.accessToken, responseData.tokens.refreshToken);
+      return { user: responseData.user, tokens: responseData.tokens };
     } finally {
       setTimeout(() => setAuthInProgress(false), 100);
     }

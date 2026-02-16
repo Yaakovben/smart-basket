@@ -79,6 +79,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   // Debounce email suggestion and check to avoid while typing
   const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const emailRef = useRef(email);
+  emailRef.current = email;
 
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
@@ -98,6 +101,11 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     if (emailCheckTimerRef.current) {
       clearTimeout(emailCheckTimerRef.current);
     }
+    // Abort any in-flight checkEmail request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
 
     // Check for domain typos after user stops typing (500ms delay)
     suggestionTimerRef.current = setTimeout(() => {
@@ -108,9 +116,14 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     // Auto-check email existence after user stops typing (800ms delay)
     if (isValidEmail(newEmail.trim())) {
       emailCheckTimerRef.current = setTimeout(async () => {
+        const trimmedEmail = newEmail.trim();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         setCheckingEmail(true);
         try {
-          const result = await authApi.checkEmail(newEmail.trim());
+          const result = await authApi.checkEmail(trimmedEmail);
+          // Verify email hasn't changed while request was in flight
+          if (controller.signal.aborted || emailRef.current.trim() !== trimmedEmail) return;
           setEmailChecked(true);
           setIsNewUser(!result.exists);
           setIsGoogleAccount(result.isGoogleAccount);
@@ -118,6 +131,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
             setError(t('useGoogleSignIn'));
           }
         } catch (err: unknown) {
+          if (controller.signal.aborted) return;
           // Show error for network/server issues
           const apiError = err as { response?: { status?: number; data?: unknown }; code?: string; config?: { baseURL?: string } };
           if (apiError.code === 'ERR_NETWORK') {
@@ -128,13 +142,15 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           }
           // For other errors, continue silently - will check on submit
         } finally {
-          setCheckingEmail(false);
+          if (!controller.signal.aborted) {
+            setCheckingEmail(false);
+          }
         }
       }, 800);
     }
   }, [t]);
 
-  // Cleanup timers on unmount
+  // Cleanup timers and abort controller on unmount
   useEffect(() => {
     return () => {
       if (suggestionTimerRef.current) {
@@ -142,6 +158,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       }
       if (emailCheckTimerRef.current) {
         clearTimeout(emailCheckTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
