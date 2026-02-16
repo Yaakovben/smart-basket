@@ -201,6 +201,7 @@ class SocketService {
       'admin:online-users',
       'admin:user-connected',
       'admin:user-disconnected',
+      'force-refresh',
     ];
 
     events.forEach((event) => {
@@ -341,6 +342,11 @@ class SocketService {
     } else {
       this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName });
     }
+  }
+
+  // Admin: force all clients to clear cache and reload
+  emitForceRefresh() {
+    this.socket?.emit('admin:force-refresh' as string);
   }
 
   // Emit list settings updated event (by owner)

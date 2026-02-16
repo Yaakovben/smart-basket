@@ -106,6 +106,16 @@ io.on('connection', (socket) => {
     authSocket.leave('admin:presence');
   });
 
+  // Admin: force all connected clients to clear cache and reload
+  authSocket.on('admin:force-refresh', () => {
+    if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL) {
+      logger.warn(`Non-admin user ${userId} attempted admin:force-refresh`);
+      return;
+    }
+    logger.info(`Admin ${userId} triggered force-refresh for all clients`);
+    io.emit('force-refresh');
+  });
+
   // Allow clients to refresh their access token on the socket connection
   authSocket.on('token:refresh', (token: string) => {
     if (token && typeof token === 'string') {

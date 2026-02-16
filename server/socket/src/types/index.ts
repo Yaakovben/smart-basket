@@ -31,6 +31,7 @@ export interface ClientToServerEvents {
   'token:refresh': (token: string) => void;
   'get:online-users': () => void;
   'leave:online-users': () => void;
+  'admin:force-refresh': () => void;
 }
 
 // Socket events from server to client
@@ -49,6 +50,7 @@ export interface ServerToClientEvents {
   'admin:online-users': (data: { userIds: string[] }) => void;
   'admin:user-connected': (data: { userId: string }) => void;
   'admin:user-disconnected': (data: { userId: string }) => void;
+  'force-refresh': () => void;
   'error': (data: { message: string }) => void;
 }
 

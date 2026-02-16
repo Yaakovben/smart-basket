@@ -254,6 +254,8 @@ type TranslationKey =
   | 'neverLoggedIn'
   | 'refreshData'
   | 'searchCustomer'
+  | 'forceRefreshAll'
+  | 'forceRefreshSent'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -264,6 +266,7 @@ type TranslationKey =
   | 'copyErrorDetails'
   | 'copiedToClipboard'
   | 'copyAndSendToSupport'
+  | 'clearCacheAndReload'
   // Auth
   | 'continueWithGoogle'
   | 'newUserHint'
@@ -599,6 +602,8 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'מעולם לא התחבר',
     refreshData: 'רענן נתונים',
     searchCustomer: 'חיפוש לקוח...',
+    forceRefreshAll: 'רענן את כל המשתמשים (ניקוי מטמון)',
+    forceRefreshSent: 'נשלח! כל המשתמשים יתרעננו',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -609,6 +614,7 @@ export const translations: Record<Language, Translations> = {
     copyErrorDetails: 'העתק פרטי שגיאה',
     copiedToClipboard: 'הועתק!',
     copyAndSendToSupport: 'העתק ושלח את פרטי השגיאה לתמיכה',
+    clearCacheAndReload: 'נקה מטמון ורענן',
     // Auth
     continueWithGoogle: 'המשך עם Google',
     newUserHint: 'משתמש חדש? הזן שם וסיסמה להרשמה',
@@ -622,7 +628,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'חזקה',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
-    cacheError: 'יש בעיית חיבור. נסה לנקות את המטמון דרך /clear-cache',
+    cacheError: 'יש בעיית חיבור. נסה לרענן את הדף.',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     offlineMessage: 'אין חיבור לאינטרנט',
     // Clear Cache Page
@@ -941,6 +947,8 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'Never logged in',
     refreshData: 'Refresh Data',
     searchCustomer: 'Search customer...',
+    forceRefreshAll: 'Force refresh all users (clear cache)',
+    forceRefreshSent: 'Sent! All users will refresh',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -951,6 +959,7 @@ export const translations: Record<Language, Translations> = {
     copyErrorDetails: 'Copy error details',
     copiedToClipboard: 'Copied!',
     copyAndSendToSupport: 'Copy and send error details to support',
+    clearCacheAndReload: 'Clear cache & reload',
     // Auth
     continueWithGoogle: 'Continue with Google',
     newUserHint: 'New user? Enter name and password to register',
@@ -964,7 +973,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Strong',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
-    cacheError: 'Connection issue. Try clearing cache at /clear-cache',
+    cacheError: 'Connection issue. Try refreshing the page.',
     noUserData: 'Error: No user data received from server',
     offlineMessage: 'No internet connection',
     // Clear Cache Page
@@ -1283,6 +1292,8 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'Никогда не входил',
     refreshData: 'Обновить данные',
     searchCustomer: 'Поиск клиента...',
+    forceRefreshAll: 'Обновить всех пользователей (очистить кэш)',
+    forceRefreshSent: 'Отправлено! Все пользователи обновятся',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',
@@ -1293,6 +1304,7 @@ export const translations: Record<Language, Translations> = {
     copyErrorDetails: 'Копировать детали ошибки',
     copiedToClipboard: 'Скопировано!',
     copyAndSendToSupport: 'Скопируйте и отправьте детали ошибки в поддержку',
+    clearCacheAndReload: 'Очистить кэш и обновить',
     // Auth
     continueWithGoogle: 'Продолжить с Google',
     newUserHint: 'Новый пользователь? Введите имя и пароль для регистрации',
@@ -1306,7 +1318,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Сильный',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
-    cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
+    cacheError: 'Проблема соединения. Попробуйте обновить страницу.',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     offlineMessage: 'Нет подключения к интернету',
     // Clear Cache Page

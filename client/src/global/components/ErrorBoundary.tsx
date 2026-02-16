@@ -53,6 +53,28 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     window.location.reload();
   };
 
+  handleClearCacheAndReload = async (): Promise<void> => {
+    try {
+      // Unregister service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+      // Clear caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      // Clear session storage
+      sessionStorage.clear();
+      // Reset cache version
+      localStorage.removeItem('cache_cleared');
+    } catch {
+      // Continue with reload even if cleanup fails
+    }
+    window.location.href = '/?t=' + Date.now();
+  };
+
   toggleDetails = (): void => {
     this.setState(prev => ({ showDetails: !prev.showDetails }));
   };
@@ -135,20 +157,29 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
           >
             {t.errorDescription}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={this.handleReset}
-              sx={{ borderRadius: '12px', px: 3 }}
-            >
-              {t.tryAgain}
-            </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2, width: '100%', maxWidth: 300 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={this.handleReset}
+                sx={{ borderRadius: '12px', px: 3, flex: 1 }}
+              >
+                {t.tryAgain}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={this.handleRefresh}
+                sx={{ borderRadius: '12px', px: 3, flex: 1 }}
+              >
+                {t.refreshPage}
+              </Button>
+            </Box>
             <Button
               variant="contained"
-              onClick={this.handleRefresh}
-              sx={{ borderRadius: '12px', px: 3 }}
+              onClick={this.handleClearCacheAndReload}
+              sx={{ borderRadius: '12px', px: 3, bgcolor: '#EF4444', '&:hover': { bgcolor: '#DC2626' } }}
             >
-              {t.refreshPage}
+              {t.clearCacheAndReload}
             </Button>
           </Box>
 
