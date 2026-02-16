@@ -1,0 +1,37 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'deploy/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            cd ~/smart-basket
+            git pull origin main
+
+            # Build API server
+            cd server/api
+            npm ci
+            npm run build
+
+            # Build Socket server
+            cd ../socket
+            npm ci
+            npm run build
+
+            # Restart PM2 processes
+            cd ~/smart-basket
+            pm2 restart ecosystem.config.js
+            pm2 save

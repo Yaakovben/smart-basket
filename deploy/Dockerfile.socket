@@ -1,0 +1,22 @@
+# ── Build stage ──
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY server/socket/package*.json ./
+RUN npm ci
+
+COPY server/socket/tsconfig.json ./
+COPY server/socket/src ./src
+RUN npm run build
+
+# ── Production stage ──
+FROM node:20-alpine
+WORKDIR /app
+
+COPY --from=builder /app/package*.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 5001
+CMD ["node", "dist/server.js"]

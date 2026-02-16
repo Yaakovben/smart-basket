@@ -1,0 +1,9 @@
+# ── API Server ──
+{$API_DOMAIN} {
+	reverse_proxy api:5000
+}
+
+# ── Socket Server (WebSocket support) ──
+{$SOCKET_DOMAIN} {
+	reverse_proxy socket:5001
+}
