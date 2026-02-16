@@ -24,10 +24,10 @@ export const registerNotificationHandlers = (
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
 
-  // Mark notifications as read
+  // Mark notifications as read (UI state only - persistence via REST API)
   socket.on('notification:read', (data: { listId: string; notificationId?: string }) => {
-    // This is mainly for UI state - actual persistence happens via REST API
-    logger.info(`User ${userId} marked notification as read in list ${data.listId}`);
+    if (!checkRateLimit(socket.id)) return;
+    if (!isValidString(data?.listId)) return;
   });
 
   // Member joined group

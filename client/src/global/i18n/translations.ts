@@ -628,7 +628,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'חזקה',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
-    cacheError: 'יש בעיית חיבור. נסה לרענן את הדף.',
+    cacheError: 'יש בעיית חיבור. נסה לנקות מטמון ב /clear-cache',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     offlineMessage: 'אין חיבור לאינטרנט',
     // Clear Cache Page
@@ -973,7 +973,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Strong',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
-    cacheError: 'Connection issue. Try refreshing the page.',
+    cacheError: 'Connection issue. Try clearing cache at /clear-cache',
     noUserData: 'Error: No user data received from server',
     offlineMessage: 'No internet connection',
     // Clear Cache Page
@@ -1318,7 +1318,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Сильный',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
-    cacheError: 'Проблема соединения. Попробуйте обновить страницу.',
+    cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     offlineMessage: 'Нет подключения к интернету',
     // Clear Cache Page

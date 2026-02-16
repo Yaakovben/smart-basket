@@ -274,7 +274,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       setLists(initialLists.map(l => convertApiList(l, locale)));
       initializedForRef.current = '__initial__';
     }
-  }, [initialLists]);
+  }, [initialLists, locale]);
 
   // Fetch lists when user changes (skip if already initialized with pre-fetched data for this user)
   useEffect(() => {
@@ -342,7 +342,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         throw error;
       }
     },
-    [],
+    [locale],
   );
 
   // Update list locally without API call (for optimistic updates)
@@ -396,7 +396,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         throw error;
       }
     },
-    [user, lists],
+    [user, lists, locale],
   );
 
   const deleteList = useCallback(
@@ -466,7 +466,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         return { success: false, error: 'unknownError' };
       }
     },
-    [user],
+    [user, locale],
   );
 
   const leaveList = useCallback(
@@ -611,8 +611,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Leave all rooms on cleanup (currentIds captured from closure)
       currentIds.forEach((id) => socketService.leaveList(id));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id or list IDs change
-  }, [user?.id, listIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id, list IDs, or locale change
+  }, [user?.id, listIds, locale]);
 
   return {
     lists,
