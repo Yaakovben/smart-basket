@@ -19,109 +19,125 @@ export const registerProductHandlers = (
 
   // Product added
   socket.on('product:add', (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
-      logger.warn('Invalid product:add data from user:', userId);
-      return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
+        logger.warn('Invalid product:add data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('product:added', {
+        listId: data.listId,
+        product: { ...data.product, id: data.product.id || '' },
+        userId,
+        userName, // from token
+        timestamp: new Date(),
+      });
+
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: 'product_add',
+        actorId: userId,
+        productId: data.product.id,
+        productName: data.product.name,
+      }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
+    } catch (error) {
+      logger.error('Error in product:add handler:', error);
     }
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
-
-    socket.to(`list:${data.listId}`).emit('product:added', {
-      listId: data.listId,
-      product: { ...data.product, id: data.product.id || '' },
-      userId,
-      userName, // from token
-      timestamp: new Date(),
-    });
-
-    ApiService.broadcastNotification({
-      listId: data.listId,
-      type: 'product_add',
-      actorId: userId,
-      productId: data.product.id,
-      productName: data.product.name,
-    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product updated
   socket.on('product:update', (data: { listId: string; product: ProductData & { id: string }; userName: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
-      logger.warn('Invalid product:update data from user:', userId);
-      return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
+        logger.warn('Invalid product:update data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('product:updated', {
+        listId: data.listId,
+        product: { ...data.product, id: data.product.id },
+        userId,
+        userName, // from token
+        timestamp: new Date(),
+      });
+
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: 'product_update',
+        actorId: userId,
+        productId: data.product.id,
+        productName: data.product.name,
+      }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
+    } catch (error) {
+      logger.error('Error in product:update handler:', error);
     }
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
-
-    socket.to(`list:${data.listId}`).emit('product:updated', {
-      listId: data.listId,
-      product: { ...data.product, id: data.product.id },
-      userId,
-      userName, // from token
-      timestamp: new Date(),
-    });
-
-    ApiService.broadcastNotification({
-      listId: data.listId,
-      type: 'product_update',
-      actorId: userId,
-      productId: data.product.id,
-      productName: data.product.name,
-    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product toggled (purchased/unpurchased)
   socket.on('product:toggle', (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidString(data?.productId) || !isValidBoolean(data?.isPurchased)) {
-      logger.warn('Invalid product:toggle data from user:', userId);
-      return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidString(data?.productId) || !isValidBoolean(data?.isPurchased)) {
+        logger.warn('Invalid product:toggle data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('product:toggled', {
+        listId: data.listId,
+        productId: data.productId,
+        productName: data.productName || '',
+        isPurchased: data.isPurchased,
+        userId,
+        userName, // from token
+        timestamp: new Date(),
+      });
+
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: data.isPurchased ? 'product_purchase' : 'product_unpurchase',
+        actorId: userId,
+        productId: data.productId,
+        productName: data.productName,
+      }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
+    } catch (error) {
+      logger.error('Error in product:toggle handler:', error);
     }
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
-
-    socket.to(`list:${data.listId}`).emit('product:toggled', {
-      listId: data.listId,
-      productId: data.productId,
-      productName: data.productName || '',
-      isPurchased: data.isPurchased,
-      userId,
-      userName, // from token
-      timestamp: new Date(),
-    });
-
-    ApiService.broadcastNotification({
-      listId: data.listId,
-      type: data.isPurchased ? 'product_purchase' : 'product_unpurchase',
-      actorId: userId,
-      productId: data.productId,
-      productName: data.productName,
-    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 
   // Product deleted
   socket.on('product:delete', (data: { listId: string; productId: string; productName: string; userName: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidString(data?.productId)) {
-      logger.warn('Invalid product:delete data from user:', userId);
-      return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidString(data?.productId)) {
+        logger.warn('Invalid product:delete data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('product:deleted', {
+        listId: data.listId,
+        productId: data.productId,
+        productName: data.productName || '',
+        userId,
+        userName, // from token
+        timestamp: new Date(),
+      });
+
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: 'product_delete',
+        actorId: userId,
+        productId: data.productId,
+        productName: data.productName,
+      }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
+    } catch (error) {
+      logger.error('Error in product:delete handler:', error);
     }
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
-
-    socket.to(`list:${data.listId}`).emit('product:deleted', {
-      listId: data.listId,
-      productId: data.productId,
-      productName: data.productName || '',
-      userId,
-      userName, // from token
-      timestamp: new Date(),
-    });
-
-    ApiService.broadcastNotification({
-      listId: data.listId,
-      type: 'product_delete',
-      actorId: userId,
-      productId: data.productId,
-      productName: data.productName,
-    }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
   });
 };
 

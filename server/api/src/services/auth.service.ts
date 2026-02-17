@@ -17,7 +17,9 @@ interface GoogleUserInfo {
 export class AuthService {
   // Check if email exists in the database
   static async checkEmail(email: string): Promise<{ exists: boolean; isGoogleAccount: boolean }> {
-    const user = await UserDAL.findByEmail(email);
+    // Use findByEmailWithPassword so the password field is included
+    // (User model has select: false on password, so findByEmail won't load it)
+    const user = await UserDAL.findByEmailWithPassword(email);
 
     if (!user) {
       return { exists: false, isGoogleAccount: false };

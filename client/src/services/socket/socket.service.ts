@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { getAccessToken } from '../api/client';
+import { getAccessToken, getRefreshToken, setTokens } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
@@ -15,12 +15,15 @@ const RECONNECTION_CONFIG = {
 
 type SocketEventHandler<T> = (data: T) => void;
 
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
+
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<SocketEventHandler<unknown>>> = new Map();
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
+  private isRefreshingToken = false;
 
   connect() {
     const token = getAccessToken();
@@ -56,12 +59,31 @@ class SocketService {
       // Socket disconnected, will auto-reconnect
     });
 
-    this.socket.on('connect_error', (error) => {
-      // If auth error (token expired/invalid), try reconnecting with fresh token
+    this.socket.on('connect_error', async (error) => {
+      // If auth error (token expired/invalid), actually refresh the token
       if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('expired')) {
-        const newToken = getAccessToken();
-        if (newToken && this.socket) {
-          this.socket.auth = { token: newToken };
+        if (this.isRefreshingToken) return;
+        this.isRefreshingToken = true;
+        try {
+          const refreshToken = getRefreshToken();
+          if (!refreshToken || !this.socket) return;
+
+          const response = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+          });
+
+          if (!response.ok) return;
+
+          const data = await response.json();
+          const { accessToken, refreshToken: newRefreshToken } = data.data;
+          setTokens(accessToken, newRefreshToken);
+          this.socket.auth = { token: accessToken };
+        } catch {
+          // Refresh failed - token is truly invalid, reconnect will eventually stop
+        } finally {
+          this.isRefreshingToken = false;
         }
       }
     });

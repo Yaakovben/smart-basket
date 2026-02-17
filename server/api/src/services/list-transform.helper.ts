@@ -13,6 +13,7 @@ const transformProduct = (p: IProductDoc): Record<string, unknown> => {
 /**
  * Transform a single list document into the API response format.
  * Populates owner/members and fetches products from the Product collection.
+ * Password is included for all members (any member can invite others).
  */
 export const transformList = async (list: IList): Promise<IListResponse> => {
   await Promise.all([
@@ -23,6 +24,9 @@ export const transformList = async (list: IList): Promise<IListResponse> => {
   const products = await ProductDAL.findByListId(list._id.toString());
   const json = list.toJSON() as Record<string, unknown>;
   json.products = products.map(transformProduct);
+
+  // Include password for all members (any member can invite others)
+  json.password = list.password || null;
 
   return json as unknown as IListResponse;
 };
@@ -41,6 +45,10 @@ export const transformListsWithProducts = async (lists: IList[]): Promise<IListR
     const products = productsMap.get(list._id.toString()) || [];
     const json = list.toJSON() as Record<string, unknown>;
     json.products = products.map(transformProduct);
+
+    // Include password for all members (any member can invite others)
+    json.password = list.password || null;
+
     return json as unknown as IListResponse;
   });
 };

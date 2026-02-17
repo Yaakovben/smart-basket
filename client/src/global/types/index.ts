@@ -55,6 +55,7 @@ export interface List {
   products: Product[];
   inviteCode?: string | null;
   password?: string | null;
+  hasPassword?: boolean;
 }
 
 // ===== Toast =====

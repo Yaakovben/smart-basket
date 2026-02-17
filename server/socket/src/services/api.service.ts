@@ -42,6 +42,7 @@ export class ApiService {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
+        signal: AbortSignal.timeout(10000),
       });
       return response.ok;
     } catch (error) {
@@ -65,6 +66,7 @@ export class ApiService {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
+        signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) return null;
 
@@ -109,6 +111,7 @@ export class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify(data),
+        signal: AbortSignal.timeout(10000),
       });
 
       if (!response.ok) {

@@ -76,6 +76,7 @@ export interface IListResponse {
   products: IProductResponse[];
   inviteCode?: string;
   password?: string;
+  hasPassword: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -87,8 +87,8 @@ const listSchema = new Schema<IList>(
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        const { _id, __v, ...rest } = ret;
-        return { ...rest, id: _id.toString() };
+        const { _id, __v, password, ...rest } = ret;
+        return { ...rest, id: _id.toString(), hasPassword: !!password };
       },
     },
   }

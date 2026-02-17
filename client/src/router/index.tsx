@@ -83,14 +83,22 @@ const ListPageWrapper = ({
       onBack={() => navigate("/")}
       onUpdateList={updateList}
       onUpdateListLocal={updateListLocal}
-      onLeaveList={(id: string) => {
-        leaveList(id);
-        showToast(t('left'));
+      onLeaveList={async (id: string) => {
+        try {
+          await leaveList(id);
+          showToast(t('left'));
+        } catch {
+          showToast(t('errorOccurred'), 'error');
+        }
         navigate("/");
       }}
-      onDeleteList={(id: string) => {
-        deleteList(id);
-        showToast(t('deleted'));
+      onDeleteList={async (id: string) => {
+        try {
+          await deleteList(id);
+          showToast(t('deleted'));
+        } catch {
+          showToast(t('errorOccurred'), 'error');
+        }
         navigate("/");
       }}
       showToast={showToast}

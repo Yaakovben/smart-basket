@@ -11,10 +11,11 @@ export const generateInviteMessage = (list: List, t: TranslateFn): string => {
     `🛒 ${t('joinGroup')} *${list.name}*`,
     ``,
     `${t('groupCode')}: ${list.inviteCode}`,
-    `${t('password')}: ${list.password}`,
-    ``,
-    `SmartBasket`
   ];
+  if (list.password) {
+    lines.push(`${t('password')}: ${list.password}`);
+  }
+  lines.push(``, `SmartBasket`);
   return lines.join('\n');
 };
 

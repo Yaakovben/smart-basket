@@ -54,7 +54,7 @@ export function validate(schema: Joi.Schema | ValidateOptions) {
     }
 
     if (errors.length > 0) {
-      throw new ValidationError(errors);
+      return next(new ValidationError(errors));
     }
 
     next();

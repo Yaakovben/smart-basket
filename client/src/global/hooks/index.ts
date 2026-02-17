@@ -133,13 +133,18 @@ export function useAuth() {
 
         // Connect socket when authenticated (if not already connected)
         socketService.connect();
-      } catch {
+      } catch (error) {
         clearTimeout(timeoutId!);
-        // Token invalid or timeout, clear everything
-        socketService.disconnect();
-        clearTokens();
-        localStorage.removeItem('cached_user');
-        setUser(null);
+        // Only logout on auth errors (401 = token truly invalid after refresh attempt)
+        // For timeout/network errors, keep cached user to avoid unnecessary logouts
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 401) {
+          socketService.disconnect();
+          clearTokens();
+          localStorage.removeItem('cached_user');
+          setUser(null);
+        }
+        // For network/timeout errors, keep the cached user (stale but functional)
       }
       setLoading(false);
     };
@@ -234,6 +239,7 @@ const convertApiList = (apiList: ApiList, locale: string): List => ({
   products: apiList.products.map(p => convertApiProduct(p, locale)),
   inviteCode: apiList.inviteCode,
   password: apiList.password,
+  hasPassword: apiList.hasPassword,
 });
 
 // ===== useLists Hook =====

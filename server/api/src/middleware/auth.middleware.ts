@@ -46,7 +46,7 @@ export const authenticate = asyncHandler(
 
 export const isAdmin = (req: AuthRequest, _res: Response, next: NextFunction) => {
   if (!req.user?.isAdmin) {
-    throw ForbiddenError.notAdmin();
+    return next(ForbiddenError.notAdmin());
   }
   next();
 };

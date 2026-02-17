@@ -26,58 +26,70 @@ export const registerNotificationHandlers = (
 
   // Member joined group
   socket.on('member:join', (data: { listId: string; listName: string; userName: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidString(data?.listName)) {
-      logger.warn('Invalid member:join data from user:', userId);
-      return;
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidString(data?.listName)) {
+        logger.warn('Invalid member:join data from user:', userId);
+        return;
+      }
+      // Verify sender is in the list room
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      const notification: NotificationData = {
+        id: generateNotificationId(userId),
+        type: 'join',
+        listId: data.listId,
+        userId,
+        userName, // from token, not client
+        message: `${userName} joined ${data.listName}`,
+        timestamp: new Date(),
+      };
+
+      socket.to(`list:${data.listId}`).emit('notification:new', notification);
+      logger.info(`User ${userName} joined group ${data.listName}`);
+    } catch (error) {
+      logger.error('Error in member:join handler:', error);
     }
-    // Verify sender is in the list room
-    if (!socket.rooms.has(`list:${data.listId}`)) return;
-
-    const notification: NotificationData = {
-      id: generateNotificationId(userId),
-      type: 'join',
-      listId: data.listId,
-      userId,
-      userName, // from token, not client
-      message: `${userName} joined ${data.listName}`,
-      timestamp: new Date(),
-    };
-
-    socket.to(`list:${data.listId}`).emit('notification:new', notification);
-    logger.info(`User ${userName} joined group ${data.listName}`);
   });
 
   // Member left group
   socket.on('member:leave', (data: { listId: string; listName: string; userName: string }, callback?: () => void) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId) || !isValidString(data?.listName)) {
-      logger.warn('Invalid member:leave data from user:', userId);
+    try {
+      if (!checkRateLimit(socket.id)) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
+      if (!isValidString(data?.listId) || !isValidString(data?.listName)) {
+        logger.warn('Invalid member:leave data from user:', userId);
+        if (typeof callback === 'function') callback();
+        return;
+      }
+      // Verify sender is in the list room
+      if (!socket.rooms.has(`list:${data.listId}`)) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
+
+      const notification: NotificationData = {
+        id: generateNotificationId(userId),
+        type: 'leave',
+        listId: data.listId,
+        userId,
+        userName, // from token, not client
+        message: `${userName} left ${data.listName}`,
+        timestamp: new Date(),
+      };
+
+      // Broadcast to all users in the list (including sender - they're about to leave anyway)
+      io.to(`list:${data.listId}`).emit('notification:new', notification);
+      logger.info(`User ${userName} left group ${data.listName}`);
+
+      // Acknowledge so client can safely proceed with API leave
       if (typeof callback === 'function') callback();
-      return;
-    }
-    // Verify sender is in the list room
-    if (!socket.rooms.has(`list:${data.listId}`)) {
+    } catch (error) {
+      logger.error('Error in member:leave handler:', error);
       if (typeof callback === 'function') callback();
-      return;
     }
-
-    const notification: NotificationData = {
-      id: generateNotificationId(userId),
-      type: 'leave',
-      listId: data.listId,
-      userId,
-      userName, // from token, not client
-      message: `${userName} left ${data.listName}`,
-      timestamp: new Date(),
-    };
-
-    // Broadcast to all users in the list (including sender - they're about to leave anyway)
-    io.to(`list:${data.listId}`).emit('notification:new', notification);
-    logger.info(`User ${userName} left group ${data.listName}`);
-
-    // Acknowledge so client can safely proceed with API leave
-    if (typeof callback === 'function') callback();
   });
 
   // Member removed from group (by admin/owner)
@@ -186,23 +198,32 @@ export const registerNotificationHandlers = (
   // List deleted by owner
   socket.on('list:delete', async (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }, callback?: () => void) => {
     try {
-      if (!checkRateLimit(socket.id)) return;
+      if (!checkRateLimit(socket.id)) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
       if (!isValidString(data?.listId) || !isValidString(data?.listName) || !Array.isArray(data?.memberIds)) {
         logger.warn('Invalid list:delete data from user:', userId);
+        if (typeof callback === 'function') callback();
         return;
       }
       // Limit memberIds to prevent abuse
       if (data.memberIds.length > 100) {
         logger.warn(`list:delete memberIds too large (${data.memberIds.length}) from user:`, userId);
+        if (typeof callback === 'function') callback();
         return;
       }
       // Verify sender is in the list room
-      if (!socket.rooms.has(`list:${data.listId}`)) return;
+      if (!socket.rooms.has(`list:${data.listId}`)) {
+        if (typeof callback === 'function') callback();
+        return;
+      }
 
       // Verify sender is owner
       const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
       if (role !== 'owner') {
         logger.warn(`User ${userId} attempted list:delete without ownership (role: ${role})`);
+        if (typeof callback === 'function') callback();
         return;
       }
 

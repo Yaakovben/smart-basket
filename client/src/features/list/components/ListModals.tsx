@@ -107,12 +107,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               {list.inviteCode}
             </Typography>
           </Box>
+          {list.password && (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
             <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
             <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>
               {list.password}
             </Typography>
           </Box>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button

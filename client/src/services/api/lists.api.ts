@@ -41,6 +41,7 @@ export interface List {
   products: Product[];
   inviteCode?: string;
   password?: string;
+  hasPassword?: boolean;
   createdAt: string;
   updatedAt: string;
 }
