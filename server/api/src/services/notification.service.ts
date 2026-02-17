@@ -286,14 +286,6 @@ export class NotificationService {
   }
 
   /**
-   * Mark a single notification as read by ID only
-   * (Used when list access was already verified)
-   */
-  static async markAsReadById(notificationId: string): Promise<void> {
-    await NotificationDAL.markAsRead(notificationId);
-  }
-
-  /**
    * Mark a single notification as read (with ownership verification)
    */
   static async markAsRead(

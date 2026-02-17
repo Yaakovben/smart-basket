@@ -98,7 +98,8 @@ export const AddProductModal = memo(({
           placeholder={t('productName')}
           aria-required="true"
           inputProps={{
-            enterKeyHint: 'next'
+            enterKeyHint: 'next',
+            maxLength: 100
           }}
         />
       </Box>
@@ -240,7 +241,8 @@ export const EditProductModal = memo(({
           onKeyDown={handleNameKeyDown}
           aria-required="true"
           inputProps={{
-            enterKeyHint: 'next'
+            enterKeyHint: 'next',
+            maxLength: 100
           }}
         />
       </Box>

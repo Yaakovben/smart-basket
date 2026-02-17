@@ -94,25 +94,4 @@ export class ListController {
     });
   });
 
-  static markNotificationsRead = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
-    const { id } = req.params;
-    const list = await ListService.markNotificationsRead(id, userId);
-
-    res.json({
-      success: true,
-      data: list,
-    });
-  });
-
-  static markNotificationRead = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
-    const { id, notificationId } = req.params;
-    const list = await ListService.markNotificationRead(id, userId, notificationId);
-
-    res.json({
-      success: true,
-      data: list,
-    });
-  });
 }

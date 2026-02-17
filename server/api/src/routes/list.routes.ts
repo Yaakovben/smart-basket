@@ -136,8 +136,4 @@ router.post('/:id/leave', validate({ params: listValidator.params }), ListContro
  */
 router.delete('/:id/members/:memberId', validate({ params: listValidator.memberParams }), ListController.removeMember);
 
-// Notifications
-router.put('/:id/notifications/read', validate({ params: listValidator.params }), ListController.markNotificationsRead);
-router.put('/:id/notifications/:notificationId/read', validate({ params: listValidator.notificationParams }), ListController.markNotificationRead);
-
 export default router;

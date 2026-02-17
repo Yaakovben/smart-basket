@@ -130,9 +130,10 @@ apiClient.interceptors.response.use(
       if (!refreshToken) {
         // Reset isRefreshing flag before returning (prevents future requests from getting stuck)
         isRefreshing = false;
-        // Don't redirect if we're in the middle of authentication
-        if (!isAuthInProgress) {
+        // Don't redirect if we're in the middle of authentication or already on login
+        if (!isAuthInProgress && window.location.pathname !== '/login') {
           clearTokens();
+          localStorage.removeItem('cached_user');
           window.location.href = '/login';
         }
         return Promise.reject(error);
@@ -155,9 +156,10 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Don't redirect if we're in the middle of authentication
-        if (!isAuthInProgress) {
+        // Don't redirect if we're in the middle of authentication or already on login
+        if (!isAuthInProgress && window.location.pathname !== '/login') {
           clearTokens();
+          localStorage.removeItem('cached_user');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

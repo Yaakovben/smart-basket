@@ -134,24 +134,4 @@ export class ListService {
     return ListMembershipService.toggleMemberAdmin(listId, userId, memberId);
   }
 
-  // ==================== Notifications ====================
-
-  static async markNotificationsRead(
-    listId: string,
-    userId: string
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
-    await NotificationService.markAllAsRead(userId, listId);
-    return transformList(list);
-  }
-
-  static async markNotificationRead(
-    listId: string,
-    userId: string,
-    notificationId: string
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
-    await NotificationService.markAsReadById(notificationId);
-    return transformList(list);
-  }
 }

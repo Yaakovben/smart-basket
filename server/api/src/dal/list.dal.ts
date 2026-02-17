@@ -102,12 +102,6 @@ class ListDALClass extends BaseDAL<IList> {
     );
   }
 
-  async getMemberIds(listId: string): Promise<string[]> {
-    const list = await this.model.findById(listId);
-    if (!list) return [];
-    return list.members.map((m) => m.user.toString());
-  }
-
   async generateUniqueInviteCode(): Promise<string> {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const MAX_RETRIES = 10;

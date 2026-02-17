@@ -346,7 +346,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                   type="submit"
                   variant="contained"
                   fullWidth
-                  disabled={emailLoading || isGoogleAccount}
+                  disabled={emailLoading || isGoogleAccount || checkingEmail}
                   sx={{ mt: 2.5, py: 1.5, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
                 >
                   {emailLoading ? (
