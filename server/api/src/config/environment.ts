@@ -62,6 +62,9 @@ const envSchema = Joi.object({
   // ניטור שגיאות Sentry - שולח רק ב-production
   SENTRY_DSN: Joi.string().optional(),
 
+  // Logtail (BetterStack) - שליחת לוגים לענן
+  LOGTAIL_TOKEN: Joi.string().optional(),
+
   // מפתחות VAPID להתראות push - ליצירה: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
@@ -97,6 +100,7 @@ export interface Environment {
   CORS_ORIGIN: string;
   ADMIN_EMAIL: string;
   SENTRY_DSN?: string;
+  LOGTAIL_TOKEN?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_EMAIL: string;

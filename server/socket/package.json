@@ -9,6 +9,8 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@logtail/node": "^0.5.6",
+    "@logtail/winston": "^0.5.6",
     "@sentry/node": "^10.38.0",
     "dotenv": "^16.3.1",
     "ioredis": "^5.3.2",

@@ -42,6 +42,9 @@ export const env = {
 
   // Sentry לניטור שגיאות - אותו DSN כמו שרת ה-API (serverName מבדיל ביניהם)
   SENTRY_DSN: process.env.SENTRY_DSN,
+
+  // Logtail (BetterStack) - שליחת לוגים לענן
+  LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
 };
 
 // ולידציה של משתני סביבה נדרשים
