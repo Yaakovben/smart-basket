@@ -69,18 +69,6 @@ export const notificationsApi = {
   },
 
   /**
-   * Get the count of unread notifications
-   */
-  async getUnreadCount(listId?: string): Promise<number> {
-    const url = listId
-      ? `/notifications/unread-count?listId=${listId}`
-      : '/notifications/unread-count';
-
-    const response = await apiClient.get<{ data: { count: number } }>(url);
-    return response.data.data.count;
-  },
-
-  /**
    * Mark a single notification as read
    */
   async markAsRead(notificationId: string): Promise<Notification> {

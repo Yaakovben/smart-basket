@@ -182,13 +182,9 @@ export function useAuth() {
   const updateUser = useCallback(
     async (updates: Partial<User>) => {
       if (!user) return;
-      try {
-        const updatedUser = await authApi.updateProfile(updates);
-        localStorage.setItem('cached_user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      } catch (error) {
-        throw error;
-      }
+      const updatedUser = await authApi.updateProfile(updates);
+      localStorage.setItem('cached_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
     },
     [user],
   );
@@ -359,40 +355,36 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Find old list to compare what changed
       const oldList = lists.find((l) => l.id === updatedList.id);
 
-      try {
-        const updated = await listsApi.updateList(updatedList.id, {
-          name: updatedList.name,
-          icon: updatedList.icon,
-          color: updatedList.color,
-        });
-        setLists((prev) =>
-          prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
-        );
-        // Emit socket event for group lists to notify other members in real-time
-        if (updatedList.isGroup && user && oldList) {
-          // Determine what changed
-          const nameChanged = oldList.name !== updatedList.name;
-          const designChanged = oldList.icon !== updatedList.icon || oldList.color !== updatedList.color;
+      const updated = await listsApi.updateList(updatedList.id, {
+        name: updatedList.name,
+        icon: updatedList.icon,
+        color: updatedList.color,
+      });
+      setLists((prev) =>
+        prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
+      );
+      // Emit socket event for group lists to notify other members in real-time
+      if (updatedList.isGroup && user && oldList) {
+        // Determine what changed
+        const nameChanged = oldList.name !== updatedList.name;
+        const designChanged = oldList.icon !== updatedList.icon || oldList.color !== updatedList.color;
 
-          let changeType: 'name' | 'design' | 'both' | undefined;
-          if (nameChanged && designChanged) {
-            changeType = 'both';
-          } else if (nameChanged) {
-            changeType = 'name';
-          } else if (designChanged) {
-            changeType = 'design';
-          }
-
-          socketService.emitListUpdated(
-            updatedList.id,
-            oldList.name, // Send old name for context
-            user.name,
-            changeType,
-            nameChanged ? updatedList.name : undefined
-          );
+        let changeType: 'name' | 'design' | 'both' | undefined;
+        if (nameChanged && designChanged) {
+          changeType = 'both';
+        } else if (nameChanged) {
+          changeType = 'name';
+        } else if (designChanged) {
+          changeType = 'design';
         }
-      } catch (error) {
-        throw error;
+
+        socketService.emitListUpdated(
+          updatedList.id,
+          oldList.name, // Send old name for context
+          user.name,
+          changeType,
+          nameChanged ? updatedList.name : undefined
+        );
       }
     },
     [user, lists, locale],
@@ -475,25 +467,21 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Get list name before leaving for notification
       const listToLeave = lists.find((l) => l.id === listId);
 
-      try {
-        // Notify other members and WAIT for server ack before API leave
-        // This ensures the notification is broadcast while the user is still a member
-        if (listToLeave) {
-          await new Promise<void>((resolve) => {
-            socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
-              resolve();
-            });
-            // Timeout fallback - don't hang forever if socket is disconnected
-            setTimeout(resolve, 5000);
+      // Notify other members and WAIT for server ack before API leave
+      // This ensures the notification is broadcast while the user is still a member
+      if (listToLeave) {
+        await new Promise<void>((resolve) => {
+          socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
+            resolve();
           });
-        }
-        await listsApi.leaveGroup(listId);
-        // Leave socket room
-        socketService.leaveList(listId);
-        setLists((prev) => prev.filter((l) => l.id !== listId));
-      } catch (error) {
-        throw error;
+          // Timeout fallback - don't hang forever if socket is disconnected
+          setTimeout(resolve, 5000);
+        });
       }
+      await listsApi.leaveGroup(listId);
+      // Leave socket room
+      socketService.leaveList(listId);
+      setLists((prev) => prev.filter((l) => l.id !== listId));
     },
     [user, lists],
   );

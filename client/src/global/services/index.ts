@@ -1,1 +1,1 @@
-export { StorageService, STORAGE_KEYS } from './storage';
+export { StorageService } from './storage';

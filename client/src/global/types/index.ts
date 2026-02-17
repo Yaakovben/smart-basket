@@ -104,35 +104,3 @@ export interface AppSettings {
   language: Language;
   notifications: NotificationSettings;
 }
-
-// ===== Global Component Props =====
-export interface ConfirmModalProps {
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  confirmText?: string;
-}
-
-export interface MemberAvatarProps {
-  member: Member | User;
-  size?: number;
-  index?: number;
-}
-
-export interface MembersButtonProps {
-  members: (Member | User)[];
-  onClick: () => void;
-}
-
-export interface ModalProps {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}
-
-export interface ToastProps {
-  msg: string;
-  type?: ToastType;
-  onDismiss?: () => void;
-}

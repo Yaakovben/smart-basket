@@ -23,15 +23,6 @@ export interface AdminLoginActivity {
   createdAt: string;
 }
 
-export interface AdminStats {
-  totalUsers: number;
-  totalLists: number;
-  totalGroupLists: number;
-  totalProducts: number;
-  recentUsers: number;
-  recentActivity: number;
-}
-
 export interface PaginatedActivity {
   activities: AdminLoginActivity[];
   pagination: {
@@ -55,17 +46,6 @@ export const adminApi = {
       params: { page, limit }
     });
     return response.data.data;
-  },
-
-  // Get dashboard stats
-  async getStats(): Promise<AdminStats> {
-    const response = await apiClient.get<{ data: AdminStats }>('/admin/stats');
-    return response.data.data;
-  },
-
-  // Delete a user
-  async deleteUser(userId: string): Promise<void> {
-    await apiClient.delete(`/admin/users/${userId}`);
   },
 };
 

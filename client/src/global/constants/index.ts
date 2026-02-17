@@ -1,4 +1,4 @@
-import type { ProductCategory, ToastType } from '../types';
+import type { ProductCategory } from '../types';
 import type { TranslationKeys } from '../i18n/translations';
 
 // ===== Category Icons =====
@@ -207,11 +207,3 @@ export const LANGUAGES = [
   { code: 'en', name: 'English', nameEn: 'English' },
   { code: 'ru', name: 'Русский', nameEn: 'Russian' }
 ] as const;
-
-// ===== Toast Config =====
-export const TOAST_CONFIG: Record<ToastType, { icon: string; bg: string; shadow: string }> = {
-  success: { icon: '✓', bg: 'linear-gradient(135deg, #22C55E, #16A34A)', shadow: 'rgba(34, 197, 94, 0.3)' },
-  error: { icon: '✕', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', shadow: 'rgba(239, 68, 68, 0.3)' },
-  info: { icon: 'ℹ', bg: 'linear-gradient(135deg, #14B8A6, #0D9488)', shadow: 'rgba(20, 184, 166, 0.3)' },
-  warning: { icon: '⚠', bg: 'linear-gradient(135deg, #F59E0B, #D97706)', shadow: 'rgba(245, 158, 11, 0.3)' }
-};

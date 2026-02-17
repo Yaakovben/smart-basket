@@ -4,10 +4,6 @@ interface VapidKeyResponse {
   publicKey: string;
 }
 
-interface PushStatusResponse {
-  subscribed: boolean;
-}
-
 /**
  * Get VAPID public key for push subscription
  */
@@ -47,18 +43,6 @@ export const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> =
 };
 
 /**
- * Get push subscription status
- */
-export const getPushStatus = async (): Promise<boolean> => {
-  try {
-    const response = await apiClient.get<{ data: PushStatusResponse }>('/push/status');
-    return response.data.data.subscribed;
-  } catch {
-    return false;
-  }
-};
-
-/**
  * Unsubscribe from all push notifications (browser + server)
  * Used during logout to stop receiving notifications
  */
@@ -90,5 +74,4 @@ export const pushApi = {
   subscribeToPush,
   unsubscribeFromPush,
   unsubscribeAllPush,
-  getPushStatus,
 };

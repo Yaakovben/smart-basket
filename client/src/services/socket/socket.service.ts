@@ -13,68 +13,6 @@ const RECONNECTION_CONFIG = {
   timeout: 20000,
 };
 
-// Socket event types
-export interface UserEventData {
-  listId: string;
-  userId: string;
-  userName: string;
-  timestamp: Date;
-}
-
-export interface ProductEventData {
-  listId: string;
-  product: {
-    id: string;
-    name: string;
-    quantity: number;
-    unit: string;
-    category: string;
-  };
-  userId: string;
-  userName: string;
-  timestamp: Date;
-}
-
-export interface ProductDeletedData {
-  listId: string;
-  productId: string;
-  userId: string;
-  userName: string;
-  timestamp: Date;
-}
-
-export interface ProductToggledData {
-  listId: string;
-  productId: string;
-  isPurchased: boolean;
-  userId: string;
-  userName: string;
-  timestamp: Date;
-}
-
-export interface NotificationData {
-  id: string;
-  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_deleted' | 'list_update';
-  listId: string;
-  userId: string;
-  userName: string;
-  message: string;
-  timestamp: Date;
-  // For list_update notifications
-  changeType?: 'name' | 'design' | 'both';
-  newName?: string;
-}
-
-export interface MemberRemovedData {
-  listId: string;
-  listName: string;
-  removedUserId: string;
-  removedUserName: string;
-  adminId: string;
-  adminName: string;
-  timestamp: Date;
-}
-
 type SocketEventHandler<T> = (data: T) => void;
 
 class SocketService {

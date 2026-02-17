@@ -373,9 +373,3 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
 export const createAppTheme = (mode: ThemeMode, language: Language) => {
   return createTheme(getBaseTheme(mode, language));
 };
-
-// Export colors for use in components
-export const THEME_COLORS = COLORS;
-
-// Default theme for backward compatibility
-export const theme = createTheme(getBaseTheme('light', 'he'));

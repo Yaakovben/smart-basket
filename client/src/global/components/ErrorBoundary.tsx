@@ -67,8 +67,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
       // Clear session storage
       sessionStorage.clear();
-      // Reset cache version
-      localStorage.removeItem('cache_cleared');
     } catch {
       // Continue with reload even if cleanup fails
     }

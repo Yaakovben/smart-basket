@@ -34,12 +34,6 @@ export const productsApi = {
     const response = await apiClient.delete<{ data: List }>(`/lists/${listId}/products/${productId}`);
     return response.data.data;
   },
-
-  // Reorder products
-  async reorderProducts(listId: string, productIds: string[]): Promise<List> {
-    const response = await apiClient.put<{ data: List }>(`/lists/${listId}/products/reorder`, { productIds });
-    return response.data.data;
-  },
 };
 
 export default productsApi;
