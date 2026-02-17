@@ -989,7 +989,7 @@ export const HomeComponent = memo(({
         }}
       >
         <Box
-          onClick={() => {}}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           sx={{
             display: 'flex',
             flexDirection: 'column',
