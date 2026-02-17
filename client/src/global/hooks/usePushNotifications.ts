@@ -102,12 +102,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   /** הרשמה להתראות push */
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
-      setError('Push not supported in this browser');
+      setError('NOT_SUPPORTED');
       return false;
     }
 
     if (!checkPwaInstalled()) {
-      setError('PWA not installed');
+      setError('PWA_NOT_INSTALLED');
       return false;
     }
 
@@ -119,14 +119,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       setPermission(permissionResult);
 
       if (permissionResult !== 'granted') {
-        setError('Permission denied');
+        setError('PERMISSION_DENIED');
         setLoading(false);
         return false;
       }
 
       const vapidPublicKey = await pushApi.getVapidPublicKey();
       if (!vapidPublicKey) {
-        setError('Push notifications not configured on server');
+        setError('NOT_CONFIGURED');
         setLoading(false);
         return false;
       }
@@ -145,14 +145,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         notifySubscriptionChange(true);
         setError(null);
       } else {
-        setError('Failed to save subscription to server');
+        setError('SAVE_FAILED');
       }
 
       setLoading(false);
       return success;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
+    } catch {
+      setError('UNKNOWN');
       setLoading(false);
       return false;
     }
@@ -178,9 +177,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       notifySubscriptionChange(false);
       setLoading(false);
       return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
+    } catch {
+      setError('UNKNOWN');
       setLoading(false);
       return false;
     }

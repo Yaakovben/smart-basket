@@ -322,7 +322,9 @@ type TranslationKey =
   | 'pushDescription'
   | 'pushNotSupported'
   | 'pushBlocked'
-  | 'pushErrorMessage'
+  | 'pushErrorNotConfigured'
+  | 'pushErrorSaveFailed'
+  | 'pushErrorUnknown'
   | 'pushRequiresInstall'
   | 'pushInstallAndroid'
   | 'pushInstallIOS'
@@ -668,7 +670,9 @@ export const translations: Record<Language, Translations> = {
     pushDescription: 'קבל התראות גם כשהאפליקציה סגורה',
     pushNotSupported: '* לא נתמך בדפדפן זה.\nבאייפון: לחץ על ״שתף״ ← ״הוסף למסך הבית״ ופתח משם',
     pushBlocked: '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר',
-    pushErrorMessage: '* שגיאה: {error}',
+    pushErrorNotConfigured: '* התראות Push לא מוגדרות בשרת',
+    pushErrorSaveFailed: '* שמירת ההרשמה נכשלה',
+    pushErrorUnknown: '* שגיאה לא ידועה',
     pushRequiresInstall: 'כדי לקבל התראות Push, יש להתקין את האפליקציה למסך הבית',
     pushInstallAndroid: 'בתפריט הדפדפן (⋮) → "התקן אפליקציה" או "הוסף למסך הבית"',
     pushInstallIOS: 'לחץ על כפתור השיתוף (⎋) → "הוסף למסך הבית"',
@@ -1011,7 +1015,9 @@ export const translations: Record<Language, Translations> = {
     pushDescription: 'Receive notifications when app is closed',
     pushNotSupported: '* Not supported.\niPhone: Tap Share → "Add to Home Screen" and open from there',
     pushBlocked: '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow',
-    pushErrorMessage: '* Error: {error}',
+    pushErrorNotConfigured: '* Push notifications not configured on server',
+    pushErrorSaveFailed: '* Failed to save subscription',
+    pushErrorUnknown: '* Unknown error',
     pushRequiresInstall: 'To receive Push notifications, install the app to your home screen',
     pushInstallAndroid: 'In browser menu (⋮) → "Install app" or "Add to Home Screen"',
     pushInstallIOS: 'Tap the Share button (⎋) → "Add to Home Screen"',
@@ -1354,7 +1360,9 @@ export const translations: Record<Language, Translations> = {
     pushDescription: 'Получать уведомления когда приложение закрыто',
     pushNotSupported: '* Не поддерживается.\niPhone: нажмите "Поделиться" → "На экран Домой"',
     pushBlocked: '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления',
-    pushErrorMessage: '* Ошибка: {error}',
+    pushErrorNotConfigured: '* Push-уведомления не настроены на сервере',
+    pushErrorSaveFailed: '* Не удалось сохранить подписку',
+    pushErrorUnknown: '* Неизвестная ошибка',
     pushRequiresInstall: 'Для Push-уведомлений установите приложение на главный экран',
     pushInstallAndroid: 'В меню браузера (⋮) → "Установить приложение" или "На главный экран"',
     pushInstallIOS: 'Нажмите кнопку "Поделиться" (⎋) → "На экран Домой"',

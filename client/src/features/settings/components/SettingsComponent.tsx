@@ -199,13 +199,13 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                         </Typography>
                       </Box>
                     )}
-                    {pushError && pushError.includes('denied') ? (
+                    {pushError === 'PERMISSION_DENIED' ? (
                       <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                         {t('pushBlocked')}
                       </Typography>
-                    ) : pushError && !pushError.includes('PWA') ? (
+                    ) : pushError === 'NOT_CONFIGURED' || pushError === 'SAVE_FAILED' || pushError === 'UNKNOWN' ? (
                       <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
-                        {t('pushErrorMessage').replace('{error}', pushError)}
+                        {pushError === 'NOT_CONFIGURED' ? t('pushErrorNotConfigured') : pushError === 'SAVE_FAILED' ? t('pushErrorSaveFailed') : t('pushErrorUnknown')}
                       </Typography>
                     ) : null}
                   </Box>
