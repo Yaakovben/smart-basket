@@ -47,7 +47,7 @@ export const newProductSchema = z.object({
 export const listNameSchema = z
   .string()
   .min(1, 'enterListName')
-  .min(2, 'listNameTooShort');
+  .min(2, 'nameTooShort');
 
 export const newListSchema = z.object({
   name: listNameSchema,
@@ -57,8 +57,8 @@ export const newListSchema = z.object({
 
 // ===== Join Group Schema =====
 export const joinGroupSchema = z.object({
-  code: z.string().length(6, 'invalidCode'),
-  password: z.string().length(4, 'invalidPassword')
+  code: z.string().length(6, 'invalidGroupCode'),
+  password: z.string().length(4, 'invalidGroupPassword')
 });
 
 // ===== Types from Schemas =====

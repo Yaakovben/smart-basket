@@ -37,14 +37,6 @@ class TokenDALClass extends BaseDAL<IRefreshToken> {
     return result.deletedCount;
   }
 
-  async isTokenValid(token: string): Promise<boolean> {
-    const tokenDoc = await this.model.findOne({
-      token,
-      expiresAt: { $gt: new Date() },
-    });
-    return tokenDoc !== null;
-  }
-
   async findByTokenPopulated(token: string): Promise<IRefreshToken | null> {
     return this.model.findOne({ token }).populate('user');
   }

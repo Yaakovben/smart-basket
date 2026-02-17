@@ -22,7 +22,6 @@ export interface ClientToServerEvents {
   'product:update': (data: { listId: string; product: ProductData & { id: string }; userName: string }) => void;
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;
   'product:delete': (data: { listId: string; productId: string; productName: string; userName: string }) => void;
-  'notification:read': (data: { listId: string; notificationId?: string }) => void;
   'member:join': (data: { listId: string; listName: string; userName: string }) => void;
   'member:leave': (data: { listId: string; listName: string; userName: string }, callback?: () => void) => void;
   'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
