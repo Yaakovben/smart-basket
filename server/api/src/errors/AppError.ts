@@ -37,7 +37,7 @@ export class AppError extends Error {
   }
 }
 
-// Validation Error (400)
+// שגיאת ולידציה (400)
 export class ValidationError extends AppError {
   constructor(details: ValidationErrorDetail[]) {
     super('Validation failed', 400, 'VALIDATION_ERROR', details);
@@ -56,7 +56,7 @@ export class ValidationError extends AppError {
   }
 }
 
-// Authentication Errors (401)
+// שגיאות אימות (401)
 export class AuthError extends AppError {
   constructor(message: string, code: string) {
     super(message, 401, code);
@@ -67,7 +67,7 @@ export class AuthError extends AppError {
   }
 
   static invalidGroupPassword(): AuthError {
-    // Use 400 instead of 401 to avoid triggering token refresh
+    // 400 במקום 401 כדי לא לגרום לרענון טוקן
     return new AppError('Invalid group password', 400, 'INVALID_GROUP_PASSWORD') as AuthError;
   }
 
@@ -88,7 +88,7 @@ export class AuthError extends AppError {
   }
 }
 
-// Forbidden Error (403)
+// שגיאת הרשאה (403)
 export class ForbiddenError extends AppError {
   constructor(message = 'Access denied') {
     super(message, 403, 'FORBIDDEN');
@@ -107,7 +107,7 @@ export class ForbiddenError extends AppError {
   }
 }
 
-// Not Found Error (404)
+// שגיאת לא נמצא (404)
 export class NotFoundError extends AppError {
   constructor(resource: string) {
     super(`${resource} not found`, 404, 'NOT_FOUND');
@@ -134,7 +134,7 @@ export class NotFoundError extends AppError {
   }
 }
 
-// Conflict Error (409)
+// שגיאת התנגשות (409)
 export class ConflictError extends AppError {
   constructor(message: string) {
     super(message, 409, 'CONFLICT');
@@ -152,4 +152,3 @@ export class ConflictError extends AppError {
     return new ConflictError('You are the owner of this list');
   }
 }
-

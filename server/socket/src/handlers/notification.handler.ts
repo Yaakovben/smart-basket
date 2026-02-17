@@ -24,7 +24,7 @@ export const registerNotificationHandlers = (
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
 
-  // Member joined group
+  // חבר הצטרף לרשימה
   socket.on('member:join', (data: { listId: string; listName: string; userName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -32,7 +32,6 @@ export const registerNotificationHandlers = (
         logger.warn('Invalid member:join data from user:', userId);
         return;
       }
-      // Verify sender is in the list room
       if (!socket.rooms.has(`list:${data.listId}`)) return;
 
       const notification: NotificationData = {
@@ -40,7 +39,7 @@ export const registerNotificationHandlers = (
         type: 'join',
         listId: data.listId,
         userId,
-        userName, // from token, not client
+        userName, // מהטוקן, לא מהקליינט
         message: `${userName} joined ${data.listName}`,
         timestamp: new Date(),
       };
@@ -52,7 +51,7 @@ export const registerNotificationHandlers = (
     }
   });
 
-  // Member left group
+  // חבר עזב רשימה
   socket.on('member:leave', (data: { listId: string; listName: string; userName: string }, callback?: () => void) => {
     try {
       if (!checkRateLimit(socket.id)) {
@@ -64,7 +63,6 @@ export const registerNotificationHandlers = (
         if (typeof callback === 'function') callback();
         return;
       }
-      // Verify sender is in the list room
       if (!socket.rooms.has(`list:${data.listId}`)) {
         if (typeof callback === 'function') callback();
         return;
@@ -75,16 +73,16 @@ export const registerNotificationHandlers = (
         type: 'leave',
         listId: data.listId,
         userId,
-        userName, // from token, not client
+        userName, // מהטוקן, לא מהקליינט
         message: `${userName} left ${data.listName}`,
         timestamp: new Date(),
       };
 
-      // Broadcast to all users in the list (including sender - they're about to leave anyway)
+      // שידור לכל המשתמשים ברשימה (כולל השולח - הוא בכל מקרה עוזב)
       io.to(`list:${data.listId}`).emit('notification:new', notification);
       logger.info(`User ${userName} left group ${data.listName}`);
 
-      // Acknowledge so client can safely proceed with API leave
+      // אישור לקליינט כדי שיוכל להמשיך בבטחה לקריאת API
       if (typeof callback === 'function') callback();
     } catch (error) {
       logger.error('Error in member:leave handler:', error);
@@ -92,7 +90,7 @@ export const registerNotificationHandlers = (
     }
   });
 
-  // Member removed from group (by admin/owner)
+  // הסרת חבר מרשימה (ע"י מנהל/בעלים)
   socket.on('member:remove', async (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -100,10 +98,9 @@ export const registerNotificationHandlers = (
         logger.warn('Invalid member:remove data from user:', userId);
         return;
       }
-      // Verify sender is in the list room
       if (!socket.rooms.has(`list:${data.listId}`)) return;
 
-      // Verify sender is owner or admin (not just a member)
+      // אימות שהשולח בעלים או מנהל
       const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
       if (role !== 'owner' && role !== 'admin') {
         logger.warn(`User ${userId} attempted member:remove without permission (role: ${role})`);
@@ -116,14 +113,14 @@ export const registerNotificationHandlers = (
         removedUserId: data.removedUserId,
         removedUserName: data.removedUserName,
         adminId: userId,
-        adminName: userName, // from token, not client
+        adminName: userName, // מהטוקן, לא מהקליינט
         timestamp: new Date(),
       };
 
-      // Send notification directly to the removed user
+      // שליחת התראה ישירה למשתמש שהוסר
       io.to(`user:${data.removedUserId}`).emit('member:removed', removedData);
 
-      // Also notify other members in the list
+      // גם עדכון שאר החברים ברשימה
       const removedNotification: NotificationData = {
         id: generateNotificationId(data.removedUserId),
         type: 'removed',
@@ -141,7 +138,7 @@ export const registerNotificationHandlers = (
     }
   });
 
-  // List settings updated by owner
+  // עדכון הגדרות רשימה ע"י בעלים
   socket.on('list:update', async (data: { listId: string; listName: string; userName: string; changeType?: 'name' | 'design' | 'both'; newName?: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -149,39 +146,36 @@ export const registerNotificationHandlers = (
         logger.warn('Invalid list:update data from user:', userId);
         return;
       }
-      // Verify sender is in the list room
       if (!socket.rooms.has(`list:${data.listId}`)) return;
 
-      // Validate changeType if provided
       if (data.changeType && !['name', 'design', 'both'].includes(data.changeType)) {
         logger.warn('Invalid changeType in list:update from user:', userId);
         return;
       }
 
-      // Verify sender is owner
+      // אימות שהשולח בעלים
       const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
       if (role !== 'owner') {
         logger.warn(`User ${userId} attempted list:update without ownership (role: ${role})`);
         return;
       }
 
-      // Use changeType and newName as notification keys - client renders in correct language
+      // שימוש ב-changeType ו-newName כמפתחות - הקליינט מרנדר בשפה הנכונה
       const notification: NotificationData = {
         id: generateNotificationId(userId),
         type: 'list_update',
         listId: data.listId,
         userId,
-        userName, // from token, not client
+        userName, // מהטוקן, לא מהקליינט
         message: `list_update:${data.changeType || 'general'}`,
         timestamp: new Date(),
         changeType: data.changeType,
         newName: data.newName,
       };
 
-      // Broadcast to all users in the list except sender
       socket.to(`list:${data.listId}`).emit('notification:new', notification);
 
-      // Also emit list:updated so clients refetch the list data (name/icon/color changes)
+      // שידור list:updated כדי שהקליינטים ירענו את נתוני הרשימה
       socket.to(`list:${data.listId}`).emit('list:updated', {
         listId: data.listId,
         changes: {},
@@ -195,7 +189,7 @@ export const registerNotificationHandlers = (
     }
   });
 
-  // List deleted by owner
+  // מחיקת רשימה ע"י בעלים
   socket.on('list:delete', async (data: { listId: string; listName: string; memberIds: string[]; ownerName: string }, callback?: () => void) => {
     try {
       if (!checkRateLimit(socket.id)) {
@@ -207,19 +201,18 @@ export const registerNotificationHandlers = (
         if (typeof callback === 'function') callback();
         return;
       }
-      // Limit memberIds to prevent abuse
+      // הגבלת כמות memberIds למניעת ניצול לרעה
       if (data.memberIds.length > 100) {
         logger.warn(`list:delete memberIds too large (${data.memberIds.length}) from user:`, userId);
         if (typeof callback === 'function') callback();
         return;
       }
-      // Verify sender is in the list room
       if (!socket.rooms.has(`list:${data.listId}`)) {
         if (typeof callback === 'function') callback();
         return;
       }
 
-      // Verify sender is owner
+      // אימות שהשולח בעלים
       const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
       if (role !== 'owner') {
         logger.warn(`User ${userId} attempted list:delete without ownership (role: ${role})`);
@@ -231,26 +224,26 @@ export const registerNotificationHandlers = (
         listId: data.listId,
         listName: data.listName,
         ownerId: userId,
-        ownerName: userName, // from token, not client
+        ownerName: userName, // מהטוקן, לא מהקליינט
         timestamp: new Date(),
       };
 
-      // Send notification to each member individually (they might not be in the room anymore)
+      // שליחת התראה לכל חבר בנפרד (ייתכן שכבר לא בחדר)
       for (const memberId of data.memberIds) {
         if (typeof memberId !== 'string' || !memberId) continue;
         io.to(`user:${memberId}`).emit('list:deleted', deletedData);
       }
 
-      // Clean up presence tracking for deleted list
+      // ניקוי מעקב נוכחות לרשימה שנמחקה
       cleanupListSockets(data.listId);
 
       logger.info(`List ${data.listName} was deleted by ${userName}, notified ${data.memberIds.length} members`);
 
-      // Acknowledge completion so client can safely proceed with API delete
+      // אישור לקליינט כדי שיוכל להמשיך בבטחה למחיקה ב-API
       if (typeof callback === 'function') callback();
     } catch (error) {
       logger.error('Error in list:delete handler:', error);
-      // Still acknowledge so client doesn't hang forever
+      // עדיין לאשר כדי שהקליינט לא ייתקע
       if (typeof callback === 'function') callback();
     }
   });

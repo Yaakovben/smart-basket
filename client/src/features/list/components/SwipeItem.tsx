@@ -36,7 +36,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
 
-  // Refs for gesture tracking
+  // Refs למעקב אחר מחוות
   const startX = useRef(0);
   const startY = useRef(0);
   const startOffset = useRef(0);
@@ -44,21 +44,21 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   const hasCalledOpen = useRef(false);
   const justSwiped = useRef(false);
 
-  // Velocity tracking
+  // מעקב מהירות
   const lastX = useRef(0);
   const lastTime = useRef(0);
   const velocity = useRef(0);
 
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
-  // Sync with external isOpen state - close when another item opens
+  // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
     if (!isOpen && offset > 0) {
       setOffset(0);
     }
   }, [isOpen, offset]);
 
-  // Cleanup body styles on unmount to prevent locked scrolling
+  // ניקוי סגנונות body ב-unmount
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
@@ -66,18 +66,17 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     };
   }, []);
 
-  // Rubber band effect calculation
+  // חישוב אפקט גומייה
   const calcOffset = useCallback((rawOffset: number): number => {
-    // Swiping right (wrong direction) - strong resistance with rubber band
+    // החלקה ימינה (כיוון שגוי) - התנגדות חזקה
     if (rawOffset < 0) {
-      // Rubber band: sqrt-based resistance for natural feel
       return -Math.sqrt(Math.abs(rawOffset)) * 3;
     }
-    // Normal range - 1:1 movement
+    // טווח רגיל - תנועה 1:1
     if (rawOffset <= SWIPE_ACTIONS_WIDTH) {
       return rawOffset;
     }
-    // Beyond max - rubber band resistance
+    // מעבר למקסימום - התנגדות גומייה
     const extra = rawOffset - SWIPE_ACTIONS_WIDTH;
     return SWIPE_ACTIONS_WIDTH + Math.sqrt(extra) * 5;
   }, []);
@@ -102,7 +101,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
-    // Calculate velocity
+    // חישוב מהירות
     const now = performance.now();
     const dt = now - lastTime.current;
     if (dt > 0) {
@@ -111,40 +110,40 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     lastX.current = touch.clientX;
     lastTime.current = now;
 
-    // Lock direction after 5px of movement
+    // נעילת כיוון אחרי 5px תנועה
     if (!directionLocked.current && (absDx > 5 || absDy > 5)) {
-      // Horizontal if dx >= dy (equal means horizontal wins)
+      // אופקי אם dx >= dy
       if (absDx >= absDy) {
         directionLocked.current = 'horizontal';
         setSwiping(true);
-        // Block scrolling
+        // חסימת גלילה
         e.preventDefault();
         document.body.style.overflow = 'hidden';
         document.body.style.touchAction = 'none';
       } else {
         directionLocked.current = 'vertical';
-        // Let scroll happen
+        // לאפשר גלילה
         return;
       }
     }
 
-    // If vertical, do nothing
+    // אנכי - לא עושים כלום
     if (directionLocked.current === 'vertical') {
       return;
     }
 
-    // Handle horizontal swipe
+    // טיפול בהחלקה אופקית
     if (directionLocked.current === 'horizontal') {
       e.preventDefault();
       e.stopPropagation();
 
-      // Close other items when starting to swipe this one
+      // סגירת פריטים אחרים בתחילת החלקה
       if (!hasCalledOpen.current && dx > 10) {
         hasCalledOpen.current = true;
         onOpen();
       }
 
-      // Calculate new offset with rubber band
+      // חישוב offset עם אפקט גומייה
       const rawOffset = startOffset.current + dx;
       const newOffset = calcOffset(rawOffset);
       setOffset(newOffset);
@@ -152,7 +151,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, [calcOffset, onOpen]);
 
   const handleTouchEnd = useCallback(() => {
-    // Restore body styles
+    // שחזור סגנונות body
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
 
@@ -164,27 +163,26 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     justSwiped.current = true;
     setTimeout(() => { justSwiped.current = false; }, 100);
 
-    // Determine final state based on velocity and position
+    // קביעת מצב סופי לפי מהירות ומיקום
     const currentVelocity = velocity.current;
     const currentOffset = offset;
 
-    // Fast swipe detection
+    // זיהוי החלקה מהירה
     const isFastSwipe = Math.abs(currentVelocity) > 0.3;
 
     let finalOffset = 0;
 
     if (isFastSwipe) {
-      // Fast swipe - direction determines outcome
       if (currentVelocity > 0.3) {
-        // Fast swipe left = open
+        // החלקה מהירה שמאלה = פתיחה
         finalOffset = SWIPE_ACTIONS_WIDTH;
         haptic('light');
       } else if (currentVelocity < -0.3) {
-        // Fast swipe right = close
+        // החלקה מהירה ימינה = סגירה
         finalOffset = 0;
       }
     } else {
-      // Slow/no velocity - position determines outcome
+      // ללא מהירות - המיקום קובע
       if (currentOffset > SWIPE_CONFIG.openThreshold) {
         finalOffset = SWIPE_ACTIONS_WIDTH;
         haptic('light');
@@ -209,7 +207,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     document.body.style.touchAction = '';
     directionLocked.current = null;
     setSwiping(false);
-    // Snap back to nearest state
+    // הצמדה למצב הקרוב
     if (offset > SWIPE_ACTIONS_WIDTH / 2) {
       setOffset(SWIPE_ACTIONS_WIDTH);
     } else {
@@ -227,7 +225,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     if (justSwiped.current) return;
 
     if (offset > 20) {
-      // Close if open
+      // סגירה אם פתוח
       setOffset(0);
       onClose();
     } else {
@@ -236,7 +234,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
   }, [offset, onClick, onClose]);
 
-  // Calculate button opacity based on offset
+  // חישוב שקיפות כפתור לפי offset
   const buttonOpacity = Math.min(1, Math.max(0, offset / 40));
 
   return (

@@ -10,11 +10,11 @@ import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
 import { hideInitialLoader } from "../App";
 
-// Load main pages directly (no lazy) for instant display after auth
+// טעינה ישירה של דפים ראשיים (ללא lazy) להצגה מיידית אחרי אימות
 import { LoginPage } from "../features/auth/auth";
 import { HomePage } from "../features/home/home";
 
-// Lazy load secondary pages
+// טעינה עצלה של דפים משניים
 const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
@@ -23,7 +23,7 @@ const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 
-// Loading fallback - same green gradient as initial loader, seamless transition
+// מסך טעינה - גרדיאנט ירוק זהה ל-loader הראשוני
 const PageLoader = () => (
   <Box sx={{
     height: '100vh',
@@ -31,13 +31,13 @@ const PageLoader = () => (
   }} />
 );
 
-// Protected Route wrapper
+// עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
-// Admin Route wrapper - only allows admin user
+// עטיפת נתיב מנהל
 const AdminRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
@@ -45,7 +45,7 @@ const AdminRoute = ({ children, user }: { children: React.ReactNode; user: User 
   return <>{children}</>;
 };
 
-// List Page Wrapper with URL params
+// עטיפת דף רשימה עם פרמטרי URL
 const ListPageWrapper = ({
   lists,
   user,
@@ -70,7 +70,7 @@ const ListPageWrapper = ({
   const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
 
-  // Derive a stable Set for the current list's online users
+  // Set יציב של משתמשים מקוונים ברשימה הנוכחית
   const onlineArr = listId ? onlineUsers[listId] : undefined;
   const onlineUserIds = useMemo(() => new Set(onlineArr || []), [onlineArr]);
 
@@ -107,21 +107,21 @@ const ListPageWrapper = ({
   );
 };
 
-// Main App Router
+// ראוטר ראשי
 export const AppRouter = () => {
   const navigate = useNavigate();
   const { t } = useSettings();
 
-  // Hooks for state management - ALL hooks must be called before any conditional returns
+  // כל ה-hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
-  // Pass pre-fetched data for faster initial load (fetched in parallel with auth)
+  // נתונים שנטענו מראש לטעינה מהירה יותר
   const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
   const { message: toast, toastType, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
 
-  // Hide initial loader when auth check is complete
+  // הסתרת loader ראשוני כשבדיקת האימות הושלמה
   useEffect(() => {
     if (!authLoading) {
       requestAnimationFrame(() => {
@@ -132,8 +132,7 @@ export const AppRouter = () => {
     }
   }, [authLoading]);
 
-  // Persisted notifications (loaded from API, updated in real-time via socket)
-  // Pass pre-fetched data for faster initial load
+  // התראות שמורות (נטענות מ-API, מתעדכנות בזמן אמת דרך socket)
   const {
     notifications: persistedNotifications,
     loading: notificationsLoading,
@@ -143,62 +142,60 @@ export const AppRouter = () => {
     addNotification: addPersistedNotification,
   } = useNotifications(user, initialData.notifications);
 
-  // Show error toast when list or notification fetch fails
+  // הצגת שגיאה כשטעינת רשימות או התראות נכשלת
   useEffect(() => {
     if (listsFetchError || notificationsFetchError) {
       showToast(t('errorOccurred'), 'error');
     }
   }, [listsFetchError, notificationsFetchError, showToast, t]);
 
-  // Create list names map for notifications
+  // מיפוי שמות רשימות להתראות
   const listNames = useMemo(() =>
     lists.reduce((acc, list) => ({ ...acc, [list.id]: list.name }), {} as Record<string, string>),
     [lists]
   );
 
-  // Callback when current user is removed from a group
+  // כשהמשתמש הנוכחי הוסר מרשימה
   const handleMemberRemoved = useCallback((listId: string) => {
     removeListLocal(listId);
-    // If currently viewing the removed list, navigate away
+    // ניווט הרחק אם צופים ברשימה שהוסרנו ממנה
     if (window.location.pathname.includes(listId)) {
       navigate('/');
     }
   }, [removeListLocal, navigate]);
 
-  // Callback when a group is deleted by owner
+  // כשרשימה נמחקה ע"י הבעלים
   const handleListDeleted = useCallback((listId: string) => {
     removeListLocal(listId);
-    // If currently viewing the deleted list, navigate away
+    // ניווט הרחק אם צופים ברשימה שנמחקה
     if (window.location.pathname.includes(listId)) {
       navigate('/');
     }
   }, [removeListLocal, navigate]);
 
-  // Subscribe to socket notifications (respects notification settings)
-  // The addPersistedNotification callback adds real-time notifications to the persisted list
+  // הרשמה להתראות socket (מכבד הגדרות התראות)
   useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted, isPushSubscribed);
 
   const handleDeleteAllData = useCallback(async () => {
     try {
-      // 1. Delete user account from server (also clears tokens)
+      // מחיקת חשבון מהשרת
       await authApi.deleteAccount();
 
-      // 2. Clear all localStorage
       localStorage.clear();
 
-      // 3. Clear all browser caches
+      // ניקוי cache
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
 
-      // 4. Unregister service workers
+      // ביטול רישום Service Workers
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(reg => reg.unregister()));
       }
 
-      // 5. Logout locally and navigate to login
+      // התנתקות וניווט לדף התחברות
       logout();
       navigate("/login");
     } catch {
@@ -206,15 +203,13 @@ export const AppRouter = () => {
     }
   }, [logout, navigate, showToast, t]);
 
-  // Show nothing while auth is loading (initial loader from HTML is visible)
+  // אין מה להציג בזמן טעינת אימות (loader ראשוני מ-HTML מוצג)
   if (authLoading) {
     return null;
   }
 
-  // Handlers
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
-    // Use flushSync to ensure user state is updated before navigation
-    // This prevents race condition where navigation happens before state update
+    // flushSync מונע race condition שבו הניווט קורה לפני עדכון ה-state
     flushSync(() => {
       login(u, loginMethod);
     });

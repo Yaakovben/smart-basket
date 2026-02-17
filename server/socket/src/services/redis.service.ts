@@ -84,7 +84,7 @@ const handleRedisEvent = (
       break;
 
     case 'user:deleted': {
-      // Force disconnect all sockets for the deleted user
+      // ניתוק כפוי של כל ה-sockets של המשתמש שנמחק
       const room = `user:${userId}`;
       io.in(room).disconnectSockets(true);
       break;

@@ -10,15 +10,15 @@ export function useOnlineUsers(): Set<string> {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Request the full list of online users and subscribe to updates
+    // בקשת רשימת משתמשים מקוונים
     socketService.requestOnlineUsers();
 
-    // Initial full list
+    // רשימה מלאה ראשונית
     const unsubAll = socketService.on<{ userIds: string[] }>('admin:online-users', (data) => {
       setOnlineUserIds(new Set(data.userIds));
     });
 
-    // User came online
+    // משתמש התחבר
     const unsubConnected = socketService.on<{ userId: string }>('admin:user-connected', (data) => {
       setOnlineUserIds(prev => {
         if (prev.has(data.userId)) return prev;
@@ -28,7 +28,7 @@ export function useOnlineUsers(): Set<string> {
       });
     });
 
-    // User went offline
+    // משתמש התנתק
     const unsubDisconnected = socketService.on<{ userId: string }>('admin:user-disconnected', (data) => {
       setOnlineUserIds(prev => {
         if (!prev.has(data.userId)) return prev;
@@ -38,7 +38,7 @@ export function useOnlineUsers(): Set<string> {
       });
     });
 
-    // Re-request full list on reconnect
+    // בקשה מחדש ב-reconnect
     const unsubReconnect = socketService.on('connect', () => {
       socketService.requestOnlineUsers();
     });

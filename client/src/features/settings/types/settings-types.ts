@@ -1,8 +1,7 @@
 import type { Language } from '../../../global/types';
 
-// ===== Hook Return Type =====
+// ===== ערך החזרה של ה-Hook =====
 export interface UseSettingsPageReturn {
-  // State
   showLanguage: boolean;
   showAbout: boolean;
   showHelp: boolean;
@@ -12,8 +11,6 @@ export interface UseSettingsPageReturn {
   productExpanded: boolean;
   pushExpanded: boolean;
   currentLanguageName: string;
-
-  // Setters
   setShowLanguage: (show: boolean) => void;
   setShowAbout: (show: boolean) => void;
   setShowHelp: (show: boolean) => void;
@@ -22,8 +19,6 @@ export interface UseSettingsPageReturn {
   setGroupExpanded: (expanded: boolean) => void;
   setProductExpanded: (expanded: boolean) => void;
   setPushExpanded: (expanded: boolean) => void;
-
-  // Handlers
   handleLanguageSelect: (lang: Language) => void;
   toggleNotificationsExpanded: () => void;
   toggleGroupExpanded: () => void;

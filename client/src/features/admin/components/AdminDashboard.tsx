@@ -12,10 +12,10 @@ import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
 import { COMMON_STYLES } from '../../../global/constants';
 
-// Skeleton indices for loading state
+// מדדי Skeleton לטעינה
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
 
-// Skeleton component for loading state
+// קומפוננטת Skeleton לטעינה
 const LoadingSkeleton = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
     {SKELETON_INDICES.map((i) => (
@@ -52,7 +52,7 @@ export const AdminDashboard = () => {
   } = useAdminDashboard();
   const onlineUserIds = useOnlineUsers();
 
-  // Memoized filtered users to avoid recalculating on every render
+  // משתמשים מסוננים (ממוזכר)
   const filteredUsers = useMemo(() => {
     if (!userSearch) return usersWithLoginInfo;
     const searchLower = userSearch.toLowerCase();

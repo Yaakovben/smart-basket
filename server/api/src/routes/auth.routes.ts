@@ -5,7 +5,7 @@ import { authValidator } from '../validators';
 
 const router = Router();
 
-// Apply general rate limiting to all auth routes
+// הגבלת קצב כללית לנתיבי אימות
 router.use(authLimiter);
 
 /**

@@ -23,18 +23,18 @@ dotenv.config();
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
  */
 const envSchema = Joi.object({
-  // Application environment - controls logging, error details, and Sentry
+  // סביבת ריצה
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
-  // Server port
+  // פורט השרת
   PORT: Joi.number().default(5000),
 
-  // MongoDB connection string
+  // חיבור ל-MongoDB
   MONGODB_URI: Joi.string().required().messages({
     'any.required': 'MongoDB URI is required',
   }),
 
-  // JWT secrets for token signing (must be strong, random strings)
+  // מפתחות JWT לחתימת טוקנים
   JWT_ACCESS_SECRET: Joi.string().min(32).required().messages({
     'string.min': 'JWT access secret must be at least 32 characters',
     'any.required': 'JWT access secret is required',
@@ -44,30 +44,29 @@ const envSchema = Joi.object({
     'any.required': 'JWT refresh secret is required',
   }),
 
-  // Token expiration times
+  // זמני תפוגה
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
-  // Google OAuth - get from Google Cloud Console
+  // Google OAuth
   GOOGLE_CLIENT_ID: Joi.string().required().messages({
     'any.required': 'Google Client ID is required',
   }),
 
-  // CORS - comma-separated list of allowed origins (e.g., "https://app.com,https://www.app.com")
+  // CORS - רשימת origins מופרדת בפסיקים
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
 
-  // Default admin email
+  // מייל אדמין
   ADMIN_EMAIL: Joi.string().email().default('yaakovbenyizchak1@gmail.com'),
 
-  // Sentry error monitoring - get DSN from sentry.io project settings
-  // Errors are only sent when NODE_ENV=production
+  // ניטור שגיאות Sentry - שולח רק ב-production
   SENTRY_DSN: Joi.string().optional(),
 
-  // Web Push VAPID keys - generate with: npx web-push generate-vapid-keys
+  // מפתחות VAPID להתראות push - ליצירה: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
   VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:yaakovbenyizchak1@gmail.com'),
-}).unknown(true); // Allow other env variables
+}).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
   const { error, value } = envSchema.validate(process.env, {

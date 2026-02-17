@@ -19,7 +19,7 @@ export class UserService {
     userId: string,
     data: UpdateProfileInput
   ): Promise<IUserResponse> {
-    // Check if email is being changed and if it's already taken
+    // בדיקה אם המייל שונה ואם כבר תפוס
     if (data.email) {
       const existingUser = await UserDAL.findByEmail(data.email);
       if (existingUser && existingUser._id.toString() !== userId) {
@@ -28,7 +28,6 @@ export class UserService {
       data.email = data.email.toLowerCase();
     }
 
-    // Sanitize name if provided
     if (data.name) {
       data.name = sanitizeText(data.name);
     }
@@ -47,29 +46,28 @@ export class UserService {
     currentPassword: string,
     newPassword: string
   ): Promise<void> {
-    // Find user with password field
+    // שליפת המשתמש עם שדה הסיסמה
     const user = await UserDAL.findByIdWithPassword(userId);
 
     if (!user) {
       throw NotFoundError.user();
     }
 
-    // Check if user has a password (Google users might not have one)
+    // משתמשי Google לא יכולים לשנות סיסמה
     if (!user.password) {
       throw ValidationError.single('password', 'Cannot change password for Google-authenticated accounts');
     }
 
-    // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
       throw AuthError.invalidCredentials();
     }
 
-    // Update password (will be hashed by pre-save hook)
+    // הסיסמה תוצפן ע"י pre-save hook
     user.password = newPassword;
     await user.save();
 
-    // Invalidate all refresh tokens (force re-login on all devices)
+    // ביטול כל הטוקנים - מאלץ התחברות מחדש בכל המכשירים
     await TokenService.invalidateAllUserTokens(userId);
   }
 
@@ -82,16 +80,15 @@ export class UserService {
   }
 
   static async deleteAccount(userId: string): Promise<void> {
-    // Use a session to ensure all operations succeed or fail together.
-    // If transactions aren't supported (no replica set), operations run individually.
+    // טרנזקציה - כל הפעולות מצליחות או נכשלות יחד
     const session = await mongoose.startSession();
 
     try {
       await session.withTransaction(async () => {
-        // 1. Delete only PRIVATE lists (not groups) that the user owns
+        // 1. מחיקת רשימות פרטיות בלבד
         await ListDAL.deletePrivateLists(userId, session);
 
-        // 2. Handle GROUP lists where user is owner
+        // 2. טיפול ברשימות קבוצתיות שהמשתמש בעלים
         const ownedGroups = await ListDAL.findOwnedGroups(userId, session);
 
         for (const group of ownedGroups) {
@@ -107,21 +104,20 @@ export class UserService {
           }
         }
 
-        // 3. Remove user from group lists where they are a member (not owner)
+        // 3. הסרה מרשימות שהוא חבר בהן
         await ListDAL.removeUserFromAllLists(userId, session);
 
-        // 4. Delete user's push subscriptions
+        // 4. מחיקת מנויי push
         await PushSubscriptionDAL.deleteByUserId(userId, session);
 
-        // 5. Delete user's notifications (as actor or target)
+        // 5. מחיקת התראות
         await NotificationDAL.deleteByUserId(userId, session);
       });
     } finally {
       await session.endSession();
     }
 
-    // These run after the transaction commits successfully.
-    // Tokens and user deletion don't need transactional rollback.
+    // פעולות אלו רצות אחרי הטרנזקציה - לא דורשות rollback
     await TokenService.invalidateAllUserTokens(userId);
 
     const user = await UserDAL.deleteById(userId);

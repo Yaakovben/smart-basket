@@ -24,7 +24,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
   const handleClose = useCallback(() => {
     haptic('light');
     setIsClosing(true);
-    // Wait for slide animation to complete
+    // המתנה לסיום אנימציית slide
     setTimeout(() => {
       onClose();
     }, 250);
@@ -57,10 +57,10 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         }
       }}
     >
-      {/* Handle bar */}
+      {/* ידית גרירה */}
       <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />
 
-      {/* Header with close button */}
+      {/* כותרת וכפתור סגירה */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', px: 2, pt: 1.5, pb: 1 }}>
         <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 17, p: 0, color: 'text.primary' }}>
           {title}

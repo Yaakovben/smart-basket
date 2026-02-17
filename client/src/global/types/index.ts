@@ -1,4 +1,4 @@
-// ===== User & Authentication =====
+// ===== משתמש ואימות =====
 export interface User {
   id: string;
   name: string;
@@ -8,7 +8,7 @@ export interface User {
   avatarEmoji?: string;
 }
 
-// ===== Product =====
+// ===== מוצר =====
 export type ProductUnit = "יח׳" | "ק״ג" | "גרם" | "ליטר";
 export type ProductCategory =
   | "מוצרי חלב"
@@ -33,7 +33,7 @@ export interface Product {
   createdTime?: string;
 }
 
-// ===== List & Group =====
+// ===== רשימה =====
 export interface Member {
   id: string;
   name: string;
@@ -58,10 +58,10 @@ export interface List {
   hasPassword?: boolean;
 }
 
-// ===== Toast =====
+// ===== הודעות Toast =====
 export type ToastType = "success" | "error" | "info" | "warning";
 
-// ===== Login Activity (Admin Dashboard) =====
+// ===== פעילות התחברות (פאנל ניהול) =====
 export type LoginMethod = 'email' | 'google';
 
 export interface LoginActivity {
@@ -82,7 +82,7 @@ export interface ActivityFilters {
   selectedHour?: number;
 }
 
-// ===== Settings =====
+// ===== הגדרות =====
 export type Language = "he" | "en" | "ru";
 export type ThemeMode = "light" | "dark";
 

@@ -12,28 +12,22 @@ interface UsePushNotificationsReturn {
   unsubscribe: () => Promise<boolean>;
 }
 
-/**
- * Check if the app is running as an installed PWA (added to home screen)
- */
+/** בדיקה אם האפליקציה רצה כ-PWA מותקן */
 function checkPwaInstalled(): boolean {
   // iOS Safari standalone mode
   if ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone) {
     return true;
   }
-  // Standard display-mode: standalone (Android Chrome, Desktop)
   if (window.matchMedia('(display-mode: standalone)').matches) {
     return true;
   }
-  // display-mode: fullscreen (some PWAs)
   if (window.matchMedia('(display-mode: fullscreen)').matches) {
     return true;
   }
   return false;
 }
 
-/**
- * Convert base64 string to Uint8Array for VAPID key
- */
+/** המרת מחרוזת base64 ל-Uint8Array עבור מפתח VAPID */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
@@ -49,16 +43,13 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
-// Shared subscription state across all hook instances.
-// When Settings page toggles push, the router's instance also updates.
+// מצב הרשמה משותף בין כל מופעי ה-hook (כשדף Settings מחליף, גם ה-router מתעדכן)
 const subscriptionListeners = new Set<(subscribed: boolean) => void>();
 function notifySubscriptionChange(subscribed: boolean) {
   subscriptionListeners.forEach(fn => fn(subscribed));
 }
 
-/**
- * Hook for managing push notifications
- */
+/** ניהול התראות push */
 export function usePushNotifications(): UsePushNotificationsReturn {
   const [isSupported, setIsSupported] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
@@ -67,17 +58,16 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync subscription state across all hook instances
+  // סנכרון מצב הרשמה בין כל מופעי ה-hook
   useEffect(() => {
     const listener = (subscribed: boolean) => setIsSubscribed(subscribed);
     subscriptionListeners.add(listener);
     return () => { subscriptionListeners.delete(listener); };
   }, []);
 
-  // Check if push notifications are supported
+  // בדיקת תמיכה בהתראות push
   useEffect(() => {
     const checkSupport = async () => {
-      // Check browser support
       const supported = 'serviceWorker' in navigator &&
                        'PushManager' in window &&
                        'Notification' in window;
@@ -90,10 +80,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return;
       }
 
-      // Get current permission
       setPermission(Notification.permission);
 
-      // Check if already subscribed
+      // בדיקה אם כבר רשום
       try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
@@ -110,9 +99,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     checkSupport();
   }, []);
 
-  /**
-   * Subscribe to push notifications
-   */
+  /** הרשמה להתראות push */
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       setError('Push not supported in this browser');
@@ -128,7 +115,6 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setError(null);
 
     try {
-      // Request permission
       const permissionResult = await Notification.requestPermission();
       setPermission(permissionResult);
 
@@ -138,7 +124,6 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return false;
       }
 
-      // Get VAPID public key from server
       const vapidPublicKey = await pushApi.getVapidPublicKey();
       if (!vapidPublicKey) {
         setError('Push notifications not configured on server');
@@ -146,16 +131,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return false;
       }
 
-      // Get service worker registration
       const registration = await navigator.serviceWorker.ready;
 
-      // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
       });
 
-      // Send subscription to server
       const success = await pushApi.subscribeToPush(subscription);
 
       if (success) {
@@ -176,9 +158,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     }
   }, [isSupported]);
 
-  /**
-   * Unsubscribe from push notifications
-   */
+  /** ביטול הרשמה מהתראות push */
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) return false;
 
@@ -186,15 +166,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setError(null);
 
     try {
-      // Get current subscription
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
-        // Unsubscribe locally
         await subscription.unsubscribe();
-
-        // Remove from server
         await pushApi.unsubscribeFromPush(subscription.endpoint);
       }
 

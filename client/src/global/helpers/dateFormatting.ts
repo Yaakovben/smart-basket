@@ -1,6 +1,6 @@
 import type { Language } from '../types';
 
-// ===== Locale Mapping =====
+// ===== מיפוי שפה ל-locale =====
 export const getLocale = (language: Language): string => {
   const locales: Record<Language, string> = {
     he: 'he-IL',
@@ -10,7 +10,7 @@ export const getLocale = (language: Language): string => {
   return locales[language] || 'en-US';
 };
 
-// ===== Date Formatting =====
+// ===== עיצוב תאריכים =====
 export const formatDateLong = (timestamp: string, language: Language): string => {
   const date = new Date(timestamp);
   return date.toLocaleDateString(getLocale(language), {
@@ -38,7 +38,7 @@ export const formatTimeShort = (timestamp: string, language: Language = 'he'): s
   });
 };
 
-// ===== Relative Time =====
+// ===== זמן יחסי =====
 export const getRelativeTime = (timestamp: string, language: Language): string => {
   const now = new Date();
   const date = new Date(timestamp);
@@ -82,7 +82,7 @@ export const getRelativeTime = (timestamp: string, language: Language): string =
   return formatDateShort(timestamp, language);
 };
 
-// ===== Date Checks =====
+// ===== בדיקות תאריך =====
 export const isToday = (dateStr: string): boolean => {
   const today = new Date().toISOString().split('T')[0];
   return dateStr === today;

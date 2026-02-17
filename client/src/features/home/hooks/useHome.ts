@@ -9,7 +9,7 @@ import type {
   UseHomeReturn
 } from '../types/home-types';
 
-// ===== Constants =====
+// ===== קבועים =====
 const DEFAULT_COLOR = '#14B8A6';
 const MIN_NAME_LENGTH = 2;
 
@@ -25,7 +25,7 @@ const DEFAULT_NEW_GROUP: NewListForm = {
   color: DEFAULT_COLOR
 };
 
-// ===== Types =====
+// ===== טיפוסים =====
 interface UseHomeParams {
   lists: List[];
   user: User;
@@ -45,11 +45,11 @@ export const useHome = ({
 }: UseHomeParams): UseHomeReturn => {
   const { t } = useSettings();
 
-  // ===== UI State =====
+  // ===== מצב UI =====
   const [tab, setTab] = useState<HomeTab>('all');
   const [search, setSearch] = useState('');
 
-  // ===== Modal State =====
+  // ===== מצב מודאלים =====
   const [showMenu, setShowMenu] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -59,7 +59,7 @@ export const useHome = ({
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
 
-  // ===== Form State =====
+  // ===== מצב טפסים =====
   const [newL, setNewL] = useState<NewListForm>(DEFAULT_NEW_LIST);
   const [joinCode, setJoinCode] = useState('');
   const [joinPass, setJoinPass] = useState('');
@@ -67,7 +67,7 @@ export const useHome = ({
   const [createError, setCreateError] = useState('');
   const [joiningGroup, setJoiningGroup] = useState(false);
 
-  // ===== Computed Values =====
+  // ===== ערכים מחושבים =====
   const userLists = useMemo(() => lists.filter((l: List) => {
     if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
     return l.owner.id === user.id;
@@ -78,7 +78,7 @@ export const useHome = ({
     groups: userLists.filter((l: List) => l.isGroup)
   }), [userLists]);
 
-  // Debounce search for better performance
+  // Debounce לחיפוש
   const debouncedSearch = useDebounce(search, 300);
 
   const display = useMemo(() => {
@@ -86,7 +86,7 @@ export const useHome = ({
     return debouncedSearch ? base.filter((l: List) => l.name.toLowerCase().includes(debouncedSearch.toLowerCase())) : base;
   }, [tab, userLists, my, groups, debouncedSearch]);
 
-  // ===== Create List Handlers =====
+  // ===== טיפול ביצירת רשימה =====
   const validateListName = useCallback((): boolean => {
     if (!newL.name.trim()) {
       setCreateError(t('enterListName'));
@@ -119,7 +119,7 @@ export const useHome = ({
     setShowCreateGroup(false);
   }, [newL, onCreateList, user, validateListName]);
 
-  // ===== Join Group Handlers =====
+  // ===== טיפול בהצטרפות לרשימה =====
   const handleJoin = useCallback(async () => {
     setJoinError('');
     if (!joinCode.trim() || !joinPass.trim()) {
@@ -135,7 +135,7 @@ export const useHome = ({
         setJoinCode('');
         setJoinPass('');
       } else {
-        // result.error is a translation key
+        // result.error הוא מפתח תרגום
         setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
       }
     } finally {
@@ -143,7 +143,7 @@ export const useHome = ({
     }
   }, [joinCode, joinPass, onJoinGroup, t]);
 
-  // ===== Menu Handlers =====
+  // ===== טיפול בתפריט =====
   const openOption = useCallback((option: string) => {
     setShowMenu(false);
     if (option === 'private') setShowCreate(true);
@@ -170,7 +170,7 @@ export const useHome = ({
     setJoinPass('');
   }, []);
 
-  // ===== Form Field Handlers =====
+  // ===== טיפול בשדות טופס =====
   const updateNewListField = useCallback(<K extends keyof NewListForm>(
     field: K,
     value: NewListForm[K]
@@ -186,7 +186,7 @@ export const useHome = ({
     setEditList(prev => prev ? { ...prev, [field]: value } : null);
   }, []);
 
-  // ===== Edit/Delete List Handlers =====
+  // ===== טיפול בעריכה/מחיקת רשימה =====
   const saveEditList = useCallback(() => {
     if (!editList) return;
     onEditList(editList);
@@ -200,7 +200,6 @@ export const useHome = ({
   }, [confirmDeleteList, onDeleteList]);
 
   return {
-    // State
     tab,
     search,
     showMenu,
@@ -218,13 +217,11 @@ export const useHome = ({
     createError,
     joiningGroup,
 
-    // Computed values
     userLists,
     my,
     groups,
     display,
 
-    // Setters
     setTab,
     setSearch,
     setShowMenu,
@@ -241,7 +238,6 @@ export const useHome = ({
     setJoinError,
     setCreateError,
 
-    // Handlers
     handleCreate,
     handleJoin,
     openOption,

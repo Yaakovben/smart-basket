@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// ===== Auth Schemas =====
+// ===== סכמות אימות =====
 export const emailSchema = z
   .string()
   .min(1, 'enterEmail')
@@ -26,7 +26,7 @@ export const registerSchema = z.object({
   password: passwordSchema
 });
 
-// ===== Product Schemas =====
+// ===== סכמות מוצר =====
 export const productNameSchema = z
   .string()
   .min(1, 'enterProductName')
@@ -43,7 +43,7 @@ export const newProductSchema = z.object({
   category: z.string()
 });
 
-// ===== List Schemas =====
+// ===== סכמות רשימה =====
 export const listNameSchema = z
   .string()
   .min(1, 'enterListName')
@@ -55,20 +55,20 @@ export const newListSchema = z.object({
   color: z.string()
 });
 
-// ===== Join Group Schema =====
+// ===== סכמת הצטרפות לרשימה =====
 export const joinGroupSchema = z.object({
   code: z.string().length(6, 'invalidGroupCode'),
   password: z.string().length(4, 'invalidGroupPassword')
 });
 
-// ===== Types from Schemas =====
+// ===== טיפוסים מסכמות =====
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type NewProductFormData = z.infer<typeof newProductSchema>;
 export type NewListFormData = z.infer<typeof newListSchema>;
 export type JoinGroupFormData = z.infer<typeof joinGroupSchema>;
 
-// ===== Validation Helper =====
+// ===== עזר ולידציה =====
 export type ValidationResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
@@ -83,7 +83,7 @@ export function validateForm<T>(
     return { success: true, data: result.data };
   }
 
-  // Return the first error message (translation key)
+  // החזרת השגיאה הראשונה (מפתח תרגום)
   const firstError = result.error.issues[0];
   return { success: false, error: firstError.message };
 }

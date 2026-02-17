@@ -41,7 +41,7 @@ interface ListDeletedEventData {
   timestamp: Date;
 }
 
-// Local notification for the popup panel
+// התראה מקומית לפאנל הפופאפ
 export interface LocalNotification {
   id: string;
   type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update';
@@ -67,7 +67,7 @@ export function useSocketNotifications(
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
 
-  // Use refs for frequently-changing values to avoid re-subscribing listeners
+  // refs לערכים שמשתנים לעיתים קרובות - מונע הרשמה מחדש למאזינים
   const showToastRef = useRef(showToast);
   const tRef = useRef(t);
   const listNamesRef = useRef(listNames);
@@ -77,7 +77,6 @@ export function useSocketNotifications(
   const notificationSettingsRef = useRef(notificationSettings);
   const isPushSubscribedRef = useRef(isPushSubscribed);
 
-  // Keep refs up to date
   showToastRef.current = showToast;
   tRef.current = t;
   listNamesRef.current = listNames;
@@ -98,7 +97,7 @@ export function useSocketNotifications(
   useEffect(() => {
     if (!user) return;
 
-    // Product added notification
+    // הוספת מוצר
     const unsubProductAdded = socketService.on('product:added', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
@@ -127,7 +126,7 @@ export function useSocketNotifications(
       }
     });
 
-    // Product updated notification
+    // עדכון מוצר
     const unsubProductUpdated = socketService.on('product:updated', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
@@ -156,7 +155,7 @@ export function useSocketNotifications(
       }
     });
 
-    // Product deleted notification
+    // מחיקת מוצר
     const unsubProductDeleted = socketService.on('product:deleted', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
@@ -185,7 +184,7 @@ export function useSocketNotifications(
       }
     });
 
-    // Product toggled notification
+    // סימון מוצר (נקנה/לא נקנה)
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
       if (event.userId === user.id) return;
@@ -216,7 +215,7 @@ export function useSocketNotifications(
       }
     });
 
-    // Member join/leave notifications (real-time)
+    // התראות חברות (הצטרפות/עזיבה/הסרה/עדכון)
     const unsubNotificationNew = socketService.on('notification:new', (data: unknown) => {
       const event = data as NotificationEventData;
       if (event.userId === user.id) return;
@@ -262,7 +261,7 @@ export function useSocketNotifications(
         });
       }
 
-      // Member was removed by admin (show to other group members)
+      // חבר הוסר ע"י מנהל (מוצג לשאר חברי הרשימה)
       if (event.type === 'removed' && (ns.groupRemoved ?? true)) {
         if (!isPushSubscribedRef.current) {
           const message = `${event.userName} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
@@ -281,7 +280,7 @@ export function useSocketNotifications(
         });
       }
 
-      // List settings were updated by owner
+      // הגדרות רשימה עודכנו ע"י בעלים
       if (event.type === 'list_update' && ns.listUpdate) {
         if (!isPushSubscribedRef.current) {
           const message = `${event.userName} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
@@ -301,7 +300,7 @@ export function useSocketNotifications(
       }
     });
 
-    // Member removed notification (when current user is removed from a group)
+    // התראת הסרת המשתמש הנוכחי מרשימה
     const unsubMemberRemoved = socketService.on('member:removed', (data: unknown) => {
       const event = data as MemberRemovedEventData;
       if (event.removedUserId !== user.id) return;
@@ -318,7 +317,7 @@ export function useSocketNotifications(
       }
     });
 
-    // List deleted notification (when owner deletes a group)
+    // התראת מחיקת רשימה ע"י בעלים
     const unsubListDeleted = socketService.on('list:deleted', (data: unknown) => {
       const event = data as ListDeletedEventData;
 

@@ -34,7 +34,7 @@ export const ClearCachePage = () => {
 
   useEffect(() => {
     const runCleanup = async () => {
-      // Step 1: Unregister Service Workers
+      // ביטול רישום Service Workers
       updateStep('sw', 'running');
       try {
         if ('serviceWorker' in navigator) {
@@ -46,7 +46,7 @@ export const ClearCachePage = () => {
         updateStep('sw', 'error', String(e));
       }
 
-      // Step 2: Clear Caches API
+      // ניקוי Caches API
       updateStep('caches', 'running');
       try {
         if ('caches' in window) {
@@ -58,7 +58,7 @@ export const ClearCachePage = () => {
         updateStep('caches', 'error', String(e));
       }
 
-      // Step 3: Clear localStorage (preserve auth tokens so user stays logged in)
+      // ניקוי localStorage (שימור טוקנים)
       updateStep('storage', 'running');
       try {
         const accessToken = localStorage.getItem('accessToken');
@@ -71,7 +71,7 @@ export const ClearCachePage = () => {
         updateStep('storage', 'error', String(e));
       }
 
-      // Step 4: Clear sessionStorage
+      // ניקוי sessionStorage
       updateStep('session', 'running');
       try {
         sessionStorage.clear();
@@ -80,7 +80,7 @@ export const ClearCachePage = () => {
         updateStep('session', 'error', String(e));
       }
 
-      // Step 5: Clear cookies (app-related)
+      // ניקוי cookies
       updateStep('cookies', 'running');
       try {
         document.cookie.split(';').forEach(c => {
@@ -98,7 +98,7 @@ export const ClearCachePage = () => {
     runCleanup();
   }, []);
 
-  // Countdown and redirect
+  // ספירה לאחור והפניה
   useEffect(() => {
     if (!done) return;
 
@@ -106,7 +106,7 @@ export const ClearCachePage = () => {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Force reload to root (bypassing any cache)
+          // ריענון כפוי (עקיפת cache)
           window.location.href = '/?t=' + Date.now();
           return 0;
         }

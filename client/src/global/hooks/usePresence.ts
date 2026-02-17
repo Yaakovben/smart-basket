@@ -14,15 +14,14 @@ interface UserEventData {
 }
 
 /**
- * Hook to track online presence of users across lists.
- * Listens to presence:online (initial state on join), user:joined, and user:left events.
- * Explicitly requests presence when list IDs change to handle timing issues.
- * Returns a record of listId → array of online userIds.
+ * מעקב נוכחות מקוונת של משתמשים ברשימות.
+ * מאזין ל-presence:online, user:joined ו-user:left.
+ * מחזיר מפה של listId → מערך userIds מקוונים.
  */
 export function usePresence(listIds: string[] = []): Record<string, string[]> {
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string[]>>({});
 
-  // Stable string key for listIds to avoid unnecessary effect re-runs
+  // מפתח יציב למניעת הפעלות מיותרות של effect
   const listIdsKey = useMemo(() => listIds.join(','), [listIds]);
 
   const requestPresenceIfConnected = useCallback((ids: string[]) => {
@@ -31,14 +30,11 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
     }
   }, []);
 
-  // Register socket event listeners
   useEffect(() => {
-    // Initial state when joining a list room
     const unsubPresence = socketService.on<PresenceData>('presence:online', (data) => {
       setOnlineUsers(prev => ({ ...prev, [data.listId]: data.userIds }));
     });
 
-    // User came online in a list
     const unsubJoined = socketService.on<UserEventData>('user:joined', (data) => {
       setOnlineUsers(prev => {
         const current = prev[data.listId] || [];
@@ -47,7 +43,6 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
       });
     });
 
-    // User went offline from a list
     const unsubLeft = socketService.on<UserEventData>('user:left', (data) => {
       setOnlineUsers(prev => {
         const current = prev[data.listId] || [];
@@ -64,15 +59,13 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
     };
   }, []);
 
-  // Request presence when list IDs change or socket reconnects
+  // בקשת נוכחות כשרשימות משתנות או ב-reconnect
   useEffect(() => {
     if (!listIdsKey) return;
     const ids = listIdsKey.split(',');
 
-    // Request immediately if already connected
     requestPresenceIfConnected(ids);
 
-    // Also request on reconnect to handle timing issues
     const unsubConnect = socketService.on('connect', () => {
       requestPresenceIfConnected(ids);
     });

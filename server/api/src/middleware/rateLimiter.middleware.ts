@@ -1,9 +1,9 @@
 import rateLimit from 'express-rate-limit';
 
-// General API rate limiter
+// הגבלת קצב כללית ל-API
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  windowMs: 15 * 60 * 1000, // 15 דקות
+  max: 100, // 100 בקשות לחלון
   message: {
     success: false,
     message: 'Too many requests, please try again later',
@@ -12,10 +12,10 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Auth routes rate limiter (stricter but reasonable for mobile)
+// הגבלת קצב לנתיבי אימות
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 requests per window (includes token refresh)
+  windowMs: 15 * 60 * 1000, // 15 דקות
+  max: 20, // 20 בקשות (כולל רענון טוקן)
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later',
@@ -24,10 +24,10 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Strict limiter for login - 5 attempts per 15 minutes
-// Prevents brute-force password attacks
+// הגבלת התחברות - 5 ניסיונות ל-15 דקות
+// מונע התקפות brute-force
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 5,
   message: {
     success: false,
@@ -35,13 +35,13 @@ export const loginLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful logins
+  skipSuccessfulRequests: true, // לא סופר התחברויות מוצלחות
 });
 
-// Strict limiter for registration - 3 attempts per hour
-// Prevents spam account creation
+// הגבלת הרשמה - 3 ניסיונות לשעה
+// מונע יצירת חשבונות ספאם
 export const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: 3,
   message: {
     success: false,
@@ -51,10 +51,10 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Limiter for joining groups - 10 attempts per 15 minutes
-// Prevents brute-force guessing of invite codes
+// הגבלת הצטרפות - 10 ניסיונות ל-15 דקות
+// מונע ניחוש קודי הזמנה
 export const joinGroupLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: {
     success: false,

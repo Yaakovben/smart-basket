@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 
-// Member subdocument interface
 export interface IMember {
   user: Types.ObjectId;
   isAdmin: boolean;
@@ -9,7 +8,6 @@ export interface IMember {
 }
 
 
-// List document interface
 export interface IList extends Document {
   _id: Types.ObjectId;
   name: string;
@@ -19,7 +17,7 @@ export interface IList extends Document {
   owner: Types.ObjectId;
   members: IMember[];
   inviteCode?: string;
-  password?: string; // Plaintext password (4 chars)
+  password?: string; // סיסמת קבוצה - 4 תווים בטקסט פשוט
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -80,7 +78,6 @@ const listSchema = new Schema<IList>(
     },
     password: {
       type: String,
-      // Simple 4-character password stored as plaintext
     },
   },
   {
@@ -94,23 +91,22 @@ const listSchema = new Schema<IList>(
   }
 );
 
-// Indexes (inviteCode index created by unique: true in schema)
+// אינדקסים (inviteCode נוצר ע"י unique: true)
 listSchema.index({ owner: 1, isGroup: 1 });
 listSchema.index({ 'members.user': 1 });
 
-// Compare password method
-// Handles both legacy bcrypt hashed passwords and new plaintext passwords
+// תומך גם בסיסמאות bcrypt ישנות וגם בטקסט פשוט חדש
 listSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
-  if (!this.password) return true; // No password set = no protection
+  if (!this.password) return true; // אין סיסמה = אין הגנה
 
-  // Legacy: hashed passwords start with $2b$
+  // ישן: סיסמאות מוצפנות מתחילות ב-$2b$
   if (this.password.startsWith('$2b$')) {
     return bcrypt.compare(candidatePassword, this.password);
   }
 
-  // New: simple plaintext comparison
+  // חדש: השוואה פשוטה
   return this.password === candidatePassword;
 };
 

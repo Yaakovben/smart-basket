@@ -6,7 +6,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 
-// ===== Sub-components =====
+// ===== קומפוננטות משנה =====
 import { ListHeader } from './ListHeader';
 import { EmptyState } from './EmptyState';
 import { SwipeHint } from './SwipeHint';
@@ -15,7 +15,7 @@ import { AddProductFab } from './AddProductFab';
 import { AddProductModal, EditProductModal, ProductDetailsModal } from './ProductModals';
 import { InviteModal, MembersModal, ShareListModal, EditListModal } from './ListModals';
 
-// ===== Props Interface =====
+// ===== Props =====
 interface ListPageProps {
   list: List;
   user: User;
@@ -28,23 +28,19 @@ interface ListPageProps {
   onlineUserIds?: Set<string>;
 }
 
-// ===== Main Component =====
+// ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
 
   const {
-    // State
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
     fabPosition, isDragging,
-    // Computed
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
-    // Setters
     setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
     setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
-    // Handlers
     handleDragStart, handleDragMove, handleDragEnd, dismissHint,
     handleAdd, handleQuickAdd, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,

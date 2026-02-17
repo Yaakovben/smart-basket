@@ -1,7 +1,7 @@
 /**
- * Minimal IndexedDB wrapper for notification settings.
- * Used by both the main app (write) and the service worker (read).
- * Service workers cannot access localStorage, so IndexedDB is the bridge.
+ * מעטפת IndexedDB מינימלית להגדרות התראות.
+ * משמש גם את האפליקציה (כתיבה) וגם את ה-Service Worker (קריאה).
+ * Service Workers לא יכולים לגשת ל-localStorage, ולכן IndexedDB משמש כגשר.
  */
 
 const DB_NAME = 'sb-notif-settings';
@@ -33,7 +33,7 @@ export interface NotifSettingsIDB {
   mutedGroupIds: string[];
 }
 
-/** Write notification settings to IndexedDB (called from main app) */
+/** כתיבת הגדרות התראות ל-IndexedDB (נקרא מהאפליקציה) */
 export async function saveNotifSettingsToIDB(settings: NotifSettingsIDB): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ export async function saveNotifSettingsToIDB(settings: NotifSettingsIDB): Promis
   });
 }
 
-/** Read notification settings from IndexedDB (called from service worker) */
+/** קריאת הגדרות התראות מ-IndexedDB (נקרא מה-Service Worker) */
 export async function getNotifSettingsFromIDB(): Promise<NotifSettingsIDB | null> {
   try {
     const db = await openDB();
@@ -59,10 +59,7 @@ export async function getNotifSettingsFromIDB(): Promise<NotifSettingsIDB | null
   }
 }
 
-/**
- * Map server notification type to the corresponding settings key.
- * Returns null if the type doesn't have a toggle (should always show).
- */
+/** מיפוי סוג התראה מהשרת למפתח ההגדרה המתאים. מחזיר null אם אין toggle (תמיד מוצג) */
 export function getSettingsKeyForType(type: string): keyof NotifSettingsIDB | null {
   switch (type) {
     case 'join': return 'groupJoin';

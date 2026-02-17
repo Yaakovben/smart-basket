@@ -1,6 +1,6 @@
 import type { Product, ProductUnit, ProductCategory, Member } from '../../../global/types';
 
-// ===== Form State Types =====
+// ===== טיפוסי מצב טופס =====
 export interface NewProductForm {
   name: string;
   quantity: number;
@@ -14,20 +14,20 @@ export interface EditListForm {
   color: string;
 }
 
-// ===== Confirm Dialog State =====
+// ===== מצב דיאלוג אישור =====
 export interface ConfirmState {
   title: string;
   message: string;
   onConfirm: () => void;
 }
 
-// ===== FAB Position =====
+// ===== מיקום FAB =====
 export interface FabPosition {
   x: number;
   y: number;
 }
 
-// ===== Drag State =====
+// ===== מצב גרירה =====
 export interface DragState {
   startX: number;
   startY: number;
@@ -35,12 +35,11 @@ export interface DragState {
   startPosY: number;
 }
 
-// ===== Filter Type =====
+// ===== טיפוס סינון =====
 export type ListFilter = 'pending' | 'purchased';
 
-// ===== Hook Return Types =====
+// ===== ערכי החזרה של Hooks =====
 export interface UseListReturn {
-  // State
   filter: ListFilter;
   search: string;
   showAdd: boolean;
@@ -60,7 +59,6 @@ export interface UseListReturn {
   fabPosition: FabPosition | null;
   isDragging: boolean;
 
-  // Computed values
   pending: Product[];
   purchased: Product[];
   items: Product[];
@@ -69,7 +67,6 @@ export interface UseListReturn {
   hasProductChanges: boolean;
   hasListChanges: boolean;
 
-  // Setters
   setFilter: (filter: ListFilter) => void;
   setSearch: (search: string) => void;
   setShowAdd: (show: boolean) => void;
@@ -86,7 +83,6 @@ export interface UseListReturn {
   setOpenItemId: (id: string | null) => void;
   setAddError: (error: string) => void;
 
-  // Handlers
   handleDragStart: (clientX: number, clientY: number) => void;
   handleDragMove: (clientX: number, clientY: number) => void;
   handleDragEnd: () => void;

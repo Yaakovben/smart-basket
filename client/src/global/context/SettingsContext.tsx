@@ -33,14 +33,14 @@ const loadSettings = (): AppSettings => {
 
 const saveSettings = (settings: AppSettings) => {
   localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
-  // Sync notification settings to IndexedDB for service worker access
+  // סנכרון הגדרות התראות ל-IndexedDB עבור ה-Service Worker
   saveNotifSettingsToIDB(settings.notifications).catch(() => {/* ignore */});
 };
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const loaded = loadSettings();
-    // Sync to IndexedDB on initial load so SW has current settings
+    // סנכרון ל-IndexedDB בטעינה ראשונית כדי שה-SW יקבל הגדרות עדכניות
     saveNotifSettingsToIDB(loaded.notifications).catch(() => {/* ignore */});
     return loaded;
   });

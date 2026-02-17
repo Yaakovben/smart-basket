@@ -11,7 +11,7 @@ import type { Language, User } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
 
-// ===== Reusable Styles =====
+// ===== סגנונות משותפים =====
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
   ...SIZES.iconButton.md,
@@ -73,7 +73,7 @@ const smallSwitchSx = {
   '& .MuiSwitch-track': { borderRadius: 13, backgroundColor: 'action.disabled', opacity: 1 },
 };
 
-// ===== Props Interface =====
+// ===== ממשק Props =====
 interface SettingsPageProps {
   user: User;
   hasUpdate?: boolean;
@@ -86,7 +86,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
-  // Detect device type for install instructions
+  // זיהוי סוג מכשיר להנחיות התקנה
   const getDeviceType = (): 'ios' | 'android' | 'desktop' => {
     const ua = navigator.userAgent;
     if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
@@ -104,10 +104,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
   const handleMainNotificationsToggle = async (enabled: boolean) => {
     updateNotifications({ enabled });
     if (!enabled && pushSubscribed) {
-      // Main notifications off → also unsubscribe from push
+      // כיבוי התראות ראשיות → גם ביטול הרשמה ל-push
       await unsubscribePush();
     } else if (enabled && pushSupported && isPwaInstalled && !pushSubscribed && Notification.permission === 'granted') {
-      // Main notifications on → re-subscribe to push if permission was already granted and PWA is installed
+      // הפעלת התראות → הרשמה מחדש ל-push אם כבר ניתנה הרשאה
       await subscribePush();
     }
   };

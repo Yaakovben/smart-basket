@@ -43,9 +43,7 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
   }
 
   async createProduct(data: CreateProductInput): Promise<IProductDoc> {
-    // Use countDocuments for position - simpler and sufficient for ordering.
-    // Minor race window is acceptable: two products may get same position,
-    // but they'll still display correctly (sorted by position then createdAt).
+    // מיקום לפי countDocuments - חלון race קטן מקובל, ממוין גם לפי createdAt
     const position = data.position ?? await this.model.countDocuments({ listId: data.listId });
 
     const product = await this.model.create({

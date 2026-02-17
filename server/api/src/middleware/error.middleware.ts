@@ -10,16 +10,15 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  // Log all errors with logger
   logger.error(`${err.name}: ${err.message}`, { stack: err.stack });
 
-  // Default error
+  // ברירת מחדל
   let statusCode = 500;
   let message = 'Internal server error';
   let errors: { field: string; message: string }[] | undefined;
   let code: string | undefined;
 
-  // AppError (and all subclasses: ValidationError, AuthError, etc.)
+  // AppError וכל תת-המחלקות
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
@@ -29,7 +28,7 @@ export const errorHandler = (
     }
   }
 
-  // Mongoose validation error
+  // שגיאת ולידציה של Mongoose
   if (err instanceof mongoose.Error.ValidationError) {
     statusCode = 400;
     message = 'Validation error';
@@ -39,7 +38,7 @@ export const errorHandler = (
     }));
   }
 
-  // Mongoose duplicate key error
+  // שגיאת מפתח כפול ב-MongoDB
   if (err.name === 'MongoServerError' && (err as { code?: number }).code === 11000) {
     statusCode = 409;
     const keyValue = (err as { keyValue?: Record<string, unknown> }).keyValue;
@@ -47,13 +46,13 @@ export const errorHandler = (
     message = `${field} already exists`;
   }
 
-  // Mongoose CastError (invalid ObjectId)
+  // ObjectId לא תקין
   if (err instanceof mongoose.Error.CastError) {
     statusCode = 400;
     message = `Invalid ${err.path}: ${err.value}`;
   }
 
-  // Report 500 errors to Sentry (skip expected client errors)
+  // דיווח שגיאות 500 ל-Sentry
   if (statusCode >= 500 && env.SENTRY_DSN) {
     Sentry.captureException(err);
   }

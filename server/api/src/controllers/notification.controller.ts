@@ -6,10 +6,7 @@ import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
 export class NotificationController {
-  /**
-   * GET /notifications
-   * Get all notifications for the authenticated user
-   */
+  /** GET /notifications */
   static getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { page, limit, listId, unreadOnly } = req.query;
@@ -28,10 +25,7 @@ export class NotificationController {
     });
   });
 
-  /**
-   * GET /notifications/unread-count
-   * Get the count of unread notifications
-   */
+  /** GET /notifications/unread-count */
   static getUnreadCount = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.query;
@@ -47,10 +41,7 @@ export class NotificationController {
     });
   });
 
-  /**
-   * PUT /notifications/:id/read
-   * Mark a single notification as read
-   */
+  /** PUT /notifications/:id/read */
   static markAsRead = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -63,10 +54,7 @@ export class NotificationController {
     });
   });
 
-  /**
-   * PUT /notifications/read-all
-   * Mark all notifications as read
-   */
+  /** PUT /notifications/read-all */
   static markAllAsRead = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.body;
@@ -79,14 +67,11 @@ export class NotificationController {
     });
   });
 
-  /**
-   * POST /notifications (internal use - for Socket server)
-   * Create a notification
-   */
+  /** POST /notifications - נתיב פנימי עבור שרת Socket */
   static createNotification = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { type, listId, listName, actorId, actorName, targetUserId, productId, productName } = req.body;
 
-    // Prevent impersonation: actorId must match the authenticated user
+    // מניעת התחזות: actorId חייב להתאים למשתמש המאומת
     if (String(actorId) !== req.user!.id) {
       throw new ForbiddenError('Cannot create notifications on behalf of another user');
     }
@@ -108,19 +93,16 @@ export class NotificationController {
     });
   });
 
-  /**
-   * POST /notifications/broadcast (internal use - for Socket server)
-   * Create notifications for all list members
-   */
+  /** POST /notifications/broadcast - נתיב פנימי עבור שרת Socket */
   static createNotificationsForListMembers = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { listId, type, actorId, productId, productName } = req.body;
 
-    // Prevent impersonation: actorId must match the authenticated user
+    // מניעת התחזות: actorId חייב להתאים למשתמש המאומת
     if (String(actorId) !== req.user!.id) {
       throw new ForbiddenError('Cannot broadcast notifications on behalf of another user');
     }
 
-    // Verify the user is a member of the list
+    // אימות שהמשתמש חבר ברשימה
     const isMember = await ListDAL.isMember(listId, req.user!.id);
     if (!isMember) {
       throw new ForbiddenError('You are not a member of this list');

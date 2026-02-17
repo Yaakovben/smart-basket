@@ -12,17 +12,17 @@ interface EmptyStateProps {
   onAddProduct: () => void;
 }
 
-// ===== Component =====
+// ===== קומפוננטה =====
 export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptyStateProps) => {
   const { t } = useSettings();
-  // Determine state type:
-  // - 'allDone': pending tab with products (all purchased)
-  // - 'noPurchased': purchased tab with no purchased items
-  // - 'noProducts': no products at all
+  // קביעת סוג מצב:
+  // - 'allDone': טאב ממתינים עם מוצרים (הכל נקנה)
+  // - 'noPurchased': טאב נקנו ללא פריטים
+  // - 'noProducts': אין מוצרים בכלל
   const isAllDone = filter === 'pending' && totalProducts > 0;
   const isPurchasedEmpty = filter === 'purchased';
 
-  // Get display config based on state
+  // תצורת תצוגה לפי מצב
   const getDisplayConfig = () => {
     if (isAllDone) {
       return {

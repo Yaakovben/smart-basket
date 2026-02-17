@@ -19,7 +19,6 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
   const { t } = useSettings();
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
-  // Find max logins for progress bar scaling
   const maxLogins = Math.max(...users.map(u => u.totalLogins), 1);
 
   const toggleExpand = (userId: string) => {

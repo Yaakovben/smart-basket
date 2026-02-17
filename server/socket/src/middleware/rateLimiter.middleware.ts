@@ -1,13 +1,10 @@
 import { logger } from '../config';
 
-/**
- * Simple in-memory rate limiter for socket events.
- * Tracks event counts per socket and resets on a sliding window.
- */
+/** מגביל קצב פשוט בזיכרון לאירועי socket. חלון הזזה לכל socket. */
 const socketEventCounts = new Map<string, { count: number; resetAt: number }>();
 
-const WINDOW_MS = 10_000; // 10 seconds
-const MAX_EVENTS = 50; // max events per window per socket
+const WINDOW_MS = 10_000; // 10 שניות
+const MAX_EVENTS = 50; // מקסימום אירועים לחלון לכל socket
 
 export const checkRateLimit = (socketId: string): boolean => {
   const now = Date.now();
@@ -31,8 +28,7 @@ export const clearRateLimit = (socketId: string): void => {
   socketEventCounts.delete(socketId);
 };
 
-// Periodic cleanup of expired entries to prevent memory accumulation
-// from sockets that disconnected without proper cleanup
+// ניקוי תקופתי של רשומות שפג תוקפן - מונע הצטברות זיכרון מ-sockets שנותקו
 setInterval(() => {
   const now = Date.now();
   for (const [socketId, entry] of socketEventCounts.entries()) {
@@ -40,4 +36,4 @@ setInterval(() => {
       socketEventCounts.delete(socketId);
     }
   }
-}, 5 * 60 * 1000).unref(); // Every 5 minutes, .unref() so it doesn't block shutdown
+}, 5 * 60 * 1000).unref(); // כל 5 דקות, .unref() כדי לא לחסום כיבוי

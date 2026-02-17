@@ -3,7 +3,7 @@ import { Box, Typography, Button, Collapse } from '@mui/material';
 import { translations } from '../i18n/translations';
 import type { Language } from '../types';
 
-// Get language from localStorage (fallback to Hebrew)
+// קבלת שפה מ-localStorage (ברירת מחדל: עברית)
 const getLanguage = (): Language => {
   try {
     const settings = localStorage.getItem('sb_settings');
@@ -55,20 +55,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   handleClearCacheAndReload = async (): Promise<void> => {
     try {
-      // Unregister service workers
+      // ביטול רישום Service Workers
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(reg => reg.unregister()));
       }
-      // Clear caches
+      // ניקוי cache
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
-      // Clear session storage
+      // ניקוי session storage
       sessionStorage.clear();
     } catch {
-      // Continue with reload even if cleanup fails
+      // המשך ריענון גם אם הניקוי נכשל
     }
     window.location.href = '/?t=' + Date.now();
   };
@@ -93,7 +93,7 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
       this.setState({ copied: true });
       setTimeout(() => this.setState({ copied: false }), 2000);
     } catch {
-      // Fallback for browsers that don't support clipboard
+      // גיבוי לדפדפנים ללא תמיכה ב-clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = errorDetails;
       document.body.appendChild(textArea);
@@ -181,7 +181,7 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
             </Button>
           </Box>
 
-          {/* Error details for mobile users to report */}
+          {/* פרטי שגיאה לדיווח */}
           <Button
             variant="text"
             onClick={this.toggleDetails}

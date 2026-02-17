@@ -6,7 +6,7 @@ if (!API_URL) {
   console.error('CRITICAL: VITE_API_URL is not configured for production!');
 }
 
-// Debug logging - only in development mode
+// לוג דיבאג - רק במצב פיתוח
 const debugLog = (message: string, data?: unknown, isError = false) => {
   if (import.meta.env.DEV) {
     if (isError) {
@@ -17,24 +17,22 @@ const debugLog = (message: string, data?: unknown, isError = false) => {
   }
 };
 
-// Token storage keys
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-// Flag to prevent auto-redirect during active auth process
+// דגל למניעת redirect אוטומטי בזמן תהליך אימות פעיל
 let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
-// Create axios instance with timeout for mobile networks
+// timeout ארוך לרשתות מובייל איטיות
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 second timeout for slow mobile networks
+  timeout: 30000,
 });
 
-// Token helpers
 export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 
@@ -48,7 +46,7 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Request interceptor - add auth token, cache busting headers, and debug
+// Interceptor: הוספת טוקן אימות ו-cache busting
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
@@ -56,7 +54,7 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Force fresh request headers (cache busting for iOS Safari)
+    // מניעת cache (בעיקר בשביל iOS Safari)
     config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
     config.headers['Pragma'] = 'no-cache';
     config.headers['X-Request-Time'] = Date.now().toString();
@@ -73,7 +71,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle token refresh
+// Interceptor: רענון טוקן אוטומטי ב-401
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
@@ -109,10 +107,9 @@ apiClient.interceptors.response.use(
     }, true);
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // If 401 and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Queue the request
+        // הוספה לתור בקשות שממתינות לרענון
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -128,9 +125,8 @@ apiClient.interceptors.response.use(
 
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
-        // Reset isRefreshing flag before returning (prevents future requests from getting stuck)
         isRefreshing = false;
-        // Don't redirect if we're in the middle of authentication or already on login
+        // לא לנווט אם בתהליך אימות או כבר בדף login
         if (!isAuthInProgress && window.location.pathname !== '/login') {
           clearTokens();
           localStorage.removeItem('cached_user');
@@ -147,7 +143,7 @@ apiClient.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         setTokens(accessToken, newRefreshToken);
 
-        // Sync the new token with the socket connection
+        // סנכרון הטוקן החדש עם חיבור ה-Socket
         socketService.updateToken(accessToken);
 
         processQueue(null, accessToken);
@@ -156,7 +152,6 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Don't redirect if we're in the middle of authentication or already on login
         if (!isAuthInProgress && window.location.pathname !== '/login') {
           clearTokens();
           localStorage.removeItem('cached_user');

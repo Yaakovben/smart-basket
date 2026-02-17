@@ -5,7 +5,7 @@ import { AuthError } from '../errors';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 
 export class AuthController {
-  // Check if email exists
+  // בדיקת קיום מייל
   static checkEmail = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body as CheckEmailInput;
     const result = await AuthService.checkEmail(email);

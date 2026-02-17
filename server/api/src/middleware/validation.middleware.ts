@@ -11,16 +11,16 @@ interface ValidateOptions {
 }
 
 /**
- * Validation middleware using JOI
- * Can validate body, params, and/or query separately
+ * מידלוור ולידציה עם JOI.
+ * יכול לאמת body, params ו/או query בנפרד.
  *
- * Usage:
+ * שימוש:
  *   validate({ body: schema })
  *   validate({ body: schema, params: paramsSchema })
- *   validate(bodySchema) // shorthand for body only
+ *   validate(bodySchema) // קיצור ל-body בלבד
  */
 export function validate(schema: Joi.Schema | ValidateOptions) {
-  // Support shorthand: validate(schema) means validate body
+  // קיצור: validate(schema) = validate({ body: schema })
   const options: ValidateOptions =
     'body' in schema || 'params' in schema || 'query' in schema
       ? (schema as ValidateOptions)
@@ -48,7 +48,7 @@ export function validate(schema: Joi.Schema | ValidateOptions) {
           });
         }
       } else {
-        // Replace with validated/sanitized values
+        // החלפה בערכים מאומתים
         req[target] = value;
       }
     }

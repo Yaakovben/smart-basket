@@ -1,9 +1,9 @@
-// ===== Email Validation =====
+// ===== אימות אימייל =====
 export const isValidEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-// ===== Common Email Domains =====
+// ===== דומיינים נפוצים =====
 const COMMON_DOMAINS = [
   'gmail.com',
   'yahoo.com',
@@ -23,7 +23,7 @@ const COMMON_DOMAINS = [
   'yandex.com'
 ];
 
-// Calculate Levenshtein distance between two strings
+// חישוב מרחק Levenshtein בין שתי מחרוזות
 const levenshteinDistance = (a: string, b: string): number => {
   const matrix: number[][] = [];
 
@@ -51,23 +51,23 @@ const levenshteinDistance = (a: string, b: string): number => {
   return matrix[b.length][a.length];
 };
 
-// Check if email domain has a typo and suggest correction
+// בדיקת שגיאת הקלדה בדומיין ומתן הצעת תיקון
 export const checkEmailDomainTypo = (email: string): string | null => {
   if (!email.includes('@')) return null;
 
   const domain = email.split('@')[1]?.toLowerCase();
   if (!domain) return null;
 
-  // If it's already a valid common domain, no suggestion needed
+  // אם זה דומיין תקין ונפוץ, אין צורך בהצעה
   if (COMMON_DOMAINS.includes(domain)) return null;
 
-  // Find the closest matching domain
+  // מציאת הדומיין הקרוב ביותר
   let bestMatch: string | null = null;
   let bestDistance = Infinity;
 
   for (const commonDomain of COMMON_DOMAINS) {
     const distance = levenshteinDistance(domain, commonDomain);
-    // Only suggest if distance is 1-2 (close typo) and better than previous
+    // הצעת תיקון רק אם המרחק הוא 1-2 (שגיאת הקלדה קרובה) ועדיף מהתוצאה הקודמת
     if (distance > 0 && distance <= 2 && distance < bestDistance) {
       bestDistance = distance;
       bestMatch = commonDomain;
@@ -77,7 +77,7 @@ export const checkEmailDomainTypo = (email: string): string | null => {
   return bestMatch;
 };
 
-// ===== Password Strength =====
+// ===== חוזק סיסמה =====
 export interface PasswordStrength {
   strength: number;
   text: string;

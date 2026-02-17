@@ -11,10 +11,10 @@ interface MembersButtonProps {
 
 const MAX_VISIBLE = 3;
 const AVATAR_SIZE = 28;
-const AVATAR_OVERLAP = 10; // How much each avatar overlaps the previous one
+const AVATAR_OVERLAP = 10; // חפיפה בין אווטארים
 
 export const MembersButton = ({ members, currentUserId, onClick, onlineUserIds }: MembersButtonProps) => {
-  // Sort members so current user is FIRST (appears on left, on top)
+  // המשתמש הנוכחי ראשון (מוצג משמאל, מעל)
   const sortedMembers = currentUserId
     ? [...members].sort((a, b) => {
         if (a.id === currentUserId) return -1;
@@ -27,7 +27,7 @@ export const MembersButton = ({ members, currentUserId, onClick, onlineUserIds }
   const extraCount = members.length - MAX_VISIBLE;
   const showExtra = extraCount > 0;
 
-  // Calculate container width based on number of avatars only
+  // רוחב מיכל לפי מספר אווטארים
   const containerWidth = AVATAR_SIZE + (visibleMembers.length - 1) * (AVATAR_SIZE - AVATAR_OVERLAP);
 
   return (

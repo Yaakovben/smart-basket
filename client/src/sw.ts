@@ -4,10 +4,10 @@ import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// VitePWA requires this - globPatterns is empty so nothing is actually cached
+// VitePWA דורש את זה - globPatterns ריק אז שום דבר לא נשמר ב-cache
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Push notification handler — filters based on user notification preferences
+// טיפול בהתראות push - סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -15,17 +15,17 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
 
     const showNotification = async () => {
-      // Read user notification settings from IndexedDB
+      // קריאת הגדרות התראות מ-IndexedDB
       const settings = await getNotifSettingsFromIDB();
 
       if (settings) {
-        // Master toggle — block all notifications
+        // מתג ראשי - חסימת כל ההתראות
         if (!settings.enabled) return;
 
         const notifType = data.data?.type as string | undefined;
         const listId = data.data?.listId as string | undefined;
 
-        // Check if this notification type is disabled
+        // בדיקה אם סוג ההתראה הזה מכובה
         if (notifType) {
           const settingsKey = getSettingsKeyForType(notifType);
           if (settingsKey && settingsKey !== 'enabled' && settingsKey !== 'mutedGroupIds') {
@@ -33,11 +33,11 @@ self.addEventListener('push', (event) => {
           }
         }
 
-        // Check if this group is muted
+        // בדיקה אם הרשימה מושתקת
         if (listId && settings.mutedGroupIds?.includes(listId)) return;
       }
 
-      // All filters passed — show the notification
+      // כל הפילטרים עברו - הצגת ההתראה
       const options = {
         body: data.body,
         icon: data.icon || '/icon-192x192.png',
@@ -58,7 +58,7 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// Notification click handler
+// לחיצה על התראה - פתיחת האפליקציה בדף הרלוונטי
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -66,18 +66,17 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if there's already a window open
+      // בדיקה אם כבר יש חלון פתוח
       for (const client of clientList) {
         if ('focus' in client) {
           client.focus();
-          // Navigate to the specific list if URL is provided
           if (url && 'navigate' in client) {
             (client as WindowClient).navigate(url);
           }
           return;
         }
       }
-      // Open new window if none exists
+      // פתיחת חלון חדש אם אין
       if (self.clients.openWindow) {
         return self.clients.openWindow(url);
       }
@@ -85,24 +84,20 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Notification close handler (optional)
-self.addEventListener('notificationclose', () => {
-  // Analytics or cleanup if needed
-});
+self.addEventListener('notificationclose', () => {});
 
-// Install event - skip waiting to activate immediately
+// התקנה - דילוג על המתנה להפעלה מיידית
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate event - clear all caches, notify clients to reload, and claim
+// הפעלה - ניקוי cache, עדכון לקוחות, ותפיסת שליטה
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => Promise.all(cacheNames.map((name) => caches.delete(name))))
       .then(() => self.clients.matchAll({ type: 'window' }))
       .then((clients) => {
-        // Tell all open windows to reload for fresh content
         clients.forEach((client) => {
           client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
         });

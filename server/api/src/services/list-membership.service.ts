@@ -17,7 +17,6 @@ export class ListMembershipService {
       throw NotFoundError.inviteCode();
     }
 
-    // Check if already a member or owner
     if (list.owner.toString() === userId) {
       throw ConflictError.isOwner();
     }
@@ -26,7 +25,6 @@ export class ListMembershipService {
       throw ConflictError.alreadyMember();
     }
 
-    // Check password if required
     if (list.password) {
       const isValidPassword = await list.comparePassword(data.password || '');
       if (!isValidPassword) {
@@ -34,14 +32,12 @@ export class ListMembershipService {
       }
     }
 
-    // Get user info for notification
     const user = await UserDAL.findById(userId);
     if (!user) {
       throw NotFoundError.user();
     }
 
-    // Atomic add member - prevents duplicate members from concurrent requests.
-    // The condition ensures the user isn't already in the members array.
+    // הוספה אטומית - מונעת כפילויות מבקשות מקבילות
     const updated = await ListDAL.updateOne(
       {
         _id: list._id,
@@ -62,11 +58,10 @@ export class ListMembershipService {
       throw ConflictError.alreadyMember();
     }
 
-    // Re-read for populated response
     const updatedList = await ListDAL.findById(list._id.toString());
     if (!updatedList) throw NotFoundError.list();
 
-    // Also save to new Notifications collection for all list members
+    // שליחת התראות לחברי הרשימה
     await NotificationService.createNotificationsForListMembers(
       updatedList._id.toString(),
       'join',
@@ -84,21 +79,18 @@ export class ListMembershipService {
       throw NotFoundError.list();
     }
 
-    // Owner cannot leave
+    // בעלים לא יכול לעזוב
     if (list.owner.toString() === userId) {
       throw new ForbiddenError('Owner cannot leave the list. Delete it instead.');
     }
 
-    // Check if member
     const isMember = list.members.some((m) => m.user.toString() === userId);
     if (!isMember) {
       throw new NotFoundError('You are not a member of this list');
     }
 
-    // Atomic remove member
     await ListDAL.removeMember(listId, userId);
 
-    // Also save to new Notifications collection for all remaining list members
     try {
       await NotificationService.createNotificationsForListMembers(
         listId,
@@ -107,7 +99,7 @@ export class ListMembershipService {
         {}
       );
     } catch {
-      // Don't fail the leave operation if notification creation fails
+      // לא להכשיל את פעולת העזיבה אם יצירת ההתראה נכשלה
     }
   }
 
@@ -122,7 +114,6 @@ export class ListMembershipService {
       throw NotFoundError.list();
     }
 
-    // Check if user is owner or admin
     const isOwner = list.owner.toString() === userId;
     const isAdmin = list.members.some(
       (m) => m.user.toString() === userId && m.isAdmin
@@ -132,24 +123,23 @@ export class ListMembershipService {
       throw new ForbiddenError('Only owner or admin can remove members');
     }
 
-    // Cannot remove owner
+    // אי אפשר להסיר את הבעלים
     if (list.owner.toString() === memberId) {
       throw new ForbiddenError('Cannot remove the owner');
     }
 
-    // Only owner can remove admins
+    // רק בעלים יכול להסיר מנהלים
     const targetMember = list.members.find(m => m.user.toString() === memberId);
     if (targetMember?.isAdmin && !isOwner) {
       throw new ForbiddenError('Only owner can remove admins');
     }
 
-    // Check member exists
     const memberExists = list.members.some((m) => m.user.toString() === memberId);
     if (!memberExists) {
       throw new NotFoundError('Member');
     }
 
-    // Get member and actor info for notification first, then remove
+    // שליפת פרטים להתראה לפני ההסרה
     const [member, actor] = await Promise.all([
       UserDAL.findById(memberId),
       UserDAL.findById(userId),
@@ -157,7 +147,7 @@ export class ListMembershipService {
 
     await ListDAL.removeMember(listId, memberId);
 
-    // Send 'member_removed' notification to the removed member
+    // התראה לחבר שהוסר
     if (member && actor) {
       await NotificationService.createNotification({
         type: 'member_removed',
@@ -169,7 +159,7 @@ export class ListMembershipService {
       });
     }
 
-    // Notify remaining list members about the removal
+    // התראה לשאר חברי הרשימה
     if (member) {
       await NotificationService.createNotificationsForListMembers(
         listId,
@@ -179,7 +169,6 @@ export class ListMembershipService {
       );
     }
 
-    // Re-read for fresh data
     const updatedList = await ListDAL.findById(listId);
     if (!updatedList) throw NotFoundError.list();
     return transformList(updatedList);
@@ -196,7 +185,7 @@ export class ListMembershipService {
       throw NotFoundError.list();
     }
 
-    // Only owner can toggle admin
+    // רק בעלים יכול לשנות סטטוס מנהל
     if (list.owner.toString() !== userId) {
       throw new ForbiddenError('Only owner can change admin status');
     }
@@ -207,7 +196,6 @@ export class ListMembershipService {
       throw new NotFoundError('Member');
     }
 
-    // Atomic toggle admin
     const updatedList = await ListDAL.setMemberAdmin(listId, memberId, !member.isAdmin);
     if (!updatedList) throw NotFoundError.list();
 

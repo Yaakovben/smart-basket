@@ -11,7 +11,7 @@ import { transformList, transformListsWithProducts } from './list-transform.help
 import { checkListAccess, checkListOwner } from './list-access.helper';
 
 export class ListService {
-  // ==================== Core CRUD ====================
+  // ==================== CRUD ראשי ====================
 
   static async getUserLists(userId: string): Promise<IListResponse[]> {
     const lists = await ListDAL.findUserListsPopulated(userId);
@@ -65,8 +65,7 @@ export class ListService {
     await list.save();
 
     if (list.isGroup && hasChanges && list.members.length > 0) {
-      // Encode change type and new name in productName (string field)
-      // productId is ObjectId and can't hold string values like 'name'/'design'
+      // קידוד סוג השינוי בשדה productName
       const changeType = nameChanged && (iconChanged || colorChanged) ? 'both'
                        : nameChanged ? 'name'
                        : 'design';
@@ -89,11 +88,11 @@ export class ListService {
     const memberIds = list.members.map(m => m.user.toString());
     const listName = list.name;
 
-    // Delete all products and old notifications for this list first
+    // מחיקת מוצרים והתראות ישנות לפני מחיקת הרשימה
     await ProductDAL.deleteByListId(listId);
     await NotificationService.deleteNotificationsForList(listId);
 
-    // Then create list_deleted notifications (after cleanup so they aren't deleted)
+    // יצירת התראות list_deleted אחרי הניקוי כדי שלא יימחקו
     const owner = await UserDAL.findById(userId);
 
     if (owner && list.isGroup && memberIds.length > 0) {
@@ -116,7 +115,7 @@ export class ListService {
     return { memberIds, listName };
   }
 
-  // ==================== Membership (delegates to ListMembershipService) ====================
+  // ==================== חברות ברשימה ====================
 
   static joinGroup(userId: string, data: JoinGroupInput): Promise<IListResponse> {
     return ListMembershipService.joinGroup(userId, data);

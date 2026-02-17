@@ -119,7 +119,7 @@ class ListDALClass extends BaseDAL<IList> {
     throw new AppError('Failed to generate unique invite code after maximum retries', 500, 'INVITE_CODE_GENERATION_FAILED');
   }
 
-  // Session-aware methods for transactions
+  // מתודות עם session לטרנזקציות
   async deletePrivateLists(ownerId: string, session: ClientSession): Promise<number> {
     const uid = new mongoose.Types.ObjectId(ownerId);
     const result = await this.model.deleteMany({ owner: uid, isGroup: false }, { session });

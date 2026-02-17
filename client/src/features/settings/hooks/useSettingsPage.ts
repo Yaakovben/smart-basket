@@ -11,7 +11,7 @@ interface UseSettingsPageParams {
 export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): UseSettingsPageReturn => {
   const { settings, updateLanguage } = useSettings();
 
-  // ===== State =====
+  // ===== מצב =====
   const [showLanguage, setShowLanguage] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -21,11 +21,11 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
   const [productExpanded, setProductExpanded] = useState(false);
   const [pushExpanded, setPushExpanded] = useState(false);
 
-  // ===== Computed =====
+  // ===== מחושבים =====
   const currentLanguage = LANGUAGES.find(l => l.code === settings.language);
   const currentLanguageName = currentLanguage?.name || '';
 
-  // ===== Handlers =====
+  // ===== טיפולים =====
   const handleLanguageSelect = useCallback((lang: Language) => {
     updateLanguage(lang);
     setShowLanguage(false);
@@ -53,7 +53,6 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
   }, [onDeleteAllData]);
 
   return {
-    // State
     showLanguage,
     showAbout,
     showHelp,
@@ -63,8 +62,6 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     productExpanded,
     pushExpanded,
     currentLanguageName,
-
-    // Setters
     setShowLanguage,
     setShowAbout,
     setShowHelp,
@@ -73,8 +70,6 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     setGroupExpanded,
     setProductExpanded,
     setPushExpanded,
-
-    // Handlers
     handleLanguageSelect,
     toggleNotificationsExpanded,
     toggleGroupExpanded,

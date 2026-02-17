@@ -4,7 +4,6 @@ import { haptic, getLocale } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
-// formatDate, formatTime, generateProductId removed - products created on server
 import { newProductSchema, validateForm } from '../../../global/validation';
 import { productsApi, listsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
@@ -18,7 +17,7 @@ import type {
   UseListReturn
 } from '../types/list-types';
 
-// Helper to convert API product to client Product type
+// המרת מוצר API לטיפוס מוצר קליינט
 const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }, locale: string): Product => ({
   id: apiProduct.id,
   name: apiProduct.name,
@@ -31,7 +30,7 @@ const convertApiProduct = (apiProduct: { id: string; name: string; quantity: num
   createdTime: new Date(apiProduct.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
 });
 
-// ===== Constants =====
+// ===== קבועים =====
 const FAB_VISIBILITY_THRESHOLD = 3;
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 };
 const DEFAULT_FAB_BOTTOM_OFFSET = 90;
@@ -43,7 +42,7 @@ const getDefaultNewProduct = (): NewProductForm => ({
   category: 'אחר' as Product['category'],
 });
 
-// Helper to create date/time strings
+// יצירת מחרוזות תאריך/שעה
 const createDateTimeStrings = (locale: string) => {
   const now = new Date();
   return {
@@ -52,7 +51,7 @@ const createDateTimeStrings = (locale: string) => {
   };
 };
 
-// ===== Types =====
+// ===== טיפוסים =====
 interface UseListParams {
   list: List;
   user: User;
@@ -77,13 +76,13 @@ export const useList = ({
   const { t, settings } = useSettings();
   const locale = getLocale(settings.language);
 
-  // ===== Filter & Search State =====
+  // ===== מצב חיפוש וסינון =====
   const [filter, setFilter] = useState<ListFilter>('pending');
   const [search, setSearch] = useState('');
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(() => !StorageService.isHintSeen());
 
-  // ===== Modal Visibility State =====
+  // ===== מצב נראות מודאלים =====
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState<Product | null>(null);
   const [originalEditProduct, setOriginalEditProduct] = useState<Product | null>(null);
@@ -95,22 +94,22 @@ export const useList = ({
   const [confirmDeleteList, setConfirmDeleteList] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
-  // ===== Form State =====
+  // ===== מצב טופס =====
   const [newProduct, setNewProduct] = useState<NewProductForm>(() => getDefaultNewProduct());
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
 
-  // ===== FAB Drag State =====
+  // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<DragState | null>(null);
 
-  // ===== Toggle Race Condition Prevention =====
+  // ===== מניעת תנאי מרוץ ב-toggle =====
   const toggleVersions = useRef(new Map<string, number>());
   const productsRef = useRef(list.products);
   productsRef.current = list.products;
 
-  // ===== Computed Values =====
+  // ===== ערכים מחושבים =====
   const pending = useMemo(
     () => list.products.filter((p: Product) => !p.isPurchased),
     [list.products]
@@ -121,7 +120,7 @@ export const useList = ({
     [list.products]
   );
 
-  // Debounce search for better performance
+  // Debounce לחיפוש
   const debouncedSearch = useDebounce(search, 300);
 
   const items = useMemo(
@@ -141,7 +140,7 @@ export const useList = ({
     [list.owner.id, user.id]
   );
 
-  // Change detection
+  // זיהוי שינויים
   const hasProductChanges = useMemo(() => {
     if (!showEdit || !originalEditProduct) return false;
     return (
@@ -161,13 +160,13 @@ export const useList = ({
     );
   }, [editListData, list.name, list.icon, list.color]);
 
-  // ===== Effects =====
+  // ===== אפקטים =====
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: hide FAB when items count drops
     if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
   }, [items.length]);
 
-  // ===== FAB Drag Handlers =====
+  // ===== מטפלי גרירת FAB =====
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
     const currentX = fabPosition?.x ?? window.innerWidth / 2;
     const currentY = fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
@@ -189,14 +188,14 @@ export const useList = ({
     dragRef.current = null;
   }, []);
 
-  // ===== Hint Handler =====
+  // ===== מטפל רמז =====
   const dismissHint = useCallback(() => {
     setShowHint(false);
     StorageService.markHintSeen();
   }, []);
 
-  // ===== Product Handlers =====
-  // Use onUpdateListLocal for optimistic updates (doesn't call API)
+  // ===== מטפלי מוצרים =====
+  // עדכון אופטימיסטי (לא קורא ל-API)
   const updateProducts = useCallback((products: Product[]) => {
     onUpdateListLocal({ ...list, products });
   }, [list, onUpdateListLocal]);
@@ -215,8 +214,8 @@ export const useList = ({
     return true;
   }, [newProduct, t]);
 
-  // Shared helper for adding products with optimistic updates
-  // showToastOnAdd: if false, caller is responsible for showing toast (e.g., after modal closes)
+  // עזר משותף להוספת מוצרים עם עדכון אופטימיסטי
+  // אם false, הקורא אחראי להצגת toast
   const addProductWithOptimisticUpdate = useCallback(async (productData: {
     name: string;
     quantity: number;
@@ -225,7 +224,7 @@ export const useList = ({
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
 
-    // Create optimistic product with temporary ID
+    // יצירת מוצר אופטימיסטי עם מזהה זמני
     const tempId = `temp_${Date.now()}`;
     const { createdDate, createdTime } = createDateTimeStrings(locale);
     const optimisticProduct: Product = {
@@ -237,10 +236,10 @@ export const useList = ({
       createdTime,
     };
 
-    // Store current products for potential rollback
+    // שמירת מוצרים נוכחיים לגלגול אחורה
     const previousProducts = [...list.products];
 
-    // Optimistic update - add product immediately to UI
+    // עדכון אופטימיסטי - הוספה מיידית ל-UI
     updateProducts([...list.products, optimisticProduct]);
     if (showToastOnAdd) {
       showToast(t('added'));
@@ -250,10 +249,10 @@ export const useList = ({
       // Call API to add product
       const updatedList = await productsApi.addProduct(list.id, productData);
 
-      // Find the newly added product (last one in the list)
+      // מציאת המוצר שנוסף (אחרון ברשימה)
       const addedProduct = updatedList.products[updatedList.products.length - 1];
 
-      // Emit socket event to notify other users
+      // שליחת אירוע socket להתראת משתמשים אחרים
       socketService.emitProductAdded(list.id, {
         id: addedProduct.id,
         name: addedProduct.name,
@@ -262,11 +261,11 @@ export const useList = ({
         category: addedProduct.category,
       }, user.name);
 
-      // Update local state with real server data (replacing temp ID)
+      // עדכון state מקומי עם נתוני שרת אמיתיים
       updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
     } catch (error) {
-      console.error('Failed to add product:', error);
-      // Revert optimistic update on error
+      if (import.meta.env.DEV) console.error('Failed to add product:', error);
+      // גלגול אחורה בשגיאה
       updateProducts(previousProducts);
       showToast(t('unknownError'), 'error');
     }
@@ -276,7 +275,7 @@ export const useList = ({
     setAddError('');
     if (!validateProduct()) return;
 
-    // Close modal immediately for better UX
+    // סגירת מודאל מיידית
     const productData = {
       name: newProduct.name.trim(),
       quantity: newProduct.quantity,
@@ -287,7 +286,7 @@ export const useList = ({
     setShowAdd(false);
     showToast(t('added'));
 
-    // Add product in background (optimistic update already shows it)
+    // הוספה ברקע (עדכון אופטימיסטי כבר מציג)
     addProductWithOptimisticUpdate(productData, false);
   }, [newProduct, validateProduct, addProductWithOptimisticUpdate, showToast, t]);
 
@@ -309,11 +308,11 @@ export const useList = ({
 
     const newIsPurchased = !product.isPurchased;
 
-    // Track concurrent toggles to prevent stale server responses
+    // מעקב אחר toggles מקבילים למניעת תגובות מיושנות
     const version = (toggleVersions.current.get(productId) || 0) + 1;
     toggleVersions.current.set(productId, version);
 
-    // Optimistic update - immediate UI response
+    // עדכון אופטימיסטי - תגובה מיידית ב-UI
     updateProducts(
       list.products.map((p: Product) =>
         p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
@@ -325,16 +324,15 @@ export const useList = ({
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
 
-      // Don't overwrite with server response - trust optimistic update
-      // This prevents out-of-order responses from causing visual glitches
+      // לא לדרוס עם תגובת שרת - סומכים על עדכון אופטימיסטי
       if (toggleVersions.current.get(productId) === version) {
         toggleVersions.current.delete(productId);
       }
 
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
-      console.error('Failed to toggle product:', error);
-      // Only rollback if no newer toggle superseded this one
+      if (import.meta.env.DEV) console.error('Failed to toggle product:', error);
+      // גלגול אחורה רק אם לא היה toggle חדש יותר
       if (toggleVersions.current.get(productId) === version) {
         updateProducts(
           productsRef.current.map((p: Product) =>
@@ -356,17 +354,17 @@ export const useList = ({
       message: `${t('delete')} "${product.name}"?`,
       onConfirm: async () => {
         try {
-          // Call API to delete product
+          // קריאת API למחיקת מוצר
           const updatedList = await productsApi.deleteProduct(list.id, productId);
 
-          // Emit socket event to notify other users
+          // שליחת אירוע socket להתראת משתמשים אחרים
           socketService.emitProductDeleted(list.id, productId, product.name, user.name);
 
           updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
           setConfirm(null);
           showToast(t('deleted'));
         } catch (error) {
-          console.error('Failed to delete product:', error);
+          if (import.meta.env.DEV) console.error('Failed to delete product:', error);
           setConfirm(null);
           showToast(t('unknownError'), 'error');
         }
@@ -378,15 +376,15 @@ export const useList = ({
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
     haptic('medium');
 
-    // Store the edit data before closing modal
+    // שמירת נתוני עריכה לפני סגירת מודאל
     const editData = { ...showEdit };
     const original = { ...originalEditProduct };
 
-    // Close modal first for smooth animation
+    // סגירת מודאל לפני לאנימציה חלקה
     setShowEdit(null);
     setOriginalEditProduct(null);
 
-    // Build diff - only send fields that actually changed
+    // בניית diff - שליחת שדות שהשתנו בלבד
     const changes: Record<string, unknown> = {};
     if (editData.name !== original.name) changes.name = editData.name;
     if (editData.quantity !== original.quantity) changes.quantity = editData.quantity;
@@ -394,10 +392,10 @@ export const useList = ({
     if (editData.category !== original.category) changes.category = editData.category;
 
     try {
-      // Call API with only changed fields
+      // קריאת API עם שדות שהשתנו בלבד
       const updatedList = await productsApi.updateProduct(list.id, editData.id, changes);
 
-      // Emit socket event to notify other users
+      // שליחת אירוע socket להתראת משתמשים אחרים
       socketService.emitProductUpdated(list.id, {
         id: editData.id,
         name: editData.name,
@@ -409,7 +407,7 @@ export const useList = ({
       updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
       showToast(t('saved'));
     } catch (error) {
-      console.error('Failed to update product:', error);
+      if (import.meta.env.DEV) console.error('Failed to update product:', error);
       showToast(t('unknownError'), 'error');
     }
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, updateProducts, showToast, t, locale]);
@@ -424,7 +422,7 @@ export const useList = ({
     setOriginalEditProduct(null);
   }, []);
 
-  // ===== Form Update Handlers =====
+  // ===== מטפלי עדכון טופס =====
   const updateNewProductField = useCallback(<K extends keyof NewProductForm>(
     field: K,
     value: NewProductForm[K]
@@ -461,7 +459,7 @@ export const useList = ({
     setAddError('');
   }, []);
 
-  // ===== List Edit Handlers =====
+  // ===== מטפלי עריכת רשימה =====
   const handleEditList = useCallback(() => {
     setEditListData({ name: list.name, icon: list.icon, color: list.color });
     setShowEditList(true);
@@ -479,7 +477,7 @@ export const useList = ({
     onBack();
   }, [list.id, onDeleteList, onBack]);
 
-  // ===== Member Handlers =====
+  // ===== מטפלי חברים =====
   const removeMember = useCallback((memberId: string, memberName: string) => {
     const message = t('removeMemberConfirm').replace('{name}', memberName);
     setConfirm({
@@ -487,20 +485,20 @@ export const useList = ({
       message,
       onConfirm: async () => {
         try {
-          // Call API to remove member
+          // קריאת API להסרת חבר
           await listsApi.removeMember(list.id, memberId);
 
-          // Emit socket event to notify the removed user
+          // שליחת אירוע socket להתראת המשתמש שהוסר
           socketService.emitMemberRemoved(list.id, list.name, memberId, memberName, user.name);
 
-          // Update local state (without API call since we already called the API)
+          // עדכון state מקומי (ללא קריאת API כי כבר קראנו)
           onUpdateListLocal({
             ...list,
             members: list.members.filter((m: Member) => m.id !== memberId)
           });
           showToast(t('removed'));
         } catch (error) {
-          console.error('Failed to remove member:', error);
+          if (import.meta.env.DEV) console.error('Failed to remove member:', error);
           showToast(t('unknownError'), 'error');
         }
         setConfirm(null);
@@ -520,7 +518,6 @@ export const useList = ({
   }, [list.id, onLeaveList, t]);
 
   return {
-    // State
     filter,
     search,
     showAdd,
@@ -540,7 +537,6 @@ export const useList = ({
     fabPosition,
     isDragging,
 
-    // Computed values
     pending,
     purchased,
     items,
@@ -549,7 +545,6 @@ export const useList = ({
     hasProductChanges,
     hasListChanges,
 
-    // Setters
     setFilter,
     setSearch,
     setShowAdd,
@@ -566,7 +561,6 @@ export const useList = ({
     setOpenItemId,
     setAddError,
 
-    // Handlers
     handleDragStart,
     handleDragMove,
     handleDragEnd,

@@ -3,9 +3,7 @@ import { PushService } from '../services';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
-/**
- * Get VAPID public key for client subscription
- */
+/** קבלת מפתח VAPID ציבורי */
 export const getVapidPublicKey = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   const publicKey = PushService.getPublicKey();
 
@@ -23,9 +21,7 @@ export const getVapidPublicKey = asyncHandler(async (_req: Request, res: Respons
   });
 });
 
-/**
- * Subscribe to push notifications
- */
+/** הרשמה להתראות push */
 export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const { subscription } = req.body;
@@ -38,9 +34,7 @@ export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): P
   });
 });
 
-/**
- * Unsubscribe from push notifications
- */
+/** ביטול הרשמה להתראות push */
 export const unsubscribe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const { endpoint } = req.body;
@@ -53,9 +47,7 @@ export const unsubscribe = asyncHandler(async (req: AuthRequest, res: Response):
   });
 });
 
-/**
- * Check if user has push subscription
- */
+/** בדיקת מנוי push */
 export const getStatus = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const hasSubscription = await PushService.hasSubscription(userId);

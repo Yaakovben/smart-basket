@@ -18,7 +18,7 @@ import { MembersButton } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 
-// ===== Styles =====
+// ===== סגנונות =====
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
   ...SIZES.iconButton.md
@@ -49,7 +49,7 @@ interface ListHeaderProps {
   onlineUserIds?: Set<string>;
 }
 
-// ===== Component =====
+// ===== קומפוננטה =====
 export const ListHeader = memo(({
   list,
   user,
@@ -90,7 +90,7 @@ export const ListHeader = memo(({
     }
   }, [showSearch, onSearchChange]);
 
-  // Handle button click - close keyboard after add
+  // סגירת מקלדת אחרי הוספה
   const handleQuickAddButton = useCallback(() => {
     const trimmed = quickAddValue.trim();
     if (trimmed.length < 2 || !onQuickAdd) return;
@@ -99,11 +99,11 @@ export const ListHeader = memo(({
     onQuickAdd(trimmed);
     setQuickAddValue('');
 
-    // Blur input to close keyboard on mobile
+    // הסתרת מקלדת במובייל
     inputRef.current?.blur();
   }, [quickAddValue, onQuickAdd]);
 
-  // Handle Enter key - keep keyboard open for continuous adding
+  // Enter - שמירת מקלדת פתוחה להוספה רציפה
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -113,7 +113,7 @@ export const ListHeader = memo(({
       haptic('light');
       onQuickAdd(trimmed);
       setQuickAddValue('');
-      // Don't blur - keep keyboard open for next item
+      // לא לסגור מקלדת - ממשיכים להוסיף
     }
   }, [quickAddValue, onQuickAdd]);
 

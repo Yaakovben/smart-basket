@@ -5,7 +5,7 @@ import { listValidator } from '../validators';
 
 const router = Router();
 
-// All list routes require authentication
+// כל נתיבי הרשימות דורשים אימות
 router.use(authenticate);
 
 /**
@@ -58,7 +58,7 @@ router.post('/', validate(listValidator.create), ListController.createList);
  *       409:
  *         description: Already a member
  */
-// IMPORTANT: This must be BEFORE /:id routes to avoid matching "join" as an ID
+// חייב להיות לפני /:id כדי לא להתפרש כ-ID
 router.post('/join', joinGroupLimiter, validate(listValidator.join), ListController.joinGroup);
 
 /**

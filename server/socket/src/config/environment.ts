@@ -19,34 +19,32 @@ dotenv.config();
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
  */
 export const env = {
-  // Server port - should be different from API server
+  // פורט השרת - צריך להיות שונה משרת ה-API
   PORT: parseInt(process.env.PORT || '5001', 10),
 
-  // Application environment - controls Sentry and logging
+  // סביבת ריצה - שולט על Sentry ורמת לוגים
   NODE_ENV: process.env.NODE_ENV || 'development',
 
-  // JWT secret - MUST match the API server's JWT_ACCESS_SECRET
+  // מפתח JWT - חייב להתאים לשרת ה-API
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
 
-  // Redis URL for pub/sub between multiple socket server instances
-  // Format: redis://[[username][:password]@][host][:port][/db-number]
+  // Redis לתקשורת pub/sub בין מופעי שרת
   REDIS_URL: process.env.REDIS_URL,
 
-  // CORS - comma-separated list of allowed origins
+  // CORS - רשימת origins מופרדים בפסיקים
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
 
-  // API server URL - Socket server calls this to persist notifications to MongoDB
+  // כתובת שרת ה-API - שרת Socket פונה אליו לשמירת התראות ב-MongoDB
   API_URL: process.env.API_URL || 'http://localhost:5000/api',
 
-  // Admin email - must match the API server's ADMIN_EMAIL for admin-only socket features
+  // מייל מנהל - חייב להתאים לשרת ה-API
   ADMIN_EMAIL: (process.env.ADMIN_EMAIL || '').toLowerCase(),
 
-  // Sentry error monitoring - get DSN from sentry.io project settings
-  // Use the same DSN as API server (serverName differentiates them)
+  // Sentry לניטור שגיאות - אותו DSN כמו שרת ה-API (serverName מבדיל ביניהם)
   SENTRY_DSN: process.env.SENTRY_DSN,
 };
 
-// Validate required env vars
+// ולידציה של משתני סביבה נדרשים
 if (!env.JWT_ACCESS_SECRET) {
   console.error('JWT_ACCESS_SECRET is required');
   process.exit(1);

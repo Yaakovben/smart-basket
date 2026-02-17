@@ -1,4 +1,4 @@
-// ===== Edit Profile Form =====
+// ===== טופס עריכת פרופיל =====
 export interface EditProfileForm {
   name: string;
   email: string;
@@ -6,18 +6,13 @@ export interface EditProfileForm {
   avatarEmoji: string;
 }
 
-// ===== Hook Return Type =====
+// ===== ערך החזרה של ה-Hook =====
 export interface UseProfileReturn {
-  // State
   editProfile: EditProfileForm | null;
   confirmLogout: boolean;
   hasChanges: boolean;
-
-  // Setters
   setEditProfile: (profile: EditProfileForm | null) => void;
   setConfirmLogout: (show: boolean) => void;
-
-  // Handlers
   openEditProfile: () => void;
   handleSave: () => Promise<void>;
   handleLogout: () => void;
@@ -25,6 +20,6 @@ export interface UseProfileReturn {
   closeEdit: () => void;
 }
 
-// ===== Constants =====
+// ===== קבועים =====
 export const AVATAR_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981'];
 export const AVATAR_EMOJIS = ['', '😊', '😎', '🦁', '🐻', '🦊', '🌟', '⚡'];

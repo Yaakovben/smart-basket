@@ -8,7 +8,7 @@ interface SwipeHintProps {
   onDismiss: () => void;
 }
 
-// ===== Component =====
+// ===== קומפוננטה =====
 export const SwipeHint = memo(({ onDismiss }: SwipeHintProps) => {
   const { t } = useSettings();
 

@@ -3,7 +3,7 @@ import { env } from './environment';
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
-// Custom log format
+// פורמט לוג מותאם
 const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
   const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
   if (stack) {
@@ -12,7 +12,6 @@ const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
   return `${timestamp} [${level}]: ${message}${metaStr}`;
 });
 
-// Create logger instance
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: combine(
@@ -20,22 +19,21 @@ export const logger = winston.createLogger({
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
   ),
   transports: [
-    // Console transport with colors in development
     new winston.transports.Console({
       format: combine(
+        // צבעים בפיתוח בלבד
         env.NODE_ENV !== 'production' ? colorize() : winston.format.uncolorize(),
         logFormat
       ),
     }),
   ],
-  // Don't exit on uncaught exceptions
+  // לא לצאת מהתהליך בשגיאות
   exitOnError: false,
 });
 
-// Stream for morgan to use winston
+// stream ל-morgan
 export const morganStream = {
   write: (message: string) => {
-    // Remove trailing newline from morgan
     logger.info(message.trim());
   },
 };

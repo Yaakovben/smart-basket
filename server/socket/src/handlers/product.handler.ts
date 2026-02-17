@@ -17,7 +17,7 @@ export const registerProductHandlers = (
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
 
-  // Product added
+  // הוספת מוצר
   socket.on('product:add', (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -31,7 +31,7 @@ export const registerProductHandlers = (
         listId: data.listId,
         product: { ...data.product, id: data.product.id || '' },
         userId,
-        userName, // from token
+        userName, // מהטוקן
         timestamp: new Date(),
       });
 
@@ -47,7 +47,7 @@ export const registerProductHandlers = (
     }
   });
 
-  // Product updated
+  // עדכון מוצר
   socket.on('product:update', (data: { listId: string; product: ProductData & { id: string }; userName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -61,7 +61,7 @@ export const registerProductHandlers = (
         listId: data.listId,
         product: { ...data.product, id: data.product.id },
         userId,
-        userName, // from token
+        userName, // מהטוקן
         timestamp: new Date(),
       });
 
@@ -77,7 +77,7 @@ export const registerProductHandlers = (
     }
   });
 
-  // Product toggled (purchased/unpurchased)
+  // סימון מוצר (נקנה/לא נקנה)
   socket.on('product:toggle', (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -93,7 +93,7 @@ export const registerProductHandlers = (
         productName: data.productName || '',
         isPurchased: data.isPurchased,
         userId,
-        userName, // from token
+        userName, // מהטוקן
         timestamp: new Date(),
       });
 
@@ -109,7 +109,7 @@ export const registerProductHandlers = (
     }
   });
 
-  // Product deleted
+  // מחיקת מוצר
   socket.on('product:delete', (data: { listId: string; productId: string; productName: string; userName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
@@ -124,7 +124,7 @@ export const registerProductHandlers = (
         productId: data.productId,
         productName: data.productName || '',
         userId,
-        userName, // from token
+        userName, // מהטוקן
         timestamp: new Date(),
       });
 
@@ -141,7 +141,7 @@ export const registerProductHandlers = (
   });
 };
 
-// Helper functions to broadcast events (called from API server via Redis)
+// פונקציות שידור (נקראות משרת ה-API דרך Redis)
 export const broadcastProductAdded = (
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   listId: string,

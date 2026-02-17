@@ -15,17 +15,15 @@ interface GoogleUserInfo {
 }
 
 export class AuthService {
-  // Check if email exists in the database
   static async checkEmail(email: string): Promise<{ exists: boolean; isGoogleAccount: boolean }> {
-    // Use findByEmailWithPassword so the password field is included
-    // (User model has select: false on password, so findByEmail won't load it)
+    // שימוש ב-findByEmailWithPassword כי ה-password field הוא select: false
     const user = await UserDAL.findByEmailWithPassword(email);
 
     if (!user) {
       return { exists: false, isGoogleAccount: false };
     }
 
-    // Check if this is a Google-only account (no password)
+    // בדיקה אם זה חשבון Google בלבד (ללא סיסמה)
     const isGoogleAccount = !!(user.googleId && !user.password);
 
     return { exists: true, isGoogleAccount };
@@ -36,16 +34,13 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-    // Check if email already exists
     const existingUser = await UserDAL.findByEmail(data.email);
     if (existingUser) {
       throw ConflictError.emailExists();
     }
 
-    // Check if user should be admin
     const isAdmin = data.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
-    // Create user with sanitized name
     const user = await UserDAL.create({
       name: sanitizeText(data.name),
       email: data.email.toLowerCase(),
@@ -53,14 +48,12 @@ export class AuthService {
       isAdmin,
     });
 
-    // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
       user.email,
       user.name
     );
 
-    // Log activity
     await LoginActivityDAL.logActivity({
       userId: user._id.toString(),
       userName: user.name,
@@ -81,14 +74,13 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-    // Find user with password
     const user = await UserDAL.findByEmailWithPassword(data.email);
 
     if (!user) {
       throw NotFoundError.user();
     }
 
-    // Check if user registered with Google only (no password)
+    // חשבון Google בלבד - אין סיסמה
     if (!user.password && user.googleId) {
       throw ValidationError.single('email', 'This account was created with Google. Please use Google Sign-In.');
     }
@@ -97,20 +89,17 @@ export class AuthService {
       throw AuthError.invalidCredentials();
     }
 
-    // Check password
     const isMatch = await user.comparePassword(data.password);
     if (!isMatch) {
       throw AuthError.invalidCredentials();
     }
 
-    // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
       user.email,
       user.name
     );
 
-    // Log activity
     await LoginActivityDAL.logActivity({
       userId: user._id.toString(),
       userName: user.name,
@@ -132,7 +121,8 @@ export class AuthService {
     userAgent?: string
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
     const { accessToken } = data;
-    // Fetch user info from Google
+
+    // שליפת פרטי משתמש מ-Google
     const response = await fetch(
       'https://www.googleapis.com/oauth2/v3/userinfo',
       {
@@ -147,17 +137,17 @@ export class AuthService {
 
     const googleUser = (await response.json()) as GoogleUserInfo;
 
-    // Validate required fields from Google
+    // אימות שדות חובה מ-Google
     if (!googleUser.sub || !googleUser.email || !googleUser.name) {
       throw AuthError.googleAuthFailed();
     }
 
-    // Ensure email is verified by Google
+    // וידוא שהאימייל מאומת ב-Google
     if (googleUser.email_verified === false) {
       throw AuthError.googleAuthFailed();
     }
 
-    // Find or create user
+    // מציאת או יצירת משתמש
     let user = await UserDAL.findByGoogleId(googleUser.sub);
 
     if (!user) {
@@ -168,28 +158,25 @@ export class AuthService {
       googleUser.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
     if (!user) {
-      // Create new user with sanitized name
       user = await UserDAL.create({
         name: sanitizeText(googleUser.name),
         email: googleUser.email.toLowerCase(),
         googleId: googleUser.sub,
-        avatarColor: '#4285F4', // Google blue
+        avatarColor: '#4285F4', // כחול של Google
         isAdmin,
       });
     } else if (!user.googleId) {
-      // Link existing email account to Google
+      // קישור חשבון אימייל קיים ל-Google
       user.googleId = googleUser.sub;
       await user.save();
     }
 
-    // Generate tokens
     const tokens = await TokenService.createTokens(
       user._id.toString(),
       user.email,
       user.name
     );
 
-    // Log activity
     await LoginActivityDAL.logActivity({
       userId: user._id.toString(),
       userName: user.name,

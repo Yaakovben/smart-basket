@@ -52,7 +52,6 @@ export class AdminController {
       LoginActivityDAL.countSince(new Date(Date.now() - 24 * 60 * 60 * 1000)),
     ]);
 
-    // Get products count from Product collection
     const totalProducts = await ProductDAL.count({});
 
     res.json({
@@ -71,15 +70,14 @@ export class AdminController {
   static deleteUser = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
 
-    // Prevent admin from deleting themselves
+    // מניעת מחיקה עצמית
     if (userId === req.user!.id) {
       throw ForbiddenError.notOwner();
     }
 
-    // Use the same comprehensive cleanup as user self-deletion
     await UserService.deleteAccount(userId);
 
-    // Delete login activities (not included in deleteAccount)
+    // מחיקת לוגי התחברות (לא כלול ב-deleteAccount)
     await LoginActivityDAL.deleteByUser(userId);
 
     res.json({

@@ -3,7 +3,7 @@ import { getAccessToken, getRefreshToken, setTokens } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
-// Reconnection config optimized for mobile
+// הגדרות התחברות מחדש מותאמות למובייל
 const RECONNECTION_CONFIG = {
   reconnection: true,
   reconnectionAttempts: 20,
@@ -27,15 +27,10 @@ class SocketService {
 
   connect() {
     const token = getAccessToken();
-    if (!token) {
-      return;
-    }
+    if (!token) return;
+    if (this.socket?.connected) return;
 
-    if (this.socket?.connected) {
-      return;
-    }
-
-    // Clean up existing disconnected/reconnecting socket to prevent connection leaks
+    // ניקוי socket קיים שלא מחובר - מונע דליפת חיבורים
     if (this.socket) {
       this.socket.disconnect();
     }
@@ -47,20 +42,17 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      // Rejoin all lists after reconnect
+      // הצטרפות מחדש לכל הרשימות אחרי reconnect
       this.joinedLists.forEach((listId) => {
         this.socket?.emit('join:list', listId);
       });
-      // Notify internal listeners (e.g. usePresence re-requests presence on reconnect)
       this.emit('connect', undefined);
     });
 
-    this.socket.on('disconnect', () => {
-      // Socket disconnected, will auto-reconnect
-    });
+    this.socket.on('disconnect', () => {});
 
     this.socket.on('connect_error', async (error) => {
-      // If auth error (token expired/invalid), actually refresh the token
+      // שגיאת אימות - רענון טוקן
       if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('expired')) {
         if (this.isRefreshingToken) return;
         this.isRefreshingToken = true;
@@ -82,36 +74,28 @@ class SocketService {
           setTokens(accessToken, newRefreshToken);
           this.socket.auth = { token: accessToken };
         } catch {
-          // Refresh failed - token is truly invalid, reconnect will eventually stop
+          // רענון נכשל - הטוקן לא תקף
         } finally {
           this.isRefreshingToken = false;
         }
       }
     });
 
-    this.socket.on('error', () => {
-      // Socket error handled by reconnection logic
-    });
+    this.socket.on('error', () => {});
 
-    // Setup event forwarding
     this.setupEventForwarding();
-
-    // Setup visibility change handler for mobile
     this.setupVisibilityHandler();
-
-    // Setup network recovery handler
     this.setupOnlineHandler();
   }
 
+  // חזרה מרקע (מובייל) - וידוא חיבור
   private setupVisibilityHandler() {
-    // Remove existing handler if any
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
     }
 
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
-        // App came to foreground - ensure connection
         if (!this.socket?.connected) {
           const token = getAccessToken();
           if (token) {
@@ -129,13 +113,13 @@ class SocketService {
     document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
+  // חזרת רשת - וידוא חיבור
   private setupOnlineHandler() {
     if (this.onlineHandler) {
       window.removeEventListener('online', this.onlineHandler);
     }
 
     this.onlineHandler = () => {
-      // Network came back online - ensure socket is connected
       if (this.socket && !this.socket.connected) {
         const token = getAccessToken();
         if (token) {
@@ -148,6 +132,7 @@ class SocketService {
     window.addEventListener('online', this.onlineHandler);
   }
 
+  // העברת אירועים מ-socket.io למאזינים פנימיים
   private setupEventForwarding() {
     const events = [
       'user:joined',
@@ -174,24 +159,20 @@ class SocketService {
   }
 
   disconnect() {
-    // Cleanup visibility handler
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
     }
-    // Cleanup network recovery handler
     if (this.onlineHandler) {
       window.removeEventListener('online', this.onlineHandler);
       this.onlineHandler = null;
     }
     this.joinedLists.clear();
-    // Clear all listeners to prevent memory leaks
     this.listeners.clear();
     this.socket?.disconnect();
     this.socket = null;
   }
 
-  // Join a list room (with optional callback after server confirms join)
   joinList(listId: string, onJoined?: () => void) {
     this.joinedLists.add(listId);
     if (onJoined) {
@@ -201,89 +182,76 @@ class SocketService {
     }
   }
 
-  // Leave a list room
   leaveList(listId: string) {
     this.joinedLists.delete(listId);
     this.socket?.emit('leave:list', listId);
   }
 
-  // Request presence for specific lists
   requestPresence(listIds: string[]) {
     if (listIds.length > 0) {
       this.socket?.emit('get:presence', listIds);
     }
   }
 
-  // Request all online users (for admin page)
   requestOnlineUsers() {
     this.socket?.emit('get:online-users');
   }
 
-  // Stop receiving online user updates (when leaving admin page)
   leaveOnlineUsers() {
     this.socket?.emit('leave:online-users');
   }
 
-  // Subscribe to events
+  // הרשמה לאירועים - מחזיר פונקציית ביטול
   on<T>(event: string, handler: SocketEventHandler<T>) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(handler as SocketEventHandler<unknown>);
 
-    // Return unsubscribe function
     return () => {
       this.listeners.get(event)?.delete(handler as SocketEventHandler<unknown>);
     };
   }
 
-  // Emit to internal listeners
   private emit(event: string, data: unknown) {
     this.listeners.get(event)?.forEach((handler) => handler(data));
   }
 
-  // Check if connected
   isConnected(): boolean {
     return this.socket?.connected ?? false;
   }
 
-  // Update token (called when HTTP client refreshes the access token)
+  // עדכון טוקן (נקרא כשה-HTTP client מרענן טוקן)
   updateToken(newToken: string) {
     if (this.socket) {
       this.socket.auth = { token: newToken };
-      // If connected, send new token to server without reconnecting
       if (this.socket.connected) {
         this.socket.emit('token:refresh', newToken);
       }
     }
   }
 
-  // Emit product added event
   emitProductAdded(listId: string, product: { id: string; name: string; quantity: number; unit: string; category: string }, userName: string) {
     this.socket?.emit('product:add', { listId, product, userName });
   }
 
-  // Emit product updated event
   emitProductUpdated(listId: string, product: { id: string; name: string; quantity: number; unit: string; category: string }, userName: string) {
     this.socket?.emit('product:update', { listId, product, userName });
   }
 
-  // Emit product deleted event
   emitProductDeleted(listId: string, productId: string, productName: string, userName: string) {
     this.socket?.emit('product:delete', { listId, productId, productName, userName });
   }
 
-  // Emit product toggled event
   emitProductToggled(listId: string, productId: string, productName: string, isPurchased: boolean, userName: string) {
     this.socket?.emit('product:toggle', { listId, productId, productName, isPurchased, userName });
   }
 
-  // Emit member joined event
   emitMemberJoined(listId: string, listName: string, userName: string) {
     this.socket?.emit('member:join', { listId, listName, userName });
   }
 
-  // Emit member left event - with optional callback for ack
+  // עם callback אופציונלי לאישור מהשרת
   emitMemberLeft(listId: string, listName: string, userName: string, onDone?: () => void) {
     if (onDone) {
       this.socket?.emit('member:leave', { listId, listName, userName }, onDone);
@@ -292,12 +260,11 @@ class SocketService {
     }
   }
 
-  // Emit member removed event (by admin)
   emitMemberRemoved(listId: string, listName: string, removedUserId: string, removedUserName: string, adminName: string) {
     this.socket?.emit('member:remove', { listId, listName, removedUserId, removedUserName, adminName });
   }
 
-  // Emit list deleted event (by owner) - with optional callback for ack
+  // עם callback אופציונלי לאישור מהשרת
   emitListDeleted(listId: string, listName: string, memberIds: string[], ownerName: string, onDone?: () => void) {
     if (onDone) {
       this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName }, onDone);
@@ -306,7 +273,6 @@ class SocketService {
     }
   }
 
-  // Emit list settings updated event (by owner)
   emitListUpdated(
     listId: string,
     listName: string,
@@ -318,7 +284,6 @@ class SocketService {
   }
 }
 
-// Singleton instance
 export const socketService = new SocketService();
 
 export default socketService;

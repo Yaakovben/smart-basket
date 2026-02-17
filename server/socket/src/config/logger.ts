@@ -3,7 +3,7 @@ import { env } from './environment';
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
 
-// Custom log format
+// פורמט לוג מותאם
 const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
   const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
   if (stack) {
@@ -12,7 +12,6 @@ const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
   return `${timestamp} [${level}]: ${message}${metaStr}`;
 });
 
-// Create logger instance
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: combine(
@@ -20,7 +19,7 @@ export const logger = winston.createLogger({
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
   ),
   transports: [
-    // Console transport with colors in development
+    // צבעים בפיתוח בלבד
     new winston.transports.Console({
       format: combine(
         env.NODE_ENV !== 'production' ? colorize() : winston.format.uncolorize(),
@@ -28,6 +27,6 @@ export const logger = winston.createLogger({
       ),
     }),
   ],
-  // Don't exit on uncaught exceptions
+  // לא לצאת מהתהליך בשגיאות
   exitOnError: false,
 });

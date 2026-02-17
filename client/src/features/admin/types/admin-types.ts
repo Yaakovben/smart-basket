@@ -15,17 +15,12 @@ export interface DashboardStats {
 }
 
 export interface UseAdminDashboardReturn {
-  // Data
   activities: LoginActivity[];
   filteredActivities: LoginActivity[];
   allUsers: User[];
   usersWithLoginInfo: UserWithLastLogin[];
   stats: DashboardStats;
-
-  // State
   filters: ActivityFilters;
-
-  // Actions
   setFilters: (filters: ActivityFilters) => void;
   setFilterMode: (mode: ActivityFilters['filterMode']) => void;
   setSelectedMonth: (month: string) => void;

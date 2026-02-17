@@ -3,9 +3,7 @@ import type { TranslationKeys } from '../i18n/translations';
 
 type TranslateFn = (key: TranslationKeys) => string;
 
-/**
- * Generates a formatted WhatsApp message for inviting members to a group
- */
+/** יצירת הודעת WhatsApp מעוצבת להזמנת חברים לרשימה */
 export const generateInviteMessage = (list: List, t: TranslateFn): string => {
   const lines = [
     `🛒 ${t('joinGroup')} *${list.name}*`,
@@ -19,9 +17,7 @@ export const generateInviteMessage = (list: List, t: TranslateFn): string => {
   return lines.join('\n');
 };
 
-/**
- * Generates a formatted WhatsApp message for sharing a shopping list
- */
+/** יצירת הודעת WhatsApp מעוצבת לשיתוף רשימת קניות */
 export const generateShareListMessage = (list: List, t: TranslateFn): string => {
   const pendingProducts = list.products.filter((p: Product) => !p.isPurchased);
 

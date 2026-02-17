@@ -11,7 +11,7 @@ const DEFAULT_FILTERS: ActivityFilters = {
   selectedHour: undefined,
 };
 
-// Convert API activity to client LoginActivity type
+// המרת פעילות API לטיפוס קליינט
 const convertApiActivity = (apiActivity: AdminLoginActivity): LoginActivity => ({
   id: apiActivity.id,
   userId: apiActivity.user,
@@ -21,7 +21,7 @@ const convertApiActivity = (apiActivity: AdminLoginActivity): LoginActivity => (
   timestamp: apiActivity.createdAt,
 });
 
-// Convert API user to client User type
+// המרת משתמש API לטיפוס קליינט
 const convertApiUser = (apiUser: AdminUser): User => ({
   id: apiUser.id,
   name: apiUser.name,
@@ -38,7 +38,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from API
+  // טעינת נתונים מה-API
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -51,19 +51,19 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       setAllUsers(usersData.map(convertApiUser));
       setActivities(activityData.activities.map(convertApiActivity));
     } catch (err) {
-      console.error('Failed to fetch admin data:', err);
+      if (import.meta.env.DEV) console.error('Failed to fetch admin data:', err);
       setError(t('adminLoadError'));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load data on mount
+  // טעינת נתונים בעלייה
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Compute users with their last login info
+  // חישוב משתמשים עם מידע התחברות אחרונה
   const usersWithLoginInfo: UserWithLastLogin[] = useMemo(() => {
     return allUsers.map((user: User) => {
       const userActivities = activities
@@ -81,7 +81,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
         totalLogins: userActivities.length,
       };
     }).sort((a: UserWithLastLogin, b: UserWithLastLogin) => {
-      // Sort by last login (most recent first), users without login at the end
+      // מיון לפי התחברות אחרונה (חדש ביותר ראשון)
       if (!a.lastLoginAt && !b.lastLoginAt) return 0;
       if (!a.lastLoginAt) return 1;
       if (!b.lastLoginAt) return -1;
@@ -89,7 +89,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     });
   }, [allUsers, activities]);
 
-  // Filter activities based on current filters
+  // סינון פעילויות לפי מסננים
   const filteredActivities = useMemo(() => {
     let result = [...activities];
 
@@ -104,7 +104,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
             a.timestamp.startsWith(filters.selectedDate!),
           );
         } else {
-          // Default to today
+          // ברירת מחדל: היום
           result = result.filter((a) => a.timestamp.startsWith(today));
         }
         break;
@@ -115,7 +115,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
             a.timestamp.startsWith(filters.selectedMonth!),
           );
         } else {
-          // Default to current month
+          // ברירת מחדל: החודש הנוכחי
           result = result.filter((a) => a.timestamp.startsWith(currentMonth));
         }
         break;
@@ -131,7 +131,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
             );
           });
         } else if (filters.selectedHour !== undefined) {
-          // Filter by hour for today
+          // סינון לפי שעה ביום הנוכחי
           result = result.filter((a) => {
             const date = new Date(a.timestamp);
             const activityDate = a.timestamp.split("T")[0];
@@ -144,18 +144,18 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
 
       case "all":
       default:
-        // No filtering
+        // ללא סינון
         break;
     }
 
-    // Sort by timestamp descending (newest first)
+    // מיון לפי זמן (חדש ביותר ראשון)
     return result.sort(
       (a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
   }, [activities, filters]);
 
-  // Calculate stats
+  // חישוב סטטיסטיקות
   const stats: DashboardStats = useMemo(() => {
     const now = new Date();
     const today = now.toISOString().split("T")[0];
@@ -164,7 +164,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     const todayActivities = activities.filter((a: LoginActivity) => a.timestamp.startsWith(today));
     const monthActivities = activities.filter((a: LoginActivity) => a.timestamp.startsWith(currentMonth));
 
-    // Count unique users
+    // ספירת משתמשים ייחודיים
     const uniqueUsersToday = new Set(todayActivities.map((a: LoginActivity) => a.userId)).size;
     const uniqueUsersThisMonth = new Set(monthActivities.map((a: LoginActivity) => a.userId)).size;
 
@@ -177,7 +177,6 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     };
   }, [activities, allUsers]);
 
-  // Actions
   const setFilterMode = useCallback((mode: ActivityFilters["filterMode"]) => {
     setFilters((prev) => ({ ...prev, filterMode: mode }));
   }, []);

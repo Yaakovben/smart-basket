@@ -7,16 +7,16 @@ import type { UseAuthReturn } from '../types/auth-types';
 import { registerSchema, validateForm } from '../../../global/validation';
 import { authApi } from '../../../services/api';
 
-// ===== Types =====
+// ===== טיפוסים =====
 interface UseAuthParams {
   onLogin: (user: User, loginMethod?: LoginMethod) => void;
 }
 
-// ===== Hook =====
+// ===== Hook ראשי =====
 export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const { t } = useSettings();
 
-  // ===== Form State =====
+  // ===== מצב טופס =====
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -30,7 +30,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const [isGoogleAccount, setIsGoogleAccount] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
-  // ===== Validation =====
+  // ===== אימות =====
   const validateRegisterForm = useCallback((): boolean => {
     const result = validateForm(registerSchema, {
       name: name.trim(),
@@ -44,8 +44,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     return true;
   }, [name, email, password, t]);
 
-  // ===== Email Handlers =====
-  // Check email existence via API
+  // ===== טיפול באימייל =====
+  // בדיקת קיום אימייל מול ה-API
   const checkEmailExists = useCallback(async () => {
     if (!isValidEmail(email.trim())) {
       setError(t('invalidEmail'));
@@ -76,7 +76,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     }
   }, [email, t]);
 
-  // Debounce email suggestion and check to avoid while typing
+  // Debounce להצעת תיקון אימייל ובדיקתו כדי למנוע קריאות בזמן הקלדה
   const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -86,34 +86,34 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleEmailChange = useCallback((newEmail: string) => {
     setEmail(newEmail);
     setError('');
-    // Reset email check state when email changes
+    // איפוס מצב בדיקת האימייל בעת שינוי האימייל
     setEmailChecked(false);
     setIsNewUser(false);
     setIsGoogleAccount(false);
 
-    // Clear previous suggestion immediately when typing
+    // ניקוי הצעת תיקון קודמת מיד עם תחילת ההקלדה
     setEmailSuggestion(null);
 
-    // Clear existing timers
+    // ניקוי טיימרים קיימים
     if (suggestionTimerRef.current) {
       clearTimeout(suggestionTimerRef.current);
     }
     if (emailCheckTimerRef.current) {
       clearTimeout(emailCheckTimerRef.current);
     }
-    // Abort any in-flight checkEmail request
+    // ביטול בקשת בדיקת אימייל שבטיסה
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
 
-    // Check for domain typos after user stops typing (500ms delay)
+    // בדיקת שגיאות הקלדה בדומיין אחרי שהמשתמש מפסיק להקליד (עיכוב 500ms)
     suggestionTimerRef.current = setTimeout(() => {
       const suggestion = checkEmailDomainTypo(newEmail);
       setEmailSuggestion(suggestion);
     }, 500);
 
-    // Auto-check email existence after user stops typing (800ms delay)
+    // בדיקה אוטומטית של קיום אימייל אחרי שהמשתמש מפסיק להקליד (עיכוב 800ms)
     if (isValidEmail(newEmail.trim())) {
       emailCheckTimerRef.current = setTimeout(async () => {
         const trimmedEmail = newEmail.trim();
@@ -122,7 +122,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setCheckingEmail(true);
         try {
           const result = await authApi.checkEmail(trimmedEmail, { signal: controller.signal });
-          // Verify email hasn't changed while request was in flight
+          // אימות שהאימייל לא השתנה בזמן שהבקשה בטיסה
           if (controller.signal.aborted || emailRef.current.trim() !== trimmedEmail) return;
           setEmailChecked(true);
           setIsNewUser(!result.exists);
@@ -132,15 +132,15 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           }
         } catch (err: unknown) {
           if (controller.signal.aborted) return;
-          // Show error for network/server issues
+          // הצגת שגיאה לבעיות רשת/שרת
           const apiError = err as { response?: { status?: number; data?: unknown }; code?: string; config?: { baseURL?: string } };
           if (apiError.code === 'ERR_NETWORK') {
             setError(t('networkError'));
           } else if (apiError.response?.status === 405) {
-            // 405 = Method Not Allowed - cache issue, show link to clear cache
+            // 405 = Method Not Allowed - בעיית מטמון, הצגת קישור לניקוי המטמון
             setError(t('cacheError'));
           }
-          // For other errors, continue silently - will check on submit
+          // לשגיאות אחרות, המשך בשקט - ייבדק בעת שליחת הטופס
         } finally {
           if (!controller.signal.aborted) {
             setCheckingEmail(false);
@@ -150,7 +150,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     }
   }, [t]);
 
-  // Cleanup timers and abort controller on unmount
+  // ניקוי טיימרים ו-AbortController בעת הסרת הקומפוננטה
   useEffect(() => {
     return () => {
       if (suggestionTimerRef.current) {
@@ -171,7 +171,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       const correctedEmail = `${localPart}@${emailSuggestion}`;
       setEmail(correctedEmail);
       setEmailSuggestion(null);
-      // Reset email check state when email changes
+      // איפוס מצב בדיקת האימייל בעת שינוי האימייל
       setEmailChecked(false);
       setIsNewUser(false);
       setIsGoogleAccount(false);
@@ -181,19 +181,19 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleEmailSubmit = useCallback(async () => {
     setError('');
 
-    // Validate email first
+    // אימות האימייל תחילה
     if (!isValidEmail(email.trim())) {
       setError(t('invalidEmail'));
       return;
     }
 
-    // Validate password (minimum 8 characters)
+    // אימות סיסמה (מינימום 8 תווים)
     if (!password || password.length < 8) {
       setError(t('passwordTooShort'));
       return;
     }
 
-    // If new user flow (name field is shown), register
+    // אם זהו תהליך משתמש חדש (שדה שם מוצג), בצע הרשמה
     if (isNewUser && emailChecked) {
       if (!validateRegisterForm()) return;
 
@@ -231,7 +231,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
       return;
     }
 
-    // First attempt - try to login
+    // ניסיון ראשון - התחברות
     setEmailLoading(true);
     try {
       const { user } = await authApi.login({ email: email.trim(), password });
@@ -256,7 +256,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         haptic('heavy');
         setError(t('wrongPassword'));
       } else if (apiError.response?.status === 404 || errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('לא נמצא')) {
-        // User doesn't exist - show name field for registration
+        // המשתמש לא קיים - הצגת שדה שם להרשמה
         haptic('light');
         setIsNewUser(true);
         setEmailChecked(true);
@@ -278,11 +278,11 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     handleEmailSubmit();
   }, [handleEmailSubmit]);
 
-  // ===== Google Auth Handlers =====
+  // ===== טיפול בהתחברות Google =====
   const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string }) => {
     setGoogleLoading(true);
     try {
-      // Send Google access token to our server
+      // שליחת טוקן Google לשרת
       const { user } = await authApi.googleAuth(tokenResponse.access_token);
       haptic('medium');
       onLogin(user, 'google');
@@ -314,24 +314,23 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     setGoogleLoading(false);
   }, [t]);
 
-  // ===== Password Handler =====
+  // ===== טיפול בסיסמה =====
   const handlePasswordChange = useCallback((newPassword: string) => {
     setPassword(newPassword);
-    // Clear error when user types (fixing the issue)
+    // ניקוי שגיאה כשהמשתמש מקליד
     if (error) {
       setError('');
     }
   }, [error]);
 
-  // ===== UI Handlers =====
+  // ===== טיפול ב-UI =====
   const toggleEmailForm = useCallback(() => {
     setShowEmailForm(prev => !prev);
     setError('');
   }, []);
 
-  // ===== Return =====
+  // ===== ערך החזרה =====
   return {
-    // State
     name,
     email,
     password,
@@ -345,14 +344,12 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     isGoogleAccount,
     checkingEmail,
 
-    // Setters
     setName,
     setEmail,
     setPassword,
     setError,
     setShowEmailForm,
 
-    // Handlers
     handleEmailChange,
     handlePasswordChange,
     handleEmailSubmit,

@@ -34,13 +34,11 @@ export interface PaginatedActivity {
 }
 
 export const adminApi = {
-  // Get all users
   async getUsers(): Promise<AdminUser[]> {
     const response = await apiClient.get<{ data: AdminUser[] }>('/admin/users');
     return response.data.data;
   },
 
-  // Get login activity with pagination
   async getLoginActivity(page = 1, limit = 100): Promise<PaginatedActivity> {
     const response = await apiClient.get<{ data: PaginatedActivity }>('/admin/activity', {
       params: { page, limit }

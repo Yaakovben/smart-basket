@@ -1,4 +1,4 @@
-// ===== Form State =====
+// ===== מצב טופס =====
 export interface AuthFormState {
   name: string;
   email: string;
@@ -10,9 +10,8 @@ export interface AuthFormState {
   showEmailForm: boolean;
 }
 
-// ===== Hook Return Type =====
+// ===== ערך החזרה של ה-Hook =====
 export interface UseAuthReturn {
-  // State
   name: string;
   email: string;
   password: string;
@@ -26,14 +25,12 @@ export interface UseAuthReturn {
   isGoogleAccount: boolean;
   checkingEmail: boolean;
 
-  // Setters
   setName: (name: string) => void;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
   setError: (error: string) => void;
   setShowEmailForm: (show: boolean) => void;
 
-  // Handlers
   handleEmailChange: (email: string) => void;
   handlePasswordChange: (password: string) => void;
   handleEmailSubmit: () => void;
@@ -46,7 +43,7 @@ export interface UseAuthReturn {
   checkEmailExists: () => Promise<void>;
 }
 
-// ===== Google User Info =====
+// ===== מידע משתמש Google =====
 export interface GoogleUserInfo {
   sub: string;
   name: string;

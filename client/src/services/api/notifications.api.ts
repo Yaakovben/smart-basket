@@ -44,9 +44,7 @@ export interface GetNotificationsOptions {
 }
 
 export const notificationsApi = {
-  /**
-   * Get all notifications for the authenticated user
-   */
+  /** קבלת כל ההתראות של המשתמש המאומת */
   async getNotifications(options: GetNotificationsOptions = {}): Promise<PaginatedNotifications> {
     const params = new URLSearchParams();
     if (options.page) params.append('page', options.page.toString());
@@ -68,9 +66,7 @@ export const notificationsApi = {
     };
   },
 
-  /**
-   * Mark a single notification as read
-   */
+  /** סימון התראה בודדת כנקראה */
   async markAsRead(notificationId: string): Promise<Notification> {
     const response = await apiClient.put<{ data: Notification }>(
       `/notifications/${notificationId}/read`
@@ -78,9 +74,7 @@ export const notificationsApi = {
     return response.data.data;
   },
 
-  /**
-   * Mark all notifications as read
-   */
+  /** סימון כל ההתראות כנקראו */
   async markAllAsRead(listId?: string): Promise<number> {
     const response = await apiClient.put<{ data: { markedCount: number } }>(
       '/notifications/read-all',

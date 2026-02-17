@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 
-/**
- * Debounce a value to reduce frequent updates
- * @param value - The value to debounce
- * @param delay - Delay in milliseconds (default: 300ms)
- * @returns The debounced value
- */
+/** השהיית ערך למניעת עדכונים תכופים */
 export const useDebounce = <T>(value: T, delay: number = 300): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 

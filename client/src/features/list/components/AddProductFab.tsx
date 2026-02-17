@@ -5,7 +5,7 @@ import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { FabPosition } from '../types/list-types';
 
-// ===== Constants =====
+// ===== קבועים =====
 const FAB_DRAGGABLE_THRESHOLD = 3;
 
 // ===== Props =====
@@ -19,7 +19,7 @@ interface AddProductFabProps {
   onDragEnd: () => void;
 }
 
-// ===== Component =====
+// ===== קומפוננטה =====
 export const AddProductFab = memo(({
   itemCount,
   fabPosition,

@@ -23,7 +23,7 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
     return formatDateLong(dateStr + 'T00:00:00', settings.language);
   };
 
-  // Group activities by date
+  // קיבוץ פעילויות לפי תאריך
   const groupedActivities: GroupedActivities[] = activities.reduce((groups: GroupedActivities[], activity) => {
     const dateStr = activity.timestamp.split('T')[0];
     const existingGroup = groups.find(g => g.date === dateStr);

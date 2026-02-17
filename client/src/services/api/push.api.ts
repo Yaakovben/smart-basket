@@ -4,9 +4,7 @@ interface VapidKeyResponse {
   publicKey: string;
 }
 
-/**
- * Get VAPID public key for push subscription
- */
+/** קבלת מפתח VAPID ציבורי */
 export const getVapidPublicKey = async (): Promise<string | null> => {
   try {
     const response = await apiClient.get<{ data: VapidKeyResponse }>('/push/vapid-public-key');
@@ -16,9 +14,7 @@ export const getVapidPublicKey = async (): Promise<string | null> => {
   }
 };
 
-/**
- * Subscribe to push notifications
- */
+/** הרשמה להתראות push */
 export const subscribeToPush = async (subscription: PushSubscription): Promise<boolean> => {
   try {
     await apiClient.post('/push/subscribe', {
@@ -30,9 +26,7 @@ export const subscribeToPush = async (subscription: PushSubscription): Promise<b
   }
 };
 
-/**
- * Unsubscribe from push notifications
- */
+/** ביטול הרשמה להתראות push */
 export const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> => {
   try {
     await apiClient.post('/push/unsubscribe', { endpoint });
@@ -42,30 +36,22 @@ export const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> =
   }
 };
 
-/**
- * Unsubscribe from all push notifications (browser + server)
- * Used during logout to stop receiving notifications
- */
+/** ביטול כל ההרשמות ל-push (דפדפן + שרת). משמש ב-logout. */
 export const unsubscribeAllPush = async (): Promise<void> => {
   try {
-    // Check if push is supported
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       return;
     }
 
-    // Get current subscription from browser
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
-      // Unsubscribe locally from browser
       await subscription.unsubscribe();
-
-      // Remove from server
       await unsubscribeFromPush(subscription.endpoint);
     }
   } catch {
-    // Don't throw - logout should continue even if push unsubscribe fails
+    // לא לזרוק - logout צריך להמשיך גם אם ביטול push נכשל
   }
 };
 

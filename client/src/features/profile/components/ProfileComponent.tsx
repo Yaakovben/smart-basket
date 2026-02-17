@@ -10,7 +10,7 @@ import { COMMON_STYLES, SIZES } from '../../../global/helpers';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 
-// ===== Reusable Styles =====
+// ===== סגנונות משותפים =====
 const glassButtonSx = {
   ...COMMON_STYLES.glassButton,
   ...SIZES.iconButton.md,
@@ -24,7 +24,7 @@ const labelSx = {
   mb: 0.75
 };
 
-// ===== Props Interface =====
+// ===== ממשק Props =====
 interface ProfilePageProps {
   user: User;
   onUpdateUser: (user: Partial<User>) => Promise<void>;

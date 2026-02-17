@@ -1,18 +1,17 @@
 import type { List } from '../../../global/types';
 
-// ===== Form State Types =====
+// ===== טיפוסי מצב טופס =====
 export interface NewListForm {
   name: string;
   icon: string;
   color: string;
 }
 
-// ===== Tab Type =====
+// ===== טיפוס טאב =====
 export type HomeTab = 'all' | 'my' | 'groups';
 
-// ===== Hook Return Types =====
+// ===== ערכי החזרה של Hooks =====
 export interface UseHomeReturn {
-  // State
   tab: HomeTab;
   search: string;
   showMenu: boolean;
@@ -30,13 +29,11 @@ export interface UseHomeReturn {
   createError: string;
   joiningGroup: boolean;
 
-  // Computed values
   userLists: List[];
   my: List[];
   groups: List[];
   display: List[];
 
-  // Setters
   setTab: (tab: HomeTab) => void;
   setSearch: (search: string) => void;
   setShowMenu: (show: boolean) => void;
@@ -53,7 +50,6 @@ export interface UseHomeReturn {
   setJoinError: (error: string) => void;
   setCreateError: (error: string) => void;
 
-  // Handlers
   handleCreate: (isGroup: boolean) => void;
   handleJoin: () => void;
   openOption: (option: string) => void;

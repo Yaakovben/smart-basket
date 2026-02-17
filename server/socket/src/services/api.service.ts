@@ -22,16 +22,13 @@ interface BroadcastNotificationData {
 export type UserRole = 'owner' | 'admin' | 'member' | null;
 
 /**
- * Service for making API calls to the main API server
- * Used primarily for persisting notifications and authorization checks
+ * שירות לקריאות API מול שרת ה-API הראשי.
+ * משמש בעיקר לשמירת התראות ובדיקות הרשאה.
  */
 export class ApiService {
   private static baseUrl = env.API_URL;
 
-  /**
-   * Verify that a user is a member of a list by calling the API.
-   * Returns true if the user has access (owner or member), false otherwise.
-   */
+  /** אימות שמשתמש חבר ברשימה. מחזיר true אם יש לו גישה. */
   static async verifyMembership(
     listId: string,
     accessToken: string
@@ -51,10 +48,7 @@ export class ApiService {
     }
   }
 
-  /**
-   * Check user's role in a list (owner/admin/member).
-   * Returns the role or null if user has no access.
-   */
+  /** בדיקת תפקיד המשתמש ברשימה (owner/admin/member). מחזיר null אם אין גישה. */
   static async checkRole(
     listId: string,
     userId: string,
@@ -74,12 +68,12 @@ export class ApiService {
       const list = body.data;
       if (!list) return null;
 
-      // Check owner (populated object with id, or raw string)
+      // בדיקת בעלים (אובייקט populated או מחרוזת)
       const owner = list.owner;
       const ownerId = typeof owner === 'object' ? owner?.id : owner;
       if (ownerId?.toString() === userId) return 'owner';
 
-      // Check members
+      // בדיקת חברים
       const member = list.members?.find((m) => {
         const memberUser = m.user;
         const memberId = typeof memberUser === 'object' ? memberUser?.id : memberUser;
@@ -95,10 +89,7 @@ export class ApiService {
     }
   }
 
-  /**
-   * Create notifications for all list members (except the actor)
-   * This is used for product events where we want to notify all list members
-   */
+  /** יצירת התראות לכל חברי הרשימה (חוץ מהפועל). משמש לאירועי מוצרים. */
   static async broadcastNotification(
     data: BroadcastNotificationData,
     accessToken: string
@@ -120,7 +111,7 @@ export class ApiService {
       }
     } catch (error) {
       logger.error('Error broadcasting notification:', error);
-      // Don't throw - notification persistence failure shouldn't break real-time events
+      // לא לזרוק - כשל בשמירת התראה לא צריך לשבור אירועים בזמן אמת
     }
   }
 }

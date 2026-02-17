@@ -17,19 +17,16 @@ export interface UpdateProductData {
 }
 
 export const productsApi = {
-  // Add product to list
   async addProduct(listId: string, data: CreateProductData): Promise<List> {
     const response = await apiClient.post<{ data: List }>(`/lists/${listId}/products`, data);
     return response.data.data;
   },
 
-  // Update product
   async updateProduct(listId: string, productId: string, data: UpdateProductData): Promise<List> {
     const response = await apiClient.put<{ data: List }>(`/lists/${listId}/products/${productId}`, data);
     return response.data.data;
   },
 
-  // Delete product
   async deleteProduct(listId: string, productId: string): Promise<List> {
     const response = await apiClient.delete<{ data: List }>(`/lists/${listId}/products/${productId}`);
     return response.data.data;

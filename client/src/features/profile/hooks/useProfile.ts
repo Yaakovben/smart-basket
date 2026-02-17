@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '../../../global/types';
 import type { EditProfileForm, UseProfileReturn } from '../types/profile-types';
 
-// ===== Constants =====
+// ===== קבועים =====
 const DEFAULT_AVATAR_COLOR = '#14B8A6';
 
 interface UseProfileParams {
@@ -15,11 +15,11 @@ interface UseProfileParams {
 export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): UseProfileReturn => {
   const navigate = useNavigate();
 
-  // ===== State =====
+  // ===== מצב =====
   const [editProfile, setEditProfile] = useState<EditProfileForm | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
-  // ===== Computed =====
+  // ===== מחושבים =====
   const hasChanges = useMemo(() => {
     if (!editProfile) return false;
     return (
@@ -30,7 +30,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     );
   }, [editProfile, user]);
 
-  // ===== Handlers =====
+  // ===== טיפולים =====
   const openEditProfile = useCallback(() => {
     setEditProfile({
       name: user.name,
@@ -46,7 +46,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
         await onUpdateUser(editProfile);
         setEditProfile(null);
       } catch {
-        // Error handled by parent - keep form open
+        // שגיאה מטופלת ע"י ההורה - שמירת טופס פתוח
       }
     }
   }, [editProfile, hasChanges, onUpdateUser]);
@@ -68,16 +68,11 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
   }, []);
 
   return {
-    // State
     editProfile,
     confirmLogout,
     hasChanges,
-
-    // Setters
     setEditProfile,
     setConfirmLogout,
-
-    // Handlers
     openEditProfile,
     handleSave,
     handleLogout,

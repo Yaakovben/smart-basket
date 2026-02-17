@@ -1,11 +1,7 @@
 import { useEffect } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 
-/**
- * Minimal service worker registration for PWA support.
- * No caching - the SW is only needed for push notifications and "Add to Home Screen".
- * Cache clearing is handled in App.tsx on module load.
- */
+/** רישום Service Worker מינימלי - נדרש רק עבור התראות push והוספה למסך הבית */
 export function useServiceWorker(): void {
   useEffect(() => {
     registerSW({

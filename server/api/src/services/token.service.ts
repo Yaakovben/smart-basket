@@ -20,11 +20,10 @@ export class TokenService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken();
 
-    // Calculate expiration date for refresh token (7 days)
+    // תפוגה של refresh token - 7 ימים
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Save refresh token to database
     await TokenDAL.createToken(userId, refreshToken, expiresAt);
 
     return { accessToken, refreshToken };
@@ -34,14 +33,14 @@ export class TokenService {
     const tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
 
     if (!tokenDoc || tokenDoc.expiresAt < new Date()) {
-      // Delete expired or invalid token
+      // מחיקת טוקן פג תוקף
       if (tokenDoc) await tokenDoc.deleteOne();
       return null;
     }
 
     const user = tokenDoc.user as unknown as { _id: string; email: string; name: string } | null;
 
-    // User was deleted — clean up the orphaned token
+    // המשתמש נמחק - ניקוי טוקן יתום
     if (!user) {
       await tokenDoc.deleteOne();
       return null;
@@ -50,11 +49,10 @@ export class TokenService {
     const email = user.email;
     const name = user.name;
 
-    // Generate new tokens
     const newAccessToken = this.generateAccessToken({ userId, email, name });
     const newRefreshToken = this.generateRefreshToken();
 
-    // Atomic update: only succeeds if the old token still exists (prevents race conditions)
+    // עדכון אטומי - מצליח רק אם הטוקן הישן קיים (מניעת race conditions)
     const updated = await TokenDAL.rotateToken(
       tokenDoc._id.toString(),
       refreshToken,
@@ -62,7 +60,7 @@ export class TokenService {
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     );
 
-    // Another request already rotated this token
+    // בקשה אחרת כבר החליפה את הטוקן
     if (!updated) return null;
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };

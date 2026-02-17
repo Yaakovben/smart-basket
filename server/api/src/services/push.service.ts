@@ -3,7 +3,7 @@ import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-// Initialize web-push with VAPID keys
+// אתחול web-push עם מפתחות VAPID
 if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(
     env.VAPID_EMAIL,
@@ -25,31 +25,21 @@ export interface PushPayload {
 }
 
 export class PushService {
-  /**
-   * Check if push notifications are configured
-   */
   static isEnabled(): boolean {
     return !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
   }
 
-  /**
-   * Get public VAPID key for client subscription
-   */
   static getPublicKey(): string | null {
     return env.VAPID_PUBLIC_KEY || null;
   }
 
-  /**
-   * Subscribe a user to push notifications
-   */
   static async subscribe(
     userId: string,
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } }
   ): Promise<void> {
-    // Remove existing subscription for this endpoint (in case of re-subscribe)
+    // מחיקת מנוי קיים לאותו endpoint (במקרה של הרשמה מחדש)
     await PushSubscriptionDAL.deleteByEndpoint(subscription.endpoint);
 
-    // Create new subscription
     await PushSubscriptionDAL.create({
       userId,
       endpoint: subscription.endpoint,
@@ -57,21 +47,15 @@ export class PushService {
     } as Record<string, unknown>);
   }
 
-  /**
-   * Unsubscribe a user from push notifications
-   */
   static async unsubscribe(userId: string, endpoint?: string): Promise<void> {
     if (endpoint) {
       await PushSubscriptionDAL.deleteByUserAndEndpoint(userId, endpoint);
     } else {
-      // Remove all subscriptions for this user
+      // מחיקת כל המנויים של המשתמש
       await PushSubscriptionDAL.deleteByUserId(userId);
     }
   }
 
-  /**
-   * Send push notification to a specific user
-   */
   static async sendToUser(userId: string, payload: PushPayload): Promise<void> {
     if (!this.isEnabled()) {
       return;
@@ -92,12 +76,12 @@ export class PushService {
           JSON.stringify(payload),
           {
             urgency: 'high',
-            TTL: 60 * 60, // 1 hour
+            TTL: 60 * 60, // שעה
           }
         );
       } catch (error: unknown) {
         const pushError = error as { statusCode?: number };
-        // Remove invalid subscriptions (410 Gone or 404 Not Found)
+        // מחיקת מנוי לא תקין (410/404)
         if (pushError.statusCode === 410 || pushError.statusCode === 404) {
           await PushSubscriptionDAL.deleteById(sub._id.toString());
         } else {
@@ -109,9 +93,6 @@ export class PushService {
     await Promise.all(sendPromises);
   }
 
-  /**
-   * Send push notification to multiple users
-   */
   static async sendToUsers(userIds: string[], payload: PushPayload): Promise<void> {
     if (!this.isEnabled()) {
       return;
@@ -121,9 +102,6 @@ export class PushService {
     await Promise.all(sendPromises);
   }
 
-  /**
-   * Check if user has any push subscriptions
-   */
   static async hasSubscription(userId: string): Promise<boolean> {
     const count = await PushSubscriptionDAL.countByUserId(userId);
     return count > 0;

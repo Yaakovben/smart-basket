@@ -5,16 +5,16 @@ import { notificationValidator } from '../validators';
 
 const router = Router();
 
-// All notification routes require authentication
+// כל נתיבי ההתראות דורשים אימות
 router.use(authenticate);
 
-// User-facing routes
+// נתיבי משתמש
 router.get('/', validate({ query: notificationValidator.getAll }), NotificationController.getNotifications);
 router.get('/unread-count', NotificationController.getUnreadCount);
 router.put('/read-all', validate(notificationValidator.markAllRead), NotificationController.markAllAsRead);
 router.put('/:id/read', validate({ params: notificationValidator.params }), NotificationController.markAsRead);
 
-// Internal routes (for Socket server) - still require auth
+// נתיבים פנימיים (עבור שרת Socket)
 router.post('/', validate(notificationValidator.create), NotificationController.createNotification);
 router.post('/broadcast', validate(notificationValidator.broadcast), NotificationController.createNotificationsForListMembers);
 

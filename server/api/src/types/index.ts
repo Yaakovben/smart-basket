@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-// ===== Auth Types =====
+// ===== טיפוסי אימות =====
 export interface AuthRequest extends Request {
   user?: {
     id: string;
@@ -20,7 +20,7 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-// ===== User Types =====
+// ===== טיפוסי משתמש =====
 export interface IUserResponse {
   id: string;
   name: string;
@@ -31,7 +31,7 @@ export interface IUserResponse {
   createdAt: Date;
 }
 
-// ===== Product Types =====
+// ===== טיפוסי מוצר =====
 export type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
 export type ProductCategory =
   | 'מוצרי חלב'
@@ -55,7 +55,7 @@ export interface IProductResponse {
   createdAt: Date;
 }
 
-// ===== Member Types =====
+// ===== טיפוסי חבר =====
 export interface IMemberResponse {
   id: string;
   name: string;
@@ -64,7 +64,7 @@ export interface IMemberResponse {
   joinedAt: Date;
 }
 
-// ===== List Types =====
+// ===== טיפוסי רשימה =====
 export interface IListResponse {
   id: string;
   name: string;
@@ -81,7 +81,7 @@ export interface IListResponse {
   updatedAt: Date;
 }
 
-// ===== API Response Types =====
+// ===== טיפוסי תגובת API =====
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
@@ -89,7 +89,7 @@ export interface ApiResponse<T = unknown> {
   errors?: { field: string; message: string }[];
 }
 
-// ===== Pagination Types =====
+// ===== טיפוסי עימוד =====
 export interface PaginationParams {
   page?: number;
   limit?: number;
@@ -105,4 +105,3 @@ export interface PaginatedResponse<T> {
     pages: number;
   };
 }
-

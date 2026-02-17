@@ -71,7 +71,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Hash password before saving
+// הצפנת סיסמה לפני שמירה
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
 
@@ -80,7 +80,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
@@ -88,6 +87,6 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Note: email and googleId indexes are created by unique: true in schema definition
+// אינדקסים ל-email ו-googleId נוצרים ע"י unique: true
 
 export const User = mongoose.model<IUser>('User', userSchema);

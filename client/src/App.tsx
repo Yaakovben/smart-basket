@@ -9,53 +9,50 @@ import { ErrorBoundary } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 
-// Automatic cache clearing on new deployments
-// __BUILD_VERSION__ is injected by Vite at build time (unique per build)
+// ניקוי cache אוטומטי בפריסות חדשות
+// __BUILD_VERSION__ מוזרק ע"י Vite בזמן build (ייחודי לכל build)
 const handleNewVersion = async () => {
   const storedVersion = localStorage.getItem('app_build_version');
 
-  // Same version — nothing to do
   if (storedVersion === __BUILD_VERSION__) return;
 
-  // Prevent reload loop: if we already reloaded for this version, just save and stop
+  // מניעת לולאת reload: אם כבר עשינו reload לגרסה הזו
   if (sessionStorage.getItem('version_reload_done') === __BUILD_VERSION__) {
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
     return;
   }
 
   try {
-    // 1. Clear all browser caches
+    // 1. ניקוי כל ה-caches
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
     }
 
-    // 2. Unregister all service workers
+    // 2. ביטול רישום כל ה-service workers
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(r => r.unregister()));
     }
 
-    // 3. Save version and mark reload
+    // 3. שמירת גרסה וסימון reload
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
     sessionStorage.setItem('version_reload_done', __BUILD_VERSION__);
 
-    // 4. Hard reload to get fresh content (only if there was a previous version)
+    // 4. reload קשיח לקבלת תוכן טרי (רק אם הייתה גרסה קודמת)
     if (storedVersion) {
       window.location.reload();
       return;
     }
   } catch (error) {
     Sentry.captureException(error, { tags: { context: 'version_update' } });
-    // Save version even on error to avoid retry loops
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
   }
 };
 
-// Run immediately on module load
 handleNewVersion();
 
-// Hide initial loader - called by AppRouter when auth is ready
+// הסתרת loader ראשוני - נקרא ע"י AppRouter כשהאימות מוכן
 export const hideInitialLoader = () => {
   const loader = document.getElementById('initial-loader');
   if (loader) {
@@ -63,7 +60,6 @@ export const hideInitialLoader = () => {
     loader.style.transition = 'opacity 0.3s ease';
     setTimeout(() => {
       loader.remove();
-      // Remove green background from body once app is loaded
       document.body.classList.add('app-loaded');
     }, 300);
   }
@@ -72,7 +68,6 @@ export const hideInitialLoader = () => {
 const ThemedApp = () => {
   const { settings } = useSettings();
 
-  // Register service worker for PWA support
   useServiceWorker();
 
   const theme = useMemo(() =>

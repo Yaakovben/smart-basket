@@ -1,13 +1,9 @@
-// Pages
 export { ListPage } from './pages/ListPage';
 
-// Components
 export { SwipeItem } from './components/SwipeItem';
 
-// Hooks
 export { useList } from './hooks/list-hooks';
 
-// Types
 export type {
   NewProductForm,
   EditListForm,

@@ -1,7 +1,7 @@
 import type { ProductCategory } from '../types';
 import type { TranslationKeys } from '../i18n/translations';
 
-// ===== Category Icons =====
+// ===== אייקוני קטגוריות =====
 export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'מוצרי חלב': '🧀',
   'מאפים': '🍞',
@@ -14,7 +14,7 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'אחר': '📦'
 };
 
-// ===== Category Translation Keys =====
+// ===== מפתחות תרגום קטגוריות =====
 export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys> = {
   'מוצרי חלב': 'catDairy',
   'מאפים': 'catBakery',
@@ -27,14 +27,14 @@ export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys>
   'אחר': 'catOther',
 };
 
-// ===== UI Constants =====
+// ===== קבועי UI =====
 export const MEMBER_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B', '#10B981', '#06B6D4'];
 export const LIST_ICONS = ['📋', '📝', '✏️', '📌', '🗒️', '✅', '🛒', '🛍️'];
 export const GROUP_ICONS = ['👨‍👩‍👧‍👦', '👥', '🏠', '💑', '👨‍👩‍👧', '🛒', '🧺', '🍽️', '👪', '❤️', '🌟', '✨'];
 export const LIST_COLORS = ['#14B8A6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#06B6D4'];
 export const SWIPE_ACTIONS_WIDTH = 200;
 
-// ===== Brand Colors =====
+// ===== צבעי מותג =====
 export const BRAND_COLORS = {
   whatsapp: '#25D366',
   whatsappHover: '#1ebe5a',
@@ -45,44 +45,44 @@ export const BRAND_COLORS = {
   success: '#22C55E'
 } as const;
 
-// ===== Swipe Constants =====
+// ===== קבועי Swipe =====
 export const SWIPE_CONFIG = {
   debounceMs: 100,
   offsetClickThreshold: 10,
   openThreshold: 60
 } as const;
 
-// ===== Unified Size Constants =====
+// ===== קבועי גדלים =====
 export const SIZES = {
-  // Icon Button Sizes
+  // גדלי כפתור אייקון
   iconButton: {
     xs: { width: 32, height: 32 },
     sm: { width: 36, height: 36 },
     md: { width: 40, height: 40 },
     lg: { width: 44, height: 44 }
   },
-  // Icon Sizes (inside buttons)
+  // גדלי אייקון (בתוך כפתורים)
   icon: {
     xs: 16,
     sm: 18,
     md: 20,
     lg: 22
   },
-  // Emoji Icon Sizes
+  // גדלי אמוג'י
   emoji: {
     sm: 18,
     md: 22,
     lg: 28,
     xl: 40
   },
-  // Avatar Sizes
+  // גדלי אווטאר
   avatar: {
     sm: { width: 36, height: 36, fontSize: 16 },
     md: { width: 44, height: 44, fontSize: 20 },
     lg: { width: 64, height: 64, fontSize: 28 },
     xl: { width: 80, height: 80, fontSize: 36 }
   },
-  // Typography Sizes
+  // גדלי טקסט
   text: {
     xs: 11,
     sm: 13,
@@ -91,7 +91,7 @@ export const SIZES = {
     xl: 20,
     xxl: 24
   },
-  // Spacing
+  // ריווח
   spacing: {
     xs: 0.5,
     sm: 1,
@@ -99,7 +99,7 @@ export const SIZES = {
     lg: 2,
     xl: 3
   },
-  // Border Radius
+  // עיגול פינות
   radius: {
     sm: '8px',
     md: '10px',
@@ -109,27 +109,27 @@ export const SIZES = {
   }
 } as const;
 
-// ===== Common Styles =====
+// ===== סגנונות משותפים =====
 export const COMMON_STYLES = {
-  // Glass effect for buttons
+  // אפקט זכוכית לכפתורים
   glassButton: {
     bgcolor: 'rgba(255,255,255,0.2)',
     backdropFilter: 'blur(10px)',
     '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
   },
-  // Card styles
+  // סגנון כרטיס
   card: {
     borderRadius: SIZES.radius.lg,
     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
     border: '1px solid #F1F5F9'
   },
-  // Input field styles
+  // סגנון שדה קלט
   inputField: {
     borderRadius: SIZES.radius.md,
     border: '1.5px solid #E5E7EB',
     '&:focus-within': { borderColor: '#14B8A6' }
   },
-  // Gradient backgrounds
+  // רקעים גרדיאנטיים
   gradients: {
     primary: 'linear-gradient(135deg, #14B8A6, #10B981)',
     header: 'linear-gradient(135deg, #14B8A6, #0D9488)',
@@ -137,7 +137,7 @@ export const COMMON_STYLES = {
   }
 } as const;
 
-// ===== Menu Options for Add Popup =====
+// ===== אפשרויות תפריט הוספה =====
 export interface MenuOption {
   id: 'private' | 'group' | 'join';
   icon: string;
@@ -170,19 +170,18 @@ export const MENU_OPTIONS: MenuOption[] = [
   }
 ];
 
-// ===== Storage Keys =====
-// Only keys that are actually used - keep minimal to avoid state sync bugs
+// ===== מפתחות אחסון =====
 export const STORAGE_KEYS = {
   HINT_SEEN: 'sb_hint_seen',
   SETTINGS: 'sb_settings'
 } as const;
 
-// ===== Admin Configuration =====
+// ===== הגדרות מנהל =====
 export const ADMIN_CONFIG = {
   adminEmail: 'yaakovbenyizchak1@gmail.com'
 } as const;
 
-// ===== Default Settings =====
+// ===== הגדרות ברירת מחדל =====
 export const DEFAULT_SETTINGS = {
   theme: 'light' as const,
   language: 'he' as const,
@@ -201,7 +200,7 @@ export const DEFAULT_SETTINGS = {
   }
 };
 
-// ===== Languages =====
+// ===== שפות =====
 export const LANGUAGES = [
   { code: 'he', name: 'עברית', nameEn: 'Hebrew' },
   { code: 'en', name: 'English', nameEn: 'English' },

@@ -6,7 +6,7 @@ import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NewProductForm } from '../types/list-types';
 
-// ===== Styles =====
+// ===== סגנונות =====
 const labelSx = {
   fontSize: SIZES.text.md - 1,
   fontWeight: 600,
@@ -30,7 +30,7 @@ const quantityBtnSx = {
   fontSize: 24
 };
 
-// ===== Add Product Modal =====
+// ===== מודאל הוספת מוצר =====
 interface AddProductModalProps {
   isOpen: boolean;
   newProduct: NewProductForm;
@@ -68,9 +68,9 @@ export const AddProductModal = memo(({
   const handleQuantityKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Blur to close keyboard on last text input
+      // סגירת מקלדת בשדה האחרון
       (e.target as HTMLInputElement).blur();
-      // If valid, submit
+      // אם תקין, שליחה
       if (isNameValid) {
         haptic('medium');
         onAdd();
@@ -183,7 +183,7 @@ export const AddProductModal = memo(({
 
 AddProductModal.displayName = 'AddProductModal';
 
-// ===== Edit Product Modal =====
+// ===== מודאל עריכת מוצר =====
 interface EditProductModalProps {
   product: Product | null;
   hasChanges: boolean;
@@ -307,7 +307,7 @@ export const EditProductModal = memo(({
 
 EditProductModal.displayName = 'EditProductModal';
 
-// ===== Product Details Modal =====
+// ===== מודאל פרטי מוצר =====
 interface ProductDetailsModalProps {
   product: Product | null;
   currentUserName: string;

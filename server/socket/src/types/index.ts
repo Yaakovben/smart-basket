@@ -13,7 +13,7 @@ export interface TokenPayload {
   name: string;
 }
 
-// Socket events from client to server
+// אירועי Socket מהקליינט לשרת
 export interface ClientToServerEvents {
   'join:list': (listId: string, callback?: () => void) => void;
   'leave:list': (listId: string) => void;
@@ -32,7 +32,7 @@ export interface ClientToServerEvents {
   'leave:online-users': () => void;
 }
 
-// Socket events from server to client
+// אירועי Socket מהשרת לקליינט
 export interface ServerToClientEvents {
   'user:joined': (data: UserEventData) => void;
   'user:left': (data: UserEventData) => void;
@@ -107,7 +107,7 @@ export interface NotificationData {
   userName: string;
   message: string;
   timestamp: Date;
-  // For list_update notifications
+  // עבור התראות list_update
   changeType?: 'name' | 'design' | 'both';
   newName?: string;
 }

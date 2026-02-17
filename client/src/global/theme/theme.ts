@@ -1,7 +1,7 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles';
 import type { ThemeMode, Language } from '../types';
 
-// ===== Color Palette =====
+// ===== פלטת צבעים =====
 const COLORS = {
   primary: {
     main: '#14B8A6',
@@ -25,7 +25,7 @@ const COLORS = {
     main: '#22C55E',
     dark: '#16A34A'
   },
-  // Light mode colors
+  // צבעי מצב בהיר
   light: {
     background: '#F8FAFC',
     paper: '#FFFFFF',
@@ -38,7 +38,7 @@ const COLORS = {
     headerGradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     cardShadow: '0 2px 8px rgba(0,0,0,0.04)'
   },
-  // Dark mode colors - improved for better visibility
+  // צבעי מצב כהה
   dark: {
     background: '#111827',
     paper: '#1F2937',

@@ -13,20 +13,18 @@ import { ForbiddenError } from './errors';
 
 const app = express();
 
-// Trust proxy (required for Render, Railway, etc.)
+// פרוקסי מהימן (נדרש ל-Render, Railway וכו')
 app.set('trust proxy', 1);
 
-// Security middleware
 app.use(helmet());
 
-// CORS configuration - supports multiple origins
+// הגדרת CORS - תמיכה במספר origins
 const allowedOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // אפשר בקשות ללא origin (אפליקציות מובייל, Postman וכו')
     if (!origin) return callback(null, true);
 
-    // Check if origin is in allowed list or if wildcard is used
     if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -40,28 +38,24 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 
-// Parse JSON bodies
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Sanitize data against NoSQL injection
+// הגנה מ-NoSQL injection
 app.use(mongoSanitize());
 
-// Compression
 app.use(compression());
 
-// HTTP Request logging
-// Format: "POST /api/auth/login 200 45ms"
+// פורמט לוג: "POST /api/auth/login 200 45ms"
 morgan.token('body-size', (req) => {
   const size = req.headers['content-length'];
   return size ? `${size}b` : '-';
 });
 app.use(morgan(':method :url :status :response-time ms :body-size', { stream: morganStream }));
 
-// Rate limiting for API routes
 app.use('/api', apiLimiter);
 
-// Prevent caching of API responses (fixes mobile browser caching issues)
+// מניעת cache בתגובות API (פותר בעיות cache בדפדפני מובייל)
 app.use('/api', (_req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.set('Pragma', 'no-cache');
@@ -70,14 +64,13 @@ app.use('/api', (_req, res, next) => {
   next();
 });
 
-// Health check
 app.get('/health', (_req, res) => {
   const dbConnected = mongoose.connection.readyState === 1;
   const status = dbConnected ? 'ok' : 'degraded';
   res.status(dbConnected ? 200 : 503).json({ status, db: dbConnected, timestamp: new Date().toISOString() });
 });
 
-// Swagger API Documentation (only in development)
+// תיעוד API (בסביבת פיתוח בלבד)
 if (env.NODE_ENV !== 'production') {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: '.swagger-ui .topbar { display: none }',
@@ -88,13 +81,8 @@ if (env.NODE_ENV !== 'production') {
   });
 }
 
-// API routes
 app.use('/api', routes);
-
-// 404 handler
 app.use(notFoundHandler);
-
-// Global error handler
 app.use(errorHandler);
 
 export default app;

@@ -3,8 +3,7 @@ import { NotFoundError, ForbiddenError } from '../errors';
 import type { IList } from '../models';
 
 /**
- * Check that a list exists and the user has access (owner or member).
- * Throws NotFoundError or ForbiddenError if not.
+ * בדיקה שהרשימה קיימת והמשתמש בעל גישה (בעלים או חבר)
  */
 export const checkListAccess = async (
   listId: string,
@@ -27,8 +26,7 @@ export const checkListAccess = async (
 };
 
 /**
- * Check that a list exists and the user is the owner.
- * Throws NotFoundError or ForbiddenError if not.
+ * בדיקה שהרשימה קיימת והמשתמש הוא הבעלים
  */
 export const checkListOwner = async (
   listId: string,

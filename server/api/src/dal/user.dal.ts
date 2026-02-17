@@ -35,7 +35,7 @@ class UserDALClass extends BaseDAL<IUser> {
   }
 
   async toggleMutedGroup(userId: string, groupId: string): Promise<IUser | null> {
-    // Try to remove (if already muted)
+    // ניסיון הסרה (אם כבר מושתק)
     const pulled = await this.model.findOneAndUpdate(
       { _id: userId, mutedGroupIds: groupId },
       { $pull: { mutedGroupIds: groupId } },
@@ -43,7 +43,7 @@ class UserDALClass extends BaseDAL<IUser> {
     );
     if (pulled) return pulled;
 
-    // Not muted yet — add it
+    // לא מושתק - הוספה
     return this.model.findByIdAndUpdate(
       userId,
       { $addToSet: { mutedGroupIds: groupId } },

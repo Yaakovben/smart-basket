@@ -22,7 +22,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
 import { usePushNotifications } from '../../../global/hooks';
 
-// ===== Animations =====
+// ===== אנימציות =====
 const checkmarkPopKeyframes = {
   '@keyframes checkmarkPop': {
     '0%': { transform: 'scale(0)', opacity: 0 },
@@ -54,7 +54,7 @@ const notificationSlideInKeyframes = {
   }
 };
 
-// ===== Reusable Styles =====
+// ===== סגנונות משותפים =====
 const glassButtonSx = {
   bgcolor: 'rgba(255,255,255,0.2)',
   backdropFilter: 'blur(10px)',
@@ -89,7 +89,7 @@ const colorSelectSx = (isSelected: boolean) => ({
   '&:hover': { transform: 'scale(1.1)' }
 });
 
-// ===== Memoized List Card Component =====
+// ===== קומפוננטת כרטיס רשימה =====
 interface ListCardProps {
   list: List;
   isMuted: boolean;
@@ -121,7 +121,7 @@ const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
 
 ListCard.displayName = 'ListCard';
 
-// ===== Props Interface =====
+// ===== ממשק Props =====
 interface HomePageProps {
   lists: List[];
   user: User;
@@ -131,7 +131,7 @@ interface HomePageProps {
   onEditList: (list: List) => void;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onLogout: () => void;
-  // Persisted notifications from API
+  // התראות שמורות מה-API
   persistedNotifications?: PersistedNotification[];
   notificationsLoading?: boolean;
   onMarkPersistedNotificationRead?: (notificationId: string) => void;
@@ -146,14 +146,14 @@ export const HomeComponent = memo(({
   const { t, settings, isGroupMuted } = useSettings();
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
-  // Push notification prompt state
+  // מצב הצעת התראות push
   const [showPushPrompt, setShowPushPrompt] = useState(false);
   const [pushPromptError, setPushPromptError] = useState(false);
   const [pushPromptDismissed, setPushPromptDismissed] = useState(() => {
     return localStorage.getItem('pushPromptDismissed') === 'true';
   });
 
-  // Show push prompt after a delay if supported and not subscribed (and not denied)
+  // הצגת הצעת push לאחר השהיה
   useEffect(() => {
     if (pushSupported && isPwaInstalled && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
       const timer = setTimeout(() => setShowPushPrompt(true), 2000);
@@ -167,7 +167,7 @@ export const HomeComponent = memo(({
     if (success) {
       setShowPushPrompt(false);
     } else {
-      // Show error state in prompt
+      // הצגת שגיאה בהצעה
       setPushPromptError(true);
     }
   };
@@ -179,16 +179,12 @@ export const HomeComponent = memo(({
   };
 
   const {
-    // State
     tab, search, showMenu, showCreate, showCreateGroup, showJoin,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup,
-    // Computed
     userLists, my, groups, display,
-    // Setters
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
-    // Handlers
     handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
     closeJoinModal, updateNewListField, updateEditListField, saveEditList,
     deleteList
@@ -196,10 +192,10 @@ export const HomeComponent = memo(({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup
   });
 
-  // Track which notifications are being dismissed (for animation)
+  // מעקב אחר התראות שנסגרות (לצורך אנימציה)
   const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
 
-  // Convert persisted notifications to display format
+  // המרת התראות שמורות לפורמט תצוגה
   const allNotifications = useMemo(() => {
     return persistedNotifications
       .filter(n => !n.read)
@@ -219,17 +215,17 @@ export const HomeComponent = memo(({
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [persistedNotifications]);
 
-  // Calculate total unread count - use allNotifications which is already deduped
+  // חישוב סה"כ לא נקראו
   const totalUnreadCount = allNotifications.length;
 
   const handleDismissNotification = useCallback((_listId: string, notificationId: string) => {
-    // Add to dismissing set to trigger animation
+    // הוספה לסט נסגרות להפעלת אנימציה
     setDismissingNotifications(prev => new Set(prev).add(notificationId));
 
-    // Mark as read
+    // סימון כנקראה
     onMarkPersistedNotificationRead?.(notificationId);
 
-    // Clear from dismissing set after animation completes
+    // ניקוי מסט נסגרות לאחר סיום אנימציה
     setTimeout(() => {
       setDismissingNotifications(prev => {
         const next = new Set(prev);
@@ -243,10 +239,10 @@ export const HomeComponent = memo(({
     onClearAllPersistedNotifications?.();
   }, [onClearAllPersistedNotifications]);
 
-  // Ref for password field in Join Group modal
+  // Ref לשדה סיסמה במודאל הצטרפות
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus to password field when code is complete
+  // פוקוס אוטומטי לשדה סיסמה כשהקוד מושלם
   useEffect(() => {
     if (joinCode.length === 6 && showJoin) {
       passwordInputRef.current?.focus();
