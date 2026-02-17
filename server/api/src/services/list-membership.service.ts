@@ -99,12 +99,16 @@ export class ListMembershipService {
     await ListDAL.removeMember(listId, userId);
 
     // Also save to new Notifications collection for all remaining list members
-    await NotificationService.createNotificationsForListMembers(
-      listId,
-      'leave',
-      userId,
-      {}
-    );
+    try {
+      await NotificationService.createNotificationsForListMembers(
+        listId,
+        'leave',
+        userId,
+        {}
+      );
+    } catch {
+      // Don't fail the leave operation if notification creation fails
+    }
   }
 
   static async removeMember(
@@ -131,6 +135,12 @@ export class ListMembershipService {
     // Cannot remove owner
     if (list.owner.toString() === memberId) {
       throw new ForbiddenError('Cannot remove the owner');
+    }
+
+    // Only owner can remove admins
+    const targetMember = list.members.find(m => m.user.toString() === memberId);
+    if (targetMember?.isAdmin && !isOwner) {
+      throw new ForbiddenError('Only owner can remove admins');
     }
 
     // Check member exists

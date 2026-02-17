@@ -82,9 +82,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (!error) return;
 
     const errorDetails = `
-שגיאה: ${error.name}
-הודעה: ${error.message}
-זמן: ${new Date().toLocaleString('he-IL')}
+Error: ${error.name}
+Message: ${error.message}
+Time: ${new Date().toISOString()}
 ${error.stack ? `\nStack:\n${error.stack}` : ''}
     `.trim();
 

@@ -46,8 +46,8 @@ const saveAndVerifyTokens = (accessToken: string, refreshToken: string): void =>
 
 export const authApi = {
   // Check if email exists
-  async checkEmail(email: string): Promise<CheckEmailResponse> {
-    const response = await apiClient.post<{ data: CheckEmailResponse }>('/auth/check-email', { email });
+  async checkEmail(email: string, options?: { signal?: AbortSignal }): Promise<CheckEmailResponse> {
+    const response = await apiClient.post<{ data: CheckEmailResponse }>('/auth/check-email', { email }, { signal: options?.signal });
     return response.data.data;
   },
 

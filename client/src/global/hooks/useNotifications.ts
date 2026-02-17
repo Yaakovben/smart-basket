@@ -101,10 +101,15 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   const markAllAsRead = useCallback(async (listId?: string) => {
     try {
       // Optimistic update
-      setPersistedNotifications(prev =>
-        prev.map(n => (!listId || n.listId === listId) ? { ...n, read: true } : n)
-      );
-      setUnreadCount(0);
+      setPersistedNotifications(prev => {
+        if (!listId) {
+          setUnreadCount(0);
+        } else {
+          const listUnread = prev.filter(n => n.listId === listId && !n.read).length;
+          setUnreadCount(c => Math.max(0, c - listUnread));
+        }
+        return prev.map(n => (!listId || n.listId === listId) ? { ...n, read: true } : n);
+      });
 
       // Persist to API
       await notificationsApi.markAllAsRead(listId);

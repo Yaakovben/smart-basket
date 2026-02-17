@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import mongoose, { type ClientSession } from 'mongoose';
 import { List, type IList } from '../models';
 import { BaseDAL } from './base.dal';
+import { AppError } from '../errors';
 
 class ListDALClass extends BaseDAL<IList> {
   constructor() {
@@ -121,7 +122,7 @@ class ListDALClass extends BaseDAL<IList> {
       if (!existing) return code;
     }
 
-    throw new Error('Failed to generate unique invite code after maximum retries');
+    throw new AppError('Failed to generate unique invite code after maximum retries', 500, 'INVITE_CODE_GENERATION_FAILED');
   }
 
   // Session-aware methods for transactions

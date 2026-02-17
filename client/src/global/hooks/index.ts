@@ -47,6 +47,12 @@ export function useToast() {
     [],
   );
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const hideToast = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setToast({ message: "", type: "success" });
@@ -180,6 +186,7 @@ export function useAuth() {
     }
     socketService.disconnect();
     localStorage.removeItem('cached_user');
+    localStorage.removeItem('pushPromptDismissed');
     setInitialData({ lists: null, notifications: null });
     setUser(null);
   }, []);

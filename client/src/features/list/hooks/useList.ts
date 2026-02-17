@@ -270,7 +270,7 @@ export const useList = ({
       updateProducts(previousProducts);
       showToast(t('unknownError'), 'error');
     }
-  }, [list.id, list.products, user.name, updateProducts, showToast, t]);
+  }, [list.id, list.products, user.name, updateProducts, showToast, t, locale]);
 
   const handleAdd = useCallback(() => {
     setAddError('');
@@ -372,7 +372,7 @@ export const useList = ({
         }
       }
     });
-  }, [list.id, list.products, user.name, updateProducts, showToast, t]);
+  }, [list.id, list.products, user.name, updateProducts, showToast, t, locale]);
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
@@ -412,7 +412,7 @@ export const useList = ({
       console.error('Failed to update product:', error);
       showToast(t('unknownError'), 'error');
     }
-  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, updateProducts, showToast, t]);
+  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, updateProducts, showToast, t, locale]);
 
   const openEditProduct = useCallback((product: Product) => {
     setShowEdit({ ...product });
@@ -474,8 +474,8 @@ export const useList = ({
     showToast(t('saved'));
   }, [list, editListData, hasListChanges, onUpdateList, showToast, t]);
 
-  const handleDeleteList = useCallback(() => {
-    onDeleteList(list.id);
+  const handleDeleteList = useCallback(async () => {
+    await onDeleteList(list.id);
     onBack();
   }, [list.id, onDeleteList, onBack]);
 

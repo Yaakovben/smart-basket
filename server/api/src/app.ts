@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
 import { env, morganStream, swaggerSpec } from './config';
+import { ForbiddenError } from './errors';
 
 const app = express();
 
@@ -30,7 +31,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    return callback(new Error('Not allowed by CORS'));
+    return callback(new ForbiddenError('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

@@ -21,8 +21,9 @@ export const productValidator = {
       'string.max': 'Product name cannot exceed 100 characters',
       'any.required': 'Product name is required',
     }),
-    quantity: Joi.number().integer().min(1).default(1).messages({
+    quantity: Joi.number().integer().min(1).max(99999).default(1).messages({
       'number.min': 'Quantity must be at least 1',
+      'number.max': 'Quantity cannot exceed 99999',
     }),
     unit: Joi.string()
       .valid(...productUnits)
@@ -37,8 +38,9 @@ export const productValidator = {
       'string.min': 'Product name must be at least 2 characters',
       'string.max': 'Product name cannot exceed 100 characters',
     }),
-    quantity: Joi.number().integer().min(1).messages({
+    quantity: Joi.number().integer().min(1).max(99999).messages({
       'number.min': 'Quantity must be at least 1',
+      'number.max': 'Quantity cannot exceed 99999',
     }),
     unit: Joi.string().valid(...productUnits),
     category: Joi.string().valid(...productCategories),

@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { NotificationService } from '../services/notification.service';
+import { ListDAL } from '../dal';
 import { ForbiddenError } from '../errors';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
@@ -117,6 +118,12 @@ export class NotificationController {
     // Prevent impersonation: actorId must match the authenticated user
     if (String(actorId) !== req.user!.id) {
       throw new ForbiddenError('Cannot broadcast notifications on behalf of another user');
+    }
+
+    // Verify the user is a member of the list
+    const isMember = await ListDAL.isMember(listId, req.user!.id);
+    if (!isMember) {
+      throw new ForbiddenError('You are not a member of this list');
     }
 
     const notifications = await NotificationService.createNotificationsForListMembers(

@@ -83,7 +83,7 @@ export const useHome = ({
 
   const display = useMemo(() => {
     const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
-    return debouncedSearch ? base.filter((l: List) => l.name.includes(debouncedSearch)) : base;
+    return debouncedSearch ? base.filter((l: List) => l.name.toLowerCase().includes(debouncedSearch.toLowerCase())) : base;
   }, [tab, userLists, my, groups, debouncedSearch]);
 
   // ===== Create List Handlers =====

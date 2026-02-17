@@ -137,6 +137,7 @@ export class AuthService {
       'https://www.googleapis.com/oauth2/v3/userinfo',
       {
         headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(10000),
       }
     );
 

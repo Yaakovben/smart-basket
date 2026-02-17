@@ -121,7 +121,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         abortControllerRef.current = controller;
         setCheckingEmail(true);
         try {
-          const result = await authApi.checkEmail(trimmedEmail);
+          const result = await authApi.checkEmail(trimmedEmail, { signal: controller.signal });
           // Verify email hasn't changed while request was in flight
           if (controller.signal.aborted || emailRef.current.trim() !== trimmedEmail) return;
           setEmailChecked(true);
