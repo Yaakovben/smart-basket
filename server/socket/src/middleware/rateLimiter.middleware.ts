@@ -30,3 +30,14 @@ export const checkRateLimit = (socketId: string): boolean => {
 export const clearRateLimit = (socketId: string): void => {
   socketEventCounts.delete(socketId);
 };
+
+// Periodic cleanup of expired entries to prevent memory accumulation
+// from sockets that disconnected without proper cleanup
+setInterval(() => {
+  const now = Date.now();
+  for (const [socketId, entry] of socketEventCounts.entries()) {
+    if (now > entry.resetAt) {
+      socketEventCounts.delete(socketId);
+    }
+  }
+}, 5 * 60 * 1000).unref(); // Every 5 minutes, .unref() so it doesn't block shutdown

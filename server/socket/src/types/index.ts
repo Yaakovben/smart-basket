@@ -31,7 +31,6 @@ export interface ClientToServerEvents {
   'token:refresh': (token: string) => void;
   'get:online-users': () => void;
   'leave:online-users': () => void;
-  'admin:force-refresh': () => void;
 }
 
 // Socket events from server to client
@@ -50,7 +49,6 @@ export interface ServerToClientEvents {
   'admin:online-users': (data: { userIds: string[] }) => void;
   'admin:user-connected': (data: { userId: string }) => void;
   'admin:user-disconnected': (data: { userId: string }) => void;
-  'force-refresh': () => void;
   'error': (data: { message: string }) => void;
 }
 
@@ -104,7 +102,7 @@ export interface ListUpdatedData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_deleted' | 'list_update';
+  type: 'join' | 'leave' | 'removed' | 'product_add' | 'product_update' | 'product_delete' | 'list_update';
   listId: string;
   userId: string;
   userName: string;

@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
 
   // Admin presence: get all online users and subscribe to updates (admin only)
   authSocket.on('get:online-users', () => {
-    if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL) {
+    if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL.toLowerCase()) {
       logger.warn(`Non-admin user ${userId} attempted get:online-users`);
       return;
     }
@@ -104,16 +104,6 @@ io.on('connection', (socket) => {
   // Admin presence: unsubscribe from updates
   authSocket.on('leave:online-users', () => {
     authSocket.leave('admin:presence');
-  });
-
-  // Admin: force all connected clients to clear cache and reload
-  authSocket.on('admin:force-refresh', () => {
-    if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL) {
-      logger.warn(`Non-admin user ${userId} attempted admin:force-refresh`);
-      return;
-    }
-    logger.info(`Admin ${userId} triggered force-refresh for all clients`);
-    io.emit('force-refresh');
   });
 
   // Allow clients to refresh their access token on the socket connection

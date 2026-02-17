@@ -24,12 +24,6 @@ export const registerNotificationHandlers = (
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
 
-  // Mark notifications as read (UI state only - persistence via REST API)
-  socket.on('notification:read', (data: { listId: string; notificationId?: string }) => {
-    if (!checkRateLimit(socket.id)) return;
-    if (!isValidString(data?.listId)) return;
-  });
-
   // Member joined group
   socket.on('member:join', (data: { listId: string; listName: string; userName: string }) => {
     if (!checkRateLimit(socket.id)) return;
@@ -90,7 +84,7 @@ export const registerNotificationHandlers = (
   socket.on('member:remove', async (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
-      if (!isValidString(data?.listId) || !isValidString(data?.removedUserId) || !isValidString(data?.listName)) {
+      if (!isValidString(data?.listId) || !isValidString(data?.removedUserId) || !isValidString(data?.listName) || !isValidString(data?.removedUserName)) {
         logger.warn('Invalid member:remove data from user:', userId);
         return;
       }
@@ -222,6 +216,7 @@ export const registerNotificationHandlers = (
 
       // Send notification to each member individually (they might not be in the room anymore)
       for (const memberId of data.memberIds) {
+        if (typeof memberId !== 'string' || !memberId) continue;
         io.to(`user:${memberId}`).emit('list:deleted', deletedData);
       }
 

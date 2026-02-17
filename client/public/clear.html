@@ -97,8 +97,12 @@
           status.textContent = 'נוקו ' + cacheNames.length + ' מטמונים';
         }
 
-        // 3. Clear localStorage
+        // 3. Clear localStorage (preserve auth tokens so user stays logged in)
+        var savedAccessToken = localStorage.getItem('accessToken');
+        var savedRefreshToken = localStorage.getItem('refreshToken');
         localStorage.clear();
+        if (savedAccessToken) localStorage.setItem('accessToken', savedAccessToken);
+        if (savedRefreshToken) localStorage.setItem('refreshToken', savedRefreshToken);
         status.textContent = 'נוקה localStorage';
 
         // 4. Clear sessionStorage

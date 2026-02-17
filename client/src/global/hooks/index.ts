@@ -13,7 +13,6 @@ export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
 export { usePushNotifications } from './usePushNotifications';
 export { usePresence } from './usePresence';
-export { useForceRefresh } from './useForceRefresh';
 
 // ===== useToast Hook =====
 import type { ToastType } from '../types';

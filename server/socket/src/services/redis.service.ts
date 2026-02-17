@@ -5,7 +5,6 @@ import type { ClientToServerEvents, ServerToClientEvents, NotificationData } fro
 import { broadcastProductAdded, broadcastProductToggled, broadcastProductDeleted } from '../handlers';
 
 let subscriber: Redis | null = null;
-let publisher: Redis | null = null;
 
 interface RedisEvent {
   type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted';
@@ -23,7 +22,6 @@ export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>
 
   try {
     subscriber = new Redis(env.REDIS_URL);
-    publisher = new Redis(env.REDIS_URL);
 
     subscriber.subscribe('smart-basket:events', (err) => {
       if (err) {
@@ -94,17 +92,6 @@ const handleRedisEvent = (
   }
 };
 
-// Publish event (for use by API server if needed)
-export const publishEvent = (event: RedisEvent) => {
-  if (!publisher) {
-    logger.warn('Redis not available - event not published');
-    return;
-  }
-
-  publisher.publish('smart-basket:events', JSON.stringify(event));
-};
-
 export const closeRedis = () => {
   subscriber?.disconnect();
-  publisher?.disconnect();
 };

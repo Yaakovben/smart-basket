@@ -54,7 +54,7 @@ export interface ProductToggledData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_update';
+  type: 'join' | 'leave' | 'removed' | 'product_added' | 'product_purchased' | 'list_deleted' | 'list_update';
   listId: string;
   userId: string;
   userName: string;
@@ -110,6 +110,8 @@ class SocketService {
       this.joinedLists.forEach((listId) => {
         this.socket?.emit('join:list', listId);
       });
+      // Notify internal listeners (e.g. usePresence re-requests presence on reconnect)
+      this.emit('connect', undefined);
     });
 
     this.socket.on('disconnect', () => {
@@ -201,7 +203,6 @@ class SocketService {
       'admin:online-users',
       'admin:user-connected',
       'admin:user-disconnected',
-      'force-refresh',
     ];
 
     events.forEach((event) => {
@@ -342,11 +343,6 @@ class SocketService {
     } else {
       this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName });
     }
-  }
-
-  // Admin: force all clients to clear cache and reload
-  emitForceRefresh() {
-    this.socket?.emit('admin:force-refresh' as string);
   }
 
   // Emit list settings updated event (by owner)

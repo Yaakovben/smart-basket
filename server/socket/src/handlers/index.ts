@@ -1,4 +1,4 @@
-export { registerListHandlers, getListUsers, cleanupListSockets } from './list.handler';
+export { registerListHandlers, cleanupListSockets } from './list.handler';
 export { registerNotificationHandlers } from './notification.handler';
 export {
   registerProductHandlers,

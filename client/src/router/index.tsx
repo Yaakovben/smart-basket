@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useForceRefresh } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -112,9 +112,6 @@ export const AppRouter = () => {
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
-
-  // Listen for admin-triggered force-refresh (clears cache + reloads for all clients)
-  useForceRefresh();
 
   // Hide initial loader when auth check is complete
   useEffect(() => {

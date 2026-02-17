@@ -9,8 +9,6 @@ type NotificationType =
   | 'product_delete'
   | 'product_purchase'
   | 'product_unpurchase'
-  | 'member_removed'
-  | 'list_deleted'
   | 'list_update';
 
 interface BroadcastNotificationData {

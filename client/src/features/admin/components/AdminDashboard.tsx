@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -11,7 +11,6 @@ import { ActivityFilters } from './ActivityFilters';
 import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
 import { COMMON_STYLES } from '../../../global/constants';
-import { socketService } from '../../../services/socket';
 
 // Skeleton indices for loading state
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
@@ -52,13 +51,6 @@ export const AdminDashboard = () => {
     error
   } = useAdminDashboard();
   const onlineUserIds = useOnlineUsers();
-  const [forceRefreshSent, setForceRefreshSent] = useState(false);
-
-  const handleForceRefresh = useCallback(() => {
-    socketService.emitForceRefresh();
-    setForceRefreshSent(true);
-    setTimeout(() => setForceRefreshSent(false), 3000);
-  }, []);
 
   // Memoized filtered users to avoid recalculating on every render
   const filteredUsers = useMemo(() => {
@@ -214,27 +206,6 @@ export const AdminDashboard = () => {
             </Typography>
           </Paper>
         </Box>
-      </Box>
-
-      {/* Force Refresh All Clients */}
-      <Box sx={{ px: 2, pb: 2 }}>
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleForceRefresh}
-          disabled={forceRefreshSent}
-          sx={{
-            bgcolor: forceRefreshSent ? '#22C55E' : '#EF4444',
-            '&:hover': { bgcolor: forceRefreshSent ? '#22C55E' : '#DC2626' },
-            borderRadius: '12px',
-            py: 1.5,
-            fontWeight: 700,
-            fontSize: 14,
-            textTransform: 'none',
-          }}
-        >
-          {forceRefreshSent ? t('forceRefreshSent') : t('forceRefreshAll')}
-        </Button>
       </Box>
 
       {/* Content */}

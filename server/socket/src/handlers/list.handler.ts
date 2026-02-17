@@ -112,6 +112,10 @@ export const registerListHandlers = (
     const isFullyOffline = removeUserSocket(listId, userId, socket.id);
     // Clean reverse map for this list
     socketToLists.get(socket.id)?.delete(listId);
+    // Remove empty entry to prevent memory accumulation
+    if (socketToLists.get(socket.id)?.size === 0) {
+      socketToLists.delete(socket.id);
+    }
 
     // Notify others only if user has no more active connections
     if (isFullyOffline) {
@@ -126,7 +130,7 @@ export const registerListHandlers = (
 
   // Request presence for specific lists - only for rooms the user has joined
   socket.on('get:presence', (listIds: string[]) => {
-    if (!Array.isArray(listIds)) return;
+    if (!Array.isArray(listIds) || listIds.length > 50) return;
     for (const listId of listIds) {
       if (typeof listId !== 'string' || !listId) continue;
       // Only return presence for lists the user is actually in
@@ -156,11 +160,6 @@ export const registerListHandlers = (
       socketToLists.delete(socket.id);
     }
   });
-};
-
-// Helper to get active users in a list
-export const getListUsers = (listId: string): string[] => {
-  return getOnlineUserIds(listId);
 };
 
 // Clean up tracking data when a list is deleted

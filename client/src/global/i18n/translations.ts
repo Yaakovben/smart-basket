@@ -254,8 +254,6 @@ type TranslationKey =
   | 'neverLoggedIn'
   | 'refreshData'
   | 'searchCustomer'
-  | 'forceRefreshAll'
-  | 'forceRefreshSent'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -602,8 +600,6 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'מעולם לא התחבר',
     refreshData: 'רענן נתונים',
     searchCustomer: 'חיפוש לקוח...',
-    forceRefreshAll: 'רענן את כל המשתמשים (ניקוי מטמון)',
-    forceRefreshSent: 'נשלח! כל המשתמשים יתרעננו',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -947,8 +943,6 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'Never logged in',
     refreshData: 'Refresh Data',
     searchCustomer: 'Search customer...',
-    forceRefreshAll: 'Force refresh all users (clear cache)',
-    forceRefreshSent: 'Sent! All users will refresh',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -1292,8 +1286,6 @@ export const translations: Record<Language, Translations> = {
     neverLoggedIn: 'Никогда не входил',
     refreshData: 'Обновить данные',
     searchCustomer: 'Поиск клиента...',
-    forceRefreshAll: 'Обновить всех пользователей (очистить кэш)',
-    forceRefreshSent: 'Отправлено! Все пользователи обновятся',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',

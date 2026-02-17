@@ -58,10 +58,14 @@ export const ClearCachePage = () => {
         updateStep('caches', 'error', String(e));
       }
 
-      // Step 3: Clear localStorage
+      // Step 3: Clear localStorage (preserve auth tokens so user stays logged in)
       updateStep('storage', 'running');
       try {
+        const accessToken = localStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken');
         localStorage.clear();
+        if (accessToken) localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
         updateStep('storage', 'success');
       } catch (e) {
         updateStep('storage', 'error', String(e));
