@@ -8,7 +8,7 @@ export const listValidator = {
       'string.max': 'List name cannot exceed 50 characters',
       'any.required': 'List name is required',
     }),
-    icon: Joi.string().optional(),
+    icon: Joi.string().max(20).optional(),
     color: Joi.string()
       .pattern(/^#[0-9A-Fa-f]{6}$/)
       .default('#14B8A6')
@@ -26,7 +26,7 @@ export const listValidator = {
       'string.min': 'List name must be at least 2 characters',
       'string.max': 'List name cannot exceed 50 characters',
     }),
-    icon: Joi.string(),
+    icon: Joi.string().max(20),
     color: Joi.string()
       .pattern(/^#[0-9A-Fa-f]{6}$/)
       .messages({
