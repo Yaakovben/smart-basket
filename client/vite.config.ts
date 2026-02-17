@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // Unique build ID injected at build time — changes on every deploy
+    '__BUILD_VERSION__': JSON.stringify(Date.now().toString()),
+  },
   plugins: [
     react(),
     VitePWA({
