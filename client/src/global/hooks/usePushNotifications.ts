@@ -146,8 +146,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
         });
       } catch (subErr) {
-        if (import.meta.env.DEV) console.error('pushManager.subscribe failed:', subErr);
-        setError('SUBSCRIBE_FAILED');
+        const errMsg = subErr instanceof Error ? subErr.message : String(subErr);
+        setError(`SUBSCRIBE_FAILED:${errMsg}`);
         setLoading(false);
         return false;
       }

@@ -170,8 +170,8 @@ export const HomeComponent = memo(({
     if (success) {
       setShowPushPrompt(false);
     } else {
-      // הצגת שגיאה בהצעה
-      setPushPromptError(true);
+      // הצגת שגיאה בהצעה - סגירת הפרומפט וניווט להגדרות לפרטים
+      handleDismissPushPrompt();
     }
   };
 
