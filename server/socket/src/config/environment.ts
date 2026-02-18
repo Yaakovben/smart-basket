@@ -53,3 +53,11 @@ if (!env.JWT_ACCESS_SECRET) {
   console.error('JWT_ACCESS_SECRET is required');
   process.exit(1);
 }
+
+// אזהרות על הגדרות חסרות
+if (!env.ADMIN_EMAIL) {
+  console.warn('ADMIN_EMAIL not configured - admin features will be disabled');
+}
+if (env.NODE_ENV === 'production' && !env.REDIS_URL) {
+  console.warn('REDIS_URL not configured in production - running in single-instance mode');
+}

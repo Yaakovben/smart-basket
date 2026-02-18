@@ -7,7 +7,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
 import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES, SIZES } from '../../../global/constants';
-import type { Language, User } from '../../../global/types';
+import type { Language, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
 
@@ -78,9 +78,10 @@ interface SettingsPageProps {
   user: User;
   hasUpdate?: boolean;
   onDeleteAllData?: () => void;
+  showToast: (msg: string, type?: ToastType) => void;
 }
 
-export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: SettingsPageProps) => {
+export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, showToast }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -100,7 +101,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
     showLanguage, showAbout, showHelp, confirmDelete, notificationsExpanded, groupExpanded, productExpanded, pushExpanded, currentLanguageName,
     setShowLanguage, setShowAbout, setShowHelp, setConfirmDelete, setGroupExpanded, setProductExpanded, setPushExpanded,
     handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, togglePushExpanded, handleDeleteData
-  } = useSettingsPage({ onDeleteAllData });
+  } = useSettingsPage({ onDeleteAllData, showToast, t });
 
   const handleMainNotificationsToggle = async (enabled: boolean) => {
     updateNotifications({ enabled });

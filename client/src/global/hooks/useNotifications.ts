@@ -65,6 +65,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
       initializedForRef.current = null;
       setPersistedNotifications([]);
       setUnreadCount(0);
+      setFetchError(false);
     }
   }, [user?.id, fetchNotifications]);
 

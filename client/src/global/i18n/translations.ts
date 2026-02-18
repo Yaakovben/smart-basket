@@ -265,6 +265,7 @@ type TranslationKey =
   | 'copiedToClipboard'
   | 'copyAndSendToSupport'
   | 'clearCacheAndReload'
+  | 'updatingVersion'
   // Auth
   | 'continueWithGoogle'
   | 'newUserHint'
@@ -614,6 +615,7 @@ export const translations: Record<Language, Translations> = {
     copiedToClipboard: 'הועתק!',
     copyAndSendToSupport: 'העתק ושלח את פרטי השגיאה לתמיכה',
     clearCacheAndReload: 'נקה מטמון ורענן',
+    updatingVersion: 'מעדכן גרסה...',
     // Auth
     continueWithGoogle: 'המשך עם Google',
     newUserHint: 'משתמש חדש? הזן שם וסיסמה להרשמה',
@@ -627,7 +629,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'חזקה',
     googleLoginError: 'שגיאה בהתחברות עם Google',
     localStorageError: 'לא ניתן לשמור את פרטי ההתחברות. בדוק שהדפדפן מאפשר שמירת נתונים.',
-    cacheError: 'יש בעיית חיבור. נסה לנקות מטמון ב /clear-cache',
+    cacheError: 'יש בעיית חיבור. נסה לנקות מטמון:',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     offlineMessage: 'אין חיבור לאינטרנט',
     // Clear Cache Page
@@ -960,6 +962,7 @@ export const translations: Record<Language, Translations> = {
     copiedToClipboard: 'Copied!',
     copyAndSendToSupport: 'Copy and send error details to support',
     clearCacheAndReload: 'Clear cache & reload',
+    updatingVersion: 'Updating version...',
     // Auth
     continueWithGoogle: 'Continue with Google',
     newUserHint: 'New user? Enter name and password to register',
@@ -973,7 +976,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Strong',
     googleLoginError: 'Error signing in with Google',
     localStorageError: 'Cannot save login details. Check that your browser allows data storage.',
-    cacheError: 'Connection issue. Try clearing cache at /clear-cache',
+    cacheError: 'Connection issue. Try clearing cache:',
     noUserData: 'Error: No user data received from server',
     offlineMessage: 'No internet connection',
     // Clear Cache Page
@@ -1306,6 +1309,7 @@ export const translations: Record<Language, Translations> = {
     copiedToClipboard: 'Скопировано!',
     copyAndSendToSupport: 'Скопируйте и отправьте детали ошибки в поддержку',
     clearCacheAndReload: 'Очистить кэш и обновить',
+    updatingVersion: 'Обновление версии...',
     // Auth
     continueWithGoogle: 'Продолжить с Google',
     newUserHint: 'Новый пользователь? Введите имя и пароль для регистрации',
@@ -1319,7 +1323,7 @@ export const translations: Record<Language, Translations> = {
     passwordStrong: 'Сильный',
     googleLoginError: 'Ошибка входа через Google',
     localStorageError: 'Невозможно сохранить данные входа. Проверьте, что браузер разрешает сохранение данных.',
-    cacheError: 'Проблема соединения. Очистите кэш на /clear-cache',
+    cacheError: 'Проблема соединения. Очистите кэш:',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     offlineMessage: 'Нет подключения к интернету',
     // Clear Cache Page

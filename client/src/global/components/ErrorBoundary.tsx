@@ -1,7 +1,21 @@
 import { Component, type ReactNode } from 'react';
-import { Box, Typography, Button, Collapse } from '@mui/material';
+import { Box, Typography, Button, Collapse, CircularProgress } from '@mui/material';
 import { translations } from '../i18n/translations';
 import type { Language } from '../types';
+
+// זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
+const isChunkLoadError = (error: Error): boolean => {
+  const message = error.message || '';
+  return (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Loading chunk') ||
+    message.includes('Loading CSS chunk') ||
+    message.includes('Importing a module script failed') ||
+    (error.name === 'TypeError' && message.includes('Failed to fetch'))
+  );
+};
+
+const CHUNK_RELOAD_KEY = 'chunk_error_reload';
 
 // קבלת שפה מ-localStorage (ברירת מחדל: עברית)
 const getLanguage = (): Language => {
@@ -27,12 +41,13 @@ interface ErrorBoundaryState {
   error: Error | null;
   showDetails: boolean;
   copied: boolean;
+  isReloading: boolean;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null, showDetails: false, copied: false };
+    this.state = { hasError: false, error: null, showDetails: false, copied: false, isReloading: false };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -42,6 +57,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
+
+    // שגיאת טעינת chunk = גרסה חדשה נפרסה → ניקוי cache וריענון אוטומטי
+    if (isChunkLoadError(error)) {
+      // מניעת לולאת reload אינסופית
+      const lastReload = sessionStorage.getItem(CHUNK_RELOAD_KEY);
+      if (lastReload && Date.now() - Number(lastReload) < 10_000) return;
+
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+      this.setState({ isReloading: true });
+      this.handleClearCacheAndReload();
     }
   }
 
@@ -107,6 +133,18 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
 
   render(): ReactNode {
     if (this.state.hasError) {
+      // בזמן ריענון אוטומטי (שגיאת chunk) - מסך טעינה נקי במקום מסך קריסה
+      if (this.state.isReloading) {
+        return (
+          <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+            <CircularProgress size={40} sx={{ mb: 2 }} />
+            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+              {translations[getLanguage()].updatingVersion}
+            </Typography>
+          </Box>
+        );
+      }
+
       if (this.props.fallback) {
         return this.props.fallback;
       }

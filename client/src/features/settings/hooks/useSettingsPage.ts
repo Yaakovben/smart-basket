@@ -1,14 +1,17 @@
 import { useState, useCallback } from 'react';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { LANGUAGES } from '../../../global/constants';
-import type { Language } from '../../../global/types';
+import type { Language, ToastType } from '../../../global/types';
+import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { UseSettingsPageReturn } from '../types/settings-types';
 
 interface UseSettingsPageParams {
   onDeleteAllData?: () => void;
+  showToast: (msg: string, type?: ToastType) => void;
+  t: (key: TranslationKeys) => string;
 }
 
-export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): UseSettingsPageReturn => {
+export const useSettingsPage = ({ onDeleteAllData, showToast, t }: UseSettingsPageParams): UseSettingsPageReturn => {
   const { settings, updateLanguage } = useSettings();
 
   // ===== מצב =====
@@ -48,9 +51,14 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
   }, []);
 
   const handleDeleteData = useCallback(async () => {
-    setConfirmDelete(false);
-    await onDeleteAllData?.();
-  }, [onDeleteAllData]);
+    try {
+      await onDeleteAllData?.();
+    } catch {
+      showToast(t('unknownError'), 'error');
+    } finally {
+      setConfirmDelete(false);
+    }
+  }, [onDeleteAllData, showToast, t]);
 
   return {
     showLanguage,

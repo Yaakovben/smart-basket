@@ -24,5 +24,5 @@ export interface UseSettingsPageReturn {
   toggleGroupExpanded: () => void;
   toggleProductExpanded: () => void;
   togglePushExpanded: () => void;
-  handleDeleteData: () => void;
+  handleDeleteData: () => Promise<void>;
 }

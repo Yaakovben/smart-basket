@@ -142,13 +142,19 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           </Button>
 
           {error && !showEmailForm && (
-            <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 13 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-              {error.includes('/clear-cache') ? (
-                <span>
-                  {error.replace('/clear-cache', '')}
-                  <a href="/clear-cache" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>/clear-cache</a>
-                </span>
-              ) : error}
+            <Alert severity="warning" sx={{ mt: 2, borderRadius: '12px', fontSize: 13, alignItems: 'center' }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
+              <Box>
+                {error}
+                {error.includes(':') && error === t('cacheError') && (
+                  <Button
+                    href="/clear-cache"
+                    size="small"
+                    sx={{ mt: 0.5, fontWeight: 600, fontSize: 12, textTransform: 'none', color: 'inherit', textDecoration: 'underline', p: 0, minWidth: 'auto' }}
+                  >
+                    {t('clearCacheAndReload')}
+                  </Button>
+                )}
+              </Box>
             </Alert>
           )}
 
@@ -294,13 +300,19 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 </Collapse>
 
                 {error && showEmailForm && (
-                  <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', fontSize: 12 }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-                    {error.includes('/clear-cache') ? (
-                      <span>
-                        {error.replace('/clear-cache', '')}
-                        <a href="/clear-cache" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>/clear-cache</a>
-                      </span>
-                    ) : error}
+                  <Alert severity="warning" sx={{ mt: 2, borderRadius: '12px', fontSize: 12, alignItems: 'center' }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
+                    <Box>
+                      {error}
+                      {error.includes(':') && error === t('cacheError') && (
+                        <Button
+                          href="/clear-cache"
+                          size="small"
+                          sx={{ mt: 0.5, fontWeight: 600, fontSize: 12, textTransform: 'none', color: 'inherit', textDecoration: 'underline', p: 0, minWidth: 'auto' }}
+                        >
+                          {t('clearCacheAndReload')}
+                        </Button>
+                      )}
+                    </Box>
                   </Alert>
                 )}
 

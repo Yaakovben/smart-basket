@@ -74,6 +74,9 @@ export const registerListHandlers = (
         return;
       }
 
+      // ייתכן שהסוקט התנתק בזמן ההמתנה ל-API
+      if (!socket.connected) return;
+
       socket.join(`list:${listId}`);
       const isNewUser = addUserSocket(listId, userId, socket.id);
 

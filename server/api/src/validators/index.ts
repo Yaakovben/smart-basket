@@ -4,3 +4,4 @@ export { listValidator, type CreateListInput, type UpdateListInput, type JoinGro
 export { productValidator, type CreateProductInput, type UpdateProductInput, type ReorderProductsInput, type ProductUnit, type ProductCategory } from './product.validator';
 export { userValidator, type UpdateProfileInput, type ChangePasswordInput } from './user.validator';
 export { notificationValidator, type NotificationType, type GetNotificationsQuery, type CreateNotificationInput, type BroadcastNotificationInput } from './notification.validator';
+export { adminValidator } from './admin.validator';

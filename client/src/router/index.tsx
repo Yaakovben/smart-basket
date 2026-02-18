@@ -146,11 +146,12 @@ export const AppRouter = () => {
   } = useNotifications(user, initialData.notifications);
 
   // הצגת שגיאה כשטעינת רשימות או התראות נכשלת
+  // לא מציג בזמן אימות ראשוני - מונע toast מיותר כשטוקן פג
   useEffect(() => {
-    if (listsFetchError || notificationsFetchError) {
+    if (!authLoading && (listsFetchError || notificationsFetchError)) {
       showToast(t('errorOccurred'), 'error');
     }
-  }, [listsFetchError, notificationsFetchError, showToast, t]);
+  }, [authLoading, listsFetchError, notificationsFetchError, showToast, t]);
 
   // מיפוי שמות רשימות להתראות
   const listNames = useMemo(() =>
@@ -334,7 +335,7 @@ export const AppRouter = () => {
           path="/settings"
           element={
             <ProtectedRoute user={user}>
-              <SettingsPage user={user!} hasUpdate={false} onDeleteAllData={handleDeleteAllData} />
+              <SettingsPage user={user!} hasUpdate={false} onDeleteAllData={handleDeleteAllData} showToast={showToast} />
             </ProtectedRoute>
           }
         />

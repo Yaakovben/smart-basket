@@ -126,7 +126,7 @@ export function useAuth() {
         clearTimeout(timeoutId!);
 
         // Cache user for next load
-        localStorage.setItem('cached_user', JSON.stringify(profile));
+        try { localStorage.setItem('cached_user', JSON.stringify(profile)); } catch { /* quota exceeded */ }
         setUser(profile);
 
         // Store pre-fetched data for hooks to consume
@@ -163,7 +163,7 @@ export function useAuth() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
       // Cache user for instant load on next visit
-      localStorage.setItem('cached_user', JSON.stringify(userData));
+      try { localStorage.setItem('cached_user', JSON.stringify(userData)); } catch { /* quota exceeded */ }
       setUser(userData);
       // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
@@ -196,7 +196,7 @@ export function useAuth() {
     async (updates: Partial<User>) => {
       if (!user) return;
       const updatedUser = await authApi.updateProfile(updates);
-      localStorage.setItem('cached_user', JSON.stringify(updatedUser));
+      try { localStorage.setItem('cached_user', JSON.stringify(updatedUser)); } catch { /* quota exceeded */ }
       setUser(updatedUser);
     },
     [user],
@@ -302,6 +302,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     } else {
       initializedForRef.current = null;
       setLists([]);
+      setFetchError(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes
   }, [user?.id, fetchLists]);

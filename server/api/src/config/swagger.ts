@@ -48,22 +48,24 @@ const options: swaggerJsdoc.Options = {
         User: {
           type: 'object',
           properties: {
-            _id: { type: 'string' },
+            id: { type: 'string' },
             name: { type: 'string' },
             email: { type: 'string', format: 'email' },
             avatarColor: { type: 'string' },
             avatarEmoji: { type: 'string' },
             isAdmin: { type: 'boolean' },
+            createdAt: { type: 'string', format: 'date-time' },
           },
         },
         List: {
           type: 'object',
           properties: {
-            _id: { type: 'string' },
+            id: { type: 'string' },
             name: { type: 'string' },
             icon: { type: 'string' },
             color: { type: 'string' },
             isGroup: { type: 'boolean' },
+            hasPassword: { type: 'boolean' },
             inviteCode: { type: 'string' },
             owner: { $ref: '#/components/schemas/User' },
             members: {
@@ -86,7 +88,7 @@ const options: swaggerJsdoc.Options = {
         Product: {
           type: 'object',
           properties: {
-            _id: { type: 'string' },
+            id: { type: 'string' },
             name: { type: 'string' },
             quantity: { type: 'number' },
             unit: { type: 'string', enum: ['יח׳', 'ק״ג', 'גרם', 'ליטר'] },
@@ -99,11 +101,13 @@ const options: swaggerJsdoc.Options = {
         Notification: {
           type: 'object',
           properties: {
-            _id: { type: 'string' },
+            id: { type: 'string' },
             type: { type: 'string' },
             listId: { type: 'string' },
             listName: { type: 'string' },
+            actorId: { type: 'string' },
             actorName: { type: 'string' },
+            productId: { type: 'string' },
             productName: { type: 'string' },
             read: { type: 'boolean' },
             createdAt: { type: 'string', format: 'date-time' },
