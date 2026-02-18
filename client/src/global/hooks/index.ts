@@ -457,24 +457,26 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         const status = apiError.response?.status;
         const errorMessage = apiError.response?.data?.message || apiError.response?.data?.error;
 
-        // Check for network error first
-        if (apiError.code === 'ERR_NETWORK') {
+        // שגיאת רשת או timeout
+        if (apiError.code === 'ERR_NETWORK' || apiError.code === 'ECONNABORTED') {
           return { success: false, error: 'networkError' };
         }
 
-        // Map specific errors to translation keys
-        // Check message content first before falling back to status codes
+        // מיפוי שגיאות ספציפיות למפתחות תרגום
         if (errorMessage?.toLowerCase().includes('owner')) {
           return { success: false, error: 'youAreOwner' };
         }
         if (status === 404 || errorMessage?.toLowerCase().includes('invalid invite code')) {
           return { success: false, error: 'invalidGroupCode' };
         }
-        if (status === 400 || status === 401 || errorMessage?.toLowerCase().includes('invalid password')) {
+        if (status === 400 || errorMessage?.toLowerCase().includes('invalid password')) {
           return { success: false, error: 'invalidGroupPassword' };
         }
         if (status === 409 || errorMessage?.toLowerCase().includes('already a member')) {
           return { success: false, error: 'alreadyMember' };
+        }
+        if (status === 429) {
+          return { success: false, error: 'tooManyAttempts' };
         }
 
         return { success: false, error: 'unknownError' };

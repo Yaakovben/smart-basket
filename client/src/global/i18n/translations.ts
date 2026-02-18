@@ -172,6 +172,7 @@ type TranslationKey =
   | 'alreadyInGroup'
   | 'userNotLoggedIn'
   | 'unknownError'
+  | 'tooManyAttempts'
   | 'invalidGroupCode'
   | 'invalidGroupPassword'
   | 'alreadyMember'
@@ -522,6 +523,7 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'אתה כבר בקבוצה',
     userNotLoggedIn: 'משתמש לא מחובר',
     unknownError: 'שגיאה לא ידועה',
+    tooManyAttempts: 'יותר מדי ניסיונות, נסה שוב מאוחר יותר',
     invalidGroupCode: 'קוד קבוצה לא תקין',
     invalidGroupPassword: 'סיסמת קבוצה שגויה',
     alreadyMember: 'אתה כבר חבר בקבוצה זו',
@@ -869,6 +871,7 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'You are already in this group',
     userNotLoggedIn: 'User not logged in',
     unknownError: 'Unknown error',
+    tooManyAttempts: 'Too many attempts, please try again later',
     invalidGroupCode: 'Invalid group code',
     invalidGroupPassword: 'Invalid group password',
     alreadyMember: 'You are already a member of this group',
@@ -1216,6 +1219,7 @@ export const translations: Record<Language, Translations> = {
     alreadyInGroup: 'Вы уже в этой группе',
     userNotLoggedIn: 'Пользователь не авторизован',
     unknownError: 'Неизвестная ошибка',
+    tooManyAttempts: 'Слишком много попыток, попробуйте позже',
     invalidGroupCode: 'Неверный код группы',
     invalidGroupPassword: 'Неверный пароль группы',
     alreadyMember: 'Вы уже являетесь участником этой группы',
