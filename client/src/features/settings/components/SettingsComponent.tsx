@@ -83,6 +83,7 @@ interface SettingsPageProps {
 export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: SettingsPageProps) => {
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
+  const isDark = settings.theme === 'dark';
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
@@ -122,7 +123,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
 
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
-      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' }, flexShrink: 0 }}>
+      <Box sx={{ background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' }, flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate('/')} sx={glassButtonSx}>
             <ArrowForwardIcon sx={{ fontSize: 22 }} />
@@ -149,20 +150,25 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
             <Box sx={{ bgcolor: 'background.default', py: 1.5 }}>
               {/* Push Notifications Section */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mb: 0.5, cursor: 'pointer' }} onClick={togglePushExpanded}>
-                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: isDark ? 'rgba(245,158,11,0.15)' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📲</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
                   {t('pushNotifications')}
                 </Typography>
                 {pushSubscribed && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', borderRadius: '8px', px: 1, py: 0.25 }}>
                     <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981' }} />
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#059669' }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: isDark ? '#6EE7B7' : '#059669' }}>
                       {t('pushActive')}
                     </Typography>
                   </Box>
                 )}
                 {pushExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
-                <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box onClick={(e) => {
+                  e.stopPropagation();
+                  if (!pushSupported || !isPwaInstalled) {
+                    setPushExpanded(true);
+                  }
+                }} sx={{ display: 'flex', alignItems: 'center' }}>
                   {pushLoading ? (
                     <CircularProgress size={20} sx={{ color: '#14B8A6' }} />
                   ) : (
@@ -190,11 +196,11 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                       </Typography>
                     )}
                     {pushSupported && !isPwaInstalled && (
-                      <Box sx={{ mt: 1, p: 1.5, bgcolor: '#FEF3C7', borderRadius: '10px' }}>
-                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#92400E', mb: 0.5 }}>
+                      <Box sx={{ mt: 1, p: 1.5, bgcolor: isDark ? 'rgba(245,158,11,0.12)' : '#FEF3C7', borderRadius: '10px' }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: isDark ? '#FCD34D' : '#92400E', mb: 0.5 }}>
                           {t('pushRequiresInstall')}
                         </Typography>
-                        <Typography sx={{ fontSize: 12, color: '#92400E', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                        <Typography sx={{ fontSize: 12, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
                           {deviceType === 'ios' ? t('pushInstallIOS') : deviceType === 'android' ? t('pushInstallAndroid') : t('pushInstallDesktop')}
                         </Typography>
                       </Box>
@@ -215,7 +221,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               {/* List Notifications Section */}
               <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleGroupExpanded}>
-                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: isDark ? 'rgba(99,102,241,0.15)' : '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
                 <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
                   {[settings.notifications.groupJoin, settings.notifications.groupLeave, settings.notifications.groupRemoved ?? true, settings.notifications.groupDelete ?? true, settings.notifications.listUpdate].filter(Boolean).length}/5
@@ -259,7 +265,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
               {/* Product Notifications Section */}
               <Box sx={{ height: '1px', bgcolor: 'divider', mx: 2, my: 1 }} />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleProductExpanded}>
-                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
+                <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: isDark ? 'rgba(34,197,94,0.15)' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
                 <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
                   {[settings.notifications.productAdd, settings.notifications.productDelete, settings.notifications.productEdit, settings.notifications.productPurchase].filter(Boolean).length}/4

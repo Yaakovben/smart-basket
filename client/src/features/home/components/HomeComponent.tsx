@@ -98,6 +98,8 @@ interface ListCardProps {
 }
 
 const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
+  const { settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
 
   return (
@@ -108,7 +110,7 @@ const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
       <Box sx={{ flex: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
           <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-          <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? '#CCFBF1' : '#E0F2FE', color: l.isGroup ? '#0D9488' : '#0369A1', height: 22 }} />
+          <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
           {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
@@ -144,6 +146,7 @@ export const HomeComponent = memo(({
 }: HomePageProps) => {
   const navigate = useNavigate();
   const { t, settings, isGroupMuted } = useSettings();
+  const isDark = settings.theme === 'dark';
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
   // מצב הצעת התראות push
@@ -252,7 +255,7 @@ export const HomeComponent = memo(({
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
-      <Box sx={{ background: 'linear-gradient(135deg, #14B8A6, #10B981)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
+      <Box sx={{ background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #10B981)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(79, 70, 229, 0.15)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
@@ -326,7 +329,7 @@ export const HomeComponent = memo(({
             <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
               {tab === 'groups' ? t('noGroups') : t('noLists')}
             </Typography>
-            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: '#9CA3AF', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
+            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
               {tab === 'groups' ? t('noGroupsDesc') : t('noListsDesc')}
             </Typography>
             <Button
@@ -497,7 +500,7 @@ export const HomeComponent = memo(({
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: joinError ? '#FEE2E2' : 'action.hover',
+                  bgcolor: joinError ? 'rgba(239,68,68,0.1)' : 'action.hover',
                   transition: 'all 0.2s',
                   '& fieldset': { borderColor: joinError ? '#EF4444' : undefined },
                   '&.Mui-focused': { bgcolor: 'background.paper' },
@@ -545,7 +548,7 @@ export const HomeComponent = memo(({
                 animation: joinError ? 'shake 0.5s ease-in-out' : 'none',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
-                  bgcolor: joinError ? '#FEE2E2' : 'action.hover',
+                  bgcolor: joinError ? 'rgba(239,68,68,0.1)' : 'action.hover',
                   transition: 'all 0.2s',
                   '& fieldset': { borderColor: joinError ? '#EF4444' : undefined },
                   '&.Mui-focused': { bgcolor: 'background.paper' },
@@ -629,7 +632,7 @@ export const HomeComponent = memo(({
             </Box>
           </Box>
           <Button variant="contained" fullWidth onClick={saveEditList} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
-          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: '#FEE2E2', color: '#DC2626', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: '#FECACA' } }}>
+          <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: 'rgba(239,68,68,0.1)', color: 'error.main', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: 'rgba(239,68,68,0.15)' } }}>
             {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>
         </Modal>
@@ -981,7 +984,7 @@ export const HomeComponent = memo(({
           alignItems: 'center',
           py: { xs: 1, sm: 1.25 },
           px: { xs: 3, sm: 4 },
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
+          boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)'
         }}
       >
         <Box

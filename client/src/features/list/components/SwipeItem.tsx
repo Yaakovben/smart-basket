@@ -32,7 +32,8 @@ const actionBtnStyle = {
 };
 
 export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
 
@@ -294,13 +295,13 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          bgcolor: isPurchased ? '#F3F4F6' : 'background.paper',
+          bgcolor: isPurchased ? (isDark ? 'rgba(255,255,255,0.05)' : '#F3F4F6') : 'background.paper',
           px: '14px',
           borderRadius: '14px',
           transform: `translateX(${-offset}px)`,
           transition: swiping ? 'none' : 'transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)',
           willChange: swiping ? 'transform' : 'auto',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent'
         }}

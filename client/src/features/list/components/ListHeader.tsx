@@ -73,7 +73,8 @@ export const ListHeader = memo(({
   onQuickAdd,
   onlineUserIds
 }: ListHeaderProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -119,11 +120,11 @@ export const ListHeader = memo(({
 
   return (
     <Box sx={{
-      background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+      background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
       p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
-      boxShadow: '0 4px 16px rgba(79, 70, 229, 0.15)'
+      boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(79, 70, 229, 0.15)'
     }}>
       {/* Title Row */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>

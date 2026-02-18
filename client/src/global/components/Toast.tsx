@@ -1,5 +1,6 @@
 import { Snackbar, Box, Typography } from '@mui/material';
 import type { ToastType } from '../types';
+import { useSettings } from '../context/SettingsContext';
 
 interface ToastProps {
   msg: string;
@@ -7,16 +8,18 @@ interface ToastProps {
   onDismiss?: () => void;
 }
 
-const TOAST_CONFIG: Record<ToastType, { icon: string; color: string; bg: string }> = {
-  success: { icon: '✓', color: '#059669', bg: '#ECFDF5' },
-  error: { icon: '✕', color: '#DC2626', bg: '#FEF2F2' },
-  info: { icon: '🔔', color: '#0891B2', bg: '#ECFEFF' },
-  warning: { icon: '⚠', color: '#D97706', bg: '#FFFBEB' }
+const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg: string }; dark: { color: string; bg: string } }> = {
+  success: { icon: '✓', light: { color: '#059669', bg: '#ECFDF5' }, dark: { color: '#6EE7B7', bg: 'rgba(16, 185, 129, 0.18)' } },
+  error: { icon: '✕', light: { color: '#DC2626', bg: '#FEF2F2' }, dark: { color: '#FCA5A5', bg: 'rgba(239, 68, 68, 0.18)' } },
+  info: { icon: '🔔', light: { color: '#0891B2', bg: '#ECFEFF' }, dark: { color: '#67E8F9', bg: 'rgba(8, 145, 178, 0.18)' } },
+  warning: { icon: '⚠', light: { color: '#D97706', bg: '#FFFBEB' }, dark: { color: '#FCD34D', bg: 'rgba(217, 119, 6, 0.18)' } }
 };
 
 export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
+  const { settings } = useSettings();
   if (!msg) return null;
-  const config = TOAST_CONFIG[type];
+  const entry = TOAST_CONFIG[type];
+  const config = settings.theme === 'dark' ? entry.dark : entry.light;
   const isLongText = msg.length > 35;
 
   return (
@@ -73,7 +76,7 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
           flexShrink: 0,
           mt: isLongText ? 0.25 : 0
         }}>
-          {config.icon}
+          {entry.icon}
         </Box>
         <Typography sx={{
           fontSize: isLongText ? 13 : 14,

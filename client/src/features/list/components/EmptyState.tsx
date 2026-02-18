@@ -14,7 +14,8 @@ interface EmptyStateProps {
 
 // ===== קומפוננטה =====
 export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptyStateProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
   // - 'allDone': טאב ממתינים עם מוצרים (הכל נקנה)
   // - 'noPurchased': טאב נקנו ללא פריטים
@@ -27,7 +28,7 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
     if (isAllDone) {
       return {
         icon: '🎉',
-        gradient: 'linear-gradient(135deg, #CCFBF1, #99F6E4)',
+        gradient: isDark ? 'linear-gradient(135deg, rgba(20,184,166,0.15), rgba(16,185,129,0.1))' : 'linear-gradient(135deg, #CCFBF1, #99F6E4)',
         title: t('allDone'),
         description: t('allDoneDesc')
       };
@@ -35,7 +36,7 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
     if (isPurchasedEmpty) {
       return {
         icon: '🛒',
-        gradient: 'linear-gradient(135deg, #E0E7FF, #C7D2FE)',
+        gradient: isDark ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(129,140,248,0.1))' : 'linear-gradient(135deg, #E0E7FF, #C7D2FE)',
         title: t('noPurchasedProducts'),
         description: t('noPurchasedProductsDesc')
       };
