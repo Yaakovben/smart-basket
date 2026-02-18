@@ -209,9 +209,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData }: 
                       <Typography sx={{ fontSize: 12, color: 'warning.dark', mt: 0.5, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                         {t('pushBlocked')}
                       </Typography>
-                    ) : pushError === 'NOT_CONFIGURED' || pushError === 'SAVE_FAILED' || pushError === 'UNKNOWN' ? (
+                    ) : pushError === 'NOT_CONFIGURED' || pushError === 'SAVE_FAILED' || pushError === 'SUBSCRIBE_FAILED' || pushError === 'UNKNOWN' ? (
                       <Typography sx={{ fontSize: 12, color: 'error.main', mt: 0.5 }}>
-                        {pushError === 'NOT_CONFIGURED' ? t('pushErrorNotConfigured') : pushError === 'SAVE_FAILED' ? t('pushErrorSaveFailed') : t('pushErrorUnknown')}
+                        {pushError === 'NOT_CONFIGURED' ? t('pushErrorNotConfigured') : pushError === 'SAVE_FAILED' ? t('pushErrorSaveFailed') : pushError === 'SUBSCRIBE_FAILED' ? t('pushErrorSubscribeFailed') : t('pushErrorUnknown')}
                       </Typography>
                     ) : null}
                   </Box>

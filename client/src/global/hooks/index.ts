@@ -408,25 +408,33 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     async (listId: string) => {
       const listToDelete = lists.find((l) => l.id === listId);
 
-      // For group lists: emit socket event and WAIT for server ack before API delete
-      // Server needs to verify ownership and notify members while the list still exists
-      if (listToDelete?.isGroup && user) {
-        const memberIds = listToDelete.members
-          .map((m) => m.id)
-          .filter((id) => id !== user.id);
-        if (memberIds.length > 0) {
-          await new Promise<void>((resolve) => {
-            socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
-              resolve();
-            });
-            // Timeout fallback - don't hang forever if socket is disconnected
-            setTimeout(resolve, 5000);
-          });
-        }
-      }
-
-      await listsApi.deleteList(listId);
+      // הסרה מיידית מה-UI (אופטימיסטי)
       setLists((prev) => prev.filter((l) => l.id !== listId));
+
+      try {
+        // הודעת socket לחברי הקבוצה ברקע
+        if (listToDelete?.isGroup && user) {
+          const memberIds = listToDelete.members
+            .map((m) => m.id)
+            .filter((id) => id !== user.id);
+          if (memberIds.length > 0) {
+            await new Promise<void>((resolve) => {
+              socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
+                resolve();
+              });
+              setTimeout(resolve, 5000);
+            });
+          }
+        }
+
+        await listsApi.deleteList(listId);
+      } catch (error) {
+        // Rollback - החזרת הרשימה ל-UI
+        if (listToDelete) {
+          setLists((prev) => [...prev, listToDelete]);
+        }
+        throw error;
+      }
     },
     [lists, user],
   );
@@ -478,24 +486,31 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     async (listId: string) => {
       if (!user) return;
 
-      // Get list name before leaving for notification
       const listToLeave = lists.find((l) => l.id === listId);
 
-      // Notify other members and WAIT for server ack before API leave
-      // This ensures the notification is broadcast while the user is still a member
-      if (listToLeave) {
-        await new Promise<void>((resolve) => {
-          socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
-            resolve();
-          });
-          // Timeout fallback - don't hang forever if socket is disconnected
-          setTimeout(resolve, 5000);
-        });
-      }
-      await listsApi.leaveGroup(listId);
-      // Leave socket room
+      // הסרה מיידית מה-UI (אופטימיסטי)
       socketService.leaveList(listId);
       setLists((prev) => prev.filter((l) => l.id !== listId));
+
+      try {
+        // הודעת socket לחברי הקבוצה ברקע
+        if (listToLeave) {
+          await new Promise<void>((resolve) => {
+            socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
+              resolve();
+            });
+            setTimeout(resolve, 5000);
+          });
+        }
+        await listsApi.leaveGroup(listId);
+      } catch (error) {
+        // Rollback - החזרת הרשימה ל-UI
+        if (listToLeave) {
+          socketService.joinList(listId);
+          setLists((prev) => [...prev, listToLeave]);
+        }
+        throw error;
+      }
     },
     [user, lists],
   );

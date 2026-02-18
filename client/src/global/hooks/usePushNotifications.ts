@@ -133,10 +133,24 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       const registration = await navigator.serviceWorker.ready;
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
-      });
+      // ביטול subscription קיים (אם יש) למניעת conflict עם VAPID key ישן
+      const existingSub = await registration.pushManager.getSubscription();
+      if (existingSub) {
+        await existingSub.unsubscribe();
+      }
+
+      let subscription: PushSubscription;
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
+        });
+      } catch (subErr) {
+        if (import.meta.env.DEV) console.error('pushManager.subscribe failed:', subErr);
+        setError('SUBSCRIBE_FAILED');
+        setLoading(false);
+        return false;
+      }
 
       const success = await pushApi.subscribeToPush(subscription);
 
@@ -150,7 +164,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setLoading(false);
       return success;
-    } catch {
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('Push subscribe error:', err);
       setError('UNKNOWN');
       setLoading(false);
       return false;

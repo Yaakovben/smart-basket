@@ -87,22 +87,22 @@ const ListPageWrapper = ({
       onUpdateListLocal={updateListLocal}
       onUpdateProductsForList={updateProductsForList}
       onLeaveList={async (id: string) => {
+        showToast(t('left'));
+        navigate("/");
         try {
           await leaveList(id);
-          showToast(t('left'));
         } catch {
           showToast(t('errorOccurred'), 'error');
         }
-        navigate("/");
       }}
       onDeleteList={async (id: string) => {
+        showToast(t('deleted'));
+        navigate("/");
         try {
           await deleteList(id);
-          showToast(t('deleted'));
         } catch {
           showToast(t('errorOccurred'), 'error');
         }
-        navigate("/");
       }}
       showToast={showToast}
       onlineUserIds={onlineUserIds}
@@ -240,28 +240,31 @@ export const AppRouter = () => {
   };
 
   const handleCreateList = async (list: List) => {
+    showToast(t('created'));
     try {
       await createList(list);
-      showToast(t('created'));
     } catch {
       showToast(t('errorOccurred'), 'error');
     }
   };
 
   const handleDeleteList = async (id: string) => {
+    showToast(t('deleted'));
     try {
       await deleteList(id);
-      showToast(t('deleted'));
     } catch {
       showToast(t('errorOccurred'), 'error');
     }
   };
 
   const handleEditList = async (list: List) => {
+    const oldList = lists.find(l => l.id === list.id);
+    updateListLocal(list);
+    showToast(t('saved'));
     try {
       await updateList(list);
-      showToast(t('saved'));
     } catch {
+      if (oldList) updateListLocal(oldList);
       showToast(t('errorOccurred'), 'error');
     }
   };

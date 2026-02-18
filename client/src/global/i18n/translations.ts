@@ -324,6 +324,7 @@ type TranslationKey =
   | 'pushBlocked'
   | 'pushErrorNotConfigured'
   | 'pushErrorSaveFailed'
+  | 'pushErrorSubscribeFailed'
   | 'pushErrorUnknown'
   | 'pushRequiresInstall'
   | 'pushInstallAndroid'
@@ -672,6 +673,7 @@ export const translations: Record<Language, Translations> = {
     pushBlocked: '⚠️ ההתראות נחסמו.\nהגדרות הדפדפן → הרשאות → התראות → אפשר',
     pushErrorNotConfigured: '* התראות Push לא מוגדרות בשרת',
     pushErrorSaveFailed: '* שמירת ההרשמה נכשלה',
+    pushErrorSubscribeFailed: '* ההרשמה לשירות ההתראות נכשלה. נסה להתנתק, למחוק את האפליקציה, להתקין מחדש ולהתחבר שוב',
     pushErrorUnknown: '* שגיאה לא ידועה',
     pushRequiresInstall: 'כדי לקבל התראות Push, יש להתקין את האפליקציה למסך הבית',
     pushInstallAndroid: 'בתפריט הדפדפן (⋮) → "התקן אפליקציה" או "הוסף למסך הבית"',
@@ -1017,6 +1019,7 @@ export const translations: Record<Language, Translations> = {
     pushBlocked: '⚠️ Notifications blocked.\nBrowser Settings → Permissions → Notifications → Allow',
     pushErrorNotConfigured: '* Push notifications not configured on server',
     pushErrorSaveFailed: '* Failed to save subscription',
+    pushErrorSubscribeFailed: '* Push service subscription failed. Try logging out, reinstalling the app, and logging back in',
     pushErrorUnknown: '* Unknown error',
     pushRequiresInstall: 'To receive Push notifications, install the app to your home screen',
     pushInstallAndroid: 'In browser menu (⋮) → "Install app" or "Add to Home Screen"',
@@ -1362,6 +1365,7 @@ export const translations: Record<Language, Translations> = {
     pushBlocked: '⚠️ Уведомления заблокированы.\nНастройки браузера → Разрешения → Уведомления',
     pushErrorNotConfigured: '* Push-уведомления не настроены на сервере',
     pushErrorSaveFailed: '* Не удалось сохранить подписку',
+    pushErrorSubscribeFailed: '* Подписка на push-уведомления не удалась. Попробуйте выйти, удалить приложение, установить заново и войти снова',
     pushErrorUnknown: '* Неизвестная ошибка',
     pushRequiresInstall: 'Для Push-уведомлений установите приложение на главный экран',
     pushInstallAndroid: 'В меню браузера (⋮) → "Установить приложение" или "На главный экран"',
