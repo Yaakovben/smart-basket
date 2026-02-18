@@ -27,7 +27,7 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
       open={!!msg}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       sx={{
-        top: 'max(20px, env(safe-area-inset-top))',
+        top: 'max(20px, calc(env(safe-area-inset-top) + 8px))',
         left: '50%',
         right: 'auto',
         transform: 'translateX(-50%)',
@@ -50,10 +50,11 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
           borderRadius: '16px',
           border: `1.5px solid ${config.color}30`,
           boxShadow: `0 4px 20px ${config.color}20`,
-          animation: 'slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          '@keyframes slideDown': {
-            from: { transform: 'translateY(-20px)', opacity: 0 },
-            to: { transform: 'translateY(0)', opacity: 1 }
+          animation: 'toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          '@keyframes toastIn': {
+            '0%': { transform: 'translateY(-50px) scale(0.85)', opacity: 0 },
+            '70%': { transform: 'translateY(4px) scale(1.02)', opacity: 1 },
+            '100%': { transform: 'translateY(0) scale(1)', opacity: 1 }
           },
           maxWidth: 'calc(100vw - 48px)',
           minWidth: isLongText ? 280 : 'auto',

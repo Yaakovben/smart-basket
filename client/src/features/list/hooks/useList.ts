@@ -354,25 +354,26 @@ export const useList = ({
     setConfirm({
       title: t('deleteProduct'),
       message: `${t('delete')} "${product.name}"?`,
-      onConfirm: async () => {
-        try {
-          // קריאת API למחיקת מוצר
-          const updatedList = await productsApi.deleteProduct(list.id, productId);
+      onConfirm: () => {
+        // סגירת מודאל מיידית + עדכון אופטימיסטי
+        setConfirm(null);
+        onUpdateProductsForList(list.id, (current) =>
+          current.filter(p => p.id !== productId)
+        );
+        showToast(t('deleted'));
 
-          // שליחת אירוע socket להתראת משתמשים אחרים
+        // API ברקע
+        productsApi.deleteProduct(list.id, productId).then(() => {
           socketService.emitProductDeleted(list.id, productId, product.name, user.name);
-
-          updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
-          setConfirm(null);
-          showToast(t('deleted'));
-        } catch (error) {
+        }).catch((error) => {
           if (import.meta.env.DEV) console.error('Failed to delete product:', error);
-          setConfirm(null);
+          // גלגול אחורה - החזרת המוצר
+          onUpdateProductsForList(list.id, (current) => [...current, product]);
           showToast(t('unknownError'), 'error');
-        }
+        });
       }
     });
-  }, [list.id, list.products, user.name, updateProducts, showToast, t, locale]);
+  }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t]);
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
@@ -382,9 +383,15 @@ export const useList = ({
     const editData = { ...showEdit };
     const original = { ...originalEditProduct };
 
-    // סגירת מודאל לפני לאנימציה חלקה
+    // סגירת מודאל מיידית
     setShowEdit(null);
     setOriginalEditProduct(null);
+
+    // עדכון אופטימיסטי - מיידי ב-UI
+    onUpdateProductsForList(list.id, (current) =>
+      current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category } : p)
+    );
+    showToast(t('saved'));
 
     // בניית diff - שליחת שדות שהשתנו בלבד
     const changes: Record<string, unknown> = {};
@@ -393,11 +400,8 @@ export const useList = ({
     if (editData.unit !== original.unit) changes.unit = editData.unit;
     if (editData.category !== original.category) changes.category = editData.category;
 
-    try {
-      // קריאת API עם שדות שהשתנו בלבד
-      const updatedList = await productsApi.updateProduct(list.id, editData.id, changes);
-
-      // שליחת אירוע socket להתראת משתמשים אחרים
+    // API ברקע
+    productsApi.updateProduct(list.id, editData.id, changes).then(() => {
       socketService.emitProductUpdated(list.id, {
         id: editData.id,
         name: editData.name,
@@ -405,14 +409,15 @@ export const useList = ({
         unit: editData.unit,
         category: editData.category,
       }, user.name);
-
-      updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
-      showToast(t('saved'));
-    } catch (error) {
+    }).catch((error) => {
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
+      // גלגול אחורה - החזרת הנתונים המקוריים
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => p.id === editData.id ? original : p)
+      );
       showToast(t('unknownError'), 'error');
-    }
-  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, updateProducts, showToast, t, locale]);
+    });
+  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
     setShowEdit({ ...product });
