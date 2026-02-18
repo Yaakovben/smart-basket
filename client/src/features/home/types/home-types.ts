@@ -28,6 +28,7 @@ export interface UseHomeReturn {
   joinError: string;
   createError: string;
   joiningGroup: boolean;
+  joinCooldown: number;
 
   userLists: List[];
   my: List[];

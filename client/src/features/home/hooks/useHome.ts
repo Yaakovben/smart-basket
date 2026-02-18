@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { List, Member, User } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
@@ -12,6 +12,8 @@ import type {
 // ===== קבועים =====
 const DEFAULT_COLOR = '#14B8A6';
 const MIN_NAME_LENGTH = 2;
+const MAX_JOIN_ATTEMPTS = 10;
+const COOLDOWN_SECONDS = 60;
 
 const DEFAULT_NEW_LIST: NewListForm = {
   name: '',
@@ -66,6 +68,28 @@ export const useHome = ({
   const [joinError, setJoinError] = useState('');
   const [createError, setCreateError] = useState('');
   const [joiningGroup, setJoiningGroup] = useState(false);
+
+  // ===== הגבלת ניסיונות הצטרפות =====
+  const joinAttemptsRef = useRef(0);
+  const [joinCooldown, setJoinCooldown] = useState(0);
+  const cooldownTimerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  useEffect(() => {
+    if (joinCooldown <= 0) {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      return;
+    }
+    cooldownTimerRef.current = setInterval(() => {
+      setJoinCooldown(prev => {
+        if (prev <= 1) {
+          joinAttemptsRef.current = 0;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current); };
+  }, [joinCooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== ערכים מחושבים =====
   const userLists = useMemo(() => lists.filter((l: List) => {
@@ -122,6 +146,10 @@ export const useHome = ({
   // ===== טיפול בהצטרפות לרשימה =====
   const handleJoin = useCallback(async () => {
     setJoinError('');
+
+    // בדיקת cooldown פעיל
+    if (joinCooldown > 0) return;
+
     if (!joinCode.trim() || !joinPass.trim()) {
       setJoinError(t('enterCodeAndPassword'));
       return;
@@ -134,14 +162,22 @@ export const useHome = ({
         setShowJoin(false);
         setJoinCode('');
         setJoinPass('');
+        joinAttemptsRef.current = 0;
       } else {
-        // result.error הוא מפתח תרגום
-        setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
+        joinAttemptsRef.current++;
+
+        // הפעלת cooldown אחרי מקסימום ניסיונות
+        if (joinAttemptsRef.current >= MAX_JOIN_ATTEMPTS) {
+          setJoinCooldown(COOLDOWN_SECONDS);
+          setJoinError(t('tooManyAttempts'));
+        } else {
+          setJoinError(result.error ? t(result.error as Parameters<typeof t>[0]) : t('unknownError'));
+        }
       }
     } finally {
       setJoiningGroup(false);
     }
-  }, [joinCode, joinPass, onJoinGroup, t]);
+  }, [joinCode, joinPass, joinCooldown, onJoinGroup, t]);
 
   // ===== טיפול בתפריט =====
   const openOption = useCallback((option: string) => {
@@ -216,6 +252,7 @@ export const useHome = ({
     joinError,
     createError,
     joiningGroup,
+    joinCooldown,
 
     userLists,
     my,

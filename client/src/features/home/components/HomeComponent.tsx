@@ -184,7 +184,7 @@ export const HomeComponent = memo(({
   const {
     tab, search, showMenu, showCreate, showCreateGroup, showJoin,
     showNotifications, confirmLogout, editList, confirmDeleteList,
-    newL, joinCode, joinPass, joinError, createError, joiningGroup,
+    newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown,
     userLists, my, groups, display,
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
@@ -578,13 +578,15 @@ export const HomeComponent = memo(({
             />
           </Box>
 
-          {joinError && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>{joinError}</Alert>}
+          {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
+            {joinCooldown > 0 ? `${joinError} (${joinCooldown}s)` : joinError}
+          </Alert>}
 
           <Button
             variant="contained"
             fullWidth
             onClick={handleJoin}
-            disabled={joinCode.length < 6 || joinPass.length < 4 || joiningGroup}
+            disabled={joinCode.length < 6 || joinPass.length < 4 || joiningGroup || joinCooldown > 0}
             sx={{
               py: 1.5,
               fontSize: 15,
