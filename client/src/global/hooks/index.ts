@@ -20,6 +20,7 @@ import type { ToastType } from '../types';
 interface ToastState {
   message: string;
   type: ToastType;
+  key: number;
 }
 
 // Toast duration by type - info/warning are longer for notification messages
@@ -31,16 +32,16 @@ const TOAST_DURATIONS: Record<ToastType, number> = {
 };
 
 export function useToast() {
-  const [toast, setToast] = useState<ToastState>({ message: "", type: "success" });
+  const [toast, setToast] = useState<ToastState>({ message: "", type: "success", key: 0 });
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback(
     (msg: string, type: ToastType = "success") => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setToast({ message: msg, type });
+      setToast((prev) => ({ message: msg, type, key: prev.key + 1 }));
       const duration = TOAST_DURATIONS[type];
       timeoutRef.current = setTimeout(() => {
-        setToast({ message: "", type: "success" });
+        setToast((prev) => ({ message: "", type: "success", key: prev.key }));
         timeoutRef.current = null;
       }, duration);
     },
@@ -55,10 +56,10 @@ export function useToast() {
 
   const hideToast = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setToast({ message: "", type: "success" });
+    setToast((prev) => ({ message: "", type: "success", key: prev.key }));
   }, []);
 
-  return { message: toast.message, toastType: toast.type, showToast, hideToast };
+  return { message: toast.message, toastType: toast.type, toastKey: toast.key, showToast, hideToast };
 }
 
 // Initial data type for parallel loading optimization
@@ -508,6 +509,16 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     [],
   );
 
+  // עדכון מוצרים אטומי - משתמש ב-functional state update למניעת stale closures
+  const updateProductsForList = useCallback(
+    (listId: string, updater: (products: Product[]) => Product[]) => {
+      setLists((prev) =>
+        prev.map((l) => l.id === listId ? { ...l, products: updater(l.products) } : l),
+      );
+    },
+    [],
+  );
+
   // Extract list IDs for stable dependency tracking
   const listIds = useMemo(() => lists.map(l => l.id).join(','), [lists]);
 
@@ -621,6 +632,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
     createList,
     updateList,
     updateListLocal,
+    updateProductsForList,
     deleteList,
     joinGroup,
     leaveList,

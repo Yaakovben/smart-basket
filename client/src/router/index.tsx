@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box } from "@mui/material";
-import type { User, List, LoginMethod, ToastType } from "../global/types";
+import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
@@ -51,6 +51,7 @@ const ListPageWrapper = ({
   user,
   updateList,
   updateListLocal,
+  updateProductsForList,
   leaveList,
   deleteList,
   showToast,
@@ -60,6 +61,7 @@ const ListPageWrapper = ({
   user: User;
   updateList: (list: List) => void;
   updateListLocal: (list: List) => void;
+  updateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
   showToast: (msg: string, type?: ToastType) => void;
@@ -83,6 +85,7 @@ const ListPageWrapper = ({
       onBack={() => navigate("/")}
       onUpdateList={updateList}
       onUpdateListLocal={updateListLocal}
+      onUpdateProductsForList={updateProductsForList}
       onLeaveList={async (id: string) => {
         try {
           await leaveList(id);
@@ -115,8 +118,8 @@ export const AppRouter = () => {
   // כל ה-hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
-  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
-  const { message: toast, toastType, showToast, hideToast } = useToast();
+  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
+  const { message: toast, toastType, toastKey, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
@@ -303,6 +306,7 @@ export const AppRouter = () => {
                 user={user!}
                 updateList={updateList}
                 updateListLocal={updateListLocal}
+                updateProductsForList={updateProductsForList}
                 leaveList={leaveList}
                 deleteList={deleteList}
                 showToast={showToast}
@@ -345,7 +349,7 @@ export const AppRouter = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
-      <Toast msg={toast} type={toastType} onDismiss={hideToast} />
+      <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} />
     </>
   );
 }

@@ -57,6 +57,7 @@ interface UseListParams {
   user: User;
   onUpdateList: (list: List) => void;
   onUpdateListLocal: (list: List) => void;
+  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   onBack: () => void;
@@ -68,6 +69,7 @@ export const useList = ({
   user,
   onUpdateList,
   onUpdateListLocal,
+  onUpdateProductsForList,
   onLeaveList,
   onDeleteList,
   onBack,
@@ -236,17 +238,13 @@ export const useList = ({
       createdTime,
     };
 
-    // שמירת מוצרים נוכחיים לגלגול אחורה
-    const previousProducts = [...list.products];
-
-    // עדכון אופטימיסטי - הוספה מיידית ל-UI
-    updateProducts([...list.products, optimisticProduct]);
+    // עדכון אופטימיסטי - הוספה ל-state הנוכחי (functional update למניעת stale closures)
+    onUpdateProductsForList(list.id, (current) => [...current, optimisticProduct]);
     if (showToastOnAdd) {
       showToast(t('added'));
     }
 
     try {
-      // Call API to add product
       const updatedList = await productsApi.addProduct(list.id, productData);
 
       // מציאת המוצר שנוסף (אחרון ברשימה)
@@ -261,15 +259,19 @@ export const useList = ({
         category: addedProduct.category,
       }, user.name);
 
-      // עדכון state מקומי עם נתוני שרת אמיתיים
-      updateProducts(updatedList.products.map(p => convertApiProduct(p, locale)));
+      // החלפת המוצר הזמני בנתון האמיתי (שומר על מוצרים אופטימיסטיים אחרים שבהמתנה)
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => p.id === tempId ? convertApiProduct(addedProduct, locale) : p)
+      );
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
-      // גלגול אחורה בשגיאה
-      updateProducts(previousProducts);
+      // הסרת המוצר הזמני בלבד (לא פוגע במוצרים אופטימיסטיים אחרים שבהמתנה)
+      onUpdateProductsForList(list.id, (current) =>
+        current.filter(p => p.id !== tempId)
+      );
       showToast(t('unknownError'), 'error');
     }
-  }, [list.id, list.products, user.name, updateProducts, showToast, t, locale]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t, locale]);
 
   const handleAdd = useCallback(() => {
     setAddError('');

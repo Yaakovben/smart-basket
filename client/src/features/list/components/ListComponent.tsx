@@ -22,6 +22,7 @@ interface ListPageProps {
   onBack: () => void;
   onUpdateList: (list: List) => void;
   onUpdateListLocal: (list: List) => void;
+  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   showToast: (message: string) => void;
@@ -29,7 +30,7 @@ interface ListPageProps {
 }
 
 // ===== קומפוננטה ראשית =====
-export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
+export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
 
   const {
@@ -48,7 +49,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal
   } = useList({
-    list, user, onUpdateList, onUpdateListLocal, onLeaveList, onDeleteList, onBack, showToast
+    list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
 
   return (
