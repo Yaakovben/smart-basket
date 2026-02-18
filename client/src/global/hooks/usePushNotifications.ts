@@ -145,9 +145,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
         });
-      } catch (subErr) {
-        const errMsg = subErr instanceof Error ? subErr.message : String(subErr);
-        setError(`SUBSCRIBE_FAILED:${errMsg}`);
+      } catch {
+        setError('SUBSCRIBE_FAILED');
         setLoading(false);
         return false;
       }

@@ -33,6 +33,7 @@ if (env.LOGTAIL_TOKEN) {
 
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+  defaultMeta: { service: 'socket' },
   format: combine(
     errors({ stack: true }),
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' })
