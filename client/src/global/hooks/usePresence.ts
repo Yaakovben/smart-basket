@@ -52,10 +52,16 @@ export function usePresence(listIds: string[] = []): Record<string, string[]> {
       });
     });
 
+    // ניקוי נוכחות בניתוק - מונע הצגת משתמשים "מקוונים" כשהחיבור נפל
+    const unsubDisconnect = socketService.on('disconnect', () => {
+      setOnlineUsers({});
+    });
+
     return () => {
       unsubPresence();
       unsubJoined();
       unsubLeft();
+      unsubDisconnect();
     };
   }, []);
 

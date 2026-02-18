@@ -94,6 +94,8 @@ const listSchema = new Schema<IList>(
 // אינדקסים (inviteCode נוצר ע"י unique: true)
 listSchema.index({ owner: 1, isGroup: 1 });
 listSchema.index({ 'members.user': 1 });
+listSchema.index({ owner: 1, updatedAt: -1 });
+listSchema.index({ 'members.user': 1, updatedAt: -1 });
 
 // תומך גם בסיסמאות bcrypt ישנות וגם בטקסט פשוט חדש
 listSchema.methods.comparePassword = async function (

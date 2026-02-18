@@ -44,8 +44,8 @@ export const listValidator = {
   }),
 
   join: Joi.object({
-    inviteCode: Joi.string().min(1).required().messages({
-      'string.min': 'Invite code is required',
+    inviteCode: Joi.string().trim().uppercase().pattern(/^[A-Z0-9]{6}$/).required().messages({
+      'string.pattern.base': 'Invite code must be exactly 6 alphanumeric characters',
       'any.required': 'Invite code is required',
     }),
     password: Joi.string().length(4).optional(),

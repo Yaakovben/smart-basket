@@ -19,7 +19,18 @@ export interface SocketEvent {
 }
 
 // ===== Notification Types =====
-export type NotificationType = 'join' | 'leave' | 'product_added' | 'product_purchased';
+export type NotificationType =
+  | 'join'
+  | 'leave'
+  | 'removed'
+  | 'product_add'
+  | 'product_update'
+  | 'product_delete'
+  | 'product_purchase'
+  | 'product_unpurchase'
+  | 'member_removed'
+  | 'list_deleted'
+  | 'list_update';
 
 export interface NotificationPayload {
   id: string;

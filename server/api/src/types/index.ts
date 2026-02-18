@@ -60,6 +60,8 @@ export interface IMemberResponse {
   id: string;
   name: string;
   email: string;
+  avatarColor: string;
+  avatarEmoji: string;
   isAdmin: boolean;
   joinedAt: Date;
 }

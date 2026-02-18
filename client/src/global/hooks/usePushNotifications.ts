@@ -82,9 +82,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setPermission(Notification.permission);
 
-      // בדיקה אם כבר רשום
+      // בדיקה אם כבר רשום (עם timeout למניעת תקיעה אם SW לא נטען)
       try {
-        const registration = await navigator.serviceWorker.ready;
+        const registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 10000)),
+        ]);
         const subscription = await registration.pushManager.getSubscription();
         const subscribed = !!subscription;
         setIsSubscribed(subscribed);
@@ -97,6 +100,17 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     };
 
     checkSupport();
+  }, []);
+
+  // בדיקה מחדש של הרשאת התראות כשהמשתמש חוזר לאפליקציה (ייתכן ששינה בהגדרות)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && 'Notification' in window) {
+        setPermission(Notification.permission);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   /** הרשמה להתראות push */

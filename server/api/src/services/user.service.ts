@@ -112,17 +112,18 @@ export class UserService {
 
         // 5. מחיקת התראות
         await NotificationDAL.deleteByUserId(userId, session);
+
+        // 6. מחיקת המשתמש (בתוך הטרנזקציה)
+        const user = await UserDAL.deleteById(userId, { session });
+        if (!user) {
+          throw NotFoundError.user();
+        }
       });
     } finally {
       await session.endSession();
     }
 
-    // פעולות אלו רצות אחרי הטרנזקציה - לא דורשות rollback
+    // ביטול טוקנים - רץ אחרי הטרנזקציה (לא דורש rollback)
     await TokenService.invalidateAllUserTokens(userId);
-
-    const user = await UserDAL.deleteById(userId);
-    if (!user) {
-      throw NotFoundError.user();
-    }
   }
 }

@@ -47,9 +47,9 @@ export const useSettingsPage = ({ onDeleteAllData }: UseSettingsPageParams): Use
     setPushExpanded(prev => !prev);
   }, []);
 
-  const handleDeleteData = useCallback(() => {
+  const handleDeleteData = useCallback(async () => {
     setConfirmDelete(false);
-    onDeleteAllData?.();
+    await onDeleteAllData?.();
   }, [onDeleteAllData]);
 
   return {

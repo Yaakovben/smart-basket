@@ -166,9 +166,9 @@ export class AuthService {
         isAdmin,
       });
     } else if (!user.googleId) {
-      // קישור חשבון אימייל קיים ל-Google
+      // קישור חשבון אימייל קיים ל-Google (פעולה אטומית)
+      await UserDAL.updateById(user._id.toString(), { googleId: googleUser.sub });
       user.googleId = googleUser.sub;
-      await user.save();
     }
 
     const tokens = await TokenService.createTokens(

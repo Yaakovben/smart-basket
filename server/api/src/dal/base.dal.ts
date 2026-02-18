@@ -27,8 +27,8 @@ export abstract class BaseDAL<T extends Document> {
     return this.model.findOneAndUpdate(filter, update, { new: true, ...options });
   }
 
-  async deleteById(id: string): Promise<T | null> {
-    return this.model.findByIdAndDelete(id);
+  async deleteById(id: string, options?: QueryOptions): Promise<T | null> {
+    return this.model.findByIdAndDelete(id, options);
   }
 
   async deleteMany(filter: FilterQuery<T>): Promise<number> {

@@ -15,13 +15,16 @@ const transformProduct = (p: IProductDoc): Record<string, unknown> => {
  * כולל populate של owner/members ושליפת מוצרים.
  * סיסמה נכללת לכל החברים (כל חבר יכול להזמין).
  */
-export const transformList = async (list: IList): Promise<IListResponse> => {
+export const transformList = async (
+  list: IList,
+  existingProducts?: IProductDoc[],
+): Promise<IListResponse> => {
   await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
     list.populate('members.user', 'name email avatarColor avatarEmoji'),
   ]);
 
-  const products = await ProductDAL.findByListId(list._id.toString());
+  const products = existingProducts ?? await ProductDAL.findByListId(list._id.toString());
   const json = list.toJSON() as Record<string, unknown>;
   json.products = products.map(transformProduct);
   json.password = list.password || null;
@@ -35,6 +38,16 @@ export const transformList = async (list: IList): Promise<IListResponse> => {
  */
 export const transformListsWithProducts = async (lists: IList[]): Promise<IListResponse[]> => {
   if (lists.length === 0) return [];
+
+  // populate אם לא כבר מאוכלס (Mongoose מדלג אם כבר populated)
+  await Promise.all(
+    lists.map((list) =>
+      Promise.all([
+        list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
+        list.populate('members.user', 'name email avatarColor avatarEmoji'),
+      ]),
+    ),
+  );
 
   const listIds = lists.map(l => l._id.toString());
   const productsMap = await ProductDAL.findByListIds(listIds);

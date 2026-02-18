@@ -136,4 +136,19 @@ router.post('/:id/leave', validate({ params: listValidator.params }), ListContro
  */
 router.delete('/:id/members/:memberId', validate({ params: listValidator.memberParams }), ListController.removeMember);
 
+/**
+ * @swagger
+ * /lists/{id}/members/{memberId}/admin:
+ *   patch:
+ *     summary: Toggle member admin status
+ *     tags: [Lists]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Member admin status toggled
+ *       403:
+ *         description: Only owner can change admin status
+ */
+router.patch('/:id/members/:memberId/admin', validate({ params: listValidator.memberParams }), ListController.toggleMemberAdmin);
+
 export default router;

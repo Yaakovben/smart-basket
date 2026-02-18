@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node';
+import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { env, logger } from './config';
@@ -96,10 +97,18 @@ io.on('connection', (socket) => {
     authSocket.leave('admin:presence');
   });
 
-  // רענון טוקן על חיבור קיים
+  // רענון טוקן על חיבור קיים - עם אימות JWT
   authSocket.on('token:refresh', (token: string) => {
-    if (token && typeof token === 'string') {
+    if (!token || typeof token !== 'string') return;
+    try {
+      const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { userId: string };
+      if (decoded.userId !== userId) {
+        logger.warn(`token:refresh userId mismatch: socket=${userId}, token=${decoded.userId}`);
+        return;
+      }
       authSocket.accessToken = token;
+    } catch {
+      logger.warn(`token:refresh invalid token from user ${userId}`);
     }
   });
 
@@ -141,9 +150,12 @@ httpServer.listen(env.PORT, () => {
 const shutdown = () => {
   logger.info('Shutting down socket server...');
   closeRedis();
+  io.disconnectSockets(true);
   io.close(() => {
-    logger.info('Socket server closed');
-    process.exit(0);
+    httpServer.close(() => {
+      logger.info('Socket server closed');
+      process.exit(0);
+    });
   });
   // כיבוי כפוי אחרי timeout
   setTimeout(() => {

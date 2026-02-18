@@ -10,10 +10,7 @@ export const authValidator = {
 
   login: Joi.object({
     email: commonSchemas.email.required(),
-    password: Joi.string().min(1).required().messages({
-      'string.min': 'Password is required',
-      'any.required': 'Password is required',
-    }),
+    password: commonSchemas.password.required(),
   }),
 
   checkEmail: Joi.object({

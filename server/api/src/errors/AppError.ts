@@ -105,6 +105,18 @@ export class ForbiddenError extends AppError {
   static noAccess(): ForbiddenError {
     return new ForbiddenError('You do not have access to this resource');
   }
+
+  static ownerCannotLeave(): ForbiddenError {
+    return new ForbiddenError('Owner cannot leave the list. Delete it instead.');
+  }
+
+  static cannotRemoveOwner(): ForbiddenError {
+    return new ForbiddenError('Cannot remove the owner');
+  }
+
+  static onlyOwnerCanRemoveAdmins(): ForbiddenError {
+    return new ForbiddenError('Only owner can remove admins');
+  }
 }
 
 // שגיאת לא נמצא (404)
@@ -131,6 +143,10 @@ export class NotFoundError extends AppError {
 
   static inviteCode(): NotFoundError {
     return new NotFoundError('Invalid invite code');
+  }
+
+  static member(): NotFoundError {
+    return new NotFoundError('Member');
   }
 }
 

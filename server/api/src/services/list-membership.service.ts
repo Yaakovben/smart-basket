@@ -81,12 +81,12 @@ export class ListMembershipService {
 
     // בעלים לא יכול לעזוב
     if (list.owner.toString() === userId) {
-      throw new ForbiddenError('Owner cannot leave the list. Delete it instead.');
+      throw ForbiddenError.ownerCannotLeave();
     }
 
     const isMember = list.members.some((m) => m.user.toString() === userId);
     if (!isMember) {
-      throw new NotFoundError('You are not a member of this list');
+      throw ForbiddenError.noAccess();
     }
 
     await ListDAL.removeMember(listId, userId);
@@ -120,23 +120,23 @@ export class ListMembershipService {
     );
 
     if (!isOwner && !isAdmin) {
-      throw new ForbiddenError('Only owner or admin can remove members');
+      throw ForbiddenError.notAdmin();
     }
 
     // אי אפשר להסיר את הבעלים
     if (list.owner.toString() === memberId) {
-      throw new ForbiddenError('Cannot remove the owner');
+      throw ForbiddenError.cannotRemoveOwner();
     }
 
     // רק בעלים יכול להסיר מנהלים
     const targetMember = list.members.find(m => m.user.toString() === memberId);
     if (targetMember?.isAdmin && !isOwner) {
-      throw new ForbiddenError('Only owner can remove admins');
+      throw ForbiddenError.onlyOwnerCanRemoveAdmins();
     }
 
     const memberExists = list.members.some((m) => m.user.toString() === memberId);
     if (!memberExists) {
-      throw new NotFoundError('Member');
+      throw NotFoundError.member();
     }
 
     // שליפת פרטים להתראה לפני ההסרה
@@ -187,13 +187,13 @@ export class ListMembershipService {
 
     // רק בעלים יכול לשנות סטטוס מנהל
     if (list.owner.toString() !== userId) {
-      throw new ForbiddenError('Only owner can change admin status');
+      throw ForbiddenError.notOwner();
     }
 
     const member = list.members.find((m) => m.user.toString() === memberId);
 
     if (!member) {
-      throw new NotFoundError('Member');
+      throw NotFoundError.member();
     }
 
     const updatedList = await ListDAL.setMemberAdmin(listId, memberId, !member.isAdmin);

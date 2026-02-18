@@ -1,10 +1,14 @@
 import Redis from 'ioredis';
+import * as Sentry from '@sentry/node';
 import type { Server } from 'socket.io';
 import { env, logger } from '../config';
 import type { ClientToServerEvents, ServerToClientEvents, NotificationData } from '../types';
 import { broadcastProductAdded, broadcastProductToggled, broadcastProductDeleted } from '../handlers';
 
 let subscriber: Redis | null = null;
+let isRedisHealthy = false;
+
+export const getRedisHealth = (): boolean => isRedisHealthy;
 
 interface RedisEvent {
   type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted';
@@ -28,6 +32,7 @@ export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>
         logger.error('Failed to subscribe to Redis channel:', err);
         return;
       }
+      isRedisHealthy = true;
       logger.info('Subscribed to Redis channel: smart-basket:events');
     });
 
@@ -43,7 +48,23 @@ export const initRedis = (io: Server<ClientToServerEvents, ServerToClientEvents>
     });
 
     subscriber.on('error', (err) => {
+      isRedisHealthy = false;
       logger.error('Redis subscriber error:', err);
+      Sentry.captureException(err, { tags: { service: 'redis' } });
+    });
+
+    subscriber.on('reconnecting', () => {
+      logger.warn('Redis reconnecting...');
+    });
+
+    subscriber.on('connect', () => {
+      isRedisHealthy = true;
+      logger.info('Redis reconnected');
+    });
+
+    subscriber.on('close', () => {
+      isRedisHealthy = false;
+      logger.warn('Redis connection closed');
     });
 
     logger.info('Redis connection established');
@@ -69,15 +90,17 @@ const handleRedisEvent = (
       );
       break;
 
-    case 'product:toggled':
+    case 'product:toggled': {
       const toggleData = data as { productId: string; isPurchased: boolean };
       broadcastProductToggled(io, listId, toggleData.productId, toggleData.isPurchased, userId, userName);
       break;
+    }
 
-    case 'product:deleted':
+    case 'product:deleted': {
       const deleteData = data as { productId: string };
       broadcastProductDeleted(io, listId, deleteData.productId, userId, userName);
       break;
+    }
 
     case 'notification':
       io.to(`list:${listId}`).emit('notification:new', data as NotificationData);

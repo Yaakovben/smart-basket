@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { Box } from '@mui/material';
 import type { Product, List, User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
@@ -32,6 +32,7 @@ interface ListPageProps {
 // ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
+  const isMuteToggling = useRef(false);
 
   const {
     filter, search, showAdd, showEdit, showDetails, showInvite,
@@ -78,7 +79,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onSearchChange={setSearch}
         onEditList={handleEditList}
         onDeleteList={() => setConfirmDeleteList(true)}
-        onToggleMute={() => { toggleGroupMute(list.id); authApi.toggleMuteGroup(list.id).catch(() => { toggleGroupMute(list.id); showToast(t('unknownError')); }); }}
+        onToggleMute={() => {
+          if (isMuteToggling.current) return;
+          isMuteToggling.current = true;
+          toggleGroupMute(list.id);
+          authApi.toggleMuteGroup(list.id)
+            .catch(() => { toggleGroupMute(list.id); showToast(t('unknownError')); })
+            .finally(() => { isMuteToggling.current = false; });
+        }}
         isMuted={isGroupMuted(list.id)}
         mainNotificationsOff={!settings.notifications.enabled}
         onShareList={() => setShowShareList(true)}

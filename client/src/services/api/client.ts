@@ -37,8 +37,13 @@ export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 
 export const setTokens = (accessToken: string, refreshToken: string) => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  try {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  } catch {
+    // localStorage מלא או לא זמין (למשל private browsing)
+    debugLog('Failed to save tokens to localStorage', undefined, true);
+  }
 };
 
 export const clearTokens = () => {
@@ -73,6 +78,7 @@ apiClient.interceptors.request.use(
 
 // Interceptor: רענון טוקן אוטומטי ב-401
 let isRefreshing = false;
+let isRedirecting = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: unknown) => void;
@@ -126,8 +132,9 @@ apiClient.interceptors.response.use(
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
         isRefreshing = false;
-        // לא לנווט אם בתהליך אימות או כבר בדף login
-        if (!isAuthInProgress && window.location.pathname !== '/login') {
+        // לא לנווט אם בתהליך אימות, כבר בדף login, או כבר במהלך ניווט
+        if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
+          isRedirecting = true;
           clearTokens();
           localStorage.removeItem('cached_user');
           window.location.href = '/login';
@@ -152,7 +159,8 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        if (!isAuthInProgress && window.location.pathname !== '/login') {
+        if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
+          isRedirecting = true;
           clearTokens();
           localStorage.removeItem('cached_user');
           window.location.href = '/login';

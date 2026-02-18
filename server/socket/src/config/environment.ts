@@ -7,16 +7,17 @@ dotenv.config();
  * ====================================
  *
  * Required:
- * - PORT: Socket server port (default: 5001)
- * - NODE_ENV: Application environment (development/production)
  * - JWT_ACCESS_SECRET: Same secret as API server - for verifying access tokens
  *
  * Optional:
- * - REDIS_URL: Redis connection URL for cross-server communication (e.g., redis://localhost:6379)
- *              Required for multi-instance deployments
+ * - PORT: Socket server port (default: 5001)
+ * - NODE_ENV: Application environment (development/production)
+ * - REDIS_URL: Redis connection URL for cross-server communication
  * - CORS_ORIGIN: Allowed origins for CORS, comma-separated (default: http://localhost:5173)
  * - API_URL: API server URL for persisting notifications (default: http://localhost:5000/api)
+ * - ADMIN_EMAIL: Admin email - must match API server (for admin panel features)
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
+ * - LOGTAIL_TOKEN: BetterStack Logtail token for cloud logging
  */
 export const env = {
   // פורט השרת - צריך להיות שונה משרת ה-API

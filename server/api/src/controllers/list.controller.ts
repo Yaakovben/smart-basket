@@ -94,4 +94,15 @@ export class ListController {
     });
   });
 
+  static toggleMemberAdmin = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { id, memberId } = req.params;
+    const list = await ListService.toggleMemberAdmin(id, userId, memberId);
+
+    res.json({
+      success: true,
+      data: list,
+    });
+  });
+
 }

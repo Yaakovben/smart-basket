@@ -45,7 +45,7 @@ export const registerNotificationHandlers = (
       };
 
       socket.to(`list:${data.listId}`).emit('notification:new', notification);
-      logger.info(`User ${userName} joined group ${data.listName}`);
+      logger.debug(`User ${userName} joined group ${data.listName}`);
     } catch (error) {
       logger.error('Error in member:join handler:', error);
     }
@@ -80,7 +80,7 @@ export const registerNotificationHandlers = (
 
       // שידור לכל המשתמשים ברשימה (כולל השולח - הוא בכל מקרה עוזב)
       io.to(`list:${data.listId}`).emit('notification:new', notification);
-      logger.info(`User ${userName} left group ${data.listName}`);
+      logger.debug(`User ${userName} left group ${data.listName}`);
 
       // אישור לקליינט כדי שיוכל להמשיך בבטחה לקריאת API
       if (typeof callback === 'function') callback();
@@ -132,7 +132,7 @@ export const registerNotificationHandlers = (
       };
       socket.to(`list:${data.listId}`).emit('notification:new', removedNotification);
 
-      logger.info(`User ${data.removedUserName} was removed from group ${data.listName} by ${userName}`);
+      logger.debug(`User ${data.removedUserName} was removed from group ${data.listName} by ${userName}`);
     } catch (error) {
       logger.error('Error in member:remove handler:', error);
     }
@@ -183,7 +183,7 @@ export const registerNotificationHandlers = (
         timestamp: new Date(),
       });
 
-      logger.info(`User ${userName} updated list ${data.listName} (${data.changeType || 'general'})`);
+      logger.debug(`User ${userName} updated list ${data.listName} (${data.changeType || 'general'})`);
     } catch (error) {
       logger.error('Error in list:update handler:', error);
     }
@@ -237,7 +237,7 @@ export const registerNotificationHandlers = (
       // ניקוי מעקב נוכחות לרשימה שנמחקה
       cleanupListSockets(data.listId);
 
-      logger.info(`List ${data.listName} was deleted by ${userName}, notified ${data.memberIds.length} members`);
+      logger.debug(`List ${data.listName} was deleted by ${userName}, notified ${data.memberIds.length} members`);
 
       // אישור לקליינט כדי שיוכל להמשיך בבטחה למחיקה ב-API
       if (typeof callback === 'function') callback();

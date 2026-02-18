@@ -23,7 +23,7 @@ class SocketService {
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
-  private isRefreshingToken = false;
+  private refreshTokenPromise: Promise<void> | null = null;
 
   connect() {
     const token = getAccessToken();
@@ -54,29 +54,16 @@ class SocketService {
     this.socket.on('connect_error', async (error) => {
       // שגיאת אימות - רענון טוקן
       if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('expired')) {
-        if (this.isRefreshingToken) return;
-        this.isRefreshingToken = true;
+        // Promise-based lock - קריאות מקבילות ממתינות לרענון הראשון
+        if (this.refreshTokenPromise) {
+          await this.refreshTokenPromise;
+          return;
+        }
+        this.refreshTokenPromise = this.doTokenRefresh();
         try {
-          const refreshToken = getRefreshToken();
-          if (!refreshToken || !this.socket) return;
-
-          const response = await fetch(`${API_URL}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken }),
-            signal: AbortSignal.timeout(10000),
-          });
-
-          if (!response.ok) return;
-
-          const data = await response.json();
-          const { accessToken, refreshToken: newRefreshToken } = data.data;
-          setTokens(accessToken, newRefreshToken);
-          this.socket.auth = { token: accessToken };
-        } catch {
-          // רענון נכשל - הטוקן לא תקף
+          await this.refreshTokenPromise;
         } finally {
-          this.isRefreshingToken = false;
+          this.refreshTokenPromise = null;
         }
       }
     });
@@ -86,6 +73,29 @@ class SocketService {
     this.setupEventForwarding();
     this.setupVisibilityHandler();
     this.setupOnlineHandler();
+  }
+
+  private async doTokenRefresh(): Promise<void> {
+    try {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken || !this.socket) return;
+
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const { accessToken, refreshToken: newRefreshToken } = data.data;
+      setTokens(accessToken, newRefreshToken);
+      this.socket.auth = { token: accessToken };
+    } catch {
+      // רענון נכשל - הטוקן לא תקף
+    }
   }
 
   // חזרה מרקע (מובייל) - וידוא חיבור

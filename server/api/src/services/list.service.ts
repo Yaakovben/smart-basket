@@ -76,7 +76,7 @@ export class ListService {
         'list_update',
         userId,
         { productName }
-      ).catch((err) => logger.warn('List update notification failed:', err));
+      ).catch((err) => logger.error('List update notification failed:', err));
     }
 
     return transformList(list);
