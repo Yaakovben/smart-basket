@@ -168,7 +168,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         )}
 
         {/* Products List or Empty State */}
-        {items.length === 0 ? (
+        {items.length === 0 && !pendingAddName ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} />
         ) : (
           <>
