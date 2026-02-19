@@ -1,18 +1,13 @@
 import { memo, useRef, useCallback } from 'react';
 import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
-import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, SIZES, formatDateShort, formatTimeShort } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES, formatDateShort, formatTimeShort } from '../../../global/helpers';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NewProductForm } from '../types/list-types';
 
 // ===== סגנונות =====
-const labelSx = {
-  fontSize: SIZES.text.md - 1,
-  fontWeight: 600,
-  color: 'text.secondary',
-  mb: 1
-};
+const labelSx = COMMON_STYLES.label;
 
 const quantityBoxSx = {
   display: 'flex',

@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member, ToastType } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { useDebounce } from '../../../global/hooks';
+import { useDebounce, convertApiProduct, convertApiList } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
 import { newProductSchema, validateForm } from '../../../global/validation';
 import { productsApi, listsApi } from '../../../services/api';
@@ -16,18 +16,6 @@ import type {
   ListFilter,
   UseListReturn
 } from '../types/list-types';
-
-// המרת מוצר API לטיפוס מוצר קליינט
-const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }): Product => ({
-  id: apiProduct.id,
-  name: apiProduct.name,
-  quantity: apiProduct.quantity,
-  unit: apiProduct.unit as Product['unit'],
-  category: apiProduct.category as Product['category'],
-  isPurchased: apiProduct.isPurchased,
-  addedBy: apiProduct.addedBy,
-  createdAt: apiProduct.createdAt,
-});
 
 // ===== קבועים =====
 const FAB_VISIBILITY_THRESHOLD = 3;
@@ -577,8 +565,8 @@ export const useList = ({
 
   const refreshList = useCallback(async () => {
     try {
-      const freshList = await listsApi.getList(list.id);
-      onUpdateList(freshList);
+      const apiList = await listsApi.getList(list.id);
+      onUpdateList(convertApiList(apiList));
       showToast(t('refresh'), 'success');
     } catch {
       showToast(t('unknownError'), 'error');

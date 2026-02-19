@@ -4,18 +4,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
 import type { List, User, Member, Product } from '../../../global/types';
-import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, SIZES, BRAND_COLORS } from '../../../global/helpers';
+import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { EditListForm } from '../types/list-types';
 
 // ===== סגנונות =====
-const labelSx = {
-  fontSize: SIZES.text.md - 1,
-  fontWeight: 600,
-  color: 'text.secondary',
-  mb: 1
-};
+const labelSx = COMMON_STYLES.label;
 
 const modalOverlaySx = {
   position: 'fixed',

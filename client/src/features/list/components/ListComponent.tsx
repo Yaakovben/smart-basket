@@ -49,7 +49,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
-    duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel
+    duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
+    refreshList
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -101,6 +102,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onShowInvite={() => setShowInvite(true)}
         onQuickAdd={handleQuickAdd}
         onlineUserIds={onlineUserIds}
+        onRefresh={refreshList}
       />
 
       {/* Content */}

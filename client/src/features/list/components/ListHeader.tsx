@@ -12,6 +12,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
 import { MembersButton } from '../../../global/components';
@@ -47,6 +48,7 @@ interface ListHeaderProps {
   onShowInvite: () => void;
   onQuickAdd?: (name: string) => void;
   onlineUserIds?: Set<string>;
+  onRefresh: () => void;
 }
 
 // ===== קומפוננטה =====
@@ -71,7 +73,8 @@ export const ListHeader = memo(({
   onShowMembers,
   onShowInvite,
   onQuickAdd,
-  onlineUserIds
+  onlineUserIds,
+  onRefresh
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -176,6 +179,18 @@ export const ListHeader = memo(({
           }
         }}
       >
+        <MenuItem
+          onClick={() => { setMenuAnchor(null); onRefresh(); }}
+          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+        >
+          <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            {t('refresh')}
+          </Typography>
+        </MenuItem>
+
+        {list.isGroup && <Divider />}
+
         {/* Mute Toggle — only for groups */}
         {list.isGroup && (
           <Box sx={{ px: 1.5, py: 1 }}>
@@ -216,7 +231,7 @@ export const ListHeader = memo(({
           </Box>
         )}
 
-        {list.isGroup && isOwner && <Divider />}
+        {isOwner && <Divider />}
 
         {isOwner && (
           <MenuItem

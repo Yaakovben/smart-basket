@@ -208,7 +208,7 @@ export function useAuth() {
 }
 
 // Helper to convert API member to client Member type
-const convertApiMember = (apiMember: ApiMember): Member => ({
+export const convertApiMember = (apiMember: ApiMember): Member => ({
   id: apiMember.user.id,
   name: apiMember.user.name,
   email: apiMember.user.email,
@@ -219,7 +219,7 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
 });
 
 // Helper to convert API product to client Product type
-const convertApiProduct = (p: ApiList['products'][0]): Product => ({
+export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   id: p.id,
   name: p.name,
   quantity: p.quantity,
@@ -231,7 +231,7 @@ const convertApiProduct = (p: ApiList['products'][0]): Product => ({
 });
 
 // Helper to convert API list to client List type
-const convertApiList = (apiList: ApiList): List => ({
+export const convertApiList = (apiList: ApiList): List => ({
   id: apiList.id,
   name: apiList.name,
   icon: apiList.icon,

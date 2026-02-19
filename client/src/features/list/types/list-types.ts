@@ -111,4 +111,5 @@ export interface UseListReturn {
   handleDuplicateIncreaseQuantity: () => void;
   handleDuplicateAddNew: () => void;
   handleDuplicateCancel: () => void;
+  refreshList: () => void;
 }

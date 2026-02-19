@@ -97,122 +97,58 @@ export function useSocketNotifications(
   useEffect(() => {
     if (!user) return;
 
-    // הוספת מוצר
+    // פונקציית עזר משותפת ל-4 אירועי מוצר
+    const handleProductEvent = (
+      event: ProductEventData,
+      settingsKey: 'productAdd' | 'productDelete' | 'productEdit' | 'productPurchase',
+      notifType: LocalNotification['type'],
+      buildToast: (firstName: string, productName: string, listName: string) => string
+    ) => {
+      if (event.userId === user.id) return;
+      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
+      if (!shouldShowNotification(settingsKey)) return;
+
+      const listName = listNamesRef.current[event.listId] || '';
+      const productName = event.product?.name || event.productName || '';
+      const firstName = event.userName.split(' ')[0];
+
+      if (!isPushSubscribedRef.current) {
+        showToastRef.current(buildToast(firstName, productName, listName), 'info');
+      }
+
+      addNotificationRef.current?.({
+        id: `notif_${Date.now()}_${event.userId}`,
+        type: notifType,
+        listId: event.listId,
+        listName,
+        userId: event.userId,
+        userName: event.userName,
+        productName,
+        ...(event.isPurchased !== undefined && { isPurchased: event.isPurchased }),
+        timestamp: new Date(),
+        read: false
+      });
+    };
+
     const unsubProductAdded = socketService.on('product:added', (data: unknown) => {
-      const event = data as ProductEventData;
-      if (event.userId === user.id) return;
-      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
-
-      if (shouldShowNotification('productAdd')) {
-        const listName = listNamesRef.current[event.listId] || '';
-        const productName = event.product?.name || event.productName || '';
-
-        if (!isPushSubscribedRef.current) {
-          const message = `${event.userName.split(' ')[0]} ${tRef.current('addedProductNotif')} "${productName}"${listName ? ` ${tRef.current('inListNotif')} ${listName}` : ''}`;
-          showToastRef.current(message, 'info');
-        }
-
-        addNotificationRef.current?.({
-          id: `notif_${Date.now()}_${event.userId}`,
-          type: 'product_add',
-          listId: event.listId,
-          listName,
-          userId: event.userId,
-          userName: event.userName,
-          productName,
-          timestamp: new Date(),
-          read: false
-        });
-      }
+      handleProductEvent(data as ProductEventData, 'productAdd', 'product_add',
+        (name, product, list) => `${name} ${tRef.current('addedProductNotif')} "${product}"${list ? ` ${tRef.current('inListNotif')} ${list}` : ''}`);
     });
 
-    // עדכון מוצר
     const unsubProductUpdated = socketService.on('product:updated', (data: unknown) => {
-      const event = data as ProductEventData;
-      if (event.userId === user.id) return;
-      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
-
-      if (shouldShowNotification('productEdit')) {
-        const listName = listNamesRef.current[event.listId] || '';
-        const productName = event.product?.name || event.productName || '';
-
-        if (!isPushSubscribedRef.current) {
-          const message = `${event.userName.split(' ')[0]} ${tRef.current('editedProductNotif')} "${productName}"`;
-          showToastRef.current(message, 'info');
-        }
-
-        addNotificationRef.current?.({
-          id: `notif_${Date.now()}_${event.userId}`,
-          type: 'product_edit',
-          listId: event.listId,
-          listName,
-          userId: event.userId,
-          userName: event.userName,
-          productName,
-          timestamp: new Date(),
-          read: false
-        });
-      }
+      handleProductEvent(data as ProductEventData, 'productEdit', 'product_edit',
+        (name, product) => `${name} ${tRef.current('editedProductNotif')} "${product}"`);
     });
 
-    // מחיקת מוצר
     const unsubProductDeleted = socketService.on('product:deleted', (data: unknown) => {
-      const event = data as ProductEventData;
-      if (event.userId === user.id) return;
-      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
-
-      if (shouldShowNotification('productDelete')) {
-        const listName = listNamesRef.current[event.listId] || '';
-        const productName = event.product?.name || event.productName || '';
-
-        if (!isPushSubscribedRef.current) {
-          const message = `${event.userName.split(' ')[0]} ${tRef.current('deletedProductNotif')} "${productName}"`;
-          showToastRef.current(message, 'info');
-        }
-
-        addNotificationRef.current?.({
-          id: `notif_${Date.now()}_${event.userId}`,
-          type: 'product_delete',
-          listId: event.listId,
-          listName,
-          userId: event.userId,
-          userName: event.userName,
-          productName,
-          timestamp: new Date(),
-          read: false
-        });
-      }
+      handleProductEvent(data as ProductEventData, 'productDelete', 'product_delete',
+        (name, product) => `${name} ${tRef.current('deletedProductNotif')} "${product}"`);
     });
 
-    // סימון מוצר (נקנה/לא נקנה)
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
-      if (event.userId === user.id) return;
-      if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
-
-      if (shouldShowNotification('productPurchase')) {
-        const listName = listNamesRef.current[event.listId] || '';
-        const productName = event.product?.name || event.productName || '';
-
-        if (!isPushSubscribedRef.current) {
-          const action = event.isPurchased ? tRef.current('purchasedNotif') : tRef.current('unmarkedPurchasedNotif');
-          const message = `${event.userName.split(' ')[0]} ${action} "${productName}"`;
-          showToastRef.current(message, 'info');
-        }
-
-        addNotificationRef.current?.({
-          id: `notif_${Date.now()}_${event.userId}`,
-          type: 'product_purchase',
-          listId: event.listId,
-          listName,
-          userId: event.userId,
-          userName: event.userName,
-          productName,
-          isPurchased: event.isPurchased,
-          timestamp: new Date(),
-          read: false
-        });
-      }
+      handleProductEvent(event, 'productPurchase', 'product_purchase',
+        (name, product) => `${name} ${event.isPurchased ? tRef.current('purchasedNotif') : tRef.current('unmarkedPurchasedNotif')} "${product}"`);
     });
 
     // התראות חברות (הצטרפות/עזיבה/הסרה/עדכון)

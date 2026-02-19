@@ -134,6 +134,13 @@ export const COMMON_STYLES = {
     primary: 'linear-gradient(135deg, #14B8A6, #10B981)',
     header: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     error: 'linear-gradient(135deg, #EF4444, #DC2626)'
+  },
+  // תווית שדה במודאלים
+  label: {
+    fontSize: SIZES.text.md - 1,
+    fontWeight: 600,
+    color: 'text.secondary',
+    mb: 1
   }
 } as const;
 

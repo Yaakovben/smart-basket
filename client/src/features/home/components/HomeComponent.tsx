@@ -101,7 +101,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const menuOpen = Boolean(anchorEl);
 
   return (
-    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }} onClick={() => onSelect(l)}>
+    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1, cursor: 'pointer' }} onClick={() => onSelect(l)}>
       <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
         {l.icon}
       </Box>
