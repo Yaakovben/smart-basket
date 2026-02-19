@@ -57,6 +57,7 @@ export interface UseListReturn {
   showHint: boolean;
   addError: string;
   addingProduct: boolean;
+  pendingAddName: string | null;
   fabPosition: FabPosition | null;
   isDragging: boolean;
 
@@ -106,4 +107,8 @@ export interface UseListReturn {
   incrementQuantity: (type: 'new' | 'edit') => void;
   decrementQuantity: (type: 'new' | 'edit') => void;
   closeAddModal: () => void;
+  duplicateProduct: { existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null;
+  handleDuplicateIncreaseQuantity: () => void;
+  handleDuplicateAddNew: () => void;
+  handleDuplicateCancel: () => void;
 }

@@ -156,6 +156,7 @@ type TranslationKey =
   | 'catOther'
   // Toasts
   | 'added'
+  | 'adding'
   | 'saved'
   | 'deleted'
   | 'updated'
@@ -351,7 +352,14 @@ type TranslationKey =
   | 'listCompleted'
   | 'sessionExpired'
   // Convert list to group
-  | 'convertToGroup';
+  | 'convertToGroup'
+  // Duplicate product
+  | 'productExists'
+  | 'productExistsMessage'
+  | 'increaseQuantity'
+  | 'addAnyway'
+  // Refresh
+  | 'refresh';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -512,6 +520,7 @@ export const translations: Record<Language, Translations> = {
     catOther: 'אחר',
     // Toasts
     added: 'נוסף',
+    adding: 'מוסיף...',
     saved: 'נשמר',
     deleted: 'נמחק',
     updated: 'עודכן',
@@ -707,6 +716,11 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'הרשימה הושלמה',
     sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
     convertToGroup: 'הפוך לקבוצה',
+    productExists: 'מוצר קיים',
+    productExistsMessage: '"{name}" כבר ברשימה ({quantity} {unit}). מה לעשות?',
+    increaseQuantity: 'הגדל כמות',
+    addAnyway: 'הוסף בכל זאת',
+    refresh: 'רענון',
   },
   en: {
     // General
@@ -864,6 +878,7 @@ export const translations: Record<Language, Translations> = {
     catOther: 'Other',
     // Toasts
     added: 'Added',
+    adding: 'Adding...',
     saved: 'Saved',
     deleted: 'Deleted',
     updated: 'Updated',
@@ -1059,6 +1074,11 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'List completed',
     sessionExpired: 'Session expired, please log in again',
     convertToGroup: 'Convert to group',
+    productExists: 'Product exists',
+    productExistsMessage: '"{name}" is already in the list ({quantity} {unit}). What to do?',
+    increaseQuantity: 'Increase quantity',
+    addAnyway: 'Add anyway',
+    refresh: 'Refresh',
   },
   ru: {
     // General
@@ -1216,6 +1236,7 @@ export const translations: Record<Language, Translations> = {
     catOther: 'Другое',
     // Toasts
     added: 'Добавлено',
+    adding: 'Добавление...',
     saved: 'Сохранено',
     deleted: 'Удалено',
     updated: 'Обновлено',
@@ -1411,6 +1432,11 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'Список завершён',
     sessionExpired: 'Сессия истекла, войдите снова',
     convertToGroup: 'Преобразовать в группу',
+    productExists: 'Продукт существует',
+    productExistsMessage: '"{name}" уже в списке ({quantity} {unit}). Что делать?',
+    increaseQuantity: 'Увеличить количество',
+    addAnyway: 'Добавить всё равно',
+    refresh: 'Обновить',
   }
 };
 

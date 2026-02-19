@@ -92,6 +92,8 @@ export const useList = ({
 
   // ===== מצב הוספת מוצר =====
   const [addingProduct, setAddingProduct] = useState(false);
+  const [pendingAddName, setPendingAddName] = useState<string | null>(null);
+  const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
 
   // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
@@ -217,6 +219,7 @@ export const useList = ({
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
     setAddingProduct(true);
+    setPendingAddName(productData.name);
 
     try {
       const addedProduct = await productsApi.addProduct(list.id, productData);
@@ -244,8 +247,16 @@ export const useList = ({
       showToast(t('unknownError'), 'error');
     } finally {
       setAddingProduct(false);
+      setPendingAddName(null);
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t]);
+
+  // בדיקת כפילות מוצר
+  const checkDuplicate = useCallback((name: string): Product | undefined => {
+    return list.products.find(
+      (p: Product) => p.name.trim().toLowerCase() === name.toLowerCase() && !p.isPurchased
+    );
+  }, [list.products]);
 
   const handleAdd = useCallback(async () => {
     setAddError('');
@@ -258,17 +269,36 @@ export const useList = ({
       category: newProduct.category,
     };
 
+    // בדיקת כפילות
+    const existing = checkDuplicate(productData.name);
+    if (existing) {
+      setNewProduct(getDefaultNewProduct());
+      setShowAdd(false);
+      setDuplicateProduct({ existing, newData: productData });
+      return;
+    }
+
     // סגירת מודאל מיידית ואיפוס הטופס
     setNewProduct(getDefaultNewProduct());
     setShowAdd(false);
 
     // שליחה לשרת - המוצר יופיע רק אחרי אישור
     await addProductToServer(productData);
-  }, [newProduct, validateProduct, addProductToServer]);
+  }, [newProduct, validateProduct, addProductToServer, checkDuplicate]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) return;
+
+    // בדיקת כפילות
+    const existing = checkDuplicate(trimmedName);
+    if (existing) {
+      setDuplicateProduct({
+        existing,
+        newData: { name: trimmedName, quantity: 1, unit: 'יח׳' as Product['unit'], category: 'אחר' as Product['category'] }
+      });
+      return;
+    }
 
     await addProductToServer({
       name: trimmedName,
@@ -276,7 +306,54 @@ export const useList = ({
       unit: 'יח׳' as Product['unit'],
       category: 'אחר' as Product['category'],
     });
-  }, [addProductToServer]);
+  }, [addProductToServer, checkDuplicate]);
+
+  // טיפול בכפילות - הגדלת כמות
+  const handleDuplicateIncreaseQuantity = useCallback(async () => {
+    if (!duplicateProduct) return;
+    const { existing, newData } = duplicateProduct;
+    const newQuantity = existing.quantity + newData.quantity;
+    setDuplicateProduct(null);
+
+    // עדכון אופטימיסטי
+    updateProducts(
+      list.products.map((p: Product) =>
+        p.id === existing.id ? { ...p, quantity: newQuantity } : p
+      )
+    );
+    showToast(t('updated'));
+
+    try {
+      await productsApi.updateProduct(list.id, existing.id, { quantity: newQuantity });
+      socketService.emitProductUpdated(list.id, {
+        id: existing.id,
+        name: existing.name,
+        quantity: newQuantity,
+        unit: existing.unit,
+        category: existing.category,
+      }, user.name);
+    } catch {
+      // rollback
+      updateProducts(
+        list.products.map((p: Product) =>
+          p.id === existing.id ? { ...p, quantity: existing.quantity } : p
+        )
+      );
+      showToast(t('unknownError'), 'error');
+    }
+  }, [duplicateProduct, list.id, list.products, user.name, updateProducts, showToast, t]);
+
+  // טיפול בכפילות - הוספה בכל זאת
+  const handleDuplicateAddNew = useCallback(async () => {
+    if (!duplicateProduct) return;
+    const { newData } = duplicateProduct;
+    setDuplicateProduct(null);
+    await addProductToServer(newData);
+  }, [duplicateProduct, addProductToServer]);
+
+  const handleDuplicateCancel = useCallback(() => {
+    setDuplicateProduct(null);
+  }, []);
 
   const toggleProduct = useCallback(async (productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
@@ -498,6 +575,16 @@ export const useList = ({
     });
   }, [list.id, onLeaveList, t]);
 
+  const refreshList = useCallback(async () => {
+    try {
+      const freshList = await listsApi.getList(list.id);
+      onUpdateList(freshList);
+      showToast(t('refresh'), 'success');
+    } catch {
+      showToast(t('unknownError'), 'error');
+    }
+  }, [list.id, onUpdateList, showToast, t]);
+
   return {
     filter,
     search,
@@ -516,6 +603,7 @@ export const useList = ({
     showHint,
     addError,
     addingProduct,
+    pendingAddName,
     fabPosition,
     isDragging,
 
@@ -564,6 +652,11 @@ export const useList = ({
     updateEditProductField,
     incrementQuantity,
     decrementQuantity,
-    closeAddModal
+    closeAddModal,
+    duplicateProduct,
+    handleDuplicateIncreaseQuantity,
+    handleDuplicateAddNew,
+    handleDuplicateCancel,
+    refreshList
   };
 };

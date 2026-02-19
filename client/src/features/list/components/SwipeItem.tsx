@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
-import type { Product } from '../../../global/types';
+import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
-
-type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר';
 
 interface SwipeItemProps {
   product: Product;
@@ -252,6 +250,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
 
   return (
     <Box
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      onClick={handleClick}
       sx={{
         position: 'relative',
         mb: '6px',
@@ -280,15 +283,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'auto' : 'none'
         }}
       >
-        <Box role="button" aria-label={t('delete')} onClick={() => { haptic('medium'); doDelete(); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
+        <Box role="button" aria-label={t('delete')} onClick={(e) => { e.stopPropagation(); haptic('medium'); doDelete(); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
           <span>🗑️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
-        <Box role="button" aria-label={t('edit')} onClick={() => { haptic('light'); doEdit(); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
+        <Box role="button" aria-label={t('edit')} onClick={(e) => { e.stopPropagation(); haptic('light'); doEdit(); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
           <span>✏️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
         </Box>
-        <Box role="button" aria-label={isPurchased ? t('return') : t('purchased')} onClick={() => { haptic('light'); doToggle(); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
+        <Box role="button" aria-label={isPurchased ? t('return') : t('purchased')} onClick={(e) => { e.stopPropagation(); haptic('light'); doToggle(); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
           <span>{isPurchased ? '↩️' : '✓'}</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
         </Box>
@@ -296,11 +299,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
 
       {/* Swipeable content */}
       <Box
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchCancel}
-        onClick={handleClick}
         sx={{
           position: 'absolute',
           inset: 0,

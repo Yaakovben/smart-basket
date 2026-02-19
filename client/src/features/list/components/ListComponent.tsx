@@ -1,7 +1,7 @@
 import { memo, useRef, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import type { Product, List, User } from '../../../global/types';
-import { ConfirmModal } from '../../../global/components';
+import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
@@ -38,7 +38,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
-    fabPosition, isDragging,
+    pendingAddName, fabPosition, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
@@ -48,7 +48,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
-    decrementQuantity, closeAddModal
+    decrementQuantity, closeAddModal,
+    duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -125,21 +126,30 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} />
         ) : (
-          items.map((p: Product) => (
-            <SwipeItem
-              key={p.id}
-              product={p}
-              isPurchased={p.isPurchased}
-              isOpen={openItemId === p.id}
-              currentUserName={user.name}
-              onOpen={setOpenItemId}
-              onClose={handleCloseItem}
-              onToggle={toggleProduct}
-              onEdit={openEditProduct}
-              onDelete={deleteProduct}
-              onClick={handleShowDetails}
-            />
-          ))
+          <>
+            {items.map((p: Product) => (
+              <SwipeItem
+                key={p.id}
+                product={p}
+                isPurchased={p.isPurchased}
+                isOpen={openItemId === p.id}
+                currentUserName={user.name}
+                onOpen={setOpenItemId}
+                onClose={handleCloseItem}
+                onToggle={toggleProduct}
+                onEdit={openEditProduct}
+                onDelete={deleteProduct}
+                onClick={handleShowDetails}
+              />
+            ))}
+            {pendingAddName && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', px: '14px', height: 72, mb: '6px', borderRadius: '14px', bgcolor: 'background.paper', opacity: 0.6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <CircularProgress size={22} sx={{ color: 'primary.main', flexShrink: 0 }} />
+                <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pendingAddName}</Typography>
+                <Typography sx={{ fontSize: 12, color: 'text.disabled', ml: 'auto', flexShrink: 0 }}>{t('adding')}</Typography>
+              </Box>
+            )}
+          </>
         )}
       </Box>
 
@@ -233,6 +243,26 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         />
       )}
       {confirm && <ConfirmModal {...confirm} onCancel={() => setConfirm(null)} />}
+
+      {/* Duplicate Product Dialog */}
+      {duplicateProduct && (
+        <Modal title={t('productExists')} onClose={handleDuplicateCancel}>
+          <Typography sx={{ fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 2.5, lineHeight: 1.6 }}>
+            {t('productExistsMessage')
+              .replace('{name}', duplicateProduct.existing.name)
+              .replace('{quantity}', String(duplicateProduct.existing.quantity))
+              .replace('{unit}', duplicateProduct.existing.unit)}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button variant="contained" fullWidth onClick={handleDuplicateIncreaseQuantity} sx={{ py: 1.25 }}>
+              {t('increaseQuantity')}
+            </Button>
+            <Button variant="outlined" fullWidth onClick={handleDuplicateAddNew} sx={{ py: 1.25 }}>
+              {t('addAnyway')}
+            </Button>
+          </Box>
+        </Modal>
+      )}
     </Box>
   );
 });
