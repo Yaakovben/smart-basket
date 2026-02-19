@@ -112,4 +112,5 @@ export interface UseListReturn {
   handleDuplicateAddNew: () => void;
   handleDuplicateCancel: () => void;
   refreshList: () => void;
+  showCelebration: boolean;
 }

@@ -92,6 +92,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
+  const totalProducts = l.products.length;
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
@@ -106,8 +107,8 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</Typography>
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
-        <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
-          {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
+        <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
+          {count > 0 ? `${count} ${t('items')}` : totalProducts > 0 ? `✓ ${t('completed')}` : `0 ${t('items')}`}
         </Typography>
       </Box>
       {/* אייקון מושתק + תפריט שלוש נקודות */}
@@ -667,16 +668,29 @@ export const HomeComponent = memo(({
           </Box>
           <Button variant="contained" fullWidth onClick={saveEditList} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
           {!editList.isGroup && (
-            <Typography
+            <Button
+              variant="outlined"
+              fullWidth
               onClick={() => {
                 const converted = { ...editList, isGroup: true, password: '0000' };
                 setEditList(null);
                 onEditList(converted);
               }}
-              sx={{ mt: 2, textAlign: 'center', fontSize: 13, color: 'primary.main', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+              sx={{
+                mt: 2,
+                py: 1,
+                fontSize: 13,
+                fontWeight: 600,
+                borderRadius: '12px',
+                borderColor: 'divider',
+                color: 'text.secondary',
+                textTransform: 'none',
+                '&:active': { transform: 'scale(0.98)' },
+              }}
+              startIcon={<span style={{ fontSize: 16 }}>👥</span>}
             >
-              👥 {t('convertToGroup')}
-            </Typography>
+              {t('convertToGroup')}
+            </Button>
           )}
         </Modal>
       )}

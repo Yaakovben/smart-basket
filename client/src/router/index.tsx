@@ -9,7 +9,7 @@ import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
 import { hideInitialLoader } from "../App";
 
-// טעינה ישירה של דפים ראשיים (ללא lazy) להצגה מיידית אחרי אימות
+// טעינה ישירה של דפים ראשיים להצגה מיידית אחרי אימות
 import { LoginPage } from "../features/auth/auth";
 import { HomePage } from "../features/home/home";
 
@@ -22,7 +22,7 @@ const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 
-// מסך טעינה - שלד עמוד במקום גרדיאנט ריק
+// מסך טעינה, שלד עמוד במקום גרדיאנט ריק
 const PageLoader = PageSkeleton;
 
 // עטיפת נתיב מוגן
@@ -66,7 +66,7 @@ const ListPageWrapper = ({
   const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
 
-  // Set יציב של משתמשים מקוונים ברשימה הנוכחית
+  // קבוצה יציבה של משתמשים מקוונים ברשימה הנוכחית
   const onlineArr = listId ? onlineUsers[listId] : undefined;
   const onlineUserIds = useMemo(() => new Set(onlineArr || []), [onlineArr]);
 
@@ -109,7 +109,7 @@ export const AppRouter = () => {
   const navigate = useNavigate();
   const { t } = useSettings();
 
-  // כל ה-hooks חייבים להיקרא לפני כל return מותנה
+  // hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
   const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
@@ -129,7 +129,7 @@ export const AppRouter = () => {
     }
   }, [authLoading]);
 
-  // התראות שמורות (נטענות מ-API, מתעדכנות בזמן אמת דרך socket)
+  // התראות שמורות, נטענות מהשרת ומתעדכנות בזמן אמת
   const {
     notifications: persistedNotifications,
     loading: notificationsLoading,
@@ -140,7 +140,7 @@ export const AppRouter = () => {
   } = useNotifications(user, initialData.notifications, authLoading);
 
   // הצגת שגיאה כשטעינת רשימות או התראות נכשלת
-  // לא מציג בזמן אימות ראשוני - מונע toast מיותר כשטוקן פג
+  // לא מציג בזמן אימות ראשוני, מונע הודעה מיותרת כשטוקן פג
   useEffect(() => {
     if (!authLoading && (listsFetchError || notificationsFetchError)) {
       showToast(t('errorOccurred'), 'error');
@@ -171,7 +171,7 @@ export const AppRouter = () => {
     }
   }, [removeListLocal, navigate]);
 
-  // הרשמה להתראות socket (מכבד הגדרות התראות)
+  // הרשמה להתראות דרך socket, מכבד הגדרות התראות
   useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted, isPushSubscribed);
 
   const handleDeleteAllData = useCallback(async () => {
@@ -201,13 +201,13 @@ export const AppRouter = () => {
     }
   }, [logout, navigate, showToast, t]);
 
-  // אין מה להציג בזמן טעינת אימות (loader ראשוני מ-HTML מוצג)
+  // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
   if (authLoading) {
     return null;
   }
 
   const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
-    // flushSync מונע race condition שבו הניווט קורה לפני עדכון ה-state
+    // מונע שהניווט יקרה לפני עדכון הסטייט (flushSync)
     flushSync(() => {
       login(u, loginMethod);
     });

@@ -4,10 +4,10 @@ import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// VitePWA דורש את זה - globPatterns ריק אז שום דבר לא נשמר ב-cache
+// קריאה נדרשת, אך רשימת הקבצים ריקה ולכן שום דבר לא נשמר במטמון
 precacheAndRoute(self.__WB_MANIFEST);
 
-// טיפול בהתראות push - סינון לפי העדפות המשתמש
+// טיפול בהתראות נכנסות, סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -15,11 +15,11 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
 
     const showNotification = async () => {
-      // קריאת הגדרות התראות מ-IndexedDB
+      // קריאת הגדרות התראות מהמסד המקומי
       const settings = await getNotifSettingsFromIDB();
 
       if (settings) {
-        // מתג ראשי - חסימת כל ההתראות
+        // מתג ראשי, חסימת כל ההתראות
         if (!settings.enabled) return;
 
         const notifType = data.data?.type as string | undefined;
@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
         if (listId && settings.mutedGroupIds?.includes(listId)) return;
       }
 
-      // כל הפילטרים עברו - הצגת ההתראה
+      // כל הפילטרים עברו, מציגים את ההתראה
       const options = {
         body: data.body,
         icon: data.icon || '/icon-192x192.png',
@@ -58,7 +58,7 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// לחיצה על התראה - פתיחת האפליקציה בדף הרלוונטי
+// לחיצה על התראה, פתיחת האפליקציה בדף הרלוונטי
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -86,12 +86,12 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('notificationclose', () => {});
 
-// התקנה - דילוג על המתנה להפעלה מיידית
+// התקנה, דילוג על המתנה להפעלה מיידית
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// הפעלה - ניקוי cache, עדכון לקוחות, ותפיסת שליטה
+// הפעלה, ניקוי מטמון, עדכון לקוחות ותפיסת שליטה
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()

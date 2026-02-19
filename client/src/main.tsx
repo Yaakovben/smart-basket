@@ -4,10 +4,10 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
 
-// אתחול Sentry מושהה כדי לא לחסום את הצגת הדף
+// אתחול מערכת דיווח שגיאות מושהה כדי לא לחסום את הצגת הדף
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
 if (SENTRY_DSN && import.meta.env.PROD) {
-  // השהיית אתחול - requestIdleCallback אם זמין, אחרת setTimeout
+  // השהיית אתחול, שימוש בזמן סרק אם זמין
   const deferInit = () => {
     import('@sentry/react').then((Sentry) => {
       Sentry.init({
@@ -27,7 +27,7 @@ if (SENTRY_DSN && import.meta.env.PROD) {
   }
 }
 
-// Google OAuth Client ID - חייב להיות מוגדר במשתני סביבה
+// חייב להיות מוגדר במשתני סביבה
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 // רינדור האפליקציה

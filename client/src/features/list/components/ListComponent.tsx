@@ -1,10 +1,53 @@
-import { memo, useRef, useCallback } from 'react';
-import { Box, CircularProgress, Typography, Button } from '@mui/material';
+import { memo, useRef, useCallback, useMemo } from 'react';
+import { Box, CircularProgress, Typography, Button, keyframes } from '@mui/material';
 import type { Product, List, User } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
+
+// ===== אנימציית חגיגה =====
+const float = keyframes`
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(-120vh) rotate(720deg) scale(0); opacity: 0; }
+`;
+
+const CELEBRATION_COLORS = ['#14B8A6', '#F59E0B', '#EC4899', '#8B5CF6', '#22C55E', '#3B82F6', '#EF4444', '#06B6D4'];
+
+const CelebrationOverlay = memo(() => {
+  const particles = useMemo(() =>
+    Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 0.8}s`,
+      duration: `${1.5 + Math.random() * 1.5}s`,
+      color: CELEBRATION_COLORS[i % CELEBRATION_COLORS.length],
+      size: 6 + Math.random() * 6,
+      shape: i % 3, // 0=circle, 1=square, 2=rectangle
+    })),
+  []);
+
+  return (
+    <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
+      {particles.map(p => (
+        <Box
+          key={p.id}
+          sx={{
+            position: 'absolute',
+            bottom: '-10px',
+            left: p.left,
+            width: p.shape === 2 ? p.size * 1.5 : p.size,
+            height: p.shape === 2 ? p.size * 0.6 : p.size,
+            bgcolor: p.color,
+            borderRadius: p.shape === 0 ? '50%' : '2px',
+            animation: `${float} ${p.duration} ${p.delay} ease-out forwards`,
+          }}
+        />
+      ))}
+    </Box>
+  );
+});
+CelebrationOverlay.displayName = 'CelebrationOverlay';
 
 // ===== קומפוננטות משנה =====
 import { ListHeader } from './ListHeader';
@@ -50,7 +93,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
-    refreshList
+    refreshList, showCelebration
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -245,6 +288,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         />
       )}
       {confirm && <ConfirmModal {...confirm} onCancel={() => setConfirm(null)} />}
+
+      {/* Celebration - all products purchased */}
+      {showCelebration && <CelebrationOverlay />}
 
       {/* Duplicate Product Dialog */}
       {duplicateProduct && (

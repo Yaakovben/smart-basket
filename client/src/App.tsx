@@ -10,36 +10,36 @@ import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 
 // ניקוי cache אוטומטי בפריסות חדשות
-// __BUILD_VERSION__ מוזרק ע"י Vite בזמן build (ייחודי לכל build)
+// גרסה ייחודית לכל build, מוזרקת ע"י Vite
 const handleNewVersion = async () => {
   const storedVersion = localStorage.getItem('app_build_version');
 
   if (storedVersion === __BUILD_VERSION__) return;
 
-  // מניעת לולאת reload: אם כבר עשינו reload לגרסה הזו
+  // מניעת לולאת רענון: אם כבר רעננו את הדף לגרסה הזו
   if (sessionStorage.getItem('version_reload_done') === __BUILD_VERSION__) {
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
     return;
   }
 
   try {
-    // 1. ניקוי כל ה-caches
+    // 1. ניקוי כל המטמון
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
     }
 
-    // 2. ביטול רישום כל ה-service workers
+    // 2. ביטול רישום של כל service workers
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(r => r.unregister()));
     }
 
-    // 3. שמירת גרסה וסימון reload
+    // 3. שמירת גרסה וסימון רענון
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
     sessionStorage.setItem('version_reload_done', __BUILD_VERSION__);
 
-    // 4. reload קשיח לקבלת תוכן טרי (רק אם הייתה גרסה קודמת)
+    // 4. רענון קשיח לקבלת תוכן טרי (רק אם הייתה גרסה קודמת)
     if (storedVersion) {
       window.location.reload();
       return;
@@ -52,7 +52,7 @@ const handleNewVersion = async () => {
 
 handleNewVersion();
 
-// הסתרת loader ראשוני - נקרא ע"י AppRouter כשהאימות מוכן
+// הסתרת מסך הטעינה הראשוני, נקרא כשהאימות מוכן
 export const hideInitialLoader = () => {
   const loader = document.getElementById('initial-loader');
   if (loader) {

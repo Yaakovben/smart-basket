@@ -4,7 +4,7 @@ import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
 
-// Re-export hooks
+// ייצוא חוזר
 export { useDebounce } from './useDebounce';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
@@ -21,12 +21,12 @@ interface ToastState {
   key: number;
 }
 
-// Toast duration by type - info/warning are longer for notification messages
+// משך הצגה לפי סוג, התראות מידע מוצגות יותר זמן
 const TOAST_DURATIONS: Record<ToastType, number> = {
   success: 1500,
   error: 3000,
-  info: 5000,  // 5 seconds for notification messages - enough time to read
-  warning: 5000 // 5 seconds for important warnings
+  info: 5000,  // 5 שניות להודעות התראה, מספיק לקריאה
+  warning: 5000 // 5 שניות לאזהרות חשובות
 };
 
 export function useToast() {
@@ -60,7 +60,7 @@ export function useToast() {
   return { message: toast.message, toastType: toast.type, toastKey: toast.key, showToast, hideToast };
 }
 
-// Initial data type for parallel loading optimization
+// טיפוס נתונים ראשוניים לטעינה מקבילית
 export interface InitialData {
   lists: ApiList[] | null;
   notifications: { notifications: import('../../services/api').PersistedNotification[]; unreadCount: number } | null;
@@ -68,14 +68,14 @@ export interface InitialData {
 
 // ===== useAuth Hook =====
 export function useAuth() {
-  // Check for cached user in localStorage for instant render
-  const MAX_CACHE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+  // בדיקת משתמש שמור לרינדור מיידי
+  const MAX_CACHE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 יום
   const [user, setUser] = useState<User | null>(() => {
     try {
       const cached = localStorage.getItem('cached_user');
       if (cached && getAccessToken()) {
         const parsed = JSON.parse(cached);
-        // בדיקת גיל cache - לא משתמשים בנתונים ישנים מ-30 יום
+        // בדיקת גיל cache, לא משתמשים בנתונים ישנים מ 30 יום
         if (parsed._cachedAt && (Date.now() - parsed._cachedAt) > MAX_CACHE_AGE) {
           localStorage.removeItem('cached_user');
           return null;
@@ -87,32 +87,32 @@ export function useAuth() {
     } catch { /* ignore */ }
     return null;
   });
-  // Show loading while we validate token and fetch initial data
-  // This keeps the HTML loader visible until data is ready, preventing empty page flash
+  // הצגת טעינה בזמן אימות הטוקן וטעינת נתונים ראשוניים
+  // מסך הטעינה נשאר מוצג עד שהנתונים מוכנים, מונע הבזק ריק
   const [loading, setLoading] = useState(() => !!getAccessToken());
-  // Pre-fetched data for faster initial load (fetched in parallel with profile)
+  // נתונים שנטענו מראש במקביל לפרופיל לטעינה מהירה
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
 
-  // Check for existing session on mount
+  // בדיקת סשן קיים בטעינה
   useEffect(() => {
     const checkAuth = async () => {
       const token = getAccessToken();
       if (!token) {
-        // No token - clear any cached user and stop loading
+        // אין טוקן, ניקוי משתמש שמור ועצירת טעינה
         localStorage.removeItem('cached_user');
         setUser(null);
         setLoading(false);
         return;
       }
 
-      // Timeout promise - don't hang forever if API is down
+      // הגבלת זמן, לא להיתקע אם השרת לא מגיב
       let timeoutId: ReturnType<typeof setTimeout>;
       const timeout = new Promise((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('timeout')), 10000);
       });
 
       try {
-        // Fetch profile, lists, and notifications in PARALLEL (with 10s timeout)
+        // טעינת פרופיל, רשימות והתראות במקביל (timeout 10 שניות)
         const [profile, listsResult, notificationsResult] = await Promise.race([
           Promise.all([
             authApi.getProfile(),
@@ -127,11 +127,11 @@ export function useAuth() {
 
         clearTimeout(timeoutId!);
 
-        // Cache user for next load
+        // שמירת משתמש לטעינה הבאה
         try { localStorage.setItem('cached_user', JSON.stringify({ ...profile, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
         setUser(profile);
 
-        // Store pre-fetched data for hooks to consume
+        // שמירת נתונים שנטענו מראש לשימוש hooks
         setInitialData({
           lists: listsResult,
           notifications: notificationsResult ? {
@@ -140,12 +140,12 @@ export function useAuth() {
           } : null,
         });
 
-        // Connect socket when authenticated (if not already connected)
+        // חיבור socket אחרי אימות מוצלח
         socketService.connect();
       } catch (error) {
         clearTimeout(timeoutId!);
-        // Only logout on auth errors (401 = token truly invalid after refresh attempt)
-        // For timeout/network errors, keep cached user to avoid unnecessary logouts
+        // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
+        // בשגיאות רשת שומרים את המשתמש השמור למניעת התנתקות מיותרת
         const status = (error as { response?: { status?: number } })?.response?.status;
         if (status === 401) {
           socketService.disconnect();
@@ -153,7 +153,7 @@ export function useAuth() {
           localStorage.removeItem('cached_user');
           setUser(null);
         }
-        // For network/timeout errors, keep the cached user (stale but functional)
+        // בשגיאת רשת, המשתמש השמור נשאר (ישן אבל פונקציונלי)
       }
       setLoading(false);
     };
@@ -164,11 +164,11 @@ export function useAuth() {
   const login = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
-      // Cache user for instant load on next visit
+      // שמירת משתמש לטעינה מיידית בביקור הבא
       try { localStorage.setItem('cached_user', JSON.stringify({ ...userData, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(userData);
-      // Login activity is tracked on the server via LoginActivity model
-      // Connect socket after login
+      // פעילות כניסה נשמרת בשרת
+      // חיבור socket אחרי כניסה
       socketService.connect();
     },
     [],
@@ -176,16 +176,16 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      // Unsubscribe from push notifications BEFORE logging out
-      // This removes the subscription from server and browser
+      // ביטול מנוי להתראות push לפני התנתקות
+      // מסיר את המנוי גם מהשרת וגם מהדפדפן
       await pushApi.unsubscribeAllPush();
     } catch {
-      // Continue with logout even if push unsubscribe fails
+      // ממשיכים בהתנתקות גם אם ביטול ההתראות נכשל
     }
     try {
       await authApi.logout();
     } catch {
-      // Ignore errors, just clear local state
+      // מתעלמים משגיאות, רק מנקים סטייט מקומי
     }
     socketService.disconnect();
     localStorage.removeItem('cached_user');
@@ -207,7 +207,7 @@ export function useAuth() {
   return { user, login, logout, updateUser, isAuthenticated: !!user, loading, initialData };
 }
 
-// Helper to convert API member to client Member type
+// Convert API member to client format
 export const convertApiMember = (apiMember: ApiMember): Member => ({
   id: apiMember.user.id,
   name: apiMember.user.name,
@@ -218,7 +218,7 @@ export const convertApiMember = (apiMember: ApiMember): Member => ({
   joinedAt: apiMember.joinedAt,
 });
 
-// Helper to convert API product to client Product type
+// Convert API product to client format
 export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   id: p.id,
   name: p.name,
@@ -230,7 +230,7 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   createdAt: p.createdAt,
 });
 
-// Helper to convert API list to client List type
+// Convert API list to client format
 export const convertApiList = (apiList: ApiList): List => ({
   id: apiList.id,
   name: apiList.name,
@@ -253,13 +253,13 @@ export const convertApiList = (apiList: ApiList): List => ({
 
 // ===== useLists Hook =====
 export function useLists(user: User | null, initialLists?: ApiList[] | null, authLoading?: boolean) {
-  // Use pre-fetched lists if available for instant render
+  // שימוש ברשימות שנטענו מראש לרינדור מיידי
   const [lists, setLists] = useState<List[]>(() =>
     initialLists ? initialLists.map(l => convertApiList(l)) : []
   );
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
-  // Track which user we've initialized pre-fetched data for
+  // מעקב איזה משתמש כבר אותחל עם נתונים מראש
   const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);
 
   const fetchLists = useCallback(async () => {
@@ -275,7 +275,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     }
   }, []);
 
-  // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
+  // סנכרון עם נתונים מראש כשהם מגיעים מטעינה מקבילית
   useEffect(() => {
     if (initialLists && !initializedForRef.current) {
       setLists(initialLists.map(l => convertApiList(l)));
@@ -283,16 +283,16 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     }
   }, [initialLists]);
 
-  // Fetch lists when user changes (skip if already initialized with pre-fetched data for this user)
-  // לא טוענים בזמן אימות ראשוני - מחכים לנתונים שנטענו מראש מ-useAuth
+  // טעינת רשימות כשמשתמש משתנה (דילוג אם כבר אותחל עם נתונים מראש)
+  // לא טוענים בזמן אימות ראשוני, מחכים לנתונים מראש
   useEffect(() => {
     if (authLoading) return;
     if (user) {
-      // User changed since last initialization — must fetch fresh data
+      // משתמש השתנה מאז האתחול האחרון, צריך נתונים חדשים
       if (initializedForRef.current && initializedForRef.current !== user.id) {
         initializedForRef.current = null;
       }
-      // Skip fetch if we already have pre-fetched data for this user
+      // דילוג על טעינה אם כבר יש נתונים מראש למשתמש הזה
       if (initializedForRef.current) {
         initializedForRef.current = user.id;
         return;
@@ -309,10 +309,10 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
   const createList = useCallback(
     async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'> & { id?: string; owner?: User; members?: Member[]; products?: Product[] }) => {
-      // Generate temp ID for optimistic update
+      // יצירת מזהה זמני לעדכון אופטימיסטי
       const tempId = list.id || `temp_${Date.now()}`;
 
-      // Create optimistic list immediately
+      // יצירת רשימה אופטימיסטית מיידית
       const optimisticList: List = {
         id: tempId,
         name: list.name,
@@ -326,11 +326,11 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         password: list.password || null,
       };
 
-      // Add to state immediately (optimistic)
+      // הוספה לסטייט מיידית (אופטימיסטי)
       setLists((prev) => [...prev, optimisticList]);
 
       try {
-        // Call API in background
+        // קריאה לשרת ברקע
         const newList = await listsApi.createList({
           name: list.name,
           icon: list.icon,
@@ -339,15 +339,15 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
           password: list.password || undefined,
         });
 
-        // Replace temp list with server response
+        // החלפת הרשימה הזמנית בתגובת השרת
         setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList) : l));
 
-        // Join socket room for the new list
+        // הצטרפות לחדר socket של הרשימה החדשה
         socketService.joinList(newList.id);
 
         return convertApiList(newList);
       } catch (error) {
-        // Remove optimistic list on error
+        // הסרת הרשימה האופטימיסטית בשגיאה
         setLists((prev) => prev.filter((l) => l.id !== tempId));
         throw error;
       }
@@ -355,7 +355,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     [],
   );
 
-  // Update list locally without API call (for optimistic updates)
+  // עדכון מקומי ללא קריאה לשרת (אופטימיסטי)
   const updateListLocal = useCallback(
     (updatedList: List) => {
       setLists((prev) =>
@@ -367,7 +367,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
   const updateList = useCallback(
     async (updatedList: List) => {
-      // Find old list to compare what changed
+      // מציאת רשימה ישנה להשוואה מה השתנה
       const oldList = lists.find((l) => l.id === updatedList.id);
 
       // בדיקה אם יש המרה מרשימה פרטית לקבוצה
@@ -381,7 +381,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       setLists((prev) =>
         prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
       );
-      // Emit socket event for group lists to notify other members in real-time
+      // שליחת אירוע socket לקבוצות להודעה בזמן אמת לחברים
       if (updatedList.isGroup && user && oldList) {
         // Determine what changed
         const nameChanged = oldList.name !== updatedList.name;

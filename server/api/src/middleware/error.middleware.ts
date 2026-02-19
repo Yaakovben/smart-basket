@@ -10,7 +10,10 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  logger.error(`${err.name}: ${err.message}`, { stack: err.stack });
+  logger.error(`${err.name}: ${err.message}`, {
+    stack: err.stack,
+    ...(err instanceof AppError && err.details && { details: err.details }),
+  });
 
   // ברירת מחדל
   let statusCode = 500;

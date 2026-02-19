@@ -30,7 +30,7 @@ class SocketService {
     if (!token) return;
     if (this.socket?.connected) return;
 
-    // ניקוי socket קיים שלא מחובר - מונע דליפת חיבורים
+    // ניקוי חיבור קיים שלא פעיל, מונע דליפות
     if (this.socket) {
       this.socket.disconnect();
     }
@@ -52,11 +52,11 @@ class SocketService {
     this.socket.on('disconnect', () => {});
 
     this.socket.on('connect_error', async (error) => {
-      // שגיאת אימות ספציפית בלבד - לא שגיאות רשת כלליות
+      // שגיאת אימות ספציפית בלבד, לא שגיאות רשת כלליות
       const msg = error.message.toLowerCase();
       const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
       if (isAuthError) {
-        // Promise-based lock - קריאות מקבילות ממתינות לרענון הראשון
+        // נעילה, קריאות מקבילות ממתינות לרענון הראשון
         if (this.refreshTokenPromise) {
           await this.refreshTokenPromise;
           return;
@@ -100,11 +100,11 @@ class SocketService {
         this.socket.connect();
       }
     } catch {
-      // רענון נכשל - הטוקן לא תקף
+      // רענון נכשל, הטוקן לא תקף
     }
   }
 
-  // חזרה מרקע (מובייל) - וידוא חיבור
+  // חזרה מרקע (מובייל), וידוא חיבור
   private setupVisibilityHandler() {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
@@ -129,7 +129,7 @@ class SocketService {
     document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
-  // חזרת רשת - וידוא חיבור
+  // חזרת רשת, וידוא חיבור
   private setupOnlineHandler() {
     if (this.onlineHandler) {
       window.removeEventListener('online', this.onlineHandler);
@@ -148,7 +148,7 @@ class SocketService {
     window.addEventListener('online', this.onlineHandler);
   }
 
-  // העברת אירועים מ-socket.io למאזינים פנימיים
+  // העברת אירועים למאזינים פנימיים
   private setupEventForwarding() {
     const events = [
       'user:joined',
@@ -217,7 +217,7 @@ class SocketService {
     this.socket?.emit('leave:online-users');
   }
 
-  // הרשמה לאירועים - מחזיר פונקציית ביטול
+  // הרשמה לאירועים, מחזיר פונקציית ביטול
   on<T>(event: string, handler: SocketEventHandler<T>) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -237,7 +237,7 @@ class SocketService {
     return this.socket?.connected ?? false;
   }
 
-  // עדכון טוקן (נקרא כשה-HTTP client מרענן טוקן)
+  // עדכון טוקן, נקרא בעת רענון ע"י HTTP client
   updateToken(newToken: string) {
     if (this.socket) {
       this.socket.auth = { token: newToken };
@@ -267,7 +267,7 @@ class SocketService {
     this.socket?.emit('member:join', { listId, listName, userName });
   }
 
-  // עם callback אופציונלי לאישור מהשרת
+  // לאישור מהשרת עם callback אופציונלי
   emitMemberLeft(listId: string, listName: string, userName: string, onDone?: () => void) {
     if (onDone) {
       this.socket?.emit('member:leave', { listId, listName, userName }, onDone);
@@ -280,7 +280,7 @@ class SocketService {
     this.socket?.emit('member:remove', { listId, listName, removedUserId, removedUserName, adminName });
   }
 
-  // עם callback אופציונלי לאישור מהשרת
+  // לאישור מהשרת עם callback אופציונלי
   emitListDeleted(listId: string, listName: string, memberIds: string[], ownerName: string, onDone?: () => void) {
     if (onDone) {
       this.socket?.emit('list:delete', { listId, listName, memberIds, ownerName }, onDone);

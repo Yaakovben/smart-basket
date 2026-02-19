@@ -83,6 +83,10 @@ export const useList = ({
   const [pendingAddName, setPendingAddName] = useState<string | null>(null);
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
 
+  // ===== חגיגת השלמת רשימה =====
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -150,6 +154,8 @@ export const useList = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: hide FAB when items count drops
     if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
   }, [items.length]);
+
+  useEffect(() => () => clearTimeout(celebrationTimer.current), []);
 
   // ===== מטפלי גרירת FAB =====
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -355,13 +361,20 @@ export const useList = ({
     toggleVersions.current.set(productId, version);
 
     // עדכון אופטימיסטי - תגובה מיידית ב-UI
-    updateProducts(
-      list.products.map((p: Product) =>
-        p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
-      )
+    const updatedProducts = list.products.map((p: Product) =>
+      p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
     );
+    updateProducts(updatedProducts);
     showToast(t('updated'));
     dismissHint();
+
+    // בדיקה אם כל המוצרים נקנו - חגיגה!
+    if (newIsPurchased && updatedProducts.length > 0 && updatedProducts.every((p: Product) => p.isPurchased)) {
+      clearTimeout(celebrationTimer.current);
+      setShowCelebration(true);
+      haptic('heavy');
+      celebrationTimer.current = setTimeout(() => setShowCelebration(false), 3000);
+    }
 
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
@@ -646,6 +659,7 @@ export const useList = ({
     handleDuplicateIncreaseQuantity,
     handleDuplicateAddNew,
     handleDuplicateCancel,
-    refreshList
+    refreshList,
+    showCelebration
   };
 };

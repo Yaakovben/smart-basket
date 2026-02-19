@@ -6,7 +6,7 @@ if (!API_URL) {
   console.error('CRITICAL: VITE_API_URL is not configured for production!');
 }
 
-// לוג דיבאג - רק במצב פיתוח
+// לוג דיבאג, רק במצב פיתוח
 const debugLog = (message: string, data?: unknown, isError = false) => {
   if (import.meta.env.DEV) {
     if (isError) {
@@ -20,7 +20,7 @@ const debugLog = (message: string, data?: unknown, isError = false) => {
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-// דגל למניעת redirect אוטומטי בזמן תהליך אימות פעיל
+// דגל למניעת הפניה אוטומטית בזמן תהליך אימות פעיל
 let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
@@ -41,7 +41,7 @@ export const setTokens = (accessToken: string, refreshToken: string) => {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   } catch {
-    // localStorage מלא או לא זמין (למשל private browsing)
+    // localStorage מלא או לא זמין, למשל גלישה פרטית
     debugLog('Failed to save tokens to localStorage', undefined, true);
   }
 };
@@ -51,7 +51,7 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Interceptor: הוספת טוקן אימות ו-cache busting
+// הוספת טוקן אימות ומניעת cache (Interceptor)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
@@ -59,7 +59,7 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // מניעת cache (בעיקר בשביל iOS Safari)
+    // מניעת cache, בעיקר iOS Safari
     config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
     config.headers['Pragma'] = 'no-cache';
     config.headers['X-Request-Time'] = Date.now().toString();
@@ -76,7 +76,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Interceptor: רענון טוקן אוטומטי ב-401
+// רענון טוקן אוטומטי בשגיאת 401 (Interceptor)
 let isRefreshing = false;
 let isRedirecting = false;
 let failedQueue: Array<{
@@ -132,7 +132,7 @@ apiClient.interceptors.response.use(
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
         isRefreshing = false;
-        // לא לנווט אם בתהליך אימות, כבר בדף login, או כבר במהלך ניווט
+        // לא לנווט אם בתהליך אימות, כבר בדף כניסה, או כבר במהלך ניווט
         if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
           isRedirecting = true;
           clearTokens();
@@ -150,7 +150,7 @@ apiClient.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         setTokens(accessToken, newRefreshToken);
 
-        // סנכרון הטוקן החדש עם חיבור ה-Socket
+        // סנכרון הטוקן החדש עם חיבור socket
         socketService.updateToken(accessToken);
 
         processQueue(null, accessToken);
@@ -160,12 +160,12 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         const refreshAxiosError = refreshError as AxiosError;
-        // שגיאת רשת (אין response מהשרת) - לא מתנתקים, רק דוחים
+        // שגיאת רשת (ללא תגובה מהשרת), לא מתנתקים רק דוחים
         // המשתמש יישאר מחובר עם הטוקן הקיים ויוכל לנסות שוב
         if (!refreshAxiosError.response) {
           return Promise.reject(refreshError);
         }
-        // שגיאת אימות אמיתית (401/403 מהשרת) - מתנתקים
+        // שגיאת אימות אמיתית (401/403), מתנתקים
         if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
           isRedirecting = true;
           clearTokens();
