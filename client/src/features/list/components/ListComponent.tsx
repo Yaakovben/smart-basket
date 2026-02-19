@@ -275,6 +275,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
         onUpdateData={setEditListData}
+        onConvertToGroup={!list.isGroup ? () => {
+          onUpdateList({ ...list, isGroup: true, password: '0000' });
+          setShowEditList(false);
+        } : undefined}
       />
 
       {/* Confirm Modals */}

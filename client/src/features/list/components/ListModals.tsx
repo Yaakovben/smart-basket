@@ -351,6 +351,7 @@ interface EditListModalProps {
   onClose: () => void;
   onSave: () => void;
   onUpdateData: (data: EditListForm) => void;
+  onConvertToGroup?: () => void;
 }
 
 export const EditListModal = memo(({
@@ -360,7 +361,8 @@ export const EditListModal = memo(({
   hasChanges,
   onClose,
   onSave,
-  onUpdateData
+  onUpdateData,
+  onConvertToGroup
 }: EditListModalProps) => {
   const { t } = useSettings();
 
@@ -370,57 +372,81 @@ export const EditListModal = memo(({
 
   return (
     <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={onClose}>
+      {/* Icon Preview */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
+        <Box sx={{
+          width: 60,
+          height: 60,
+          borderRadius: '14px',
+          bgcolor: editData.color,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 28,
+          boxShadow: `0 4px 12px ${editData.color}40`,
+          transition: 'all 0.2s ease'
+        }}>
+          {editData.icon}
+        </Box>
+      </Box>
+
       <Box sx={{ mb: 2 }}>
-        <Typography component="label" htmlFor="list-name" sx={labelSx}>{t('name')}</Typography>
+        <Typography sx={labelSx}>{t('name')}</Typography>
         <TextField
-          id="list-name"
           fullWidth
           value={editData.name}
           onChange={e => onUpdateData({ ...editData, name: e.target.value })}
-          aria-required="true"
+          size="small"
         />
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('icon')}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('icon')}>
+        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }} role="radiogroup" aria-label={t('icon')}>
           {icons.map(i => (
-            <Button
+            <Box
               key={i}
               onClick={() => onUpdateData({ ...editData, icon: i })}
               sx={{
-                width: 48,
-                height: 48,
-                minWidth: 48,
-                borderRadius: '12px',
-                border: editData.icon === i ? '2px solid' : '1.5px solid',
-                borderColor: editData.icon === i ? 'primary.main' : 'divider',
-                bgcolor: editData.icon === i ? 'primary.light' : 'background.paper',
-                fontSize: 22
+                width: 42,
+                height: 42,
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 20,
+                cursor: 'pointer',
+                border: '2px solid',
+                borderColor: editData.icon === i ? 'primary.main' : 'transparent',
+                bgcolor: editData.icon === i ? 'primary.light' : 'action.hover',
+                transition: 'all 0.15s ease',
+                '&:active': { transform: 'scale(0.92)' }
               }}
               role="radio"
               aria-checked={editData.icon === i}
               aria-label={i}
             >
               {i}
-            </Button>
+            </Box>
           ))}
         </Box>
       </Box>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2.5 }}>
         <Typography sx={labelSx}>{t('color')}</Typography>
-        <Box sx={{ display: 'flex', gap: 1.25 }} role="radiogroup" aria-label={t('color')}>
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }} role="radiogroup" aria-label={t('color')}>
           {LIST_COLORS.map(c => (
             <Box
               key={c}
               onClick={() => onUpdateData({ ...editData, color: c })}
               sx={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 borderRadius: '50%',
                 bgcolor: c,
-                border: editData.color === c ? '3px solid' : 'none',
-                borderColor: 'text.primary',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                border: '3px solid',
+                borderColor: editData.color === c ? 'text.primary' : 'transparent',
+                transition: 'all 0.15s ease',
+                '&:active': { transform: 'scale(0.9)' }
               }}
               role="radio"
               aria-checked={editData.color === c}
@@ -431,7 +457,28 @@ export const EditListModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges}>{t('saveChanges')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
+      {!list.isGroup && onConvertToGroup && (
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={onConvertToGroup}
+          sx={{
+            mt: 2,
+            py: 1,
+            fontSize: 13,
+            fontWeight: 600,
+            borderRadius: '12px',
+            borderColor: 'divider',
+            color: 'text.secondary',
+            textTransform: 'none',
+            '&:active': { transform: 'scale(0.98)' },
+          }}
+          startIcon={<span style={{ fontSize: 16 }}>👥</span>}
+        >
+          {t('convertToGroup')}
+        </Button>
+      )}
     </Modal>
   );
 });

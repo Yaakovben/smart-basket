@@ -19,6 +19,7 @@ import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
 import { Modal, ConfirmModal, ListMenu } from '../../../global/components';
+import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
 import { usePushNotifications } from '../../../global/hooks';
@@ -207,11 +208,25 @@ export const HomeComponent = memo(({
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
     handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
-    closeJoinModal, updateNewListField, updateEditListField, saveEditList,
+    closeJoinModal, updateNewListField, saveEditList,
     deleteList
   } = useHome({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup
   });
+
+  // ===== אדפטר עבור EditListModal המשותף =====
+  const editListOriginal = useRef<List | null>(null);
+  if (editList && (!editListOriginal.current || editListOriginal.current.id !== editList.id)) {
+    editListOriginal.current = editList;
+  }
+  if (!editList) editListOriginal.current = null;
+
+  const editListData = editList ? { name: editList.name, icon: editList.icon, color: editList.color } : null;
+  const editListHasChanges = !!(editList && editListOriginal.current && (
+    editList.name !== editListOriginal.current.name ||
+    editList.icon !== editListOriginal.current.icon ||
+    editList.color !== editListOriginal.current.color
+  ));
 
   // מעקב אחר התראות שנסגרות (לצורך אנימציה)
   const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
@@ -639,61 +654,22 @@ export const HomeComponent = memo(({
       )}
 
       {/* Edit List Modal */}
-      {editList && (
-        <Modal title={editList.isGroup ? t('editGroup') : t('editList')} onClose={() => setEditList(null)}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-            <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: editList.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${editList.color}40` }}>
-              {editList.icon}
-            </Box>
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('name')}</Typography>
-            <TextField fullWidth value={editList.name} onChange={e => updateEditListField('name', e.target.value)} size="small" />
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {(editList.isGroup ? GROUP_ICONS : LIST_ICONS).map(i => (
-                <Box key={i} onClick={() => updateEditListField('icon', i)} sx={iconSelectSx(editList.icon === i)}>{i}</Box>
-              ))}
-            </Box>
-          </Box>
-          <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('color')}</Typography>
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-              {LIST_COLORS.map(c => (
-                <Box key={c} onClick={() => updateEditListField('color', c)} sx={{ ...colorSelectSx(editList.color === c), bgcolor: c }} />
-              ))}
-            </Box>
-          </Box>
-          <Button variant="contained" fullWidth onClick={saveEditList} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
-          {!editList.isGroup && (
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => {
-                const converted = { ...editList, isGroup: true, password: '0000' };
-                setEditList(null);
-                onEditList(converted);
-              }}
-              sx={{
-                mt: 2,
-                py: 1,
-                fontSize: 13,
-                fontWeight: 600,
-                borderRadius: '12px',
-                borderColor: 'divider',
-                color: 'text.secondary',
-                textTransform: 'none',
-                '&:active': { transform: 'scale(0.98)' },
-              }}
-              startIcon={<span style={{ fontSize: 16 }}>👥</span>}
-            >
-              {t('convertToGroup')}
-            </Button>
-          )}
-        </Modal>
-      )}
+      {editList && <EditListModal
+        isOpen
+        list={editList}
+        editData={editListData}
+        hasChanges={editListHasChanges}
+        onClose={() => setEditList(null)}
+        onSave={saveEditList}
+        onUpdateData={(data) => {
+          if (!editList) return;
+          setEditList({ ...editList, ...data });
+        }}
+        onConvertToGroup={!editList.isGroup ? () => {
+          onEditList({ ...editList, isGroup: true, password: '0000' });
+          setEditList(null);
+        } : undefined}
+      />}
 
       {/* Confirm Delete */}
       {confirmDeleteList && (
