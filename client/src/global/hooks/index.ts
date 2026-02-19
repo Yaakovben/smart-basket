@@ -71,11 +71,20 @@ export interface InitialData {
 // ===== useAuth Hook =====
 export function useAuth() {
   // Check for cached user in localStorage for instant render
+  const MAX_CACHE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
   const [user, setUser] = useState<User | null>(() => {
     try {
       const cached = localStorage.getItem('cached_user');
       if (cached && getAccessToken()) {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        // בדיקת גיל cache - לא משתמשים בנתונים ישנים מ-30 יום
+        if (parsed._cachedAt && (Date.now() - parsed._cachedAt) > MAX_CACHE_AGE) {
+          localStorage.removeItem('cached_user');
+          return null;
+        }
+        // הסרת _cachedAt מאובייקט המשתמש
+        const { _cachedAt: _, ...userData } = parsed;
+        return userData as User;
       }
     } catch { /* ignore */ }
     return null;
@@ -96,11 +105,6 @@ export function useAuth() {
         setUser(null);
         setLoading(false);
         return;
-      }
-
-      // If we have a cached user, connect socket immediately while we validate
-      if (user) {
-        socketService.connect();
       }
 
       // Timeout promise - don't hang forever if API is down
@@ -126,7 +130,7 @@ export function useAuth() {
         clearTimeout(timeoutId!);
 
         // Cache user for next load
-        try { localStorage.setItem('cached_user', JSON.stringify(profile)); } catch { /* quota exceeded */ }
+        try { localStorage.setItem('cached_user', JSON.stringify({ ...profile, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
         setUser(profile);
 
         // Store pre-fetched data for hooks to consume
@@ -163,7 +167,7 @@ export function useAuth() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (userData: User, _loginMethod: LoginMethod = "email") => {
       // Cache user for instant load on next visit
-      try { localStorage.setItem('cached_user', JSON.stringify(userData)); } catch { /* quota exceeded */ }
+      try { localStorage.setItem('cached_user', JSON.stringify({ ...userData, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(userData);
       // Login activity is tracked on the server via LoginActivity model
       // Connect socket after login
@@ -196,7 +200,7 @@ export function useAuth() {
     async (updates: Partial<User>) => {
       if (!user) return;
       const updatedUser = await authApi.updateProfile(updates);
-      try { localStorage.setItem('cached_user', JSON.stringify(updatedUser)); } catch { /* quota exceeded */ }
+      try { localStorage.setItem('cached_user', JSON.stringify({ ...updatedUser, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(updatedUser);
     },
     [user],
@@ -251,7 +255,7 @@ const convertApiList = (apiList: ApiList, locale: string): List => ({
 });
 
 // ===== useLists Hook =====
-export function useLists(user: User | null, initialLists?: ApiList[] | null) {
+export function useLists(user: User | null, initialLists?: ApiList[] | null, authLoading?: boolean) {
   const { settings } = useSettings();
   const locale = getLocale(settings.language);
 
@@ -286,7 +290,9 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
   }, [initialLists, locale]);
 
   // Fetch lists when user changes (skip if already initialized with pre-fetched data for this user)
+  // לא טוענים בזמן אימות ראשוני - מחכים לנתונים שנטענו מראש מ-useAuth
   useEffect(() => {
+    if (authLoading) return;
     if (user) {
       // User changed since last initialization — must fetch fresh data
       if (initializedForRef.current && initializedForRef.current !== user.id) {
@@ -304,8 +310,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       setLists([]);
       setFetchError(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes
-  }, [user?.id, fetchLists]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes or auth completes
+  }, [authLoading, user?.id, fetchLists]);
 
   const createList = useCallback(
     async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'> & { id?: string; owner?: User; members?: Member[]; products?: Product[] }) => {
@@ -370,10 +376,13 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
       // Find old list to compare what changed
       const oldList = lists.find((l) => l.id === updatedList.id);
 
+      // בדיקה אם יש המרה מרשימה פרטית לקבוצה
+      const isConverting = updatedList.isGroup && oldList && !oldList.isGroup;
       const updated = await listsApi.updateList(updatedList.id, {
         name: updatedList.name,
         icon: updatedList.icon,
         color: updatedList.color,
+        ...(isConverting ? { isGroup: true, password: updatedList.password || undefined } : {}),
       });
       setLists((prev) =>
         prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
@@ -572,7 +581,16 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null) {
         idsToRefetch.forEach((id) => {
           listsApi.getList(id).then((updated) => {
             setLists((prev) =>
-              prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
+              prev.map((l) => {
+                if (l.id !== updated.id) return l;
+                const updatedList = convertApiList(updated, locale);
+                // שימור מוצרים שעדיין בהמתנה (isPending) - יש להם temp ID שלא יתנגש עם Mongo IDs
+                const pendingProducts = l.products.filter(p => p.isPending);
+                if (pendingProducts.length > 0) {
+                  updatedList.products = [...updatedList.products, ...pendingProducts];
+                }
+                return updatedList;
+              }),
             );
           }).catch(() => {
             // Refetch failed - stale data will be shown until next sync

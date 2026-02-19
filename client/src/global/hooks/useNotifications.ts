@@ -13,7 +13,7 @@ export interface InitialNotificationsData {
  * טוען התראות שמורות, ממזג עם התראות חיות, ומספק פונקציות סימון כנקראו.
  * תומך בנתונים שנטענו מראש לטעינה ראשונית מהירה יותר.
  */
-export function useNotifications(user: User | null, initialData?: InitialNotificationsData | null) {
+export function useNotifications(user: User | null, initialData?: InitialNotificationsData | null, authLoading?: boolean) {
   // שימוש בנתונים שנטענו מראש לרינדור מיידי
   const [persistedNotifications, setPersistedNotifications] = useState<PersistedNotification[]>(
     () => initialData?.notifications || []
@@ -50,7 +50,9 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   }, [initialData]);
 
   // טעינה בעליה ובהחלפת משתמש (דילוג אם כבר אותחל עם נתונים מראש)
+  // לא טוענים בזמן אימות ראשוני - מחכים לנתונים שנטענו מראש מ-useAuth
   useEffect(() => {
+    if (authLoading) return;
     if (user) {
       if (initializedForRef.current && initializedForRef.current !== user.id) {
         initializedForRef.current = null;
@@ -67,7 +69,8 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
       setUnreadCount(0);
       setFetchError(false);
     }
-  }, [user?.id, fetchNotifications]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id, fetchNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {

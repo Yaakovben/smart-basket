@@ -9,14 +9,16 @@ import type { ListFilter } from '../types/list-types';
 interface EmptyStateProps {
   filter: ListFilter;
   totalProducts: number;
+  hasSearch?: boolean;
   onAddProduct: () => void;
 }
 
 // ===== קומפוננטה =====
-export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct }: EmptyStateProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
+  // - 'search': חיפוש ללא תוצאות
   // - 'allDone': טאב ממתינים עם מוצרים (הכל נקנה)
   // - 'noPurchased': טאב נקנו ללא פריטים
   // - 'noProducts': אין מוצרים בכלל
@@ -25,6 +27,14 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
 
   // תצורת תצוגה לפי מצב
   const getDisplayConfig = () => {
+    if (hasSearch) {
+      return {
+        icon: '🔍',
+        gradient: isDark ? 'linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1))' : 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+        title: t('noSearchResults'),
+        description: t('noSearchResultsDesc')
+      };
+    }
     if (isAllDone) {
       return {
         icon: '🎉',
@@ -85,7 +95,7 @@ export const EmptyState = memo(({ filter, totalProducts, onAddProduct }: EmptySt
         {config.description}
       </Typography>
       {/* Only show button on pending tab when no products at all (FAB handles purchased tab) */}
-      {!isAllDone && filter === 'pending' && totalProducts === 0 && (
+      {!hasSearch && !isAllDone && filter === 'pending' && totalProducts === 0 && (
         <Button
           variant="contained"
           onClick={() => { haptic('light'); onAddProduct(); }}

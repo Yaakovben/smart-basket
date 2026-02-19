@@ -2,12 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Menu, MenuItem
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -93,30 +98,74 @@ const colorSelectSx = (isSelected: boolean) => ({
 interface ListCardProps {
   list: List;
   isMuted: boolean;
+  isOwner: boolean;
   onSelect: (list: List) => void;
+  onEditList: (list: List) => void;
+  onDeleteList: (list: List) => void;
+  onToggleMute: (listId: string) => void;
   t: (key: TranslationKeys) => string;
 }
 
-const ListCard = memo(({ list: l, isMuted, onSelect, t }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onToggleMute, t }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
   return (
-    <Card onClick={() => onSelect(l)} sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }}>
-      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1.5, cursor: 'pointer' }} onClick={() => onSelect(l)}>
+      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
         {l.icon}
       </Box>
-      <Box sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{l.name}</Typography>
-          <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22 }} />
+          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</Typography>
+          <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : 'success.main' }}>
           {count > 0 ? `${count} ${t('items')}` : `✓ ${t('completed')}`}
         </Typography>
       </Box>
-      {isMuted && <NotificationsOffIcon sx={{ fontSize: 22, color: 'text.disabled' }} />}
+      {/* אייקון מושתק + תפריט שלוש נקודות */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0 }}>
+        {isMuted && <NotificationsOffIcon sx={{ fontSize: 18, color: 'text.disabled' }} />}
+        <IconButton
+          size="small"
+          onClick={(e) => { e.stopPropagation(); setAnchorEl(e.currentTarget); }}
+          sx={{ color: 'text.secondary', width: 32, height: 32 }}
+        >
+          <MoreVertIcon sx={{ fontSize: 20 }} />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={(e: React.SyntheticEvent) => { e.stopPropagation?.(); setAnchorEl(null); }}
+          onClick={(e) => e.stopPropagation()}
+          transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+          slotProps={{ paper: { sx: { borderRadius: '12px', minWidth: 160, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' } } }}
+        >
+          {l.isGroup && (
+            <MenuItem onClick={() => { setAnchorEl(null); onToggleMute(l.id); }} sx={{ gap: 1.5, fontSize: 14 }}>
+              {isMuted ? <VolumeUpIcon sx={{ fontSize: 20 }} /> : <VolumeOffIcon sx={{ fontSize: 20 }} />}
+              {isMuted ? t('unmuteGroup') : t('muteGroup')}
+            </MenuItem>
+          )}
+          {isOwner && (
+            <MenuItem onClick={() => { setAnchorEl(null); onEditList(l); }} sx={{ gap: 1.5, fontSize: 14 }}>
+              <EditIcon sx={{ fontSize: 20 }} />
+              {t('edit')}
+            </MenuItem>
+          )}
+          {isOwner && (
+            <MenuItem onClick={() => { setAnchorEl(null); onDeleteList(l); }} sx={{ gap: 1.5, fontSize: 14, color: 'error.main' }}>
+              <DeleteOutlineIcon sx={{ fontSize: 20 }} />
+              {t('delete')}
+            </MenuItem>
+          )}
+        </Menu>
+      </Box>
     </Card>
   );
 });
@@ -145,7 +194,7 @@ export const HomeComponent = memo(({
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
-  const { t, settings, isGroupMuted } = useSettings();
+  const { t, settings, isGroupMuted, toggleGroupMute } = useSettings();
   const isDark = settings.theme === 'dark';
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
@@ -342,7 +391,17 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : display.map((l: List) => (
-          <ListCard key={l.id} list={l} isMuted={isGroupMuted(l.id)} onSelect={onSelectList} t={t} />
+          <ListCard
+            key={l.id}
+            list={l}
+            isMuted={isGroupMuted(l.id)}
+            isOwner={l.owner.id === user.id}
+            onSelect={onSelectList}
+            onEditList={(list) => setEditList({ ...list })}
+            onDeleteList={(list) => setConfirmDeleteList(list)}
+            onToggleMute={toggleGroupMute}
+            t={t}
+          />
         ))}
       </Box>
 
@@ -634,6 +693,19 @@ export const HomeComponent = memo(({
             </Box>
           </Box>
           <Button variant="contained" fullWidth onClick={saveEditList} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
+          {!editList.isGroup && (
+            <Button
+              fullWidth
+              onClick={() => {
+                const converted = { ...editList, isGroup: true, password: '0000' };
+                setEditList(null);
+                onEditList(converted);
+              }}
+              sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: 'rgba(20,184,166,0.1)', color: 'primary.main', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' } }}
+            >
+              👥 {t('convertToGroup')}
+            </Button>
+          )}
           <Button fullWidth onClick={() => { setConfirmDeleteList(editList); setEditList(null); }} sx={{ mt: 1.5, py: 1.25, borderRadius: '12px', bgcolor: 'rgba(239,68,68,0.1)', color: 'error.main', fontSize: 14, fontWeight: 600, '&:hover': { bgcolor: 'rgba(239,68,68,0.15)' } }}>
             {editList.isGroup ? t('deleteGroup') : t('deleteList')}
           </Button>

@@ -52,8 +52,10 @@ class SocketService {
     this.socket.on('disconnect', () => {});
 
     this.socket.on('connect_error', async (error) => {
-      // שגיאת אימות - רענון טוקן
-      if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('expired')) {
+      // שגיאת אימות ספציפית בלבד - לא שגיאות רשת כלליות
+      const msg = error.message.toLowerCase();
+      const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
+      if (isAuthError) {
         // Promise-based lock - קריאות מקבילות ממתינות לרענון הראשון
         if (this.refreshTokenPromise) {
           await this.refreshTokenPromise;

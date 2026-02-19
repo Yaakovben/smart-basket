@@ -118,7 +118,7 @@ export const AppRouter = () => {
   // כל ה-hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
-  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists);
+  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
   const { message: toast, toastType, toastKey, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
@@ -143,7 +143,7 @@ export const AppRouter = () => {
     markAsRead: markPersistedNotificationRead,
     markAllAsRead: clearAllPersistedNotifications,
     addNotification: addPersistedNotification,
-  } = useNotifications(user, initialData.notifications);
+  } = useNotifications(user, initialData.notifications, authLoading);
 
   // הצגת שגיאה כשטעינת רשימות או התראות נכשלת
   // לא מציג בזמן אימות ראשוני - מונע toast מיותר כשטוקן פג

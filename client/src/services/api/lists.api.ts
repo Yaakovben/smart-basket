@@ -59,6 +59,7 @@ export interface UpdateListData {
   icon?: string;
   color?: string;
   password?: string | null;
+  isGroup?: boolean;
 }
 
 export interface JoinGroupData {

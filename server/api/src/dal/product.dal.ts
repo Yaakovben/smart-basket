@@ -17,21 +17,24 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
     super(Product);
   }
 
-  async findByListId(listId: string): Promise<IProductDoc[]> {
+  async findByListId(listId: string) {
     return this.model
       .find({ listId })
       .populate('addedBy', 'name')
-      .sort({ position: 1, createdAt: 1 });
+      .sort({ position: 1, createdAt: 1 })
+      .lean();
   }
 
-  async findByListIds(listIds: string[]): Promise<Map<string, IProductDoc[]>> {
+  async findByListIds(listIds: string[]) {
     const objectIds = listIds.map(id => new mongoose.Types.ObjectId(id));
     const products = await this.model
       .find({ listId: { $in: objectIds } })
       .populate('addedBy', 'name')
-      .sort({ position: 1, createdAt: 1 });
+      .sort({ position: 1, createdAt: 1 })
+      .lean();
 
-    const map = new Map<string, IProductDoc[]>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const map = new Map<string, any[]>();
     for (const id of listIds) {
       map.set(id, []);
     }

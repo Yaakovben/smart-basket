@@ -9,6 +9,7 @@ type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פי
 interface SwipeItemProps {
   product: Product;
   isPurchased: boolean;
+  isPending?: boolean;
   isOpen: boolean;
   currentUserName: string;
   onToggle: () => void;
@@ -31,7 +32,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isPending, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
@@ -83,6 +84,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isPending) return;
     const touch = e.touches[0];
     startX.current = touch.clientX;
     startY.current = touch.clientY;
@@ -302,7 +304,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           transition: swiping ? 'none' : 'transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)',
           willChange: swiping ? 'transform' : 'auto',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
-          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
+          pointerEvents: isPending ? 'none' : (offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto'),
+          opacity: isPending ? 0.55 : 1,
           WebkitTapHighlightColor: 'transparent'
         }}
       >
@@ -316,7 +319,14 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '22px',
-            flexShrink: 0
+            flexShrink: 0,
+            ...(isPending && {
+              animation: 'pendingPulse 1.5s ease-in-out infinite',
+              '@keyframes pendingPulse': {
+                '0%, 100%': { opacity: 0.6 },
+                '50%': { opacity: 0.3 },
+              },
+            })
           }}
         >
           {icon}

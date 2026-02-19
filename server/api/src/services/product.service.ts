@@ -2,19 +2,27 @@ import { ProductDAL } from '../dal';
 import { NotFoundError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
-import type { IListResponse } from '../types';
-import { transformList } from './list-transform.helper';
+import type { IProductDoc } from '../models';
 import { checkListAccess } from './list-access.helper';
+
+// המרת מוצר Mongoose לאובייקט תגובת API
+const toProductResponse = (product: IProductDoc) => {
+  const json = product.toJSON() as Record<string, unknown>;
+  if (json.addedBy && typeof json.addedBy === 'object') {
+    json.addedBy = (json.addedBy as { name?: string }).name || 'Unknown';
+  }
+  return json;
+};
 
 export class ProductService {
   static async addProduct(
     listId: string,
     userId: string,
     data: CreateProductInput
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
+  ) {
+    await checkListAccess(listId, userId);
 
-    await ProductDAL.createProduct({
+    const product = await ProductDAL.createProduct({
       listId,
       name: sanitizeText(data.name),
       quantity: data.quantity ?? 1,
@@ -23,7 +31,7 @@ export class ProductService {
       addedBy: userId,
     });
 
-    return transformList(list);
+    return toProductResponse(product);
   }
 
   static async updateProduct(
@@ -31,8 +39,8 @@ export class ProductService {
     productId: string,
     userId: string,
     data: UpdateProductInput
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
+  ): Promise<void> {
+    await checkListAccess(listId, userId);
 
     const product = await ProductDAL.findById(productId);
     if (!product || product.listId.toString() !== listId) {
@@ -47,16 +55,14 @@ export class ProductService {
     if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
 
     await ProductDAL.updateProduct(productId, updates);
-
-    return transformList(list);
   }
 
   static async deleteProduct(
     listId: string,
     productId: string,
     userId: string
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
+  ): Promise<void> {
+    await checkListAccess(listId, userId);
 
     const product = await ProductDAL.findById(productId);
     if (!product || product.listId.toString() !== listId) {
@@ -64,19 +70,15 @@ export class ProductService {
     }
 
     await ProductDAL.deleteProduct(productId);
-
-    return transformList(list);
   }
 
   static async reorderProducts(
     listId: string,
     userId: string,
     productIds: string[]
-  ): Promise<IListResponse> {
-    const list = await checkListAccess(listId, userId);
+  ): Promise<void> {
+    await checkListAccess(listId, userId);
 
     await ProductDAL.reorderProducts(listId, productIds);
-
-    return transformList(list);
   }
 }

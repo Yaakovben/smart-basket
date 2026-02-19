@@ -159,10 +159,18 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+        const refreshAxiosError = refreshError as AxiosError;
+        // שגיאת רשת (אין response מהשרת) - לא מתנתקים, רק דוחים
+        // המשתמש יישאר מחובר עם הטוקן הקיים ויוכל לנסות שוב
+        if (!refreshAxiosError.response) {
+          return Promise.reject(refreshError);
+        }
+        // שגיאת אימות אמיתית (401/403 מהשרת) - מתנתקים
         if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
           isRedirecting = true;
           clearTokens();
           localStorage.removeItem('cached_user');
+          try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

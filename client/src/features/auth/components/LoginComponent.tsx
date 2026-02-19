@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Box, TextField, Button, Typography, Alert,
   CircularProgress, InputAdornment, Paper, Collapse
@@ -38,6 +39,18 @@ interface LoginPageProps {
 
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
+
+  // בדיקת session expired (מוגדר ב-client.ts כשרענון טוקן נכשל)
+  const [sessionExpired, setSessionExpired] = useState(() => {
+    try {
+      return sessionStorage.getItem('session_expired') === 'true';
+    } catch { return false; }
+  });
+  useEffect(() => {
+    if (sessionExpired) {
+      try { sessionStorage.removeItem('session_expired'); } catch { /* ignore */ }
+    }
+  }, [sessionExpired]);
 
   const {
     name, email, password, error, googleLoading, emailLoading, isNewUser, showEmailForm, emailSuggestion,
@@ -105,6 +118,13 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
 
         {/* Content */}
         <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
+          {/* Session expired alert */}
+          {sessionExpired && (
+            <Alert severity="info" sx={{ mb: 2, borderRadius: '12px', fontSize: 13, alignItems: 'center' }}
+              onClose={() => setSessionExpired(false)}>
+              {t('sessionExpired')}
+            </Alert>
+          )}
           {/* Google Login Button */}
           <Button
             fullWidth

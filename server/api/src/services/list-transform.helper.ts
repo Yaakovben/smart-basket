@@ -2,8 +2,11 @@ import { ProductDAL } from '../dal';
 import type { IListResponse } from '../types';
 import type { IList, IProductDoc } from '../models';
 
-const transformProduct = (p: IProductDoc): Record<string, unknown> => {
-  const pJson = p.toJSON() as Record<string, unknown>;
+const transformProduct = (p: IProductDoc | Record<string, unknown>): Record<string, unknown> => {
+  // תמיכה גם ב-Mongoose docs וגם ב-lean POJOs
+  const pJson = (typeof (p as IProductDoc).toJSON === 'function')
+    ? (p as IProductDoc).toJSON() as Record<string, unknown>
+    : p as Record<string, unknown>;
   if (pJson.addedBy && typeof pJson.addedBy === 'object') {
     pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
   }

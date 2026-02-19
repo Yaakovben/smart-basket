@@ -236,6 +236,7 @@ export const useList = ({
       addedBy: user.name,
       createdDate,
       createdTime,
+      isPending: true,
     };
 
     // עדכון אופטימיסטי - הוספה ל-state הנוכחי (functional update למניעת stale closures)
@@ -245,10 +246,7 @@ export const useList = ({
     }
 
     try {
-      const updatedList = await productsApi.addProduct(list.id, productData);
-
-      // מציאת המוצר שנוסף (אחרון ברשימה)
-      const addedProduct = updatedList.products[updatedList.products.length - 1];
+      const addedProduct = await productsApi.addProduct(list.id, productData);
 
       // שליחת אירוע socket להתראת משתמשים אחרים
       socketService.emitProductAdded(list.id, {
@@ -261,7 +259,7 @@ export const useList = ({
 
       // החלפת המוצר הזמני בנתון האמיתי (שומר על מוצרים אופטימיסטיים אחרים שבהמתנה)
       onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === tempId ? convertApiProduct(addedProduct, locale) : p)
+        current.map(p => p.id === tempId ? { ...convertApiProduct(addedProduct, locale), isPending: false } : p)
       );
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
@@ -306,7 +304,7 @@ export const useList = ({
 
   const toggleProduct = useCallback(async (productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
-    if (!product) return;
+    if (!product || product.isPending) return;
 
     const newIsPurchased = !product.isPurchased;
 
@@ -349,7 +347,7 @@ export const useList = ({
 
   const deleteProduct = useCallback((productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
-    if (!product) return;
+    if (!product || product.isPending) return;
 
     setConfirm({
       title: t('deleteProduct'),
@@ -420,6 +418,7 @@ export const useList = ({
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
+    if (product.isPending) return;
     setShowEdit({ ...product });
     setOriginalEditProduct({ ...product });
   }, []);

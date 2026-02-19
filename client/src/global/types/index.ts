@@ -31,6 +31,7 @@ export interface Product {
   addedBy: string;
   createdDate?: string;
   createdTime?: string;
+  isPending?: boolean;
 }
 
 // ===== רשימה =====

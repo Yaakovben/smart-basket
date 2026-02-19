@@ -121,6 +121,8 @@ type TranslationKey =
   | 'allDoneDesc'
   | 'noProducts'
   | 'noProductsDesc'
+  | 'noSearchResults'
+  | 'noSearchResultsDesc'
   | 'noPurchasedProducts'
   | 'noPurchasedProductsDesc'
   | 'swipeHint'
@@ -346,7 +348,12 @@ type TranslationKey =
   | 'loginMethodLabel'
   | 'adminLoadError'
   // WhatsApp share
-  | 'listCompleted';
+  | 'listCompleted'
+  | 'sessionExpired'
+  // Convert list to group
+  | 'convertToGroup'
+  | 'convertToGroupDesc'
+  | 'convertToGroupConfirm';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -472,6 +479,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'כל המוצרים נקנו בהצלחה',
     noProducts: 'אין מוצרים',
     noProductsDesc: 'הוסף מוצרים חדשים לרשימה',
+    noSearchResults: 'לא נמצאו תוצאות',
+    noSearchResultsDesc: 'נסה לחפש מילה אחרת',
     noPurchasedProducts: 'אין מוצרים שנקנו',
     noPurchasedProductsDesc: 'מוצרים שתסמן כנקנו יופיעו כאן',
     swipeHint: 'טיפ: גרור שמאלה לפעולות • לחץ לפרטים',
@@ -697,7 +706,11 @@ export const translations: Record<Language, Translations> = {
     loginMethodLabel: 'שיטת התחברות:',
     adminLoadError: 'שגיאה בטעינת נתוני הניהול',
     // WhatsApp share
-    listCompleted: 'הרשימה הושלמה'
+    listCompleted: 'הרשימה הושלמה',
+    sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
+    convertToGroup: 'הפוך לקבוצה',
+    convertToGroupDesc: 'הפוך את הרשימה לקבוצה משותפת עם קוד הזמנה',
+    convertToGroupConfirm: 'להמיר לקבוצה?'
   },
   en: {
     // General
@@ -820,6 +833,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'All products have been purchased',
     noProducts: 'No products',
     noProductsDesc: 'Add new products to the list',
+    noSearchResults: 'No results found',
+    noSearchResultsDesc: 'Try a different search term',
     noPurchasedProducts: 'No purchased products',
     noPurchasedProductsDesc: 'Items you mark as purchased will appear here',
     swipeHint: 'Tip: Swipe left for actions • Tap for details',
@@ -1045,7 +1060,11 @@ export const translations: Record<Language, Translations> = {
     loginMethodLabel: 'Login method:',
     adminLoadError: 'Failed to load admin data',
     // WhatsApp share
-    listCompleted: 'List completed'
+    listCompleted: 'List completed',
+    sessionExpired: 'Session expired, please log in again',
+    convertToGroup: 'Convert to group',
+    convertToGroupDesc: 'Convert this list to a shared group with an invite code',
+    convertToGroupConfirm: 'Convert to group?'
   },
   ru: {
     // General
@@ -1168,6 +1187,8 @@ export const translations: Record<Language, Translations> = {
     allDoneDesc: 'Все товары куплены',
     noProducts: 'Нет товаров',
     noProductsDesc: 'Добавьте новые товары в список',
+    noSearchResults: 'Ничего не найдено',
+    noSearchResultsDesc: 'Попробуйте другой запрос',
     noPurchasedProducts: 'Нет купленных товаров',
     noPurchasedProductsDesc: 'Товары, отмеченные как купленные, появятся здесь',
     swipeHint: 'Совет: Свайп влево для действий • Нажмите для деталей',
@@ -1393,7 +1414,11 @@ export const translations: Record<Language, Translations> = {
     loginMethodLabel: 'Способ входа:',
     adminLoadError: 'Ошибка загрузки данных',
     // WhatsApp share
-    listCompleted: 'Список завершён'
+    listCompleted: 'Список завершён',
+    sessionExpired: 'Сессия истекла, войдите снова',
+    convertToGroup: 'Преобразовать в группу',
+    convertToGroupDesc: 'Преобразовать список в общую группу с кодом приглашения',
+    convertToGroupConfirm: 'Преобразовать в группу?'
   }
 };
 

@@ -9,11 +9,11 @@ export class ProductController {
     const userId = req.user!.id;
     const { listId } = req.params;
     const data = req.body as CreateProductInput;
-    const list = await ProductService.addProduct(listId, userId, data);
+    const product = await ProductService.addProduct(listId, userId, data);
 
     res.status(201).json({
       success: true,
-      data: list,
+      data: product,
     });
   });
 
@@ -21,34 +21,25 @@ export class ProductController {
     const userId = req.user!.id;
     const { listId, productId } = req.params;
     const data = req.body as UpdateProductInput;
-    const list = await ProductService.updateProduct(listId, productId, userId, data);
+    await ProductService.updateProduct(listId, productId, userId, data);
 
-    res.json({
-      success: true,
-      data: list,
-    });
+    res.json({ success: true });
   });
 
   static deleteProduct = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId, productId } = req.params;
-    const list = await ProductService.deleteProduct(listId, productId, userId);
+    await ProductService.deleteProduct(listId, productId, userId);
 
-    res.json({
-      success: true,
-      data: list,
-    });
+    res.json({ success: true });
   });
 
   static reorderProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.params;
     const { productIds } = req.body as ReorderProductsInput;
-    const list = await ProductService.reorderProducts(listId, userId, productIds);
+    await ProductService.reorderProducts(listId, userId, productIds);
 
-    res.json({
-      success: true,
-      data: list,
-    });
+    res.json({ success: true });
   });
 }

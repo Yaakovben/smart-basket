@@ -84,5 +84,6 @@ const productSchema = new Schema<IProductDoc>(
 // Compound index for efficient list queries with ordering
 productSchema.index({ listId: 1, position: 1 });
 productSchema.index({ listId: 1, isPurchased: 1 });
+productSchema.index({ addedBy: 1 });
 
 export const Product = mongoose.model<IProductDoc>('Product', productSchema);

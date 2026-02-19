@@ -8,7 +8,7 @@ import type {
   MemberRemovedData,
   ListDeletedData,
 } from '../types';
-import { ApiService } from '../services/api.service';
+import { ApiService, type UserRole } from '../services/api.service';
 import { logger } from '../config';
 import { checkRateLimit } from '../middleware/rateLimiter.middleware';
 import { isValidString } from '../utils/validation';
@@ -23,6 +23,20 @@ export const registerNotificationHandlers = (
 ) => {
   const userId = socket.userId!;
   const userName = socket.userName || 'Unknown';
+
+  /** בדיקת הרשאה מרוכזת - מחזיר true אם יש הרשאה */
+  const verifyRole = async (
+    listId: string,
+    event: string,
+    allowedRoles: UserRole[]
+  ): Promise<boolean> => {
+    const role = await ApiService.checkRole(listId, userId, socket.accessToken!);
+    if (!role || !allowedRoles.includes(role)) {
+      logger.warn(`User ${userId} attempted ${event} without permission (role: ${role})`);
+      return false;
+    }
+    return true;
+  };
 
   // חבר הצטרף לרשימה
   socket.on('member:join', (data: { listId: string; listName: string; userName: string }) => {
@@ -100,12 +114,7 @@ export const registerNotificationHandlers = (
       }
       if (!socket.rooms.has(`list:${data.listId}`)) return;
 
-      // אימות שהשולח בעלים או מנהל
-      const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
-      if (role !== 'owner' && role !== 'admin') {
-        logger.warn(`User ${userId} attempted member:remove without permission (role: ${role})`);
-        return;
-      }
+      if (!await verifyRole(data.listId, 'member:remove', ['owner', 'admin'])) return;
 
       const removedData: MemberRemovedData = {
         listId: data.listId,
@@ -153,12 +162,7 @@ export const registerNotificationHandlers = (
         return;
       }
 
-      // אימות שהשולח בעלים
-      const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
-      if (role !== 'owner') {
-        logger.warn(`User ${userId} attempted list:update without ownership (role: ${role})`);
-        return;
-      }
+      if (!await verifyRole(data.listId, 'list:update', ['owner'])) return;
 
       // שימוש ב-changeType ו-newName כמפתחות - הקליינט מרנדר בשפה הנכונה
       const notification: NotificationData = {
@@ -212,10 +216,7 @@ export const registerNotificationHandlers = (
         return;
       }
 
-      // אימות שהשולח בעלים
-      const role = await ApiService.checkRole(data.listId, userId, socket.accessToken!);
-      if (role !== 'owner') {
-        logger.warn(`User ${userId} attempted list:delete without ownership (role: ${role})`);
+      if (!await verifyRole(data.listId, 'list:delete', ['owner'])) {
         if (typeof callback === 'function') callback();
         return;
       }

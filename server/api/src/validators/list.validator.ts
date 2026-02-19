@@ -35,6 +35,9 @@ export const listValidator = {
     password: Joi.string().length(4).allow(null).messages({
       'string.length': 'Password must be exactly 4 characters',
     }),
+    isGroup: Joi.boolean().valid(true).optional().messages({
+      'any.only': 'Can only convert to group (true)',
+    }),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
   }),
@@ -72,6 +75,7 @@ export type UpdateListInput = {
   icon?: string;
   color?: string;
   password?: string | null;
+  isGroup?: boolean;
 };
 
 export type JoinGroupInput = {

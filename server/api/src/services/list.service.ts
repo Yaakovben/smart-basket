@@ -51,7 +51,18 @@ export class ListService {
   ): Promise<IListResponse> {
     const list = await checkListOwner(listId, userId);
 
-    const sanitizedData = { ...data };
+    // המרת רשימה פרטית לקבוצה
+    if (data.isGroup && !list.isGroup) {
+      const inviteCode = await ListDAL.generateUniqueInviteCode();
+      list.isGroup = true;
+      list.inviteCode = inviteCode;
+      if (data.password) {
+        list.password = data.password;
+      }
+    }
+
+    // הסרת isGroup מהנתונים לפני Object.assign (כבר טיפלנו בזה)
+    const { isGroup: _isGroup, ...sanitizedData } = { ...data };
     if (sanitizedData.name) {
       sanitizedData.name = sanitizeText(sanitizedData.name);
     }

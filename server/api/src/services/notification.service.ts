@@ -241,7 +241,8 @@ export class NotificationService {
     userId: string,
     options: GetNotificationsOptions = {}
   ): Promise<PaginatedNotifications> {
-    const { page = 1, limit = 50, listId, unreadOnly = false } = options;
+    const { page = 1, limit: rawLimit = 50, listId, unreadOnly = false } = options;
+    const limit = Math.min(rawLimit, 100);
 
     const result = await NotificationDAL.findByUser(userId, {
       page,
