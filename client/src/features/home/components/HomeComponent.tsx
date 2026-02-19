@@ -665,8 +665,8 @@ export const HomeComponent = memo(({
           if (!editList) return;
           setEditList({ ...editList, ...data });
         }}
-        onConvertToGroup={!editList.isGroup ? () => {
-          onEditList({ ...editList, isGroup: true, password: '0000' });
+        onConvertToGroup={!editList.isGroup ? (password: string) => {
+          onEditList({ ...editList, isGroup: true, password });
           setEditList(null);
         } : undefined}
       />}

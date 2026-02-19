@@ -354,6 +354,7 @@ type TranslationKey =
   // Convert list to group
   | 'convertToGroup'
   | 'convertToGroupHint'
+  | 'setGroupPassword'
   // Duplicate product
   | 'productExists'
   | 'productExistsMessage'
@@ -414,7 +415,7 @@ export const translations: Record<Language, Translations> = {
     sendWhatsApp: 'שלח וואטסאפ',
     helpDescription: 'נשמח לעזור! פנה אלינו בכל שאלה.',
     // About
-    aboutDescription: 'פשוט, נוח, משותף - רשימת קניות חכמה',
+    aboutDescription: 'פשוט, נוח, קבוצתי - רשימת קניות חכמה',
     developedBy: 'פותח על ידי',
     allRightsReserved: 'כל הזכויות שמורות',
     // Home
@@ -422,27 +423,27 @@ export const translations: Record<Language, Translations> = {
     search: 'חיפוש רשימה...',
     all: 'הכל',
     myLists: 'שלי',
-    groups: 'משותפות',
+    groups: 'קבוצתיות',
     createList: 'צור רשימה',
-    createGroup: 'צור רשימה משותפת',
-    newGroup: 'רשימה משותפת חדשה',
+    createGroup: 'צור רשימה קבוצתית',
+    newGroup: 'רשימה קבוצתית חדשה',
     joinGroup: 'הצטרף לרשימה',
     privateList: 'רשימה פרטית',
     privateListDesc: 'צור רשימת קניות אישית רק בשבילך',
-    sharedGroup: 'רשימה משותפת',
+    sharedGroup: 'רשימה קבוצתית',
     sharedGroupDesc: 'צור רשימה ושתף עם משפחה וחברים',
     joinExistingGroup: 'הצטרף לרשימה קיימת',
     joinExistingGroupDesc: 'יש לך קוד הזמנה? הכנס אותו כאן',
     noLists: 'טרם נוצרו רשימות',
     noListsDesc: 'התחל ביצירת רשימת קניות חדשה ועקוב בקלות אחר הצרכים שלך',
-    noGroups: 'טרם נוצרו רשימות משותפות',
-    noGroupsDesc: 'התחל ברשימה משותפת וצור רשימות קניות עם המשפחה והחברים',
+    noGroups: 'טרם נוצרו רשימות קבוצתיות',
+    noGroupsDesc: 'התחל ברשימה קבוצתית וצור רשימות קניות עם המשפחה והחברים',
     createFirstList: 'צור רשימה ראשונה',
-    createFirstGroup: 'צור רשימה משותפת',
+    createFirstGroup: 'צור רשימה קבוצתית',
     items: 'פריטים',
     listsCount: 'רשימות',
     completed: 'הושלם',
-    group: 'משותפת',
+    group: 'קבוצתית',
     private: 'פרטית',
     // List
     toBuy: 'לקנות',
@@ -586,7 +587,7 @@ export const translations: Record<Language, Translations> = {
     deleteGroupTitle: 'מחיקת רשימה',
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
-    deleteDataWarning: 'פעולה זו תמחק:\n• כל הרשימות הפרטיות שלך\n• רשימות משותפות שיצרת יועברו לחבר אחר\n• תוסר מרשימות שהצטרפת אליהן\n• כל ההגדרות וההעדפות\n• חשבונך לצמיתות\n\nפעולה זו לא ניתנת לביטול!',
+    deleteDataWarning: 'פעולה זו תמחק:\n• כל הרשימות הפרטיות שלך\n• רשימות קבוצתיות שיצרת יועברו לחבר אחר\n• תוסר מרשימות שהצטרפת אליהן\n• כל ההגדרות וההעדפות\n• חשבונך לצמיתות\n\nפעולה זו לא ניתנת לביטול!',
     errorOccurred: 'אירעה שגיאה',
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
@@ -716,8 +717,9 @@ export const translations: Record<Language, Translations> = {
     // WhatsApp share
     listCompleted: 'הרשימה הושלמה',
     sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
-    convertToGroup: 'הפוך לרשימה משותפת',
+    convertToGroup: 'הפוך לרשימה קבוצתית',
     convertToGroupHint: 'שתף את הרשימה עם אחרים',
+    setGroupPassword: 'הגדר סיסמת קבוצה (4 ספרות)',
     productExists: 'מוצר קיים',
     productExistsMessage: '"{name}" כבר ברשימה ({quantity} {unit}). מה לעשות?',
     increaseQuantity: 'הגדל כמות',
@@ -1077,6 +1079,7 @@ export const translations: Record<Language, Translations> = {
     sessionExpired: 'Session expired, please log in again',
     convertToGroup: 'Convert to shared list',
     convertToGroupHint: 'Share this list with others',
+    setGroupPassword: 'Set group password (4 digits)',
     productExists: 'Product exists',
     productExistsMessage: '"{name}" is already in the list ({quantity} {unit}). What to do?',
     increaseQuantity: 'Increase quantity',
@@ -1436,6 +1439,7 @@ export const translations: Record<Language, Translations> = {
     sessionExpired: 'Сессия истекла, войдите снова',
     convertToGroup: 'Сделать совместным списком',
     convertToGroupHint: 'Поделитесь списком с другими',
+    setGroupPassword: 'Установите пароль группы (4 цифры)',
     productExists: 'Продукт существует',
     productExistsMessage: '"{name}" уже в списке ({quantity} {unit}). Что делать?',
     increaseQuantity: 'Увеличить количество',

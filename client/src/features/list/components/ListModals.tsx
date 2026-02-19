@@ -1,4 +1,4 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -351,7 +351,7 @@ interface EditListModalProps {
   onClose: () => void;
   onSave: () => void;
   onUpdateData: (data: EditListForm) => void;
-  onConvertToGroup?: () => void;
+  onConvertToGroup?: (password: string) => void;
 }
 
 export const EditListModal = memo(({
@@ -365,6 +365,8 @@ export const EditListModal = memo(({
   onConvertToGroup
 }: EditListModalProps) => {
   const { t } = useSettings();
+  const [showPasswordStep, setShowPasswordStep] = useState(false);
+  const [convertPassword, setConvertPassword] = useState('');
 
   if (!isOpen || !editData) return null;
 
@@ -458,9 +460,9 @@ export const EditListModal = memo(({
         </Box>
       </Box>
       <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
-      {!list.isGroup && onConvertToGroup && (
+      {!list.isGroup && onConvertToGroup && !showPasswordStep && (
         <Box
-          onClick={onConvertToGroup}
+          onClick={() => setShowPasswordStep(true)}
           sx={{
             mt: 2.5,
             p: 1.5,
@@ -496,6 +498,44 @@ export const EditListModal = memo(({
             <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>
               {t('convertToGroupHint')}
             </Typography>
+          </Box>
+        </Box>
+      )}
+      {!list.isGroup && onConvertToGroup && showPasswordStep && (
+        <Box sx={{ mt: 2.5, p: 2, borderRadius: '12px', bgcolor: 'rgba(20, 184, 166, 0.06)', border: '1.5px solid', borderColor: 'primary.main' }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main', mb: 1.5 }}>
+            {t('setGroupPassword')}
+          </Typography>
+          <TextField
+            fullWidth
+            value={convertPassword}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+              setConvertPassword(val);
+            }}
+            placeholder="1234"
+            size="small"
+            inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 8 } }}
+            sx={{ mb: 1.5 }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => { setShowPasswordStep(false); setConvertPassword(''); }}
+              sx={{ flex: 1, fontSize: 13 }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={convertPassword.length !== 4}
+              onClick={() => onConvertToGroup(convertPassword)}
+              sx={{ flex: 1, fontSize: 13 }}
+            >
+              {t('convertToGroup')}
+            </Button>
           </Box>
         </Box>
       )}
