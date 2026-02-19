@@ -282,13 +282,28 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
   const handleGoogleSuccess = useCallback(async (tokenResponse: { access_token: string }) => {
     setGoogleLoading(true);
     try {
-      // שליחת טוקן Google לשרת
-      const { user } = await authApi.googleAuth(tokenResponse.access_token);
-      haptic('medium');
-      onLogin(user, 'google');
-    } catch (error: unknown) {
+      // ניסיון ראשון + retry אחד במקרה של שגיאת רשת
+      let lastError: unknown;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { user } = await authApi.googleAuth(tokenResponse.access_token);
+          haptic('medium');
+          onLogin(user, 'google');
+          return;
+        } catch (error: unknown) {
+          lastError = error;
+          const apiError = error as { code?: string; response?: { status?: number } };
+          const isNetworkError = apiError.code === 'ERR_NETWORK' || !apiError.response;
+          if (attempt === 0 && isNetworkError) {
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+          break;
+        }
+      }
+
       haptic('heavy');
-      const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string; message?: string };
+      const apiError = lastError as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string; message?: string };
       const errorMsg = apiError.response?.data?.message || apiError.response?.data?.error;
       const status = apiError.response?.status;
 
@@ -298,8 +313,6 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setError(t('localStorageError'));
       } else if (errorMsg) {
         setError(errorMsg);
-      } else if (status) {
-        setError(t('cacheError'));
       } else {
         setError(t('cacheError'));
       }

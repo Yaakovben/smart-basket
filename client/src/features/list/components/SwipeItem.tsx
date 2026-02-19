@@ -9,14 +9,13 @@ type ProductCategory = 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פי
 interface SwipeItemProps {
   product: Product;
   isPurchased: boolean;
-  isPending?: boolean;
   isOpen: boolean;
   currentUserName: string;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onClick: () => void;
-  onOpen: () => void;
+  onToggle: (productId: string) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (productId: string) => void;
+  onClick: (product: Product) => void;
+  onOpen: (productId: string) => void;
   onClose: () => void;
 }
 
@@ -32,7 +31,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isPending, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
@@ -84,7 +83,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isPending) return;
     const touch = e.touches[0];
     startX.current = touch.clientX;
     startY.current = touch.clientY;
@@ -143,7 +141,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
       // סגירת פריטים אחרים בתחילת החלקה
       if (!hasCalledOpen.current && dx > 10) {
         hasCalledOpen.current = true;
-        onOpen();
+        onOpen(product.id);
       }
 
       // חישוב offset עם אפקט גומייה
@@ -151,7 +149,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
       const newOffset = calcOffset(rawOffset);
       setOffset(newOffset);
     }
-  }, [calcOffset, onOpen]);
+  }, [calcOffset, onOpen, product.id]);
 
   const handleTouchEnd = useCallback(() => {
     // שחזור סגנונות body
@@ -218,11 +216,23 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
   }, [offset]);
 
-  const doAction = useCallback((fn: () => void) => {
+  const doToggle = useCallback(() => {
     setOffset(0);
     onClose();
-    fn();
-  }, [onClose]);
+    onToggle(product.id);
+  }, [onClose, onToggle, product.id]);
+
+  const doEdit = useCallback(() => {
+    setOffset(0);
+    onClose();
+    onEdit(product);
+  }, [onClose, onEdit, product]);
+
+  const doDelete = useCallback(() => {
+    setOffset(0);
+    onClose();
+    onDelete(product.id);
+  }, [onClose, onDelete, product.id]);
 
   const handleClick = useCallback(() => {
     if (justSwiped.current) return;
@@ -233,9 +243,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
       onClose();
     } else {
       haptic('light');
-      onClick();
+      onClick(product);
     }
-  }, [offset, onClick, onClose]);
+  }, [offset, onClick, onClose, product]);
 
   // חישוב שקיפות כפתור לפי offset
   const buttonOpacity = Math.min(1, Math.max(0, offset / 40));
@@ -270,15 +280,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'auto' : 'none'
         }}
       >
-        <Box role="button" aria-label={t('delete')} onClick={() => { haptic('medium'); doAction(onDelete); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
+        <Box role="button" aria-label={t('delete')} onClick={() => { haptic('medium'); doDelete(); }} sx={{ ...actionBtnStyle, bgcolor: '#EF4444' }}>
           <span>🗑️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('delete')}</Typography>
         </Box>
-        <Box role="button" aria-label={t('edit')} onClick={() => { haptic('light'); doAction(onEdit); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
+        <Box role="button" aria-label={t('edit')} onClick={() => { haptic('light'); doEdit(); }} sx={{ ...actionBtnStyle, bgcolor: '#14B8A6' }}>
           <span>✏️</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{t('edit')}</Typography>
         </Box>
-        <Box role="button" aria-label={isPurchased ? t('return') : t('purchased')} onClick={() => { haptic('light'); doAction(onToggle); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
+        <Box role="button" aria-label={isPurchased ? t('return') : t('purchased')} onClick={() => { haptic('light'); doToggle(); }} sx={{ ...actionBtnStyle, bgcolor: isPurchased ? '#F59E0B' : '#22C55E' }}>
           <span>{isPurchased ? '↩️' : '✓'}</span>
           <Typography sx={{ fontSize: '11px', fontWeight: 600 }}>{isPurchased ? t('return') : t('purchased')}</Typography>
         </Box>
@@ -304,8 +314,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           transition: swiping ? 'none' : 'transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)',
           willChange: swiping ? 'transform' : 'auto',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
-          pointerEvents: isPending ? 'none' : (offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto'),
-          opacity: isPending ? 0.55 : 1,
+          pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent'
         }}
       >
@@ -319,14 +328,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '22px',
-            flexShrink: 0,
-            ...(isPending && {
-              animation: 'pendingPulse 1.5s ease-in-out infinite',
-              '@keyframes pendingPulse': {
-                '0%, 100%': { opacity: 0.6 },
-                '50%': { opacity: 0.3 },
-              },
-            })
+            flexShrink: 0
           }}
         >
           {icon}

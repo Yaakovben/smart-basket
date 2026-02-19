@@ -108,7 +108,7 @@ export function useSocketNotifications(
         const productName = event.product?.name || event.productName || '';
 
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('addedProductNotif')} "${productName}"${listName ? ` ${tRef.current('inListNotif')} ${listName}` : ''}`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('addedProductNotif')} "${productName}"${listName ? ` ${tRef.current('inListNotif')} ${listName}` : ''}`;
           showToastRef.current(message, 'info');
         }
 
@@ -137,7 +137,7 @@ export function useSocketNotifications(
         const productName = event.product?.name || event.productName || '';
 
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('editedProductNotif')} "${productName}"`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('editedProductNotif')} "${productName}"`;
           showToastRef.current(message, 'info');
         }
 
@@ -166,7 +166,7 @@ export function useSocketNotifications(
         const productName = event.product?.name || event.productName || '';
 
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('deletedProductNotif')} "${productName}"`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('deletedProductNotif')} "${productName}"`;
           showToastRef.current(message, 'info');
         }
 
@@ -196,7 +196,7 @@ export function useSocketNotifications(
 
         if (!isPushSubscribedRef.current) {
           const action = event.isPurchased ? tRef.current('purchasedNotif') : tRef.current('unmarkedPurchasedNotif');
-          const message = `${event.userName} ${action} "${productName}"`;
+          const message = `${event.userName.split(' ')[0]} ${action} "${productName}"`;
           showToastRef.current(message, 'info');
         }
 
@@ -227,7 +227,7 @@ export function useSocketNotifications(
 
       if (event.type === 'join' && ns.groupJoin) {
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
           showToastRef.current(message, 'info');
         }
 
@@ -245,7 +245,7 @@ export function useSocketNotifications(
 
       if (event.type === 'leave' && ns.groupLeave) {
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
           showToastRef.current(message, 'info');
         }
 
@@ -264,7 +264,7 @@ export function useSocketNotifications(
       // חבר הוסר ע"י מנהל (מוצג לשאר חברי הרשימה)
       if (event.type === 'removed' && (ns.groupRemoved ?? true)) {
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
           showToastRef.current(message, 'warning');
         }
 
@@ -283,7 +283,7 @@ export function useSocketNotifications(
       // הגדרות רשימה עודכנו ע"י בעלים
       if (event.type === 'list_update' && ns.listUpdate) {
         if (!isPushSubscribedRef.current) {
-          const message = `${event.userName} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
+          const message = `${event.userName.split(' ')[0]} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
           showToastRef.current(message, 'info');
         }
 
@@ -328,7 +328,7 @@ export function useSocketNotifications(
       if (!(ns.groupDelete ?? true)) return;
 
       if (!isPushSubscribedRef.current) {
-        const message = `${event.ownerName} ${tRef.current('deletedGroupNotif')} "${event.listName}"`;
+        const message = `${event.ownerName.split(' ')[0]} ${tRef.current('deletedGroupNotif')} "${event.listName}"`;
         showToastRef.current(message, 'warning');
       }
 

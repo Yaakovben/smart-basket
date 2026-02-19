@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member, ToastType } from '../../../global/types';
-import { haptic, getLocale } from '../../../global/helpers';
+import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
@@ -18,7 +18,7 @@ import type {
 } from '../types/list-types';
 
 // המרת מוצר API לטיפוס מוצר קליינט
-const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }, locale: string): Product => ({
+const convertApiProduct = (apiProduct: { id: string; name: string; quantity: number; unit: string; category: string; isPurchased: boolean; addedBy: string; createdAt: string }): Product => ({
   id: apiProduct.id,
   name: apiProduct.name,
   quantity: apiProduct.quantity,
@@ -26,8 +26,7 @@ const convertApiProduct = (apiProduct: { id: string; name: string; quantity: num
   category: apiProduct.category as Product['category'],
   isPurchased: apiProduct.isPurchased,
   addedBy: apiProduct.addedBy,
-  createdDate: new Date(apiProduct.createdAt).toLocaleDateString(locale),
-  createdTime: new Date(apiProduct.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+  createdAt: apiProduct.createdAt,
 });
 
 // ===== קבועים =====
@@ -41,15 +40,6 @@ const getDefaultNewProduct = (): NewProductForm => ({
   unit: 'יח׳' as Product['unit'],
   category: 'אחר' as Product['category'],
 });
-
-// יצירת מחרוזות תאריך/שעה
-const createDateTimeStrings = (locale: string) => {
-  const now = new Date();
-  return {
-    createdDate: now.toLocaleDateString(locale),
-    createdTime: now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
-  };
-};
 
 // ===== טיפוסים =====
 interface UseListParams {
@@ -75,8 +65,7 @@ export const useList = ({
   onBack,
   showToast
 }: UseListParams): UseListReturn => {
-  const { t, settings } = useSettings();
-  const locale = getLocale(settings.language);
+  const { t } = useSettings();
 
   // ===== מצב חיפוש וסינון =====
   const [filter, setFilter] = useState<ListFilter>('pending');
@@ -100,6 +89,9 @@ export const useList = ({
   const [newProduct, setNewProduct] = useState<NewProductForm>(() => getDefaultNewProduct());
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
+
+  // ===== מצב הוספת מוצר =====
+  const [addingProduct, setAddingProduct] = useState(false);
 
   // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
@@ -216,37 +208,24 @@ export const useList = ({
     return true;
   }, [newProduct, t]);
 
-  // עזר משותף להוספת מוצרים עם עדכון אופטימיסטי
-  // אם false, הקורא אחראי להצגת toast
-  const addProductWithOptimisticUpdate = useCallback(async (productData: {
+  // הוספת מוצר - ממתין לאישור שרת לפני הצגה ברשימה
+  const addProductToServer = useCallback(async (productData: {
     name: string;
     quantity: number;
     unit: Product['unit'];
     category: Product['category'];
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
-
-    // יצירת מוצר אופטימיסטי עם מזהה זמני
-    const tempId = `temp_${Date.now()}`;
-    const { createdDate, createdTime } = createDateTimeStrings(locale);
-    const optimisticProduct: Product = {
-      id: tempId,
-      ...productData,
-      isPurchased: false,
-      addedBy: user.name,
-      createdDate,
-      createdTime,
-      isPending: true,
-    };
-
-    // עדכון אופטימיסטי - הוספה ל-state הנוכחי (functional update למניעת stale closures)
-    onUpdateProductsForList(list.id, (current) => [...current, optimisticProduct]);
-    if (showToastOnAdd) {
-      showToast(t('added'));
-    }
+    setAddingProduct(true);
 
     try {
       const addedProduct = await productsApi.addProduct(list.id, productData);
+
+      // הוספה ל-state רק אחרי שהשרת אישר
+      onUpdateProductsForList(list.id, (current) => [
+        ...current,
+        convertApiProduct(addedProduct),
+      ]);
 
       // שליחת אירוע socket להתראת משתמשים אחרים
       socketService.emitProductAdded(list.id, {
@@ -257,54 +236,51 @@ export const useList = ({
         category: addedProduct.category,
       }, user.name);
 
-      // החלפת המוצר הזמני בנתון האמיתי (שומר על מוצרים אופטימיסטיים אחרים שבהמתנה)
-      onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === tempId ? { ...convertApiProduct(addedProduct, locale), isPending: false } : p)
-      );
+      if (showToastOnAdd) {
+        showToast(t('added'));
+      }
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
-      // הסרת המוצר הזמני בלבד (לא פוגע במוצרים אופטימיסטיים אחרים שבהמתנה)
-      onUpdateProductsForList(list.id, (current) =>
-        current.filter(p => p.id !== tempId)
-      );
       showToast(t('unknownError'), 'error');
+    } finally {
+      setAddingProduct(false);
     }
-  }, [list.id, user.name, onUpdateProductsForList, showToast, t, locale]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t]);
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = useCallback(async () => {
     setAddError('');
     if (!validateProduct()) return;
 
-    // סגירת מודאל מיידית
     const productData = {
       name: newProduct.name.trim(),
       quantity: newProduct.quantity,
       unit: newProduct.unit,
       category: newProduct.category,
     };
+
+    // סגירת מודאל מיידית ואיפוס הטופס
     setNewProduct(getDefaultNewProduct());
     setShowAdd(false);
-    showToast(t('added'));
 
-    // הוספה ברקע (עדכון אופטימיסטי כבר מציג)
-    addProductWithOptimisticUpdate(productData, false);
-  }, [newProduct, validateProduct, addProductWithOptimisticUpdate, showToast, t]);
+    // שליחה לשרת - המוצר יופיע רק אחרי אישור
+    await addProductToServer(productData);
+  }, [newProduct, validateProduct, addProductToServer]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) return;
 
-    await addProductWithOptimisticUpdate({
+    await addProductToServer({
       name: trimmedName,
       quantity: 1,
       unit: 'יח׳' as Product['unit'],
       category: 'אחר' as Product['category'],
     });
-  }, [addProductWithOptimisticUpdate]);
+  }, [addProductToServer]);
 
   const toggleProduct = useCallback(async (productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
-    if (!product || product.isPending) return;
+    if (!product) return;
 
     const newIsPurchased = !product.isPurchased;
 
@@ -347,7 +323,7 @@ export const useList = ({
 
   const deleteProduct = useCallback((productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
-    if (!product || product.isPending) return;
+    if (!product) return;
 
     setConfirm({
       title: t('deleteProduct'),
@@ -418,7 +394,6 @@ export const useList = ({
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
-    if (product.isPending) return;
     setShowEdit({ ...product });
     setOriginalEditProduct({ ...product });
   }, []);
@@ -540,6 +515,7 @@ export const useList = ({
     openItemId,
     showHint,
     addError,
+    addingProduct,
     fabPosition,
     isDragging,
 

@@ -75,6 +75,7 @@ type TranslationKey =
   | 'createFirstList'
   | 'createFirstGroup'
   | 'items'
+  | 'listsCount'
   | 'completed'
   | 'group'
   | 'private'
@@ -433,6 +434,7 @@ export const translations: Record<Language, Translations> = {
     createFirstList: 'צור רשימה ראשונה',
     createFirstGroup: 'צור קבוצה ראשונה',
     items: 'פריטים',
+    listsCount: 'רשימות',
     completed: 'הושלם',
     group: 'קבוצה',
     private: 'פרטית',
@@ -787,6 +789,7 @@ export const translations: Record<Language, Translations> = {
     createFirstList: 'Create First List',
     createFirstGroup: 'Create First Group',
     items: 'items',
+    listsCount: 'lists',
     completed: 'Completed',
     group: 'Group',
     private: 'Private',
@@ -1141,6 +1144,7 @@ export const translations: Record<Language, Translations> = {
     createFirstList: 'Создать первый список',
     createFirstGroup: 'Создать первую группу',
     items: 'товаров',
+    listsCount: 'списков',
     completed: 'Завершено',
     group: 'Группа',
     private: 'Личный',

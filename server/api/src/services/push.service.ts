@@ -83,7 +83,11 @@ export class PushService {
         const pushError = error as { statusCode?: number };
         // מחיקת מנוי לא תקין (410/404)
         if (pushError.statusCode === 410 || pushError.statusCode === 404) {
-          await PushSubscriptionDAL.deleteById(sub._id.toString());
+          try {
+            await PushSubscriptionDAL.deleteById(sub._id.toString());
+          } catch (deleteError) {
+            logger.warn('Failed to delete invalid push subscription %s: %s', sub.endpoint, (deleteError as Error).message);
+          }
         } else {
           logger.warn('Push notification failed for endpoint %s: %s', sub.endpoint, (error as Error).message);
         }

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Menu, MenuItem
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Menu, MenuItem, Divider
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -109,6 +109,7 @@ interface ListCardProps {
 const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onToggleMute, t }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
+  const mainNotificationsOff = !settings.notifications.enabled;
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
@@ -142,26 +143,84 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           open={menuOpen}
           onClose={(e: React.SyntheticEvent) => { e.stopPropagation?.(); setAnchorEl(null); }}
           onClick={(e) => e.stopPropagation()}
-          transformOrigin={{ horizontal: 'left', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
-          slotProps={{ paper: { sx: { borderRadius: '12px', minWidth: 160, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' } } }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: '16px',
+                minWidth: 240,
+                mt: 1,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)',
+                py: 0.5,
+                overflow: 'visible'
+              }
+            }
+          }}
         >
+          {/* Mute Toggle — only for groups */}
           {l.isGroup && (
-            <MenuItem onClick={() => { setAnchorEl(null); onToggleMute(l.id); }} sx={{ gap: 1.5, fontSize: 14 }}>
-              {isMuted ? <VolumeUpIcon sx={{ fontSize: 20 }} /> : <VolumeOffIcon sx={{ fontSize: 20 }} />}
-              {isMuted ? t('unmuteGroup') : t('muteGroup')}
+            <Box sx={{ px: 1.5, py: 1 }}>
+              <Box
+                onClick={() => { if (!mainNotificationsOff) { setAnchorEl(null); onToggleMute(l.id); } }}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 1.5,
+                  px: 2, py: 1.5,
+                  borderRadius: '12px',
+                  bgcolor: isMuted || mainNotificationsOff
+                    ? 'rgba(239,68,68,0.08)'
+                    : 'rgba(20,184,166,0.08)',
+                  border: '1px solid',
+                  borderColor: isMuted || mainNotificationsOff
+                    ? 'rgba(239,68,68,0.15)'
+                    : 'rgba(20,184,166,0.15)',
+                  cursor: mainNotificationsOff ? 'default' : 'pointer',
+                  opacity: mainNotificationsOff ? 0.5 : 1,
+                  transition: 'all 0.15s ease',
+                  '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
+                }}
+              >
+                {isMuted || mainNotificationsOff
+                  ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
+                  : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+                }
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
+                    {isMuted ? t('unmuteGroup') : t('muteGroup')}
+                  </Typography>
+                  {mainNotificationsOff && (
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                      {t('notificationsOff')}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {l.isGroup && isOwner && <Divider />}
+
+          {isOwner && (
+            <MenuItem
+              onClick={() => { setAnchorEl(null); onEditList(l); }}
+              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+            >
+              <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+                {l.isGroup ? t('editGroup') : t('editList')}
+              </Typography>
             </MenuItem>
           )}
+
           {isOwner && (
-            <MenuItem onClick={() => { setAnchorEl(null); onEditList(l); }} sx={{ gap: 1.5, fontSize: 14 }}>
-              <EditIcon sx={{ fontSize: 20 }} />
-              {t('edit')}
-            </MenuItem>
-          )}
-          {isOwner && (
-            <MenuItem onClick={() => { setAnchorEl(null); onDeleteList(l); }} sx={{ gap: 1.5, fontSize: 14, color: 'error.main' }}>
-              <DeleteOutlineIcon sx={{ fontSize: 20 }} />
-              {t('delete')}
+            <MenuItem
+              onClick={() => { setAnchorEl(null); onDeleteList(l); }}
+              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+            >
+              <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
+                {l.isGroup ? t('deleteGroup') : t('deleteList')}
+              </Typography>
             </MenuItem>
           )}
         </Menu>
@@ -390,7 +449,11 @@ export const HomeComponent = memo(({
               <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
             </Button>
           </Box>
-        ) : display.map((l: List) => (
+        ) : (<>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1, px: 0.5 }}>
+            📋 {display.length} {t('listsCount')}
+          </Typography>
+          {display.map((l: List) => (
           <ListCard
             key={l.id}
             list={l}
@@ -403,6 +466,7 @@ export const HomeComponent = memo(({
             t={t}
           />
         ))}
+        </>)}
       </Box>
 
       {/* Menu Bottom Sheet */}

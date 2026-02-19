@@ -55,41 +55,43 @@ const generatePushMessage = (
   listName: string,
   productName?: string,
 ): { title: string; body: string } => {
+  // שם ראשון בלבד ב-push - שמות ארוכים חותכים את תיאור האירוע
+  const firstName = actorName.split(' ')[0];
   const getAction = (): string => {
     switch (type) {
       case 'join':
-        return `${actorName} הצטרף/ה לקבוצה`;
+        return `${firstName} הצטרף/ה לקבוצה`;
       case 'leave':
-        return `${actorName} עזב/ה את הקבוצה`;
+        return `${firstName} עזב/ה את הקבוצה`;
       case 'removed':
-        return `${actorName} הוסר/ה מהקבוצה`;
+        return `${firstName} הוסר/ה מהקבוצה`;
       case 'member_removed':
-        return `הוסרת מהקבוצה על ידי ${actorName}`;
+        return `הוסרת מהקבוצה על ידי ${firstName}`;
       case 'list_deleted':
-        return `${actorName} מחק/ה את הקבוצה`;
+        return `${firstName} מחק/ה את הקבוצה`;
       case 'product_add':
-        return `${actorName} הוסיף/ה "${productName}"`;
+        return `${firstName} הוסיף/ה "${productName}"`;
       case 'product_update':
-        return `${actorName} עדכן/ה "${productName}"`;
+        return `${firstName} עדכן/ה "${productName}"`;
       case 'product_delete':
-        return `${actorName} מחק/ה "${productName}"`;
+        return `${firstName} מחק/ה "${productName}"`;
       case 'product_purchase':
-        return `${actorName} סימן/ה "${productName}" כנקנה`;
+        return `${firstName} סימן/ה "${productName}" כנקנה`;
       case 'product_unpurchase':
-        return `${actorName} החזיר/ה "${productName}" לרשימה`;
+        return `${firstName} החזיר/ה "${productName}" לרשימה`;
       case 'list_update': {
         // productName מקודד סוג שינוי ושם חדש אופציונלי כ-"changeType:newName"
         const [changeType, newName] = productName?.includes(':')
           ? [productName.split(':')[0], productName.split(':').slice(1).join(':')]
           : [productName, undefined];
         if (changeType === 'name' && newName) {
-          return `${actorName} שינה/תה את שם הרשימה ל-"${newName}"`;
+          return `${firstName} שינה/תה את שם הרשימה ל-"${newName}"`;
         } else if (changeType === 'design') {
-          return `${actorName} שינה/תה את עיצוב הרשימה`;
+          return `${firstName} שינה/תה את עיצוב הרשימה`;
         } else if (changeType === 'both' && newName) {
-          return `${actorName} עדכן/ה את הרשימה ל-"${newName}"`;
+          return `${firstName} עדכן/ה את הרשימה ל-"${newName}"`;
         }
-        return `${actorName} עדכן/ה את הרשימה`;
+        return `${firstName} עדכן/ה את הרשימה`;
       }
       default:
         return `פעילות חדשה`;

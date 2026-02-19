@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { Box } from '@mui/material';
 import type { Product, List, User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
@@ -53,6 +53,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
 
+  const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
+  const handleShowDetails = useCallback((product: Product) => {
+    setShowDetails(product);
+    dismissHint();
+  }, [setShowDetails, dismissHint]);
+
   return (
     <Box sx={{
       height: { xs: '100dvh', sm: '100vh' },
@@ -106,7 +112,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           pb: { xs: 'calc(120px + env(safe-area-inset-bottom))', sm: 'calc(110px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch'
         }}
-        onClick={() => setOpenItemId(null)}
+        onClick={handleCloseItem}
         role="main"
         aria-label={list.name}
       >
@@ -124,15 +130,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               key={p.id}
               product={p}
               isPurchased={p.isPurchased}
-              isPending={p.isPending}
               isOpen={openItemId === p.id}
               currentUserName={user.name}
-              onOpen={() => setOpenItemId(p.id)}
-              onClose={() => setOpenItemId(null)}
-              onToggle={() => toggleProduct(p.id)}
-              onEdit={() => openEditProduct(p)}
-              onDelete={() => deleteProduct(p.id)}
-              onClick={() => { setShowDetails(p); dismissHint(); }}
+              onOpen={setOpenItemId}
+              onClose={handleCloseItem}
+              onToggle={toggleProduct}
+              onEdit={openEditProduct}
+              onDelete={deleteProduct}
+              onClick={handleShowDetails}
             />
           ))
         )}

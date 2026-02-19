@@ -1,7 +1,7 @@
 import { memo, useRef, useCallback } from 'react';
 import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
-import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, SIZES } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, SIZES, formatDateShort, formatTimeShort } from '../../../global/helpers';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NewProductForm } from '../types/list-types';
@@ -319,15 +319,15 @@ export const ProductDetailsModal = memo(({
   currentUserName,
   onClose
 }: ProductDetailsModalProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
 
   if (!product) return null;
 
   const detailRows = [
     { label: t('category'), value: t(CATEGORY_TRANSLATION_KEYS[product.category]) },
     { label: t('addedBy'), value: product.addedBy === currentUserName ? t('you') : product.addedBy, highlight: product.addedBy === currentUserName },
-    { label: t('date'), value: product.createdDate || '-' },
-    { label: t('time'), value: product.createdTime || '-' }
+    { label: t('date'), value: product.createdAt ? formatDateShort(product.createdAt, settings.language) : '-' },
+    { label: t('time'), value: product.createdAt ? formatTimeShort(product.createdAt, settings.language) : '-' }
   ];
 
   return (

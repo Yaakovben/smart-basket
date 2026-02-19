@@ -56,6 +56,7 @@ export interface UseListReturn {
   openItemId: string | null;
   showHint: boolean;
   addError: string;
+  addingProduct: boolean;
   fabPosition: FabPosition | null;
   isDragging: boolean;
 

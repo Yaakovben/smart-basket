@@ -29,9 +29,7 @@ export interface Product {
   category: ProductCategory;
   isPurchased: boolean;
   addedBy: string;
-  createdDate?: string;
-  createdTime?: string;
-  isPending?: boolean;
+  createdAt?: string;
 }
 
 // ===== רשימה =====

@@ -3,8 +3,6 @@ import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
-import { useSettings } from "../context/SettingsContext";
-import { getLocale } from "../helpers";
 
 // Re-export hooks
 export { useDebounce } from './useDebounce';
@@ -221,7 +219,7 @@ const convertApiMember = (apiMember: ApiMember): Member => ({
 });
 
 // Helper to convert API product to client Product type
-const convertApiProduct = (p: ApiList['products'][0], locale: string): Product => ({
+const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   id: p.id,
   name: p.name,
   quantity: p.quantity,
@@ -229,12 +227,11 @@ const convertApiProduct = (p: ApiList['products'][0], locale: string): Product =
   category: p.category,
   isPurchased: p.isPurchased,
   addedBy: p.addedBy,
-  createdDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString(locale) : undefined,
-  createdTime: p.createdAt ? new Date(p.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : undefined,
+  createdAt: p.createdAt,
 });
 
 // Helper to convert API list to client List type
-const convertApiList = (apiList: ApiList, locale: string): List => ({
+const convertApiList = (apiList: ApiList): List => ({
   id: apiList.id,
   name: apiList.name,
   icon: apiList.icon,
@@ -248,7 +245,7 @@ const convertApiList = (apiList: ApiList, locale: string): List => ({
     avatarEmoji: apiList.owner.avatarEmoji,
   },
   members: apiList.members.map(convertApiMember),
-  products: apiList.products.map(p => convertApiProduct(p, locale)),
+  products: apiList.products.map(convertApiProduct),
   inviteCode: apiList.inviteCode,
   password: apiList.password,
   hasPassword: apiList.hasPassword,
@@ -256,12 +253,9 @@ const convertApiList = (apiList: ApiList, locale: string): List => ({
 
 // ===== useLists Hook =====
 export function useLists(user: User | null, initialLists?: ApiList[] | null, authLoading?: boolean) {
-  const { settings } = useSettings();
-  const locale = getLocale(settings.language);
-
   // Use pre-fetched lists if available for instant render
   const [lists, setLists] = useState<List[]>(() =>
-    initialLists ? initialLists.map(l => convertApiList(l, locale)) : []
+    initialLists ? initialLists.map(l => convertApiList(l)) : []
   );
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
@@ -273,21 +267,21 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     setFetchError(false);
     try {
       const apiLists = await listsApi.getLists();
-      setLists(apiLists.map(l => convertApiList(l, locale)));
+      setLists(apiLists.map(l => convertApiList(l)));
     } catch {
       setFetchError(true);
     } finally {
       setLoading(false);
     }
-  }, [locale]);
+  }, []);
 
   // Sync with pre-fetched data when it arrives from useAuth's parallel fetch
   useEffect(() => {
     if (initialLists && !initializedForRef.current) {
-      setLists(initialLists.map(l => convertApiList(l, locale)));
+      setLists(initialLists.map(l => convertApiList(l)));
       initializedForRef.current = '__initial__';
     }
-  }, [initialLists, locale]);
+  }, [initialLists]);
 
   // Fetch lists when user changes (skip if already initialized with pre-fetched data for this user)
   // לא טוענים בזמן אימות ראשוני - מחכים לנתונים שנטענו מראש מ-useAuth
@@ -346,19 +340,19 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         });
 
         // Replace temp list with server response
-        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList, locale) : l));
+        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList) : l));
 
         // Join socket room for the new list
         socketService.joinList(newList.id);
 
-        return convertApiList(newList, locale);
+        return convertApiList(newList);
       } catch (error) {
         // Remove optimistic list on error
         setLists((prev) => prev.filter((l) => l.id !== tempId));
         throw error;
       }
     },
-    [locale],
+    [],
   );
 
   // Update list locally without API call (for optimistic updates)
@@ -385,7 +379,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         ...(isConverting ? { isGroup: true, password: updatedList.password || undefined } : {}),
       });
       setLists((prev) =>
-        prev.map((l) => (l.id === updated.id ? convertApiList(updated, locale) : l)),
+        prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
       );
       // Emit socket event for group lists to notify other members in real-time
       if (updatedList.isGroup && user && oldList) {
@@ -411,7 +405,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         );
       }
     },
-    [user, lists, locale],
+    [user, lists],
   );
 
   const deleteList = useCallback(
@@ -455,7 +449,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
       try {
         const joinedList = await listsApi.joinGroup({ inviteCode: code, password });
-        setLists((prev) => [...prev, convertApiList(joinedList, locale)]);
+        setLists((prev) => [...prev, convertApiList(joinedList)]);
         // Join socket room, then notify members after server confirms join
         socketService.joinList(joinedList.id, () => {
           socketService.emitMemberJoined(joinedList.id, joinedList.name, user!.name);
@@ -491,7 +485,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         return { success: false, error: 'unknownError' };
       }
     },
-    [user, locale],
+    [user],
   );
 
   const leaveList = useCallback(
@@ -583,13 +577,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
             setLists((prev) =>
               prev.map((l) => {
                 if (l.id !== updated.id) return l;
-                const updatedList = convertApiList(updated, locale);
-                // שימור מוצרים שעדיין בהמתנה (isPending) - יש להם temp ID שלא יתנגש עם Mongo IDs
-                const pendingProducts = l.products.filter(p => p.isPending);
-                if (pendingProducts.length > 0) {
-                  updatedList.products = [...updatedList.products, ...pendingProducts];
-                }
-                return updatedList;
+                return convertApiList(updated);
               }),
             );
           }).catch(() => {
@@ -658,8 +646,23 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // Leave all rooms on cleanup (currentIds captured from closure)
       currentIds.forEach((id) => socketService.leaveList(id));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id, list IDs, or locale change
-  }, [user?.id, listIds, locale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id or list IDs change
+  }, [user?.id, listIds]);
+
+  // Refetch all lists when app returns to foreground (e.g. after push notification click)
+  // Socket events fired while app was backgrounded are lost, so we need a fresh fetch
+  useEffect(() => {
+    if (!user) return;
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchLists();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [user?.id, fetchLists]);
 
   return {
     lists,
