@@ -18,9 +18,9 @@ import type {
 } from '../types/list-types';
 
 // ===== קבועים =====
-const FAB_VISIBILITY_THRESHOLD = 3;
-const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 };
-const DEFAULT_FAB_BOTTOM_OFFSET = 90;
+const FAB_VISIBILITY_THRESHOLD = 3; // מוסתר כשפחות מ-3 מוצרים
+const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 }; // גבולות גרירה בפיקסלים
+const DEFAULT_FAB_BOTTOM_OFFSET = 90; // מיקום ברירת מחדל מתחתית המסך
 
 const getDefaultNewProduct = (): NewProductForm => ({
   name: '',
@@ -88,7 +88,8 @@ export const useList = ({
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<DragState | null>(null);
 
-  // ===== מניעת תנאי מרוץ ב-toggle =====
+  // ===== מניעת תנאי מרוץ =====
+  // גרסה עולה לכל מוצר - תגובות ישנות מהשרת מתעלמות
   const toggleVersions = useRef(new Map<string, number>());
   const productsRef = useRef(list.products);
   productsRef.current = list.products;

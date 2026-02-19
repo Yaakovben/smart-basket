@@ -56,8 +56,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
-  pingTimeout: 60000,
-  pingInterval: 25000,
+  pingTimeout: 60000,   // המתנה לתגובה לפני ניתוק
+  pingInterval: 25000,  // בדיקת חיבור
 });
 
 io.use(authenticateSocket);

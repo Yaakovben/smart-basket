@@ -102,9 +102,10 @@ class ListDALClass extends BaseDAL<IList> {
     );
   }
 
+  // יצירת קוד הזמנה ייחודי בן 6 תווים
   async generateUniqueInviteCode(): Promise<string> {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const MAX_RETRIES = 10;
+    const MAX_RETRIES = 10; // הסיכוי להתנגשות זניח
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const bytes = crypto.randomBytes(6);

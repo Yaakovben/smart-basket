@@ -2,16 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
-  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress, Menu, MenuItem, Divider
+  Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,7 +18,7 @@ import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
-import { Modal, ConfirmModal } from '../../../global/components';
+import { Modal, ConfirmModal, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
 import { usePushNotifications } from '../../../global/hooks';
@@ -124,92 +120,19 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
         >
           <MoreVertIcon sx={{ fontSize: 22 }} />
         </IconButton>
-        <Menu
+        <ListMenu
           anchorEl={anchorEl}
           open={menuOpen}
-          onClose={(e: React.SyntheticEvent) => { e.stopPropagation?.(); setAnchorEl(null); }}
-          onClick={(e) => e.stopPropagation()}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-          slotProps={{
-            paper: {
-              sx: {
-                borderRadius: '16px',
-                minWidth: 240,
-                mt: 1,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)',
-                py: 0.5,
-                overflow: 'visible'
-              }
-            }
-          }}
-        >
-          {/* Mute Toggle — only for groups */}
-          {l.isGroup && (
-            <Box sx={{ px: 1.5, py: 1 }}>
-              <Box
-                onClick={() => { if (!mainNotificationsOff) { setAnchorEl(null); onToggleMute(l.id); } }}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 1.5,
-                  px: 2, py: 1.5,
-                  borderRadius: '12px',
-                  bgcolor: isMuted || mainNotificationsOff
-                    ? 'rgba(239,68,68,0.08)'
-                    : 'rgba(20,184,166,0.08)',
-                  border: '1px solid',
-                  borderColor: isMuted || mainNotificationsOff
-                    ? 'rgba(239,68,68,0.15)'
-                    : 'rgba(20,184,166,0.15)',
-                  cursor: mainNotificationsOff ? 'default' : 'pointer',
-                  opacity: mainNotificationsOff ? 0.5 : 1,
-                  transition: 'all 0.15s ease',
-                  '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
-                }}
-              >
-                {isMuted || mainNotificationsOff
-                  ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
-                  : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-                }
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
-                    {isMuted ? t('unmuteGroup') : t('muteGroup')}
-                  </Typography>
-                  {mainNotificationsOff && (
-                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                      {t('notificationsOff')}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          )}
-
-          {l.isGroup && isOwner && <Divider />}
-
-          {isOwner && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); onEditList(l); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-                {l.isGroup ? t('editGroup') : t('editList')}
-              </Typography>
-            </MenuItem>
-          )}
-
-          {isOwner && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); onDeleteList(l); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
-                {l.isGroup ? t('deleteGroup') : t('deleteList')}
-              </Typography>
-            </MenuItem>
-          )}
-        </Menu>
+          onClose={() => setAnchorEl(null)}
+          isGroup={l.isGroup}
+          isOwner={isOwner}
+          isMuted={isMuted}
+          mainNotificationsOff={mainNotificationsOff}
+          onToggleMute={() => onToggleMute(l.id)}
+          onEdit={() => onEditList(l)}
+          onDelete={() => onDeleteList(l)}
+          stopPropagation
+        />
       </Box>
     </Card>
   );

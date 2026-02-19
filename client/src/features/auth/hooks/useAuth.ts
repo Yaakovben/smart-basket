@@ -137,7 +137,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           if (apiError.code === 'ERR_NETWORK') {
             setError(t('networkError'));
           } else if (apiError.response?.status === 405) {
-            // 405 = Method Not Allowed - בעיית מטמון, הצגת קישור לניקוי המטמון
+            // קורה כשמטמון ישן מחזיר תגובה עם שיטה שגויה
             setError(t('cacheError'));
           }
           // לשגיאות אחרות, המשך בשקט - ייבדק בעת שליחת הטופס

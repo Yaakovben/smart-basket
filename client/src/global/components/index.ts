@@ -1,5 +1,6 @@
 export { ConfirmModal } from './ConfirmModal';
 export { ErrorBoundary } from './ErrorBoundary';
+export { ListMenu } from './ListMenu';
 export { MemberAvatar } from './MemberAvatar';
 export { MembersButton } from './MembersButton';
 export { Modal } from './Modal';

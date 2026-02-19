@@ -57,7 +57,7 @@ export class TokenService {
       tokenDoc._id.toString(),
       refreshToken,
       newRefreshToken,
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // שבוע - תואם להגדרת תוקף הטוקן
     );
 
     // בקשה אחרת כבר החליפה את הטוקן
