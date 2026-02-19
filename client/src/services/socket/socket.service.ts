@@ -95,6 +95,10 @@ class SocketService {
       const { accessToken, refreshToken: newRefreshToken } = data.data;
       setTokens(accessToken, newRefreshToken);
       this.socket.auth = { token: accessToken };
+      // חיבור מחדש מיידי עם הטוקן החדש
+      if (!this.socket.connected) {
+        this.socket.connect();
+      }
     } catch {
       // רענון נכשל - הטוקן לא תקף
     }

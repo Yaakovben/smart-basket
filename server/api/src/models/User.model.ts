@@ -88,5 +88,6 @@ userSchema.methods.comparePassword = async function (
 };
 
 // אינדקסים ל-email ו-googleId נוצרים ע"י unique: true
+userSchema.index({ mutedGroupIds: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);

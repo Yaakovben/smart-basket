@@ -38,7 +38,7 @@ router.use(authLimiter);
  *                   type: object
  *                   properties:
  *                     exists: { type: boolean }
- *                     isGoogleUser: { type: boolean }
+ *                     isGoogleAccount: { type: boolean }
  */
 router.post('/check-email', validate(authValidator.checkEmail), AuthController.checkEmail);
 

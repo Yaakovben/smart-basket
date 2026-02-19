@@ -274,7 +274,6 @@ type TranslationKey =
   | 'continueWithGoogle'
   | 'newUserHint'
   | 'returningUserHint'
-  | 'loginOrRegisterHint'
   | 'continue'
   | 'change'
   | 'networkError'
@@ -352,9 +351,7 @@ type TranslationKey =
   | 'listCompleted'
   | 'sessionExpired'
   // Convert list to group
-  | 'convertToGroup'
-  | 'convertToGroupDesc'
-  | 'convertToGroupConfirm';
+  | 'convertToGroup';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -633,7 +630,6 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'המשך עם Google',
     newUserHint: 'משתמש חדש? הזן שם וסיסמה להרשמה',
     returningUserHint: 'שלום שוב! הזן סיסמה להתחברות',
-    loginOrRegisterHint: 'אם אתה משתמש חדש, הזן את שמך. אם יש לך חשבון, בדוק את הסיסמה.',
     continue: 'המשך',
     change: 'שנה',
     networkError: 'בדוק את חיבור האינטרנט',
@@ -711,8 +707,6 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'הרשימה הושלמה',
     sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
     convertToGroup: 'הפוך לקבוצה',
-    convertToGroupDesc: 'הפוך את הרשימה לקבוצה משותפת עם קוד הזמנה',
-    convertToGroupConfirm: 'להמיר לקבוצה?'
   },
   en: {
     // General
@@ -988,7 +982,6 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'Continue with Google',
     newUserHint: 'New user? Enter name and password to register',
     returningUserHint: 'Welcome back! Enter password to login',
-    loginOrRegisterHint: 'If you\'re a new user, enter your name. If you have an account, check your password.',
     continue: 'Continue',
     change: 'Change',
     networkError: 'Check your internet connection',
@@ -1066,8 +1059,6 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'List completed',
     sessionExpired: 'Session expired, please log in again',
     convertToGroup: 'Convert to group',
-    convertToGroupDesc: 'Convert this list to a shared group with an invite code',
-    convertToGroupConfirm: 'Convert to group?'
   },
   ru: {
     // General
@@ -1343,7 +1334,6 @@ export const translations: Record<Language, Translations> = {
     continueWithGoogle: 'Продолжить с Google',
     newUserHint: 'Новый пользователь? Введите имя и пароль для регистрации',
     returningUserHint: 'С возвращением! Введите пароль для входа',
-    loginOrRegisterHint: 'Если вы новый пользователь, введите имя. Если у вас есть аккаунт, проверьте пароль.',
     continue: 'Продолжить',
     change: 'Изменить',
     networkError: 'Проверьте подключение к интернету',
@@ -1421,8 +1411,6 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'Список завершён',
     sessionExpired: 'Сессия истекла, войдите снова',
     convertToGroup: 'Преобразовать в группу',
-    convertToGroupDesc: 'Преобразовать список в общую группу с кодом приглашения',
-    convertToGroupConfirm: 'Преобразовать в группу?'
   }
 };
 

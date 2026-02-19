@@ -93,7 +93,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pt: editProfile ? 2 : 2, pb: 'calc(24px + env(safe-area-inset-bottom))', mt: editProfile ? 0 : -3, WebkitOverflowScrolling: 'touch' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pt: 2, pb: 'calc(24px + env(safe-area-inset-bottom))', mt: editProfile ? 0 : -3, WebkitOverflowScrolling: 'touch' }}>
         {editProfile ? (
           <Paper sx={{ borderRadius: '14px', p: 2.5 }}>
             {/* Avatar Preview */}
