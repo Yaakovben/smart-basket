@@ -459,25 +459,45 @@ export const EditListModal = memo(({
       </Box>
       <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
       {!list.isGroup && onConvertToGroup && (
-        <Button
-          variant="outlined"
-          fullWidth
+        <Box
           onClick={onConvertToGroup}
           sx={{
-            mt: 2,
-            py: 1,
-            fontSize: 13,
-            fontWeight: 600,
+            mt: 2.5,
+            p: 1.5,
             borderRadius: '12px',
-            borderColor: 'divider',
-            color: 'text.secondary',
-            textTransform: 'none',
-            '&:active': { transform: 'scale(0.98)' },
+            bgcolor: 'rgba(20, 184, 166, 0.06)',
+            border: '1.5px dashed',
+            borderColor: 'rgba(20, 184, 166, 0.3)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            transition: 'all 0.15s ease',
+            '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(20, 184, 166, 0.12)' }
           }}
-          startIcon={<span style={{ fontSize: 16 }}>👥</span>}
         >
-          {t('convertToGroup')}
-        </Button>
+          <Box sx={{
+            width: 36,
+            height: 36,
+            borderRadius: '10px',
+            bgcolor: 'rgba(20, 184, 166, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 18,
+            flexShrink: 0
+          }}>
+            👥
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main', lineHeight: 1.3 }}>
+              {t('convertToGroup')}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>
+              {t('convertToGroupHint')}
+            </Typography>
+          </Box>
+        </Box>
       )}
     </Modal>
   );

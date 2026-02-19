@@ -353,6 +353,7 @@ type TranslationKey =
   | 'sessionExpired'
   // Convert list to group
   | 'convertToGroup'
+  | 'convertToGroupHint'
   // Duplicate product
   | 'productExists'
   | 'productExistsMessage'
@@ -716,6 +717,7 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'הרשימה הושלמה',
     sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
     convertToGroup: 'הפוך לרשימה משותפת',
+    convertToGroupHint: 'שתף את הרשימה עם אחרים',
     productExists: 'מוצר קיים',
     productExistsMessage: '"{name}" כבר ברשימה ({quantity} {unit}). מה לעשות?',
     increaseQuantity: 'הגדל כמות',
@@ -1074,6 +1076,7 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'List completed',
     sessionExpired: 'Session expired, please log in again',
     convertToGroup: 'Convert to shared list',
+    convertToGroupHint: 'Share this list with others',
     productExists: 'Product exists',
     productExistsMessage: '"{name}" is already in the list ({quantity} {unit}). What to do?',
     increaseQuantity: 'Increase quantity',
@@ -1432,6 +1435,7 @@ export const translations: Record<Language, Translations> = {
     listCompleted: 'Список завершён',
     sessionExpired: 'Сессия истекла, войдите снова',
     convertToGroup: 'Сделать совместным списком',
+    convertToGroupHint: 'Поделитесь списком с другими',
     productExists: 'Продукт существует',
     productExistsMessage: '"{name}" уже в списке ({quantity} {unit}). Что делать?',
     increaseQuantity: 'Увеличить количество',
