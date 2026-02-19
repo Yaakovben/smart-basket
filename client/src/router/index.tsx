@@ -1,10 +1,9 @@
 import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
-import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
-import { Toast } from "../global/components";
+import { Toast, PageSkeleton } from "../global/components";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
@@ -23,13 +22,8 @@ const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 
-// מסך טעינה - גרדיאנט ירוק זהה ל-loader הראשוני
-const PageLoader = () => (
-  <Box sx={{
-    height: '100vh',
-    background: 'linear-gradient(135deg, #2DD4BF, #34D399)'
-  }} />
-);
+// מסך טעינה - שלד עמוד במקום גרדיאנט ריק
+const PageLoader = PageSkeleton;
 
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
