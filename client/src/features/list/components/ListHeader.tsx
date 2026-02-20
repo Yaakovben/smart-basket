@@ -330,49 +330,38 @@ export const ListHeader = memo(({
                 <Box sx={{ fontSize: 20 }}>🛒</Box>
               </InputAdornment>
             ),
-            endAdornment: (
-              <InputAdornment position="end">
-                {/* Add button - always visible, disabled when < 2 chars */}
-                <IconButton
-                  onClick={handleQuickAddButton}
-                  disabled={quickAddValue.trim().length < 2}
-                  sx={{
-                    background: quickAddValue.trim().length >= 2
-                      ? 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)'
-                      : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
-                    color: 'white',
-                    width: 40,
-                    height: 40,
-                    borderRadius: '10px',
-                    boxShadow: quickAddValue.trim().length >= 2
-                      ? '0 2px 6px rgba(20, 184, 166, 0.35)'
-                      : 'none',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      background: quickAddValue.trim().length >= 2
-                        ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
-                        : 'linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%)',
-                      boxShadow: quickAddValue.trim().length >= 2
-                        ? '0 3px 10px rgba(20, 184, 166, 0.45)'
-                        : 'none'
-                    },
-                    '&:active': {
-                      transform: quickAddValue.trim().length >= 2 ? 'scale(0.92)' : 'none',
-                      boxShadow: quickAddValue.trim().length >= 2
-                        ? '0 1px 3px rgba(20, 184, 166, 0.3)'
-                        : 'none'
-                    },
-                    '&.Mui-disabled': {
+            endAdornment: (() => {
+              const ready = quickAddValue.trim().length >= 2;
+              return (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleQuickAddButton}
+                    disabled={!ready}
+                    sx={{
+                      background: ready
+                        ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
+                        : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                       color: 'white',
-                      opacity: 0.7
-                    }
-                  }}
-                  aria-label={t('add')}
-                >
-                  <AddIcon sx={{ fontSize: 22 }} />
-                </IconButton>
-              </InputAdornment>
-            ),
+                      width: 40, height: 40,
+                      borderRadius: '10px',
+                      boxShadow: ready ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        background: ready
+                          ? 'linear-gradient(135deg, #0D9488, #0F766E)'
+                          : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                        boxShadow: ready ? '0 3px 10px rgba(20, 184, 166, 0.45)' : 'none'
+                      },
+                      '&:active': { transform: ready ? 'scale(0.92)' : 'none' },
+                      '&.Mui-disabled': { color: 'white', opacity: 0.7 }
+                    }}
+                    aria-label={t('add')}
+                  >
+                    <AddIcon sx={{ fontSize: 22 }} />
+                  </IconButton>
+                </InputAdornment>
+              );
+            })(),
             'aria-label': t('quickAddPlaceholder')
           }}
         />

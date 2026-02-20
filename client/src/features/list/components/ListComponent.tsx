@@ -7,189 +7,122 @@ import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 
 // ===== אנימציות חגיגה =====
-// חלקיקים עולים מלמטה
 const floatUp = keyframes`
   0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
   70% { opacity: 1; }
   100% { transform: translateY(-110vh) rotate(540deg) scale(0.2); opacity: 0; }
 `;
 
-// חלקיקים יורדים מלמעלה (מאזור הבר)
 const fallDown = keyframes`
   0% { transform: translateY(0) rotate(0deg) scale(0); opacity: 0; }
   15% { transform: translateY(10px) rotate(30deg) scale(1.2); opacity: 1; }
   100% { transform: translateY(90vh) rotate(360deg) scale(0.3); opacity: 0; }
 `;
 
-// ניצוצות מנצנצים
 const sparkle = keyframes`
   0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
-  25% { transform: scale(1) rotate(90deg); opacity: 1; }
-  50% { transform: scale(0.6) rotate(180deg); opacity: 0.8; }
-  75% { transform: scale(1.2) rotate(270deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
 `;
 
-// הבזק אור ירוק ברקע
 const flashBg = keyframes`
   0% { opacity: 0; }
   15% { opacity: 0.15; }
   100% { opacity: 0; }
 `;
 
-const CELEBRATION_COLORS = ['#14B8A6', '#F59E0B', '#EC4899', '#8B5CF6', '#22C55E', '#3B82F6', '#06B6D4', '#FBBF24', '#A78BFA', '#34D399'];
-const CELEBRATION_EMOJIS = ['🎉', '✨', '⭐', '🛒', '✅', '🎊'];
+const COLORS = ['#14B8A6', '#F59E0B', '#EC4899', '#8B5CF6', '#22C55E', '#3B82F6', '#06B6D4', '#FBBF24', '#A78BFA', '#34D399'];
+const EMOJIS = ['🎉', '✨', '⭐', '🛒', '✅', '🎊'];
+
+type ParticleType = 'confetti' | 'emoji' | 'sparkle';
+
+interface Particle {
+  id: number;
+  type: ParticleType;
+  left: string;
+  top?: string;
+  delay: string;
+  duration: string;
+  color: string;
+  w: number;
+  h: number;
+  round: boolean;
+  direction: 'up' | 'down';
+  emoji?: string;
+}
+
+// יצירת חלקיק קונפטי
+const makeConfetti = (id: number, direction: 'up' | 'down'): Particle => {
+  const size = 5 + Math.random() * 8;
+  const isRect = id % 3 === 2;
+  return {
+    id, type: 'confetti', direction,
+    left: `${(direction === 'down' ? 10 : 0) + Math.random() * (direction === 'down' ? 80 : 100)}%`,
+    delay: `${Math.random() * 0.4}s`,
+    duration: `${2 + Math.random() * 1.5}s`,
+    color: COLORS[id % COLORS.length],
+    w: isRect ? size * 1.5 : size,
+    h: isRect ? size * 0.6 : size,
+    round: id % 3 === 0
+  };
+};
 
 const CelebrationOverlay = memo(() => {
-  const particles = useMemo(() => {
-    const items: Array<{
-      id: number;
-      left: string;
-      top?: string;
-      delay: string;
-      duration: string;
-      color: string;
-      size: number;
-      shape: number;
-      direction: 'up' | 'down';
-      emoji?: string;
-    }> = [];
-
-    // גל 1: חלקיקים עולים מלמטה (20 חלקיקים)
-    for (let i = 0; i < 20; i++) {
-      items.push({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 0.3}s`,
-        duration: `${2 + Math.random() * 1.5}s`,
-        color: CELEBRATION_COLORS[i % CELEBRATION_COLORS.length],
-        size: 6 + Math.random() * 8,
-        shape: i % 4,
-        direction: 'up'
-      });
-    }
-
-    // גל 2: חלקיקים יורדים מלמעלה - מרגיש כאילו הבר התפוצץ (20 חלקיקים)
-    for (let i = 0; i < 20; i++) {
-      items.push({
-        id: 20 + i,
-        left: `${10 + Math.random() * 80}%`,
-        delay: `${0.1 + Math.random() * 0.4}s`,
-        duration: `${2.5 + Math.random() * 1.5}s`,
-        color: CELEBRATION_COLORS[i % CELEBRATION_COLORS.length],
-        size: 5 + Math.random() * 7,
-        shape: i % 4,
-        direction: 'down'
-      });
-    }
-
-    // גל 3: אמוג'ים מעורבבים (8 אמוג'ים)
-    for (let i = 0; i < 8; i++) {
-      items.push({
-        id: 40 + i,
-        left: `${5 + Math.random() * 90}%`,
-        delay: `${0.2 + Math.random() * 0.6}s`,
-        duration: `${2.5 + Math.random() * 1}s`,
-        color: '',
-        size: 16 + Math.random() * 8,
-        shape: -1,
-        direction: i % 2 === 0 ? 'up' : 'down',
-        emoji: CELEBRATION_EMOJIS[i % CELEBRATION_EMOJIS.length]
-      });
-    }
-
-    // ניצוצות קטנים (12 כוכבים)
-    for (let i = 0; i < 12; i++) {
-      items.push({
-        id: 48 + i,
+  const particles = useMemo((): Particle[] => [
+    // 20 חלקיקים עולים + 20 יורדים
+    ...Array.from({ length: 20 }, (_, i) => makeConfetti(i, 'up')),
+    ...Array.from({ length: 20 }, (_, i) => makeConfetti(20 + i, 'down')),
+    // 8 אמוג'ים
+    ...Array.from({ length: 8 }, (_, i): Particle => ({
+      id: 40 + i, type: 'emoji', direction: i % 2 === 0 ? 'up' : 'down',
+      left: `${5 + Math.random() * 90}%`,
+      delay: `${0.2 + Math.random() * 0.6}s`,
+      duration: `${2.5 + Math.random() * 1}s`,
+      color: '', w: 0, h: 0, round: false,
+      emoji: EMOJIS[i % EMOJIS.length]
+    })),
+    // 12 ניצוצות
+    ...Array.from({ length: 12 }, (_, i): Particle => {
+      const size = 3 + Math.random() * 4;
+      return {
+        id: 48 + i, type: 'sparkle', direction: 'up',
         left: `${Math.random() * 100}%`,
         top: `${20 + Math.random() * 60}%`,
         delay: `${Math.random() * 1.5}s`,
         duration: `${1 + Math.random() * 1}s`,
-        color: '#FBBF24',
-        size: 3 + Math.random() * 4,
-        shape: 5, // ניצוץ
-        direction: 'up'
-      });
-    }
+        color: '#FBBF24', w: size, h: size, round: true
+      };
+    })
+  ], []);
 
-    return items;
-  }, []);
+  const getAnim = (p: Particle) =>
+    p.type === 'sparkle'
+      ? `${sparkle} ${p.duration} ${p.delay} ease-in-out forwards`
+      : `${p.direction === 'up' ? floatUp : fallDown} ${p.duration} ${p.delay} ease-out forwards`;
 
   return (
     <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
       {/* הבזק ירוק ברקע */}
       <Box sx={{
-        position: 'absolute',
-        inset: 0,
+        position: 'absolute', inset: 0,
         background: 'radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.3), transparent 70%)',
         animation: `${flashBg} 1.5s ease-out forwards`
       }} />
 
-      {particles.map(p => {
-        // אמוג'ים
-        if (p.emoji) {
-          return (
-            <Box
-              key={p.id}
-              sx={{
-                position: 'absolute',
-                ...(p.direction === 'up' ? { bottom: '-20px' } : { top: '60px' }),
-                left: p.left,
-                fontSize: p.size,
-                lineHeight: 1,
-                animation: `${p.direction === 'up' ? floatUp : fallDown} ${p.duration} ${p.delay} ease-out forwards`,
-              }}
-            >
-              {p.emoji}
-            </Box>
-          );
-        }
-
-        // ניצוצות
-        if (p.shape === 5) {
-          return (
-            <Box
-              key={p.id}
-              sx={{
-                position: 'absolute',
-                top: p.top,
-                left: p.left,
-                width: p.size,
-                height: p.size,
-                bgcolor: p.color,
-                borderRadius: '50%',
-                boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
-                animation: `${sparkle} ${p.duration} ${p.delay} ease-in-out forwards`,
-              }}
-            />
-          );
-        }
-
-        // חלקיקים רגילים (עיגולים, ריבועים, מלבנים, משולשים)
-        return (
-          <Box
-            key={p.id}
-            sx={{
-              position: 'absolute',
-              ...(p.direction === 'up' ? { bottom: '-10px' } : { top: '50px' }),
-              left: p.left,
-              width: p.shape === 2 ? p.size * 1.5 : p.size,
-              height: p.shape === 2 ? p.size * 0.6 : p.size,
-              bgcolor: p.shape === 3 ? 'transparent' : p.color,
-              borderRadius: p.shape === 0 ? '50%' : '2px',
-              // משולש
-              ...(p.shape === 3 && {
-                width: 0, height: 0,
-                borderLeft: `${p.size / 2}px solid transparent`,
-                borderRight: `${p.size / 2}px solid transparent`,
-                borderBottom: `${p.size}px solid ${p.color}`,
-                bgcolor: 'transparent', borderRadius: 0
-              }),
-              animation: `${p.direction === 'up' ? floatUp : fallDown} ${p.duration} ${p.delay} ease-out forwards`,
-            }}
-          />
-        );
-      })}
+      {particles.map(p => (
+        <Box key={p.id} sx={{
+          position: 'absolute',
+          left: p.left,
+          ...(p.type === 'sparkle'
+            ? { top: p.top, width: p.w, height: p.h, bgcolor: p.color, borderRadius: '50%', boxShadow: `0 0 ${p.w * 2}px ${p.color}` }
+            : p.type === 'emoji'
+              ? { [p.direction === 'up' ? 'bottom' : 'top']: p.direction === 'up' ? '-20px' : '60px', fontSize: 18, lineHeight: 1 }
+              : { [p.direction === 'up' ? 'bottom' : 'top']: p.direction === 'up' ? '-10px' : '50px', width: p.w, height: p.h, bgcolor: p.color, borderRadius: p.round ? '50%' : '2px' }
+          ),
+          animation: getAnim(p)
+        }}>
+          {p.emoji}
+        </Box>
+      ))}
     </Box>
   );
 });
