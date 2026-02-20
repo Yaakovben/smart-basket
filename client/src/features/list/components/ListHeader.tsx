@@ -8,6 +8,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import type { List, User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES, haptic } from '../../../global/helpers';
@@ -393,6 +394,52 @@ export const ListHeader = memo(({
         <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
         <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
       </Tabs>
+
+      {/* סטטוס: זמן עדכון + בר התקדמות */}
+      {(list.updatedAt || (pendingCount + purchasedCount) > 0) && (() => {
+        const total = pendingCount + purchasedCount;
+        const percent = total > 0 ? Math.round((purchasedCount / total) * 100) : 0;
+        const barColor = percent === 100
+          ? '#22C55E'
+          : percent >= 66 ? 'rgba(255,255,255,0.8)'
+          : percent >= 33 ? '#F59E0B'
+          : '#EF4444';
+        const barBg = percent === 100
+          ? 'linear-gradient(90deg, #22C55E, #16A34A)'
+          : barColor;
+
+        return (
+          <Box sx={{ mt: 0.75 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
+              {list.updatedAt && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                  <AccessTimeIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
+                  <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                    {t('updated')} {getTimeAgo(list.updatedAt, t)}
+                  </Typography>
+                </Box>
+              )}
+              {total > 0 && (
+                <Typography sx={{ color: barColor, fontSize: 10, fontWeight: 600, transition: 'color 0.3s ease' }}>
+                  {percent === 100 ? '✓' : `${percent}%`}
+                </Typography>
+              )}
+            </Box>
+            {total > 0 && (
+              <Box sx={{ height: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+                <Box sx={{
+                  height: '100%',
+                  width: `${percent}%`,
+                  background: barBg,
+                  borderRadius: 1,
+                  transition: 'width 0.5s ease, background 0.3s ease',
+                  boxShadow: `0 0 4px ${barColor}40`
+                }} />
+              </Box>
+            )}
+          </Box>
+        );
+      })()}
     </Box>
   );
 });
