@@ -168,10 +168,24 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {error.includes(':') && error === t('cacheError') && (
                   <Button
                     href="/clear-cache"
-                    size="small"
-                    sx={{ mt: 0.5, fontWeight: 600, fontSize: 12, textTransform: 'none', color: 'inherit', textDecoration: 'underline', p: 0, minWidth: 'auto' }}
+                    variant="contained"
+                    fullWidth
+                    sx={{
+                      mt: 1.5,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      textTransform: 'none',
+                      bgcolor: '#14B8A6',
+                      color: 'white',
+                      borderRadius: '12px',
+                      py: 1.5,
+                      boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
+                      '&:hover': { bgcolor: '#0D9488' },
+                      '&:active': { transform: 'scale(0.97)' },
+                      transition: 'all 0.15s ease'
+                    }}
                   >
-                    {t('clearCacheAndReload')}
+                    🔄 {t('clearCacheAndReload')}
                   </Button>
                 )}
               </Box>
@@ -326,10 +340,24 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                       {error.includes(':') && error === t('cacheError') && (
                         <Button
                           href="/clear-cache"
-                          size="small"
-                          sx={{ mt: 0.5, fontWeight: 600, fontSize: 12, textTransform: 'none', color: 'inherit', textDecoration: 'underline', p: 0, minWidth: 'auto' }}
+                          variant="contained"
+                          fullWidth
+                          sx={{
+                            mt: 1.5,
+                            fontWeight: 700,
+                            fontSize: 14,
+                            textTransform: 'none',
+                            bgcolor: '#14B8A6',
+                            color: 'white',
+                            borderRadius: '12px',
+                            py: 1.5,
+                            boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
+                            '&:hover': { bgcolor: '#0D9488' },
+                            '&:active': { transform: 'scale(0.97)' },
+                            transition: 'all 0.15s ease'
+                          }}
                         >
-                          {t('clearCacheAndReload')}
+                          🔄 {t('clearCacheAndReload')}
                         </Button>
                       )}
                     </Box>

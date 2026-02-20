@@ -152,7 +152,7 @@ export function useSocketNotifications(
 
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const event = data as ProductEventData;
-      handleProductEvent(event, 'productPurchase', 'product_purchase',
+      handleProductEvent(event, 'productPurchase', event.isPurchased ? 'product_purchase' : 'product_unpurchase',
         (name, product) => `${name} ${event.isPurchased ? tRef.current('purchasedNotif') : tRef.current('unmarkedPurchasedNotif')} "${product}"`);
     });
 

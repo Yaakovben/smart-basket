@@ -368,6 +368,14 @@ export const EditListModal = memo(({
   const [showPasswordStep, setShowPasswordStep] = useState(false);
   const [convertPassword, setConvertPassword] = useState('');
 
+  // איפוס state מקומי כשהמודאל נסגר
+  useEffect(() => {
+    if (!isOpen) {
+      setShowPasswordStep(false);
+      setConvertPassword('');
+    }
+  }, [isOpen]);
+
   if (!isOpen || !editData) return null;
 
   const icons = list.isGroup ? GROUP_ICONS : LIST_ICONS;

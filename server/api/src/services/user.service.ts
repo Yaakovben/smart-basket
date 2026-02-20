@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { UserDAL, ListDAL, NotificationDAL, PushSubscriptionDAL } from '../dal';
+import { UserDAL, ListDAL, ProductDAL, NotificationDAL, PushSubscriptionDAL } from '../dal';
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
@@ -88,7 +88,9 @@ export class UserService {
 
     try {
       await session.withTransaction(async () => {
-        // 1. מחיקת רשימות פרטיות בלבד
+        // 1. מחיקת מוצרים ורשימות פרטיות
+        const privateListIds = await ListDAL.findPrivateListIds(userId, session);
+        await ProductDAL.deleteByListIds(privateListIds, session);
         await ListDAL.deletePrivateLists(userId, session);
 
         // 2. טיפול ברשימות קבוצתיות שהמשתמש בעלים
@@ -103,6 +105,8 @@ export class UserService {
             const newOwner = otherMembers.find((m) => m.isAdmin) || otherMembers[0];
             await ListDAL.transferOwnership(group._id.toString(), newOwner.user, session);
           } else {
+            // מחיקת מוצרי הקבוצה הריקה לפני מחיקתה
+            await ProductDAL.deleteByListIds([group._id.toString()], session);
             await ListDAL.deleteByIdWithSession(group._id.toString(), session);
           }
         }

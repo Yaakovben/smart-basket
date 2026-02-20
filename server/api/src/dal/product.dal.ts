@@ -74,6 +74,17 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
     return result.deletedCount;
   }
 
+  // מחיקת מוצרים של מספר רשימות (עם תמיכה בטרנזקציה)
+  async deleteByListIds(listIds: string[], session?: mongoose.ClientSession): Promise<number> {
+    if (listIds.length === 0) return 0;
+    const objectIds = listIds.map(id => new mongoose.Types.ObjectId(id));
+    const result = await this.model.deleteMany(
+      { listId: { $in: objectIds } },
+      session ? { session } : undefined,
+    );
+    return result.deletedCount;
+  }
+
   async reorderProducts(listId: string, productIds: string[]): Promise<void> {
     const bulkOps = productIds.map((id, index) => ({
       updateOne: {

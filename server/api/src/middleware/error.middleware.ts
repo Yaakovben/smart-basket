@@ -62,7 +62,7 @@ export const errorHandler = (
   };
 
   // לוג מפורט לכל שגיאה עם כל פרטי הבקשה
-  const userId = (req as unknown as { user?: { userId?: string } }).user?.userId;
+  const userId = (req as unknown as { user?: { id?: string } }).user?.id;
   logger.error(`[${statusCode}] ${err.name}: ${err.message}`, {
     method: req.method,
     url: req.originalUrl,

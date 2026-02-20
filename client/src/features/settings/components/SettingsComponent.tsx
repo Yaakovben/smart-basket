@@ -352,10 +352,18 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
-        {/* Show clear cache button only when there's an update available */}
+        {/* כפתור ניקוי מטמון, מוצג רק כשיש עדכון זמין */}
         {hasUpdate && (
           <Paper
-            sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2, border: '2px solid', borderColor: 'warning.main', cursor: 'pointer', '&:active': { transform: 'scale(0.98)' }, transition: 'transform 0.1s' }}
+            sx={{
+              borderRadius: '16px', overflow: 'hidden', mt: 2, cursor: 'pointer',
+              background: isDark
+                ? 'linear-gradient(135deg, #0D9488, #047857)'
+                : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+              '&:active': { transform: 'scale(0.97)', opacity: 0.9 },
+              transition: 'transform 0.15s, opacity 0.15s',
+              boxShadow: '0 4px 16px rgba(20, 184, 166, 0.3)',
+            }}
             onClick={async () => {
               if ('caches' in window) {
                 const cacheNames = await caches.keys();
@@ -369,14 +377,14 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2.5 }}>
-              <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: 'warning.main', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+              <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
                 🔄
               </Box>
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontWeight: 600, fontSize: 16, color: 'warning.dark' }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'white' }}>
                   {t('clearCacheRefresh')}
                 </Typography>
-                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', mt: 0.25 }}>
                   {t('version')} {t('appName')}
                 </Typography>
               </Box>

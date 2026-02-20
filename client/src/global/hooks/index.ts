@@ -499,11 +499,10 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       const listToLeave = lists.find((l) => l.id === listId);
 
       // הסרה מיידית מה-UI (אופטימיסטי)
-      socketService.leaveList(listId);
       setLists((prev) => prev.filter((l) => l.id !== listId));
 
       try {
-        // הודעת socket לחברי הקבוצה ברקע
+        // הודעת socket לחברי הקבוצה לפני עזיבת החדר
         if (listToLeave) {
           await new Promise<void>((resolve) => {
             socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
@@ -512,6 +511,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
             setTimeout(resolve, 5000);
           });
         }
+        // עזיבת חדר הסוקט רק אחרי שההודעה נשלחה
+        socketService.leaveList(listId);
         await listsApi.leaveGroup(listId);
       } catch (error) {
         // Rollback - החזרת הרשימה ל-UI

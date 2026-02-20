@@ -46,13 +46,15 @@ class SocketService {
       this.emit('connect', undefined);
     });
 
-    // רישום ריק למניעת אזהרות unhandled; הטיפול בנתק מתבצע דרך בדיקת connected
-    this.socket.on('disconnect', () => {});
+    // העברת אירוע ניתוק למאזינים פנימיים (נוכחות, וכו')
+    this.socket.on('disconnect', () => {
+      this.emit('disconnect', undefined);
+    });
 
     // שגיאת אימות: רענון טוקן דרך הפונקציה המרכזית המשותפת
     this.socket.on('connect_error', async (error) => {
       const msg = error.message.toLowerCase();
-      const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
+      const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('token expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
       if (isAuthError) {
         // שימוש ברענון המרכזי, אותה פונקציה שה HTTP interceptor משתמש בה
         // מונע race condition עם refresh token rotation

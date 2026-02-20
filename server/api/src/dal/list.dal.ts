@@ -121,6 +121,12 @@ class ListDALClass extends BaseDAL<IList> {
   }
 
   // מתודות עם session לטרנזקציות
+  async findPrivateListIds(ownerId: string, session: ClientSession): Promise<string[]> {
+    const uid = new mongoose.Types.ObjectId(ownerId);
+    const lists = await this.model.find({ owner: uid, isGroup: false }, { _id: 1 }).session(session).lean();
+    return lists.map(l => l._id.toString());
+  }
+
   async deletePrivateLists(ownerId: string, session: ClientSession): Promise<number> {
     const uid = new mongoose.Types.ObjectId(ownerId);
     const result = await this.model.deleteMany({ owner: uid, isGroup: false }, { session });
