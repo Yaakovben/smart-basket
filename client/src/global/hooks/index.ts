@@ -207,7 +207,7 @@ export function useAuth() {
   return { user, login, logout, updateUser, isAuthenticated: !!user, loading, initialData };
 }
 
-// Convert API member to client format
+// המרת חבר מפורמט API לפורמט לקוח
 export const convertApiMember = (apiMember: ApiMember): Member => ({
   id: apiMember.user.id,
   name: apiMember.user.name,
@@ -218,7 +218,7 @@ export const convertApiMember = (apiMember: ApiMember): Member => ({
   joinedAt: apiMember.joinedAt,
 });
 
-// Convert API product to client format
+// המרת מוצר מפורמט API לפורמט לקוח
 export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   id: p.id,
   name: p.name,
@@ -230,7 +230,7 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   createdAt: p.createdAt,
 });
 
-// Convert API list to client format
+// המרת רשימה מפורמט API לפורמט לקוח
 export const convertApiList = (apiList: ApiList): List => ({
   id: apiList.id,
   name: apiList.name,
@@ -383,7 +383,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       );
       // שליחת אירוע socket לקבוצות להודעה בזמן אמת לחברים
       if (updatedList.isGroup && user && oldList) {
-        // Determine what changed
+        // זיהוי מה השתנה
         const nameChanged = oldList.name !== updatedList.name;
         const designChanged = oldList.icon !== updatedList.icon || oldList.color !== updatedList.color;
 
@@ -398,7 +398,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
         socketService.emitListUpdated(
           updatedList.id,
-          oldList.name, // Send old name for context
+          oldList.name, // שם ישן להקשר
           user.name,
           changeType,
           nameChanged ? updatedList.name : undefined

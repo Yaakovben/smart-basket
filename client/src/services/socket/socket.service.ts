@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { getAccessToken, getRefreshToken, setTokens } from '../api/client';
+import { getAccessToken, refreshAccessToken, isTokenExpired } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
@@ -15,15 +15,12 @@ const RECONNECTION_CONFIG = {
 
 type SocketEventHandler<T> = (data: T) => void;
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
-
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<SocketEventHandler<unknown>>> = new Map();
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
-  private refreshTokenPromise: Promise<void> | null = null;
 
   connect() {
     const token = getAccessToken();
@@ -51,21 +48,19 @@ class SocketService {
 
     this.socket.on('disconnect', () => {});
 
+    // שגיאת אימות: רענון טוקן דרך הפונקציה המרכזית המשותפת
     this.socket.on('connect_error', async (error) => {
-      // שגיאת אימות ספציפית בלבד, לא שגיאות רשת כלליות
       const msg = error.message.toLowerCase();
       const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
       if (isAuthError) {
-        // נעילה, קריאות מקבילות ממתינות לרענון הראשון
-        if (this.refreshTokenPromise) {
-          await this.refreshTokenPromise;
-          return;
-        }
-        this.refreshTokenPromise = this.doTokenRefresh();
-        try {
-          await this.refreshTokenPromise;
-        } finally {
-          this.refreshTokenPromise = null;
+        // שימוש ברענון המרכזי, אותה פונקציה שה HTTP interceptor משתמש בה
+        // מונע race condition עם refresh token rotation
+        const newToken = await refreshAccessToken();
+        if (newToken && this.socket) {
+          this.socket.auth = { token: newToken };
+          if (!this.socket.connected) {
+            this.socket.connect();
+          }
         }
       }
     });
@@ -77,34 +72,7 @@ class SocketService {
     this.setupOnlineHandler();
   }
 
-  private async doTokenRefresh(): Promise<void> {
-    try {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken || !this.socket) return;
-
-      const response = await fetch(`${API_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-      const { accessToken, refreshToken: newRefreshToken } = data.data;
-      setTokens(accessToken, newRefreshToken);
-      this.socket.auth = { token: accessToken };
-      // חיבור מחדש מיידי עם הטוקן החדש
-      if (!this.socket.connected) {
-        this.socket.connect();
-      }
-    } catch {
-      // רענון נכשל, הטוקן לא תקף
-    }
-  }
-
-  // חזרה מרקע (מובייל), וידוא חיבור
+  // חזרה מרקע (מובייל), רענון טוקן פרואקטיבי לפני חיבור מחדש
   private setupVisibilityHandler() {
     if (this.visibilityHandler) {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
@@ -113,20 +81,36 @@ class SocketService {
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         if (!this.socket?.connected) {
-          const token = getAccessToken();
-          if (token) {
-            if (this.socket) {
-              this.socket.auth = { token };
-              this.socket.connect();
-            } else {
-              this.connect();
-            }
-          }
+          // רענון פרואקטיבי: לא מתחברים עם טוקן פג תוקף
+          this.reconnectWithFreshToken();
         }
       }
     };
 
     document.addEventListener('visibilitychange', this.visibilityHandler);
+  }
+
+  // חיבור מחדש עם טוקן תקף, מרענן אם צריך
+  private async reconnectWithFreshToken() {
+    let token = getAccessToken();
+    if (!token) return;
+
+    // אם הטוקן פג, מרענן קודם לפני חיבור
+    if (isTokenExpired()) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        token = newToken;
+      } else {
+        return; // לא הצלחנו לרענן, לא מתחברים
+      }
+    }
+
+    if (this.socket) {
+      this.socket.auth = { token };
+      this.socket.connect();
+    } else {
+      this.connect();
+    }
   }
 
   // חזרת רשת, וידוא חיבור
@@ -137,11 +121,7 @@ class SocketService {
 
     this.onlineHandler = () => {
       if (this.socket && !this.socket.connected) {
-        const token = getAccessToken();
-        if (token) {
-          this.socket.auth = { token };
-          this.socket.connect();
-        }
+        this.reconnectWithFreshToken();
       }
     };
 
@@ -237,7 +217,7 @@ class SocketService {
     return this.socket?.connected ?? false;
   }
 
-  // עדכון טוקן, נקרא בעת רענון ע"י HTTP client
+  // עדכון טוקן, נקרא בעת רענון על ידי HTTP client
   updateToken(newToken: string) {
     if (this.socket) {
       this.socket.auth = { token: newToken };

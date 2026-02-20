@@ -51,10 +51,83 @@ export const clearTokens = () => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// הוספת טוקן אימות ומניעת cache (Interceptor)
+// ===== רענון טוקן מרכזי =====
+// פונקציה אחת משותפת ל HTTP interceptor ול socket service
+// מונעת race condition כשגם ה HTTP וגם הsocket מנסים לרענן במקביל
+let sharedRefreshPromise: Promise<string | null> | null = null;
+
+/** בדיקה אם הטוקן פג תוקף או עומד לפוג (מרווח 30 שניות) */
+export function isTokenExpired(): boolean {
+  const token = getAccessToken();
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    // מרווח ביטחון של 30 שניות לפני תפוגה בפועל
+    return !payload.exp || payload.exp * 1000 < Date.now() + 30000;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * רענון טוקן משותף עם deduplication
+ * אם כמה קריאות מנסות לרענן במקביל, רק בקשה אחת יוצאת לשרת
+ * מחזיר access token חדש או null אם נכשל
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  // אם כבר מתבצע רענון, ממתינים לאותו promise
+  if (sharedRefreshPromise) return sharedRefreshPromise;
+
+  sharedRefreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      // שימוש ב axios ישיר (לא apiClient) למניעת interceptor רקורסיבי
+      const response = await axios.post(`${API_URL}/auth/refresh`, {
+        refreshToken,
+      }, { timeout: 10000 });
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      setTokens(accessToken, newRefreshToken);
+      return accessToken;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      // שגיאת אימות מהשרת: refresh token לא תקף, מנקים טוקנים
+      if (axiosError.response) {
+        clearTokens();
+      }
+      // שגיאת רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
+      return null;
+    }
+  })();
+
+  try {
+    return await sharedRefreshPromise;
+  } finally {
+    sharedRefreshPromise = null;
+  }
+}
+
+// ===== Request Interceptor =====
+// רענון פרואקטיבי: אם הטוקן פג, מרענן לפני שליחת הבקשה
+// מונע 401 מיותרים ושיפור חוויית משתמש
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken();
+  async (config: InternalAxiosRequestConfig) => {
+    let token = getAccessToken();
+
+    // רענון פרואקטיבי אם הטוקן פג תוקף או עומד לפוג
+    if (token && isTokenExpired()) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        token = newToken;
+        // עדכון socket עם הטוקן החדש
+        socketService.updateToken(newToken);
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -76,24 +149,9 @@ apiClient.interceptors.request.use(
   }
 );
 
-// רענון טוקן אוטומטי בשגיאת 401 (Interceptor)
-let isRefreshing = false;
+// ===== Response Interceptor =====
+// טיפול ב 401 כ fallback: אם הרענון הפרואקטיבי לא עזר
 let isRedirecting = false;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}> = [];
-
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
-    }
-  });
-  failedQueue = [];
-};
 
 apiClient.interceptors.response.use(
   (response) => {
@@ -113,70 +171,34 @@ apiClient.interceptors.response.use(
     }, true);
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // 401 שלא טופלה כבר (fallback לרענון הפרואקטיבי)
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // הוספה לתור בקשות שממתינות לרענון
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        isRefreshing = false;
-        // לא לנווט אם בתהליך אימות, כבר בדף כניסה, או כבר במהלך ניווט
-        if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
-          isRedirecting = true;
-          clearTokens();
-          localStorage.removeItem('cached_user');
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
+      // רענון משותף עם dedup, מונע race condition עם socket
+      const newAccessToken = await refreshAccessToken();
+
+      if (newAccessToken) {
+        // עדכון socket עם הטוקן החדש
+        socketService.updateToken(newAccessToken);
+        // ניסיון חוזר של הבקשה המקורית
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return apiClient(originalRequest);
       }
 
-      try {
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        }, { timeout: 10000 });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-        setTokens(accessToken, newRefreshToken);
-
-        // סנכרון הטוקן החדש עם חיבור socket
-        socketService.updateToken(accessToken);
-
-        processQueue(null, accessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        const refreshAxiosError = refreshError as AxiosError;
-        // שגיאת רשת (ללא תגובה מהשרת), לא מתנתקים רק דוחים
-        // המשתמש יישאר מחובר עם הטוקן הקיים ויוכל לנסות שוב
-        if (!refreshAxiosError.response) {
-          return Promise.reject(refreshError);
-        }
-        // שגיאת אימות אמיתית (401/403), מתנתקים
+      // הרענון נכשל
+      // בדיקה אם הטוקנים נוקו (שגיאת אימות) או לא (שגיאת רשת)
+      if (!getRefreshToken()) {
+        // שגיאת אימות אמיתית, טוקנים נוקו, מפנים ללוגין
         if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
           isRedirecting = true;
-          clearTokens();
           localStorage.removeItem('cached_user');
           try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
           window.location.href = '/login';
         }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
+      // שגיאת רשת: הטוקנים נשמרו, המשתמש יישאר מחובר ויוכל לנסות שוב
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
