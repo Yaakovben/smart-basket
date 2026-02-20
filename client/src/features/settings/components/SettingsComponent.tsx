@@ -6,17 +6,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
-import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES, SIZES } from '../../../global/constants';
+import { LANGUAGES, ADMIN_CONFIG, COMMON_STYLES } from '../../../global/constants';
 import type { Language, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
 
-// ===== סגנונות משותפים =====
-const glassButtonSx = {
-  ...COMMON_STYLES.glassButton,
-  ...SIZES.iconButton.md,
-  color: 'white'
-};
+// ===== סגנונות =====
+const glassButtonSx = COMMON_STYLES.glassIconButton;
 const settingRowSx = {
   display: 'flex',
   alignItems: 'center',

@@ -114,6 +114,10 @@ export class ForbiddenError extends AppError {
     return new ForbiddenError('Cannot remove the owner');
   }
 
+  static cannotDeleteSelf(): ForbiddenError {
+    return new ForbiddenError('Cannot delete your own account from admin panel');
+  }
+
   static onlyOwnerCanRemoveAdmins(): ForbiddenError {
     return new ForbiddenError('Only owner can remove admins');
   }

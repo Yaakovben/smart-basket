@@ -141,6 +141,15 @@ export const COMMON_STYLES = {
     fontWeight: 600,
     color: 'text.secondary',
     mb: 1
+  },
+  // כפתור אייקון זכוכית מוכן לשימוש (ללא צורך בהרכבה בכל קובץ)
+  glassIconButton: {
+    bgcolor: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)',
+    '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
+    width: 40,
+    height: 40,
+    color: 'white'
   }
 } as const;
 

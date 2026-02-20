@@ -6,16 +6,12 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { COMMON_STYLES, SIZES } from '../../../global/helpers';
+import { COMMON_STYLES } from '../../../global/helpers';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 
-// ===== סגנונות משותפים =====
-const glassButtonSx = {
-  ...COMMON_STYLES.glassButton,
-  ...SIZES.iconButton.md,
-  color: 'white'
-};
+// ===== סגנונות =====
+const glassButtonSx = COMMON_STYLES.glassIconButton;
 
 const labelSx = {
   ...COMMON_STYLES.label,

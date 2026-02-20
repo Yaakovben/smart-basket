@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import type { ProductUnit, ProductCategory } from '../types';
+import { PRODUCT_UNITS, PRODUCT_CATEGORIES, DEFAULT_UNIT, DEFAULT_CATEGORY } from '../constants';
+import type { ProductUnit, ProductCategory } from '../constants';
 
 export interface IProductDoc extends Document {
   _id: Types.ObjectId;
@@ -38,23 +39,13 @@ const productSchema = new Schema<IProductDoc>(
     },
     unit: {
       type: String,
-      enum: ['יח׳', 'ק״ג', 'גרם', 'ליטר'],
-      default: 'יח׳',
+      enum: [...PRODUCT_UNITS],
+      default: DEFAULT_UNIT,
     },
     category: {
       type: String,
-      enum: [
-        'מוצרי חלב',
-        'מאפים',
-        'ירקות',
-        'פירות',
-        'בשר',
-        'משקאות',
-        'ממתקים',
-        'ניקיון',
-        'אחר',
-      ],
-      default: 'אחר',
+      enum: [...PRODUCT_CATEGORIES],
+      default: DEFAULT_CATEGORY,
     },
     isPurchased: {
       type: Boolean,

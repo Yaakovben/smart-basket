@@ -72,7 +72,7 @@ export class AdminController {
 
     // מניעת מחיקה עצמית
     if (userId === req.user!.id) {
-      throw ForbiddenError.notOwner();
+      throw ForbiddenError.cannotDeleteSelf();
     }
 
     await UserService.deleteAccount(userId);

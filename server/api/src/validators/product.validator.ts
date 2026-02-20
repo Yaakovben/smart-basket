@@ -1,18 +1,6 @@
 import Joi from 'joi';
 import { commonSchemas } from './common.validator';
-
-const productUnits = ['יח׳', 'ק״ג', 'גרם', 'ליטר'] as const;
-const productCategories = [
-  'מוצרי חלב',
-  'מאפים',
-  'ירקות',
-  'פירות',
-  'בשר',
-  'משקאות',
-  'ממתקים',
-  'ניקיון',
-  'אחר',
-] as const;
+import { PRODUCT_UNITS, PRODUCT_CATEGORIES, DEFAULT_UNIT, DEFAULT_CATEGORY } from '../constants';
 
 export const productValidator = {
   create: Joi.object({
@@ -26,11 +14,11 @@ export const productValidator = {
       'number.max': 'Quantity cannot exceed 99999',
     }),
     unit: Joi.string()
-      .valid(...productUnits)
-      .default('יח׳'),
+      .valid(...PRODUCT_UNITS)
+      .default(DEFAULT_UNIT),
     category: Joi.string()
-      .valid(...productCategories)
-      .default('אחר'),
+      .valid(...PRODUCT_CATEGORIES)
+      .default(DEFAULT_CATEGORY),
   }),
 
   update: Joi.object({
@@ -42,8 +30,8 @@ export const productValidator = {
       'number.min': 'Quantity must be at least 1',
       'number.max': 'Quantity cannot exceed 99999',
     }),
-    unit: Joi.string().valid(...productUnits),
-    category: Joi.string().valid(...productCategories),
+    unit: Joi.string().valid(...PRODUCT_UNITS),
+    category: Joi.string().valid(...PRODUCT_CATEGORIES),
     isPurchased: Joi.boolean(),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
@@ -70,9 +58,8 @@ export const productValidator = {
   }),
 };
 
-// Type exports
-export type ProductUnit = (typeof productUnits)[number];
-export type ProductCategory = (typeof productCategories)[number];
+// ייבוא טיפוסים מהקבועים
+import type { ProductUnit, ProductCategory } from '../constants';
 
 export type CreateProductInput = {
   name: string;

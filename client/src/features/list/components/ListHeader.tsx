@@ -9,16 +9,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
-import { COMMON_STYLES, SIZES, haptic } from '../../../global/helpers';
+import { COMMON_STYLES, haptic } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 
 // ===== סגנונות =====
-const glassButtonSx = {
-  ...COMMON_STYLES.glassButton,
-  ...SIZES.iconButton.md
-};
+const glassButtonSx = COMMON_STYLES.glassIconButton;
 
 // ===== Props =====
 interface ListHeaderProps {

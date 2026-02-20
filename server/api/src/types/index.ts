@@ -32,17 +32,8 @@ export interface IUserResponse {
 }
 
 // ===== טיפוסי מוצר =====
-export type ProductUnit = 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
-export type ProductCategory =
-  | 'מוצרי חלב'
-  | 'מאפים'
-  | 'ירקות'
-  | 'פירות'
-  | 'בשר'
-  | 'משקאות'
-  | 'ממתקים'
-  | 'ניקיון'
-  | 'אחר';
+import type { ProductUnit, ProductCategory } from '../constants';
+export type { ProductUnit, ProductCategory };
 
 export interface IProductResponse {
   id: string;

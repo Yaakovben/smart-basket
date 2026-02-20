@@ -17,7 +17,7 @@ import type { List, Product, User } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
-import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES } from '../../../global/helpers';
+import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES, COMMON_STYLES } from '../../../global/helpers';
 import { Modal, ConfirmModal, ListMenu } from '../../../global/components';
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -42,13 +42,8 @@ const shakeKeyframes = {
   }
 };
 
-// ===== סגנונות משותפים =====
-const glassButtonSx = {
-  bgcolor: 'rgba(255,255,255,0.2)',
-  backdropFilter: 'blur(10px)',
-  width: 40,
-  height: 40
-};
+// ===== סגנונות =====
+const glassButtonSx = COMMON_STYLES.glassIconButton;
 
 const iconSelectSx = (isSelected: boolean) => ({
   width: 44,
