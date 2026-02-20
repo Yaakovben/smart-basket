@@ -73,7 +73,7 @@ export class NotificationController {
 
     // מניעת התחזות: actorId חייב להתאים למשתמש המאומת
     if (String(actorId) !== req.user!.id) {
-      throw new ForbiddenError('Cannot create notifications on behalf of another user');
+      throw ForbiddenError.impersonation();
     }
 
     const notification = await NotificationService.createNotification({
@@ -99,13 +99,13 @@ export class NotificationController {
 
     // מניעת התחזות: actorId חייב להתאים למשתמש המאומת
     if (String(actorId) !== req.user!.id) {
-      throw new ForbiddenError('Cannot broadcast notifications on behalf of another user');
+      throw ForbiddenError.impersonation();
     }
 
     // אימות שהמשתמש חבר ברשימה
     const isMember = await ListDAL.isMember(listId, req.user!.id);
     if (!isMember) {
-      throw new ForbiddenError('You are not a member of this list');
+      throw ForbiddenError.notMember();
     }
 
     const notifications = await NotificationService.createNotificationsForListMembers(

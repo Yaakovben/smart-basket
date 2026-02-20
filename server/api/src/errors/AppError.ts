@@ -121,6 +121,14 @@ export class ForbiddenError extends AppError {
   static onlyOwnerCanRemoveAdmins(): ForbiddenError {
     return new ForbiddenError('Only owner can remove admins');
   }
+
+  static impersonation(): ForbiddenError {
+    return new ForbiddenError('Cannot perform actions on behalf of another user');
+  }
+
+  static notMember(): ForbiddenError {
+    return new ForbiddenError('You are not a member of this list');
+  }
 }
 
 // שגיאת לא נמצא (404)
