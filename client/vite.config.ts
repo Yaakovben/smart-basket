@@ -27,7 +27,7 @@ export default defineConfig({
         short_name: 'Smart Basket',
         description: 'רשימת קניות חכמה - פשוט, נוח, משותף',
         theme_color: '#14B8A6',
-        background_color: '#ffffff',
+        background_color: '#14B8A6',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -39,13 +39,25 @@ export default defineConfig({
             src: 'icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: 'icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
