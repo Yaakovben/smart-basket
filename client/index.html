@@ -50,7 +50,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #2DD4BF, #34D399);
+      background: #14B8A6;
       min-height: 100%;
     }
     /* Remove background once app loads (set by React) */
@@ -120,24 +120,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #2DD4BF, #34D399);
+      background: #14B8A6;
       gap: 16px;
       z-index: 9999;
       overflow: hidden;
     ">
-      <!-- App icon -->
-      <svg width="100" height="100" viewBox="0 0 512 512">
-        <rect width="512" height="512" rx="112" fill="rgba(255,255,255,0.2)"/>
-        <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white" opacity="0.95"/>
-        <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
-        <path d="M216 286 L248 318 L304 258" stroke="#2DD4BF" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-
-      <!-- App Name -->
-      <div style="color: white; font-size: 22px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0.5px;">
-        SmartBasket
-      </div>
-
       <!-- Loading dots -->
       <div class="loading-dots">
         <span></span>
