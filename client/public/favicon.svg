@@ -1,66 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bgR" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2DD4BF"/>
-      <stop offset="40%" stop-color="#14B8A6"/>
-      <stop offset="100%" stop-color="#0F766E"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#0D9488"/>
     </linearGradient>
-    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="checkG" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0F766E"/>
       <stop offset="100%" stop-color="#0D9488"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="glowSoft">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
     <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.15"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+    <filter id="checkShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F766E" flood-opacity="0.25"/>
     </filter>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bgR)"/>
 
-  <!-- Basket with shadow - clean -->
+  <!-- רקע -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- סל עם צל -->
   <g filter="url(#shadow)">
-    <path d="M158 228 L184 368 C186 380 194 390 208 390 L304 390 C318 390 326 380 328 368 L354 228 C355 223 351 218 346 218 L166 218 C161 218 157 223 158 228 Z" fill="white"/>
-    <path d="M186 218 C186 190 200 155 256 155 C312 155 326 190 326 218" stroke="white" stroke-width="24" fill="none" stroke-linecap="round"/>
+    <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white"/>
+    <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
   </g>
 
-  <!-- Hidden Y in basket - single smooth path, cleaner junction -->
-  <path d="M224 240 L256 288 L288 240" stroke="#0D9488" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.08"/>
-  <line x1="256" y1="288" x2="256" y2="350" stroke="#0D9488" stroke-width="7" stroke-linecap="round" opacity="0.08"/>
+  <!-- Y עדין -->
+  <path d="M228 250 L256 288 L284 250" stroke="#0D9488" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.09"/>
+  <line x1="256" y1="288" x2="256" y2="350" stroke="#0D9488" stroke-width="6" stroke-linecap="round" opacity="0.09"/>
 
-  <!-- Checkmark -->
-  <path d="M212 280 L244 312 L308 248" stroke="url(#checkGrad)" stroke-width="26" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Premium sparkles - mix of sizes with rich glow -->
-  <g filter="url(#glow)">
-    <!-- Hero sparkle top-right - large, bright -->
-    <path d="M388 120 L392 96 L396 120 L420 124 L396 128 L392 152 L388 128 L364 124 Z" fill="white" opacity="0.95"/>
-    <!-- Medium sparkle top-left -->
-    <path d="M122 148 L125 136 L128 148 L140 151 L128 154 L125 166 L122 154 L110 151 Z" fill="white" opacity="0.75"/>
-  </g>
-  <g filter="url(#glowSoft)">
-    <!-- Elegant elongated sparkle right -->
-    <path d="M418 175 L420 164 L422 175 L430 177 L422 179 L420 190 L418 179 L410 177 Z" fill="white" opacity="0.6"/>
-    <!-- Small sparkle upper-center -->
-    <path d="M310 108 L311 103 L312 108 L317 109 L312 110 L311 115 L310 110 L305 109 Z" fill="white" opacity="0.5"/>
-    <!-- Tiny sparkle bottom-left -->
-    <path d="M130 375 L131 371 L132 375 L136 376 L132 377 L131 381 L130 377 L126 376 Z" fill="white" opacity="0.35"/>
-    <!-- Tiny sparkle bottom-right -->
-    <path d="M378 365 L379 362 L380 365 L383 366 L380 367 L379 370 L378 367 L375 366 Z" fill="white" opacity="0.25"/>
-  </g>
-
-  <!-- Shimmer dots scattered around sparkles -->
-  <circle cx="372" cy="105" r="3" fill="white" opacity="0.6"/>
-  <circle cx="410" cy="108" r="2" fill="white" opacity="0.5"/>
-  <circle cx="405" cy="148" r="2.5" fill="white" opacity="0.45"/>
-  <circle cx="365" cy="145" r="2" fill="white" opacity="0.4"/>
-  <circle cx="428" cy="160" r="1.5" fill="white" opacity="0.35"/>
-  <circle cx="108" cy="170" r="2" fill="white" opacity="0.35"/>
-  <circle cx="140" cy="135" r="1.5" fill="white" opacity="0.3"/>
-  <circle cx="320" cy="98" r="1.5" fill="white" opacity="0.3"/>
+  <!-- וי עם צל -->
+  <path d="M214 282 L246 314 L306 254" stroke="url(#checkG)" stroke-width="24" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#checkShadow)"/>
 </svg>
