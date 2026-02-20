@@ -1,16 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- Full teal background -->
-  <rect width="64" height="64" rx="14" fill="#14B8A6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="40%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#0F766E"/>
+    </linearGradient>
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSoft">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgR)"/>
 
-  <!-- Shopping basket icon -->
-  <g fill="white">
-    <!-- Basket body -->
-    <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" fill="white" opacity="0.95"/>
-
-    <!-- Basket handles -->
-    <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
-
-    <!-- Checkmark -->
-    <path d="M26 32 L30 36 L38 28" stroke="#14B8A6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Basket with shadow - clean -->
+  <g filter="url(#shadow)">
+    <path d="M158 228 L184 368 C186 380 194 390 208 390 L304 390 C318 390 326 380 328 368 L354 228 C355 223 351 218 346 218 L166 218 C161 218 157 223 158 228 Z" fill="white"/>
+    <path d="M186 218 C186 190 200 155 256 155 C312 155 326 190 326 218" stroke="white" stroke-width="24" fill="none" stroke-linecap="round"/>
   </g>
+
+  <!-- Hidden Y in basket - single smooth path, cleaner junction -->
+  <path d="M224 240 L256 288 L288 240" stroke="#0D9488" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.08"/>
+  <line x1="256" y1="288" x2="256" y2="350" stroke="#0D9488" stroke-width="7" stroke-linecap="round" opacity="0.08"/>
+
+  <!-- Checkmark -->
+  <path d="M212 280 L244 312 L308 248" stroke="url(#checkGrad)" stroke-width="26" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Premium sparkles - mix of sizes with rich glow -->
+  <g filter="url(#glow)">
+    <!-- Hero sparkle top-right - large, bright -->
+    <path d="M388 120 L392 96 L396 120 L420 124 L396 128 L392 152 L388 128 L364 124 Z" fill="white" opacity="0.95"/>
+    <!-- Medium sparkle top-left -->
+    <path d="M122 148 L125 136 L128 148 L140 151 L128 154 L125 166 L122 154 L110 151 Z" fill="white" opacity="0.75"/>
+  </g>
+  <g filter="url(#glowSoft)">
+    <!-- Elegant elongated sparkle right -->
+    <path d="M418 175 L420 164 L422 175 L430 177 L422 179 L420 190 L418 179 L410 177 Z" fill="white" opacity="0.6"/>
+    <!-- Small sparkle upper-center -->
+    <path d="M310 108 L311 103 L312 108 L317 109 L312 110 L311 115 L310 110 L305 109 Z" fill="white" opacity="0.5"/>
+    <!-- Tiny sparkle bottom-left -->
+    <path d="M130 375 L131 371 L132 375 L136 376 L132 377 L131 381 L130 377 L126 376 Z" fill="white" opacity="0.35"/>
+    <!-- Tiny sparkle bottom-right -->
+    <path d="M378 365 L379 362 L380 365 L383 366 L380 367 L379 370 L378 367 L375 366 Z" fill="white" opacity="0.25"/>
+  </g>
+
+  <!-- Shimmer dots scattered around sparkles -->
+  <circle cx="372" cy="105" r="3" fill="white" opacity="0.6"/>
+  <circle cx="410" cy="108" r="2" fill="white" opacity="0.5"/>
+  <circle cx="405" cy="148" r="2.5" fill="white" opacity="0.45"/>
+  <circle cx="365" cy="145" r="2" fill="white" opacity="0.4"/>
+  <circle cx="428" cy="160" r="1.5" fill="white" opacity="0.35"/>
+  <circle cx="108" cy="170" r="2" fill="white" opacity="0.35"/>
+  <circle cx="140" cy="135" r="1.5" fill="white" opacity="0.3"/>
+  <circle cx="320" cy="98" r="1.5" fill="white" opacity="0.3"/>
 </svg>
