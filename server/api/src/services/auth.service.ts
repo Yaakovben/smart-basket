@@ -1,5 +1,5 @@
 import { UserDAL, LoginActivityDAL } from '../dal';
-import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
+import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
 import { TokenService } from './token.service';
 import { env } from '../config';
@@ -76,16 +76,8 @@ export class AuthService {
   ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
     const user = await UserDAL.findByEmailWithPassword(data.email);
 
-    if (!user) {
-      throw NotFoundError.user();
-    }
-
-    // חשבון Google בלבד - אין סיסמה
-    if (!user.password && user.googleId) {
-      throw ValidationError.single('email', 'This account was created with Google. Please use Google Sign-In.');
-    }
-
-    if (!user.password) {
+    // שגיאה אחידה לכל מקרי כישלון, מונעת חשיפת מידע על קיום חשבון
+    if (!user || !user.password) {
       throw AuthError.invalidCredentials();
     }
 

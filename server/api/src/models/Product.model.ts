@@ -27,7 +27,7 @@ const productSchema = new Schema<IProductDoc>(
       type: String,
       required: true,
       trim: true,
-      minlength: 1,
+      minlength: 2,
       maxlength: 100,
     },
     quantity: {
