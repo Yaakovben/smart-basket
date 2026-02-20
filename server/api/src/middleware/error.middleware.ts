@@ -6,15 +6,10 @@ import { env, logger } from '../config';
 
 export const errorHandler = (
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ) => {
-  logger.error(`${err.name}: ${err.message}`, {
-    stack: err.stack,
-    ...(err instanceof AppError && err.details && { details: err.details }),
-  });
-
   // ברירת מחדל
   let statusCode = 500;
   let message = 'Internal server error';
@@ -55,9 +50,42 @@ export const errorHandler = (
     message = `Invalid ${err.path}: ${err.value}`;
   }
 
-  // דיווח שגיאות 500 ל-Sentry
-  if (statusCode >= 500 && env.SENTRY_DSN) {
-    Sentry.captureException(err);
+  // לוג מפורט לכל שגיאה עם כל פרטי הבקשה
+  const userId = (req as unknown as { user?: { userId?: string } }).user?.userId;
+  logger.error(`[${statusCode}] ${err.name}: ${err.message}`, {
+    method: req.method,
+    url: req.originalUrl,
+    statusCode,
+    code,
+    userId,
+    params: req.params,
+    body: req.body,
+    stack: err.stack,
+    ...(err instanceof AppError && err.details && { details: err.details }),
+    ...(errors && { errors }),
+  });
+
+  // דיווח כל השגיאות ל-Sentry עם הקשר מלא
+  if (env.SENTRY_DSN) {
+    Sentry.withScope((scope) => {
+      scope.setTag('statusCode', statusCode.toString());
+      scope.setTag('errorCode', code || 'UNKNOWN');
+      scope.setTag('method', req.method);
+      scope.setTag('url', req.originalUrl);
+      if (userId) scope.setUser({ id: userId });
+      scope.setContext('request', {
+        method: req.method,
+        url: req.originalUrl,
+        params: req.params,
+        body: req.body,
+      });
+      if (errors) {
+        scope.setContext('validationErrors', { errors });
+      }
+      // 500 כ-error, 4xx כ-warning
+      scope.setLevel(statusCode >= 500 ? 'error' : 'warning');
+      Sentry.captureException(err);
+    });
   }
 
   res.status(statusCode).json({

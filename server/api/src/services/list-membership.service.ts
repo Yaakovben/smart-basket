@@ -5,6 +5,7 @@ import { NotificationService } from './notification.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import { transformList } from './list-transform.helper';
+import { logger } from '../config';
 
 export class ListMembershipService {
   static async joinGroup(
@@ -98,8 +99,9 @@ export class ListMembershipService {
         userId,
         {}
       );
-    } catch {
+    } catch (err) {
       // לא להכשיל את פעולת העזיבה אם יצירת ההתראה נכשלה
+      logger.warn('Failed to create leave notification:', { listId, userId, error: err });
     }
   }
 

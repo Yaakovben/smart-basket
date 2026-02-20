@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { validateId } from './validate-id';
 
 export type NotificationType =
   | 'join'
@@ -68,6 +69,7 @@ export const notificationsApi = {
 
   /** סימון התראה בודדת כנקראה */
   async markAsRead(notificationId: string): Promise<Notification> {
+    validateId(notificationId, 'notificationId');
     const response = await apiClient.put<{ data: Notification }>(
       `/notifications/${notificationId}/read`
     );

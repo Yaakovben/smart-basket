@@ -386,7 +386,7 @@ export const useList = ({
 
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
-      if (import.meta.env.DEV) console.error('Failed to toggle product:', error);
+      console.error('Failed to toggle product:', { productId, listId: list.id, error });
       // גלגול אחורה רק אם לא היה toggle חדש יותר
       if (toggleVersions.current.get(productId) === version) {
         updateProducts(
