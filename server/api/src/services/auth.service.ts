@@ -134,8 +134,8 @@ export class AuthService {
       throw AuthError.googleAuthFailed();
     }
 
-    // וידוא שהאימייל מאומת ב-Google
-    if (googleUser.email_verified === false) {
+    // וידוא שהאימייל מאומת ב-Google (תופס גם undefined)
+    if (googleUser.email_verified !== true) {
       throw AuthError.googleAuthFailed();
     }
 

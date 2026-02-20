@@ -50,6 +50,17 @@ export const errorHandler = (
     message = `Invalid ${err.path}: ${err.value}`;
   }
 
+  // ניקוי שדות רגישים מגוף הבקשה לפני לוג
+  const sanitizeBody = (body: Record<string, unknown> | undefined) => {
+    if (!body || typeof body !== 'object') return body;
+    const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'refreshToken', 'token'];
+    const cleaned = { ...body };
+    for (const field of sensitiveFields) {
+      if (field in cleaned) cleaned[field] = '[REDACTED]';
+    }
+    return cleaned;
+  };
+
   // לוג מפורט לכל שגיאה עם כל פרטי הבקשה
   const userId = (req as unknown as { user?: { userId?: string } }).user?.userId;
   logger.error(`[${statusCode}] ${err.name}: ${err.message}`, {
@@ -59,7 +70,7 @@ export const errorHandler = (
     code,
     userId,
     params: req.params,
-    body: req.body,
+    body: sanitizeBody(req.body as Record<string, unknown>),
     stack: err.stack,
     ...(err instanceof AppError && err.details && { details: err.details }),
     ...(errors && { errors }),
@@ -77,7 +88,7 @@ export const errorHandler = (
         method: req.method,
         url: req.originalUrl,
         params: req.params,
-        body: req.body,
+        body: sanitizeBody(req.body as Record<string, unknown>),
       });
       if (errors) {
         scope.setContext('validationErrors', { errors });
