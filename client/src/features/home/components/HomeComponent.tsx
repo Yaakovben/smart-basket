@@ -105,6 +105,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
           {count > 0 ? `${count} ${t('items')}` : totalProducts > 0 ? `✓ ${t('completed')}` : `0 ${t('items')}`}
+          {l.isGroup && l.members.length > 0 && <Typography component="span" sx={{ fontSize: 12, color: 'text.disabled' }}>{' '}· 👥 {l.members.length}</Typography>}
         </Typography>
       </Box>
       {/* אייקון מושתק + תפריט שלוש נקודות */}

@@ -55,6 +55,7 @@ export interface List {
   inviteCode?: string | null;
   password?: string | null;
   hasPassword?: boolean;
+  updatedAt?: string;
 }
 
 // ===== הודעות Toast =====

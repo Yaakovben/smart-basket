@@ -77,6 +77,13 @@ type TranslationKey =
   | 'items'
   | 'listsCount'
   | 'completed'
+  | 'justNow'
+  | 'minutesAgo'
+  | 'hoursAgo'
+  | 'daysAgo'
+  | 'agoMinutes'
+  | 'agoHours'
+  | 'agoDays'
   | 'group'
   | 'private'
   // List
@@ -443,6 +450,13 @@ export const translations: Record<Language, Translations> = {
     items: 'פריטים',
     listsCount: 'רשימות',
     completed: 'הושלם',
+    justNow: 'עכשיו',
+    minutesAgo: 'ד׳',
+    hoursAgo: 'ש׳',
+    daysAgo: 'י׳',
+    agoMinutes: 'לפני {n} דק׳',
+    agoHours: 'לפני {n} שע׳',
+    agoDays: 'לפני {n} ימים',
     group: 'משותפת',
     private: 'פרטית',
     // List
@@ -803,6 +817,13 @@ export const translations: Record<Language, Translations> = {
     items: 'items',
     listsCount: 'lists',
     completed: 'Completed',
+    justNow: 'now',
+    minutesAgo: 'm',
+    hoursAgo: 'h',
+    daysAgo: 'd',
+    agoMinutes: '{n} min ago',
+    agoHours: '{n}h ago',
+    agoDays: '{n}d ago',
     group: 'Shared',
     private: 'Private',
     // List
@@ -1163,6 +1184,13 @@ export const translations: Record<Language, Translations> = {
     items: 'товаров',
     listsCount: 'списков',
     completed: 'Завершено',
+    justNow: 'сейчас',
+    minutesAgo: 'м',
+    hoursAgo: 'ч',
+    daysAgo: 'д',
+    agoMinutes: '{n} мин назад',
+    agoHours: '{n} ч назад',
+    agoDays: '{n} д назад',
     group: 'Совместный',
     private: 'Личный',
     // List

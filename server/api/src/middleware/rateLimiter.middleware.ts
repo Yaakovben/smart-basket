@@ -51,6 +51,20 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// הגבלת שינוי סיסמה - 5 ניסיונות לשעה
+// מונע ניחוש סיסמה נוכחית
+export const passwordChangeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: {
+    success: false,
+    message: 'Too many password change attempts, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
 // הגבלת הצטרפות - 10 ניסיונות ל-15 דקות
 // מונע ניחוש קודי הזמנה
 export const joinGroupLimiter = rateLimit({

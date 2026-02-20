@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import { NotificationService } from '../services/notification.service';
 import { ListDAL } from '../dal';
 import { ForbiddenError } from '../errors';
-import { asyncHandler } from '../utils';
+import { asyncHandler, sanitizeText } from '../utils';
 import type { AuthRequest } from '../types';
 
 export class NotificationController {
@@ -79,12 +79,12 @@ export class NotificationController {
     const notification = await NotificationService.createNotification({
       type,
       listId,
-      listName,
+      listName: sanitizeText(listName),
       actorId,
-      actorName,
+      actorName: sanitizeText(actorName),
       targetUserId,
       productId,
-      productName,
+      productName: productName ? sanitizeText(productName) : undefined,
     });
 
     res.status(201).json({
@@ -112,7 +112,7 @@ export class NotificationController {
       listId,
       type,
       actorId,
-      { productId, productName }
+      { productId, productName: productName ? sanitizeText(productName) : undefined }
     );
 
     res.status(201).json({

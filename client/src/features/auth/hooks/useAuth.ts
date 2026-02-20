@@ -65,9 +65,11 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setError(t('useGoogleSignIn'));
       }
     } catch (err: unknown) {
-      const apiError = err as { code?: string; message?: string };
+      const apiError = err as { code?: string; message?: string; response?: { status?: number } };
       if (apiError.code === 'ERR_NETWORK') {
         setError(t('networkError'));
+      } else if (apiError.response?.status === 429) {
+        setError(t('tooManyAttempts'));
       } else {
         setError(apiError.message || t('unknownError'));
       }
@@ -139,6 +141,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           } else if (apiError.response?.status === 405) {
             // קורה כשמטמון ישן מחזיר תגובה עם שיטה שגויה
             setError(t('cacheError'));
+          } else if (apiError.response?.status === 429) {
+            setError(t('tooManyAttempts'));
           }
           // לשגיאות אחרות, המשך בשקט - ייבדק בעת שליחת הטופס
         } finally {
@@ -222,6 +226,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
           setError(t('networkError'));
         } else if (regApiError.message?.includes('localStorage')) {
           setError(t('localStorageError'));
+        } else if ((regApiError as { response?: { status?: number } }).response?.status === 429) {
+          setError(t('tooManyAttempts'));
         } else {
           setError(regErrorMsg || regApiError.message || t('unknownError'));
         }
@@ -252,6 +258,9 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setError(t('useGoogleSignIn'));
         setIsGoogleAccount(true);
         setEmailChecked(true);
+      } else if (apiError.response?.status === 429) {
+        haptic('heavy');
+        setError(t('tooManyAttempts'));
       } else if (apiError.response?.status === 401) {
         haptic('heavy');
         setError(t('wrongPassword'));
@@ -311,6 +320,8 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         setError(t('cacheError'));
       } else if (apiError.message?.includes('localStorage')) {
         setError(t('localStorageError'));
+      } else if (status === 429) {
+        setError(t('tooManyAttempts'));
       } else if (errorMsg) {
         setError(errorMsg);
       } else {

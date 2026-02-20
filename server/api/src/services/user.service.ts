@@ -31,6 +31,9 @@ export class UserService {
     if (data.name) {
       data.name = sanitizeText(data.name);
     }
+    if (data.avatarEmoji) {
+      data.avatarEmoji = sanitizeText(data.avatarEmoji);
+    }
 
     const user = await UserDAL.updateProfile(userId, data);
 

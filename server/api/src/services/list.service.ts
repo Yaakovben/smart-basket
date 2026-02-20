@@ -66,6 +66,9 @@ export class ListService {
     if (sanitizedData.name) {
       sanitizedData.name = sanitizeText(sanitizedData.name);
     }
+    if (sanitizedData.icon) {
+      sanitizedData.icon = sanitizeText(sanitizedData.icon);
+    }
 
     const nameChanged = sanitizedData.name && sanitizedData.name !== list.name;
     const iconChanged = sanitizedData.icon && sanitizedData.icon !== list.icon;

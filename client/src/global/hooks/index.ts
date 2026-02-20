@@ -249,6 +249,7 @@ export const convertApiList = (apiList: ApiList): List => ({
   inviteCode: apiList.inviteCode,
   password: apiList.password,
   hasPassword: apiList.hasPassword,
+  updatedAt: apiList.updatedAt,
 });
 
 // ===== useLists Hook =====

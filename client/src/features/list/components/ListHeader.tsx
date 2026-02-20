@@ -9,6 +9,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
+import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES, haptic } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -16,6 +17,19 @@ import type { ListFilter } from '../types/list-types';
 
 // ===== סגנונות =====
 const glassButtonSx = COMMON_STYLES.glassIconButton;
+
+// ===== פונקציית זמן יחסי =====
+const getTimeAgo = (dateStr: string | undefined, t: (key: TranslationKeys) => string): string => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return t('justNow');
+  if (minutes < 60) return t('agoMinutes').replace('{n}', String(minutes));
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t('agoHours').replace('{n}', String(hours));
+  const days = Math.floor(hours / 24);
+  return t('agoDays').replace('{n}', String(days));
+};
 
 // ===== Props =====
 interface ListHeaderProps {
