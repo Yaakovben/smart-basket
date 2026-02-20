@@ -371,7 +371,7 @@ export const HomeComponent = memo(({
           </Box>
         ) : (<>
           <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1, px: 0.5 }}>
-            📋 {display.length} {t('listsCount')}
+            {display.length} {t('listsCount')}
           </Typography>
           {display.map((l: List) => (
           <ListCard

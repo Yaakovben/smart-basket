@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ListController } from '../controllers';
-import { authenticate, validate } from '../middleware';
+import { authenticate, validate, joinGroupLimiter } from '../middleware';
 import { listValidator } from '../validators';
 
 const router = Router();
@@ -59,7 +59,7 @@ router.post('/', validate(listValidator.create), ListController.createList);
  *         description: Already a member
  */
 // חייב להיות לפני /:id כדי לא להתפרש כ-ID
-router.post('/join', validate(listValidator.join), ListController.joinGroup);
+router.post('/join', joinGroupLimiter, validate(listValidator.join), ListController.joinGroup);
 
 /**
  * @swagger
