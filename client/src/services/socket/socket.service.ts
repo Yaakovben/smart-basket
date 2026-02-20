@@ -46,6 +46,7 @@ class SocketService {
       this.emit('connect', undefined);
     });
 
+    // רישום ריק למניעת אזהרות unhandled; הטיפול בנתק מתבצע דרך בדיקת connected
     this.socket.on('disconnect', () => {});
 
     // שגיאת אימות: רענון טוקן דרך הפונקציה המרכזית המשותפת
@@ -65,6 +66,7 @@ class SocketService {
       }
     });
 
+    // רישום ריק למניעת אזהרות unhandled
     this.socket.on('error', () => {});
 
     this.setupEventForwarding();

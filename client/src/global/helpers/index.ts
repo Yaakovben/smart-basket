@@ -1,14 +1,14 @@
-// ===== Haptic Feedback (shared across all features) =====
-// Note: Only works on Android. iOS Safari doesn't support Vibration API in PWAs.
+// ===== רטט מישוש (משותף לכל הפיצ'רים) =====
+// עובד רק על Android. ב iOS Safari אין תמיכה ב Vibration API באפליקציות PWA.
 export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
-  // Try native vibration (Android only)
+  // רטט מקורי (Android בלבד)
   if ('vibrate' in navigator) {
     const patterns = { light: 10, medium: 20, heavy: 40 };
     navigator.vibrate(patterns[style]);
   }
 };
 
-// Re-export constants for backward compatibility
+// ייצוא חוזר של קבועים
 export {
   CATEGORY_ICONS,
   CATEGORY_TRANSLATION_KEYS,
@@ -27,13 +27,13 @@ export {
   SWIPE_CONFIG
 } from '../constants';
 
-// List operations helpers
+// פעולות רשימה
 export {
   generateInviteMessage,
   generateShareListMessage
 } from './listOperations';
 
-// Date formatting utilities
+// עיצוב תאריכים
 export {
   getLocale,
   formatDateLong,

@@ -18,9 +18,8 @@ const glassButtonSx = {
 };
 
 const labelSx = {
+  ...COMMON_STYLES.label,
   fontSize: 12,
-  fontWeight: 600,
-  color: 'text.secondary',
   mb: 0.75
 };
 

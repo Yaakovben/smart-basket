@@ -89,7 +89,7 @@ export const useHome = ({
       });
     }, 1000);
     return () => { if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current); };
-  }, [joinCooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [joinCooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps -- רק בדיקה אם קיים cooldown
 
   // ===== ערכים מחושבים =====
   const userLists = useMemo(() => lists.filter((l: List) => {

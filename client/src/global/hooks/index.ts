@@ -450,7 +450,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       try {
         const joinedList = await listsApi.joinGroup({ inviteCode: code, password });
         setLists((prev) => [...prev, convertApiList(joinedList)]);
-        // Join socket room, then notify members after server confirms join
+        // הצטרפות לחדר socket, הודעה לחברים אחרי אישור השרת
         socketService.joinList(joinedList.id, () => {
           socketService.emitMemberJoined(joinedList.id, joinedList.name, user!.name);
         });
@@ -521,7 +521,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     [user, lists],
   );
 
-  // Remove list locally without API call (for when user is removed from group)
+  // הסרת רשימה מקומית ללא קריאת API (כשמשתמש הוסר מהקבוצה)
   const removeListLocal = useCallback(
     (listId: string) => {
       socketService.leaveList(listId);
@@ -540,38 +540,38 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     [],
   );
 
-  // Extract list IDs for stable dependency tracking
+  // חילוץ מזהי רשימות למעקב תלויות יציב
   const listIds = useMemo(() => lists.map(l => l.id).join(','), [lists]);
 
-  // Refs for debounced list refetching (prevents multiple API calls for same list)
+  // משתנים לטעינה מחדש מושהית (מונע קריאות API כפולות לאותה רשימה)
   const pendingRefetchIds = useRef<Set<string>>(new Set());
   const refetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Subscribe to socket events for real-time updates
+  // הרשמה לאירועי socket לעדכונים בזמן אמת
   useEffect(() => {
     if (!user) return;
 
-    // Parse list IDs from the memoized string
+    // פירוק מזהי רשימות מהמחרוזת
     const currentIds = listIds ? listIds.split(',') : [];
 
-    // Join all list rooms
+    // הצטרפות לכל חדרי הרשימות
     currentIds.forEach((id) => socketService.joinList(id));
 
-    // Debounced refetch function - batches multiple refetch requests for same list
+    // טעינה מחדש מושהית, מאחדת בקשות מרובות לאותה רשימה
     const scheduleRefetch = (listId: string) => {
       pendingRefetchIds.current.add(listId);
 
-      // Clear existing timeout
+      // ניקוי טיימר קיים
       if (refetchTimeoutRef.current) {
         clearTimeout(refetchTimeoutRef.current);
       }
 
-      // Schedule refetch after 100ms of no new events
+      // תזמון טעינה מחדש אחרי 100ms ללא אירועים חדשים
       refetchTimeoutRef.current = setTimeout(() => {
         const idsToRefetch = Array.from(pendingRefetchIds.current);
         pendingRefetchIds.current.clear();
 
-        // Refetch each list only once
+        // טעינת כל רשימה פעם אחת בלבד
         idsToRefetch.forEach((id) => {
           listsApi.getList(id).then((updated) => {
             setLists((prev) =>
@@ -581,28 +581,27 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
               }),
             );
           }).catch(() => {
-            // Refetch failed - stale data will be shown until next sync
+            // טעינה נכשלה, נתונים ישנים יוצגו עד הסנכרון הבא
           });
         });
       }, 100);
     };
 
-    // Subscribe to list updates
+    // האזנה לעדכוני רשימות
     const unsubscribeListUpdated = socketService.on('list:updated', (data: unknown) => {
       const listData = data as { listId: string };
       scheduleRefetch(listData.listId);
     });
 
-    // Note: user:joined and user:left socket events are for PRESENCE tracking only
-    // (indicating when a user's socket connects/disconnects from the room).
-    // They fire on every app open, refresh, or network reconnect - NOT for actual
-    // group membership changes. Actual group joins/leaves go through the REST API
-    // and are stored as notifications in the database.
-    // We intentionally do NOT refetch list data on these events to avoid:
-    // 1. Unnecessary API calls on every reconnect
-    // 2. Confusing users with activity when someone just reconnects
+    // הערה: אירועי user:joined ו user:left הם למעקב נוכחות בלבד
+    // (חיבור/ניתוק socket של משתמש לחדר).
+    // הם נשלחים בכל פתיחת אפליקציה, רענון, או התחברות מחדש, לא בשינויי חברות בפועל.
+    // שינויי חברות אמיתיים עוברים דרך REST API ונשמרים כהתראות ב DB.
+    // בכוונה לא טוענים מחדש נתוני רשימות באירועים אלו כדי למנוע:
+    // 1. קריאות API מיותרות בכל התחברות מחדש
+    // 2. בלבול משתמשים עם פעילות כשמישהו רק מתחבר מחדש
 
-    // Subscribe to product events - all use debounced refetch
+    // האזנה לאירועי מוצרים, כולם משתמשים בטעינה מושהית
     const unsubscribeProductAdded = socketService.on('product:added', (data: unknown) => {
       const eventData = data as { listId: string };
       scheduleRefetch(eventData.listId);
@@ -623,17 +622,17 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       scheduleRefetch(eventData.listId);
     });
 
-    // Subscribe to member change events (join/leave/removed) to update members list
+    // האזנה לשינויי חברות (הצטרפות/עזיבה/הסרה) לעדכון רשימת החברים
     const unsubscribeNotificationNew = socketService.on('notification:new', (data: unknown) => {
       const eventData = data as { type: string; listId: string; userId: string };
-      // Only refetch on member changes, not on other notification types
+      // טעינה מחדש רק בשינויי חברות, לא בסוגי התראות אחרים
       if (['join', 'leave', 'removed'].includes(eventData.type)) {
         scheduleRefetch(eventData.listId);
       }
     });
 
     return () => {
-      // Clear pending refetch timeout
+      // ניקוי טיימר טעינה ממתינה
       if (refetchTimeoutRef.current) {
         clearTimeout(refetchTimeoutRef.current);
       }
@@ -643,14 +642,14 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       unsubscribeProductDeleted();
       unsubscribeProductToggled();
       unsubscribeNotificationNew();
-      // Leave all rooms on cleanup (currentIds captured from closure)
+      // יציאה מכל החדרים בניקוי
       currentIds.forEach((id) => socketService.leaveList(id));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id or list IDs change
   }, [user?.id, listIds]);
 
-  // Refetch all lists when app returns to foreground (e.g. after push notification click)
-  // Socket events fired while app was backgrounded are lost, so we need a fresh fetch
+  // טעינת כל הרשימות מחדש כשהאפליקציה חוזרת לחזית (למשל אחרי לחיצה על התראה)
+  // אירועי socket שנשלחו בזמן שהאפליקציה ברקע אבדו, לכן צריך טעינה חדשה
   useEffect(() => {
     if (!user) return;
 

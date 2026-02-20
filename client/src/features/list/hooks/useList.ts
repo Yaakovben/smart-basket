@@ -151,7 +151,7 @@ export const useList = ({
 
   // ===== אפקטים =====
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: hide FAB when items count drops
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- הסתרת FAB כשמספר הפריטים קטן
     if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
   }, [items.length]);
 

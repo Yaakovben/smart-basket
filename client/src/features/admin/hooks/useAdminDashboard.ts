@@ -45,7 +45,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     try {
       const [usersData, activityData] = await Promise.all([
         adminApi.getUsers(),
-        adminApi.getLoginActivity(1, 500), // Get up to 500 activities
+        adminApi.getLoginActivity(1, 500), // עד 500 פעילויות
       ]);
 
       setAllUsers(usersData.map(convertApiUser));

@@ -26,7 +26,7 @@ const loadSettings = (): AppSettings => {
       return { ...DEFAULT_SETTINGS, ...parsed, notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications } };
     }
   } catch {
-    // ignore
+    // התעלמות משגיאת localStorage
   }
   return DEFAULT_SETTINGS;
 };

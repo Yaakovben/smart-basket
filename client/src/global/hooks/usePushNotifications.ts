@@ -14,7 +14,7 @@ interface UsePushNotificationsReturn {
 
 /** בדיקה אם האפליקציה רצה כ-PWA מותקן */
 function checkPwaInstalled(): boolean {
-  // iOS Safari standalone mode
+  // מצב standalone ב iOS Safari
   if ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone) {
     return true;
   }
