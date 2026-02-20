@@ -535,10 +535,11 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   );
 
   // עדכון מוצרים אטומי - משתמש ב-functional state update למניעת stale closures
+  // מעדכן גם את updatedAt כדי שזמן העדכון יתרענן ב-UI
   const updateProductsForList = useCallback(
     (listId: string, updater: (products: Product[]) => Product[]) => {
       setLists((prev) =>
-        prev.map((l) => l.id === listId ? { ...l, products: updater(l.products) } : l),
+        prev.map((l) => l.id === listId ? { ...l, products: updater(l.products), updatedAt: new Date().toISOString() } : l),
       );
     },
     [],

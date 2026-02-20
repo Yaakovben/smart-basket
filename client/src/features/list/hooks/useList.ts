@@ -86,6 +86,8 @@ export const useList = ({
   // ===== חגיגת השלמת רשימה =====
   const [showCelebration, setShowCelebration] = useState(false);
   const celebrationTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // דגל שמסמן שהמשתמש סימן מוצר כנקנה (לזיהוי חגיגה ב-useEffect)
+  const justMarkedPurchased = useRef(false);
 
   // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
@@ -156,6 +158,21 @@ export const useList = ({
   }, [items.length]);
 
   useEffect(() => () => clearTimeout(celebrationTimer.current), []);
+
+  // זיהוי חגיגה: כל המוצרים נקנו + המשתמש זה עתה סימן מוצר
+  useEffect(() => {
+    if (
+      justMarkedPurchased.current &&
+      list.products.length > 0 &&
+      list.products.every((p: Product) => p.isPurchased)
+    ) {
+      justMarkedPurchased.current = false;
+      clearTimeout(celebrationTimer.current);
+      setShowCelebration(true);
+      haptic('heavy');
+      celebrationTimer.current = setTimeout(() => setShowCelebration(false), 3000);
+    }
+  }, [list.products]);
 
   // ===== מטפלי גרירת FAB =====
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -361,27 +378,19 @@ export const useList = ({
     const version = (toggleVersions.current.get(productId) || 0) + 1;
     toggleVersions.current.set(productId, version);
 
+    // סימון דגל לזיהוי חגיגה ב-useEffect (אחרי שה-state מתעדכן)
+    if (newIsPurchased) {
+      justMarkedPurchased.current = true;
+    }
+
     // עדכון אופטימיסטי עם functional updater למניעת stale closures
-    // בדיקת חגיגה מתבצעת בתוך ה-updater כי רק שם יש גישה ל-state העדכני ביותר
-    let shouldCelebrate = false;
-    onUpdateProductsForList(list.id, (currentProducts) => {
-      const updated = currentProducts.map((p: Product) =>
+    onUpdateProductsForList(list.id, (currentProducts) =>
+      currentProducts.map((p: Product) =>
         p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
-      );
-      if (newIsPurchased && updated.length > 0 && updated.every((p: Product) => p.isPurchased)) {
-        shouldCelebrate = true;
-      }
-      return updated;
-    });
+      )
+    );
     showToast(t('updated'));
     dismissHint();
-
-    if (shouldCelebrate) {
-      clearTimeout(celebrationTimer.current);
-      setShowCelebration(true);
-      haptic('heavy');
-      celebrationTimer.current = setTimeout(() => setShowCelebration(false), 3000);
-    }
 
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
@@ -393,7 +402,7 @@ export const useList = ({
 
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
-      console.error('Failed to toggle product:', { productId, listId: list.id, error });
+      if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
       // גלגול אחורה עם functional updater
       if (toggleVersions.current.get(productId) === version) {
         onUpdateProductsForList(list.id, (currentProducts) =>
@@ -540,9 +549,14 @@ export const useList = ({
   }, [list, editListData, hasListChanges, onUpdateList, showToast, t]);
 
   const handleDeleteList = useCallback(async () => {
-    await onDeleteList(list.id);
-    onBack();
-  }, [list.id, onDeleteList, onBack]);
+    try {
+      await onDeleteList(list.id);
+      onBack();
+    } catch (error) {
+      if (import.meta.env.DEV) console.error('Failed to delete list:', error);
+      showToast(t('unknownError'), 'error');
+    }
+  }, [list.id, onDeleteList, onBack, showToast, t]);
 
   // ===== מטפלי חברים =====
   const removeMember = useCallback((memberId: string, memberName: string) => {
