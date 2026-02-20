@@ -32,7 +32,7 @@ export const userValidator = {
   }),
 };
 
-// Type exports
+// ייצוא טיפוסים
 export type UpdateProfileInput = {
   name?: string;
   email?: string;

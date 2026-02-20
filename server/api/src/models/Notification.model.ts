@@ -3,15 +3,15 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export type NotificationType =
   | 'join'
   | 'leave'
-  | 'removed'  // When a member is removed by admin (different from 'leave' which is voluntary)
+  | 'removed'  // כשחבר הוסר על ידי מנהל (שונה מעזיבה שהיא וולנטרית)
   | 'product_add'
   | 'product_update'
   | 'product_delete'
   | 'product_purchase'
-  | 'product_unpurchase'  // When a purchased product is returned to the list
+  | 'product_unpurchase'  // כשמוצר שנרכש מוחזר לרשימה
   | 'member_removed'
   | 'list_deleted'
-  | 'list_update';  // When list name/settings are changed
+  | 'list_update';  // כששם או הגדרות הרשימה שונו
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
@@ -80,7 +80,7 @@ const notificationSchema = new Schema<INotification>(
   }
 );
 
-// Indexes for efficient querying
+// אינדקסים לשאילתות יעילות
 notificationSchema.index({ targetUserId: 1, read: 1, createdAt: -1 });
 notificationSchema.index({ listId: 1 });
 notificationSchema.index({ actorId: 1 });

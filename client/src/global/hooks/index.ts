@@ -306,7 +306,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       setLists([]);
       setFetchError(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-fetch when user.id changes or auth completes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה מחדש רק כשמזהה המשתמש משתנה או האימות מסתיים
   }, [authLoading, user?.id, fetchLists]);
 
   const createList = useCallback(
@@ -651,7 +651,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // יציאה מכל החדרים בניקוי
       currentIds.forEach((id) => socketService.leaveList(id));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-run when user.id or list IDs change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- הרצה מחדש רק כשמזהה המשתמש או מזהי הרשימות משתנים
   }, [user?.id, listIds]);
 
   // טעינת כל הרשימות מחדש כשהאפליקציה חוזרת לחזית (למשל אחרי לחיצה על התראה)

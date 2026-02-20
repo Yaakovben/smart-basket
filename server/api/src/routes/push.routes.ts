@@ -19,10 +19,10 @@ const unsubscribeSchema = Joi.object({
   endpoint: Joi.string().uri().required(),
 });
 
-// Public route - get VAPID public key
+// נתיב ציבורי
 router.get('/vapid-public-key', getVapidPublicKey);
 
-// Protected routes
+// נתיבים מוגנים
 router.post('/subscribe', authenticate, validate(subscribeSchema), subscribe);
 router.post('/unsubscribe', authenticate, validate(unsubscribeSchema), unsubscribe);
 router.get('/status', authenticate, getStatus);

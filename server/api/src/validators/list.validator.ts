@@ -61,7 +61,7 @@ export const listValidator = {
 
 };
 
-// Type exports
+// ייצוא טיפוסים
 export type CreateListInput = {
   name: string;
   icon?: string;

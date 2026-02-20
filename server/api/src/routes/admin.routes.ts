@@ -6,7 +6,8 @@ import Joi from 'joi';
 
 const router = Router();
 
-// All admin routes require authentication and admin role
+
+// כל נתיבי הניהול דורשים אימות והרשאת מנהל
 router.use(authenticate);
 router.use(isAdmin);
 

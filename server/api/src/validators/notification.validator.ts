@@ -55,7 +55,7 @@ export const notificationValidator = {
   }),
 };
 
-// Type exports
+// ייצוא טיפוסים
 export type NotificationType = (typeof notificationTypes)[number];
 
 export type GetNotificationsQuery = {

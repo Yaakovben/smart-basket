@@ -5,7 +5,7 @@ import { userValidator } from '../validators';
 
 const router = Router();
 
-// All user routes require authentication
+// כל נתיבי המשתמש דורשים אימות
 router.use(authenticate);
 
 router.get('/me', UserController.getProfile);

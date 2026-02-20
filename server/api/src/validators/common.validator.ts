@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-// Common schemas used across multiple validators
+// סכמות משותפות המשמשות במספר ולידטורים
 export const commonSchemas = {
   objectId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)

@@ -39,7 +39,7 @@ const pushSubscriptionSchema = new Schema<IPushSubscription>(
   }
 );
 
-// Index for efficient queries
+// אינדקס לשאילתות יעילות
 pushSubscriptionSchema.index({ userId: 1, endpoint: 1 });
 
 export const PushSubscription = mongoose.model<IPushSubscription>('PushSubscription', pushSubscriptionSchema);

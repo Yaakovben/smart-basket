@@ -27,7 +27,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
   { timestamps: true }
 );
 
-// Auto-delete expired tokens
+// מחיקה אוטומטית של טוקנים שפג תוקפם
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 refreshTokenSchema.index({ user: 1 });
 

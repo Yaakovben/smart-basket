@@ -131,7 +131,7 @@ export function useSocketNotifications(
           read: false
         });
       } catch (err) {
-        console.error('[Socket] שגיאה בטיפול באירוע מוצר:', err);
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול באירוע מוצר:', err);
       }
     };
 
@@ -243,7 +243,7 @@ export function useSocketNotifications(
           });
         }
       } catch (err) {
-        console.error('[Socket] שגיאה בטיפול בהתראת חברות:', err);
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול בהתראת חברות:', err);
       }
     });
 
@@ -265,7 +265,7 @@ export function useSocketNotifications(
           showToastRef.current(message, 'warning');
         }
       } catch (err) {
-        console.error('[Socket] שגיאה בטיפול בהתראת הסרה:', err);
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול בהתראת הסרה:', err);
       }
     });
 
@@ -299,7 +299,7 @@ export function useSocketNotifications(
           read: false
         });
       } catch (err) {
-        console.error('[Socket] שגיאה בטיפול בהתראת מחיקת רשימה:', err);
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול בהתראת מחיקת רשימה:', err);
       }
     });
 

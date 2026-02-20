@@ -32,7 +32,7 @@ export const authValidator = {
   }),
 };
 
-// Type exports
+// ייצוא טיפוסים
 export type RegisterInput = {
   name: string;
   email: string;

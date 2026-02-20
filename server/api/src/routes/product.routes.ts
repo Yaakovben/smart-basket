@@ -5,7 +5,7 @@ import { productValidator } from '../validators';
 
 const router = Router({ mergeParams: true });
 
-// All product routes require authentication
+// כל נתיבי המוצרים דורשים אימות
 router.use(authenticate);
 
 router.post('/', validate({ body: productValidator.create, params: productValidator.listParams }), ProductController.addProduct);

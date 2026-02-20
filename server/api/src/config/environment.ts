@@ -48,7 +48,7 @@ const envSchema = Joi.object({
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
-  // Google OAuth
+  // אימות Google
   GOOGLE_CLIENT_ID: Joi.string().required().messages({
     'any.required': 'Google Client ID is required',
   }),

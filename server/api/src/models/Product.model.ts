@@ -72,7 +72,7 @@ const productSchema = new Schema<IProductDoc>(
   }
 );
 
-// Compound index for efficient list queries with ordering
+// אינדקס מורכב לשאילתות רשימה יעילות עם מיון
 productSchema.index({ listId: 1, position: 1 });
 productSchema.index({ listId: 1, isPurchased: 1 });
 productSchema.index({ addedBy: 1 });
