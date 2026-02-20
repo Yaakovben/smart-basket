@@ -6,7 +6,17 @@ const transformProduct = (p: IProductDoc | Record<string, unknown>): Record<stri
   // תמיכה גם ב-Mongoose docs וגם ב-lean POJOs
   const pJson = (typeof (p as IProductDoc).toJSON === 'function')
     ? (p as IProductDoc).toJSON() as Record<string, unknown>
-    : p as Record<string, unknown>;
+    : { ...(p as Record<string, unknown>) };
+
+  // lean POJOs מגיעים עם _id במקום id, צריך להמיר
+  if (!pJson.id && pJson._id) {
+    pJson.id = pJson._id.toString();
+  }
+  // ניקוי שדות פנימיים שלא אמורים להישלח ללקוח
+  delete pJson._id;
+  delete pJson.__v;
+  delete pJson.listId;
+
   if (pJson.addedBy && typeof pJson.addedBy === 'object') {
     pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
   }

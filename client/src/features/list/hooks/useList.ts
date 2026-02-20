@@ -186,10 +186,10 @@ export const useList = ({
   }, []);
 
   // ===== מטפלי מוצרים =====
-  // עדכון אופטימיסטי (לא קורא ל-API)
+  // עדכון אופטימיסטי (לא קורא ל-API), משתמש ב-functional updater למניעת stale closures
   const updateProducts = useCallback((products: Product[]) => {
-    onUpdateListLocal({ ...list, products });
-  }, [list, onUpdateListLocal]);
+    onUpdateProductsForList(list.id, () => products);
+  }, [list.id, onUpdateProductsForList]);
 
   const validateProduct = useCallback((): boolean => {
     const result = validateForm(newProductSchema, {
@@ -310,9 +310,9 @@ export const useList = ({
     const newQuantity = existing.quantity + newData.quantity;
     setDuplicateProduct(null);
 
-    // עדכון אופטימיסטי
-    updateProducts(
-      list.products.map((p: Product) =>
+    // עדכון אופטימיסטי עם functional updater
+    onUpdateProductsForList(list.id, (currentProducts) =>
+      currentProducts.map((p: Product) =>
         p.id === existing.id ? { ...p, quantity: newQuantity } : p
       )
     );
@@ -328,15 +328,15 @@ export const useList = ({
         category: existing.category,
       }, user.name);
     } catch {
-      // rollback
-      updateProducts(
-        list.products.map((p: Product) =>
+      // גלגול אחורה עם functional updater
+      onUpdateProductsForList(list.id, (currentProducts) =>
+        currentProducts.map((p: Product) =>
           p.id === existing.id ? { ...p, quantity: existing.quantity } : p
         )
       );
       showToast(t('unknownError'), 'error');
     }
-  }, [duplicateProduct, list.id, list.products, user.name, updateProducts, showToast, t]);
+  }, [duplicateProduct, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   // טיפול בכפילות - הוספה בכל זאת
   const handleDuplicateAddNew = useCallback(async () => {
@@ -351,7 +351,8 @@ export const useList = ({
   }, []);
 
   const toggleProduct = useCallback(async (productId: string) => {
-    const product = list.products.find((p: Product) => p.id === productId);
+    // שימוש ב-ref לקבלת שם המוצר לשליחה ל-socket
+    const product = productsRef.current.find((p: Product) => p.id === productId);
     if (!product) return;
 
     const newIsPurchased = !product.isPurchased;
@@ -360,16 +361,22 @@ export const useList = ({
     const version = (toggleVersions.current.get(productId) || 0) + 1;
     toggleVersions.current.set(productId, version);
 
-    // עדכון אופטימיסטי - תגובה מיידית ב-UI
-    const updatedProducts = list.products.map((p: Product) =>
-      p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
-    );
-    updateProducts(updatedProducts);
+    // עדכון אופטימיסטי עם functional updater למניעת stale closures
+    // בדיקת חגיגה מתבצעת בתוך ה-updater כי רק שם יש גישה ל-state העדכני ביותר
+    let shouldCelebrate = false;
+    onUpdateProductsForList(list.id, (currentProducts) => {
+      const updated = currentProducts.map((p: Product) =>
+        p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
+      );
+      if (newIsPurchased && updated.length > 0 && updated.every((p: Product) => p.isPurchased)) {
+        shouldCelebrate = true;
+      }
+      return updated;
+    });
     showToast(t('updated'));
     dismissHint();
 
-    // בדיקה אם כל המוצרים נקנו - חגיגה!
-    if (newIsPurchased && updatedProducts.length > 0 && updatedProducts.every((p: Product) => p.isPurchased)) {
+    if (shouldCelebrate) {
       clearTimeout(celebrationTimer.current);
       setShowCelebration(true);
       haptic('heavy');
@@ -387,10 +394,10 @@ export const useList = ({
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
       console.error('Failed to toggle product:', { productId, listId: list.id, error });
-      // גלגול אחורה רק אם לא היה toggle חדש יותר
+      // גלגול אחורה עם functional updater
       if (toggleVersions.current.get(productId) === version) {
-        updateProducts(
-          productsRef.current.map((p: Product) =>
+        onUpdateProductsForList(list.id, (currentProducts) =>
+          currentProducts.map((p: Product) =>
             p.id === productId ? { ...p, isPurchased: !newIsPurchased } : p
           )
         );
@@ -398,7 +405,7 @@ export const useList = ({
         toggleVersions.current.delete(productId);
       }
     }
-  }, [list.id, list.products, user.name, updateProducts, showToast, t, dismissHint]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint]);
 
   const deleteProduct = useCallback((productId: string) => {
     const product = list.products.find((p: Product) => p.id === productId);
