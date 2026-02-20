@@ -135,7 +135,9 @@ export const useHome = ({
       members: [],
       products: [],
       inviteCode: isGroup ? generateInviteCode() : null,
-      password: isGroup ? generatePassword() : null
+      password: isGroup ? generatePassword() : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);

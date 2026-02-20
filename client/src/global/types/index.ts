@@ -29,7 +29,7 @@ export interface Product {
   category: ProductCategory;
   isPurchased: boolean;
   addedBy: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
 // ===== רשימה =====
@@ -55,7 +55,8 @@ export interface List {
   inviteCode?: string | null;
   password?: string | null;
   hasPassword?: boolean;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ===== הודעות Toast =====

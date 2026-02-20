@@ -249,6 +249,7 @@ export const convertApiList = (apiList: ApiList): List => ({
   inviteCode: apiList.inviteCode,
   password: apiList.password,
   hasPassword: apiList.hasPassword,
+  createdAt: apiList.createdAt,
   updatedAt: apiList.updatedAt,
 });
 
@@ -325,6 +326,8 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
         products: list.products || [],
         inviteCode: list.inviteCode || null,
         password: list.password || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       // הוספה לסטייט מיידית (אופטימיסטי)
