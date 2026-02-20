@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box, TextField, Button, Typography, Alert,
   CircularProgress, InputAdornment, Paper, Collapse
@@ -39,6 +39,42 @@ interface LoginPageProps {
 
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
   const { t } = useSettings();
+  const [clearing, setClearing] = useState(false);
+
+  // ניקוי מטמון מלא ישירות, ללא ניווט לדף נפרד
+  const handleClearCache = useCallback(async () => {
+    setClearing(true);
+    try {
+      // ביטול רישום Service Workers
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      // ניקוי Cache API
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+      }
+      // ניקוי localStorage (שימור טוקנים)
+      const access = localStorage.getItem('accessToken');
+      const refresh = localStorage.getItem('refreshToken');
+      localStorage.clear();
+      if (access) localStorage.setItem('accessToken', access);
+      if (refresh) localStorage.setItem('refreshToken', refresh);
+      // ניקוי sessionStorage
+      sessionStorage.clear();
+      // ניקוי IndexedDB
+      if ('indexedDB' in window && indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        dbs.forEach(db => { if (db.name) indexedDB.deleteDatabase(db.name); });
+      }
+      // ריענון כפוי
+      window.location.href = '/?t=' + Date.now();
+    } catch {
+      // במקרה של שגיאה, ניווט לדף סטטי כגיבוי
+      window.location.href = '/clear.html';
+    }
+  }, []);
 
   // בדיקת session expired (מוגדר ב-client.ts כשרענון טוקן נכשל)
   const [sessionExpired, setSessionExpired] = useState(() => {
@@ -167,7 +203,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 {error}
                 {error.includes(':') && error === t('cacheError') && (
                   <Button
-                    href="/clear-cache"
+                    onClick={handleClearCache}
+                    disabled={clearing}
                     variant="contained"
                     fullWidth
                     sx={{
@@ -185,7 +222,11 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    🔄 {t('clearCacheAndReload')}
+                    {clearing ? (
+                      <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
+                    ) : (
+                      <>🔄 {t('clearCacheAndReload')}</>
+                    )}
                   </Button>
                 )}
               </Box>
@@ -339,7 +380,8 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                       {error}
                       {error.includes(':') && error === t('cacheError') && (
                         <Button
-                          href="/clear-cache"
+                          onClick={handleClearCache}
+                          disabled={clearing}
                           variant="contained"
                           fullWidth
                           sx={{
@@ -357,7 +399,11 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                             transition: 'all 0.15s ease'
                           }}
                         >
-                          🔄 {t('clearCacheAndReload')}
+                          {clearing ? (
+                            <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
+                          ) : (
+                            <>🔄 {t('clearCacheAndReload')}</>
+                          )}
                         </Button>
                       )}
                     </Box>
