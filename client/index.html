@@ -131,7 +131,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: iconFadeIn 0.4s ease-out;
       ">
         <svg width="100" height="100" viewBox="0 0 512 512">
           <defs>
@@ -146,15 +145,15 @@
         </svg>
       </div>
 
-      <!-- נקודות טעינה, מופיעות רק אחרי 3 שניות -->
-      <div class="loading-dots">
+      <!-- נקודות טעינה, מופיעות רק אחרי 3 שניות (absolute כדי לא לזוז את האייקון) -->
+      <div class="loading-dots" style="position: absolute; bottom: 38%;">
         <span></span>
         <span></span>
         <span></span>
       </div>
 
       <!-- Fallback error message (hidden by default, shown after 15s or on error) -->
-      <div id="load-error" style="display: none; margin-top: 20px; text-align: center;">
+      <div id="load-error" style="display: none; position: absolute; bottom: 20%; text-align: center; padding: 0 20px;">
         <p style="color: white; font-size: 14px; margin-bottom: 8px;">הטעינה נכשלה</p>
         <p id="error-text" style="color: rgba(255,255,255,0.7); font-size: 11px; margin-bottom: 12px; direction: ltr; word-break: break-all;"></p>
         <button onclick="location.href='/clear.html'" style="
@@ -191,15 +190,9 @@
       </script>
 
       <style>
-        @keyframes iconFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
         .loading-dots {
           display: flex;
           gap: 6px;
-          margin-top: 24px;
           opacity: 0;
           animation: showDots 0.3s ease-out 3s forwards;
         }
