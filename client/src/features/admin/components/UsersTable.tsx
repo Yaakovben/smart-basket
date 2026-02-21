@@ -1,13 +1,20 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { Box, Typography, Paper, LinearProgress, Chip, Collapse, IconButton } from '@mui/material';
+import { Box, Typography, Paper, LinearProgress, Chip, Collapse, IconButton, keyframes } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';
 import type { Language } from '../../../global/types';
+
+// אנימציית פעימה לנקודה ירוקה
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+`;
 
 // ===== UserRow - כל שורה מנהלת את ה-expand שלה =====
 interface UserRowProps {
@@ -32,10 +39,11 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
     <Paper
       sx={{
         borderRadius: '14px',
-        border: '1px solid',
-        borderColor: isOnline ? 'rgba(34, 197, 94, 0.4)' : activeToday ? 'rgba(20, 184, 166, 0.3)' : 'divider',
-        bgcolor: isOnline ? 'rgba(34, 197, 94, 0.04)' : activeToday ? 'rgba(20, 184, 166, 0.03)' : 'background.paper',
+        border: isOnline ? '2px solid #22C55E' : '1px solid',
+        borderColor: isOnline ? '#22C55E' : activeToday ? 'rgba(20, 184, 166, 0.3)' : 'divider',
+        bgcolor: isOnline ? 'rgba(34, 197, 94, 0.08)' : activeToday ? 'rgba(20, 184, 166, 0.03)' : 'background.paper',
         overflow: 'hidden',
+        boxShadow: isOnline ? '0 0 12px rgba(34, 197, 94, 0.2)' : undefined,
       }}
     >
       {/* Compact View - Always visible */}
@@ -83,7 +91,9 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             fontWeight: 600,
             fontSize: user.avatarEmoji ? 18 : 15,
             flexShrink: 0,
-            position: 'relative'
+            position: 'relative',
+            outline: isOnline ? '2.5px solid #22C55E' : 'none',
+            outlineOffset: 2
           }}
         >
           {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
@@ -91,13 +101,14 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             <Box
               sx={{
                 position: 'absolute',
-                bottom: -1,
-                right: -1,
-                width: 10,
-                height: 10,
+                bottom: -3,
+                right: -3,
+                width: 14,
+                height: 14,
                 borderRadius: '50%',
                 bgcolor: '#22C55E',
-                border: '2px solid white'
+                border: '2.5px solid white',
+                animation: `${pulse} 2s ease-in-out infinite`
               }}
             />
           )}
@@ -120,15 +131,18 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             </Typography>
             {isOnline && (
               <Chip
+                icon={<FiberManualRecordIcon sx={{ fontSize: '10px !important', color: '#22C55E !important' }} />}
                 label={t('online')}
                 size="small"
                 sx={{
-                  height: 20,
-                  fontSize: 10,
+                  height: 24,
+                  fontSize: 12,
                   fontWeight: 700,
-                  bgcolor: '#ECFDF5',
-                  color: '#059669',
-                  '& .MuiChip-label': { px: 0.75 }
+                  bgcolor: '#DCFCE7',
+                  color: '#16A34A',
+                  border: '1px solid #BBF7D0',
+                  '& .MuiChip-label': { px: 0.5 },
+                  '& .MuiChip-icon': { ml: 0.5 }
                 }}
               />
             )}
@@ -289,14 +303,15 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
   const { t } = useSettings();
   const maxLogins = Math.max(...users.map(u => u.totalLogins), 1);
 
-  // מיון: מחוברים ראשונים, אחר כך לפי התחברות אחרונה
-  const sortedUsers = useMemo(() => {
-    return [...users].sort((a, b) => {
-      const aOnline = onlineUserIds.has(a.id) ? 1 : 0;
-      const bOnline = onlineUserIds.has(b.id) ? 1 : 0;
-      if (aOnline !== bOnline) return bOnline - aOnline;
-      return 0; // שמירה על המיון המקורי (לפי התחברות אחרונה)
+  // הפרדה: מחוברים ולא מחוברים
+  const { onlineUsers, offlineUsers } = useMemo(() => {
+    const online: UserWithLastLogin[] = [];
+    const offline: UserWithLastLogin[] = [];
+    users.forEach(u => {
+      if (onlineUserIds.has(u.id)) online.push(u);
+      else offline.push(u);
     });
+    return { onlineUsers: online, offlineUsers: offline };
   }, [users, onlineUserIds]);
 
   if (users.length === 0) {
@@ -310,14 +325,60 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {sortedUsers.map((user, index) => (
+      {/* כותרת מחוברים עכשיו */}
+      {onlineUsers.length > 0 && (
+        <>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 0.5,
+            py: 0.75
+          }}>
+            <FiberManualRecordIcon sx={{ fontSize: 12, color: '#22C55E' }} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#16A34A' }}>
+              {t('onlineNow')} ({onlineUsers.length})
+            </Typography>
+          </Box>
+          {onlineUsers.map((user, index) => (
+            <UserRow
+              key={user.id}
+              user={user}
+              index={index}
+              maxLogins={maxLogins}
+              language={language}
+              isOnline
+            />
+          ))}
+        </>
+      )}
+
+      {/* מפריד בין מחוברים ללא מחוברים */}
+      {onlineUsers.length > 0 && offlineUsers.length > 0 && (
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 0.5,
+          py: 1
+        }}>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+          <Typography sx={{ fontSize: 12, color: 'text.disabled', fontWeight: 500, whiteSpace: 'nowrap' }}>
+            {t('registeredUsers')} ({offlineUsers.length})
+          </Typography>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+        </Box>
+      )}
+
+      {/* משתמשים לא מחוברים */}
+      {offlineUsers.map((user, index) => (
         <UserRow
           key={user.id}
           user={user}
-          index={index}
+          index={onlineUsers.length + index}
           maxLogins={maxLogins}
           language={language}
-          isOnline={onlineUserIds.has(user.id)}
+          isOnline={false}
         />
       ))}
     </Box>
