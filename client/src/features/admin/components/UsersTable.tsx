@@ -64,11 +64,11 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             width: 22,
             height: 22,
             borderRadius: '6px',
-            bgcolor: index < 3 ? '#F59E0B' : 'action.selected',
+            bgcolor: 'action.selected',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: index < 3 ? 'white' : 'text.secondary',
+            color: 'text.secondary',
             fontWeight: 700,
             fontSize: 11,
             flexShrink: 0
