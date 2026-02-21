@@ -17,7 +17,7 @@ dotenv.config();
  *
  * Optional:
  * - JWT_ACCESS_EXPIRES_IN: Access token expiry (default: 15m)
- * - JWT_REFRESH_EXPIRES_IN: Refresh token expiry (default: 7d)
+ * - JWT_REFRESH_EXPIRES_IN: Refresh token expiry (default: 30d)
  * - CORS_ORIGIN: Allowed origins for CORS, comma-separated (default: http://localhost:5173)
  * - ADMIN_EMAIL: Default admin user email
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
@@ -46,7 +46,7 @@ const envSchema = Joi.object({
 
   // זמני תפוגה
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
-  JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
 
   // אימות Google
   GOOGLE_CLIENT_ID: Joi.string().required().messages({
