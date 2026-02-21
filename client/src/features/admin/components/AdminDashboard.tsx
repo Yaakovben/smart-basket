@@ -6,6 +6,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useAuth } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { ActivityFilters } from './ActivityFilters';
 import { ActivityTable } from './ActivityTable';
@@ -35,6 +36,7 @@ const LoadingSkeleton = () => (
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [userSearch, setUserSearch] = useState('');
   const {
@@ -50,7 +52,16 @@ export const AdminDashboard = () => {
     loading,
     error
   } = useAdminDashboard();
-  const onlineUserIds = useOnlineUsers();
+  const socketOnlineUserIds = useOnlineUsers();
+
+  // המשתמש הנוכחי בהכרח מחובר, תמיד מוסיפים אותו לרשימה
+  const onlineUserIds = useMemo(() => {
+    if (!user?.id) return socketOnlineUserIds;
+    if (socketOnlineUserIds.has(user.id)) return socketOnlineUserIds;
+    const merged = new Set(socketOnlineUserIds);
+    merged.add(user.id);
+    return merged;
+  }, [socketOnlineUserIds, user?.id]);
 
   // משתמשים מסוננים (ממוזכר)
   const filteredUsers = useMemo(() => {
