@@ -113,12 +113,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         </Box>
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
-            component="a"
-            href={`https://wa.me/?text=${encodeURIComponent(generateInviteMessage(list, t))}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => {
+              const message = generateInviteMessage(list, t);
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+              onClose();
+            }}
             fullWidth
-            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, textDecoration: 'none' }}
+            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
             aria-label="WhatsApp"
           >
             <WhatsAppIcon />
@@ -321,12 +322,13 @@ export const ShareListModal = memo(({
         </Box>
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
-            component="a"
-            href={`https://wa.me/?text=${encodeURIComponent(generateShareListMessage(list, t))}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => {
+              const message = generateShareListMessage(list, t);
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+              onClose();
+            }}
             fullWidth
-            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, textDecoration: 'none' }}
+            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
             aria-label="WhatsApp"
           >
             <WhatsAppIcon />
