@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import type { ActivityFilters, LoginActivity, User } from "../../../global/types";
 import type { UseAdminDashboardReturn, DashboardStats, UserWithLastLogin } from "../types";
-import { adminApi, type AdminUser, type AdminLoginActivity } from "../../../services/api";
+import { adminApi, type AdminUser, type AdminLoginActivity, type AdminStats } from "../../../services/api";
 import { useSettings } from "../../../global/context/SettingsContext";
 
 const DEFAULT_FILTERS: ActivityFilters = {
@@ -34,22 +34,25 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const { t } = useSettings();
   const [filters, setFilters] = useState<ActivityFilters>(DEFAULT_FILTERS);
   const [activities, setActivities] = useState<LoginActivity[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [serverStats, setServerStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // טעינת נתונים מה-API
+  // טעינת נתונים מה-API (משתמשים עם סטטיסטיקות, פעילויות, וסטטיסטיקות כלליות)
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [usersData, activityData] = await Promise.all([
+      const [usersData, activityData, statsData] = await Promise.all([
         adminApi.getUsers(),
-        adminApi.getLoginActivity(1, 500), // עד 500 פעילויות
+        adminApi.getLoginActivity(1, 500),
+        adminApi.getStats(),
       ]);
 
-      setAllUsers(usersData.map(convertApiUser));
+      setAllUsers(usersData);
       setActivities(activityData.activities.map(convertApiActivity));
+      setServerStats(statsData);
     } catch (err) {
       if (import.meta.env.DEV) console.error('Failed to fetch admin data:', err);
       setError(t('adminLoadError'));
@@ -63,31 +66,25 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     fetchData();
   }, [fetchData]);
 
-  // חישוב משתמשים עם מידע התחברות אחרונה
+  // משתמשים עם סטטיסטיקות התחברות (נתונים מהשרת, מחושבים ב-MongoDB)
   const usersWithLoginInfo: UserWithLastLogin[] = useMemo(() => {
-    return allUsers.map((user: User) => {
-      const userActivities = activities
-        .filter((a: LoginActivity) => a.userId === user.id)
-        .sort((a: LoginActivity, b: LoginActivity) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-
-      const lastActivity = userActivities[0];
-
-      return {
-        ...user,
-        lastLoginAt: lastActivity?.timestamp,
-        lastLoginMethod: lastActivity?.loginMethod,
-        totalLogins: userActivities.length,
-      };
-    }).sort((a: UserWithLastLogin, b: UserWithLastLogin) => {
+    return allUsers.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarColor: user.avatarColor,
+      avatarEmoji: user.avatarEmoji,
+      totalLogins: user.totalLogins,
+      lastLoginAt: user.lastLoginAt || undefined,
+      lastLoginMethod: user.lastLoginMethod || undefined,
+    })).sort((a, b) => {
       // מיון לפי התחברות אחרונה (חדש ביותר ראשון)
       if (!a.lastLoginAt && !b.lastLoginAt) return 0;
       if (!a.lastLoginAt) return 1;
       if (!b.lastLoginAt) return -1;
       return new Date(b.lastLoginAt).getTime() - new Date(a.lastLoginAt).getTime();
     });
-  }, [allUsers, activities]);
+  }, [allUsers]);
 
   // סינון פעילויות לפי מסננים
   const filteredActivities = useMemo(() => {
@@ -155,27 +152,14 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     );
   }, [activities, filters]);
 
-  // חישוב סטטיסטיקות
-  const stats: DashboardStats = useMemo(() => {
-    const now = new Date();
-    const today = now.toISOString().split("T")[0];
-    const currentMonth = today.substring(0, 7);
-
-    const todayActivities = activities.filter((a: LoginActivity) => a.timestamp.startsWith(today));
-    const monthActivities = activities.filter((a: LoginActivity) => a.timestamp.startsWith(currentMonth));
-
-    // ספירת משתמשים ייחודיים
-    const uniqueUsersToday = new Set(todayActivities.map((a: LoginActivity) => a.userId)).size;
-    const uniqueUsersThisMonth = new Set(monthActivities.map((a: LoginActivity) => a.userId)).size;
-
-    return {
-      totalUsers: allUsers.length,
-      loginsToday: todayActivities.length,
-      loginsThisMonth: monthActivities.length,
-      uniqueUsersToday,
-      uniqueUsersThisMonth,
-    };
-  }, [activities, allUsers]);
+  // סטטיסטיקות מהשרת (מחושבות ב-MongoDB, מדויקות לחלוטין)
+  const stats: DashboardStats = useMemo(() => ({
+    totalUsers: serverStats?.totalUsers || allUsers.length,
+    loginsToday: serverStats?.loginsToday || 0,
+    loginsThisMonth: serverStats?.loginsThisMonth || 0,
+    uniqueUsersToday: serverStats?.uniqueUsersToday || 0,
+    uniqueUsersThisMonth: serverStats?.uniqueUsersThisMonth || 0,
+  }), [serverStats, allUsers]);
 
   const setFilterMode = useCallback((mode: ActivityFilters["filterMode"]) => {
     setFilters((prev) => ({ ...prev, filterMode: mode }));
@@ -201,10 +185,15 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     fetchData();
   }, [fetchData]);
 
+  // המרת AdminUser ל-User לתאימות עם הממשק
+  const users: User[] = useMemo(() =>
+    allUsers.map(convertApiUser),
+  [allUsers]);
+
   return {
     activities,
     filteredActivities,
-    allUsers,
+    allUsers: users,
     usersWithLoginInfo,
     stats,
     filters,

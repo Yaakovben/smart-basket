@@ -10,6 +10,10 @@ export interface AdminUser {
   isAdmin: boolean;
   createdAt: string;
   updatedAt: string;
+  // סטטיסטיקות התחברות מהשרת (aggregation)
+  totalLogins: number;
+  lastLoginAt: string | null;
+  lastLoginMethod: 'email' | 'google' | null;
 }
 
 export interface AdminLoginActivity {
@@ -33,16 +37,32 @@ export interface PaginatedActivity {
   };
 }
 
+export interface AdminStats {
+  totalUsers: number;
+  totalLists: number;
+  totalGroupLists: number;
+  totalProducts: number;
+  loginsToday: number;
+  uniqueUsersToday: number;
+  loginsThisMonth: number;
+  uniqueUsersThisMonth: number;
+}
+
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
     const response = await apiClient.get<{ data: AdminUser[] }>('/admin/users');
     return response.data.data;
   },
 
-  async getLoginActivity(page = 1, limit = 100): Promise<PaginatedActivity> {
+  async getLoginActivity(page = 1, limit = 500): Promise<PaginatedActivity> {
     const response = await apiClient.get<{ data: PaginatedActivity }>('/admin/activity', {
       params: { page, limit }
     });
+    return response.data.data;
+  },
+
+  async getStats(): Promise<AdminStats> {
+    const response = await apiClient.get<{ data: AdminStats }>('/admin/stats');
     return response.data.data;
   },
 };

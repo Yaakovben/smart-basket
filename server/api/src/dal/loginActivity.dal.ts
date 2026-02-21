@@ -22,6 +22,60 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     return { activities, total };
   }
 
+  // סטטיסטיקות התחברות לכל משתמש (aggregation ישירות ב-MongoDB)
+  async getStatsByUser(): Promise<Array<{
+    userId: string;
+    totalLogins: number;
+    lastLoginAt: Date;
+    lastLoginMethod: string;
+  }>> {
+    return this.model.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: '$user',
+          totalLogins: { $sum: 1 },
+          lastLoginAt: { $first: '$createdAt' },
+          lastLoginMethod: { $first: '$loginMethod' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: { $toString: '$_id' },
+          totalLogins: 1,
+          lastLoginAt: 1,
+          lastLoginMethod: 1,
+        },
+      },
+    ]);
+  }
+
+  // ספירת כניסות מתאריך מסוים (כולל ייחודיים)
+  async getStatsSince(since: Date): Promise<{
+    totalLogins: number;
+    uniqueUsers: number;
+  }> {
+    const result = await this.model.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: null,
+          totalLogins: { $sum: 1 },
+          uniqueUsers: { $addToSet: '$user' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalLogins: 1,
+          uniqueUsers: { $size: '$uniqueUsers' },
+        },
+      },
+    ]);
+    return result[0] || { totalLogins: 0, uniqueUsers: 0 };
+  }
+
   async countSince(since: Date): Promise<number> {
     return this.model.countDocuments({ createdAt: { $gte: since } });
   }
