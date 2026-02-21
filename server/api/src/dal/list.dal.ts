@@ -120,6 +120,14 @@ class ListDALClass extends BaseDAL<IList> {
     throw new AppError('Failed to generate unique invite code after maximum retries', 500, 'INVITE_CODE_GENERATION_FAILED');
   }
 
+  // עדכון updatedAt של הרשימה כשמוצרים משתנים (מוצרים בקולקשן נפרד)
+  async touchUpdatedAt(listId: string): Promise<void> {
+    await this.model.updateOne(
+      { _id: listId },
+      { $set: { updatedAt: new Date() } }
+    );
+  }
+
   // מתודות עם session לטרנזקציות
   async findPrivateListIds(ownerId: string, session: ClientSession): Promise<string[]> {
     const uid = new mongoose.Types.ObjectId(ownerId);

@@ -1,4 +1,4 @@
-import { ProductDAL } from '../dal';
+import { ProductDAL, ListDAL } from '../dal';
 import { NotFoundError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
@@ -31,6 +31,9 @@ export class ProductService {
       addedBy: userId,
     });
 
+    // עדכון זמן שינוי הרשימה (מוצרים בקולקשן נפרד)
+    await ListDAL.touchUpdatedAt(listId);
+
     return toProductResponse(product);
   }
 
@@ -55,6 +58,9 @@ export class ProductService {
     if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
 
     await ProductDAL.updateProduct(productId, updates);
+
+    // עדכון זמן שינוי הרשימה
+    await ListDAL.touchUpdatedAt(listId);
   }
 
   static async deleteProduct(
@@ -70,6 +76,9 @@ export class ProductService {
     }
 
     await ProductDAL.deleteProduct(productId);
+
+    // עדכון זמן שינוי הרשימה
+    await ListDAL.touchUpdatedAt(listId);
   }
 
   static async reorderProducts(
