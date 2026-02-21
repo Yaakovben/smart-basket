@@ -1,4 +1,4 @@
-import { useState, memo, useCallback } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Typography, Paper, LinearProgress, Chip, Collapse, IconButton } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LoginIcon from '@mui/icons-material/Login';
@@ -119,13 +119,18 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
               {user.name}
             </Typography>
             {isOnline && (
-              <Box sx={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                bgcolor: '#22C55E',
-                flexShrink: 0
-              }} />
+              <Chip
+                label={t('online')}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  bgcolor: '#ECFDF5',
+                  color: '#059669',
+                  '& .MuiChip-label': { px: 0.75 }
+                }}
+              />
             )}
           </Box>
           <Typography
@@ -284,6 +289,16 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
   const { t } = useSettings();
   const maxLogins = Math.max(...users.map(u => u.totalLogins), 1);
 
+  // מיון: מחוברים ראשונים, אחר כך לפי התחברות אחרונה
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const aOnline = onlineUserIds.has(a.id) ? 1 : 0;
+      const bOnline = onlineUserIds.has(b.id) ? 1 : 0;
+      if (aOnline !== bOnline) return bOnline - aOnline;
+      return 0; // שמירה על המיון המקורי (לפי התחברות אחרונה)
+    });
+  }, [users, onlineUserIds]);
+
   if (users.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
@@ -295,7 +310,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {users.map((user, index) => (
+      {sortedUsers.map((user, index) => (
         <UserRow
           key={user.id}
           user={user}
