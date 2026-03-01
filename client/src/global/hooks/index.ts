@@ -310,7 +310,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   }, [authLoading, user?.id, fetchLists]);
 
   const createList = useCallback(
-    async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'> & { id?: string; owner?: User; members?: Member[]; products?: Product[] }) => {
+    async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
       // שליחה לשרת קודם, הוספה ל-UI רק אחרי אישור
       const newList = await listsApi.createList({
         name: list.name,
@@ -329,7 +329,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     [],
   );
 
-  // עדכון מקומי ללא קריאה לשרת (אופטימיסטי)
+  // עדכון מקומי ללא קריאה לשרת (לאירועי socket)
   const updateListLocal = useCallback(
     (updatedList: List) => {
       setLists((prev) =>

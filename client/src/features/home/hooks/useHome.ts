@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { List, Member, User } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
-import { generateInviteCode, generatePassword, generateListId } from '../helpers/home-helpers';
+import { generatePassword } from '../helpers/home-helpers';
 import type {
   NewListForm,
   HomeTab,
@@ -31,7 +31,7 @@ const DEFAULT_NEW_GROUP: NewListForm = {
 interface UseHomeParams {
   lists: List[];
   user: User;
-  onCreateList: (list: List) => void;
+  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void;
   onDeleteList: (listId: string) => void;
   onEditList: (list: List) => void;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -128,22 +128,15 @@ export const useHome = ({
     if (!validateListName()) return;
 
     onCreateList({
-      id: generateListId(),
       ...newL,
       isGroup,
-      owner: user,
-      members: [],
-      products: [],
-      inviteCode: isGroup ? generateInviteCode() : null,
       password: isGroup ? generatePassword() : null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
 
     setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
     setShowCreate(false);
     setShowCreateGroup(false);
-  }, [newL, onCreateList, user, validateListName]);
+  }, [newL, onCreateList, validateListName]);
 
   // ===== טיפול בהצטרפות לרשימה =====
   const handleJoin = useCallback(async () => {

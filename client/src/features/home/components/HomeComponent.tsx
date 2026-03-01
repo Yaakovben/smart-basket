@@ -143,7 +143,7 @@ interface HomePageProps {
   lists: List[];
   user: User;
   onSelectList: (list: List) => void;
-  onCreateList: (list: List) => void;
+  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void;
   onDeleteList: (listId: string) => void;
   onEditList: (list: List) => void;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;

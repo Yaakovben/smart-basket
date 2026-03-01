@@ -74,7 +74,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      // עדכון אופטימיסטי
+      // עדכון מקומי מיידי (סימון קריאה הוא פעולה קלה שלא צריכה להמתין לשרת)
       setPersistedNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -92,7 +92,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
   const markAllAsRead = useCallback(async (listId?: string) => {
     try {
-      // עדכון אופטימיסטי
+      // עדכון מקומי מיידי (סימון קריאה הוא פעולה קלה שלא צריכה להמתין לשרת)
       setPersistedNotifications(prev => {
         if (!listId) {
           setUnreadCount(0);

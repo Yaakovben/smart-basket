@@ -234,7 +234,7 @@ export const AppRouter = () => {
     }
   };
 
-  const handleCreateList = async (list: List) => {
+  const handleCreateList = async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
     showToast(t('created'));
     try {
       await createList(list);

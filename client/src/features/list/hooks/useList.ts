@@ -203,7 +203,7 @@ export const useList = ({
   }, []);
 
   // ===== מטפלי מוצרים =====
-  // עדכון אופטימיסטי (לא קורא ל-API), משתמש ב-functional updater למניעת stale closures
+  // עדכון מקומי (לא קורא ל-API), משתמש ב-functional updater למניעת stale closures
   const updateProducts = useCallback((products: Product[]) => {
     onUpdateProductsForList(list.id, () => products);
   }, [list.id, onUpdateProductsForList]);
