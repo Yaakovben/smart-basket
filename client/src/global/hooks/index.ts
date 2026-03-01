@@ -311,50 +311,20 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
   const createList = useCallback(
     async (list: Omit<List, 'id' | 'owner' | 'members' | 'products' | 'notifications'> & { id?: string; owner?: User; members?: Member[]; products?: Product[] }) => {
-      // יצירת מזהה זמני לעדכון אופטימיסטי
-      const tempId = list.id || `temp_${Date.now()}`;
-
-      // יצירת רשימה אופטימיסטית מיידית
-      const optimisticList: List = {
-        id: tempId,
+      // שליחה לשרת קודם, הוספה ל-UI רק אחרי אישור
+      const newList = await listsApi.createList({
         name: list.name,
         icon: list.icon,
         color: list.color,
         isGroup: list.isGroup,
-        owner: list.owner || { id: '', name: '', email: '' },
-        members: list.members || [],
-        products: list.products || [],
-        inviteCode: list.inviteCode || null,
-        password: list.password || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        password: list.password || undefined,
+      });
 
-      // הוספה לסטייט מיידית (אופטימיסטי)
-      setLists((prev) => [...prev, optimisticList]);
+      const converted = convertApiList(newList);
+      setLists((prev) => [...prev, converted]);
+      socketService.joinList(newList.id);
 
-      try {
-        // קריאה לשרת ברקע
-        const newList = await listsApi.createList({
-          name: list.name,
-          icon: list.icon,
-          color: list.color,
-          isGroup: list.isGroup,
-          password: list.password || undefined,
-        });
-
-        // החלפת הרשימה הזמנית בתגובת השרת
-        setLists((prev) => prev.map((l) => l.id === tempId ? convertApiList(newList) : l));
-
-        // הצטרפות לחדר socket של הרשימה החדשה
-        socketService.joinList(newList.id);
-
-        return convertApiList(newList);
-      } catch (error) {
-        // הסרת הרשימה האופטימיסטית בשגיאה
-        setLists((prev) => prev.filter((l) => l.id !== tempId));
-        throw error;
-      }
+      return converted;
     },
     [],
   );
@@ -416,33 +386,24 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     async (listId: string) => {
       const listToDelete = lists.find((l) => l.id === listId);
 
-      // הסרה מיידית מה-UI (אופטימיסטי)
-      setLists((prev) => prev.filter((l) => l.id !== listId));
-
-      try {
-        // הודעת socket לחברי הקבוצה ברקע
-        if (listToDelete?.isGroup && user) {
-          const memberIds = listToDelete.members
-            .map((m) => m.id)
-            .filter((id) => id !== user.id);
-          if (memberIds.length > 0) {
-            await new Promise<void>((resolve) => {
-              socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
-                resolve();
-              });
-              setTimeout(resolve, 5000);
+      // הודעת socket לחברי הקבוצה לפני מחיקה
+      if (listToDelete?.isGroup && user) {
+        const memberIds = listToDelete.members
+          .map((m) => m.id)
+          .filter((id) => id !== user.id);
+        if (memberIds.length > 0) {
+          await new Promise<void>((resolve) => {
+            socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
+              resolve();
             });
-          }
+            setTimeout(resolve, 5000);
+          });
         }
-
-        await listsApi.deleteList(listId);
-      } catch (error) {
-        // Rollback - החזרת הרשימה ל-UI
-        if (listToDelete) {
-          setLists((prev) => [...prev, listToDelete]);
-        }
-        throw error;
       }
+
+      // מחיקה בשרת קודם, הסרה מה-UI רק אחרי אישור
+      await listsApi.deleteList(listId);
+      setLists((prev) => prev.filter((l) => l.id !== listId));
     },
     [lists, user],
   );
@@ -498,30 +459,20 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
 
       const listToLeave = lists.find((l) => l.id === listId);
 
-      // הסרה מיידית מה-UI (אופטימיסטי)
-      setLists((prev) => prev.filter((l) => l.id !== listId));
-
-      try {
-        // הודעת socket לחברי הקבוצה לפני עזיבת החדר
-        if (listToLeave) {
-          await new Promise<void>((resolve) => {
-            socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
-              resolve();
-            });
-            setTimeout(resolve, 5000);
+      // הודעת socket לחברי הקבוצה לפני עזיבה
+      if (listToLeave) {
+        await new Promise<void>((resolve) => {
+          socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
+            resolve();
           });
-        }
-        // עזיבת חדר הסוקט רק אחרי שההודעה נשלחה
-        socketService.leaveList(listId);
-        await listsApi.leaveGroup(listId);
-      } catch (error) {
-        // Rollback - החזרת הרשימה ל-UI
-        if (listToLeave) {
-          socketService.joinList(listId);
-          setLists((prev) => [...prev, listToLeave]);
-        }
-        throw error;
+          setTimeout(resolve, 5000);
+        });
       }
+
+      // עזיבה בשרת קודם, הסרה מה-UI רק אחרי אישור
+      await listsApi.leaveGroup(listId);
+      socketService.leaveList(listId);
+      setLists((prev) => prev.filter((l) => l.id !== listId));
     },
     [user, lists],
   );
