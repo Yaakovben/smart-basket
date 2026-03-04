@@ -25,6 +25,7 @@ export class AdminController {
         totalLogins: stats?.totalLogins || 0,
         lastLoginAt: stats?.lastLoginAt || null,
         lastLoginMethod: stats?.lastLoginMethod || null,
+        lastAppOpenAt: stats?.lastAppOpenAt || null,
       };
     });
 

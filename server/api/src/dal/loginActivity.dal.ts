@@ -23,11 +23,13 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
   }
 
   // סטטיסטיקות התחברות לכל משתמש (aggregation ישירות ב-MongoDB)
+  // מחזיר התחברות אחרונה (email/google) ופתיחת אפליקציה אחרונה (app_open) בנפרד
   async getStatsByUser(): Promise<Array<{
     userId: string;
     totalLogins: number;
-    lastLoginAt: Date;
-    lastLoginMethod: string;
+    lastLoginAt: Date | null;
+    lastLoginMethod: string | null;
+    lastAppOpenAt: Date | null;
   }>> {
     return this.model.aggregate([
       { $sort: { createdAt: -1 } },
@@ -35,8 +37,8 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
         $group: {
           _id: '$user',
           totalLogins: { $sum: 1 },
-          lastLoginAt: { $first: '$createdAt' },
-          lastLoginMethod: { $first: '$loginMethod' },
+          // כל הפעילויות ממוינות לפי תאריך יורד
+          activities: { $push: { method: '$loginMethod', date: '$createdAt' } },
         },
       },
       {
@@ -44,8 +46,53 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
           _id: 0,
           userId: { $toString: '$_id' },
           totalLogins: 1,
-          lastLoginAt: 1,
-          lastLoginMethod: 1,
+          // התחברות אחרונה (email או google בלבד)
+          lastLoginAt: {
+            $let: {
+              vars: {
+                loginEntry: {
+                  $first: {
+                    $filter: {
+                      input: '$activities',
+                      cond: { $in: ['$$this.method', ['email', 'google']] },
+                    },
+                  },
+                },
+              },
+              in: '$$loginEntry.date',
+            },
+          },
+          lastLoginMethod: {
+            $let: {
+              vars: {
+                loginEntry: {
+                  $first: {
+                    $filter: {
+                      input: '$activities',
+                      cond: { $in: ['$$this.method', ['email', 'google']] },
+                    },
+                  },
+                },
+              },
+              in: '$$loginEntry.method',
+            },
+          },
+          // פתיחת אפליקציה אחרונה
+          lastAppOpenAt: {
+            $let: {
+              vars: {
+                appEntry: {
+                  $first: {
+                    $filter: {
+                      input: '$activities',
+                      cond: { $eq: ['$$this.method', 'app_open'] },
+                    },
+                  },
+                },
+              },
+              in: '$$appEntry.date',
+            },
+          },
         },
       },
     ]);

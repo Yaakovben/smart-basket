@@ -202,12 +202,20 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           borderColor: 'divider',
           bgcolor: 'action.hover'
         }}>
-          {/* רשת 2x2 של כרטיסי מידע */}
+          {/* אימייל מלא */}
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1, mb: 1 }}>
+            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Email</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
+              {user.email}
+            </Typography>
+          </Box>
+
+          {/* רשת כרטיסי מידע */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-            {/* התחברות אחרונה */}
+            {/* התחברות אחרונה (email/google בלבד) */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                <LoginIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
                 <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
                   {t('lastLogin')}
                 </Typography>
@@ -232,6 +240,30 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
               )}
             </Box>
 
+            {/* פתיחת אפליקציה אחרונה */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <AccessTimeIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+                  {t('lastAppOpen')}
+                </Typography>
+              </Box>
+              {user.lastAppOpenAt ? (
+                <>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
+                    {getRelativeTime(user.lastAppOpenAt, language)}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
+                    {formatDateShort(user.lastAppOpenAt, language)} {formatTimeShort(user.lastAppOpenAt, language)}
+                  </Typography>
+                </>
+              ) : (
+                <Typography sx={{ fontSize: 12, color: 'text.disabled', fontStyle: 'italic' }}>
+                  {t('neverOpened')}
+                </Typography>
+              )}
+            </Box>
+
             {/* סה"כ כניסות */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
@@ -250,35 +282,12 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                   height: 3,
                   borderRadius: 2,
                   bgcolor: 'rgba(139, 92, 246, 0.1)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: '#8B5CF6',
-                    borderRadius: 2
-                  }
+                  '& .MuiLinearProgress-bar': { bgcolor: '#8B5CF6', borderRadius: 2 }
                 }}
               />
             </Box>
 
-            {/* שיטת הרשמה */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                {isGoogle
-                  ? <GoogleIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                  : <EmailIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                }
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-                  {t('registeredVia')}
-                </Typography>
-              </Box>
-              <Typography sx={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: isGoogle ? '#4285F4' : '#14B8A6',
-              }}>
-                {isGoogle ? 'Google' : 'Email'}
-              </Typography>
-            </Box>
-
-            {/* תאריך הרשמה */}
+            {/* שיטת הרשמה + תאריך */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                 <CalendarTodayIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
@@ -286,11 +295,11 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                   {t('registeredAt')}
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
-                {formatDateShort(user.createdAt, language)}
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: isGoogle ? '#4285F4' : '#14B8A6' }}>
+                {isGoogle ? 'Google' : 'Email'}
               </Typography>
               <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                {formatTimeShort(user.createdAt, language)}
+                {formatDateShort(user.createdAt, language)}
               </Typography>
             </Box>
           </Box>

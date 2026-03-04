@@ -3,6 +3,7 @@ import type { LoginActivity, ActivityFilters, User } from '../../../global/types
 export interface UserWithLastLogin extends User {
   lastLoginAt?: string;
   lastLoginMethod?: 'email' | 'google' | 'app_open';
+  lastAppOpenAt?: string;
   registrationMethod: 'google' | 'email';
   createdAt: string;
   totalLogins: number;

@@ -85,6 +85,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       totalLogins: user.totalLogins,
       lastLoginAt: user.lastLoginAt || undefined,
       lastLoginMethod: user.lastLoginMethod || undefined,
+      lastAppOpenAt: user.lastAppOpenAt || undefined,
       registrationMethod: (user.googleId ? 'google' : 'email') as 'google' | 'email',
       createdAt: user.createdAt,
     })).sort((a, b) => {

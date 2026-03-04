@@ -14,6 +14,7 @@ export interface AdminUser {
   totalLogins: number;
   lastLoginAt: string | null;
   lastLoginMethod: 'email' | 'google' | 'app_open' | null;
+  lastAppOpenAt: string | null;
 }
 
 export interface AdminLoginActivity {

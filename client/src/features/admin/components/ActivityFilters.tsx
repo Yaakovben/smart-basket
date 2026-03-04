@@ -8,6 +8,13 @@ interface ActivityFiltersProps {
   onDateChange: (date: string) => void;
   onMonthChange: (month: string) => void;
   onHourChange: (hour: number) => void;
+  // סינון לפי סוג פעילות
+  activityType: 'all' | 'login' | 'app_open';
+  onActivityTypeChange: (type: 'all' | 'login' | 'app_open') => void;
+  // סינון לפי משתמש
+  userNames: string[];
+  selectedUser: string;
+  onUserChange: (user: string) => void;
 }
 
 export const ActivityFilters = ({
@@ -15,7 +22,12 @@ export const ActivityFilters = ({
   onFilterModeChange,
   onDateChange,
   onMonthChange,
-  onHourChange
+  onHourChange,
+  activityType,
+  onActivityTypeChange,
+  userNames,
+  selectedUser,
+  onUserChange,
 }: ActivityFiltersProps) => {
   const { t } = useSettings();
 
@@ -24,6 +36,12 @@ export const ActivityFilters = ({
     { value: 'daily', label: t('dailyView') },
     { value: 'monthly', label: t('monthlyView') },
     { value: 'hourly', label: t('hourlyView') }
+  ];
+
+  const activityTypes: Array<{ value: 'all' | 'login' | 'app_open'; label: string }> = [
+    { value: 'all', label: t('allTypes') },
+    { value: 'login', label: t('activityLogins') },
+    { value: 'app_open', label: t('activityAppOpens') },
   ];
 
   const today = new Date().toISOString().split('T')[0];
@@ -35,16 +53,18 @@ export const ActivityFilters = ({
       borderRadius: '16px',
       p: 2,
       mb: 2,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 1.5
     }}>
-      {/* Filter Mode Buttons */}
+      {/* כפתורי זמן */}
       <Box sx={{
         display: 'flex',
         gap: 0.5,
         p: 0.5,
         bgcolor: 'rgba(20, 184, 166, 0.08)',
-        borderRadius: '12px',
-        mb: filters.filterMode !== 'all' ? 2 : 0
+        borderRadius: '12px'
       }}>
         {filterModes.map(mode => (
           <Button
@@ -71,12 +91,63 @@ export const ActivityFilters = ({
         ))}
       </Box>
 
-      {/* Conditional Inputs based on filter mode */}
+      {/* סינון סוג פעילות */}
+      <Box sx={{
+        display: 'flex',
+        gap: 0.5,
+        p: 0.5,
+        bgcolor: 'rgba(139, 92, 246, 0.08)',
+        borderRadius: '12px'
+      }}>
+        {activityTypes.map(type => (
+          <Button
+            key={type.value}
+            onClick={() => onActivityTypeChange(type.value)}
+            sx={{
+              flex: 1,
+              borderRadius: '10px',
+              bgcolor: activityType === type.value ? '#8B5CF6' : 'transparent',
+              color: activityType === type.value ? 'white' : 'text.primary',
+              textTransform: 'none',
+              py: 0.75,
+              px: 1,
+              fontSize: 12,
+              fontWeight: 600,
+              minHeight: 36,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                bgcolor: activityType === type.value ? '#7C3AED' : 'rgba(139, 92, 246, 0.1)'
+              }
+            }}
+          >
+            {type.label}
+          </Button>
+        ))}
+      </Box>
+
+      {/* סינון לפי משתמש */}
+      <FormControl size="small" fullWidth>
+        <InputLabel shrink>{t('filterByUser')}</InputLabel>
+        <Select
+          value={selectedUser}
+          onChange={(e) => onUserChange(e.target.value)}
+          label={t('filterByUser')}
+          displayEmpty
+          sx={{ borderRadius: '10px', height: 42, '& .MuiSelect-select': { py: 1 } }}
+        >
+          <MenuItem value="">{t('allUsers')}</MenuItem>
+          {userNames.map(name => (
+            <MenuItem key={name} value={name}>{name}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {/* שדות זמן מותנים */}
       {filters.filterMode === 'daily' && (
         <Box sx={{
           bgcolor: 'rgba(20, 184, 166, 0.04)',
           borderRadius: '12px',
-          p: 2,
+          p: 1.5,
           border: '1.5px solid',
           borderColor: 'rgba(20, 184, 166, 0.2)'
         }}>
@@ -87,13 +158,7 @@ export const ActivityFilters = ({
             fullWidth
             label={t('selectDate')}
             InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'background.paper',
-                borderRadius: '10px',
-                height: 48
-              }
-            }}
+            sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '10px', height: 48 } }}
           />
         </Box>
       )}
@@ -102,7 +167,7 @@ export const ActivityFilters = ({
         <Box sx={{
           bgcolor: 'rgba(20, 184, 166, 0.04)',
           borderRadius: '12px',
-          p: 2,
+          p: 1.5,
           border: '1.5px solid',
           borderColor: 'rgba(20, 184, 166, 0.2)'
         }}>
@@ -113,13 +178,7 @@ export const ActivityFilters = ({
             fullWidth
             label={t('selectMonth')}
             InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'background.paper',
-                borderRadius: '10px',
-                height: 48
-              }
-            }}
+            sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '10px', height: 48 } }}
           />
         </Box>
       )}
@@ -128,7 +187,7 @@ export const ActivityFilters = ({
         <Box sx={{
           bgcolor: 'rgba(20, 184, 166, 0.04)',
           borderRadius: '12px',
-          p: 2,
+          p: 1.5,
           border: '1.5px solid',
           borderColor: 'rgba(20, 184, 166, 0.2)'
         }}>
@@ -139,14 +198,7 @@ export const ActivityFilters = ({
               onChange={(e) => onDateChange(e.target.value)}
               label={t('selectDate')}
               InputLabelProps={{ shrink: true }}
-              sx={{
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'background.paper',
-                  borderRadius: '10px',
-                  height: 48
-                }
-              }}
+              sx={{ flex: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '10px', height: 48 } }}
             />
             <FormControl sx={{ flex: 1 }}>
               <InputLabel shrink>{t('selectHour')}</InputLabel>
@@ -155,14 +207,7 @@ export const ActivityFilters = ({
                 onChange={(e) => onHourChange(Number(e.target.value))}
                 displayEmpty
                 label={t('selectHour')}
-                sx={{
-                  bgcolor: 'background.paper',
-                  borderRadius: '10px',
-                  height: 48,
-                  '& .MuiSelect-select': {
-                    py: 1.5
-                  }
-                }}
+                sx={{ bgcolor: 'background.paper', borderRadius: '10px', height: 48, '& .MuiSelect-select': { py: 1.5 } }}
               >
                 <MenuItem value="" disabled>{t('selectHour')}</MenuItem>
                 {Array.from({ length: 24 }, (_, i) => (

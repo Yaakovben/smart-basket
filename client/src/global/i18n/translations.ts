@@ -263,9 +263,16 @@ type TranslationKey =
   | 'uniqueUsersThisMonth'
   | 'registeredUsers'
   | 'lastLogin'
+  | 'lastAppOpen'
   | 'neverLoggedIn'
+  | 'neverOpened'
   | 'refreshData'
   | 'searchCustomer'
+  | 'activityLogins'
+  | 'activityAppOpens'
+  | 'filterByUser'
+  | 'allUsers'
+  | 'allTypes'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -639,9 +646,16 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'משתמשים פעילים החודש',
     registeredUsers: 'משתמשים רשומים',
     lastLogin: 'התחברות אחרונה',
+    lastAppOpen: 'פתיחה אחרונה',
     neverLoggedIn: 'מעולם לא התחבר',
+    neverOpened: 'מעולם לא פתח',
     refreshData: 'רענן נתונים',
     searchCustomer: 'חיפוש לקוח...',
+    activityLogins: 'התחברויות',
+    activityAppOpens: 'פתיחות אפליקציה',
+    filterByUser: 'סנן לפי משתמש',
+    allUsers: 'כל המשתמשים',
+    allTypes: 'כל הסוגים',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -1009,9 +1023,16 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'Active Users This Month',
     registeredUsers: 'Registered Users',
     lastLogin: 'Last Login',
+    lastAppOpen: 'Last App Open',
     neverLoggedIn: 'Never logged in',
+    neverOpened: 'Never opened',
     refreshData: 'Refresh Data',
     searchCustomer: 'Search customer...',
+    activityLogins: 'Logins',
+    activityAppOpens: 'App Opens',
+    filterByUser: 'Filter by user',
+    allUsers: 'All Users',
+    allTypes: 'All Types',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -1379,9 +1400,16 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'Активных пользователей в этом месяце',
     registeredUsers: 'Зарегистрированные пользователи',
     lastLogin: 'Последний вход',
+    lastAppOpen: 'Последнее открытие',
     neverLoggedIn: 'Никогда не входил',
+    neverOpened: 'Никогда не открывал',
     refreshData: 'Обновить данные',
     searchCustomer: 'Поиск клиента...',
+    activityLogins: 'Входы',
+    activityAppOpens: 'Открытия приложения',
+    filterByUser: 'Фильтр по пользователю',
+    allUsers: 'Все пользователи',
+    allTypes: 'Все типы',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',

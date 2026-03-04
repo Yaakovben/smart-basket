@@ -39,6 +39,8 @@ export const AdminDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [userSearch, setUserSearch] = useState('');
+  const [activityType, setActivityType] = useState<'all' | 'login' | 'app_open'>('all');
+  const [selectedActivityUser, setSelectedActivityUser] = useState('');
   const {
     filteredActivities,
     usersWithLoginInfo,
@@ -62,6 +64,26 @@ export const AdminDashboard = () => {
     merged.add(user.id);
     return merged;
   }, [socketOnlineUserIds, user?.id]);
+
+  // שמות משתמשים ייחודיים לסינון
+  const uniqueUserNames = useMemo(() => {
+    const names = new Set(filteredActivities.map(a => a.userName));
+    return Array.from(names).sort();
+  }, [filteredActivities]);
+
+  // סינון פעילויות לפי סוג ומשתמש
+  const displayedActivities = useMemo(() => {
+    let result = filteredActivities;
+    if (activityType === 'login') {
+      result = result.filter(a => a.loginMethod === 'email' || a.loginMethod === 'google');
+    } else if (activityType === 'app_open') {
+      result = result.filter(a => a.loginMethod === 'app_open');
+    }
+    if (selectedActivityUser) {
+      result = result.filter(a => a.userName === selectedActivityUser);
+    }
+    return result;
+  }, [filteredActivities, activityType, selectedActivityUser]);
 
   // משתמשים מסוננים (ממוזכר)
   const filteredUsers = useMemo(() => {
@@ -259,7 +281,7 @@ export const AdminDashboard = () => {
             }
           }}
         >
-          <Tab label={loading ? t('loginActivity') : `${t('loginActivity')} (${filteredActivities.length})`} />
+          <Tab label={loading ? t('loginActivity') : `${t('loginActivity')} (${displayedActivities.length})`} />
           <Tab label={loading ? t('registeredUsers') : `${t('registeredUsers')} (${usersWithLoginInfo.length})`} />
         </Tabs>
 
@@ -273,11 +295,16 @@ export const AdminDashboard = () => {
                 onDateChange={setSelectedDate}
                 onMonthChange={setSelectedMonth}
                 onHourChange={setSelectedHour}
+                activityType={activityType}
+                onActivityTypeChange={setActivityType}
+                userNames={uniqueUserNames}
+                selectedUser={selectedActivityUser}
+                onUserChange={setSelectedActivityUser}
               />
             )}
 
             {/* Activity Table or Loading */}
-            {loading ? <LoadingSkeleton /> : <ActivityTable activities={filteredActivities} />}
+            {loading ? <LoadingSkeleton /> : <ActivityTable activities={displayedActivities} language={settings.language} />}
           </>
         )}
 
