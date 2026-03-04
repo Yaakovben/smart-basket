@@ -54,7 +54,9 @@ export class AuthController {
 
   static refreshToken = asyncHandler(async (req: Request, res: Response) => {
     const { refreshToken } = req.body as { refreshToken: string };
-    const result = await TokenService.refreshAccessToken(refreshToken);
+    const ipAddress = req.ip || req.socket.remoteAddress;
+    const userAgent = req.get('User-Agent');
+    const result = await TokenService.refreshAccessToken(refreshToken, ipAddress, userAgent);
 
     if (!result) {
       throw AuthError.invalidToken();

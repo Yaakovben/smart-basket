@@ -13,7 +13,7 @@ export interface AdminUser {
   // סטטיסטיקות התחברות מהשרת (aggregation)
   totalLogins: number;
   lastLoginAt: string | null;
-  lastLoginMethod: 'email' | 'google' | null;
+  lastLoginMethod: 'email' | 'google' | 'app_open' | null;
 }
 
 export interface AdminLoginActivity {
@@ -21,7 +21,7 @@ export interface AdminLoginActivity {
   user: string;
   userName: string;
   userEmail: string;
-  loginMethod: 'email' | 'google';
+  loginMethod: 'email' | 'google' | 'app_open';
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;

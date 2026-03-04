@@ -63,7 +63,7 @@ export interface List {
 export type ToastType = "success" | "error" | "info" | "warning";
 
 // ===== פעילות התחברות (פאנל ניהול) =====
-export type LoginMethod = 'email' | 'google';
+export type LoginMethod = 'email' | 'google' | 'app_open';
 
 export interface LoginActivity {
   id: string;

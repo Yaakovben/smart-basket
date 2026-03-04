@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
-export type LoginMethod = 'email' | 'google';
+export type LoginMethod = 'email' | 'google' | 'app_open';
 
 export interface ILoginActivity extends Document {
   user: Types.ObjectId;
@@ -29,7 +29,7 @@ const loginActivitySchema = new Schema<ILoginActivity>(
     },
     loginMethod: {
       type: String,
-      enum: ['email', 'google'],
+      enum: ['email', 'google', 'app_open'],
       required: true,
     },
     ipAddress: String,

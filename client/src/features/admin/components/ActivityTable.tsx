@@ -14,6 +14,18 @@ interface GroupedActivities {
   activities: LoginActivity[];
 }
 
+const getMethodColor = (method: string) => {
+  if (method === 'google') return '#4285F4';
+  if (method === 'app_open') return '#F59E0B';
+  return '#14B8A6';
+};
+
+const getMethodLabel = (method: string) => {
+  if (method === 'google') return 'Google';
+  if (method === 'app_open') return 'App';
+  return 'Email';
+};
+
 export const ActivityTable = ({ activities }: ActivityTableProps) => {
   const { t, settings } = useSettings();
 
@@ -111,18 +123,18 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
                     minWidth: 60,
                     p: 1,
                     borderRadius: '10px',
-                    bgcolor: activity.loginMethod === 'google' ? 'rgba(66, 133, 244, 0.1)' : 'rgba(20, 184, 166, 0.1)'
+                    bgcolor: `${getMethodColor(activity.loginMethod)}18`
                   }}
                 >
                   <AccessTimeIcon sx={{
                     fontSize: 16,
-                    color: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6',
+                    color: getMethodColor(activity.loginMethod),
                     mb: 0.25
                   }} />
                   <Typography sx={{
                     fontSize: 16,
                     fontWeight: 700,
-                    color: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6'
+                    color: getMethodColor(activity.loginMethod)
                   }}>
                     {formatTimeShort(activity.timestamp, settings.language)}
                   </Typography>
@@ -134,7 +146,7 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
                     width: 44,
                     height: 44,
                     borderRadius: '12px',
-                    bgcolor: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6',
+                    bgcolor: getMethodColor(activity.loginMethod),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -176,16 +188,16 @@ export const ActivityTable = ({ activities }: ActivityTableProps) => {
 
                 {/* Login Method Badge */}
                 <Chip
-                  label={activity.loginMethod === 'google' ? 'Google' : 'Email'}
+                  label={getMethodLabel(activity.loginMethod)}
                   size="small"
                   sx={{
                     height: 24,
                     fontSize: 11,
                     fontWeight: 600,
-                    bgcolor: activity.loginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-                    color: activity.loginMethod === 'google' ? '#4285F4' : '#14B8A6',
+                    bgcolor: `${getMethodColor(activity.loginMethod)}26`,
+                    color: getMethodColor(activity.loginMethod),
                     border: '1px solid',
-                    borderColor: activity.loginMethod === 'google' ? 'rgba(66, 133, 244, 0.3)' : 'rgba(20, 184, 166, 0.3)'
+                    borderColor: `${getMethodColor(activity.loginMethod)}4D`
                   }}
                 />
               </Paper>

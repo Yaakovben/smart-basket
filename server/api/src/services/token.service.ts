@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { TokenDAL } from '../dal';
+import { TokenDAL, LoginActivityDAL } from '../dal';
 import { env } from '../config';
 import type { TokenPayload, AuthTokens } from '../types';
 
@@ -29,7 +29,7 @@ export class TokenService {
     return { accessToken, refreshToken };
   }
 
-  static async refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
+  static async refreshAccessToken(refreshToken: string, ipAddress?: string, userAgent?: string): Promise<AuthTokens | null> {
     const tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
 
     if (!tokenDoc || tokenDoc.expiresAt < new Date()) {
@@ -62,6 +62,16 @@ export class TokenService {
 
     // בקשה אחרת כבר החליפה את הטוקן
     if (!updated) return null;
+
+    // רישום פתיחת אפליקציה
+    LoginActivityDAL.logActivity({
+      userId,
+      userName: name,
+      userEmail: email,
+      loginMethod: 'app_open',
+      ipAddress,
+      userAgent,
+    }).catch(() => {});
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }

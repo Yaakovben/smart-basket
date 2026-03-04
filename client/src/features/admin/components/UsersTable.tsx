@@ -164,15 +164,15 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
         {/* Login Method Badge */}
         {user.lastLoginMethod && (
           <Chip
-            label={user.lastLoginMethod === 'google' ? 'G' : '@'}
+            label={user.lastLoginMethod === 'google' ? 'G' : user.lastLoginMethod === 'app_open' ? '⟳' : '@'}
             size="small"
             sx={{
               width: 24,
               height: 24,
               fontSize: 11,
               fontWeight: 700,
-              bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-              color: user.lastLoginMethod === 'google' ? '#4285F4' : '#14B8A6',
+              bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : user.lastLoginMethod === 'app_open' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(20, 184, 166, 0.15)',
+              color: user.lastLoginMethod === 'google' ? '#4285F4' : user.lastLoginMethod === 'app_open' ? '#F59E0B' : '#14B8A6',
               '& .MuiChip-label': { px: 0 }
             }}
           />
@@ -272,14 +272,14 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                 {t('loginMethodLabel')}
               </Typography>
               <Chip
-                label={user.lastLoginMethod === 'google' ? 'Google' : 'Email'}
+                label={user.lastLoginMethod === 'google' ? 'Google' : user.lastLoginMethod === 'app_open' ? 'App' : 'Email'}
                 size="small"
                 sx={{
                   height: 20,
                   fontSize: 10,
                   fontWeight: 600,
-                  bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-                  color: user.lastLoginMethod === 'google' ? '#4285F4' : '#14B8A6'
+                  bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : user.lastLoginMethod === 'app_open' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(20, 184, 166, 0.15)',
+                  color: user.lastLoginMethod === 'google' ? '#4285F4' : user.lastLoginMethod === 'app_open' ? '#F59E0B' : '#14B8A6'
                 }}
               />
             </Box>
