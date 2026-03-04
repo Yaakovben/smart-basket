@@ -80,12 +80,15 @@ export const useList = ({
 
   // ===== מצב פעולות =====
   const [savingListChanges, setSavingListChanges] = useState(false);
-  const [togglingProductId, setTogglingProductId] = useState<string | null>(null);
-  const [savingProduct, setSavingProduct] = useState(false);
+  // togglingProductId לא בשימוש כי toggle הוא אופטימיסטי מיידי
+  const togglingProductId = null;
+  // savingProduct לא בשימוש כי עדכון מוצר הוא אופטימיסטי מיידי
+  const savingProduct = false;
   const [processingDuplicate, setProcessingDuplicate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [addingProduct, setAddingProduct] = useState(false);
-  const [pendingAddName, setPendingAddName] = useState<string | null>(null);
+  // addingProduct ו-pendingAddName לא בשימוש כי הוספת מוצר היא אופטימיסטית
+  const addingProduct = false;
+  const pendingAddName = null;
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
 
   // ===== חגיגת השלמת רשימה =====
@@ -227,7 +230,7 @@ export const useList = ({
     return true;
   }, [newProduct, t]);
 
-  // הוספת מוצר - ממתין לאישור שרת לפני הצגה ברשימה
+  // הוספת מוצר - אופטימיסטי עם מזהה זמני
   const addProductToServer = useCallback(async (productData: {
     name: string;
     quantity: number;
@@ -235,19 +238,29 @@ export const useList = ({
     category: Product['category'];
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
-    setAddingProduct(true);
-    setPendingAddName(productData.name);
+
+    // הוספה אופטימיסטית מיידית עם מזהה זמני
+    const tempId = `temp-${Date.now()}`;
+    const tempProduct: Product = {
+      id: tempId,
+      name: productData.name,
+      quantity: productData.quantity,
+      unit: productData.unit,
+      category: productData.category,
+      isPurchased: false,
+      addedBy: user.name,
+      createdAt: new Date().toISOString(),
+    };
+    onUpdateProductsForList(list.id, (current) => [...current, tempProduct]);
 
     try {
       const addedProduct = await productsApi.addProduct(list.id, productData);
 
-      // הוספה ל-state רק אחרי שהשרת אישר
-      onUpdateProductsForList(list.id, (current) => [
-        ...current,
-        convertApiProduct(addedProduct),
-      ]);
+      // החלפת מזהה זמני במזהה אמיתי מהשרת
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => p.id === tempId ? convertApiProduct(addedProduct) : p)
+      );
 
-      // שליחת אירוע socket להתראת משתמשים אחרים
       socketService.emitProductAdded(list.id, {
         id: addedProduct.id,
         name: addedProduct.name,
@@ -260,11 +273,12 @@ export const useList = ({
         showToast(t('added'));
       }
     } catch (error) {
+      // שחזור - הסרת המוצר הזמני
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
+      onUpdateProductsForList(list.id, (current) =>
+        current.filter(p => p.id !== tempId)
+      );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      setAddingProduct(false);
-      setPendingAddName(null);
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t]);
 
@@ -378,26 +392,29 @@ export const useList = ({
 
     const newIsPurchased = !product.isPurchased;
     dismissHint();
-    setTogglingProductId(productId);
+
+    // עדכון אופטימיסטי מיידי - ה-UI מגיב ברגע
+    if (newIsPurchased) {
+      justMarkedPurchased.current = true;
+    }
+    onUpdateProductsForList(list.id, (currentProducts) =>
+      currentProducts.map((p: Product) =>
+        p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
+      )
+    );
 
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
-
-      if (newIsPurchased) {
-        justMarkedPurchased.current = true;
-      }
-
-      onUpdateProductsForList(list.id, (currentProducts) =>
-        currentProducts.map((p: Product) =>
-          p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
-        )
-      );
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
+      // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
+      onUpdateProductsForList(list.id, (currentProducts) =>
+        currentProducts.map((p: Product) =>
+          p.id === productId ? { ...p, isPurchased: product.isPurchased } : p
+        )
+      );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      setTogglingProductId(null);
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint]);
 
@@ -411,16 +428,19 @@ export const useList = ({
       onConfirm: async () => {
         setConfirm(null);
 
+        // מחיקה אופטימיסטית מיידית
+        onUpdateProductsForList(list.id, (current) =>
+          current.filter(p => p.id !== productId)
+        );
+
         try {
-          // שרת קודם, UI רק אחרי אישור
           await productsApi.deleteProduct(list.id, productId);
-          onUpdateProductsForList(list.id, (current) =>
-            current.filter(p => p.id !== productId)
-          );
           showToast(t('deleted'));
           socketService.emitProductDeleted(list.id, productId, product.name, user.name);
         } catch (error) {
+          // שחזור במקרה של שגיאה
           if (import.meta.env.DEV) console.error('Failed to delete product:', error);
+          onUpdateProductsForList(list.id, (current) => [...current, product]);
           showToast(t('errorOccurred'), 'error');
         }
       }
@@ -441,15 +461,15 @@ export const useList = ({
     if (editData.unit !== original.unit) changes.unit = editData.unit;
     if (editData.category !== original.category) changes.category = editData.category;
 
-    setSavingProduct(true);
+    // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי
+    setShowEdit(null);
+    setOriginalEditProduct(null);
+    onUpdateProductsForList(list.id, (current) =>
+      current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category } : p)
+    );
+
     try {
       await productsApi.updateProduct(list.id, editData.id, changes);
-      // סגירת מודאל רק אחרי אישור שרת
-      setShowEdit(null);
-      setOriginalEditProduct(null);
-      onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category } : p)
-      );
       showToast(t('saved'));
       socketService.emitProductUpdated(list.id, {
         id: editData.id,
@@ -459,10 +479,12 @@ export const useList = ({
         category: editData.category,
       }, user.name);
     } catch (error) {
+      // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category } : p)
+      );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      setSavingProduct(false);
     }
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 

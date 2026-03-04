@@ -5,6 +5,9 @@ import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import GoogleIcon from '@mui/icons-material/Google';
+import EmailIcon from '@mui/icons-material/Email';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';
@@ -16,7 +19,7 @@ const pulse = keyframes`
   50% { transform: scale(1.4); opacity: 0.7; }
 `;
 
-// ===== UserRow - כל שורה מנהלת את ה-expand שלה =====
+// ===== UserRow =====
 interface UserRowProps {
   user: UserWithLastLogin;
   index: number;
@@ -30,6 +33,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
   const [isExpanded, setIsExpanded] = useState(false);
   const activeToday = isActiveToday(user.lastLoginAt);
   const activeThisWeek = isActiveThisWeek(user.lastLoginAt);
+  const isGoogle = user.registrationMethod === 'google';
 
   const toggleExpand = useCallback(() => {
     setIsExpanded(prev => !prev);
@@ -46,7 +50,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
         boxShadow: isOnline ? '0 0 12px rgba(34, 197, 94, 0.2)' : undefined,
       }}
     >
-      {/* Compact View - Always visible */}
+      {/* שורה ראשית */}
       <Box
         onClick={toggleExpand}
         sx={{
@@ -55,10 +59,11 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           alignItems: 'center',
           gap: 1.5,
           cursor: 'pointer',
+          transition: 'background-color 0.15s',
           '&:active': { bgcolor: 'action.hover' }
         }}
       >
-        {/* Rank */}
+        {/* מספור */}
         <Box
           sx={{
             width: 22,
@@ -77,7 +82,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           {index + 1}
         </Box>
 
-        {/* Avatar */}
+        {/* אווטאר */}
         <Box
           sx={{
             width: 40,
@@ -114,7 +119,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           )}
         </Box>
 
-        {/* Name & Stats */}
+        {/* שם + סטטוס */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <Typography
@@ -147,74 +152,63 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
               />
             )}
           </Box>
+          {/* אימייל בשורה הראשית */}
           <Typography
             sx={{
               fontSize: 11,
               color: 'text.secondary',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5
-            }}
-          >
-            <LoginIcon sx={{ fontSize: 12 }} />
-            {user.totalLogins} {t('logins')}
-          </Typography>
-        </Box>
-
-        {/* Login Method Badge */}
-        {user.lastLoginMethod && (
-          <Chip
-            label={user.lastLoginMethod === 'google' ? 'G' : user.lastLoginMethod === 'app_open' ? '⟳' : '@'}
-            size="small"
-            sx={{
-              width: 24,
-              height: 24,
-              fontSize: 11,
-              fontWeight: 700,
-              bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : user.lastLoginMethod === 'app_open' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-              color: user.lastLoginMethod === 'google' ? '#4285F4' : user.lastLoginMethod === 'app_open' ? '#F59E0B' : '#14B8A6',
-              '& .MuiChip-label': { px: 0 }
-            }}
-          />
-        )}
-
-        {/* Expand Icon */}
-        <IconButton size="small" sx={{ p: 0.5 }}>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
-
-      {/* Expanded Details */}
-      <Collapse in={isExpanded}>
-        <Box sx={{
-          px: 1.5,
-          pb: 1.5,
-          pt: 0.5,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'action.hover'
-        }}>
-          {/* Email */}
-          <Typography
-            sx={{
-              fontSize: 12,
-              color: 'text.secondary',
-              mb: 1.5,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}
           >
-            📧 {user.email}
+            {user.email}
           </Typography>
+        </Box>
 
-          {/* Stats Grid */}
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
-            {/* Last Login */}
-            <Box sx={{ flex: 1, bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+        {/* תג שיטת הרשמה */}
+        <Chip
+          icon={isGoogle
+            ? <GoogleIcon sx={{ fontSize: '13px !important', color: '#4285F4 !important' }} />
+            : <EmailIcon sx={{ fontSize: '13px !important', color: '#14B8A6 !important' }} />
+          }
+          label={isGoogle ? 'Google' : 'Email'}
+          size="small"
+          sx={{
+            height: 26,
+            fontSize: 11,
+            fontWeight: 600,
+            bgcolor: isGoogle ? 'rgba(66, 133, 244, 0.12)' : 'rgba(20, 184, 166, 0.12)',
+            color: isGoogle ? '#4285F4' : '#14B8A6',
+            border: `1px solid ${isGoogle ? 'rgba(66, 133, 244, 0.25)' : 'rgba(20, 184, 166, 0.25)'}`,
+            '& .MuiChip-label': { px: 0.5 },
+            '& .MuiChip-icon': { ml: 0.5, mr: -0.25 }
+          }}
+        />
+
+        {/* כפתור פתיחה */}
+        <IconButton size="small" sx={{ p: 0.5 }}>
+          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </IconButton>
+      </Box>
+
+      {/* פרטים מורחבים */}
+      <Collapse in={isExpanded}>
+        <Box sx={{
+          px: 1.5,
+          pb: 1.5,
+          pt: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'action.hover'
+        }}>
+          {/* רשת 2x2 של כרטיסי מידע */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+            {/* התחברות אחרונה */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
+                <AccessTimeIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
                   {t('lastLogin')}
                 </Typography>
               </Box>
@@ -238,11 +232,11 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
               )}
             </Box>
 
-            {/* Total Logins */}
-            <Box sx={{ flex: 1, bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+            {/* סה"כ כניסות */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <LoginIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
+                <LoginIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
                   {t('logins')}
                 </Typography>
               </Box>
@@ -263,27 +257,43 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                 }}
               />
             </Box>
-          </Box>
 
-          {/* Login Method */}
-          {user.lastLoginMethod && (
-            <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                {t('loginMethodLabel')}
+            {/* שיטת הרשמה */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                {isGoogle
+                  ? <GoogleIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                  : <EmailIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                }
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+                  {t('registeredVia')}
+                </Typography>
+              </Box>
+              <Typography sx={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: isGoogle ? '#4285F4' : '#14B8A6',
+              }}>
+                {isGoogle ? 'Google' : 'Email'}
               </Typography>
-              <Chip
-                label={user.lastLoginMethod === 'google' ? 'Google' : user.lastLoginMethod === 'app_open' ? 'App' : 'Email'}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  bgcolor: user.lastLoginMethod === 'google' ? 'rgba(66, 133, 244, 0.15)' : user.lastLoginMethod === 'app_open' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-                  color: user.lastLoginMethod === 'google' ? '#4285F4' : user.lastLoginMethod === 'app_open' ? '#F59E0B' : '#14B8A6'
-                }}
-              />
             </Box>
-          )}
+
+            {/* תאריך הרשמה */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <CalendarTodayIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+                  {t('registeredAt')}
+                </Typography>
+              </Box>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
+                {formatDateShort(user.createdAt, language)}
+              </Typography>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
+                {formatTimeShort(user.createdAt, language)}
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       </Collapse>
     </Paper>
@@ -353,7 +363,7 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
         </>
       )}
 
-      {/* מפריד בין מחוברים ללא מחוברים */}
+      {/* מפריד */}
       {onlineUsers.length > 0 && offlineUsers.length > 0 && (
         <Box sx={{
           display: 'flex',

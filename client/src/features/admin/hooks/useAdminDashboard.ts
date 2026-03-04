@@ -85,6 +85,8 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       totalLogins: user.totalLogins,
       lastLoginAt: user.lastLoginAt || undefined,
       lastLoginMethod: user.lastLoginMethod || undefined,
+      registrationMethod: (user.googleId ? 'google' : 'email') as 'google' | 'email',
+      createdAt: user.createdAt,
     })).sort((a, b) => {
       // מיון לפי התחברות אחרונה (חדש ביותר ראשון)
       if (!a.lastLoginAt && !b.lastLoginAt) return 0;

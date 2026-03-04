@@ -355,6 +355,8 @@ type TranslationKey =
   | 'yesterday'
   | 'logins'
   | 'loginMethodLabel'
+  | 'registeredVia'
+  | 'registeredAt'
   | 'adminLoadError'
   // WhatsApp share
   | 'listCompleted'
@@ -729,6 +731,8 @@ export const translations: Record<Language, Translations> = {
     yesterday: 'אתמול',
     logins: 'כניסות',
     loginMethodLabel: 'שיטת התחברות:',
+    registeredVia: 'נרשם דרך:',
+    registeredAt: 'תאריך הרשמה:',
     adminLoadError: 'שגיאה בטעינת נתוני הניהול',
     // WhatsApp share
     listCompleted: 'הרשימה הושלמה',
@@ -1097,6 +1101,8 @@ export const translations: Record<Language, Translations> = {
     yesterday: 'Yesterday',
     logins: 'Logins',
     loginMethodLabel: 'Login method:',
+    registeredVia: 'Registered via:',
+    registeredAt: 'Registered:',
     adminLoadError: 'Failed to load admin data',
     // WhatsApp share
     listCompleted: 'List completed',
@@ -1465,6 +1471,8 @@ export const translations: Record<Language, Translations> = {
     yesterday: 'Вчера',
     logins: 'Входы',
     loginMethodLabel: 'Способ входа:',
+    registeredVia: 'Зарегистрирован через:',
+    registeredAt: 'Дата регистрации:',
     adminLoadError: 'Ошибка загрузки данных',
     // WhatsApp share
     listCompleted: 'Список завершён',
