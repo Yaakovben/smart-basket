@@ -160,7 +160,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
-    pendingAddName, savingListChanges, fabPosition, isDragging,
+    pendingAddName, savingListChanges, togglingProductId, savingProduct, processingDuplicate, refreshing,
+    fabPosition, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
@@ -225,6 +226,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onQuickAdd={handleQuickAdd}
         onlineUserIds={onlineUserIds}
         onRefresh={refreshList}
+        refreshing={refreshing}
       />
 
       {/* Content */}
@@ -257,6 +259,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 product={p}
                 isPurchased={p.isPurchased}
                 isOpen={openItemId === p.id}
+                isToggling={togglingProductId === p.id}
                 currentUserName={user.name}
                 onOpen={setOpenItemId}
                 onClose={handleCloseItem}
@@ -305,6 +308,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       <EditProductModal
         product={showEdit}
         hasChanges={hasProductChanges}
+        saving={savingProduct}
         onClose={closeEditProduct}
         onSave={saveEditedProduct}
         onUpdateField={updateEditProductField}
@@ -378,7 +382,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
       {/* Duplicate Product Dialog */}
       {duplicateProduct && (
-        <Modal title={t('productExists')} onClose={handleDuplicateCancel}>
+        <Modal title={t('productExists')} onClose={() => !processingDuplicate && handleDuplicateCancel()}>
           <Typography sx={{ fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 2.5, lineHeight: 1.6 }}>
             {t('productExistsMessage')
               .replace('{name}', duplicateProduct.existing.name)
@@ -386,10 +390,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               .replace('{unit}', duplicateProduct.existing.unit)}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Button variant="contained" fullWidth onClick={handleDuplicateIncreaseQuantity} sx={{ py: 1.25 }}>
-              {t('increaseQuantity')}
+            <Button variant="contained" fullWidth onClick={handleDuplicateIncreaseQuantity} disabled={processingDuplicate} sx={{ py: 1.25 }}>
+              {processingDuplicate ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('increaseQuantity')}
             </Button>
-            <Button variant="outlined" fullWidth onClick={handleDuplicateAddNew} sx={{ py: 1.25 }}>
+            <Button variant="outlined" fullWidth onClick={handleDuplicateAddNew} disabled={processingDuplicate} sx={{ py: 1.25 }}>
               {t('addAnyway')}
             </Button>
           </Box>

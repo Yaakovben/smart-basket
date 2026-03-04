@@ -78,8 +78,12 @@ export const useList = ({
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
 
-  // ===== מצב הוספת מוצר =====
+  // ===== מצב פעולות =====
   const [savingListChanges, setSavingListChanges] = useState(false);
+  const [togglingProductId, setTogglingProductId] = useState<string | null>(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [processingDuplicate, setProcessingDuplicate] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingAddName, setPendingAddName] = useState<string | null>(null);
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
@@ -326,11 +330,11 @@ export const useList = ({
     if (!duplicateProduct) return;
     const { existing, newData } = duplicateProduct;
     const newQuantity = existing.quantity + newData.quantity;
-    setDuplicateProduct(null);
 
+    setProcessingDuplicate(true);
     try {
-      // שרת קודם, UI רק אחרי אישור
       await productsApi.updateProduct(list.id, existing.id, { quantity: newQuantity });
+      setDuplicateProduct(null);
       onUpdateProductsForList(list.id, (currentProducts) =>
         currentProducts.map((p: Product) =>
           p.id === existing.id ? { ...p, quantity: newQuantity } : p
@@ -346,6 +350,8 @@ export const useList = ({
       }, user.name);
     } catch {
       showToast(t('unknownError'), 'error');
+    } finally {
+      setProcessingDuplicate(false);
     }
   }, [duplicateProduct, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
@@ -353,8 +359,13 @@ export const useList = ({
   const handleDuplicateAddNew = useCallback(async () => {
     if (!duplicateProduct) return;
     const { newData } = duplicateProduct;
-    setDuplicateProduct(null);
-    await addProductToServer(newData);
+    setProcessingDuplicate(true);
+    try {
+      setDuplicateProduct(null);
+      await addProductToServer(newData);
+    } finally {
+      setProcessingDuplicate(false);
+    }
   }, [duplicateProduct, addProductToServer]);
 
   const handleDuplicateCancel = useCallback(() => {
@@ -367,12 +378,11 @@ export const useList = ({
 
     const newIsPurchased = !product.isPurchased;
     dismissHint();
+    setTogglingProductId(productId);
 
     try {
-      // שרת קודם, UI רק אחרי אישור
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
 
-      // סימון דגל לזיהוי חגיגה ב-useEffect
       if (newIsPurchased) {
         justMarkedPurchased.current = true;
       }
@@ -387,6 +397,8 @@ export const useList = ({
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
       showToast(t('unknownError'), 'error');
+    } finally {
+      setTogglingProductId(null);
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint]);
 
@@ -423,10 +435,6 @@ export const useList = ({
     const editData = { ...showEdit };
     const original = { ...originalEditProduct };
 
-    // סגירת מודאל מיידית
-    setShowEdit(null);
-    setOriginalEditProduct(null);
-
     // בניית diff - שליחת שדות שהשתנו בלבד
     const changes: Record<string, unknown> = {};
     if (editData.name !== original.name) changes.name = editData.name;
@@ -434,9 +442,12 @@ export const useList = ({
     if (editData.unit !== original.unit) changes.unit = editData.unit;
     if (editData.category !== original.category) changes.category = editData.category;
 
+    setSavingProduct(true);
     try {
-      // שרת קודם, UI רק אחרי אישור
       await productsApi.updateProduct(list.id, editData.id, changes);
+      // סגירת מודאל רק אחרי אישור שרת
+      setShowEdit(null);
+      setOriginalEditProduct(null);
       onUpdateProductsForList(list.id, (current) =>
         current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category } : p)
       );
@@ -451,6 +462,8 @@ export const useList = ({
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       showToast(t('unknownError'), 'error');
+    } finally {
+      setSavingProduct(false);
     }
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
@@ -572,12 +585,15 @@ export const useList = ({
   }, [list.id, onLeaveList, t]);
 
   const refreshList = useCallback(async () => {
+    setRefreshing(true);
     try {
       const apiList = await listsApi.getList(list.id);
       onUpdateList(convertApiList(apiList));
       showToast(t('refresh'), 'success');
     } catch {
       showToast(t('unknownError'), 'error');
+    } finally {
+      setRefreshing(false);
     }
   }, [list.id, onUpdateList, showToast, t]);
 
@@ -601,6 +617,10 @@ export const useList = ({
     addingProduct,
     pendingAddName,
     savingListChanges,
+    togglingProductId,
+    savingProduct,
+    processingDuplicate,
+    refreshing,
     fabPosition,
     isDragging,
 

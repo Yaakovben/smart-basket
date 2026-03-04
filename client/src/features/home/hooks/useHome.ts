@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import type { List, Member, User } from '../../../global/types';
+import type { List, Member, User, ToastType } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
@@ -35,6 +35,7 @@ interface UseHomeParams {
   onDeleteList: (listId: string) => void | Promise<void>;
   onEditList: (list: List) => void | Promise<void>;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
 export const useHome = ({
@@ -44,6 +45,7 @@ export const useHome = ({
   onDeleteList,
   onEditList,
   onJoinGroup,
+  showToast,
 }: UseHomeParams): UseHomeReturn => {
   const { t } = useSettings();
 
@@ -139,12 +141,13 @@ export const useHome = ({
       setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
       setShowCreate(false);
       setShowCreateGroup(false);
+      showToast(t('created'));
     } catch {
       setCreateError(t('errorOccurred'));
     } finally {
       setCreatingList(false);
     }
-  }, [newL, onCreateList, validateListName, t]);
+  }, [newL, onCreateList, validateListName, t, showToast]);
 
   // ===== טיפול בהצטרפות לרשימה =====
   const handleJoin = useCallback(async () => {
@@ -232,18 +235,24 @@ export const useHome = ({
     try {
       await onEditList(editList);
       setEditList(null);
+      showToast(t('saved'));
     } catch {
-      // error toast handled in router
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setSavingList(false);
     }
-  }, [editList, onEditList]);
+  }, [editList, onEditList, showToast, t]);
 
   const deleteList = useCallback(async () => {
     if (!confirmDeleteList) return;
-    await onDeleteList(confirmDeleteList.id);
-    setConfirmDeleteList(null);
-  }, [confirmDeleteList, onDeleteList]);
+    try {
+      await onDeleteList(confirmDeleteList.id);
+      setConfirmDeleteList(null);
+      showToast(t('deleted'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [confirmDeleteList, onDeleteList, showToast, t]);
 
   return {
     tab,

@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef } from 'react';
-import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, keyframes } from '@mui/material';
+import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, CircularProgress, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ShareIcon from '@mui/icons-material/Share';
@@ -68,6 +68,7 @@ interface ListHeaderProps {
   onQuickAdd?: (name: string) => void;
   onlineUserIds?: Set<string>;
   onRefresh: () => void;
+  refreshing?: boolean;
 }
 
 // ===== קומפוננטה =====
@@ -93,7 +94,8 @@ export const ListHeader = memo(({
   onShowInvite,
   onQuickAdd,
   onlineUserIds,
-  onRefresh
+  onRefresh,
+  refreshing = false
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -157,9 +159,12 @@ export const ListHeader = memo(({
         >
           <ArrowForwardIcon sx={{ color: 'white', fontSize: 22 }} />
         </IconButton>
-        <Typography sx={{ flex: 1, color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center' }}>
-          {list.name}
-        </Typography>
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <Typography sx={{ color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center' }}>
+            {list.name}
+          </Typography>
+          {refreshing && <CircularProgress size={18} sx={{ color: 'white' }} />}
+        </Box>
         <Box sx={{ display: 'flex', gap: 0.75 }}>
           <IconButton
             onClick={onShareList}

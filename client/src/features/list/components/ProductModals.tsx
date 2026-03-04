@@ -1,5 +1,5 @@
 import { memo, useRef, useCallback } from 'react';
-import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip } from '@mui/material';
+import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip, CircularProgress } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES, formatDateShort, formatTimeShort } from '../../../global/helpers';
 import { Modal } from '../../../global/components';
@@ -182,6 +182,7 @@ AddProductModal.displayName = 'AddProductModal';
 interface EditProductModalProps {
   product: Product | null;
   hasChanges: boolean;
+  saving?: boolean;
   onClose: () => void;
   onSave: () => void;
   onUpdateField: <K extends keyof Product>(field: K, value: Product[K]) => void;
@@ -192,6 +193,7 @@ interface EditProductModalProps {
 export const EditProductModal = memo(({
   product,
   hasChanges,
+  saving = false,
   onClose,
   onSave,
   onUpdateField,
@@ -202,7 +204,7 @@ export const EditProductModal = memo(({
   const quantityRef = useRef<HTMLInputElement>(null);
 
   const isNameValid = product ? product.name.trim().length >= 2 : false;
-  const canSave = hasChanges && isNameValid;
+  const canSave = hasChanges && isNameValid && !saving;
 
   const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -225,7 +227,7 @@ export const EditProductModal = memo(({
   if (!product) return null;
 
   return (
-    <Modal title={t('editProduct')} onClose={onClose}>
+    <Modal title={t('editProduct')} onClose={() => !saving && onClose()}>
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="edit-product-name" sx={labelSx}>{t('name')}</Typography>
         <TextField
@@ -295,7 +297,9 @@ export const EditProductModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!canSave}>{t('save')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!canSave}>
+        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
+      </Button>
     </Modal>
   );
 });

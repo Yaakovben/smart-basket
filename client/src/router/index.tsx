@@ -234,31 +234,17 @@ export const AppRouter = () => {
     }
   };
 
+  // handlers שלא תופסים שגיאות - useHome מטפל ב-UI (ספינר, טוסט, שגיאה)
   const handleCreateList = async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
-    try {
-      await createList(list);
-      showToast(t('created'));
-    } catch {
-      showToast(t('errorOccurred'), 'error');
-    }
+    await createList(list);
   };
 
   const handleDeleteList = async (id: string) => {
-    try {
-      await deleteList(id);
-      showToast(t('deleted'));
-    } catch {
-      showToast(t('errorOccurred'), 'error');
-    }
+    await deleteList(id);
   };
 
   const handleEditList = async (list: List) => {
-    try {
-      await updateList(list);
-      showToast(t('saved'));
-    } catch {
-      showToast(t('errorOccurred'), 'error');
-    }
+    await updateList(list);
   };
 
   return (
@@ -284,6 +270,7 @@ export const AppRouter = () => {
                 onEditList={handleEditList}
                 onJoinGroup={handleJoinGroup}
                 onLogout={handleLogout}
+                showToast={showToast}
                 persistedNotifications={persistedNotifications}
                 notificationsLoading={notificationsLoading}
                 onMarkPersistedNotificationRead={markPersistedNotificationRead}

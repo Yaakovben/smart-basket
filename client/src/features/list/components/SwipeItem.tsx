@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -8,6 +8,7 @@ interface SwipeItemProps {
   product: Product;
   isPurchased: boolean;
   isOpen: boolean;
+  isToggling?: boolean;
   currentUserName: string;
   onToggle: (productId: string) => void;
   onEdit: (product: Product) => void;
@@ -29,7 +30,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, isToggling = false, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
@@ -349,7 +350,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
           </Typography>
         </Box>
-        {isPurchased && <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>}
+        {isToggling ? (
+          <CircularProgress size={20} sx={{ color: 'primary.main', flexShrink: 0 }} />
+        ) : isPurchased ? (
+          <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>
+        ) : null}
       </Box>
     </Box>
   );

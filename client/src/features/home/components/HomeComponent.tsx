@@ -13,7 +13,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
-import type { List, Product, User } from '../../../global/types';
+import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
@@ -148,6 +148,7 @@ interface HomePageProps {
   onEditList: (list: List) => void | Promise<void>;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onLogout: () => void;
+  showToast: (message: string, type?: ToastType) => void;
   // התראות שמורות מה-API
   persistedNotifications?: PersistedNotification[];
   notificationsLoading?: boolean;
@@ -156,7 +157,7 @@ interface HomePageProps {
 }
 
 export const HomeComponent = memo(({
-  lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, user,
+  lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
@@ -207,7 +208,7 @@ export const HomeComponent = memo(({
     closeJoinModal, updateNewListField, saveEditList,
     deleteList
   } = useHome({
-    lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup
+    lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, showToast
   });
 
   // ===== אדפטר עבור EditListModal המשותף =====
