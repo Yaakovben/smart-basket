@@ -75,10 +75,17 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
       // עדכון מקומי מיידי (סימון קריאה הוא פעולה קלה שלא צריכה להמתין לשרת)
+      let wasUnread = false;
       setPersistedNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        prev.map(n => {
+          if (n.id === notificationId && !n.read) {
+            wasUnread = true;
+            return { ...n, read: true };
+          }
+          return n;
+        })
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
 
       await notificationsApi.markAsRead(notificationId);
     } catch (error) {

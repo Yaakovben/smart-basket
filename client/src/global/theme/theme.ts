@@ -165,6 +165,7 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
               }
             },
             '& .MuiInputBase-input': {
+              fontSize: 16,
               textAlign: isRtl ? 'right' : 'left',
               color: colors.text
             },

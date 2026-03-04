@@ -3,6 +3,7 @@ import type { List, Member, User, ToastType } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
+import { haptic } from '../../../global/helpers';
 import type {
   NewListForm,
   HomeTab,
@@ -131,6 +132,7 @@ export const useHome = ({
     setCreateError('');
     if (!validateListName()) return;
 
+    haptic('medium');
     setCreatingList(true);
     try {
       await onCreateList({

@@ -27,6 +27,7 @@ export const authenticate = asyncHandler(
 
       req.user = {
         id: decoded.userId,
+        name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
       };

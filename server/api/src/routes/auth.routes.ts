@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers';
-import { validate, authLimiter, loginLimiter, registerLimiter } from '../middleware';
+import { validate, authenticate, authLimiter, loginLimiter, registerLimiter } from '../middleware';
 import { authValidator } from '../validators';
 
 const router = Router();
@@ -186,5 +186,8 @@ router.post('/refresh', validate(authValidator.refreshToken), AuthController.ref
  *         description: Logged out successfully
  */
 router.post('/logout', validate(authValidator.refreshToken), AuthController.logout);
+
+// רישום פתיחת אפליקציה (מאומת)
+router.post('/app-open', authenticate, AuthController.logAppOpen);
 
 export default router;

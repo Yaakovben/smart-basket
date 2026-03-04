@@ -161,6 +161,7 @@ export const HomeComponent = memo(({
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
+  const contentRef = useRef<HTMLDivElement>(null);
   const { t, settings, isGroupMuted, toggleGroupMute } = useSettings();
   const isDark = settings.theme === 'dark';
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
@@ -317,8 +318,8 @@ export const HomeComponent = memo(({
           value={search}
           onChange={e => setSearch(e.target.value)}
           size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' } }}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#9CA3AF' }} /></InputAdornment> }}
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
         />
 
         <Tabs
@@ -350,7 +351,7 @@ export const HomeComponent = memo(({
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
+      <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
         {display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
             <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
@@ -449,7 +450,7 @@ export const HomeComponent = memo(({
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('listName')}</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
+            <TextField autoFocus fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
@@ -484,7 +485,7 @@ export const HomeComponent = memo(({
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{t('groupName')}</Typography>
-            <TextField fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
+            <TextField autoFocus fullWidth value={newL.name} onChange={e => updateNewListField('name', e.target.value)} size="small" />
           </Box>
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>
@@ -538,6 +539,7 @@ export const HomeComponent = memo(({
               <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
             </Box>
             <TextField
+              autoFocus
               fullWidth
               value={joinCode}
               onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setJoinError(''); }}
@@ -850,7 +852,7 @@ export const HomeComponent = memo(({
         }}
       >
         <Box
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
           sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -861,7 +863,8 @@ export const HomeComponent = memo(({
             borderRadius: '10px',
             bgcolor: 'rgba(20, 184, 166, 0.1)',
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            '&:active': { bgcolor: 'rgba(20, 184, 166, 0.2)' }
           }}
         >
           <HomeIcon sx={{ fontSize: 22, color: 'primary.main' }} />

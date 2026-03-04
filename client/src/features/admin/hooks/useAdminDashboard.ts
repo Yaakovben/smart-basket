@@ -61,9 +61,17 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     }
   }, []);
 
-  // טעינת נתונים בעלייה
+  // טעינת נתונים בעלייה + רענון אוטומטי כשחוזרים לטאב
   useEffect(() => {
     fetchData();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [fetchData]);
 
   // משתמשים עם סטטיסטיקות התחברות (נתונים מהשרת, מחושבים ב-MongoDB)

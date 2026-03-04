@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
 import type { List, User, Member, Product } from '../../../global/types';
-import { COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
+import { haptic, COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { EditListForm } from '../types/list-types';
@@ -409,6 +409,7 @@ export const EditListModal = memo(({
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('name')}</Typography>
         <TextField
+          autoFocus
           fullWidth
           value={editData.name}
           onChange={e => onUpdateData({ ...editData, name: e.target.value })}
@@ -473,7 +474,7 @@ export const EditListModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
+      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
       </Button>
       {!list.isGroup && onConvertToGroup && !showPasswordStep && (

@@ -142,6 +142,9 @@ export function useAuth() {
 
         // חיבור socket אחרי אימות מוצלח
         socketService.connect();
+
+        // רישום פתיחת אפליקציה לאדמין
+        authApi.logAppOpen();
       } catch (error) {
         clearTimeout(timeoutId!);
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)

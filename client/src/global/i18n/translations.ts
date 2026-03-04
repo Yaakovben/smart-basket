@@ -293,6 +293,7 @@ type TranslationKey =
   | 'cacheError'
   | 'noUserData'
   | 'offlineMessage'
+  | 'reconnectingMessage'
   // Clear Cache Page
   | 'clearCacheTitle'
   | 'clearCacheSubtitle'
@@ -666,6 +667,7 @@ export const translations: Record<Language, Translations> = {
     cacheError: 'יש בעיית חיבור. נסה לנקות מטמון:',
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     offlineMessage: 'אין חיבור לאינטרנט',
+    reconnectingMessage: 'מתחבר מחדש...',
     // Clear Cache Page
     clearCacheTitle: 'ניקוי מטמון',
     clearCacheSubtitle: 'מנקה נתונים שמורים...',
@@ -690,8 +692,8 @@ export const translations: Record<Language, Translations> = {
     timeHoursAgo: 'היום {time}',
     timeYesterday: 'אתמול',
     timeDaysAgo: 'לפני {count} ימים',
-    timeWeeksAgo: 'לפני {count}',
-    timeMonthsAgo: 'לפני {count}',
+    timeWeeksAgo: 'לפני {count} שבועות',
+    timeMonthsAgo: 'לפני {count} חודשים',
     // Push notification prompt
     pushNotifBlocked: 'ההתראות נחסמו',
     pushNotifBlockedDesc: 'כדי להפעיל התראות, יש לאפשר אותן\nבהגדרות הדפדפן → הרשאות → התראות',
@@ -1033,6 +1035,7 @@ export const translations: Record<Language, Translations> = {
     cacheError: 'Connection issue. Try clearing cache:',
     noUserData: 'Error: No user data received from server',
     offlineMessage: 'No internet connection',
+    reconnectingMessage: 'Reconnecting...',
     // Clear Cache Page
     clearCacheTitle: 'Clear Cache',
     clearCacheSubtitle: 'Clearing saved data...',
@@ -1400,6 +1403,7 @@ export const translations: Record<Language, Translations> = {
     cacheError: 'Проблема соединения. Очистите кэш:',
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     offlineMessage: 'Нет подключения к интернету',
+    reconnectingMessage: 'Переподключение...',
     // Clear Cache Page
     clearCacheTitle: 'Очистка кэша',
     clearCacheSubtitle: 'Очистка сохранённых данных...',

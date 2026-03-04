@@ -117,18 +117,6 @@ export const COMMON_STYLES = {
     backdropFilter: 'blur(10px)',
     '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
   },
-  // סגנון כרטיס
-  card: {
-    borderRadius: SIZES.radius.lg,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-    border: '1px solid #F1F5F9'
-  },
-  // סגנון שדה קלט
-  inputField: {
-    borderRadius: SIZES.radius.md,
-    border: '1.5px solid #E5E7EB',
-    '&:focus-within': { borderColor: '#14B8A6' }
-  },
   // רקעים גרדיאנטיים
   gradients: {
     primary: 'linear-gradient(135deg, #14B8A6, #10B981)',
@@ -147,8 +135,8 @@ export const COMMON_STYLES = {
     bgcolor: 'rgba(255,255,255,0.2)',
     backdropFilter: 'blur(10px)',
     '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     color: 'white'
   }
 } as const;

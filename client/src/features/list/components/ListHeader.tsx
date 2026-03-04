@@ -270,7 +270,7 @@ export const ListHeader = memo(({
                 }
               },
               '& .MuiOutlinedInput-input': {
-                fontSize: 15,
+                fontSize: 16,
                 color: 'text.primary'
               }
             }}
@@ -431,8 +431,8 @@ export const ListHeader = memo(({
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
               {list.updatedAt && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
-                  <AccessTimeIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} />
-                  <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                  <AccessTimeIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }} />
+                  <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
                     {t('updated')} {getTimeAgo(list.updatedAt, t)}
                   </Typography>
                 </Box>
@@ -440,7 +440,7 @@ export const ListHeader = memo(({
               {total > 0 && (
                 <Typography sx={{
                   color: textColor,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 700,
                   transition: 'color 0.3s ease',
                   ...(isComplete && {
@@ -454,7 +454,7 @@ export const ListHeader = memo(({
             </Box>
             {total > 0 && (
               <Box sx={{
-                height: isComplete ? 3 : 2,
+                height: isComplete ? 4 : 3,
                 bgcolor: 'rgba(255,255,255,0.1)',
                 borderRadius: 2,
                 overflow: 'hidden',

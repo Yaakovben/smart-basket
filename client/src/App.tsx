@@ -7,6 +7,7 @@ import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
+import { ReconnectingBanner } from "./global/components/ReconnectingBanner";
 import { useServiceWorker } from './global/hooks';
 
 // ניקוי cache אוטומטי בפריסות חדשות
@@ -79,6 +80,7 @@ const ThemedApp = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <OfflineBanner />
+      <ReconnectingBanner />
       <BrowserRouter>
         <AppRouter />
       </BrowserRouter>

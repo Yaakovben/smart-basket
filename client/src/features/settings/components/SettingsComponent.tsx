@@ -20,7 +20,9 @@ const settingRowSx = {
   p: 2,
   borderBottom: '1px solid',
   borderColor: 'divider',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  transition: 'background-color 0.15s ease',
+  '&:active': { bgcolor: 'action.selected' }
 };
 
 const subSettingRowSx = {
@@ -137,7 +139,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('notifications')}</Typography>
             {settings.notifications.enabled && (
               <Box onClick={(e) => { e.stopPropagation(); toggleNotificationsExpanded(); }} sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', p: 0.5, mr: 0.5 }}>
-                {notificationsExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF' }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF' }} />}
+                {notificationsExpanded ? <ExpandLessIcon sx={{ color: 'text.disabled' }} /> : <ExpandMoreIcon sx={{ color: 'text.disabled' }} />}
               </Box>
             )}
             <Switch checked={settings.notifications.enabled} onChange={(e) => { e.stopPropagation(); handleMainNotificationsToggle(e.target.checked); }} onClick={(e) => e.stopPropagation()} sx={switchSx} />
@@ -159,7 +161,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
                     </Typography>
                   </Box>
                 )}
-                {pushExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
+                {pushExpanded ? <ExpandLessIcon sx={{ color: 'text.disabled', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: 'text.disabled', fontSize: 20 }} />}
                 <Box onClick={(e) => {
                   e.stopPropagation();
                   if (!pushSupported || !isPwaInstalled) {
@@ -220,10 +222,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleGroupExpanded}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: isDark ? 'rgba(99,102,241,0.15)' : '#E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>👥</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('groupNotifications')}</Typography>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.disabled', minWidth: 28, textAlign: 'center' }}>
                   {[settings.notifications.groupJoin, settings.notifications.groupLeave, settings.notifications.groupRemoved ?? true, settings.notifications.groupDelete ?? true, settings.notifications.listUpdate].filter(Boolean).length}/5
                 </Typography>
-                {groupExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
+                {groupExpanded ? <ExpandLessIcon sx={{ color: 'text.disabled', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: 'text.disabled', fontSize: 20 }} />}
                 <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Switch
                     checked={settings.notifications.groupJoin && settings.notifications.groupLeave && (settings.notifications.groupRemoved ?? true) && (settings.notifications.groupDelete ?? true) && settings.notifications.listUpdate}
@@ -264,10 +266,10 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 1.5, mt: 0.5, mb: 0.5, cursor: 'pointer' }} onClick={toggleProductExpanded}>
                 <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: isDark ? 'rgba(34,197,94,0.15)' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📦</Box>
                 <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>{t('productNotifications')}</Typography>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', minWidth: 28, textAlign: 'center' }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.disabled', minWidth: 28, textAlign: 'center' }}>
                   {[settings.notifications.productAdd, settings.notifications.productDelete, settings.notifications.productEdit, settings.notifications.productPurchase].filter(Boolean).length}/4
                 </Typography>
-                {productExpanded ? <ExpandLessIcon sx={{ color: '#9CA3AF', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />}
+                {productExpanded ? <ExpandLessIcon sx={{ color: 'text.disabled', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: 'text.disabled', fontSize: 20 }} />}
                 <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center' }}>
                   <Switch
                     checked={settings.notifications.productAdd && settings.notifications.productDelete && settings.notifications.productEdit && settings.notifications.productPurchase}
@@ -311,7 +313,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             <Box component="span" sx={{ fontSize: 22 }}>🌐</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('language')}</Typography>
             <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{currentLanguageName}</Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
 
@@ -319,12 +321,12 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Box sx={settingRowSx} onClick={() => setShowHelp(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>❓</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('helpSupport')}</Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
           <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => setShowAbout(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>ℹ️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('about')}</Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
 
@@ -332,12 +334,12 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>
             <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('privacyPolicy')}</Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
           <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/terms')}>
             <Box component="span" sx={{ fontSize: 22 }}>📄</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsOfService')}</Typography>
-            <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
 
@@ -347,7 +349,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
               <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
               <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
-              <ChevronLeftIcon sx={{ color: '#9CA3AF' }} />
+              <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
             </Box>
           </Paper>
         )}
@@ -399,7 +401,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Box>
         </Paper>
 
-        <Typography sx={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} 1.1.0</Typography>
+        <Typography sx={{ textAlign: 'center', color: 'text.disabled', fontSize: 13, mt: 4 }}>{t('appName')} {t('version')} 1.1.0</Typography>
       </Box>
 
       {showLanguage && (

@@ -123,6 +123,9 @@ export const authApi = {
     return response.data.data;
   },
 
+  // רישום פתיחת אפליקציה לאדמין
+  logAppOpen: () => apiClient.post('/auth/app-open').catch(() => {}),
+
   async deleteAccount(): Promise<void> {
     await apiClient.delete('/users/me');
     clearTokens();

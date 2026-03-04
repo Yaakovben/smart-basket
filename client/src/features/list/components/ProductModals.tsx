@@ -85,6 +85,7 @@ export const AddProductModal = memo(({
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="product-name" sx={labelSx}>{t('name')}</Typography>
         <TextField
+          autoFocus
           id="product-name"
           fullWidth
           value={newProduct.name}
@@ -231,6 +232,7 @@ export const EditProductModal = memo(({
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="edit-product-name" sx={labelSx}>{t('name')}</Typography>
         <TextField
+          autoFocus
           id="edit-product-name"
           fullWidth
           value={product.name}
@@ -297,7 +299,7 @@ export const EditProductModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!canSave}>
+      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>
     </Modal>

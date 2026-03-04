@@ -1,7 +1,9 @@
 import type { Request, Response } from 'express';
 import { AuthService, TokenService } from '../services';
+import { LoginActivityDAL } from '../dal';
 import { asyncHandler } from '../utils';
 import { AuthError } from '../errors';
+import type { AuthRequest } from '../types';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 
 export class AuthController {
@@ -54,9 +56,7 @@ export class AuthController {
 
   static refreshToken = asyncHandler(async (req: Request, res: Response) => {
     const { refreshToken } = req.body as { refreshToken: string };
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.get('User-Agent');
-    const result = await TokenService.refreshAccessToken(refreshToken, ipAddress, userAgent);
+    const result = await TokenService.refreshAccessToken(refreshToken);
 
     if (!result) {
       throw AuthError.invalidToken();
@@ -66,6 +66,24 @@ export class AuthController {
       success: true,
       data: result,
     });
+  });
+
+  // רישום פתיחת אפליקציה
+  static logAppOpen = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const user = req.user!;
+    const ipAddress = req.ip || req.socket.remoteAddress;
+    const userAgent = req.get('User-Agent');
+
+    LoginActivityDAL.logActivity({
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      loginMethod: 'app_open',
+      ipAddress,
+      userAgent,
+    }).catch(() => {});
+
+    res.status(204).send();
   });
 
   static logout = asyncHandler(async (req: Request, res: Response) => {
