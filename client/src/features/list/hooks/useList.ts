@@ -22,6 +22,9 @@ const FAB_VISIBILITY_THRESHOLD = 3; // מוסתר כשפחות מ-3 מוצרים
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 }; // גבולות גרירה בפיקסלים
 const DEFAULT_FAB_BOTTOM_OFFSET = 90; // מיקום ברירת מחדל מתחתית המסך
 
+// מזהה זמני למוצרים שעדיין לא אושרו מהשרת
+const isTempId = (id: string) => id.startsWith('temp-');
+
 const getDefaultNewProduct = (): NewProductForm => ({
   name: '',
   quantity: 1,
@@ -389,6 +392,7 @@ export const useList = ({
   }, []);
 
   const toggleProduct = useCallback(async (productId: string) => {
+    if (isTempId(productId)) return; // מוצר עדיין לא אושר מהשרת
     const product = productsRef.current.find((p: Product) => p.id === productId);
     if (!product) return;
 
@@ -421,6 +425,7 @@ export const useList = ({
   }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint]);
 
   const deleteProduct = useCallback((productId: string) => {
+    if (isTempId(productId)) return; // מוצר עדיין לא אושר מהשרת
     const product = list.products.find((p: Product) => p.id === productId);
     if (!product) return;
 
@@ -451,6 +456,7 @@ export const useList = ({
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
+    if (isTempId(showEdit.id)) return; // מוצר עדיין לא אושר מהשרת
     haptic('medium');
 
     const editData = { ...showEdit };
@@ -491,6 +497,7 @@ export const useList = ({
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   const openEditProduct = useCallback((product: Product) => {
+    if (isTempId(product.id)) return; // מוצר עדיין לא אושר מהשרת
     setShowEdit({ ...product });
     setOriginalEditProduct({ ...product });
   }, []);
