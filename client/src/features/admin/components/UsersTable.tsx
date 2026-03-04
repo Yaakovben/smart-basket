@@ -172,7 +172,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             ? <GoogleIcon sx={{ fontSize: '13px !important', color: '#4285F4 !important' }} />
             : <EmailIcon sx={{ fontSize: '13px !important', color: '#14B8A6 !important' }} />
           }
-          label={isGoogle ? 'Google' : 'Email'}
+          label={isGoogle ? t('methodGoogle') : t('methodEmail')}
           size="small"
           sx={{
             height: 26,
@@ -204,7 +204,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
         }}>
           {/* אימייל מלא */}
           <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1, mb: 1 }}>
-            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Email</Typography>
+            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('emailField')}</Typography>
             <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
               {user.email}
             </Typography>
@@ -296,7 +296,7 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                 </Typography>
               </Box>
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: isGoogle ? '#4285F4' : '#14B8A6' }}>
-                {isGoogle ? 'Google' : 'Email'}
+                {isGoogle ? t('methodGoogle') : t('methodEmail')}
               </Typography>
               <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
                 {formatDateShort(user.createdAt, language)}

@@ -274,6 +274,13 @@ type TranslationKey =
   | 'allUsers'
   | 'allTypes'
   | 'timeFilter'
+  | 'methodEmail'
+  | 'methodGoogle'
+  | 'methodApp'
+  | 'emailField'
+  | 'dateField'
+  | 'loginAction'
+  | 'appOpenAction'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -658,6 +665,13 @@ export const translations: Record<Language, Translations> = {
     allUsers: 'כל המשתמשים',
     allTypes: 'כל הסוגים',
     timeFilter: 'תקופה',
+    methodEmail: 'אימייל',
+    methodGoogle: 'Google',
+    methodApp: 'אפליקציה',
+    emailField: 'אימייל',
+    dateField: 'תאריך',
+    loginAction: 'התחברות',
+    appOpenAction: 'פתיחת אפליקציה',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -1036,6 +1050,13 @@ export const translations: Record<Language, Translations> = {
     allUsers: 'All Users',
     allTypes: 'All Types',
     timeFilter: 'Time Period',
+    methodEmail: 'Email',
+    methodGoogle: 'Google',
+    methodApp: 'App',
+    emailField: 'Email',
+    dateField: 'Date',
+    loginAction: 'Login',
+    appOpenAction: 'App Open',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -1414,6 +1435,13 @@ export const translations: Record<Language, Translations> = {
     allUsers: 'Все пользователи',
     allTypes: 'Все типы',
     timeFilter: 'Период',
+    methodEmail: 'Email',
+    methodGoogle: 'Google',
+    methodApp: 'Приложение',
+    emailField: 'Email',
+    dateField: 'Дата',
+    loginAction: 'Вход',
+    appOpenAction: 'Открытие приложения',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',

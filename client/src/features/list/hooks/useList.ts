@@ -108,7 +108,8 @@ export const useList = ({
   const dragRef = useRef<DragState | null>(null);
 
   // ===== מניעת תנאי מרוץ =====
-  // גרסה עולה לכל מוצר - תגובות ישנות מהשרת מתעלמות
+  // תור פעולות ממתינות למוצרים עם מזהה זמני
+  const pendingTempActions = useRef(new Map<string, 'toggle'>());
 
   const productsRef = useRef(list.products);
   productsRef.current = list.products;
@@ -260,6 +261,7 @@ export const useList = ({
 
     try {
       const addedProduct = await productsApi.addProduct(list.id, productData);
+      const realId = addedProduct.id;
 
       // החלפת מזהה זמני במזהה אמיתי מהשרת
       onUpdateProductsForList(list.id, (current) =>
@@ -267,7 +269,7 @@ export const useList = ({
       );
 
       socketService.emitProductAdded(list.id, {
-        id: addedProduct.id,
+        id: realId,
         name: addedProduct.name,
         quantity: addedProduct.quantity,
         unit: addedProduct.unit,
@@ -277,9 +279,27 @@ export const useList = ({
       if (showToastOnAdd) {
         showToast(t('added'));
       }
+
+      // ביצוע פעולות שהמתינו למזהה אמיתי
+      const pendingAction = pendingTempActions.current.get(tempId);
+      if (pendingAction) {
+        pendingTempActions.current.delete(tempId);
+        if (pendingAction === 'toggle') {
+          try {
+            await productsApi.updateProduct(list.id, realId, { isPurchased: true });
+            socketService.emitProductToggled(list.id, realId, addedProduct.name, true, user.name);
+          } catch {
+            // שחזור הסימון
+            onUpdateProductsForList(list.id, (current) =>
+              current.map(p => p.id === realId ? { ...p, isPurchased: false } : p)
+            );
+          }
+        }
+      }
     } catch (error) {
       // שחזור - הסרת המוצר הזמני
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
+      pendingTempActions.current.delete(tempId);
       onUpdateProductsForList(list.id, (current) =>
         current.filter(p => p.id !== tempId)
       );
@@ -392,14 +412,13 @@ export const useList = ({
   }, []);
 
   const toggleProduct = useCallback(async (productId: string) => {
-    if (isTempId(productId)) return; // מוצר עדיין לא אושר מהשרת
     const product = productsRef.current.find((p: Product) => p.id === productId);
     if (!product) return;
 
     const newIsPurchased = !product.isPurchased;
     dismissHint();
 
-    // עדכון אופטימיסטי מיידי - ה-UI מגיב ברגע
+    // עדכון אופטימיסטי מיידי
     if (newIsPurchased) {
       justMarkedPurchased.current = true;
     }
@@ -408,6 +427,12 @@ export const useList = ({
         p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
       )
     );
+
+    // מוצר עם מזהה זמני: שמירת הפעולה בתור, תישלח לשרת אחרי קבלת מזהה אמיתי
+    if (isTempId(productId)) {
+      pendingTempActions.current.set(productId, 'toggle');
+      return;
+    }
 
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });

@@ -41,10 +41,12 @@ const getMethodColor = (method: string) => {
   return TEAL;
 };
 
-const getMethodLabel = (method: string) => {
-  if (method === 'google') return 'Google';
-  if (method === 'app_open') return 'App';
-  return 'Email';
+// תוויות שיטה מתורגמות, נקראות בתוך קומפוננטה עם t()
+type TranslateFn = (key: 'methodEmail' | 'methodGoogle' | 'methodApp') => string;
+const getMethodLabel = (method: string, t: TranslateFn) => {
+  if (method === 'google') return t('methodGoogle');
+  if (method === 'app_open') return t('methodApp');
+  return t('methodEmail');
 };
 
 const getMethodIcon = (method: string) => {
@@ -55,6 +57,7 @@ const getMethodIcon = (method: string) => {
 
 // שורת פעילות
 const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginActivity; language: Language; isOnline: boolean }) => {
+  const { t } = useSettings();
   const [expanded, setExpanded] = useState(false);
   const toggle = useCallback(() => setExpanded(p => !p), []);
   const color = getMethodColor(activity.loginMethod);
@@ -146,7 +149,7 @@ const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginAct
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {getMethodIcon(activity.loginMethod)}
             <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-              {getMethodLabel(activity.loginMethod)}
+              {getMethodLabel(activity.loginMethod, t)}
             </Typography>
           </Box>
         </Box>
@@ -164,7 +167,7 @@ const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginAct
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75, mt: 1 }}>
             {/* אימייל מלא */}
             <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Email</Typography>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('emailField')}</Typography>
               <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
                 {activity.userEmail}
               </Typography>
@@ -173,11 +176,11 @@ const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginAct
             {/* שיטה */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
               <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.5 }}>
-                {activity.loginMethod === 'app_open' ? 'App Open' : 'Login'}
+                {activity.loginMethod === 'app_open' ? t('appOpenAction') : t('loginAction')}
               </Typography>
               <Chip
                 icon={getMethodIcon(activity.loginMethod)}
-                label={getMethodLabel(activity.loginMethod)}
+                label={getMethodLabel(activity.loginMethod, t)}
                 size="small"
                 sx={{
                   height: 24,
@@ -192,7 +195,7 @@ const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginAct
 
             {/* תאריך ושעה */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Date</Typography>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('dateField')}</Typography>
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                 {formatDateShort(activity.timestamp, language)}
               </Typography>
