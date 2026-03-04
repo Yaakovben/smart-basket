@@ -273,6 +273,7 @@ type TranslationKey =
   | 'filterByUser'
   | 'allUsers'
   | 'allTypes'
+  | 'timeFilter'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -656,6 +657,7 @@ export const translations: Record<Language, Translations> = {
     filterByUser: 'סנן לפי משתמש',
     allUsers: 'כל המשתמשים',
     allTypes: 'כל הסוגים',
+    timeFilter: 'תקופה',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -1033,6 +1035,7 @@ export const translations: Record<Language, Translations> = {
     filterByUser: 'Filter by user',
     allUsers: 'All Users',
     allTypes: 'All Types',
+    timeFilter: 'Time Period',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -1410,6 +1413,7 @@ export const translations: Record<Language, Translations> = {
     filterByUser: 'Фильтр по пользователю',
     allUsers: 'Все пользователи',
     allTypes: 'Все типы',
+    timeFilter: 'Период',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',

@@ -1,19 +1,32 @@
 import { useState, useCallback, memo } from 'react';
-import { Box, Typography, Paper, Chip, Collapse } from '@mui/material';
+import { Box, Typography, Paper, Chip, Collapse, keyframes } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateLong, formatDateShort, formatTimeShort, isToday, isYesterday } from '../../../global/helpers';
 import type { LoginActivity } from '../../../global/types';
 import type { Language } from '../../../global/types';
 
+// צבעים אחידים
+const TEAL = '#14B8A6';
+const GOOGLE_BLUE = '#4285F4';
+const APP_AMBER = '#F59E0B';
+const ONLINE_GREEN = '#22C55E';
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+`;
+
 interface ActivityTableProps {
   activities: LoginActivity[];
   language: Language;
+  onlineUserIds: Set<string>;
 }
 
 interface GroupedActivities {
@@ -23,9 +36,9 @@ interface GroupedActivities {
 }
 
 const getMethodColor = (method: string) => {
-  if (method === 'google') return '#4285F4';
-  if (method === 'app_open') return '#F59E0B';
-  return '#14B8A6';
+  if (method === 'google') return GOOGLE_BLUE;
+  if (method === 'app_open') return APP_AMBER;
+  return TEAL;
 };
 
 const getMethodLabel = (method: string) => {
@@ -40,8 +53,8 @@ const getMethodIcon = (method: string) => {
   return <EmailIcon sx={{ fontSize: 14 }} />;
 };
 
-// שורת פעילות עם פרטים מורחבים
-const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; language: Language }) => {
+// שורת פעילות
+const ActivityRow = memo(({ activity, language, isOnline }: { activity: LoginActivity; language: Language; isOnline: boolean }) => {
   const [expanded, setExpanded] = useState(false);
   const toggle = useCallback(() => setExpanded(p => !p), []);
   const color = getMethodColor(activity.loginMethod);
@@ -52,7 +65,8 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
       sx={{
         borderRadius: '12px',
         border: '1px solid',
-        borderColor: 'divider',
+        borderColor: isOnline ? 'rgba(34, 197, 94, 0.3)' : 'divider',
+        bgcolor: isOnline ? 'rgba(34, 197, 94, 0.04)' : 'background.paper',
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'background-color 0.15s',
@@ -60,30 +74,30 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
       }}
     >
       {/* שורה ראשית */}
-      <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        {/* תג שעה */}
+      <Box sx={{ p: 1.25, display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        {/* שעה */}
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            minWidth: 52,
-            p: 0.75,
+            minWidth: 48,
+            p: 0.5,
             borderRadius: '8px',
-            bgcolor: `${color}14`
+            bgcolor: `${color}10`
           }}
         >
-          <AccessTimeIcon sx={{ fontSize: 14, color, mb: 0.25 }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color }}>
+          <AccessTimeIcon sx={{ fontSize: 13, color, mb: 0.25 }} />
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color, lineHeight: 1 }}>
             {formatTimeShort(activity.timestamp, language)}
           </Typography>
         </Box>
 
-        {/* אווטאר */}
+        {/* אווטאר עם סטטוס אונליין */}
         <Box
           sx={{
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             borderRadius: '10px',
             bgcolor: color,
             display: 'flex',
@@ -91,18 +105,44 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
             justifyContent: 'center',
             color: 'white',
             fontWeight: 600,
-            fontSize: 16,
-            flexShrink: 0
+            fontSize: 15,
+            flexShrink: 0,
+            position: 'relative',
           }}
         >
           {activity.userName.charAt(0).toUpperCase()}
+          {isOnline && (
+            <Box sx={{
+              position: 'absolute',
+              bottom: -2,
+              right: -2,
+              width: 11,
+              height: 11,
+              borderRadius: '50%',
+              bgcolor: ONLINE_GREEN,
+              border: '2px solid white',
+              animation: `${pulse} 2s ease-in-out infinite`,
+            }} />
+          )}
         </Box>
 
-        {/* שם */}
+        {/* שם + שיטה */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {activity.userName}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography sx={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'text.primary',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {activity.userName}
+            </Typography>
+            {isOnline && (
+              <FiberManualRecordIcon sx={{ fontSize: 8, color: ONLINE_GREEN, flexShrink: 0 }} />
+            )}
+          </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {getMethodIcon(activity.loginMethod)}
             <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
@@ -111,14 +151,17 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
           </Box>
         </Box>
 
-        {/* כפתור הרחבה */}
-        {expanded ? <ExpandLessIcon sx={{ color: 'text.disabled', fontSize: 20 }} /> : <ExpandMoreIcon sx={{ color: 'text.disabled', fontSize: 20 }} />}
+        {/* חץ הרחבה */}
+        {expanded
+          ? <ExpandLessIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
+          : <ExpandMoreIcon sx={{ color: 'text.disabled', fontSize: 20 }} />
+        }
       </Box>
 
       {/* פרטים מורחבים */}
       <Collapse in={expanded}>
-        <Box sx={{ px: 1.5, pb: 1.5, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 1 }}>
+        <Box sx={{ px: 1.25, pb: 1.25, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75, mt: 1 }}>
             {/* אימייל מלא */}
             <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
               <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Email</Typography>
@@ -129,7 +172,7 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
 
             {/* שיטה */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.5 }}>
                 {activity.loginMethod === 'app_open' ? 'App Open' : 'Login'}
               </Typography>
               <Chip
@@ -140,14 +183,14 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
                   height: 24,
                   fontSize: 11,
                   fontWeight: 600,
-                  bgcolor: `${color}18`,
+                  bgcolor: `${color}14`,
                   color,
                   '& .MuiChip-icon': { color: `${color} !important` }
                 }}
               />
             </Box>
 
-            {/* תאריך ושעה מלאים */}
+            {/* תאריך ושעה */}
             <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
               <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>Date</Typography>
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
@@ -166,7 +209,7 @@ const ActivityRow = memo(({ activity, language }: { activity: LoginActivity; lan
 
 ActivityRow.displayName = 'ActivityRow';
 
-export const ActivityTable = ({ activities, language }: ActivityTableProps) => {
+export const ActivityTable = ({ activities, language, onlineUserIds }: ActivityTableProps) => {
   const { t, settings } = useSettings();
 
   const getDateLabel = (dateStr: string) => {
@@ -207,11 +250,11 @@ export const ActivityTable = ({ activities, language }: ActivityTableProps) => {
       {groupedActivities.map((group) => (
         <Box key={group.date}>
           {/* כותרת תאריך */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, px: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, px: 0.5 }}>
             <Typography sx={{
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 700,
-              color: isToday(group.date) ? '#14B8A6' : 'text.primary'
+              color: isToday(group.date) ? TEAL : 'text.primary'
             }}>
               {group.displayDate}
             </Typography>
@@ -222,8 +265,9 @@ export const ActivityTable = ({ activities, language }: ActivityTableProps) => {
                 height: 20,
                 fontSize: 11,
                 fontWeight: 600,
-                bgcolor: isToday(group.date) ? '#14B8A6' : 'action.selected',
-                color: isToday(group.date) ? 'white' : 'text.secondary'
+                bgcolor: isToday(group.date) ? TEAL : 'action.selected',
+                color: isToday(group.date) ? 'white' : 'text.secondary',
+                '& .MuiChip-label': { px: 0.75 },
               }}
             />
           </Box>
@@ -231,7 +275,12 @@ export const ActivityTable = ({ activities, language }: ActivityTableProps) => {
           {/* פעילויות */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             {group.activities.map((activity) => (
-              <ActivityRow key={activity.id} activity={activity} language={language} />
+              <ActivityRow
+                key={activity.id}
+                activity={activity}
+                language={language}
+                isOnline={onlineUserIds.has(activity.userId)}
+              />
             ))}
           </Box>
         </Box>

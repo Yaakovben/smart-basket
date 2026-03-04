@@ -126,118 +126,38 @@ export const AdminDashboard = () => {
           </IconButton>
         </Box>
 
-        {/* Stats Cards - Row 1 */}
-        <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, mb: 1.5 }}>
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#14B8A6' }}>
-              {stats.totalUsers}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('totalUsers')}
-            </Typography>
-          </Paper>
-
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#8B5CF6' }}>
-              {stats.uniqueUsersToday}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('uniqueUsersToday')}
-            </Typography>
-          </Paper>
-
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#EC4899' }}>
-              {stats.uniqueUsersThisMonth}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('uniqueUsersThisMonth')}
-            </Typography>
-          </Paper>
-        </Box>
-
-        {/* Stats Cards - Row 2 */}
-        <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#F59E0B' }}>
-              {stats.loginsToday}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('loginsToday')}
-            </Typography>
-          </Paper>
-
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#3B82F6' }}>
-              {stats.loginsThisMonth}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('loginsThisMonth')}
-            </Typography>
-          </Paper>
-
-          <Paper
-            sx={{
-              flex: '1 0 auto',
-              minWidth: 90,
-              p: 1.5,
-              borderRadius: '14px',
-              textAlign: 'center',
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: '#22C55E' }}>
-              {onlineUserIds.size}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-              {t('onlineNow')}
-            </Typography>
-          </Paper>
+        {/* Stats Cards */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 1,
+          mb: 1,
+        }}>
+          {([
+            { value: stats.totalUsers, label: t('totalUsers'), color: '#14B8A6' },
+            { value: stats.uniqueUsersToday, label: t('uniqueUsersToday'), color: '#0EA5E9' },
+            { value: onlineUserIds.size, label: t('onlineNow'), color: '#22C55E' },
+            { value: stats.loginsToday, label: t('loginsToday'), color: '#14B8A6' },
+            { value: stats.loginsThisMonth, label: t('loginsThisMonth'), color: '#0EA5E9' },
+            { value: stats.uniqueUsersThisMonth, label: t('uniqueUsersThisMonth'), color: '#8B5CF6' },
+          ]).map((stat, i) => (
+            <Paper
+              key={i}
+              sx={{
+                p: 1.25,
+                borderRadius: '12px',
+                textAlign: 'center',
+                bgcolor: 'rgba(255,255,255,0.95)',
+              }}
+            >
+              <Typography sx={{ fontSize: 24, fontWeight: 700, color: stat.color, lineHeight: 1.2 }}>
+                {stat.value}
+              </Typography>
+              <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500, lineHeight: 1.3, mt: 0.25 }}>
+                {stat.label}
+              </Typography>
+            </Paper>
+          ))}
         </Box>
       </Box>
 
@@ -304,7 +224,7 @@ export const AdminDashboard = () => {
             )}
 
             {/* Activity Table or Loading */}
-            {loading ? <LoadingSkeleton /> : <ActivityTable activities={displayedActivities} language={settings.language} />}
+            {loading ? <LoadingSkeleton /> : <ActivityTable activities={displayedActivities} language={settings.language} onlineUserIds={onlineUserIds} />}
           </>
         )}
 
