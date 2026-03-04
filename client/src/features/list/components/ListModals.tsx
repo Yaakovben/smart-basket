@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Box, Typography, TextField, Button, IconButton, Avatar, Chip } from '@mui/material';
+import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
@@ -350,6 +350,7 @@ interface EditListModalProps {
   list: List;
   editData: EditListForm | null;
   hasChanges: boolean;
+  saving?: boolean;
   onClose: () => void;
   onSave: () => void;
   onUpdateData: (data: EditListForm) => void;
@@ -361,6 +362,7 @@ export const EditListModal = memo(({
   list,
   editData,
   hasChanges,
+  saving = false,
   onClose,
   onSave,
   onUpdateData,
@@ -383,7 +385,7 @@ export const EditListModal = memo(({
   const icons = list.isGroup ? GROUP_ICONS : LIST_ICONS;
 
   return (
-    <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={onClose}>
+    <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={() => !saving && onClose()}>
       {/* Icon Preview */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
         <Box sx={{
@@ -469,7 +471,9 @@ export const EditListModal = memo(({
           ))}
         </Box>
       </Box>
-      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges} sx={{ py: 1.25, fontSize: 15 }}>{t('saveChanges')}</Button>
+      <Button variant="contained" fullWidth onClick={onSave} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
+        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
+      </Button>
       {!list.isGroup && onConvertToGroup && !showPasswordStep && (
         <Box
           onClick={() => setShowPasswordStep(true)}

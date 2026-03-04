@@ -58,6 +58,7 @@ export interface UseListReturn {
   addError: string;
   addingProduct: boolean;
   pendingAddName: string | null;
+  savingListChanges: boolean;
   fabPosition: FabPosition | null;
   isDragging: boolean;
 

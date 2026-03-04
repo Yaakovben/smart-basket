@@ -18,6 +18,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
   // ===== מצב =====
   const [editProfile, setEditProfile] = useState<EditProfileForm | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // ===== מחושבים =====
   const hasChanges = useMemo(() => {
@@ -42,11 +43,14 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
 
   const handleSave = useCallback(async () => {
     if (editProfile && hasChanges) {
+      setSavingProfile(true);
       try {
         await onUpdateUser(editProfile);
         setEditProfile(null);
       } catch {
         // שגיאה מטופלת ע"י ההורה - שמירת טופס פתוח
+      } finally {
+        setSavingProfile(false);
       }
     }
   }, [editProfile, hasChanges, onUpdateUser]);
@@ -71,6 +75,7 @@ export const useProfile = ({ user, onUpdateUser, onLogout }: UseProfileParams): 
     editProfile,
     confirmLogout,
     hasChanges,
+    savingProfile,
     setEditProfile,
     setConfirmLogout,
     openEditProfile,

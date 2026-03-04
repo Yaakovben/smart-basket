@@ -160,7 +160,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
-    pendingAddName, fabPosition, isDragging,
+    pendingAddName, savingListChanges, fabPosition, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
@@ -351,7 +351,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         list={list}
         editData={editListData}
         hasChanges={hasListChanges}
-        onClose={() => setShowEditList(false)}
+        saving={savingListChanges}
+        onClose={() => !savingListChanges && setShowEditList(false)}
         onSave={saveListChanges}
         onUpdateData={setEditListData}
         onConvertToGroup={!list.isGroup ? (password: string) => {

@@ -143,9 +143,9 @@ interface HomePageProps {
   lists: List[];
   user: User;
   onSelectList: (list: List) => void;
-  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void;
-  onDeleteList: (listId: string) => void;
-  onEditList: (list: List) => void;
+  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;
+  onDeleteList: (listId: string) => void | Promise<void>;
+  onEditList: (list: List) => void | Promise<void>;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onLogout: () => void;
   // התראות שמורות מה-API
@@ -199,7 +199,7 @@ export const HomeComponent = memo(({
   const {
     tab, search, showMenu, showCreate, showCreateGroup, showJoin,
     showNotifications, confirmLogout, editList, confirmDeleteList,
-    newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown,
+    newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
     setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
@@ -439,7 +439,7 @@ export const HomeComponent = memo(({
 
       {/* Create Private List Modal */}
       {showCreate && (
-        <Modal title={t('privateList')} onClose={closeCreateModal}>
+        <Modal title={t('privateList')} onClose={() => !creatingList && closeCreateModal()}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
             <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: newL.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${newL.color}40` }}>
@@ -466,13 +466,15 @@ export const HomeComponent = memo(({
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(false)} sx={{ py: 1.25, fontSize: 15 }}>{t('createList')}</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(false)} disabled={creatingList} sx={{ py: 1.25, fontSize: 15 }}>
+            {creatingList ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('createList')}
+          </Button>
         </Modal>
       )}
 
       {/* Create Group Modal */}
       {showCreateGroup && (
-        <Modal title={t('newGroup')} onClose={closeCreateGroupModal}>
+        <Modal title={t('newGroup')} onClose={() => !creatingList && closeCreateGroupModal()}>
           {createError && <Alert severity="error" sx={{ mb: 2, borderRadius: SIZES.radius.md }}>{createError}</Alert>}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
             <Box sx={{ width: 60, height: 60, borderRadius: '14px', bgcolor: newL.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: `0 4px 12px ${newL.color}40` }}>
@@ -499,7 +501,9 @@ export const HomeComponent = memo(({
               ))}
             </Box>
           </Box>
-          <Button variant="contained" fullWidth onClick={() => handleCreate(true)} sx={{ py: 1.25, fontSize: 15 }}>{t('createGroup')}</Button>
+          <Button variant="contained" fullWidth onClick={() => handleCreate(true)} disabled={creatingList} sx={{ py: 1.25, fontSize: 15 }}>
+            {creatingList ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('createGroup')}
+          </Button>
         </Modal>
       )}
 
@@ -655,7 +659,8 @@ export const HomeComponent = memo(({
         list={editList}
         editData={editListData}
         hasChanges={editListHasChanges}
-        onClose={() => setEditList(null)}
+        saving={savingList}
+        onClose={() => !savingList && setEditList(null)}
         onSave={saveEditList}
         onUpdateData={(data) => {
           if (!editList) return;

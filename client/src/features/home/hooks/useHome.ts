@@ -31,9 +31,9 @@ const DEFAULT_NEW_GROUP: NewListForm = {
 interface UseHomeParams {
   lists: List[];
   user: User;
-  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void;
-  onDeleteList: (listId: string) => void;
-  onEditList: (list: List) => void;
+  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;
+  onDeleteList: (listId: string) => void | Promise<void>;
+  onEditList: (list: List) => void | Promise<void>;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -68,6 +68,8 @@ export const useHome = ({
   const [joinError, setJoinError] = useState('');
   const [createError, setCreateError] = useState('');
   const [joiningGroup, setJoiningGroup] = useState(false);
+  const [creatingList, setCreatingList] = useState(false);
+  const [savingList, setSavingList] = useState(false);
 
   // ===== הגבלת ניסיונות הצטרפות =====
   const joinAttemptsRef = useRef(0);
@@ -123,20 +125,26 @@ export const useHome = ({
     return true;
   }, [newL.name, t]);
 
-  const handleCreate = useCallback((isGroup: boolean) => {
+  const handleCreate = useCallback(async (isGroup: boolean) => {
     setCreateError('');
     if (!validateListName()) return;
 
-    onCreateList({
-      ...newL,
-      isGroup,
-      password: isGroup ? generatePassword() : null,
-    });
-
-    setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
-    setShowCreate(false);
-    setShowCreateGroup(false);
-  }, [newL, onCreateList, validateListName]);
+    setCreatingList(true);
+    try {
+      await onCreateList({
+        ...newL,
+        isGroup,
+        password: isGroup ? generatePassword() : null,
+      });
+      setNewL(isGroup ? DEFAULT_NEW_GROUP : DEFAULT_NEW_LIST);
+      setShowCreate(false);
+      setShowCreateGroup(false);
+    } catch {
+      setCreateError(t('errorOccurred'));
+    } finally {
+      setCreatingList(false);
+    }
+  }, [newL, onCreateList, validateListName, t]);
 
   // ===== טיפול בהצטרפות לרשימה =====
   const handleJoin = useCallback(async () => {
@@ -218,15 +226,22 @@ export const useHome = ({
   }, []);
 
   // ===== טיפול בעריכה/מחיקת רשימה =====
-  const saveEditList = useCallback(() => {
+  const saveEditList = useCallback(async () => {
     if (!editList) return;
-    onEditList(editList);
-    setEditList(null);
+    setSavingList(true);
+    try {
+      await onEditList(editList);
+      setEditList(null);
+    } catch {
+      // error toast handled in router
+    } finally {
+      setSavingList(false);
+    }
   }, [editList, onEditList]);
 
-  const deleteList = useCallback(() => {
+  const deleteList = useCallback(async () => {
     if (!confirmDeleteList) return;
-    onDeleteList(confirmDeleteList.id);
+    await onDeleteList(confirmDeleteList.id);
     setConfirmDeleteList(null);
   }, [confirmDeleteList, onDeleteList]);
 
@@ -248,6 +263,8 @@ export const useHome = ({
     createError,
     joiningGroup,
     joinCooldown,
+    creatingList,
+    savingList,
 
     userLists,
     my,

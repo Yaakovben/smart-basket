@@ -33,11 +33,11 @@ const getDefaultNewProduct = (): NewProductForm => ({
 interface UseListParams {
   list: List;
   user: User;
-  onUpdateList: (list: List) => void;
+  onUpdateList: (list: List) => void | Promise<void>;
   onUpdateListLocal: (list: List) => void;
   onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
-  onLeaveList: (listId: string) => void;
-  onDeleteList: (listId: string) => void;
+  onLeaveList: (listId: string) => void | Promise<void>;
+  onDeleteList: (listId: string) => void | Promise<void>;
   onBack: () => void;
   showToast: (message: string, type?: ToastType) => void;
 }
@@ -79,6 +79,7 @@ export const useList = ({
   const [addError, setAddError] = useState('');
 
   // ===== מצב הוספת מוצר =====
+  const [savingListChanges, setSavingListChanges] = useState(false);
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingAddName, setPendingAddName] = useState<string | null>(null);
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
@@ -506,11 +507,18 @@ export const useList = ({
     setShowEditList(true);
   }, [list.name, list.icon, list.color]);
 
-  const saveListChanges = useCallback(() => {
+  const saveListChanges = useCallback(async () => {
     if (!editListData || !hasListChanges) return;
-    onUpdateList({ ...list, ...editListData });
-    setShowEditList(false);
-    showToast(t('saved'));
+    setSavingListChanges(true);
+    try {
+      await onUpdateList({ ...list, ...editListData });
+      setShowEditList(false);
+      showToast(t('saved'));
+    } catch {
+      showToast(t('unknownError'), 'error');
+    } finally {
+      setSavingListChanges(false);
+    }
   }, [list, editListData, hasListChanges, onUpdateList, showToast, t]);
 
   const handleDeleteList = useCallback(async () => {
@@ -556,8 +564,8 @@ export const useList = ({
     setConfirm({
       title: t('leaveGroup'),
       message: t('leaveGroupConfirm'),
-      onConfirm: () => {
-        onLeaveList(list.id);
+      onConfirm: async () => {
+        await onLeaveList(list.id);
         setConfirm(null);
       }
     });
@@ -592,6 +600,7 @@ export const useList = ({
     addError,
     addingProduct,
     pendingAddName,
+    savingListChanges,
     fabPosition,
     isDragging,
 
