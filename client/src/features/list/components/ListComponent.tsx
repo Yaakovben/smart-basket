@@ -1,5 +1,5 @@
 import { memo, useRef, useCallback, useMemo } from 'react';
-import { Box, CircularProgress, Typography, Button, keyframes } from '@mui/material';
+import { Box, Typography, Button, keyframes } from '@mui/material';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -160,7 +160,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
-    pendingAddName, savingListChanges, togglingProductId, savingProduct, processingDuplicate, refreshing,
+    refreshing,
     fabPosition, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
@@ -249,34 +249,24 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         )}
 
         {/* Products List or Empty State */}
-        {items.length === 0 && !pendingAddName ? (
+        {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} />
         ) : (
-          <>
-            {items.map((p: Product) => (
-              <SwipeItem
-                key={p.id}
-                product={p}
-                isPurchased={p.isPurchased}
-                isOpen={openItemId === p.id}
-                isToggling={togglingProductId === p.id}
-                currentUserName={user.name}
-                onOpen={setOpenItemId}
-                onClose={handleCloseItem}
-                onToggle={toggleProduct}
-                onEdit={openEditProduct}
-                onDelete={deleteProduct}
-                onClick={handleShowDetails}
-              />
-            ))}
-            {pendingAddName && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', px: '14px', height: 72, mb: '6px', borderRadius: '14px', bgcolor: 'background.paper', opacity: 0.6, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <CircularProgress size={22} sx={{ color: 'primary.main', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pendingAddName}</Typography>
-                <Typography sx={{ fontSize: 12, color: 'text.disabled', ml: 'auto', flexShrink: 0 }}>{t('adding')}</Typography>
-              </Box>
-            )}
-          </>
+          items.map((p: Product) => (
+            <SwipeItem
+              key={p.id}
+              product={p}
+              isPurchased={p.isPurchased}
+              isOpen={openItemId === p.id}
+              currentUserName={user.name}
+              onOpen={setOpenItemId}
+              onClose={handleCloseItem}
+              onToggle={toggleProduct}
+              onEdit={openEditProduct}
+              onDelete={deleteProduct}
+              onClick={handleShowDetails}
+            />
+          ))
         )}
       </Box>
 
@@ -308,7 +298,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       <EditProductModal
         product={showEdit}
         hasChanges={hasProductChanges}
-        saving={savingProduct}
+        saving={false}
         onClose={closeEditProduct}
         onSave={saveEditedProduct}
         onUpdateField={updateEditProductField}
@@ -355,8 +345,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         list={list}
         editData={editListData}
         hasChanges={hasListChanges}
-        saving={savingListChanges}
-        onClose={() => !savingListChanges && setShowEditList(false)}
+        saving={false}
+        onClose={() => setShowEditList(false)}
         onSave={saveListChanges}
         onUpdateData={setEditListData}
         onConvertToGroup={!list.isGroup ? async (password: string) => {
@@ -386,7 +376,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
       {/* Duplicate Product Dialog */}
       {duplicateProduct && (
-        <Modal title={t('productExists')} onClose={() => !processingDuplicate && handleDuplicateCancel()}>
+        <Modal title={t('productExists')} onClose={handleDuplicateCancel}>
           <Typography sx={{ fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 2.5, lineHeight: 1.6 }}>
             {t('productExistsMessage')
               .replace('{name}', duplicateProduct.existing.name)
@@ -394,10 +384,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               .replace('{unit}', duplicateProduct.existing.unit)}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Button variant="contained" fullWidth onClick={handleDuplicateIncreaseQuantity} disabled={processingDuplicate} sx={{ py: 1.25 }}>
-              {processingDuplicate ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('increaseQuantity')}
+            <Button variant="contained" fullWidth onClick={handleDuplicateIncreaseQuantity} sx={{ py: 1.25 }}>
+              {t('increaseQuantity')}
             </Button>
-            <Button variant="outlined" fullWidth onClick={handleDuplicateAddNew} disabled={processingDuplicate} sx={{ py: 1.25 }}>
+            <Button variant="outlined" fullWidth onClick={handleDuplicateAddNew} sx={{ py: 1.25 }}>
               {t('addAnyway')}
             </Button>
           </Box>

@@ -79,12 +79,14 @@ export const useList = ({
   const [addError, setAddError] = useState('');
 
   // ===== מצב פעולות =====
-  const [savingListChanges, setSavingListChanges] = useState(false);
+  // savingListChanges לא בשימוש כי עדכון רשימה הוא אופטימיסטי מיידי
+  const savingListChanges = false;
   // togglingProductId לא בשימוש כי toggle הוא אופטימיסטי מיידי
   const togglingProductId = null;
   // savingProduct לא בשימוש כי עדכון מוצר הוא אופטימיסטי מיידי
   const savingProduct = false;
-  const [processingDuplicate, setProcessingDuplicate] = useState(false);
+  // processingDuplicate לא בשימוש כי טיפול בכפילות הוא אופטימיסטי
+  const processingDuplicate = false;
   const [refreshing, setRefreshing] = useState(false);
   // addingProduct ו-pendingAddName לא בשימוש כי הוספת מוצר היא אופטימיסטית
   const addingProduct = false;
@@ -339,21 +341,22 @@ export const useList = ({
     });
   }, [addProductToServer, checkDuplicate]);
 
-  // טיפול בכפילות - הגדלת כמות
+  // טיפול בכפילות - הגדלת כמות (אופטימיסטי)
   const handleDuplicateIncreaseQuantity = useCallback(async () => {
     if (!duplicateProduct) return;
     const { existing, newData } = duplicateProduct;
     const newQuantity = existing.quantity + newData.quantity;
 
-    setProcessingDuplicate(true);
+    // עדכון אופטימיסטי מיידי
+    setDuplicateProduct(null);
+    onUpdateProductsForList(list.id, (currentProducts) =>
+      currentProducts.map((p: Product) =>
+        p.id === existing.id ? { ...p, quantity: newQuantity } : p
+      )
+    );
+
     try {
       await productsApi.updateProduct(list.id, existing.id, { quantity: newQuantity });
-      setDuplicateProduct(null);
-      onUpdateProductsForList(list.id, (currentProducts) =>
-        currentProducts.map((p: Product) =>
-          p.id === existing.id ? { ...p, quantity: newQuantity } : p
-        )
-      );
       showToast(t('updated'));
       socketService.emitProductUpdated(list.id, {
         id: existing.id,
@@ -363,9 +366,13 @@ export const useList = ({
         category: existing.category,
       }, user.name);
     } catch {
+      // שחזור במקרה של שגיאה
+      onUpdateProductsForList(list.id, (currentProducts) =>
+        currentProducts.map((p: Product) =>
+          p.id === existing.id ? { ...p, quantity: existing.quantity } : p
+        )
+      );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      setProcessingDuplicate(false);
     }
   }, [duplicateProduct, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
@@ -373,13 +380,8 @@ export const useList = ({
   const handleDuplicateAddNew = useCallback(async () => {
     if (!duplicateProduct) return;
     const { newData } = duplicateProduct;
-    setProcessingDuplicate(true);
-    try {
-      setDuplicateProduct(null);
-      await addProductToServer(newData);
-    } finally {
-      setProcessingDuplicate(false);
-    }
+    setDuplicateProduct(null);
+    await addProductToServer(newData);
   }, [duplicateProduct, addProductToServer]);
 
   const handleDuplicateCancel = useCallback(() => {
@@ -543,17 +545,21 @@ export const useList = ({
 
   const saveListChanges = useCallback(async () => {
     if (!editListData || !hasListChanges) return;
-    setSavingListChanges(true);
+    const oldData = { name: list.name, icon: list.icon, color: list.color };
+
+    // עדכון אופטימיסטי - סגירת מודאל ועדכון מיידי
+    setShowEditList(false);
+    onUpdateListLocal({ ...list, ...editListData });
+
     try {
       await onUpdateList({ ...list, ...editListData });
-      setShowEditList(false);
       showToast(t('saved'));
     } catch {
+      // שחזור במקרה של שגיאה
+      onUpdateListLocal({ ...list, ...oldData });
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      setSavingListChanges(false);
     }
-  }, [list, editListData, hasListChanges, onUpdateList, showToast, t]);
+  }, [list, editListData, hasListChanges, onUpdateList, onUpdateListLocal, showToast, t]);
 
   const handleDeleteList = useCallback(async () => {
     try {
