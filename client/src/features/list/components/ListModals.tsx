@@ -354,7 +354,7 @@ interface EditListModalProps {
   onClose: () => void;
   onSave: () => void;
   onUpdateData: (data: EditListForm) => void;
-  onConvertToGroup?: (password: string) => void;
+  onConvertToGroup?: (password: string) => void | Promise<void>;
 }
 
 export const EditListModal = memo(({
@@ -371,12 +371,14 @@ export const EditListModal = memo(({
   const { t } = useSettings();
   const [showPasswordStep, setShowPasswordStep] = useState(false);
   const [convertPassword, setConvertPassword] = useState('');
+  const [converting, setConverting] = useState(false);
 
   // איפוס state מקומי כשהמודאל נסגר
   useEffect(() => {
     if (!isOpen) {
       setShowPasswordStep(false);
       setConvertPassword('');
+      setConverting(false);
     }
   }, [isOpen]);
 
@@ -385,7 +387,7 @@ export const EditListModal = memo(({
   const icons = list.isGroup ? GROUP_ICONS : LIST_ICONS;
 
   return (
-    <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={() => !saving && onClose()}>
+    <Modal title={list.isGroup ? t('editGroup') : t('editList')} onClose={() => !saving && !converting && onClose()}>
       {/* Icon Preview */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
         <Box sx={{
@@ -537,6 +539,7 @@ export const EditListModal = memo(({
               variant="outlined"
               size="small"
               onClick={() => { setShowPasswordStep(false); setConvertPassword(''); }}
+              disabled={converting}
               sx={{ flex: 1, fontSize: 13 }}
             >
               {t('cancel')}
@@ -544,11 +547,18 @@ export const EditListModal = memo(({
             <Button
               variant="contained"
               size="small"
-              disabled={convertPassword.length !== 4}
-              onClick={() => onConvertToGroup(convertPassword)}
+              disabled={convertPassword.length !== 4 || converting}
+              onClick={async () => {
+                setConverting(true);
+                try {
+                  await onConvertToGroup!(convertPassword);
+                } finally {
+                  setConverting(false);
+                }
+              }}
               sx={{ flex: 1, fontSize: 13 }}
             >
-              {t('convertToGroup')}
+              {converting ? <CircularProgress size={18} sx={{ color: 'white' }} /> : t('convertToGroup')}
             </Button>
           </Box>
         </Box>

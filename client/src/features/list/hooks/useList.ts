@@ -261,7 +261,7 @@ export const useList = ({
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setAddingProduct(false);
       setPendingAddName(null);
@@ -349,7 +349,7 @@ export const useList = ({
         category: existing.category,
       }, user.name);
     } catch {
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setProcessingDuplicate(false);
     }
@@ -392,11 +392,10 @@ export const useList = ({
           p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
         )
       );
-      showToast(t('updated'));
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setTogglingProductId(null);
     }
@@ -422,7 +421,7 @@ export const useList = ({
           socketService.emitProductDeleted(list.id, productId, product.name, user.name);
         } catch (error) {
           if (import.meta.env.DEV) console.error('Failed to delete product:', error);
-          showToast(t('unknownError'), 'error');
+          showToast(t('errorOccurred'), 'error');
         }
       }
     });
@@ -461,7 +460,7 @@ export const useList = ({
       }, user.name);
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setSavingProduct(false);
     }
@@ -528,7 +527,7 @@ export const useList = ({
       setShowEditList(false);
       showToast(t('saved'));
     } catch {
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setSavingListChanges(false);
     }
@@ -540,7 +539,7 @@ export const useList = ({
       onBack();
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to delete list:', error);
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     }
   }, [list.id, onDeleteList, onBack, showToast, t]);
 
@@ -566,7 +565,7 @@ export const useList = ({
           showToast(t('removed'));
         } catch (error) {
           if (import.meta.env.DEV) console.error('Failed to remove member:', error);
-          showToast(t('unknownError'), 'error');
+          showToast(t('errorOccurred'), 'error');
         }
         setConfirm(null);
       }
@@ -589,9 +588,8 @@ export const useList = ({
     try {
       const apiList = await listsApi.getList(list.id);
       onUpdateList(convertApiList(apiList));
-      showToast(t('refresh'), 'success');
     } catch {
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setRefreshing(false);
     }

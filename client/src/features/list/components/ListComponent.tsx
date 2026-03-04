@@ -1,6 +1,6 @@
 import { memo, useRef, useCallback, useMemo } from 'react';
 import { Box, CircularProgress, Typography, Button, keyframes } from '@mui/material';
-import type { Product, List, User } from '../../../global/types';
+import type { Product, List, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
@@ -147,7 +147,7 @@ interface ListPageProps {
   onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
-  showToast: (message: string) => void;
+  showToast: (message: string, type?: ToastType) => void;
   onlineUserIds?: Set<string>;
 }
 
@@ -215,7 +215,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           isMuteToggling.current = true;
           toggleGroupMute(list.id);
           authApi.toggleMuteGroup(list.id)
-            .catch(() => { toggleGroupMute(list.id); showToast(t('unknownError')); })
+            .catch(() => { toggleGroupMute(list.id); showToast(t('errorOccurred'), 'error'); })
             .finally(() => { isMuteToggling.current = false; });
         }}
         isMuted={isGroupMuted(list.id)}
@@ -359,9 +359,13 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onClose={() => !savingListChanges && setShowEditList(false)}
         onSave={saveListChanges}
         onUpdateData={setEditListData}
-        onConvertToGroup={!list.isGroup ? (password: string) => {
-          onUpdateList({ ...list, isGroup: true, password });
-          setShowEditList(false);
+        onConvertToGroup={!list.isGroup ? async (password: string) => {
+          try {
+            await onUpdateList({ ...list, isGroup: true, password });
+            setShowEditList(false);
+          } catch {
+            showToast(t('errorOccurred'), 'error');
+          }
         } : undefined}
       />
 

@@ -54,7 +54,7 @@ export const useSettingsPage = ({ onDeleteAllData, showToast, t }: UseSettingsPa
     try {
       await onDeleteAllData?.();
     } catch {
-      showToast(t('unknownError'), 'error');
+      showToast(t('errorOccurred'), 'error');
     } finally {
       setConfirmDelete(false);
     }
