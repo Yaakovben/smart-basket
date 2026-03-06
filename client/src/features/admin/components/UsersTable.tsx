@@ -1,17 +1,50 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { Box, Typography, Paper, Collapse, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Collapse, IconButton, keyframes } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
+
+// צבעי סוגי אירועים
+const EVENT_COLORS = {
+  login: '#14B8A6',
+  app_open: '#3B82F6',
+  registration: '#8B5CF6',
+  google: '#4285F4',
+} as const;
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+`;
+
+// אייקון שיטה בתוך עיגול צבעוני
+const MethodBadge = ({ method, size = 28 }: { method: string; size?: number }) => {
+  const color = method === 'google' ? EVENT_COLORS.google : method === 'app_open' ? EVENT_COLORS.app_open : EVENT_COLORS.login;
+  const iconSize = size * 0.5;
+  return (
+    <Box sx={{
+      width: size,
+      height: size,
+      borderRadius: '50%',
+      bgcolor: `${color}14`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      {method === 'google' && <GoogleIcon sx={{ fontSize: iconSize, color }} />}
+      {method === 'app_open' && <PhoneAndroidIcon sx={{ fontSize: iconSize, color }} />}
+      {method === 'email' && <EmailIcon sx={{ fontSize: iconSize, color }} />}
+    </Box>
+  );
+};
 
 // ===== UserRow =====
 interface UserRowProps {
@@ -21,22 +54,16 @@ interface UserRowProps {
   userActivities: LoginActivity[];
 }
 
-const getMethodIcon = (method: string, size = 14) => {
-  if (method === 'google') return <GoogleIcon sx={{ fontSize: size, color: '#4285F4' }} />;
-  if (method === 'app_open') return <PhoneAndroidIcon sx={{ fontSize: size, color: '#14B8A6' }} />;
-  return <EmailIcon sx={{ fontSize: size, color: '#14B8A6' }} />;
-};
-
 const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
   const isGoogle = user.registrationMethod === 'google';
+  const isRtl = settings.language === 'he';
 
   const toggleExpand = useCallback(() => {
     setIsExpanded(prev => !prev);
   }, []);
 
-  // הפעילות האחרונה (התחברות או פתיחת אפליקציה)
   const lastActivity = user.lastAppOpenAt && user.lastLoginAt
     ? (new Date(user.lastAppOpenAt) > new Date(user.lastLoginAt) ? user.lastAppOpenAt : user.lastLoginAt)
     : user.lastAppOpenAt || user.lastLoginAt;
@@ -44,10 +71,14 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
   return (
     <Paper
       sx={{
-        borderRadius: '12px',
-        border: '1px solid',
-        borderColor: 'divider',
+        borderRadius: '16px',
         overflow: 'hidden',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        border: '1px solid',
+        borderColor: isOnline ? 'rgba(34,197,94,0.2)' : 'rgba(0,0,0,0.04)',
+        background: isOnline
+          ? `linear-gradient(${isRtl ? '270deg' : '90deg'}, rgba(34,197,94,0.05), transparent 60%)`
+          : 'white',
       }}
     >
       {/* שורה ראשית */}
@@ -60,46 +91,51 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
           gap: 1.25,
           cursor: 'pointer',
           transition: 'background-color 0.15s',
-          '&:active': { bgcolor: 'action.hover' }
+          '&:active': { bgcolor: 'rgba(0,0,0,0.02)' }
         }}
       >
-        {/* נקודת סטטוס */}
-        <Box
-          sx={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            bgcolor: isOnline ? '#22C55E' : '#D1D5DB',
-            flexShrink: 0,
-          }}
-        />
-
-        {/* אווטאר */}
-        <Box
-          sx={{
-            width: 38,
-            height: 38,
-            borderRadius: '10px',
-            bgcolor: user.avatarColor || '#14B8A6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: user.avatarEmoji ? 17 : 14,
-            flexShrink: 0,
-          }}
-        >
-          {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
+        {/* אווטאר עם נקודת אונליין */}
+        <Box sx={{ position: 'relative', flexShrink: 0 }}>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              bgcolor: user.avatarColor || '#14B8A6',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: user.avatarEmoji ? 20 : 16,
+              boxShadow: isOnline ? '0 0 0 2.5px rgba(34,197,94,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+            }}
+          >
+            {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
+          </Box>
+          {/* נקודת אונליין על האווטאר */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              [isRtl ? 'left' : 'right']: 0,
+              width: 13,
+              height: 13,
+              borderRadius: '50%',
+              bgcolor: isOnline ? '#22C55E' : '#D1D5DB',
+              border: '2.5px solid white',
+              ...(isOnline && { animation: `${pulse} 2.5s ease-in-out infinite` }),
+            }}
+          />
         </Box>
 
         {/* שם + נראה לאחרונה */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontSize: 13.5,
+              fontSize: 14,
               fontWeight: 600,
-              color: 'text.primary',
+              color: '#1F2937',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
@@ -107,7 +143,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
           >
             {user.name}
           </Typography>
-          <Typography sx={{ fontSize: 11, color: isOnline ? '#16A34A' : 'text.secondary' }}>
+          <Typography sx={{ fontSize: 11.5, color: isOnline ? '#16A34A' : '#9CA3AF', fontWeight: isOnline ? 500 : 400 }}>
             {isOnline
               ? t('onlineNow')
               : lastActivity
@@ -118,145 +154,218 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
         </Box>
 
         {/* מספר כניסות */}
-        <Box sx={{ textAlign: 'center', flexShrink: 0 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#14B8A6', lineHeight: 1 }}>
+        <Box sx={{
+          bgcolor: 'rgba(20,184,166,0.08)',
+          borderRadius: '10px',
+          px: 1,
+          py: 0.5,
+          textAlign: 'center',
+          flexShrink: 0,
+        }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#14B8A6', lineHeight: 1 }}>
             {user.totalLogins}
           </Typography>
-          <Typography sx={{ fontSize: 9, color: 'text.disabled', lineHeight: 1.2 }}>
+          <Typography sx={{ fontSize: 8.5, color: '#6B7280', lineHeight: 1.3, fontWeight: 500 }}>
             {t('logins')}
           </Typography>
         </Box>
 
-        {/* אייקון שיטת רישום */}
-        {isGoogle
-          ? <GoogleIcon sx={{ fontSize: 16, color: '#4285F4', flexShrink: 0 }} />
-          : <EmailIcon sx={{ fontSize: 16, color: '#9CA3AF', flexShrink: 0 }} />
-        }
-
         {/* חץ הרחבה */}
         <IconButton size="small" sx={{ p: 0.25 }}>
-          {isExpanded ? <ExpandLessIcon sx={{ fontSize: 20 }} /> : <ExpandMoreIcon sx={{ fontSize: 20 }} />}
+          <ExpandMoreIcon sx={{
+            fontSize: 22,
+            color: '#9CA3AF',
+            transition: 'transform 0.2s',
+            transform: isExpanded ? 'rotate(180deg)' : 'none',
+          }} />
         </IconButton>
       </Box>
 
       {/* אזור מורחב */}
       <Collapse in={isExpanded}>
-        <Box sx={{
-          px: 1.5,
-          pb: 1.5,
-          pt: 1,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'action.hover'
-        }}>
-          {/* פרטי משתמש */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75, mb: 1 }}>
-            {/* אימייל */}
-            <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('emailField')}</Typography>
-              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
-                {user.email}
+        <Box sx={{ px: 1.5, pb: 2, pt: 0.5 }}>
+
+          {/* 1. רישום - סגול */}
+          <Box sx={{
+            mb: 1,
+            borderRadius: '12px',
+            border: '1px solid rgba(139,92,246,0.15)',
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.25,
+              py: 0.75,
+              bgcolor: 'rgba(139,92,246,0.06)',
+              borderBottom: '1px solid rgba(139,92,246,0.1)',
+            }}>
+              <PersonAddIcon sx={{ fontSize: 15, color: EVENT_COLORS.registration }} />
+              <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: EVENT_COLORS.registration }}>
+                {t('registeredAt')}
               </Typography>
             </Box>
-
-            {/* התחברות אחרונה */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <LoginIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
-                  {t('lastLogin')}
+            <Box sx={{ px: 1.25, py: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>
+                {formatDateShort(user.createdAt, language)} · {formatTimeShort(user.createdAt, language)}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                {isGoogle
+                  ? <GoogleIcon sx={{ fontSize: 13, color: EVENT_COLORS.google }} />
+                  : <EmailIcon sx={{ fontSize: 13, color: EVENT_COLORS.login }} />
+                }
+                <Typography sx={{ fontSize: 11, color: '#6B7280' }}>
+                  {isGoogle ? t('methodGoogle') : t('methodEmail')}
+                </Typography>
+                <Typography sx={{ mx: 0.5, color: '#D1D5DB' }}>·</Typography>
+                <Typography sx={{ fontSize: 11, color: '#9CA3AF', wordBreak: 'break-all' }}>
+                  {user.email}
                 </Typography>
               </Box>
+            </Box>
+          </Box>
+
+          {/* 2. התחברות אחרונה - teal */}
+          <Box sx={{
+            mb: 1,
+            borderRadius: '12px',
+            border: '1px solid rgba(20,184,166,0.15)',
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.25,
+              py: 0.75,
+              bgcolor: 'rgba(20,184,166,0.06)',
+              borderBottom: '1px solid rgba(20,184,166,0.1)',
+            }}>
+              <LoginIcon sx={{ fontSize: 15, color: EVENT_COLORS.login }} />
+              <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: EVENT_COLORS.login }}>
+                {t('lastLogin')}
+              </Typography>
+            </Box>
+            <Box sx={{ px: 1.25, py: 1 }}>
               {user.lastLoginAt ? (
                 <>
                   <Typography sx={{
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: 600,
-                    color: isActiveToday(user.lastLoginAt) ? '#10B981' : isActiveThisWeek(user.lastLoginAt) ? '#F59E0B' : 'text.primary'
+                    color: isActiveToday(user.lastLoginAt) ? '#059669' : isActiveThisWeek(user.lastLoginAt) ? '#D97706' : '#374151'
                   }}>
                     {getRelativeTime(user.lastLoginAt, language)}
                   </Typography>
-                  <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                    {formatDateShort(user.lastLoginAt, language)} {formatTimeShort(user.lastLoginAt, language)}
+                  <Typography sx={{ fontSize: 11.5, color: '#9CA3AF', mt: 0.25 }}>
+                    {formatDateShort(user.lastLoginAt, language)} · {formatTimeShort(user.lastLoginAt, language)}
                   </Typography>
                 </>
               ) : (
-                <Typography sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>
+                <Typography sx={{ fontSize: 12, color: '#D1D5DB', fontStyle: 'italic' }}>
                   {t('neverLoggedIn')}
                 </Typography>
               )}
             </Box>
+          </Box>
 
-            {/* פתיחת אפליקציה אחרונה */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
-                  {t('lastAppOpen')}
-                </Typography>
-              </Box>
+          {/* 3. פתיחת אפליקציה אחרונה - כחול */}
+          <Box sx={{
+            mb: 1.5,
+            borderRadius: '12px',
+            border: '1px solid rgba(59,130,246,0.15)',
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.25,
+              py: 0.75,
+              bgcolor: 'rgba(59,130,246,0.06)',
+              borderBottom: '1px solid rgba(59,130,246,0.1)',
+            }}>
+              <PhoneAndroidIcon sx={{ fontSize: 15, color: EVENT_COLORS.app_open }} />
+              <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: EVENT_COLORS.app_open }}>
+                {t('lastAppOpen')}
+              </Typography>
+            </Box>
+            <Box sx={{ px: 1.25, py: 1 }}>
               {user.lastAppOpenAt ? (
                 <>
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
                     {getRelativeTime(user.lastAppOpenAt, language)}
                   </Typography>
-                  <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                    {formatDateShort(user.lastAppOpenAt, language)} {formatTimeShort(user.lastAppOpenAt, language)}
+                  <Typography sx={{ fontSize: 11.5, color: '#9CA3AF', mt: 0.25 }}>
+                    {formatDateShort(user.lastAppOpenAt, language)} · {formatTimeShort(user.lastAppOpenAt, language)}
                   </Typography>
                 </>
               ) : (
-                <Typography sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>
+                <Typography sx={{ fontSize: 12, color: '#D1D5DB', fontStyle: 'italic' }}>
                   {t('neverOpened')}
                 </Typography>
               )}
-            </Box>
-
-            {/* תאריך הרשמה */}
-            <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                <CalendarTodayIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
-                  {t('registeredAt')}
-                </Typography>
-              </Box>
-              <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>
-                {formatDateShort(user.createdAt, language)} · {isGoogle ? t('methodGoogle') : t('methodEmail')}
-              </Typography>
             </Box>
           </Box>
 
           {/* ציר זמן פעילות */}
           {userActivities.length > 0 && (
             <Box>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600, mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <Typography sx={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600, mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('recentActivity')}
               </Typography>
-              <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', overflow: 'hidden' }}>
-                {userActivities.slice(0, 10).map((activity, i) => (
-                  <Box
-                    key={activity.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      px: 1,
-                      py: 0.5,
-                      borderBottom: i < Math.min(userActivities.length, 10) - 1 ? '1px solid' : 'none',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <Typography sx={{ fontSize: 11, color: 'text.disabled', minWidth: 70, fontFamily: 'monospace' }}>
-                      {formatDateShort(activity.timestamp, language)}
-                    </Typography>
-                    <Typography sx={{ fontSize: 11, color: 'text.disabled', minWidth: 38, fontFamily: 'monospace' }}>
-                      {formatTimeShort(activity.timestamp, language)}
-                    </Typography>
-                    {getMethodIcon(activity.loginMethod, 12)}
-                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                      {activity.loginMethod === 'app_open' ? t('methodApp') : activity.loginMethod === 'google' ? t('methodGoogle') : t('methodEmail')}
-                    </Typography>
-                  </Box>
-                ))}
+              <Box sx={{
+                position: 'relative',
+                [isRtl ? 'pr' : 'pl']: 2.5,
+              }}>
+                {/* קו ציר זמן */}
+                <Box sx={{
+                  position: 'absolute',
+                  [isRtl ? 'right' : 'left']: 5,
+                  top: 6,
+                  bottom: 6,
+                  width: 2,
+                  bgcolor: '#E5E7EB',
+                  borderRadius: 1,
+                }} />
+                {userActivities.slice(0, 8).map((activity) => {
+                  const dotColor = activity.loginMethod === 'app_open'
+                    ? EVENT_COLORS.app_open
+                    : activity.loginMethod === 'google'
+                      ? EVENT_COLORS.google
+                      : EVENT_COLORS.login;
+                  return (
+                    <Box
+                      key={activity.id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        py: 0.5,
+                        position: 'relative',
+                      }}
+                    >
+                      {/* נקודת ציר זמן */}
+                      <Box sx={{
+                        position: 'absolute',
+                        [isRtl ? 'right' : 'left']: -16,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: dotColor,
+                        border: '2px solid white',
+                        boxShadow: `0 0 0 1px ${dotColor}40`,
+                      }} />
+                      <Typography sx={{ fontSize: 11, color: '#9CA3AF', minWidth: 38 }}>
+                        {formatTimeShort(activity.timestamp, language)}
+                      </Typography>
+                      <Typography sx={{ fontSize: 11, color: '#6B7280', minWidth: 62 }}>
+                        {formatDateShort(activity.timestamp, language)}
+                      </Typography>
+                      <MethodBadge method={activity.loginMethod} size={22} />
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}
@@ -279,7 +388,6 @@ interface UsersTableProps {
 export const UsersTable = ({ users, activities, language, onlineUserIds }: UsersTableProps) => {
   const { t } = useSettings();
 
-  // מיון: אונליין קודם, אח"כ לפי פעילות אחרונה
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
       const aOnline = onlineUserIds.has(a.id) ? 1 : 0;
@@ -291,7 +399,6 @@ export const UsersTable = ({ users, activities, language, onlineUserIds }: Users
     });
   }, [users, onlineUserIds]);
 
-  // מיפוי פעילויות לפי משתמש
   const activitiesByUser = useMemo(() => {
     const map = new Map<string, LoginActivity[]>();
     for (const activity of activities) {
@@ -304,15 +411,15 @@ export const UsersTable = ({ users, activities, language, onlineUserIds }: Users
 
   if (users.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-        <Typography sx={{ fontSize: 40, mb: 1 }}>👥</Typography>
-        <Typography sx={{ fontSize: 15 }}>{t('noActivityFound')}</Typography>
+      <Box sx={{ textAlign: 'center', py: 6, color: '#9CA3AF' }}>
+        <Typography sx={{ fontSize: 48, mb: 1, opacity: 0.5 }}>👥</Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{t('noActivityFound')}</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
       {sortedUsers.map((user) => (
         <UserRow
           key={user.id}

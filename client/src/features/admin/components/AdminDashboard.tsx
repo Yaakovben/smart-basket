@@ -1,28 +1,34 @@
 import { useState, useMemo } from 'react';
-import { Box, Typography, Paper, IconButton, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Skeleton, TextField, InputAdornment, Button, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
+import PeopleIcon from '@mui/icons-material/People';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { UsersTable } from './UsersTable';
 import { RecentActivityFeed } from './RecentActivityFeed';
-import { COMMON_STYLES } from '../../../global/constants';
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`;
 
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
 
 const LoadingSkeleton = () => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
     {SKELETON_INDICES.map((i) => (
       <Paper key={i} sx={{ p: 2, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Skeleton variant="rounded" width={48} height={48} sx={{ borderRadius: '14px' }} />
+          <Skeleton variant="circular" width={44} height={44} />
           <Box sx={{ flex: 1 }}>
-            <Skeleton variant="text" width="60%" height={24} />
-            <Skeleton variant="text" width="40%" height={18} />
+            <Skeleton variant="text" width="60%" height={22} />
+            <Skeleton variant="text" width="40%" height={16} />
           </Box>
         </Box>
       </Paper>
@@ -44,8 +50,8 @@ export const AdminDashboard = () => {
     error
   } = useAdminDashboard();
   const socketOnlineUserIds = useOnlineUsers();
+  const isRtl = settings.language === 'he';
 
-  // המשתמש הנוכחי בהכרח מחובר
   const onlineUserIds = useMemo(() => {
     if (!user?.id) return socketOnlineUserIds;
     if (socketOnlineUserIds.has(user.id)) return socketOnlineUserIds;
@@ -54,7 +60,6 @@ export const AdminDashboard = () => {
     return merged;
   }, [socketOnlineUserIds, user?.id]);
 
-  // סינון משתמשים לפי חיפוש
   const filteredUsers = useMemo(() => {
     if (!userSearch) return usersWithLoginInfo;
     const searchLower = userSearch.toLowerCase();
@@ -64,76 +69,141 @@ export const AdminDashboard = () => {
     );
   }, [usersWithLoginInfo, userSearch]);
 
-  const statCards = [
-    { value: onlineUserIds.size, label: t('onlineNow'), color: '#22C55E' },
-    { value: stats.uniqueUsersToday, label: t('activeToday'), color: '#14B8A6' },
-    { value: stats.totalUsers, label: t('totalUsers'), color: '#6B7280' },
-  ];
-
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFB' }}>
       {/* Header */}
       <Box
         sx={{
-          background: COMMON_STYLES.gradients.header,
+          background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #2DD4BF 100%)',
           pt: 'max(env(safe-area-inset-top), 16px)',
-          pb: 3,
-          px: 2
+          pb: 8,
+          px: 2,
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        {/* עיגולים דקורטיביים */}
+        <Box sx={{
+          position: 'absolute',
+          top: -40,
+          [isRtl ? 'left' : 'right']: -40,
+          width: 160,
+          height: 160,
+          borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.08)',
+        }} />
+        <Box sx={{
+          position: 'absolute',
+          bottom: 20,
+          [isRtl ? 'right' : 'left']: -30,
+          width: 100,
+          height: 100,
+          borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.05)',
+        }} />
+
+        {/* כותרת + כפתורים */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
               onClick={() => navigate('/settings')}
-              sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)' }}
+              sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
             >
-              {settings.language === 'he' ? <ArrowForwardIcon /> : <ArrowBackIcon />}
+              {isRtl ? <ArrowForwardIcon /> : <ArrowBackIcon />}
             </IconButton>
-            <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>
+            <Typography sx={{ color: 'white', fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>
               {t('adminDashboard')}
             </Typography>
           </Box>
           <IconButton
             onClick={refreshData}
-            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)' }}
+            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
           >
             <RefreshIcon />
           </IconButton>
         </Box>
 
-        {/* 3 כרטיסי סטטיסטיקה */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-          {statCards.map((stat, i) => (
-            <Paper
-              key={i}
-              sx={{
-                p: 1.25,
-                borderRadius: '12px',
-                textAlign: 'center',
-                bgcolor: 'rgba(255,255,255,0.95)',
-              }}
-            >
-              <Typography sx={{ fontSize: 24, fontWeight: 700, color: stat.color, lineHeight: 1.2 }}>
-                {stat.value}
+        {/* Glass Stats Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, position: 'relative', zIndex: 1 }}>
+          {/* מחוברים עכשיו */}
+          <Box sx={{
+            p: 1.5,
+            borderRadius: '16px',
+            bgcolor: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            textAlign: 'center',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
+              <Box sx={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                bgcolor: '#4ADE80',
+                boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)',
+                animation: `${pulse} 2s ease-in-out infinite`,
+              }} />
+              <Typography sx={{ fontSize: 28, fontWeight: 800, color: 'white', lineHeight: 1 }}>
+                {onlineUserIds.size}
               </Typography>
-              <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500, lineHeight: 1.3, mt: 0.25 }}>
-                {stat.label}
+            </Box>
+            <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 500, mt: 0.5 }}>
+              {t('onlineNow')}
+            </Typography>
+          </Box>
+
+          {/* פעילים היום */}
+          <Box sx={{
+            p: 1.5,
+            borderRadius: '16px',
+            bgcolor: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            textAlign: 'center',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+              <TrendingUpIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
+              <Typography sx={{ fontSize: 28, fontWeight: 800, color: 'white', lineHeight: 1 }}>
+                {stats.uniqueUsersToday}
               </Typography>
-            </Paper>
-          ))}
+            </Box>
+            <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 500, mt: 0.5 }}>
+              {t('activeToday')}
+            </Typography>
+          </Box>
+
+          {/* סה"כ משתמשים */}
+          <Box sx={{
+            p: 1.5,
+            borderRadius: '16px',
+            bgcolor: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            textAlign: 'center',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+              <PeopleIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
+              <Typography sx={{ fontSize: 28, fontWeight: 800, color: 'white', lineHeight: 1 }}>
+                {stats.totalUsers}
+              </Typography>
+            </Box>
+            <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 500, mt: 0.5 }}>
+              {t('totalUsers')}
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
       {/* Content */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
         {/* שגיאה */}
         {error && !loading && (
-          <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2, mb: 2 }}>
+          <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 3, mb: 2 }}>
             <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
             <Button
               variant="contained"
               onClick={refreshData}
-              sx={{ bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' } }}
+              sx={{ bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' }, borderRadius: 2 }}
             >
               {t('tryAgain')}
             </Button>
@@ -148,11 +218,22 @@ export const AdminDashboard = () => {
             placeholder={t('searchCustomer')}
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
-            sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '14px',
+                bgcolor: 'white',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                border: 'none',
+                '& fieldset': { border: '1px solid rgba(0,0,0,0.06)' },
+                '&:hover fieldset': { borderColor: '#14B8A6' },
+                '&.Mui-focused fieldset': { borderColor: '#14B8A6', borderWidth: 1.5 },
+              }
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'text.disabled' }} />
+                  <SearchIcon sx={{ color: '#9CA3AF' }} />
                 </InputAdornment>
               )
             }}
@@ -175,6 +256,9 @@ export const AdminDashboard = () => {
         {!loading && activities.length > 0 && (
           <RecentActivityFeed activities={activities} language={settings.language} />
         )}
+
+        {/* ריווח תחתון */}
+        <Box sx={{ height: 32 }} />
       </Box>
     </Box>
   );
