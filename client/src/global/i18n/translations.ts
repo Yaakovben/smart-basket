@@ -243,44 +243,20 @@ type TranslationKey =
   | 'legal'
   // Admin Dashboard
   | 'adminDashboard'
-  | 'loginActivity'
   | 'totalUsers'
-  | 'loginsToday'
-  | 'loginsThisMonth'
   | 'onlineNow'
-  | 'allActivity'
-  | 'dailyView'
-  | 'monthlyView'
-  | 'hourlyView'
+  | 'activeToday'
   | 'noActivityFound'
-  | 'loginMethod'
-  | 'viaEmail'
-  | 'viaGoogle'
-  | 'selectMonth'
-  | 'selectDate'
-  | 'selectHour'
-  | 'uniqueUsersToday'
-  | 'uniqueUsersThisMonth'
-  | 'registeredUsers'
+  | 'searchCustomer'
   | 'lastLogin'
   | 'lastAppOpen'
   | 'neverLoggedIn'
   | 'neverOpened'
-  | 'refreshData'
-  | 'searchCustomer'
-  | 'activityLogins'
-  | 'activityAppOpens'
-  | 'filterByUser'
-  | 'allUsers'
-  | 'allTypes'
-  | 'timeFilter'
+  | 'recentActivity'
   | 'methodEmail'
   | 'methodGoogle'
   | 'methodApp'
   | 'emailField'
-  | 'dateField'
-  | 'loginAction'
-  | 'appOpenAction'
   // Error Boundary
   | 'errorTitle'
   | 'errorDescription'
@@ -634,44 +610,20 @@ export const translations: Record<Language, Translations> = {
     legal: 'משפטי',
     // Admin Dashboard
     adminDashboard: 'לוח בקרה למנהל',
-    loginActivity: 'פעילות התחברות',
     totalUsers: 'סה״כ משתמשים',
-    loginsToday: 'התחברויות היום',
-    loginsThisMonth: 'התחברויות החודש',
     onlineNow: 'מחוברים עכשיו',
-    allActivity: 'כל הפעילות',
-    dailyView: 'יומי',
-    monthlyView: 'חודשי',
-    hourlyView: 'שעתי',
+    activeToday: 'פעילים היום',
     noActivityFound: 'לא נמצאה פעילות',
-    loginMethod: 'שיטת התחברות',
-    viaEmail: 'באמצעות אימייל',
-    viaGoogle: 'באמצעות Google',
-    selectMonth: 'בחר חודש',
-    selectDate: 'בחר תאריך',
-    selectHour: 'בחר שעה',
-    uniqueUsersToday: 'משתמשים פעילים היום',
-    uniqueUsersThisMonth: 'משתמשים פעילים החודש',
-    registeredUsers: 'משתמשים רשומים',
+    searchCustomer: 'חיפוש לקוח...',
     lastLogin: 'התחברות אחרונה',
     lastAppOpen: 'פתיחה אחרונה',
     neverLoggedIn: 'מעולם לא התחבר',
     neverOpened: 'מעולם לא פתח',
-    refreshData: 'רענן נתונים',
-    searchCustomer: 'חיפוש לקוח...',
-    activityLogins: 'התחברויות',
-    activityAppOpens: 'פתיחות אפליקציה',
-    filterByUser: 'סנן לפי משתמש',
-    allUsers: 'כל המשתמשים',
-    allTypes: 'כל הסוגים',
-    timeFilter: 'תקופה',
+    recentActivity: 'פעילות אחרונה',
     methodEmail: 'אימייל',
     methodGoogle: 'Google',
     methodApp: 'אפליקציה',
     emailField: 'אימייל',
-    dateField: 'תאריך',
-    loginAction: 'התחברות',
-    appOpenAction: 'פתיחת אפליקציה',
     // Error Boundary
     errorTitle: 'משהו השתבש',
     errorDescription: 'אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור אחורה.',
@@ -1019,44 +971,20 @@ export const translations: Record<Language, Translations> = {
     legal: 'Legal',
     // Admin Dashboard
     adminDashboard: 'Admin Dashboard',
-    loginActivity: 'Login Activity',
     totalUsers: 'Total Users',
-    loginsToday: 'Logins Today',
-    loginsThisMonth: 'Logins This Month',
     onlineNow: 'Online Now',
-    allActivity: 'All Activity',
-    dailyView: 'Daily',
-    monthlyView: 'Monthly',
-    hourlyView: 'Hourly',
+    activeToday: 'Active Today',
     noActivityFound: 'No activity found',
-    loginMethod: 'Login Method',
-    viaEmail: 'Via Email',
-    viaGoogle: 'Via Google',
-    selectMonth: 'Select Month',
-    selectDate: 'Select Date',
-    selectHour: 'Select Hour',
-    uniqueUsersToday: 'Active Users Today',
-    uniqueUsersThisMonth: 'Active Users This Month',
-    registeredUsers: 'Registered Users',
+    searchCustomer: 'Search customer...',
     lastLogin: 'Last Login',
     lastAppOpen: 'Last App Open',
     neverLoggedIn: 'Never logged in',
     neverOpened: 'Never opened',
-    refreshData: 'Refresh Data',
-    searchCustomer: 'Search customer...',
-    activityLogins: 'Logins',
-    activityAppOpens: 'App Opens',
-    filterByUser: 'Filter by user',
-    allUsers: 'All Users',
-    allTypes: 'All Types',
-    timeFilter: 'Time Period',
+    recentActivity: 'Recent Activity',
     methodEmail: 'Email',
     methodGoogle: 'Google',
     methodApp: 'App',
     emailField: 'Email',
-    dateField: 'Date',
-    loginAction: 'Login',
-    appOpenAction: 'App Open',
     // Error Boundary
     errorTitle: 'Something went wrong',
     errorDescription: 'An unexpected error occurred. Try refreshing the page or going back.',
@@ -1404,44 +1332,20 @@ export const translations: Record<Language, Translations> = {
     legal: 'Правовая информация',
     // Admin Dashboard
     adminDashboard: 'Панель администратора',
-    loginActivity: 'Активность входа',
     totalUsers: 'Всего пользователей',
-    loginsToday: 'Входов сегодня',
-    loginsThisMonth: 'Входов в этом месяце',
     onlineNow: 'Онлайн сейчас',
-    allActivity: 'Вся активность',
-    dailyView: 'По дням',
-    monthlyView: 'По месяцам',
-    hourlyView: 'По часам',
+    activeToday: 'Активных сегодня',
     noActivityFound: 'Активность не найдена',
-    loginMethod: 'Метод входа',
-    viaEmail: 'Через Email',
-    viaGoogle: 'Через Google',
-    selectMonth: 'Выберите месяц',
-    selectDate: 'Выберите дату',
-    selectHour: 'Выберите час',
-    uniqueUsersToday: 'Активных пользователей сегодня',
-    uniqueUsersThisMonth: 'Активных пользователей в этом месяце',
-    registeredUsers: 'Зарегистрированные пользователи',
+    searchCustomer: 'Поиск клиента...',
     lastLogin: 'Последний вход',
     lastAppOpen: 'Последнее открытие',
     neverLoggedIn: 'Никогда не входил',
     neverOpened: 'Никогда не открывал',
-    refreshData: 'Обновить данные',
-    searchCustomer: 'Поиск клиента...',
-    activityLogins: 'Входы',
-    activityAppOpens: 'Открытия приложения',
-    filterByUser: 'Фильтр по пользователю',
-    allUsers: 'Все пользователи',
-    allTypes: 'Все типы',
-    timeFilter: 'Период',
+    recentActivity: 'Недавняя активность',
     methodEmail: 'Email',
     methodGoogle: 'Google',
     methodApp: 'Приложение',
     emailField: 'Email',
-    dateField: 'Дата',
-    loginAction: 'Вход',
-    appOpenAction: 'Открытие приложения',
     // Error Boundary
     errorTitle: 'Что-то пошло не так',
     errorDescription: 'Произошла непредвиденная ошибка. Попробуйте обновить страницу или вернуться назад.',

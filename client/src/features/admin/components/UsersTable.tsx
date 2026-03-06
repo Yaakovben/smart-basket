@@ -1,53 +1,53 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { Box, Typography, Paper, LinearProgress, Chip, Collapse, IconButton, keyframes } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { Box, Typography, Paper, Collapse, IconButton } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
 import type { UserWithLastLogin } from '../types';
-import type { Language } from '../../../global/types';
-
-// אנימציית פעימה לנקודה ירוקה
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.7; }
-`;
+import type { LoginActivity, Language } from '../../../global/types';
 
 // ===== UserRow =====
 interface UserRowProps {
   user: UserWithLastLogin;
-  index: number;
-  maxLogins: number;
   language: Language;
   isOnline: boolean;
+  userActivities: LoginActivity[];
 }
 
-const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowProps) => {
+const getMethodIcon = (method: string, size = 14) => {
+  if (method === 'google') return <GoogleIcon sx={{ fontSize: size, color: '#4285F4' }} />;
+  if (method === 'app_open') return <PhoneAndroidIcon sx={{ fontSize: size, color: '#14B8A6' }} />;
+  return <EmailIcon sx={{ fontSize: size, color: '#14B8A6' }} />;
+};
+
+const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps) => {
   const { t } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
-  const activeToday = isActiveToday(user.lastLoginAt);
-  const activeThisWeek = isActiveThisWeek(user.lastLoginAt);
   const isGoogle = user.registrationMethod === 'google';
 
   const toggleExpand = useCallback(() => {
     setIsExpanded(prev => !prev);
   }, []);
 
+  // הפעילות האחרונה (התחברות או פתיחת אפליקציה)
+  const lastActivity = user.lastAppOpenAt && user.lastLoginAt
+    ? (new Date(user.lastAppOpenAt) > new Date(user.lastLoginAt) ? user.lastAppOpenAt : user.lastLoginAt)
+    : user.lastAppOpenAt || user.lastLoginAt;
+
   return (
     <Paper
       sx={{
-        borderRadius: '14px',
-        border: isOnline ? '2px solid #22C55E' : '1px solid',
-        borderColor: isOnline ? '#22C55E' : activeToday ? 'rgba(20, 184, 166, 0.3)' : 'divider',
-        bgcolor: isOnline ? 'rgba(34, 197, 94, 0.08)' : activeToday ? 'rgba(20, 184, 166, 0.03)' : 'background.paper',
+        borderRadius: '12px',
+        border: '1px solid',
+        borderColor: 'divider',
         overflow: 'hidden',
-        boxShadow: isOnline ? '0 0 12px rgba(34, 197, 94, 0.2)' : undefined,
       }}
     >
       {/* שורה ראשית */}
@@ -57,36 +57,28 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           p: 1.5,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1.25,
           cursor: 'pointer',
           transition: 'background-color 0.15s',
           '&:active': { bgcolor: 'action.hover' }
         }}
       >
-        {/* מספור */}
+        {/* נקודת סטטוס */}
         <Box
           sx={{
-            width: 22,
-            height: 22,
-            borderRadius: '6px',
-            bgcolor: 'action.selected',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'text.secondary',
-            fontWeight: 700,
-            fontSize: 11,
-            flexShrink: 0
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: isOnline ? '#22C55E' : '#D1D5DB',
+            flexShrink: 0,
           }}
-        >
-          {index + 1}
-        </Box>
+        />
 
         {/* אווטאר */}
         <Box
           sx={{
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             borderRadius: '10px',
             bgcolor: user.avatarColor || '#14B8A6',
             display: 'flex',
@@ -94,105 +86,60 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
             justifyContent: 'center',
             color: 'white',
             fontWeight: 600,
-            fontSize: user.avatarEmoji ? 18 : 15,
+            fontSize: user.avatarEmoji ? 17 : 14,
             flexShrink: 0,
-            position: 'relative',
-            outline: isOnline ? '2.5px solid #22C55E' : 'none',
-            outlineOffset: 2
           }}
         >
           {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
-          {isOnline && (
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: -3,
-                right: -3,
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                bgcolor: '#22C55E',
-                border: '2.5px solid white',
-                animation: `${pulse} 2s ease-in-out infinite`
-              }}
-            />
-          )}
         </Box>
 
-        {/* שם + סטטוס */}
+        {/* שם + נראה לאחרונה */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'text.primary',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {user.name}
-            </Typography>
-            {isOnline && (
-              <Chip
-                icon={<FiberManualRecordIcon sx={{ fontSize: '10px !important', color: '#22C55E !important' }} />}
-                label={t('online')}
-                size="small"
-                sx={{
-                  height: 24,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  bgcolor: '#DCFCE7',
-                  color: '#16A34A',
-                  border: '1px solid #BBF7D0',
-                  '& .MuiChip-label': { px: 0.5 },
-                  '& .MuiChip-icon': { ml: 0.5 }
-                }}
-              />
-            )}
-          </Box>
-          {/* אימייל בשורה הראשית */}
           <Typography
             sx={{
-              fontSize: 11,
-              color: 'text.secondary',
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: 'text.primary',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}
           >
-            {user.email}
+            {user.name}
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: isOnline ? '#16A34A' : 'text.secondary' }}>
+            {isOnline
+              ? t('onlineNow')
+              : lastActivity
+                ? getRelativeTime(lastActivity, language)
+                : t('neverLoggedIn')
+            }
           </Typography>
         </Box>
 
-        {/* תג שיטת הרשמה */}
-        <Chip
-          icon={isGoogle
-            ? <GoogleIcon sx={{ fontSize: '13px !important', color: '#4285F4 !important' }} />
-            : <EmailIcon sx={{ fontSize: '13px !important', color: '#14B8A6 !important' }} />
-          }
-          label={isGoogle ? t('methodGoogle') : t('methodEmail')}
-          size="small"
-          sx={{
-            height: 26,
-            fontSize: 11,
-            fontWeight: 600,
-            bgcolor: isGoogle ? 'rgba(66, 133, 244, 0.12)' : 'rgba(20, 184, 166, 0.12)',
-            color: isGoogle ? '#4285F4' : '#14B8A6',
-            border: `1px solid ${isGoogle ? 'rgba(66, 133, 244, 0.25)' : 'rgba(20, 184, 166, 0.25)'}`,
-            '& .MuiChip-label': { px: 0.5 },
-            '& .MuiChip-icon': { ml: 0.5, mr: -0.25 }
-          }}
-        />
+        {/* מספר כניסות */}
+        <Box sx={{ textAlign: 'center', flexShrink: 0 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#14B8A6', lineHeight: 1 }}>
+            {user.totalLogins}
+          </Typography>
+          <Typography sx={{ fontSize: 9, color: 'text.disabled', lineHeight: 1.2 }}>
+            {t('logins')}
+          </Typography>
+        </Box>
 
-        {/* כפתור פתיחה */}
-        <IconButton size="small" sx={{ p: 0.5 }}>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        {/* אייקון שיטת רישום */}
+        {isGoogle
+          ? <GoogleIcon sx={{ fontSize: 16, color: '#4285F4', flexShrink: 0 }} />
+          : <EmailIcon sx={{ fontSize: 16, color: '#9CA3AF', flexShrink: 0 }} />
+        }
+
+        {/* חץ הרחבה */}
+        <IconButton size="small" sx={{ p: 0.25 }}>
+          {isExpanded ? <ExpandLessIcon sx={{ fontSize: 20 }} /> : <ExpandMoreIcon sx={{ fontSize: 20 }} />}
         </IconButton>
       </Box>
 
-      {/* פרטים מורחבים */}
+      {/* אזור מורחב */}
       <Collapse in={isExpanded}>
         <Box sx={{
           px: 1.5,
@@ -202,30 +149,30 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
           borderColor: 'divider',
           bgcolor: 'action.hover'
         }}>
-          {/* אימייל מלא */}
-          <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1, mb: 1 }}>
-            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('emailField')}</Typography>
-            <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
-              {user.email}
-            </Typography>
-          </Box>
+          {/* פרטי משתמש */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75, mb: 1 }}>
+            {/* אימייל */}
+            <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500, mb: 0.25 }}>{t('emailField')}</Typography>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
+                {user.email}
+              </Typography>
+            </Box>
 
-          {/* רשת כרטיסי מידע */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-            {/* התחברות אחרונה (email/google בלבד) */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+            {/* התחברות אחרונה */}
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <LoginIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+                <LoginIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
                   {t('lastLogin')}
                 </Typography>
               </Box>
               {user.lastLoginAt ? (
                 <>
                   <Typography sx={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 600,
-                    color: activeToday ? '#10B981' : activeThisWeek ? '#F59E0B' : 'text.primary'
+                    color: isActiveToday(user.lastLoginAt) ? '#10B981' : isActiveThisWeek(user.lastLoginAt) ? '#F59E0B' : 'text.primary'
                   }}>
                     {getRelativeTime(user.lastLoginAt, language)}
                   </Typography>
@@ -234,23 +181,23 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                   </Typography>
                 </>
               ) : (
-                <Typography sx={{ fontSize: 12, color: 'text.disabled', fontStyle: 'italic' }}>
+                <Typography sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>
                   {t('neverLoggedIn')}
                 </Typography>
               )}
             </Box>
 
             {/* פתיחת אפליקציה אחרונה */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
+            <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+                <AccessTimeIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
                   {t('lastAppOpen')}
                 </Typography>
               </Box>
               {user.lastAppOpenAt ? (
                 <>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>
                     {getRelativeTime(user.lastAppOpenAt, language)}
                   </Typography>
                   <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
@@ -258,51 +205,61 @@ const UserRow = memo(({ user, index, maxLogins, language, isOnline }: UserRowPro
                   </Typography>
                 </>
               ) : (
-                <Typography sx={{ fontSize: 12, color: 'text.disabled', fontStyle: 'italic' }}>
+                <Typography sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>
                   {t('neverOpened')}
                 </Typography>
               )}
             </Box>
 
-            {/* סה"כ כניסות */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <LoginIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
-                  {t('logins')}
-                </Typography>
-              </Box>
-              <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#8B5CF6', mb: 0.5 }}>
-                {user.totalLogins}
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(user.totalLogins / maxLogins) * 100}
-                sx={{
-                  height: 3,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(139, 92, 246, 0.1)',
-                  '& .MuiLinearProgress-bar': { bgcolor: '#8B5CF6', borderRadius: 2 }
-                }}
-              />
-            </Box>
-
-            {/* שיטת הרשמה + תאריך */}
-            <Box sx={{ bgcolor: 'background.paper', borderRadius: '10px', p: 1.25 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <CalendarTodayIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500 }}>
+            {/* תאריך הרשמה */}
+            <Box sx={{ gridColumn: '1 / -1', bgcolor: 'background.paper', borderRadius: '8px', p: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <CalendarTodayIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500 }}>
                   {t('registeredAt')}
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: isGoogle ? '#4285F4' : '#14B8A6' }}>
-                {isGoogle ? t('methodGoogle') : t('methodEmail')}
-              </Typography>
-              <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                {formatDateShort(user.createdAt, language)}
+              <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>
+                {formatDateShort(user.createdAt, language)} · {isGoogle ? t('methodGoogle') : t('methodEmail')}
               </Typography>
             </Box>
           </Box>
+
+          {/* ציר זמן פעילות */}
+          {userActivities.length > 0 && (
+            <Box>
+              <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600, mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('recentActivity')}
+              </Typography>
+              <Box sx={{ bgcolor: 'background.paper', borderRadius: '8px', overflow: 'hidden' }}>
+                {userActivities.slice(0, 10).map((activity, i) => (
+                  <Box
+                    key={activity.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1,
+                      py: 0.5,
+                      borderBottom: i < Math.min(userActivities.length, 10) - 1 ? '1px solid' : 'none',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 11, color: 'text.disabled', minWidth: 70, fontFamily: 'monospace' }}>
+                      {formatDateShort(activity.timestamp, language)}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: 'text.disabled', minWidth: 38, fontFamily: 'monospace' }}>
+                      {formatTimeShort(activity.timestamp, language)}
+                    </Typography>
+                    {getMethodIcon(activity.loginMethod, 12)}
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                      {activity.loginMethod === 'app_open' ? t('methodApp') : activity.loginMethod === 'google' ? t('methodGoogle') : t('methodEmail')}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
         </Box>
       </Collapse>
     </Paper>
@@ -314,24 +271,36 @@ UserRow.displayName = 'UserRow';
 // ===== UsersTable =====
 interface UsersTableProps {
   users: UserWithLastLogin[];
+  activities: LoginActivity[];
   language: Language;
   onlineUserIds: Set<string>;
 }
 
-export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) => {
+export const UsersTable = ({ users, activities, language, onlineUserIds }: UsersTableProps) => {
   const { t } = useSettings();
-  const maxLogins = Math.max(...users.map(u => u.totalLogins), 1);
 
-  // הפרדה: מחוברים ולא מחוברים
-  const { onlineUsers, offlineUsers } = useMemo(() => {
-    const online: UserWithLastLogin[] = [];
-    const offline: UserWithLastLogin[] = [];
-    users.forEach(u => {
-      if (onlineUserIds.has(u.id)) online.push(u);
-      else offline.push(u);
+  // מיון: אונליין קודם, אח"כ לפי פעילות אחרונה
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const aOnline = onlineUserIds.has(a.id) ? 1 : 0;
+      const bOnline = onlineUserIds.has(b.id) ? 1 : 0;
+      if (aOnline !== bOnline) return bOnline - aOnline;
+      const aTime = a.lastAppOpenAt || a.lastLoginAt || a.createdAt;
+      const bTime = b.lastAppOpenAt || b.lastLoginAt || b.createdAt;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-    return { onlineUsers: online, offlineUsers: offline };
   }, [users, onlineUserIds]);
+
+  // מיפוי פעילויות לפי משתמש
+  const activitiesByUser = useMemo(() => {
+    const map = new Map<string, LoginActivity[]>();
+    for (const activity of activities) {
+      const list = map.get(activity.userId);
+      if (list) list.push(activity);
+      else map.set(activity.userId, [activity]);
+    }
+    return map;
+  }, [activities]);
 
   if (users.length === 0) {
     return (
@@ -344,60 +313,13 @@ export const UsersTable = ({ users, language, onlineUserIds }: UsersTableProps) 
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {/* כותרת מחוברים עכשיו */}
-      {onlineUsers.length > 0 && (
-        <>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 0.5,
-            py: 0.75
-          }}>
-            <FiberManualRecordIcon sx={{ fontSize: 12, color: '#22C55E' }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#16A34A' }}>
-              {t('onlineNow')} ({onlineUsers.length})
-            </Typography>
-          </Box>
-          {onlineUsers.map((user, index) => (
-            <UserRow
-              key={user.id}
-              user={user}
-              index={index}
-              maxLogins={maxLogins}
-              language={language}
-              isOnline
-            />
-          ))}
-        </>
-      )}
-
-      {/* מפריד */}
-      {onlineUsers.length > 0 && offlineUsers.length > 0 && (
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 0.5,
-          py: 1
-        }}>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-          <Typography sx={{ fontSize: 12, color: 'text.disabled', fontWeight: 500, whiteSpace: 'nowrap' }}>
-            {t('registeredUsers')} ({offlineUsers.length})
-          </Typography>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
-        </Box>
-      )}
-
-      {/* משתמשים לא מחוברים */}
-      {offlineUsers.map((user, index) => (
+      {sortedUsers.map((user) => (
         <UserRow
           key={user.id}
           user={user}
-          index={onlineUsers.length + index}
-          maxLogins={maxLogins}
           language={language}
-          isOnline={false}
+          isOnline={onlineUserIds.has(user.id)}
+          userActivities={activitiesByUser.get(user.id) || []}
         />
       ))}
     </Box>

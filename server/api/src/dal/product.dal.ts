@@ -33,8 +33,8 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
       .sort({ position: 1, createdAt: 1 })
       .lean();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const map = new Map<string, any[]>();
+    type LeanProduct = ReturnType<IProductDoc['toObject']>;
+    const map = new Map<string, LeanProduct[]>();
     for (const id of listIds) {
       map.set(id, []);
     }

@@ -3,6 +3,7 @@ import { AuthService, TokenService } from '../services';
 import { LoginActivityDAL } from '../dal';
 import { asyncHandler } from '../utils';
 import { AuthError } from '../errors';
+import { logger } from '../config';
 import type { AuthRequest } from '../types';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 
@@ -81,7 +82,7 @@ export class AuthController {
       loginMethod: 'app_open',
       ipAddress,
       userAgent,
-    }).catch(() => {});
+    }).catch(err => logger.warn('Failed to log app open:', err));
 
     res.status(204).send();
   });

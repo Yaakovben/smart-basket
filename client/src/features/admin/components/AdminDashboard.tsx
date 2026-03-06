@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Box, Typography, Paper, IconButton, Tabs, Tab, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
+import { Box, Typography, Paper, IconButton, Skeleton, TextField, InputAdornment, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -8,15 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
-import { ActivityFilters } from './ActivityFilters';
-import { ActivityTable } from './ActivityTable';
 import { UsersTable } from './UsersTable';
+import { RecentActivityFeed } from './RecentActivityFeed';
 import { COMMON_STYLES } from '../../../global/constants';
 
-// מדדי Skeleton לטעינה
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
 
-// קומפוננטת Skeleton לטעינה
 const LoadingSkeleton = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
     {SKELETON_INDICES.map((i) => (
@@ -37,26 +34,18 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
   const [userSearch, setUserSearch] = useState('');
-  const [activityType, setActivityType] = useState<'all' | 'login' | 'app_open'>('all');
-  const [selectedActivityUser, setSelectedActivityUser] = useState('');
   const {
-    filteredActivities,
+    activities,
     usersWithLoginInfo,
     stats,
-    filters,
-    setFilterMode,
-    setSelectedDate,
-    setSelectedMonth,
-    setSelectedHour,
     refreshData,
     loading,
     error
   } = useAdminDashboard();
   const socketOnlineUserIds = useOnlineUsers();
 
-  // המשתמש הנוכחי בהכרח מחובר, תמיד מוסיפים אותו לרשימה
+  // המשתמש הנוכחי בהכרח מחובר
   const onlineUserIds = useMemo(() => {
     if (!user?.id) return socketOnlineUserIds;
     if (socketOnlineUserIds.has(user.id)) return socketOnlineUserIds;
@@ -65,27 +54,7 @@ export const AdminDashboard = () => {
     return merged;
   }, [socketOnlineUserIds, user?.id]);
 
-  // שמות משתמשים ייחודיים לסינון
-  const uniqueUserNames = useMemo(() => {
-    const names = new Set(filteredActivities.map(a => a.userName));
-    return Array.from(names).sort();
-  }, [filteredActivities]);
-
-  // סינון פעילויות לפי סוג ומשתמש
-  const displayedActivities = useMemo(() => {
-    let result = filteredActivities;
-    if (activityType === 'login') {
-      result = result.filter(a => a.loginMethod === 'email' || a.loginMethod === 'google');
-    } else if (activityType === 'app_open') {
-      result = result.filter(a => a.loginMethod === 'app_open');
-    }
-    if (selectedActivityUser) {
-      result = result.filter(a => a.userName === selectedActivityUser);
-    }
-    return result;
-  }, [filteredActivities, activityType, selectedActivityUser]);
-
-  // משתמשים מסוננים (ממוזכר)
+  // סינון משתמשים לפי חיפוש
   const filteredUsers = useMemo(() => {
     if (!userSearch) return usersWithLoginInfo;
     const searchLower = userSearch.toLowerCase();
@@ -94,6 +63,12 @@ export const AdminDashboard = () => {
       u.email.toLowerCase().includes(searchLower)
     );
   }, [usersWithLoginInfo, userSearch]);
+
+  const statCards = [
+    { value: onlineUserIds.size, label: t('onlineNow'), color: '#22C55E' },
+    { value: stats.uniqueUsersToday, label: t('activeToday'), color: '#14B8A6' },
+    { value: stats.totalUsers, label: t('totalUsers'), color: '#6B7280' },
+  ];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -126,21 +101,9 @@ export const AdminDashboard = () => {
           </IconButton>
         </Box>
 
-        {/* Stats Cards */}
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 1,
-          mb: 1,
-        }}>
-          {([
-            { value: stats.totalUsers, label: t('totalUsers'), color: '#14B8A6' },
-            { value: stats.uniqueUsersToday, label: t('uniqueUsersToday'), color: '#0EA5E9' },
-            { value: onlineUserIds.size, label: t('onlineNow'), color: '#22C55E' },
-            { value: stats.loginsToday, label: t('loginsToday'), color: '#14B8A6' },
-            { value: stats.loginsThisMonth, label: t('loginsThisMonth'), color: '#0EA5E9' },
-            { value: stats.uniqueUsersThisMonth, label: t('uniqueUsersThisMonth'), color: '#8B5CF6' },
-          ]).map((stat, i) => (
+        {/* 3 כרטיסי סטטיסטיקה */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+          {statCards.map((stat, i) => (
             <Paper
               key={i}
               sx={{
@@ -163,7 +126,7 @@ export const AdminDashboard = () => {
 
       {/* Content */}
       <Box sx={{ p: 2 }}>
-        {/* Error State */}
+        {/* שגיאה */}
         {error && !loading && (
           <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 2, mb: 2 }}>
             <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
@@ -177,89 +140,40 @@ export const AdminDashboard = () => {
           </Paper>
         )}
 
-        {/* Tabs - Always visible */}
-        <Tabs
-          value={activeTab}
-          onChange={(_, newValue) => setActiveTab(newValue)}
-          sx={{
-            mb: 2,
-            '& .MuiTabs-indicator': {
-              bgcolor: '#14B8A6',
-              height: 3,
-              borderRadius: '3px'
-            },
-            '& .MuiTab-root': {
-              fontWeight: 600,
-              fontSize: { xs: 12, sm: 14 },
-              textTransform: 'none',
-              minWidth: 'auto',
-              px: { xs: 1.5, sm: 2 },
-              color: 'text.secondary',
-              '&.Mui-selected': {
-                color: '#14B8A6'
-              }
-            }
-          }}
-        >
-          <Tab label={loading ? t('loginActivity') : `${t('loginActivity')} (${displayedActivities.length})`} />
-          <Tab label={loading ? t('registeredUsers') : `${t('registeredUsers')} (${usersWithLoginInfo.length})`} />
-        </Tabs>
-
-        {activeTab === 0 && (
-          <>
-            {/* Filters */}
-            {!loading && (
-              <ActivityFilters
-                filters={filters}
-                onFilterModeChange={setFilterMode}
-                onDateChange={setSelectedDate}
-                onMonthChange={setSelectedMonth}
-                onHourChange={setSelectedHour}
-                activityType={activityType}
-                onActivityTypeChange={setActivityType}
-                userNames={uniqueUserNames}
-                selectedUser={selectedActivityUser}
-                onUserChange={setSelectedActivityUser}
-              />
-            )}
-
-            {/* Activity Table or Loading */}
-            {loading ? <LoadingSkeleton /> : <ActivityTable activities={displayedActivities} language={settings.language} onlineUserIds={onlineUserIds} />}
-          </>
+        {/* חיפוש */}
+        {!loading && (
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchCustomer')}
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              )
+            }}
+          />
         )}
 
-        {activeTab === 1 && (
-          <>
-            {/* Search Users */}
-            {!loading && (
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={t('searchCustomer')}
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: 'text.disabled' }} />
-                    </InputAdornment>
-                  )
-                }}
-              />
-            )}
+        {/* טבלת משתמשים */}
+        {loading ? (
+          <LoadingSkeleton />
+        ) : (
+          <UsersTable
+            users={filteredUsers}
+            activities={activities}
+            language={settings.language}
+            onlineUserIds={onlineUserIds}
+          />
+        )}
 
-            {/* Users Table or Loading */}
-            {loading ? (
-              <LoadingSkeleton />
-            ) : (
-              <UsersTable
-                users={filteredUsers}
-                language={settings.language}
-                onlineUserIds={onlineUserIds}
-              />
-            )}
-          </>
+        {/* פיד פעילות אחרונה */}
+        {!loading && activities.length > 0 && (
+          <RecentActivityFeed activities={activities} language={settings.language} />
         )}
       </Box>
     </Box>

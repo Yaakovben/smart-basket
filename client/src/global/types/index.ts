@@ -74,15 +74,6 @@ export interface LoginActivity {
   loginMethod: LoginMethod;
 }
 
-export type ActivityFilterMode = 'all' | 'daily' | 'monthly' | 'hourly';
-
-export interface ActivityFilters {
-  filterMode: ActivityFilterMode;
-  selectedMonth?: string;
-  selectedDate?: string;
-  selectedHour?: number;
-}
-
 // ===== הגדרות =====
 export type Language = "he" | "en" | "ru";
 export type ThemeMode = "light" | "dark";

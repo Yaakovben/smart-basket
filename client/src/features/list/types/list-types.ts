@@ -56,12 +56,6 @@ export interface UseListReturn {
   openItemId: string | null;
   showHint: boolean;
   addError: string;
-  addingProduct: boolean;
-  pendingAddName: string | null;
-  savingListChanges: boolean;
-  togglingProductId: string | null;
-  savingProduct: boolean;
-  processingDuplicate: boolean;
   refreshing: boolean;
   fabPosition: FabPosition | null;
   isDragging: boolean;

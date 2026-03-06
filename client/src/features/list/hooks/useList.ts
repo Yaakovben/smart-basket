@@ -81,19 +81,7 @@ export const useList = ({
   const [editListData, setEditListData] = useState<EditListForm | null>(null);
   const [addError, setAddError] = useState('');
 
-  // ===== מצב פעולות =====
-  // savingListChanges לא בשימוש כי עדכון רשימה הוא אופטימיסטי מיידי
-  const savingListChanges = false;
-  // togglingProductId לא בשימוש כי toggle הוא אופטימיסטי מיידי
-  const togglingProductId = null;
-  // savingProduct לא בשימוש כי עדכון מוצר הוא אופטימיסטי מיידי
-  const savingProduct = false;
-  // processingDuplicate לא בשימוש כי טיפול בכפילות הוא אופטימיסטי
-  const processingDuplicate = false;
   const [refreshing, setRefreshing] = useState(false);
-  // addingProduct ו-pendingAddName לא בשימוש כי הוספת מוצר היא אופטימיסטית
-  const addingProduct = false;
-  const pendingAddName = null;
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
 
   // ===== חגיגת השלמת רשימה =====
@@ -672,12 +660,6 @@ export const useList = ({
     openItemId,
     showHint,
     addError,
-    addingProduct,
-    pendingAddName,
-    savingListChanges,
-    togglingProductId,
-    savingProduct,
-    processingDuplicate,
     refreshing,
     fabPosition,
     isDragging,
