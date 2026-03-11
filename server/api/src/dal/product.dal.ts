@@ -103,6 +103,16 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
     return result.deletedCount;
   }
 
+  async clearPending(listId: string): Promise<number> {
+    const result = await this.model.deleteMany({ listId, isPurchased: false });
+    return result.deletedCount;
+  }
+
+  async clearAll(listId: string): Promise<number> {
+    const result = await this.model.deleteMany({ listId });
+    return result.deletedCount;
+  }
+
   async countByListId(listId: string): Promise<number> {
     return this.model.countDocuments({ listId });
   }

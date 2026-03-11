@@ -21,8 +21,8 @@ interface ListMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onRefresh?: () => void;
-  onClearPurchased?: () => void;
-  hasPurchasedItems?: boolean;
+  onClearList?: () => void;
+  hasProducts?: boolean;
   onLeave?: () => void;
   stopPropagation?: boolean;
 }
@@ -39,8 +39,8 @@ export const ListMenu = memo(({
   onEdit,
   onDelete,
   onRefresh,
-  onClearPurchased,
-  hasPurchasedItems = false,
+  onClearList,
+  hasProducts = false,
   onLeave,
   stopPropagation = false
 }: ListMenuProps) => {
@@ -80,15 +80,15 @@ export const ListMenu = memo(({
         </MenuItem>
       )}
 
-      {/* ניקוי מוצרים שנקנו */}
-      {onClearPurchased && hasPurchasedItems && (
+      {/* ניקוי רשימה */}
+      {onClearList && hasProducts && (
         <MenuItem
-          onClick={() => { onClose(); onClearPurchased(); }}
+          onClick={() => { onClose(); onClearList(); }}
           sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
         >
           <CleaningServicesIcon sx={{ color: 'warning.main', fontSize: 22 }} />
           <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-            {t('clearPurchased')}
+            {t('clearList')}
           </Typography>
         </MenuItem>
       )}

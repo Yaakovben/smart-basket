@@ -98,6 +98,13 @@ type TranslationKey =
   | 'clearPurchased'
   | 'clearPurchasedConfirm'
   | 'purchasedCleared'
+  | 'clearList'
+  | 'clearAll'
+  | 'clearAllDesc'
+  | 'clearPurchasedDesc'
+  | 'clearPendingDesc'
+  | 'clearPending'
+  | 'listCleared'
   | 'addProduct'
   | 'newProduct'
   | 'productName'
@@ -474,6 +481,13 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'נקה נקנו',
     clearPurchasedConfirm: 'למחוק את כל המוצרים שנקנו?',
     purchasedCleared: 'המוצרים שנקנו נמחקו',
+    clearList: 'נקה רשימה',
+    clearAll: 'מחק הכל',
+    clearAllDesc: 'מחיקת כל המוצרים מהרשימה',
+    clearPurchasedDesc: 'מחיקת מוצרים שכבר נקנו',
+    clearPendingDesc: 'מחיקת מוצרים שעדיין לא נקנו',
+    clearPending: 'נקה לא נקנו',
+    listCleared: 'הרשימה נוקתה',
     addProduct: 'הוסף מוצר',
     newProduct: 'מוצר חדש',
     productName: 'שם המוצר',
@@ -844,6 +858,13 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'Clear purchased',
     clearPurchasedConfirm: 'Delete all purchased products?',
     purchasedCleared: 'Purchased products cleared',
+    clearList: 'Clear list',
+    clearAll: 'Delete all',
+    clearAllDesc: 'Delete all products from the list',
+    clearPurchasedDesc: 'Delete products already purchased',
+    clearPendingDesc: 'Delete products not yet purchased',
+    clearPending: 'Clear pending',
+    listCleared: 'List cleared',
     addProduct: 'Add Product',
     newProduct: 'New Product',
     productName: 'Product Name',
@@ -1214,6 +1235,13 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'Очистить купленное',
     clearPurchasedConfirm: 'Удалить все купленные товары?',
     purchasedCleared: 'Купленные товары удалены',
+    clearList: 'Очистить список',
+    clearAll: 'Удалить всё',
+    clearAllDesc: 'Удалить все товары из списка',
+    clearPurchasedDesc: 'Удалить уже купленные товары',
+    clearPendingDesc: 'Удалить ещё не купленные товары',
+    clearPending: 'Очистить некупленное',
+    listCleared: 'Список очищен',
     addProduct: 'Добавить товар',
     newProduct: 'Новый товар',
     productName: 'Название товара',

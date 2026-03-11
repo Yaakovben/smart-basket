@@ -92,6 +92,25 @@ export class ProductService {
     return deletedCount;
   }
 
+  static async clearProducts(
+    listId: string,
+    userId: string,
+    filter: 'all' | 'purchased' | 'pending'
+  ): Promise<number> {
+    await checkListAccess(listId, userId);
+
+    let deletedCount: number;
+    if (filter === 'purchased') {
+      deletedCount = await ProductDAL.clearPurchased(listId);
+    } else if (filter === 'pending') {
+      deletedCount = await ProductDAL.clearPending(listId);
+    } else {
+      deletedCount = await ProductDAL.clearAll(listId);
+    }
+    await ListDAL.touchUpdatedAt(listId);
+    return deletedCount;
+  }
+
   static async reorderProducts(
     listId: string,
     userId: string,

@@ -1,5 +1,8 @@
 import { memo, useRef, useCallback, useMemo } from 'react';
 import { Box, Typography, Button, keyframes } from '@mui/material';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -173,7 +176,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
-    refreshList, clearPurchased, showCelebration
+    refreshList, showClearList, setShowClearList, handleClearList, showCelebration
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -227,8 +230,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onlineUserIds={onlineUserIds}
         onRefresh={refreshList}
         refreshing={refreshing}
-        onClearPurchased={clearPurchased}
-        hasPurchasedItems={purchased.length > 0}
+        onClearList={() => setShowClearList(true)}
+        hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? leaveList : undefined}
       />
 
@@ -376,6 +379,112 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
       {/* Celebration - all products purchased */}
       {showCelebration && <CelebrationOverlay />}
+
+      {/* Clear List Modal */}
+      {showClearList && (
+        <Modal title={t('clearList')} onClose={() => setShowClearList(false)}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {/* מחק הכל */}
+            {(pending.length + purchased.length) > 0 && (
+              <Box
+                onClick={() => handleClearList('all')}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  p: 2, borderRadius: '14px',
+                  border: '1.5px solid',
+                  borderColor: 'rgba(239,68,68,0.2)',
+                  bgcolor: 'rgba(239,68,68,0.04)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(239,68,68,0.08)' }
+                }}
+              >
+                <Box sx={{
+                  width: 44, height: 44, borderRadius: '12px',
+                  bgcolor: 'rgba(239,68,68,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <DeleteSweepIcon sx={{ color: '#EF4444', fontSize: 24 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#EF4444' }}>
+                    {t('clearAll')}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                    {t('clearAllDesc')} ({pending.length + purchased.length})
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
+            {/* מחק נקנו */}
+            {purchased.length > 0 && (
+              <Box
+                onClick={() => handleClearList('purchased')}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  p: 2, borderRadius: '14px',
+                  border: '1.5px solid',
+                  borderColor: 'rgba(34,197,94,0.2)',
+                  bgcolor: 'rgba(34,197,94,0.04)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(34,197,94,0.08)' }
+                }}
+              >
+                <Box sx={{
+                  width: 44, height: 44, borderRadius: '12px',
+                  bgcolor: 'rgba(34,197,94,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <CheckCircleOutlineIcon sx={{ color: '#22C55E', fontSize: 24 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#22C55E' }}>
+                    {t('clearPurchased')}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                    {t('clearPurchasedDesc')} ({purchased.length})
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
+            {/* מחק לא נקנו */}
+            {pending.length > 0 && (
+              <Box
+                onClick={() => handleClearList('pending')}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  p: 2, borderRadius: '14px',
+                  border: '1.5px solid',
+                  borderColor: 'rgba(245,158,11,0.2)',
+                  bgcolor: 'rgba(245,158,11,0.04)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(245,158,11,0.08)' }
+                }}
+              >
+                <Box sx={{
+                  width: 44, height: 44, borderRadius: '12px',
+                  bgcolor: 'rgba(245,158,11,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  <RemoveShoppingCartIcon sx={{ color: '#F59E0B', fontSize: 24 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>
+                    {t('clearPending')}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                    {t('clearPendingDesc')} ({pending.length})
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Modal>
+      )}
 
       {/* Duplicate Product Dialog */}
       {duplicateProduct && (

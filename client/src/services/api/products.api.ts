@@ -48,6 +48,12 @@ export const productsApi = {
     return response.data.data.deletedCount;
   },
 
+  async clearProducts(listId: string, filter: 'all' | 'purchased' | 'pending'): Promise<number> {
+    validateId(listId, 'listId');
+    const response = await apiClient.delete<{ data: { deletedCount: number } }>(`/lists/${listId}/products/clear?filter=${filter}`);
+    return response.data.data.deletedCount;
+  },
+
   async deleteProduct(listId: string, productId: string): Promise<void> {
     validateId(listId, 'listId');
     validateId(productId, 'productId');

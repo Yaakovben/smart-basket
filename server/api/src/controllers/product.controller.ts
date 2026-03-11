@@ -42,6 +42,19 @@ export class ProductController {
     res.json({ success: true, data: { deletedCount } });
   });
 
+  static clearProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { listId } = req.params;
+    const filter = (req.query.filter as string) || 'all';
+    if (!['all', 'purchased', 'pending'].includes(filter)) {
+      res.status(400).json({ success: false, error: 'Invalid filter' });
+      return;
+    }
+    const deletedCount = await ProductService.clearProducts(listId, userId, filter as 'all' | 'purchased' | 'pending');
+
+    res.json({ success: true, data: { deletedCount } });
+  });
+
   static reorderProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.params;

@@ -478,37 +478,42 @@ export const useList = ({
     });
   }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t]);
 
-  const clearPurchased = useCallback(() => {
-    const purchasedItems = list.products.filter((p: Product) => p.isPurchased);
-    if (purchasedItems.length === 0) return;
+  // ===== ניקוי רשימה =====
+  const [showClearList, setShowClearList] = useState(false);
 
-    setConfirm({
-      title: t('clearPurchased'),
-      message: t('clearPurchasedConfirm'),
-      onConfirm: async () => {
-        setConfirm(null);
+  const handleClearList = useCallback(async (filter: 'all' | 'purchased' | 'pending') => {
+    const affectedItems = filter === 'all'
+      ? list.products
+      : filter === 'purchased'
+        ? list.products.filter((p: Product) => p.isPurchased)
+        : list.products.filter((p: Product) => !p.isPurchased);
 
-        // מחיקה אופטימיסטית
-        onUpdateProductsForList(list.id, (current) =>
-          current.filter(p => !p.isPurchased)
-        );
+    if (affectedItems.length === 0) return;
+    setShowClearList(false);
 
-        try {
-          await productsApi.clearPurchased(list.id);
-          // עדכון חברי קבוצה דרך socket
-          purchasedItems.forEach(p => {
-            socketService.emitProductDeleted(list.id, p.id, p.name, user.name);
-          });
-          showToast(t('purchasedCleared'), 'success');
-        } catch (error) {
-          if (import.meta.env.DEV) console.error('Failed to clear purchased:', error);
-          // שחזור
-          onUpdateProductsForList(list.id, (current) => [...current, ...purchasedItems]);
-          showToast(t('errorOccurred'), 'error');
-        }
-      }
-    });
-  }, [list.id, list.products, onUpdateProductsForList, showToast, t]);
+    // מחיקה אופטימיסטית
+    onUpdateProductsForList(list.id, (current) =>
+      filter === 'all'
+        ? []
+        : filter === 'purchased'
+          ? current.filter(p => !p.isPurchased)
+          : current.filter(p => p.isPurchased)
+    );
+
+    try {
+      await productsApi.clearProducts(list.id, filter);
+      // עדכון חברי קבוצה דרך socket
+      affectedItems.forEach(p => {
+        socketService.emitProductDeleted(list.id, p.id, p.name, user.name);
+      });
+      showToast(t('listCleared'), 'success');
+    } catch (error) {
+      if (import.meta.env.DEV) console.error('Failed to clear list:', error);
+      // שחזור
+      onUpdateProductsForList(list.id, (current) => [...current, ...affectedItems]);
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t]);
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
@@ -758,7 +763,9 @@ export const useList = ({
     handleDuplicateAddNew,
     handleDuplicateCancel,
     refreshList,
-    clearPurchased,
+    showClearList,
+    setShowClearList,
+    handleClearList,
     showCelebration
   };
 };

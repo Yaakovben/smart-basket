@@ -95,11 +95,12 @@ export async function refreshAccessToken(): Promise<string | null> {
       return accessToken;
     } catch (error) {
       const axiosError = error as AxiosError;
-      // שגיאת אימות מהשרת: refresh token לא תקף, מנקים טוקנים
-      if (axiosError.response) {
+      const status = axiosError.response?.status;
+      // שגיאת אימות (401/403): refresh token לא תקף, מנקים טוקנים
+      if (status === 401 || status === 403) {
         clearTokens();
       }
-      // שגיאת רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
+      // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
     }
   })();
