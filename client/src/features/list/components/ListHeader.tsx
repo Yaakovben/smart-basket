@@ -69,6 +69,9 @@ interface ListHeaderProps {
   onlineUserIds?: Set<string>;
   onRefresh: () => void;
   refreshing?: boolean;
+  onClearPurchased?: () => void;
+  hasPurchasedItems?: boolean;
+  onLeave?: () => void;
 }
 
 // ===== קומפוננטה =====
@@ -95,7 +98,10 @@ export const ListHeader = memo(({
   onQuickAdd,
   onlineUserIds,
   onRefresh,
-  refreshing = false
+  refreshing = false,
+  onClearPurchased,
+  hasPurchasedItems = false,
+  onLeave
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -196,6 +202,9 @@ export const ListHeader = memo(({
         onEdit={onEditList}
         onDelete={onDeleteList}
         onRefresh={onRefresh}
+        onClearPurchased={onClearPurchased}
+        hasPurchasedItems={hasPurchasedItems}
+        onLeave={onLeave}
       />
 
       {/* Members Row (Group Only) */}

@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import { Snackbar, Box, Typography } from '@mui/material';
 import type { ToastType } from '../types';
 import { useSettings } from '../context/SettingsContext';
@@ -15,8 +16,45 @@ const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg
   warning: { icon: '⚠', light: { color: '#D97706', bg: '#FFFBEB' }, dark: { color: '#FCD34D', bg: 'rgba(217, 119, 6, 0.18)' } }
 };
 
+const SWIPE_THRESHOLD = 60;
+
 export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
   const { settings } = useSettings();
+  const startY = useRef(0);
+  const currentY = useRef(0);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+    currentY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    currentY.current = e.touches[0].clientY;
+    const diff = currentY.current - startY.current;
+    // רק החלקה למעלה
+    if (diff < 0 && boxRef.current) {
+      boxRef.current.style.transform = `translateY(${diff}px)`;
+      boxRef.current.style.opacity = `${Math.max(0, 1 + diff / 150)}`;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const diff = currentY.current - startY.current;
+    if (diff < -SWIPE_THRESHOLD && onDismiss) {
+      // החלקה מספיקה = סגירה
+      if (boxRef.current) {
+        boxRef.current.style.transform = 'translateY(-100px)';
+        boxRef.current.style.opacity = '0';
+      }
+      setTimeout(onDismiss, 150);
+    } else if (boxRef.current) {
+      // החזרה למקום
+      boxRef.current.style.transform = '';
+      boxRef.current.style.opacity = '';
+    }
+  }, [onDismiss]);
+
   if (!msg) return null;
   const entry = TOAST_CONFIG[type];
   const config = settings.theme === 'dark' ? entry.dark : entry.light;
@@ -39,7 +77,11 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
       aria-atomic="true"
     >
       <Box
+        ref={boxRef}
         onClick={onDismiss}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         sx={{
           display: 'flex',
           alignItems: isLongText ? 'flex-start' : 'center',
@@ -60,7 +102,8 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
           minWidth: isLongText ? 280 : 'auto',
           cursor: onDismiss ? 'pointer' : 'default',
           transition: 'transform 0.15s ease, opacity 0.15s ease',
-          '&:active': onDismiss ? { transform: 'scale(0.97)', opacity: 0.9 } : {}
+          '&:active': onDismiss ? { transform: 'scale(0.97)', opacity: 0.9 } : {},
+          touchAction: 'pan-x',
         }}
       >
         <Box sx={{

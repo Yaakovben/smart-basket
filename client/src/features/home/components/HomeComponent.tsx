@@ -72,6 +72,15 @@ const colorSelectSx = (isSelected: boolean) => ({
   '&:hover': { transform: 'scale(1.1)' }
 });
 
+// ===== ברכה לפי שעה =====
+const getTimeGreeting = (): TranslationKeys => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'goodMorning';
+  if (hour >= 12 && hour < 17) return 'goodAfternoon';
+  if (hour >= 17 && hour < 21) return 'goodEvening';
+  return 'goodNight';
+};
+
 // ===== קומפוננטת כרטיס רשימה =====
 interface ListCardProps {
   list: List;
@@ -80,11 +89,12 @@ interface ListCardProps {
   onSelect: (list: List) => void;
   onEditList: (list: List) => void;
   onDeleteList: (list: List) => void;
+  onLeaveList?: (list: List) => void;
   onToggleMute: (listId: string) => void;
   t: (key: TranslationKeys) => string;
 }
 
-const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onToggleMute, t }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -105,7 +115,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
           {count > 0 ? `${count} ${t('items')}` : totalProducts > 0 ? `✓ ${t('completed')}` : `0 ${t('items')}`}
-          {l.isGroup && l.members.length > 0 && <Typography component="span" sx={{ fontSize: 12, color: 'text.disabled' }}>{' '}· {l.members.length} {t('members')}</Typography>}
+          {l.isGroup && <Typography component="span" sx={{ fontSize: 12, color: 'text.disabled' }}>{' '}· {l.members.length + 1} {t('members')}</Typography>}
         </Typography>
       </Box>
       {/* אייקון מושתק + תפריט שלוש נקודות */}
@@ -129,6 +139,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           onToggleMute={() => onToggleMute(l.id)}
           onEdit={() => onEditList(l)}
           onDelete={() => onDeleteList(l)}
+          onLeave={!isOwner && l.isGroup && onLeaveList ? () => onLeaveList(l) : undefined}
           stopPropagation
         />
       </Box>
@@ -145,6 +156,7 @@ interface HomePageProps {
   onSelectList: (list: List) => void;
   onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;
   onDeleteList: (listId: string) => void | Promise<void>;
+  onLeaveList?: (listId: string) => void | Promise<void>;
   onEditList: (list: List) => void | Promise<void>;
   onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
   onLogout: () => void;
@@ -157,7 +169,7 @@ interface HomePageProps {
 }
 
 export const HomeComponent = memo(({
-  lists, onSelectList, onCreateList, onDeleteList, onEditList, onJoinGroup, onLogout, user, showToast,
+  lists, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
@@ -225,6 +237,20 @@ export const HomeComponent = memo(({
     editList.icon !== editListOriginal.current.icon ||
     editList.color !== editListOriginal.current.color
   ));
+
+  // מצב אישור עזיבת רשימה
+  const [confirmLeaveList, setConfirmLeaveList] = useState<List | null>(null);
+
+  const handleLeaveList = useCallback(async () => {
+    if (!confirmLeaveList || !onLeaveList) return;
+    try {
+      await onLeaveList(confirmLeaveList.id);
+      setConfirmLeaveList(null);
+      showToast(t('left'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [confirmLeaveList, onLeaveList, showToast, t]);
 
   // מעקב אחר התראות שנסגרות (לצורך אנימציה)
   const [dismissingNotifications, setDismissingNotifications] = useState<Set<string>>(new Set());
@@ -296,7 +322,7 @@ export const HomeComponent = memo(({
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
             <Box>
-              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{t('hello')}</Typography>
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{t(getTimeGreeting())}</Typography>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
             </Box>
           </Box>
@@ -385,6 +411,7 @@ export const HomeComponent = memo(({
             onSelect={onSelectList}
             onEditList={(list) => setEditList({ ...list })}
             onDeleteList={(list) => setConfirmDeleteList(list)}
+            onLeaveList={onLeaveList ? (list) => setConfirmLeaveList(list) : undefined}
             onToggleMute={toggleGroupMute}
             t={t}
           />
@@ -686,6 +713,17 @@ export const HomeComponent = memo(({
         />
       )}
 
+      {/* Confirm Leave */}
+      {confirmLeaveList && (
+        <ConfirmModal
+          title={t('leaveGroup')}
+          message={`${t('leaveGroupConfirm')}\n"${confirmLeaveList.name}"`}
+          confirmText={t('leaveGroup')}
+          onConfirm={handleLeaveList}
+          onCancel={() => setConfirmLeaveList(null)}
+        />
+      )}
+
       {/* Notifications Modal */}
       {showNotifications && (
         <Modal title={t('notifications')} onClose={() => setShowNotifications(false)}>
@@ -714,15 +752,36 @@ export const HomeComponent = memo(({
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              {/* Count sub-header */}
-              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1.5, px: 0.5 }}>
-                {allNotifications.length}{' '}
-                {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
-              </Typography>
+              {/* כותרת עם כפתור סמן הכל כנקרא */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: 0.5 }}>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
+                  {allNotifications.length}{' '}
+                  {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={handleMarkAllRead}
+                  sx={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: '#14B8A6',
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    px: 1.5,
+                    py: 0.4,
+                    minWidth: 'auto',
+                    bgcolor: 'rgba(20,184,166,0.08)',
+                    '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' },
+                    '&:active': { transform: 'scale(0.96)' },
+                  }}
+                >
+                  {t('markAllAsRead')}
+                </Button>
+              </Box>
 
               {/* Notification list */}
               <Box sx={{
-                maxHeight: '55vh',
+                maxHeight: '60vh',
                 overflowY: 'auto',
                 overscrollBehavior: 'contain',
                 mx: -0.5,
@@ -740,31 +799,6 @@ export const HomeComponent = memo(({
                     onDismiss={handleDismissNotification}
                   />
                 ))}
-              </Box>
-
-              {/* Clear all button */}
-              <Box sx={{ pt: 1.5, pb: 0.5 }}>
-                <Button
-                  fullWidth
-                  onClick={handleMarkAllRead}
-                  sx={{
-                    borderRadius: '12px',
-                    py: 1.2,
-                    fontSize: 13.5,
-                    fontWeight: 600,
-                    color: 'white',
-                    background: 'linear-gradient(135deg, #14B8A6 0%, #10B981 100%)',
-                    boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-                    textTransform: 'none',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #0D9488 0%, #059669 100%)',
-                      boxShadow: '0 4px 12px rgba(20, 184, 166, 0.4)',
-                    },
-                    '&:active': { transform: 'scale(0.98)' },
-                  }}
-                >
-                  {t('markAllAsRead')}
-                </Button>
               </Box>
             </Box>
           )}

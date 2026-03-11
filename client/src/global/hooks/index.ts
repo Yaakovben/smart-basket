@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { User, List, Member, Product, LoginMethod } from "../types";
-import { authApi, listsApi, pushApi, type ApiList, type ApiMember } from "../../services/api";
+import { authApi, listsApi, pushApi, notificationsApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens } from "../../services/api/client";
 
@@ -134,9 +134,7 @@ export function useAuth() {
           Promise.all([
             authApi.getProfile(),
             listsApi.getLists().catch(() => null),
-            import('../../services/api').then(({ notificationsApi }) =>
-              notificationsApi.getNotifications({ limit: 50 }).catch(() => null)
-            ),
+            notificationsApi.getNotifications({ limit: 50 }).catch(() => null),
           ]),
           timeout.then(() => { throw new Error('timeout'); }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -173,7 +173,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
-    refreshList, showCelebration
+    refreshList, clearPurchased, showCelebration
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -227,6 +227,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onlineUserIds={onlineUserIds}
         onRefresh={refreshList}
         refreshing={refreshing}
+        onClearPurchased={clearPurchased}
+        hasPurchasedItems={purchased.length > 0}
+        onLeave={!isOwner && list.isGroup ? leaveList : undefined}
       />
 
       {/* Content */}

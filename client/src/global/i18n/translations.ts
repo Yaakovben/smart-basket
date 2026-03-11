@@ -54,6 +54,10 @@ type TranslationKey =
   | 'allRightsReserved'
   // Home
   | 'hello'
+  | 'goodMorning'
+  | 'goodAfternoon'
+  | 'goodEvening'
+  | 'goodNight'
   | 'search'
   | 'all'
   | 'myLists'
@@ -89,6 +93,11 @@ type TranslationKey =
   // List
   | 'toBuy'
   | 'purchased'
+  | 'markedAsPurchased'
+  | 'markedAsNotPurchased'
+  | 'clearPurchased'
+  | 'clearPurchasedConfirm'
+  | 'purchasedCleared'
   | 'addProduct'
   | 'newProduct'
   | 'productName'
@@ -421,6 +430,10 @@ export const translations: Record<Language, Translations> = {
     allRightsReserved: 'כל הזכויות שמורות',
     // Home
     hello: 'שלום,',
+    goodMorning: 'בוקר טוב,',
+    goodAfternoon: 'צהריים טובים,',
+    goodEvening: 'ערב טוב,',
+    goodNight: 'לילה טוב,',
     search: 'חיפוש רשימה...',
     all: 'הכל',
     myLists: 'שלי',
@@ -456,6 +469,11 @@ export const translations: Record<Language, Translations> = {
     // List
     toBuy: 'לקנות',
     purchased: 'נקנה',
+    markedAsPurchased: 'סומן כנקנה',
+    markedAsNotPurchased: 'הוחזר לרשימה',
+    clearPurchased: 'נקה נקנו',
+    clearPurchasedConfirm: 'למחוק את כל המוצרים שנקנו?',
+    purchasedCleared: 'המוצרים שנקנו נמחקו',
     addProduct: 'הוסף מוצר',
     newProduct: 'מוצר חדש',
     productName: 'שם המוצר',
@@ -782,6 +800,10 @@ export const translations: Record<Language, Translations> = {
     allRightsReserved: 'All rights reserved',
     // Home
     hello: 'Hello,',
+    goodMorning: 'Good Morning,',
+    goodAfternoon: 'Good Afternoon,',
+    goodEvening: 'Good Evening,',
+    goodNight: 'Good Night,',
     search: 'Search...',
     all: 'All',
     myLists: 'My Lists',
@@ -817,6 +839,11 @@ export const translations: Record<Language, Translations> = {
     // List
     toBuy: 'To Buy',
     purchased: 'Purchased',
+    markedAsPurchased: 'Marked as purchased',
+    markedAsNotPurchased: 'Returned to list',
+    clearPurchased: 'Clear purchased',
+    clearPurchasedConfirm: 'Delete all purchased products?',
+    purchasedCleared: 'Purchased products cleared',
     addProduct: 'Add Product',
     newProduct: 'New Product',
     productName: 'Product Name',
@@ -1143,6 +1170,10 @@ export const translations: Record<Language, Translations> = {
     allRightsReserved: 'Все права защищены',
     // Home
     hello: 'Привет,',
+    goodMorning: 'Доброе утро,',
+    goodAfternoon: 'Добрый день,',
+    goodEvening: 'Добрый вечер,',
+    goodNight: 'Доброй ночи,',
     search: 'Поиск...',
     all: 'Все',
     myLists: 'Мои списки',
@@ -1178,6 +1209,11 @@ export const translations: Record<Language, Translations> = {
     // List
     toBuy: 'Купить',
     purchased: 'Куплено',
+    markedAsPurchased: 'Отмечено как купленное',
+    markedAsNotPurchased: 'Возвращено в список',
+    clearPurchased: 'Очистить купленное',
+    clearPurchasedConfirm: 'Удалить все купленные товары?',
+    purchasedCleared: 'Купленные товары удалены',
     addProduct: 'Добавить товар',
     newProduct: 'Новый товар',
     productName: 'Название товара',

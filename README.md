@@ -30,7 +30,7 @@
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │   Client     │────▶│   API Server     │────▶│   MongoDB Atlas  │
 │  (React PWA) │     │  (Express:5000)  │     │                  │
-│   Vercel     │     │  Oracle Cloud    │     └──────────────────┘
+│   Vercel     │     │  Render          │     └──────────────────┘
 └──────┬───────┘     └──────────────────┘
        │                      ▲
        │ WebSocket            │ Redis pub/sub
@@ -38,7 +38,7 @@
 ┌──────────────────┐     ┌────┴─────┐
 │  Socket Server   │────▶│  Redis   │
 │ (Socket.io:5001) │     │(אופציונלי)│
-│  Oracle Cloud    │     └──────────┘
+│  Render          │     └──────────┘
 └──────────────────┘
 ```
 
@@ -559,38 +559,16 @@ cd client && npm run build         # → dist/
 
 ### ארכיטקטורת הפריסה
 ```
-┌─────────────────────────────────────────────────┐
-│              Oracle Cloud VM                     │
-│                                                  │
-│  ┌─────────────┐   ┌──────────────────────────┐ │
-│  │   Caddy     │──▶│  PM2                     │ │
-│  │  (port 443) │   │  ├── api     (port 5000) │ │
-│  │  auto-SSL   │   │  └── socket  (port 5001) │ │
-│  └─────────────┘   └──────────────────────────┘ │
-│                                                  │
-└─────────────────────────────────────────────────┘
-
-┌─────────────┐     ┌──────────────────┐
-│   Vercel    │     │  MongoDB Atlas   │
-│  (Client)   │     │  (Database)      │
-└─────────────┘     └──────────────────┘
+┌─────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   Vercel    │     │  Render          │     │  MongoDB Atlas   │
+│  (Client)   │     │  (API + Socket)  │     │  (Database)      │
+└─────────────┘     └──────────────────┘     └──────────────────┘
 ```
 
-### Caddy (Reverse Proxy + SSL)
-```
-# deploy/Caddyfile
-{$API_DOMAIN}    → reverse_proxy localhost:5000
-{$SOCKET_DOMAIN} → reverse_proxy localhost:5001
-```
-Caddy מנפיק SSL אוטומטית מ-Let's Encrypt ומחדש אותם.
-
-### PM2 (Process Manager)
-```bash
-# ecosystem.config.js (על השרת)
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup  # הפעלה אוטומטית עם boot
-```
+### Render (API + Socket)
+- שני Web Services נפרדים: API ו-Socket
+- Deploy אוטומטי על כל push ל-main
+- SSL אוטומטי
 
 ### Vercel (Client)
 - Build: `npm run build`
@@ -600,42 +578,9 @@ pm2 startup  # הפעלה אוטומטית עם boot
   - Cache-Control: `no-cache` לקבצים קריטיים (index.html, sw.js, version.json)
   - SPA rewrite: כל path → `index.html`
 
----
-
-## Deploy
-
-### Deploy אוטומטי (GitHub Actions)
-```yaml
-# .github/workflows/deploy.yml
-# טריגר: push ל-main עם שינויים ב-server/ או deploy/
-# מה קורה:
-#   1. SSH לשרת Oracle
-#   2. git pull origin main
-#   3. npm ci + npm run build (API + Socket)
-#   4. pm2 restart + pm2 save
-```
-
-**GitHub Secrets נדרשים:**
-| Secret | תיאור |
-|--------|--------|
-| `ORACLE_HOST` | IP של שרת Oracle |
-| `ORACLE_USER` | שם משתמש SSH |
-| `ORACLE_SSH_KEY` | מפתח SSH פרטי |
-
-### Deploy ידני
-```bash
-# על שרת Oracle:
-cd ~/smart-basket
-git pull origin main
-cd server/api && npm ci && npm run build
-cd ../socket && npm ci && npm run build
-cd ~/smart-basket
-pm2 restart ecosystem.config.js --update-env
-pm2 save
-```
-
-### Deploy קליינט
-Vercel עושה deploy אוטומטי על כל push ל-main (client/ changes).
+### Deploy
+- **שרת**: Render עושה deploy אוטומטי על כל push ל-main
+- **קליינט**: Vercel עושה deploy אוטומטי על כל push ל-main (client/ changes)
 
 ---
 

@@ -267,6 +267,7 @@ export const AppRouter = () => {
                 onSelectList={(list: List) => navigate(`/list/${list.id}`)}
                 onCreateList={handleCreateList}
                 onDeleteList={handleDeleteList}
+                onLeaveList={leaveList}
                 onEditList={handleEditList}
                 onJoinGroup={handleJoinGroup}
                 onLogout={handleLogout}

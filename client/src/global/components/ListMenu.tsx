@@ -4,6 +4,8 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import LogoutIcon from '@mui/icons-material/Logout';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useSettings } from '../context/SettingsContext';
 
@@ -19,6 +21,9 @@ interface ListMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onRefresh?: () => void;
+  onClearPurchased?: () => void;
+  hasPurchasedItems?: boolean;
+  onLeave?: () => void;
   stopPropagation?: boolean;
 }
 
@@ -34,6 +39,9 @@ export const ListMenu = memo(({
   onEdit,
   onDelete,
   onRefresh,
+  onClearPurchased,
+  hasPurchasedItems = false,
+  onLeave,
   stopPropagation = false
 }: ListMenuProps) => {
   const { t } = useSettings();
@@ -68,6 +76,19 @@ export const ListMenu = memo(({
           <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
           <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
             {t('refresh')}
+          </Typography>
+        </MenuItem>
+      )}
+
+      {/* ניקוי מוצרים שנקנו */}
+      {onClearPurchased && hasPurchasedItems && (
+        <MenuItem
+          onClick={() => { onClose(); onClearPurchased(); }}
+          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+        >
+          <CleaningServicesIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            {t('clearPurchased')}
           </Typography>
         </MenuItem>
       )}
@@ -140,6 +161,22 @@ export const ListMenu = memo(({
             {isGroup ? t('deleteGroup') : t('deleteList')}
           </Typography>
         </MenuItem>
+      )}
+
+      {/* עזיבת רשימה (לחברים שאינם בעלים) */}
+      {!isOwner && isGroup && onLeave && (
+        <>
+          <Divider />
+          <MenuItem
+            onClick={() => { onClose(); onLeave(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <LogoutIcon sx={{ color: 'error.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
+              {t('leaveGroup')}
+            </Typography>
+          </MenuItem>
+        </>
       )}
     </Menu>
   );

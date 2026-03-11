@@ -107,17 +107,13 @@ export function useSocketNotifications(
       try {
         if (!event?.userId || !event?.listId) return;
         if (event.userId === user.id) return;
-        if (notificationSettingsRef.current.mutedGroupIds?.includes(event.listId)) return;
-        if (!shouldShowNotification(settingsKey)) return;
 
         const listName = listNamesRef.current[event.listId] || '';
         const productName = event.product?.name || event.productName || '';
         const firstName = event.userName?.split(' ')[0] || '';
+        const isMuted = notificationSettingsRef.current.mutedGroupIds?.includes(event.listId);
 
-        if (!isPushSubscribedRef.current) {
-          showToastRef.current(buildToast(firstName, productName, listName), 'info');
-        }
-
+        // תמיד שומרים את ההתראה (לתצוגה בפופאפ + ספירת badge)
         addNotificationRef.current?.({
           id: `notif_${Date.now()}_${event.userId}`,
           type: notifType,
@@ -130,6 +126,11 @@ export function useSocketNotifications(
           timestamp: new Date(),
           read: false
         });
+
+        // טוסט מוצג רק אם לא מושתק ההגדרה פעילה
+        if (!isMuted && shouldShowNotification(settingsKey) && !isPushSubscribedRef.current) {
+          showToastRef.current(buildToast(firstName, productName, listName), 'info');
+        }
       } catch (err) {
         if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול באירוע מוצר:', err);
       }
@@ -163,21 +164,17 @@ export function useSocketNotifications(
         if (!event?.userId || !event?.listId) return;
         if (event.userId === user.id) return;
         const ns = notificationSettingsRef.current;
-        if (ns.mutedGroupIds?.includes(event.listId)) return;
-        if (!ns.enabled) return;
+        const isMuted = ns.mutedGroupIds?.includes(event.listId);
+        // טוסט רק אם לא מושתק, התראות מופעלות, ואין push
+        const canShowToast = !isMuted && ns.enabled && !isPushSubscribedRef.current;
 
         const listName = listNamesRef.current[event.listId] || '';
         const firstName = event.userName?.split(' ')[0] || '';
 
-        if (event.type === 'join' && ns.groupJoin) {
-          if (!isPushSubscribedRef.current) {
-            const message = `${firstName} ${tRef.current('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-            showToastRef.current(message, 'info');
-          }
-
+        const addNotif = (type: LocalNotification['type']) => {
           addNotificationRef.current?.({
             id: event.id,
-            type: 'join',
+            type,
             listId: event.listId,
             listName,
             userId: event.userId,
@@ -185,62 +182,34 @@ export function useSocketNotifications(
             timestamp: new Date(event.timestamp),
             read: false
           });
+        };
+
+        if (event.type === 'join') {
+          addNotif('join');
+          if (canShowToast && ns.groupJoin) {
+            showToastRef.current(`${firstName} ${tRef.current('joinedGroupNotif')}${listName ? ` "${listName}"` : ''}`, 'info');
+          }
         }
 
-        if (event.type === 'leave' && ns.groupLeave) {
-          if (!isPushSubscribedRef.current) {
-            const message = `${firstName} ${tRef.current('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`;
-            showToastRef.current(message, 'info');
+        if (event.type === 'leave') {
+          addNotif('leave');
+          if (canShowToast && ns.groupLeave) {
+            showToastRef.current(`${firstName} ${tRef.current('leftGroupNotif')}${listName ? ` "${listName}"` : ''}`, 'info');
           }
-
-          addNotificationRef.current?.({
-            id: event.id,
-            type: 'leave',
-            listId: event.listId,
-            listName,
-            userId: event.userId,
-            userName: event.userName,
-            timestamp: new Date(event.timestamp),
-            read: false
-          });
         }
 
-        // חבר הוסר ע"י מנהל (מוצג לשאר חברי הרשימה)
-        if (event.type === 'removed' && (ns.groupRemoved ?? true)) {
-          if (!isPushSubscribedRef.current) {
-            const message = `${firstName} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`;
-            showToastRef.current(message, 'warning');
+        if (event.type === 'removed') {
+          addNotif('removed');
+          if (canShowToast && (ns.groupRemoved ?? true)) {
+            showToastRef.current(`${firstName} ${tRef.current('memberRemoved')}${listName ? ` "${listName}"` : ''}`, 'warning');
           }
-
-          addNotificationRef.current?.({
-            id: event.id,
-            type: 'removed',
-            listId: event.listId,
-            listName,
-            userId: event.userId,
-            userName: event.userName,
-            timestamp: new Date(event.timestamp),
-            read: false
-          });
         }
 
-        // הגדרות רשימה עודכנו ע"י בעלים
-        if (event.type === 'list_update' && ns.listUpdate) {
-          if (!isPushSubscribedRef.current) {
-            const message = `${firstName} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`;
-            showToastRef.current(message, 'info');
+        if (event.type === 'list_update') {
+          addNotif('list_update');
+          if (canShowToast && ns.listUpdate) {
+            showToastRef.current(`${firstName} ${tRef.current('listUpdatedNotif')}${listName ? ` "${listName}"` : ''}`, 'info');
           }
-
-          addNotificationRef.current?.({
-            id: event.id,
-            type: 'list_update',
-            listId: event.listId,
-            listName,
-            userId: event.userId,
-            userName: event.userName,
-            timestamp: new Date(event.timestamp),
-            read: false
-          });
         }
       } catch (err) {
         if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול בהתראת חברות:', err);

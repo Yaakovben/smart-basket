@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Box, Typography, Paper, IconButton, Skeleton, TextField, InputAdornment, Button, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -9,6 +9,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
+import { isActiveToday } from '../../../global/helpers';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { UsersTable } from './UsersTable';
 import { RecentActivityFeed } from './RecentActivityFeed';
@@ -17,6 +18,8 @@ const pulse = keyframes`
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 `;
+
+type UserFilter = 'all' | 'online' | 'activeToday';
 
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
 
@@ -36,11 +39,27 @@ const LoadingSkeleton = () => (
   </Box>
 );
 
+// סגנון כרטיס סטטיסטיקה
+const getCardSx = (isSelected: boolean) => ({
+  p: 1.5,
+  borderRadius: '16px',
+  bgcolor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
+  backdropFilter: 'blur(12px)',
+  border: '1px solid',
+  borderColor: isSelected ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)',
+  textAlign: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+  transform: isSelected ? 'scale(1.03)' : 'none',
+  '&:active': { transform: 'scale(0.97)' },
+});
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const { user } = useAuth();
   const [userSearch, setUserSearch] = useState('');
+  const [userFilter, setUserFilter] = useState<UserFilter>('all');
   const {
     activities,
     usersWithLoginInfo,
@@ -60,14 +79,35 @@ export const AdminDashboard = () => {
     return merged;
   }, [socketOnlineUserIds, user?.id]);
 
+  // לחיצה על כרטיס סטטיסטיקה = מסנן/מבטל סינון
+  const handleFilterClick = useCallback((filter: UserFilter) => {
+    setUserFilter(prev => prev === filter ? 'all' : filter);
+  }, []);
+
+  // סינון משתמשים לפי חיפוש + פילטר כרטיס
   const filteredUsers = useMemo(() => {
-    if (!userSearch) return usersWithLoginInfo;
-    const searchLower = userSearch.toLowerCase();
-    return usersWithLoginInfo.filter(u =>
-      u.name.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower)
-    );
-  }, [usersWithLoginInfo, userSearch]);
+    let result = usersWithLoginInfo;
+
+    // סינון לפי כרטיס
+    if (userFilter === 'online') {
+      result = result.filter(u => onlineUserIds.has(u.id));
+    } else if (userFilter === 'activeToday') {
+      result = result.filter(u =>
+        isActiveToday(u.lastLoginAt) || isActiveToday(u.lastAppOpenAt)
+      );
+    }
+
+    // סינון לפי חיפוש
+    if (userSearch) {
+      const searchLower = userSearch.toLowerCase();
+      result = result.filter(u =>
+        u.name.toLowerCase().includes(searchLower) ||
+        u.email.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return result;
+  }, [usersWithLoginInfo, userSearch, userFilter, onlineUserIds]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFB' }}>
@@ -102,7 +142,7 @@ export const AdminDashboard = () => {
           bgcolor: 'rgba(255,255,255,0.05)',
         }} />
 
-        {/* כותרת + כפתורים */}
+        {/* כותרת + רענון */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
@@ -117,23 +157,16 @@ export const AdminDashboard = () => {
           </Box>
           <IconButton
             onClick={refreshData}
-            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
+            sx={{ color: 'rgba(255,255,255,0.85)', p: 1 }}
           >
-            <RefreshIcon />
+            <RefreshIcon sx={{ fontSize: 22 }} />
           </IconButton>
         </Box>
 
-        {/* Glass Stats Cards */}
+        {/* כרטיסי סטטיסטיקה לחיצים */}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.25, position: 'relative', zIndex: 1 }}>
           {/* מחוברים עכשיו */}
-          <Box sx={{
-            p: 1.5,
-            borderRadius: '16px',
-            bgcolor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            textAlign: 'center',
-          }}>
+          <Box sx={getCardSx(userFilter === 'online')} onClick={() => handleFilterClick('online')}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
               <Box sx={{
                 width: 10,
@@ -153,14 +186,7 @@ export const AdminDashboard = () => {
           </Box>
 
           {/* פעילים היום */}
-          <Box sx={{
-            p: 1.5,
-            borderRadius: '16px',
-            bgcolor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            textAlign: 'center',
-          }}>
+          <Box sx={getCardSx(userFilter === 'activeToday')} onClick={() => handleFilterClick('activeToday')}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               <TrendingUpIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
               <Typography sx={{ fontSize: 28, fontWeight: 800, color: 'white', lineHeight: 1 }}>
@@ -173,14 +199,7 @@ export const AdminDashboard = () => {
           </Box>
 
           {/* סה"כ משתמשים */}
-          <Box sx={{
-            p: 1.5,
-            borderRadius: '16px',
-            bgcolor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            textAlign: 'center',
-          }}>
+          <Box sx={getCardSx(userFilter === 'all')} onClick={() => setUserFilter('all')}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               <PeopleIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }} />
               <Typography sx={{ fontSize: 28, fontWeight: 800, color: 'white', lineHeight: 1 }}>
@@ -252,9 +271,9 @@ export const AdminDashboard = () => {
           />
         )}
 
-        {/* פיד פעילות אחרונה */}
+        {/* פיד פעילות אחרונה (פתוח כברירת מחדל) */}
         {!loading && activities.length > 0 && (
-          <RecentActivityFeed activities={activities} language={settings.language} />
+          <RecentActivityFeed activities={activities} language={settings.language} defaultExpanded />
         )}
 
         {/* ריווח תחתון */}

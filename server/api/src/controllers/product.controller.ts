@@ -34,6 +34,14 @@ export class ProductController {
     res.json({ success: true });
   });
 
+  static clearPurchased = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { listId } = req.params;
+    const deletedCount = await ProductService.clearPurchased(listId, userId);
+
+    res.json({ success: true, data: { deletedCount } });
+  });
+
   static reorderProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { listId } = req.params;

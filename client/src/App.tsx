@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import * as Sentry from '@sentry/react';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
@@ -10,9 +9,9 @@ import { OfflineBanner } from "./global/components/OfflineBanner";
 import { ReconnectingBanner } from "./global/components/ReconnectingBanner";
 import { useServiceWorker } from './global/hooks';
 
-// ניקוי cache אוטומטי בפריסות חדשות
+// ניקוי cache אוטומטי בפריסות חדשות (לא חוסם את הטעינה)
 // גרסה ייחודית לכל build, מוזרקת ע"י Vite
-const handleNewVersion = async () => {
+const handleNewVersion = () => {
   const storedVersion = localStorage.getItem('app_build_version');
 
   if (storedVersion === __BUILD_VERSION__) return;
@@ -23,32 +22,30 @@ const handleNewVersion = async () => {
     return;
   }
 
-  try {
-    // 1. ניקוי כל המטמון
-    if ('caches' in window) {
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
-    }
-
-    // 2. ביטול רישום של כל service workers
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map(r => r.unregister()));
-    }
-
-    // 3. שמירת גרסה וסימון רענון
+  // רענון מיידי לגרסה חדשה אם הייתה גרסה קודמת
+  if (storedVersion) {
     localStorage.setItem('app_build_version', __BUILD_VERSION__);
     sessionStorage.setItem('version_reload_done', __BUILD_VERSION__);
-
-    // 4. רענון קשיח לקבלת תוכן טרי (רק אם הייתה גרסה קודמת)
-    if (storedVersion) {
+    // ניקוי cache ברקע לפני רענון
+    const cleanup = async () => {
+      try {
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(r => r.unregister()));
+        }
+      } catch {}
       window.location.reload();
-      return;
-    }
-  } catch (error) {
-    Sentry.captureException(error, { tags: { context: 'version_update' } });
-    localStorage.setItem('app_build_version', __BUILD_VERSION__);
+    };
+    cleanup();
+    return;
   }
+
+  // התקנה ראשונה: שמירת גרסה בלי חסימה
+  localStorage.setItem('app_build_version', __BUILD_VERSION__);
 };
 
 handleNewVersion();

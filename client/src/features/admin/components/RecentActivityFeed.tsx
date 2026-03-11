@@ -22,11 +22,12 @@ const getColor = (method: string) => EVENT_COLORS[method as keyof typeof EVENT_C
 interface RecentActivityFeedProps {
   activities: LoginActivity[];
   language: Language;
+  defaultExpanded?: boolean;
 }
 
-export const RecentActivityFeed = ({ activities, language }: RecentActivityFeedProps) => {
+export const RecentActivityFeed = ({ activities, language, defaultExpanded = false }: RecentActivityFeedProps) => {
   const { t } = useSettings();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const displayActivities = activities.slice(0, MAX_ENTRIES);
 
   return (

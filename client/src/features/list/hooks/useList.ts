@@ -91,7 +91,12 @@ export const useList = ({
   const justMarkedPurchased = useRef(false);
 
   // ===== מצב גרירת FAB =====
-  const [fabPosition, setFabPosition] = useState<FabPosition | null>(null);
+  const [fabPosition, setFabPosition] = useState<FabPosition | null>(() => {
+    try {
+      const saved = localStorage.getItem('fab-position');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<DragState | null>(null);
 
@@ -163,12 +168,13 @@ export const useList = ({
 
   // זיהוי חגיגה: כל המוצרים נקנו + המשתמש זה עתה סימן מוצר
   useEffect(() => {
+    if (!justMarkedPurchased.current) return;
+    // איפוס הדגל תמיד כדי למנוע הפעלה שגויה מאירועי socket
+    justMarkedPurchased.current = false;
     if (
-      justMarkedPurchased.current &&
       list.products.length > 0 &&
       list.products.every((p: Product) => p.isPurchased)
     ) {
-      justMarkedPurchased.current = false;
       clearTimeout(celebrationTimer.current);
       setShowCelebration(true);
       haptic('heavy');
@@ -196,7 +202,11 @@ export const useList = ({
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
     dragRef.current = null;
-  }, []);
+    // שמירת מיקום FAB ב-localStorage
+    if (fabPosition) {
+      try { localStorage.setItem('fab-position', JSON.stringify(fabPosition)); } catch {}
+    }
+  }, [fabPosition]);
 
   // ===== מטפל רמז =====
   const dismissHint = useCallback(() => {
@@ -425,6 +435,7 @@ export const useList = ({
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
+      showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'), 'success');
     } catch (error) {
       // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
@@ -466,6 +477,38 @@ export const useList = ({
       }
     });
   }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t]);
+
+  const clearPurchased = useCallback(() => {
+    const purchasedItems = list.products.filter((p: Product) => p.isPurchased);
+    if (purchasedItems.length === 0) return;
+
+    setConfirm({
+      title: t('clearPurchased'),
+      message: t('clearPurchasedConfirm'),
+      onConfirm: async () => {
+        setConfirm(null);
+
+        // מחיקה אופטימיסטית
+        onUpdateProductsForList(list.id, (current) =>
+          current.filter(p => !p.isPurchased)
+        );
+
+        try {
+          await productsApi.clearPurchased(list.id);
+          // עדכון חברי קבוצה דרך socket
+          purchasedItems.forEach(p => {
+            socketService.emitProductDeleted(list.id, p.id, p.name, user.name);
+          });
+          showToast(t('purchasedCleared'), 'success');
+        } catch (error) {
+          if (import.meta.env.DEV) console.error('Failed to clear purchased:', error);
+          // שחזור
+          onUpdateProductsForList(list.id, (current) => [...current, ...purchasedItems]);
+          showToast(t('errorOccurred'), 'error');
+        }
+      }
+    });
+  }, [list.id, list.products, onUpdateProductsForList, showToast, t]);
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
@@ -715,6 +758,7 @@ export const useList = ({
     handleDuplicateAddNew,
     handleDuplicateCancel,
     refreshList,
+    clearPurchased,
     showCelebration
   };
 };
