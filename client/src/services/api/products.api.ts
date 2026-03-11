@@ -42,12 +42,6 @@ export const productsApi = {
     await apiClient.put(`/lists/${listId}/products/${productId}`, data);
   },
 
-  async clearPurchased(listId: string): Promise<number> {
-    validateId(listId, 'listId');
-    const response = await apiClient.delete<{ data: { deletedCount: number } }>(`/lists/${listId}/products/purchased`);
-    return response.data.data.deletedCount;
-  },
-
   async clearProducts(listId: string, filter: 'all' | 'purchased' | 'pending'): Promise<number> {
     validateId(listId, 'listId');
     const response = await apiClient.delete<{ data: { deletedCount: number } }>(`/lists/${listId}/products/clear?filter=${filter}`);

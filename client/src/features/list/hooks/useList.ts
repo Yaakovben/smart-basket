@@ -307,10 +307,10 @@ export const useList = ({
 
   // בדיקת כפילות מוצר
   const checkDuplicate = useCallback((name: string): Product | undefined => {
-    return list.products.find(
+    return productsRef.current.find(
       (p: Product) => p.name.trim().toLowerCase() === name.toLowerCase() && !p.isPurchased
     );
-  }, [list.products]);
+  }, []);
 
   const handleAdd = useCallback(async () => {
     setAddError('');

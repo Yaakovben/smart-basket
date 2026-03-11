@@ -96,8 +96,6 @@ type TranslationKey =
   | 'markedAsPurchased'
   | 'markedAsNotPurchased'
   | 'clearPurchased'
-  | 'clearPurchasedConfirm'
-  | 'purchasedCleared'
   | 'clearList'
   | 'clearAll'
   | 'clearAllDesc'
@@ -478,15 +476,13 @@ export const translations: Record<Language, Translations> = {
     purchased: 'נקנה',
     markedAsPurchased: 'סומן כנקנה',
     markedAsNotPurchased: 'הוחזר לרשימה',
-    clearPurchased: 'נקה נקנו',
-    clearPurchasedConfirm: 'למחוק את כל המוצרים שנקנו?',
-    purchasedCleared: 'המוצרים שנקנו נמחקו',
+    clearPurchased: 'נקה מוצרים שנקנו',
     clearList: 'נקה רשימה',
     clearAll: 'מחק הכל',
     clearAllDesc: 'מחיקת כל המוצרים מהרשימה',
     clearPurchasedDesc: 'מחיקת מוצרים שכבר נקנו',
     clearPendingDesc: 'מחיקת מוצרים שעדיין לא נקנו',
-    clearPending: 'נקה לא נקנו',
+    clearPending: 'נקה מוצרים שלא נקנו',
     listCleared: 'הרשימה נוקתה',
     addProduct: 'הוסף מוצר',
     newProduct: 'מוצר חדש',
@@ -855,15 +851,13 @@ export const translations: Record<Language, Translations> = {
     purchased: 'Purchased',
     markedAsPurchased: 'Marked as purchased',
     markedAsNotPurchased: 'Returned to list',
-    clearPurchased: 'Clear purchased',
-    clearPurchasedConfirm: 'Delete all purchased products?',
-    purchasedCleared: 'Purchased products cleared',
+    clearPurchased: 'Clear purchased products',
     clearList: 'Clear list',
     clearAll: 'Delete all',
     clearAllDesc: 'Delete all products from the list',
     clearPurchasedDesc: 'Delete products already purchased',
     clearPendingDesc: 'Delete products not yet purchased',
-    clearPending: 'Clear pending',
+    clearPending: 'Clear pending products',
     listCleared: 'List cleared',
     addProduct: 'Add Product',
     newProduct: 'New Product',
@@ -1232,15 +1226,13 @@ export const translations: Record<Language, Translations> = {
     purchased: 'Куплено',
     markedAsPurchased: 'Отмечено как купленное',
     markedAsNotPurchased: 'Возвращено в список',
-    clearPurchased: 'Очистить купленное',
-    clearPurchasedConfirm: 'Удалить все купленные товары?',
-    purchasedCleared: 'Купленные товары удалены',
+    clearPurchased: 'Очистить купленные товары',
     clearList: 'Очистить список',
     clearAll: 'Удалить всё',
     clearAllDesc: 'Удалить все товары из списка',
     clearPurchasedDesc: 'Удалить уже купленные товары',
     clearPendingDesc: 'Удалить ещё не купленные товары',
-    clearPending: 'Очистить некупленное',
+    clearPending: 'Очистить некупленные товары',
     listCleared: 'Список очищен',
     addProduct: 'Добавить товар',
     newProduct: 'Новый товар',

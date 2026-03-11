@@ -80,6 +80,8 @@ export const ListMenu = memo(({
         </MenuItem>
       )}
 
+      {onRefresh && (onClearList && hasProducts) && <Divider sx={{ my: 0.5 }} />}
+
       {/* ניקוי רשימה */}
       {onClearList && hasProducts && (
         <MenuItem
@@ -93,12 +95,11 @@ export const ListMenu = memo(({
         </MenuItem>
       )}
 
-      {/* Divider after refresh if group follows */}
-      {onRefresh && isGroup && <Divider />}
+      {(onRefresh || (onClearList && hasProducts)) && isGroup && <Divider sx={{ my: 0.5 }} />}
 
       {/* Mute Toggle — only for groups */}
       {isGroup && (
-        <Box sx={{ px: 1.5, py: 1 }}>
+        <Box sx={{ px: 1.5, py: 0.5 }}>
           <Box
             onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
             sx={{
@@ -136,8 +137,7 @@ export const ListMenu = memo(({
         </Box>
       )}
 
-      {/* Divider before owner actions */}
-      {isOwner && (isGroup || onRefresh) && <Divider />}
+      {isOwner && <Divider sx={{ my: 0.5 }} />}
 
       {isOwner && (
         <MenuItem
@@ -150,6 +150,8 @@ export const ListMenu = memo(({
           </Typography>
         </MenuItem>
       )}
+
+      {isOwner && <Divider sx={{ my: 0.5 }} />}
 
       {isOwner && (
         <MenuItem
@@ -166,7 +168,7 @@ export const ListMenu = memo(({
       {/* עזיבת רשימה (לחברים שאינם בעלים) */}
       {!isOwner && isGroup && onLeave && (
         <>
-          <Divider />
+          <Divider sx={{ my: 0.5 }} />
           <MenuItem
             onClick={() => { onClose(); onLeave(); }}
             sx={{ py: 1.5, px: 2.5, gap: 1.5 }}

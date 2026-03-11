@@ -140,6 +140,65 @@ import { AddProductFab } from './AddProductFab';
 import { AddProductModal, EditProductModal, ProductDetailsModal } from './ProductModals';
 import { InviteModal, MembersModal, ShareListModal, EditListModal } from './ListModals';
 
+// ===== כרטיס אפשרות ניקוי =====
+const clearCardSx = (rgb: string) => ({
+  display: 'flex', alignItems: 'center', gap: 2,
+  p: 2, borderRadius: '14px',
+  border: '1.5px solid',
+  borderColor: `rgba(${rgb},0.2)`,
+  bgcolor: `rgba(${rgb},0.04)`,
+  cursor: 'pointer',
+  transition: 'all 0.15s',
+  '&:active': { transform: 'scale(0.98)', bgcolor: `rgba(${rgb},0.08)` }
+});
+
+const clearIconSx = (rgb: string) => ({
+  width: 44, height: 44, borderRadius: '12px',
+  bgcolor: `rgba(${rgb},0.1)`,
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+});
+
+const CLEAR_OPTIONS = [
+  { filter: 'all' as const, rgb: '239,68,68', hex: '#EF4444', Icon: DeleteSweepIcon, label: 'clearAll' as const, desc: 'clearAllDesc' as const },
+  { filter: 'purchased' as const, rgb: '34,197,94', hex: '#22C55E', Icon: CheckCircleOutlineIcon, label: 'clearPurchased' as const, desc: 'clearPurchasedDesc' as const },
+  { filter: 'pending' as const, rgb: '245,158,11', hex: '#F59E0B', Icon: RemoveShoppingCartIcon, label: 'clearPending' as const, desc: 'clearPendingDesc' as const },
+] as const;
+
+const ClearListModal = memo(({ pendingCount, purchasedCount, onClear, onClose }: {
+  pendingCount: number;
+  purchasedCount: number;
+  onClear: (filter: 'all' | 'purchased' | 'pending') => void;
+  onClose: () => void;
+}) => {
+  const { t } = useSettings();
+  const counts = { all: pendingCount + purchasedCount, purchased: purchasedCount, pending: pendingCount };
+
+  return (
+    <Modal title={t('clearList')} onClose={onClose}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {CLEAR_OPTIONS.map(({ filter, rgb, hex, Icon, label, desc }) =>
+          counts[filter] > 0 && (
+            <Box key={filter} onClick={() => onClear(filter)} sx={clearCardSx(rgb)}>
+              <Box sx={clearIconSx(rgb)}>
+                <Icon sx={{ color: hex, fontSize: 24 }} />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 700, color: hex }}>
+                  {t(label)}
+                </Typography>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
+                  {t(desc)} ({counts[filter]})
+                </Typography>
+              </Box>
+            </Box>
+          )
+        )}
+      </Box>
+    </Modal>
+  );
+});
+ClearListModal.displayName = 'ClearListModal';
+
 // ===== Props =====
 interface ListPageProps {
   list: List;
@@ -382,108 +441,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
       {/* Clear List Modal */}
       {showClearList && (
-        <Modal title={t('clearList')} onClose={() => setShowClearList(false)}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* מחק הכל */}
-            {(pending.length + purchased.length) > 0 && (
-              <Box
-                onClick={() => handleClearList('all')}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  p: 2, borderRadius: '14px',
-                  border: '1.5px solid',
-                  borderColor: 'rgba(239,68,68,0.2)',
-                  bgcolor: 'rgba(239,68,68,0.04)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(239,68,68,0.08)' }
-                }}
-              >
-                <Box sx={{
-                  width: 44, height: 44, borderRadius: '12px',
-                  bgcolor: 'rgba(239,68,68,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <DeleteSweepIcon sx={{ color: '#EF4444', fontSize: 24 }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#EF4444' }}>
-                    {t('clearAll')}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                    {t('clearAllDesc')} ({pending.length + purchased.length})
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {/* מחק נקנו */}
-            {purchased.length > 0 && (
-              <Box
-                onClick={() => handleClearList('purchased')}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  p: 2, borderRadius: '14px',
-                  border: '1.5px solid',
-                  borderColor: 'rgba(34,197,94,0.2)',
-                  bgcolor: 'rgba(34,197,94,0.04)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(34,197,94,0.08)' }
-                }}
-              >
-                <Box sx={{
-                  width: 44, height: 44, borderRadius: '12px',
-                  bgcolor: 'rgba(34,197,94,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <CheckCircleOutlineIcon sx={{ color: '#22C55E', fontSize: 24 }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#22C55E' }}>
-                    {t('clearPurchased')}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                    {t('clearPurchasedDesc')} ({purchased.length})
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {/* מחק לא נקנו */}
-            {pending.length > 0 && (
-              <Box
-                onClick={() => handleClearList('pending')}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  p: 2, borderRadius: '14px',
-                  border: '1.5px solid',
-                  borderColor: 'rgba(245,158,11,0.2)',
-                  bgcolor: 'rgba(245,158,11,0.04)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  '&:active': { transform: 'scale(0.98)', bgcolor: 'rgba(245,158,11,0.08)' }
-                }}
-              >
-                <Box sx={{
-                  width: 44, height: 44, borderRadius: '12px',
-                  bgcolor: 'rgba(245,158,11,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <RemoveShoppingCartIcon sx={{ color: '#F59E0B', fontSize: 24 }} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>
-                    {t('clearPending')}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.25 }}>
-                    {t('clearPendingDesc')} ({pending.length})
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-          </Box>
-        </Modal>
+        <ClearListModal
+          pendingCount={pending.length}
+          purchasedCount={purchased.length}
+          onClear={handleClearList}
+          onClose={() => setShowClearList(false)}
+        />
       )}
 
       {/* Duplicate Product Dialog */}

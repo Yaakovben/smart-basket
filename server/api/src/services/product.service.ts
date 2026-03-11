@@ -81,17 +81,6 @@ export class ProductService {
     await ListDAL.touchUpdatedAt(listId);
   }
 
-  static async clearPurchased(
-    listId: string,
-    userId: string
-  ): Promise<number> {
-    await checkListAccess(listId, userId);
-
-    const deletedCount = await ProductDAL.clearPurchased(listId);
-    await ListDAL.touchUpdatedAt(listId);
-    return deletedCount;
-  }
-
   static async clearProducts(
     listId: string,
     userId: string,
