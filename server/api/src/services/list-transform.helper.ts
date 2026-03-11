@@ -32,14 +32,15 @@ export const transformList = async (
   list: IList,
   existingProducts?: IProductDoc[],
 ): Promise<IListResponse> => {
-  await Promise.all([
+  // populate ושליפת מוצרים במקביל
+  const [, , products] = await Promise.all([
     list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
     list.populate('members.user', 'name email avatarColor avatarEmoji'),
+    existingProducts ?? ProductDAL.findByListId(list._id.toString()),
   ]);
 
-  const products = existingProducts ?? await ProductDAL.findByListId(list._id.toString());
   const json = list.toJSON() as Record<string, unknown>;
-  json.products = products.map(transformProduct);
+  json.products = (products as (IProductDoc | Record<string, unknown>)[]).map(transformProduct);
   json.password = list.password || null;
 
   return json as unknown as IListResponse;

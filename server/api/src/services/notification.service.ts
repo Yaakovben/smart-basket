@@ -165,15 +165,13 @@ export class NotificationService {
       excludeUserId?: string;
     } = {}
   ): Promise<NotificationResponse[]> {
-    const list = await ListDAL.findById(listId);
-    if (!list) {
-      throw NotFoundError.list();
-    }
-
-    const actor = await UserDAL.findById(actorId);
-    if (!actor) {
-      throw NotFoundError.user();
-    }
+    // שאילתות מקבילות במקום סדרתיות
+    const [list, actor] = await Promise.all([
+      ListDAL.findById(listId),
+      UserDAL.findById(actorId),
+    ]);
+    if (!list) throw NotFoundError.list();
+    if (!actor) throw NotFoundError.user();
 
     const excludeIds = new Set([actorId]);
     if (data.excludeUserId) {

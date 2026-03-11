@@ -67,37 +67,7 @@ export const ListMenu = memo(({
         }
       }}
     >
-      {/* Refresh */}
-      {onRefresh && (
-        <MenuItem
-          onClick={() => { onClose(); onRefresh(); }}
-          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-        >
-          <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-            {t('refresh')}
-          </Typography>
-        </MenuItem>
-      )}
-
-      {onRefresh && (onClearList && hasProducts) && <Divider sx={{ my: 0.5 }} />}
-
-      {/* ניקוי רשימה */}
-      {onClearList && hasProducts && (
-        <MenuItem
-          onClick={() => { onClose(); onClearList(); }}
-          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-        >
-          <CleaningServicesIcon sx={{ color: 'warning.main', fontSize: 22 }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-            {t('clearList')}
-          </Typography>
-        </MenuItem>
-      )}
-
-      {(onRefresh || (onClearList && hasProducts)) && isGroup && <Divider sx={{ my: 0.5 }} />}
-
-      {/* Mute Toggle — only for groups */}
+      {/* Mute Toggle — רק בקבוצות, תמיד למעלה */}
       {isGroup && (
         <Box sx={{ px: 1.5, py: 0.5 }}>
           <Box
@@ -137,7 +107,35 @@ export const ListMenu = memo(({
         </Box>
       )}
 
-      {isOwner && <Divider sx={{ my: 0.5 }} />}
+      {isGroup && <Divider sx={{ my: 0.5 }} />}
+
+      {/* Refresh */}
+      {onRefresh && (
+        <MenuItem
+          onClick={() => { onClose(); onRefresh(); }}
+          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+        >
+          <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            {t('refresh')}
+          </Typography>
+        </MenuItem>
+      )}
+
+      {onRefresh && (onClearList && hasProducts) && <Divider sx={{ my: 0.5 }} />}
+
+      {/* ניקוי רשימה */}
+      {onClearList && hasProducts && (
+        <MenuItem
+          onClick={() => { onClose(); onClearList(); }}
+          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+        >
+          <CleaningServicesIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            {t('clearList')}
+          </Typography>
+        </MenuItem>
+      )}
 
       {isOwner && (
         <MenuItem
@@ -150,8 +148,6 @@ export const ListMenu = memo(({
           </Typography>
         </MenuItem>
       )}
-
-      {isOwner && <Divider sx={{ my: 0.5 }} />}
 
       {isOwner && (
         <MenuItem

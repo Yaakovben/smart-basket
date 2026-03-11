@@ -59,18 +59,15 @@ export class ListMembershipService {
       throw ConflictError.alreadyMember();
     }
 
-    const updatedList = await ListDAL.findById(list._id.toString());
-    if (!updatedList) throw NotFoundError.list();
-
-    // שליחת התראות לחברי הרשימה
-    await NotificationService.createNotificationsForListMembers(
-      updatedList._id.toString(),
+    // התראות ברקע
+    NotificationService.createNotificationsForListMembers(
+      updated._id.toString(),
       'join',
       userId,
       {}
-    );
+    ).catch((err) => logger.warn('Failed to create join notifications:', err));
 
-    return transformList(updatedList);
+    return transformList(updated);
   }
 
   static async leaveGroup(listId: string, userId: string): Promise<void> {
@@ -147,32 +144,31 @@ export class ListMembershipService {
       UserDAL.findById(userId),
     ]);
 
-    await ListDAL.removeMember(listId, memberId);
+    // הסרה מחזירה את הרשימה המעודכנת, חוסך שליפה נוספת
+    const updatedList = await ListDAL.removeMember(listId, memberId);
+    if (!updatedList) throw NotFoundError.list();
 
-    // התראה לחבר שהוסר
+    // התראות ברקע, לא חוסמות את התגובה
     if (member && actor) {
-      await NotificationService.createNotification({
+      NotificationService.createNotification({
         type: 'member_removed',
         listId,
         listName: list.name,
         actorId: userId,
         actorName: actor.name,
         targetUserId: memberId,
-      });
+      }).catch((err) => logger.warn('Failed to create member_removed notification:', err));
     }
 
-    // התראה לשאר חברי הרשימה
     if (member) {
-      await NotificationService.createNotificationsForListMembers(
+      NotificationService.createNotificationsForListMembers(
         listId,
         'removed',
         memberId,
         { excludeUserId: userId }
-      );
+      ).catch((err) => logger.warn('Failed to create removed notifications:', err));
     }
 
-    const updatedList = await ListDAL.findById(listId);
-    if (!updatedList) throw NotFoundError.list();
     return transformList(updatedList);
   }
 

@@ -6,6 +6,11 @@ class UserDALClass extends BaseDAL<IUser> {
     super(User);
   }
 
+  // שליפה קלה לאימות - רק שדות הכרחיים, בלי hydration של Mongoose
+  async findForAuth(id: string): Promise<{ name: string; email: string; isAdmin: boolean } | null> {
+    return this.model.findById(id).select('name email isAdmin').lean();
+  }
+
   async findByEmail(email: string): Promise<IUser | null> {
     return this.model.findOne({ email: email.toLowerCase() });
   }

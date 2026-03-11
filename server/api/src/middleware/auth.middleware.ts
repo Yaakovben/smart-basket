@@ -19,7 +19,8 @@ export const authenticate = asyncHandler(
     try {
       const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
 
-      const user = await UserDAL.findById(decoded.userId);
+      // שליפה קלה עם select+lean במקום מסמך Mongoose מלא
+      const user = await UserDAL.findForAuth(decoded.userId);
 
       if (!user) {
         throw NotFoundError.user();

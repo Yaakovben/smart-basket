@@ -11,6 +11,10 @@ class PushSubscriptionDALClass extends BaseDAL<IPushSubscription> {
     return this.model.find({ userId });
   }
 
+  async findByUserIds(userIds: string[]): Promise<IPushSubscription[]> {
+    return this.model.find({ userId: { $in: userIds } });
+  }
+
   async deleteByEndpoint(endpoint: string): Promise<void> {
     await this.model.deleteOne({ endpoint });
   }

@@ -98,11 +98,29 @@ export class PushService {
   }
 
   static async sendToUsers(userIds: string[], payload: PushPayload): Promise<void> {
-    if (!this.isEnabled()) {
-      return;
-    }
+    if (!this.isEnabled() || userIds.length === 0) return;
 
-    const sendPromises = userIds.map((userId) => this.sendToUser(userId, payload));
+    // שאילתה אחת במקום N שאילתות נפרדות
+    const subscriptions = await PushSubscriptionDAL.findByUserIds(userIds);
+    if (subscriptions.length === 0) return;
+
+    const payloadStr = JSON.stringify(payload);
+    const sendPromises = subscriptions.map(async (sub) => {
+      try {
+        await webPush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
+          payloadStr,
+          { urgency: 'high', TTL: 60 * 60 }
+        );
+      } catch (error: unknown) {
+        const pushError = error as { statusCode?: number };
+        if (pushError.statusCode === 410 || pushError.statusCode === 404) {
+          try { await PushSubscriptionDAL.deleteById(sub._id.toString()); } catch {}
+        } else {
+          logger.warn('Push notification failed for endpoint %s: %s', sub.endpoint, (error as Error).message);
+        }
+      }
+    });
     await Promise.all(sendPromises);
   }
 
