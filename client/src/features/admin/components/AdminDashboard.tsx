@@ -192,11 +192,14 @@ export const AdminDashboard = () => {
           <IconButton
             onClick={handleRefresh}
             size="small"
+            disableRipple
             sx={{
               color: 'white',
               width: 36,
               height: 36,
+              p: 0,
               transition: 'all 0.2s',
+              '&:hover': { bgcolor: 'transparent' },
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
