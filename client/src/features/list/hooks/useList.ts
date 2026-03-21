@@ -503,10 +503,8 @@ export const useList = ({
 
     try {
       await productsApi.clearProducts(list.id, filter);
-      // עדכון חברי קבוצה דרך socket
-      affectedItems.forEach(p => {
-        socketService.emitProductDeleted(list.id, p.id, p.name, user.name);
-      });
+      // עדכון חברי קבוצה דרך socket, התראה אחת של ניקוי רשימה
+      socketService.emitProductsCleared(list.id, affectedItems.map(p => p.id), filter, user.name);
       showToast(t('listCleared'), 'success');
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to clear list:', error);

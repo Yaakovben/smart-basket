@@ -9,11 +9,11 @@ interface ToastProps {
   onDismiss?: () => void;
 }
 
-const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg: string }; dark: { color: string; bg: string } }> = {
-  success: { icon: '✓', light: { color: '#059669', bg: '#ECFDF5' }, dark: { color: '#6EE7B7', bg: 'rgba(16, 185, 129, 0.18)' } },
-  error: { icon: '✕', light: { color: '#DC2626', bg: '#FEF2F2' }, dark: { color: '#FCA5A5', bg: 'rgba(239, 68, 68, 0.18)' } },
-  info: { icon: '🔔', light: { color: '#0891B2', bg: '#ECFEFF' }, dark: { color: '#67E8F9', bg: 'rgba(8, 145, 178, 0.18)' } },
-  warning: { icon: '⚠', light: { color: '#D97706', bg: '#FFFBEB' }, dark: { color: '#FCD34D', bg: 'rgba(217, 119, 6, 0.18)' } }
+const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg: string; border: string }; dark: { color: string; bg: string; border: string } }> = {
+  success: { icon: '✓', light: { color: '#059669', bg: '#ECFDF5', border: '#05966930' }, dark: { color: '#6EE7B7', bg: 'rgba(16, 185, 129, 0.22)', border: 'rgba(110, 231, 183, 0.3)' } },
+  error: { icon: '✕', light: { color: '#DC2626', bg: '#FEF2F2', border: '#DC262630' }, dark: { color: '#FCA5A5', bg: 'rgba(239, 68, 68, 0.22)', border: 'rgba(252, 165, 165, 0.3)' } },
+  info: { icon: '🔔', light: { color: '#0891B2', bg: '#ECFEFF', border: '#0891B230' }, dark: { color: '#67E8F9', bg: 'rgba(8, 145, 178, 0.22)', border: 'rgba(103, 232, 249, 0.3)' } },
+  warning: { icon: '⚠', light: { color: '#D97706', bg: '#FFFBEB', border: '#D9770630' }, dark: { color: '#FCD34D', bg: 'rgba(217, 119, 6, 0.22)', border: 'rgba(252, 211, 77, 0.3)' } }
 };
 
 const SWIPE_THRESHOLD = 60;
@@ -57,7 +57,8 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
 
   if (!msg) return null;
   const entry = TOAST_CONFIG[type];
-  const config = settings.theme === 'dark' ? entry.dark : entry.light;
+  const isDark = settings.theme === 'dark';
+  const config = isDark ? entry.dark : entry.light;
   const isLongText = msg.length > 35;
 
   return (
@@ -90,8 +91,11 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
           py: 1.25,
           bgcolor: config.bg,
           borderRadius: '16px',
-          border: `1.5px solid ${config.color}30`,
-          boxShadow: `0 4px 20px ${config.color}20`,
+          border: `1.5px solid ${config.border}`,
+          boxShadow: isDark
+            ? `0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)`
+            : `0 4px 20px ${config.color}20`,
+          backdropFilter: isDark ? 'blur(12px)' : 'none',
           animation: 'toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
           '@keyframes toastIn': {
             '0%': { transform: 'translateY(-50px) scale(0.85)', opacity: 0 },

@@ -229,6 +229,7 @@ type TranslationKey =
   | 'addedProductNotif'
   | 'editedProductNotif'
   | 'deletedProductNotif'
+  | 'clearedListNotif'
   | 'purchasedNotif'
   | 'unmarkedPurchasedNotif'
   | 'joinedGroupNotif'
@@ -627,6 +628,7 @@ export const translations: Record<Language, Translations> = {
     addedProductNotif: 'הוסיף/ה',
     editedProductNotif: 'ערך/ה',
     deletedProductNotif: 'מחק/ה',
+    clearedListNotif: 'ניקה/תה את הרשימה',
     purchasedNotif: 'סימן/ה כנקנה',
     unmarkedPurchasedNotif: 'ביטל/ה סימון',
     joinedGroupNotif: 'הצטרף/ה לרשימה',
@@ -1019,6 +1021,7 @@ export const translations: Record<Language, Translations> = {
     addedProductNotif: 'added',
     editedProductNotif: 'edited',
     deletedProductNotif: 'deleted',
+    clearedListNotif: 'cleared the list',
     purchasedNotif: 'marked as purchased',
     unmarkedPurchasedNotif: 'unmarked',
     joinedGroupNotif: 'joined the list',
@@ -1410,6 +1413,7 @@ export const translations: Record<Language, Translations> = {
     addedProductNotif: 'добавил(а)',
     editedProductNotif: 'изменил(а)',
     deletedProductNotif: 'удалил(а)',
+    clearedListNotif: 'очистил(а) список',
     purchasedNotif: 'отметил(а) как купленный',
     unmarkedPurchasedNotif: 'снял(а) отметку',
     joinedGroupNotif: 'присоединился(ась) к списку',

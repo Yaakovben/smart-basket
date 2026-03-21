@@ -8,7 +8,7 @@ import type {
 import { ApiService } from '../services/api.service';
 import { logger } from '../config';
 import { checkRateLimit } from '../middleware/rateLimiter.middleware';
-import { isValidString, isValidBoolean, isValidProduct } from '../utils/validation';
+import { isValidString, isValidBoolean, isValidProduct, isValidArray } from '../utils/validation';
 
 export const registerProductHandlers = (
   io: Server<ClientToServerEvents, ServerToClientEvents>,
@@ -137,6 +137,36 @@ export const registerProductHandlers = (
       }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
     } catch (error) {
       logger.error('Error in product:delete handler:', error);
+    }
+  });
+
+  // ניקוי רשימה (מחיקה מרובה)
+  socket.on('products:clear', (data: { listId: string; productIds: string[]; filter: 'all' | 'purchased' | 'pending'; userName: string }) => {
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId) || !isValidArray(data?.productIds) || !isValidString(data?.filter)) {
+        logger.warn('Invalid products:clear data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('products:cleared', {
+        listId: data.listId,
+        productIds: data.productIds,
+        filter: data.filter,
+        userId,
+        userName,
+        timestamp: new Date(),
+      });
+
+      // התראה אחת של ניקוי רשימה במקום התראה לכל מוצר
+      ApiService.broadcastNotification({
+        listId: data.listId,
+        type: 'list_clear',
+        actorId: userId,
+      }, socket.accessToken!).catch((err) => logger.error('broadcastNotification failed:', err));
+    } catch (error) {
+      logger.error('Error in products:clear handler:', error);
     }
   });
 };

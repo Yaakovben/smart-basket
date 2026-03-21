@@ -12,7 +12,8 @@ export type NotificationType =
   | 'product_unpurchase'
   | 'member_removed'
   | 'list_deleted'
-  | 'list_update';
+  | 'list_update'
+  | 'list_clear';
 
 export interface Notification {
   id: string;

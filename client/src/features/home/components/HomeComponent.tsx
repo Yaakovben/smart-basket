@@ -586,7 +586,7 @@ export const HomeComponent = memo(({
                       onClick={handleSaveOrder}
                       disabled={!hasOrderChanges}
                       startIcon={<DoneIcon sx={{ fontSize: 16 }} />}
-                      sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
+                      sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', gap: 0.75, boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
                     >
                       {t('reorderDone')}
                     </Button>

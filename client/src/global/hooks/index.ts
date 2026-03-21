@@ -592,6 +592,11 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       scheduleRefetch(eventData.listId);
     });
 
+    const unsubscribeProductsCleared = socketService.on('products:cleared', (data: unknown) => {
+      const eventData = data as { listId: string };
+      scheduleRefetch(eventData.listId);
+    });
+
     const unsubscribeProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const eventData = data as { listId: string };
       scheduleRefetch(eventData.listId);
@@ -615,6 +620,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       unsubscribeProductAdded();
       unsubscribeProductUpdated();
       unsubscribeProductDeleted();
+      unsubscribeProductsCleared();
       unsubscribeProductToggled();
       unsubscribeNotificationNew();
       // יציאה מכל החדרים בניקוי

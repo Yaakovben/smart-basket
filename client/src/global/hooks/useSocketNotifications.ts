@@ -44,7 +44,7 @@ interface ListDeletedEventData {
 // התראה מקומית לפאנל הפופאפ
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update';
+  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
   listId: string;
   listName: string;
   userId: string;
@@ -149,6 +149,36 @@ export function useSocketNotifications(
     const unsubProductDeleted = socketService.on('product:deleted', (data: unknown) => {
       handleProductEvent(data as ProductEventData, 'productDelete', 'product_delete',
         (name, product) => `${name} ${tRef.current('deletedProductNotif')} "${product}"`);
+    });
+
+    // ניקוי רשימה, התראה אחת במקום התראה לכל מוצר
+    const unsubProductsCleared = socketService.on('products:cleared', (data: unknown) => {
+      try {
+        const event = data as { listId: string; productIds: string[]; filter: string; userId: string; userName: string };
+        if (!event?.userId || !event?.listId) return;
+        if (event.userId === user.id) return;
+
+        const listName = listNamesRef.current[event.listId] || '';
+        const firstName = event.userName?.split(' ')[0] || '';
+        const isMuted = notificationSettingsRef.current.mutedGroupIds?.includes(event.listId);
+
+        addNotificationRef.current?.({
+          id: `notif_${Date.now()}_${event.userId}`,
+          type: 'list_clear',
+          listId: event.listId,
+          listName,
+          userId: event.userId,
+          userName: event.userName,
+          timestamp: new Date(),
+          read: false
+        });
+
+        if (!isMuted && shouldShowNotification('productDelete') && !isPushSubscribedRef.current) {
+          showToastRef.current(`${firstName} ${tRef.current('clearedListNotif')}${listName ? ` "${listName}"` : ''}`, 'info');
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('[Socket] שגיאה בטיפול באירוע ניקוי רשימה:', err);
+      }
     });
 
     const unsubProductToggled = socketService.on('product:toggled', (data: unknown) => {
@@ -276,6 +306,7 @@ export function useSocketNotifications(
       unsubProductAdded();
       unsubProductUpdated();
       unsubProductDeleted();
+      unsubProductsCleared();
       unsubProductToggled();
       unsubNotificationNew();
       unsubMemberRemoved();

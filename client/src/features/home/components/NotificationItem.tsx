@@ -36,6 +36,7 @@ const getEmoji = (type: LocalNotification['type']): string => {
     case 'product_purchase': return '✅';
     case 'product_unpurchase': return '↩️';
     case 'list_update': return '⚙️';
+    case 'list_clear': return '🧹';
     default: return '📢';
   }
 };
@@ -48,6 +49,7 @@ const getAccentColor = (type: LocalNotification['type']): string => {
     case 'product_edit': return '#F59E0B';
     case 'product_purchase': case 'product_unpurchase': return '#14B8A6';
     case 'list_update': return '#8B5CF6';
+    case 'list_clear': return '#F59E0B';
     default: return '#6B7280';
   }
 };
@@ -119,6 +121,7 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
       case 'product_purchase': return `${t('purchasedNotif')} "${n.productName}"`;
       case 'product_unpurchase': return `${t('unmarkedPurchasedNotif')} "${n.productName}"`;
       case 'list_update': return t('listUpdatedNotif');
+      case 'list_clear': return t('clearedListNotif');
       default: return '';
     }
   };

@@ -13,6 +13,7 @@ const notificationTypes = [
   'member_removed',
   'list_deleted',
   'list_update',
+  'list_clear',
 ] as const;
 
 export const notificationValidator = {

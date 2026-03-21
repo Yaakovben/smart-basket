@@ -5,6 +5,9 @@ export const isValidString = (val: unknown): val is string =>
 
 export const isValidBoolean = (val: unknown): val is boolean => typeof val === 'boolean';
 
+export const isValidArray = (val: unknown): val is string[] =>
+  Array.isArray(val) && val.length > 0 && val.every(item => typeof item === 'string');
+
 export const isValidProduct = (product: unknown): product is ProductData => {
   if (product === null || typeof product !== 'object') return false;
   const p = product as ProductData;
