@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import PlaylistRemoveIcon from '@mui/icons-material/DeleteSweep';
+import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';

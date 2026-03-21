@@ -5,7 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PlaylistRemoveIcon from '@mui/icons-material/DeleteSweep';
+import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useSettings } from '../context/SettingsContext';
 
