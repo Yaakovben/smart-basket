@@ -116,7 +116,7 @@ export const AddProductModal = memo(({
               type="number"
               min="1"
               enterKeyHint="done"
-              style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }}
+              style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent', color: 'inherit' }}
               value={newProduct.quantity}
               onChange={e => onUpdateField('quantity', Math.max(1, parseInt(e.target.value) || 1))}
               onKeyDown={handleQuantityKeyDown}
@@ -256,7 +256,7 @@ export const EditProductModal = memo(({
               type="number"
               min="1"
               enterKeyHint="done"
-              style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent' }}
+              style={{ flex: 1, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 600, outline: 'none', width: 50, background: 'transparent', color: 'inherit' }}
               value={product.quantity}
               onChange={e => onUpdateField('quantity', Math.max(1, parseInt(e.target.value) || 1))}
               onKeyDown={handleQuantityKeyDown}
@@ -338,13 +338,13 @@ export const ProductDetailsModal = memo(({
           width: 72,
           height: 72,
           borderRadius: '18px',
-          bgcolor: 'rgba(20, 184, 166, 0.1)',
+          bgcolor: 'action.hover',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           mx: 'auto',
           mb: 1.5,
-          boxShadow: '0 4px 12px rgba(20, 184, 166, 0.15)'
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
         }}>
           <Typography sx={{ fontSize: 36 }} role="img" aria-label={product.category}>
             {CATEGORY_ICONS[product.category]}

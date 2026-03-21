@@ -169,7 +169,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
                   }
                 }} sx={{ display: 'flex', alignItems: 'center' }}>
                   {pushLoading ? (
-                    <CircularProgress size={20} sx={{ color: '#14B8A6' }} />
+                    <CircularProgress size={20} sx={{ color: 'primary.main' }} />
                   ) : (
                     <Switch
                       checked={pushSubscribed}
@@ -439,12 +439,12 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
       {showHelp && (
         <Modal title={t('helpSupport')} onClose={() => setShowHelp(false)}>
           <Box sx={{ textAlign: 'center', py: 2 }}>
-            <Box sx={{ width: 80, height: 80, borderRadius: '20px', bgcolor: '#14B8A6', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, fontSize: 36 }}>
+            <Box sx={{ width: 80, height: 80, borderRadius: '20px', bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, fontSize: 36 }}>
               📧
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('contactUs')}</Typography>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 3, px: 2 }}>{t('helpDescription')}</Typography>
-            <Button component="a" href="mailto:smartbasket129@gmail.com?subject=Smart Basket - Support" target="_blank" rel="noopener noreferrer" fullWidth sx={{ justifyContent: 'flex-start', p: 2, borderRadius: '12px', bgcolor: '#14B8A6', color: 'white', textTransform: 'none', gap: 2, '&:hover': { bgcolor: '#0D9488' }, textDecoration: 'none' }}>
+            <Button component="a" href="mailto:smartbasket129@gmail.com?subject=Smart Basket - Support" target="_blank" rel="noopener noreferrer" fullWidth sx={{ justifyContent: 'flex-start', p: 2, borderRadius: '12px', bgcolor: 'primary.main', color: 'white', textTransform: 'none', gap: 2, '&:hover': { bgcolor: 'primary.dark' }, textDecoration: 'none' }}>
               <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
                 📧
               </Box>

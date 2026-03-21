@@ -38,7 +38,8 @@ interface LoginPageProps {
 }
 
 export const LoginComponent = ({ onLogin }: LoginPageProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const [clearing, setClearing] = useState(false);
 
   // ניקוי מטמון מלא ישירות, ללא ניווט לדף נפרד
@@ -107,7 +108,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+      background: isDark
+        ? 'linear-gradient(135deg, #0F1419 0%, #1A2332 100%)'
+        : 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
       p: { xs: 2, sm: 2.5 },
       pt: 'max(20px, env(safe-area-inset-top))',
       pb: 'max(20px, env(safe-area-inset-bottom))',
@@ -118,7 +121,9 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         width: '100%',
         maxWidth: { xs: '100%', sm: 400 },
         borderRadius: { xs: '24px', sm: '28px' },
-        boxShadow: '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+        boxShadow: isDark
+          ? '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)'
+          : '0 20px 60px rgba(20, 184, 166, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -212,12 +217,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                       fontWeight: 700,
                       fontSize: 14,
                       textTransform: 'none',
-                      bgcolor: '#14B8A6',
+                      bgcolor: 'primary.main',
                       color: 'white',
                       borderRadius: '12px',
                       py: 1.5,
                       boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-                      '&:hover': { bgcolor: '#0D9488' },
+                      '&:hover': { bgcolor: 'primary.dark' },
                       '&:active': { transform: 'scale(0.97)' },
                       transition: 'all 0.15s ease'
                     }}
@@ -389,12 +394,12 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                             fontWeight: 700,
                             fontSize: 14,
                             textTransform: 'none',
-                            bgcolor: '#14B8A6',
+                            bgcolor: 'primary.main',
                             color: 'white',
                             borderRadius: '12px',
                             py: 1.5,
                             boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-                            '&:hover': { bgcolor: '#0D9488' },
+                            '&:hover': { bgcolor: 'primary.dark' },
                             '&:active': { transform: 'scale(0.97)' },
                             transition: 'all 0.15s ease'
                           }}

@@ -92,12 +92,12 @@ export const ListMenu = memo(({
                 px: 2, py: 1.5,
                 borderRadius: '12px',
                 bgcolor: isMuted || mainNotificationsOff
-                  ? 'rgba(239,68,68,0.08)'
-                  : 'rgba(20,184,166,0.08)',
+                  ? 'rgba(239,68,68,0.06)'
+                  : 'rgba(20,184,166,0.06)',
                 border: '1px solid',
                 borderColor: isMuted || mainNotificationsOff
-                  ? 'rgba(239,68,68,0.15)'
-                  : 'rgba(20,184,166,0.15)',
+                  ? 'rgba(239,68,68,0.12)'
+                  : 'rgba(20,184,166,0.12)',
                 cursor: mainNotificationsOff ? 'default' : 'pointer',
                 opacity: mainNotificationsOff ? 0.5 : 1,
                 transition: 'all 0.15s ease',
@@ -105,7 +105,7 @@ export const ListMenu = memo(({
               }}
             >
               {isMuted || mainNotificationsOff
-                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
+                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'text.disabled' : 'error.main', fontSize: 22 }} />
                 : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
               }
               <Box sx={{ flex: 1 }}>
