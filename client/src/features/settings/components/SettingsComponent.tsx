@@ -331,14 +331,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         </Paper>
 
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>
-            <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
-            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('privacyPolicy')}</Typography>
-            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
-          </Box>
-          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/terms')}>
-            <Box component="span" sx={{ fontSize: 22 }}>📄</Box>
-            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsOfService')}</Typography>
+          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/privacy')}>
+            <Box component="span" sx={{ fontSize: 22 }}>📋</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsAndPrivacy')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>

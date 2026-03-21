@@ -458,6 +458,8 @@ export const useList = ({
       message: `${t('delete')} "${product.name}"?`,
       onConfirm: async () => {
         setConfirm(null);
+        // מניעת חגיגה שגויה - מחיקה לא נחשבת כסימון נקנה
+        justMarkedPurchased.current = false;
 
         // מחיקה אופטימיסטית מיידית
         onUpdateProductsForList(list.id, (current) =>
@@ -490,6 +492,8 @@ export const useList = ({
 
     if (affectedItems.length === 0) return;
     setShowClearList(false);
+    // מניעת חגיגה שגויה - ניקוי לא נחשב כסימון נקנה
+    justMarkedPurchased.current = false;
 
     // מחיקה אופטימיסטית
     onUpdateProductsForList(list.id, (current) =>

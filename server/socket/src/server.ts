@@ -84,12 +84,14 @@ io.on('connection', (socket) => {
   // נוכחות אדמין: קבלת רשימת משתמשים מחוברים (אדמין בלבד)
   authSocket.on('get:online-users', () => {
     if (!env.ADMIN_EMAIL || authSocket.email?.toLowerCase() !== env.ADMIN_EMAIL.toLowerCase()) {
-      logger.warn(`Non-admin user ${userId} attempted get:online-users`);
+      logger.warn(`Non-admin user ${userId} attempted get:online-users (email=${authSocket.email}, admin=${env.ADMIN_EMAIL})`);
       return;
     }
     authSocket.join('admin:presence');
+    const onlineIds = Array.from(connectedUsers.keys());
+    logger.info(`Admin requested online users: ${onlineIds.length} connected`);
     authSocket.emit('admin:online-users', {
-      userIds: Array.from(connectedUsers.keys()),
+      userIds: onlineIds,
     });
   });
 

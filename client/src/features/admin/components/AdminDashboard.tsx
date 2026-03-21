@@ -6,8 +6,6 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LoginIcon from '@mui/icons-material/Login';
 import { useNavigate } from 'react-router-dom';
@@ -186,8 +184,12 @@ export const AdminDashboard = () => {
           </Box>
           <IconButton
             onClick={handleRefresh}
+            size="small"
             sx={{
               color: 'white',
+              width: 36,
+              height: 36,
+              minWidth: 36,
               bgcolor: 'rgba(255,255,255,0.15)',
               backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.25)',
@@ -197,7 +199,7 @@ export const AdminDashboard = () => {
             }}
           >
             <RefreshIcon sx={{
-              fontSize: 22,
+              fontSize: 20,
               animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
             }} />
           </IconButton>
@@ -253,31 +255,7 @@ export const AdminDashboard = () => {
         </Box>
 
         {/* שורה שנייה - מידע נוסף */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, position: 'relative', zIndex: 1 }}>
-          <Box sx={infoCardSx}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              <ListAltIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} />
-              <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', lineHeight: 1 }}>
-                {stats.totalLists}
-              </Typography>
-            </Box>
-            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', fontWeight: 500, mt: 0.25 }}>
-              {t('totalLists')}
-            </Typography>
-          </Box>
-
-          <Box sx={infoCardSx}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              <ShoppingCartIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} />
-              <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', lineHeight: 1 }}>
-                {stats.totalProducts}
-              </Typography>
-            </Box>
-            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', fontWeight: 500, mt: 0.25 }}>
-              {t('totalProducts')}
-            </Typography>
-          </Box>
-
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, position: 'relative', zIndex: 1 }}>
           <Box sx={infoCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
               <LoginIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} />

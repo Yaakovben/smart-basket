@@ -81,7 +81,7 @@ const getTimeGreeting = (): TranslationKeys => {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 12) return 'goodMorning';
   if (hour >= 12 && hour < 17) return 'goodAfternoon';
-  if (hour >= 17 && hour < 21) return 'goodEvening';
+  if (hour >= 17 && hour < 22) return 'goodEvening';
   return 'goodNight';
 };
 
@@ -97,13 +97,13 @@ interface ListCardProps {
   onToggleMute: (listId: string) => void;
   t: (key: TranslationKeys) => string;
   reorderMode?: boolean;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  isFirst?: boolean;
-  isLast?: boolean;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragHandleTouch?: (e: React.TouchEvent) => void;
+  onDragHandleMouse?: (e: React.MouseEvent) => void;
 }
 
-const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, onMoveUp, onMoveDown, isFirst, isLast }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, isDragOver, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -113,25 +113,27 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const menuOpen = Boolean(anchorEl);
 
   return (
-    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1, cursor: reorderMode ? 'default' : 'pointer', transition: 'transform 0.15s' }} onClick={() => !reorderMode && onSelect(l)}>
+    <Card sx={{
+      display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
+      cursor: reorderMode ? 'default' : 'pointer',
+      transition: isDragging ? 'none' : 'transform 0.2s, box-shadow 0.2s, opacity 0.2s',
+      opacity: isDragging ? 0.5 : 1,
+      boxShadow: isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
+      position: 'relative',
+      zIndex: isDragging ? 10 : 'auto',
+    }} onClick={() => !reorderMode && onSelect(l)}>
       {reorderMode && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, flexShrink: 0 }}>
-          <IconButton
-            size="small"
-            onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
-            disabled={isFirst}
-            sx={{ p: 0.25, color: isFirst ? 'text.disabled' : 'primary.main' }}
-          >
-            <Box sx={{ fontSize: 18, lineHeight: 1 }}>▲</Box>
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
-            disabled={isLast}
-            sx={{ p: 0.25, color: isLast ? 'text.disabled' : 'primary.main' }}
-          >
-            <Box sx={{ fontSize: 18, lineHeight: 1 }}>▼</Box>
-          </IconButton>
+        <Box
+          onTouchStart={onDragHandleTouch}
+          onMouseDown={onDragHandleMouse}
+          sx={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, touchAction: 'none', cursor: 'grab',
+            p: 0.5, mx: -0.5, borderRadius: '8px',
+            '&:active': { cursor: 'grabbing', bgcolor: 'action.hover' },
+          }}
+        >
+          <DragIndicatorIcon sx={{ color: 'text.secondary', fontSize: 24 }} />
         </Box>
       )}
       <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
@@ -172,9 +174,6 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           stopPropagation
         />
       </Box>}
-      {reorderMode && (
-        <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: 22, flexShrink: 0 }} />
-      )}
     </Card>
   );
 });
@@ -273,6 +272,10 @@ export const HomeComponent = memo(({
   // מצב סידור רשימות
   const [reorderMode, setReorderMode] = useState(false);
   const [reorderedIds, setReorderedIds] = useState<string[] | null>(null);
+  const [dragIndex, setDragIndex] = useState(-1);
+  const [dragOverIndex, setDragOverIndex] = useState(-1);
+  const dragStartY = useRef(0);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // חישוב סדר תצוגה עם סדר מותאם אישית
   const orderedDisplay = useMemo(() => {
@@ -289,14 +292,80 @@ export const HomeComponent = memo(({
     });
   }, [display, reorderedIds, user.listOrder]);
 
-  const handleMoveItem = useCallback((fromIndex: number, direction: 'up' | 'down') => {
-    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
-    const currentIds = orderedDisplay.map(l => l.id);
-    const newIds = [...currentIds];
-    [newIds[fromIndex], newIds[toIndex]] = [newIds[toIndex], newIds[fromIndex]];
-    setReorderedIds(newIds);
+  // גרירה: חישוב אינדקס יעד לפי מיקום Y
+  const getTargetIndex = useCallback((clientY: number): number => {
+    for (let i = 0; i < cardRefs.current.length; i++) {
+      const el = cardRefs.current[i];
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (clientY < midY) return i;
+    }
+    return cardRefs.current.length - 1;
+  }, []);
+
+  // גרירה: החלפת מיקום בסדר
+  const moveItem = useCallback((from: number, to: number) => {
+    setReorderedIds(prev => {
+      if (!prev) return prev;
+      const newIds = [...prev];
+      const [moved] = newIds.splice(from, 1);
+      newIds.splice(to, 0, moved);
+      return newIds;
+    });
     haptic('light');
-  }, [orderedDisplay]);
+  }, []);
+
+  // גרירה: התחלת גרירה (touch)
+  const handleDragStart = useCallback((index: number, clientY: number) => {
+    setDragIndex(index);
+    setDragOverIndex(index);
+    dragStartY.current = clientY;
+    haptic('medium');
+  }, []);
+
+  // גרירה: תנועה (touch/mouse)
+  const handleDragMove = useCallback((clientY: number) => {
+    if (dragIndex < 0) return;
+    const targetIdx = getTargetIndex(clientY);
+    if (targetIdx !== dragOverIndex) {
+      setDragOverIndex(targetIdx);
+    }
+    if (targetIdx !== dragIndex) {
+      moveItem(dragIndex, targetIdx);
+      setDragIndex(targetIdx);
+      setDragOverIndex(targetIdx);
+    }
+  }, [dragIndex, dragOverIndex, getTargetIndex, moveItem]);
+
+  // גרירה: סיום
+  const handleDragEnd = useCallback(() => {
+    setDragIndex(-1);
+    setDragOverIndex(-1);
+  }, []);
+
+  // touch event handlers
+  useEffect(() => {
+    if (dragIndex < 0) return;
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      handleDragMove(e.touches[0].clientY);
+    };
+    const onTouchEnd = () => handleDragEnd();
+    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY);
+    const onMouseUp = () => handleDragEnd();
+
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [dragIndex, handleDragMove, handleDragEnd]);
 
   const handleSaveOrder = useCallback(async () => {
     if (reorderedIds) {
@@ -505,23 +574,31 @@ export const HomeComponent = memo(({
             )}
           </Box>
           {orderedDisplay.map((l: List, idx: number) => (
-          <ListCard
-            key={l.id}
-            list={l}
-            isMuted={isGroupMuted(l.id)}
-            isOwner={l.owner.id === user.id}
-            onSelect={onSelectList}
-            onEditList={(list) => setEditList({ ...list })}
-            onDeleteList={(list) => setConfirmDeleteList(list)}
-            onLeaveList={onLeaveList ? (list) => setConfirmLeaveList(list) : undefined}
-            onToggleMute={toggleGroupMute}
-            t={t}
-            reorderMode={reorderMode}
-            onMoveUp={() => handleMoveItem(idx, 'up')}
-            onMoveDown={() => handleMoveItem(idx, 'down')}
-            isFirst={idx === 0}
-            isLast={idx === orderedDisplay.length - 1}
-          />
+          <Box key={l.id} ref={(el: HTMLDivElement | null) => { cardRefs.current[idx] = el; }}>
+            <ListCard
+              list={l}
+              isMuted={isGroupMuted(l.id)}
+              isOwner={l.owner.id === user.id}
+              onSelect={onSelectList}
+              onEditList={(list) => setEditList({ ...list })}
+              onDeleteList={(list) => setConfirmDeleteList(list)}
+              onLeaveList={onLeaveList ? (list) => setConfirmLeaveList(list) : undefined}
+              onToggleMute={toggleGroupMute}
+              t={t}
+              reorderMode={reorderMode}
+              isDragging={reorderMode && dragIndex === idx}
+              isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
+              onDragHandleTouch={reorderMode ? (e: React.TouchEvent) => {
+                e.stopPropagation();
+                handleDragStart(idx, e.touches[0].clientY);
+              } : undefined}
+              onDragHandleMouse={reorderMode ? (e: React.MouseEvent) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleDragStart(idx, e.clientY);
+              } : undefined}
+            />
+          </Box>
         ))}
         </>)}
       </Box>

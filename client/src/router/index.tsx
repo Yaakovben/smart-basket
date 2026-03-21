@@ -18,7 +18,6 @@ const ListPage = lazy(() => import("../features/list/list").then(m => ({ default
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
-const TermsOfService = lazy(() => import("../features/legal/legal").then(m => ({ default: m.TermsOfService })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 
@@ -319,7 +318,7 @@ export const AppRouter = () => {
           }
         />
         <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/terms" element={<PrivacyPolicy />} />
         <Route path="/clear-cache" element={<ClearCachePage />} />
         <Route
           path="/admin"

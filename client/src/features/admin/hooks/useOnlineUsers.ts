@@ -10,11 +10,11 @@ export function useOnlineUsers(): Set<string> {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // בקשת רשימת משתמשים מקוונים
-    socketService.requestOnlineUsers();
+    let received = false;
 
     // רשימה מלאה ראשונית
     const unsubAll = socketService.on<{ userIds: string[] }>('admin:online-users', (data) => {
+      received = true;
       setOnlineUserIds(new Set(data.userIds));
     });
 
@@ -43,7 +43,16 @@ export function useOnlineUsers(): Set<string> {
       socketService.requestOnlineUsers();
     });
 
+    // בקשת רשימת משתמשים מקוונים
+    socketService.requestOnlineUsers();
+
+    // ניסיון חוזר אם לא התקבלה תשובה (ייתכן שהסוקט לא היה מוכן)
+    const retryTimer = setTimeout(() => {
+      if (!received) socketService.requestOnlineUsers();
+    }, 2000);
+
     return () => {
+      clearTimeout(retryTimer);
       unsubAll();
       unsubConnected();
       unsubDisconnected();
