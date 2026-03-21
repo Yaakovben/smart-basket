@@ -196,12 +196,7 @@ export const AdminDashboard = () => {
               color: 'white',
               width: 36,
               height: 36,
-              minWidth: 36,
-              borderRadius: '50%',
-              bgcolor: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.25)',
               transition: 'all 0.2s',
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
               '&:active': { transform: 'scale(0.92)' },
             }}
           >

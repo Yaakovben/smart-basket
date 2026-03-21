@@ -17,12 +17,15 @@ export class AdminController {
     // מיפוי סטטיסטיקות לפי מזהה משתמש
     const statsMap = new Map(loginStats.map(s => [s.userId, s]));
 
-    // מיזוג נתונים
+    // מיזוג נתונים (lean objects מגיעים עם _id, צריך להמיר ל-id)
     const usersWithStats = users.map(user => {
       const userObj = typeof user.toJSON === 'function' ? user.toJSON() : user;
-      const stats = statsMap.get(String(userObj._id || userObj.id));
+      const userId = String(userObj._id || userObj.id);
+      const stats = statsMap.get(userId);
+      const { _id, __v, password, ...rest } = userObj as Record<string, unknown>;
       return {
-        ...userObj,
+        ...rest,
+        id: userId,
         totalLogins: stats?.totalLogins || 0,
         lastLoginAt: stats?.lastLoginAt || null,
         lastLoginMethod: stats?.lastLoginMethod || null,
