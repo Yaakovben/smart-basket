@@ -387,6 +387,7 @@ type TranslationKey =
   // List reorder
   | 'reorderLists'
   | 'reorderDone'
+  | 'reorderHint'
   | 'orderSaved'
   // Admin user details
   | 'moreDetails'
@@ -781,6 +782,7 @@ export const translations: Record<Language, Translations> = {
     // List reorder
     reorderLists: 'סדר רשימות',
     reorderDone: 'סיום',
+    reorderHint: 'גרור ☰ כדי לשנות סדר',
     orderSaved: 'הסדר נשמר',
     // פרטי משתמש למנהל
     moreDetails: 'פרטים נוספים',
@@ -1172,6 +1174,7 @@ export const translations: Record<Language, Translations> = {
     // List reorder
     reorderLists: 'Reorder Lists',
     reorderDone: 'Done',
+    reorderHint: 'Drag ☰ to reorder',
     orderSaved: 'Order saved',
     moreDetails: 'More Details',
     lists: 'lists',
@@ -1562,6 +1565,7 @@ export const translations: Record<Language, Translations> = {
     // List reorder
     reorderLists: 'Упорядочить списки',
     reorderDone: 'Готово',
+    reorderHint: 'Перетащите ☰ для сортировки',
     orderSaved: 'Порядок сохранён',
     moreDetails: 'Подробнее',
     lists: 'списков',

@@ -146,15 +146,16 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   return (
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
-      cursor: reorderMode ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
+      cursor: reorderMode ? 'default' : 'pointer',
       transition: isDragging ? 'none' : 'all 0.2s ease',
-      transform: isDragging ? 'scale(1.03)' : isDragOver ? 'translateY(4px)' : 'none',
-      opacity: isDragging ? 0.85 : 1,
-      boxShadow: isDragging ? '0 8px 25px rgba(0,0,0,0.15)' : isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
+      transform: isDragOver ? 'translateY(4px)' : 'none',
+      opacity: isDragging ? 0.9 : 1,
+      boxShadow: isDragging ? '0 4px 16px rgba(0,0,0,0.12)' : isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
       position: 'relative',
       zIndex: isDragging ? 10 : 'auto',
-      border: isDragging ? '2px solid' : undefined,
-      borderColor: isDragging ? 'primary.main' : undefined,
+      bgcolor: isDragging ? 'action.hover' : undefined,
+      userSelect: reorderMode ? 'none' : 'auto',
+      WebkitUserSelect: reorderMode ? 'none' : 'auto',
     }}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
@@ -168,12 +169,11 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           sx={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, touchAction: 'none', cursor: 'grab',
-            p: 0.75, mx: -0.5, borderRadius: '10px',
-            bgcolor: 'rgba(20,184,166,0.08)',
-            '&:active': { cursor: 'grabbing', bgcolor: 'rgba(20,184,166,0.15)' },
+            p: 1, mx: -0.5, borderRadius: '10px',
+            '&:active': { cursor: 'grabbing' },
           }}
         >
-          <DragIndicatorIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+          <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: 22 }} />
         </Box>
       )}
       <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
@@ -599,30 +599,37 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : (<>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
-            <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
-              {orderedDisplay.length} {t('listsCount')}
-            </Typography>
-            {orderedDisplay.length > 1 && (
-              reorderMode ? (
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={handleSaveOrder}
-                  startIcon={<DoneIcon sx={{ fontSize: 18 }} />}
-                  sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 2, py: 0.5, minWidth: 'auto', boxShadow: '0 2px 8px rgba(20,184,166,0.3)' }}
-                >
-                  {t('reorderDone')}
-                </Button>
-              ) : (
-                <IconButton
-                  size="small"
-                  onClick={handleEnterReorder}
-                  sx={{ color: 'text.secondary', p: 0.5 }}
-                >
-                  <SwapVertIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-              )
+          <Box sx={{ mb: 1, px: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
+                {reorderMode ? t('reorderLists') : `${orderedDisplay.length} ${t('listsCount')}`}
+              </Typography>
+              {orderedDisplay.length > 1 && (
+                reorderMode ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={handleSaveOrder}
+                    startIcon={<DoneIcon sx={{ fontSize: 18 }} />}
+                    sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 2, py: 0.5, minWidth: 'auto', boxShadow: '0 2px 8px rgba(20,184,166,0.3)' }}
+                  >
+                    {t('reorderDone')}
+                  </Button>
+                ) : (
+                  <IconButton
+                    size="small"
+                    onClick={handleEnterReorder}
+                    sx={{ color: 'text.secondary', p: 0.5 }}
+                  >
+                    <SwapVertIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                )
+              )}
+            </Box>
+            {reorderMode && (
+              <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25 }}>
+                {t('reorderHint')}
+              </Typography>
             )}
           </Box>
           {orderedDisplay.map((l: List, idx: number) => (
