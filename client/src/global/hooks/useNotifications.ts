@@ -29,7 +29,7 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
     setLoading(true);
     setFetchError(false);
     try {
-      const result = await notificationsApi.getNotifications({ limit: 50 });
+      const result = await notificationsApi.getNotifications({ limit: 50, unreadOnly: true });
       setPersistedNotifications(result.notifications);
       const count = result.notifications.filter(n => !n.read).length;
       setUnreadCount(count);

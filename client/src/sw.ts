@@ -42,8 +42,7 @@ self.addEventListener('push', (event) => {
         body: data.body,
         icon: data.icon || '/icon-192x192.png',
         badge: data.badge || '/icon-192x192.png',
-        tag: data.data?.listId || 'smart-basket',
-        renotify: true,
+        tag: data.data?.notificationId || `${data.data?.listId || 'sb'}_${Date.now()}`,
         data: data.data,
         vibrate: [100, 50, 100],
       };
