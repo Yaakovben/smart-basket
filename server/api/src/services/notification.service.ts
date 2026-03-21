@@ -136,7 +136,7 @@ export class NotificationService {
       productName: data.productName,
     });
 
-    // שליחת push ברקע
+    // שליחת push ברקע עם מזהה ייחודי למניעת דריסת התראות
     const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
@@ -146,6 +146,7 @@ export class NotificationService {
         listId: data.listId,
         type: data.type,
         url: `/list/${data.listId}`,
+        notificationId: notification.id,
       },
     }).catch((err) => logger.warn('Push notification failed:', err));
 
@@ -221,8 +222,9 @@ export class NotificationService {
 
     const notifications = await NotificationDAL.createMany(notificationsData);
 
-    // שליחת push לכל המקבלים ברקע
+    // שליחת push לכל המקבלים ברקע עם מזהה ייחודי לאירוע
     const pushMessage = generatePushMessage(type, actor.name, list.name, data.productName);
+    const eventId = new mongoose.Types.ObjectId().toString();
     PushService.sendToUsers(activeTargetIds, {
       ...pushMessage,
       icon: '/icon-192x192.png',
@@ -231,6 +233,7 @@ export class NotificationService {
         listId,
         type,
         url: `/list/${listId}`,
+        notificationId: eventId,
       },
     }).catch((err) => logger.warn('Push notification failed:', err));
 

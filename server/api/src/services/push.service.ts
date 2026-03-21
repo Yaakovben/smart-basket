@@ -21,6 +21,7 @@ export interface PushPayload {
     url?: string;
     listId?: string;
     type?: string;
+    notificationId?: string;
   };
 }
 

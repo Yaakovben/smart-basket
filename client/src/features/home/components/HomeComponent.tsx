@@ -971,27 +971,27 @@ export const HomeComponent = memo(({
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              {/* כותרת עם כפתור סמן הכל כנקרא */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: 0.5 }}>
-                <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
+              {/* כותרת + כפתור סמן הכל כנקרא */}
+              <Box sx={{ mb: 2, px: 0.5 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', mb: 1.5, textAlign: 'center' }}>
                   {allNotifications.length}{' '}
                   {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
                 </Typography>
                 <Button
+                  fullWidth
                   size="small"
                   onClick={handleMarkAllRead}
                   sx={{
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: 600,
                     color: '#14B8A6',
                     textTransform: 'none',
-                    borderRadius: '8px',
-                    px: 1.5,
-                    py: 0.4,
-                    minWidth: 'auto',
-                    bgcolor: 'rgba(20,184,166,0.08)',
-                    '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' },
-                    '&:active': { transform: 'scale(0.96)' },
+                    borderRadius: '12px',
+                    py: 1,
+                    bgcolor: 'rgba(20,184,166,0.06)',
+                    border: '1px solid rgba(20,184,166,0.15)',
+                    '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
+                    '&:active': { transform: 'scale(0.98)' },
                   }}
                 >
                   {t('markAllAsRead')}

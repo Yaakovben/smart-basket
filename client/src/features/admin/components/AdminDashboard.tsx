@@ -189,17 +189,23 @@ export const AdminDashboard = () => {
               {t('adminDashboard')}
             </Typography>
           </Box>
-          <IconButton
+          <Box
+            component="button"
             onClick={handleRefresh}
-            size="small"
-            disableRipple
             sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               color: 'white',
               width: 36,
               height: 36,
               p: 0,
+              border: 'none',
+              bgcolor: 'transparent',
+              cursor: 'pointer',
+              borderRadius: '50%',
+              outline: 'none',
               transition: 'all 0.2s',
-              '&:hover': { bgcolor: 'transparent' },
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
@@ -207,7 +213,7 @@ export const AdminDashboard = () => {
               fontSize: 20,
               animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
             }} />
-          </IconButton>
+          </Box>
         </Box>
 
         {/* כרטיסי סטטיסטיקה לחיצים */}
