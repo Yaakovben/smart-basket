@@ -38,10 +38,10 @@ const loginActivitySchema = new Schema<ILoginActivity>(
   { timestamps: true }
 );
 
-// אינדקסים לשאילתות יעילות
-loginActivitySchema.index({ user: 1 });
+// אינדקס מורכב: שאילתות לפי משתמש ממוינות לפי תאריך (מכסה aggregation ו-pagination)
+loginActivitySchema.index({ user: 1, createdAt: -1 });
 
-// אינדקס TTL, מחיקה אוטומטית של רשומות מעל 90 יום (גם מכסה שאילתות מיון לפי createdAt)
+// אינדקס TTL: מחיקה אוטומטית מעל 90 יום + מיון לפי תאריך (pagination, getStatsSince)
 loginActivitySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 export const LoginActivity = mongoose.model<ILoginActivity>(

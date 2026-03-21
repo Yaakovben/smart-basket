@@ -49,19 +49,23 @@ export const transformList = async (
 /**
  * המרת מספר רשימות לפורמט API.
  * שאילתה אחת לכל המוצרים (פותר N+1).
+ * מדלג על populate אם הרשימות כבר מאוכלסות (מגיעות מ-findUserListsPopulated).
  */
 export const transformListsWithProducts = async (lists: IList[]): Promise<IListResponse[]> => {
   if (lists.length === 0) return [];
 
-  // populate אם לא כבר מאוכלס (Mongoose מדלג אם כבר populated)
-  await Promise.all(
-    lists.map((list) =>
-      Promise.all([
-        list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
-        list.populate('members.user', 'name email avatarColor avatarEmoji'),
-      ]),
-    ),
-  );
+  // populate רק אם לא כבר מאוכלס (בדיקה: owner הוא אובייקט עם name = כבר populated)
+  const needsPopulate = lists.length > 0 && !lists[0].populated('owner');
+  if (needsPopulate) {
+    await Promise.all(
+      lists.map((list) =>
+        Promise.all([
+          list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
+          list.populate('members.user', 'name email avatarColor avatarEmoji'),
+        ]),
+      ),
+    );
+  }
 
   const listIds = lists.map(l => l._id.toString());
   const productsMap = await ProductDAL.findByListIds(listIds);

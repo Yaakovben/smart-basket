@@ -15,15 +15,15 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     const skip = (page - 1) * limit;
 
     const [activities, total] = await Promise.all([
-      this.model.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      this.model.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean() as unknown as Promise<ILoginActivity[]>,
       this.model.countDocuments(),
     ]);
 
     return { activities, total };
   }
 
-  // סטטיסטיקות התחברות לכל משתמש (aggregation ישירות ב-MongoDB)
-  // מחזיר התחברות אחרונה (email/google) ופתיחת אפליקציה אחרונה (app_open) בנפרד
+  // סטטיסטיקות התחברות לכל משתמש
+  // משתמש ב-$max במקום $sort+$push - חוסך מיון כבד וצריכת זיכרון
   async getStatsByUser(): Promise<Array<{
     userId: string;
     totalLogins: number;
@@ -32,13 +32,32 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     lastAppOpenAt: Date | null;
   }>> {
     return this.model.aggregate([
-      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: '$user',
           totalLogins: { $sum: 1 },
-          // כל הפעילויות ממוינות לפי תאריך יורד
-          activities: { $push: { method: '$loginMethod', date: '$createdAt' } },
+          // התחברות אחרונה (email/google) ישירות עם $max
+          lastLoginAt: {
+            $max: {
+              $cond: [{ $in: ['$loginMethod', ['email', 'google']] }, '$createdAt', null],
+            },
+          },
+          // פתיחת אפליקציה אחרונה
+          lastAppOpenAt: {
+            $max: {
+              $cond: [{ $eq: ['$loginMethod', 'app_open'] }, '$createdAt', null],
+            },
+          },
+          // שיטת התחברות אחרונה: שימוש ב-$max על מחרוזת תאריך+שיטה
+          _lastLoginEntry: {
+            $max: {
+              $cond: [
+                { $in: ['$loginMethod', ['email', 'google']] },
+                { $concat: [{ $dateToString: { format: '%Y%m%d%H%M%S', date: '$createdAt' } }, ':', '$loginMethod'] },
+                null,
+              ],
+            },
+          },
         },
       },
       {
@@ -46,52 +65,14 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
           _id: 0,
           userId: { $toString: '$_id' },
           totalLogins: 1,
-          // התחברות אחרונה (email או google בלבד)
-          lastLoginAt: {
-            $let: {
-              vars: {
-                loginEntry: {
-                  $first: {
-                    $filter: {
-                      input: '$activities',
-                      cond: { $in: ['$$this.method', ['email', 'google']] },
-                    },
-                  },
-                },
-              },
-              in: '$$loginEntry.date',
-            },
-          },
+          lastLoginAt: 1,
+          lastAppOpenAt: 1,
           lastLoginMethod: {
-            $let: {
-              vars: {
-                loginEntry: {
-                  $first: {
-                    $filter: {
-                      input: '$activities',
-                      cond: { $in: ['$$this.method', ['email', 'google']] },
-                    },
-                  },
-                },
-              },
-              in: '$$loginEntry.method',
-            },
-          },
-          // פתיחת אפליקציה אחרונה
-          lastAppOpenAt: {
-            $let: {
-              vars: {
-                appEntry: {
-                  $first: {
-                    $filter: {
-                      input: '$activities',
-                      cond: { $eq: ['$$this.method', 'app_open'] },
-                    },
-                  },
-                },
-              },
-              in: '$$appEntry.date',
-            },
+            $cond: [
+              { $eq: ['$_lastLoginEntry', null] },
+              null,
+              { $arrayElemAt: [{ $split: ['$_lastLoginEntry', ':'] }, 1] },
+            ],
           },
         },
       },

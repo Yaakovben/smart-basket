@@ -18,7 +18,6 @@ import type {
 } from '../types/list-types';
 
 // ===== קבועים =====
-const FAB_VISIBILITY_THRESHOLD = 3; // מוסתר כשפחות מ-3 מוצרים
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 }; // גבולות גרירה בפיקסלים
 const DEFAULT_FAB_BOTTOM_OFFSET = 90; // מיקום ברירת מחדל מתחתית המסך
 
@@ -159,8 +158,8 @@ export const useList = ({
   }, [editListData, list.name, list.icon, list.color]);
 
   // ===== אפקטים =====
-  // FAB מוסתר כש-items.length קטן, אבל לא מאפסים מיקום (נשמר לטאב אחר)
-  const showFab = items.length > FAB_VISIBILITY_THRESHOLD;
+  // FAB מוצג כשיש מוצרים ברשימה, מיקום נשמר בין טאבים
+  const showFab = (pending.length + purchased.length) > 0;
 
   useEffect(() => () => clearTimeout(celebrationTimer.current), []);
 

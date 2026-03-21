@@ -54,94 +54,73 @@ export const PrivacyPolicy = memo(() => {
           {language === 'he' ? (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                גרסה אחרונה: מרץ 2026
+                עדכון אחרון: מרץ 2026
               </Typography>
 
               <SectionText>
-                מסמך זה מפרט את תנאי השימוש ומדיניות הפרטיות של Smart Basket. השימוש באפליקציה מהווה הסכמה לתנאים המפורטים להלן.
+                השימוש ב-Smart Basket מהווה הסכמה מלאה לתנאים אלה. אם אינך מסכים, אל תשתמש באפליקציה.
               </SectionText>
 
-              {/* תנאי שימוש */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mt: 3, mb: 0.5 }}>
                 תנאי שימוש
               </Typography>
 
-              <SectionTitle>1. תיאור השירות</SectionTitle>
+              <SectionTitle>1. השירות</SectionTitle>
               <SectionText>
-                Smart Basket הינה פלטפורמה לניהול רשימות קניות, המאפשרת יצירה, עריכה ושיתוף של רשימות עם משתמשים נוספים. השירות מסופק ללא תשלום לשימוש אישי ומשפחתי.
+                Smart Basket היא פלטפורמה לניהול ושיתוף רשימות קניות. השירות מסופק במתכונת "AS IS" ללא כל מצג, התחייבות או אחריות מכל סוג, מפורשת או משתמעת.
               </SectionText>
 
-              <SectionTitle>2. חשבון והרשמה</SectionTitle>
+              <SectionTitle>2. אחריות המשתמש</SectionTitle>
               <SectionText>
-                המשתמש אחראי לשמירה על סודיות פרטי ההתחברות שלו ולדיוק המידע שנמסר בעת ההרשמה. יש לדווח מיידית על כל חשד לשימוש בלתי מורשה בחשבון.
+                המשתמש אחראי באופן בלעדי לשמירה על פרטי ההתחברות שלו, לדיוק המידע שהוא מזין ולכל פעולה שנעשית דרך חשבונו. השימוש מותר למטרות חוקיות בלבד.
               </SectionText>
 
-              <SectionTitle>3. מדיניות שימוש</SectionTitle>
+              <SectionTitle>3. הגבלת אחריות</SectionTitle>
               <SectionText>
-                השימוש באפליקציה מותר למטרות חוקיות בלבד. חל איסור מוחלט על פגיעה בשירות, העלאת תוכן פוגעני או בלתי חוקי, וניסיון גישה למערכות ללא הרשאה מתאימה.
+                Smart Basket, מפתחיה, בעליה ונציגיה לא יישאו בכל אחריות לנזק ישיר, עקיף, מקרי, תוצאתי, מיוחד או עונשי, לרבות אובדן נתונים, הפסד רווחים או הפרעה לשימוש, הנובע מהשימוש בשירות או מחוסר היכולת להשתמש בו, גם אם הודיעו על האפשרות לנזק כזה. המשתמש נוטל על עצמו את מלוא הסיכון הכרוך בשימוש.
               </SectionText>
 
-              <SectionTitle>4. קניין רוחני</SectionTitle>
+              <SectionTitle>4. שיפוי</SectionTitle>
               <SectionText>
-                כלל הזכויות באפליקציה, לרבות עיצוב, קוד ומותג, שמורות ל-Smart Basket. התוכן שנוצר על ידי המשתמש נשאר בבעלותו המלאה.
+                המשתמש מתחייב לשפות ולפצות את Smart Basket ואת כל הגורמים הקשורים אליה מפני כל תביעה, דרישה, נזק, הוצאה או הפסד הנובעים משימוש המשתמש בשירות או מהפרת תנאים אלה.
               </SectionText>
 
-              <SectionTitle>5. הגבלת אחריות</SectionTitle>
+              <SectionTitle>5. קניין רוחני</SectionTitle>
               <SectionText>
-                השירות מסופק במתכונת "AS IS" ללא כל מצג או התחייבות. Smart Basket אינה נושאת באחריות לנזקים עקיפים או תוצאתיים. החברה פועלת לשמירה על זמינות השירות אך אינה מתחייבת לרציפות מלאה.
+                כל הזכויות באפליקציה שמורות ל-Smart Basket. תוכן שנוצר על ידי המשתמש נשאר בבעלותו.
               </SectionText>
 
-              <SectionTitle>6. סיום שימוש</SectionTitle>
+              <SectionTitle>6. סיום</SectionTitle>
               <SectionText>
-                המשתמש רשאי למחוק את חשבונו בכל עת דרך ההגדרות. Smart Basket שומרת לעצמה את הזכות להשעות חשבונות המפרים תנאים אלה.
+                Smart Basket רשאית להשעות או לסיים חשבונות בכל עת ולפי שיקול דעתה הבלעדי, ללא הודעה מוקדמת. המשתמש רשאי למחוק את חשבונו בכל עת דרך ההגדרות.
               </SectionText>
 
               <SectionDivider />
 
-              {/* מדיניות פרטיות */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
                 מדיניות פרטיות
               </Typography>
 
-              <SectionTitle>7. איסוף מידע</SectionTitle>
+              <SectionTitle>7. מידע שנאסף</SectionTitle>
               <SectionText>
-                במסגרת השירות נאסף המידע הבא:{'\n'}
-                • <strong>פרטי חשבון:</strong> שם, כתובת דוא"ל וסיסמה מוצפנת{'\n'}
-                • <strong>תוכן:</strong> רשימות קניות, פריטים וקבוצות{'\n'}
-                • <strong>העדפות:</strong> שפה, ערכת נושא והתראות{'\n'}
-                • <strong>נתוני אבטחה:</strong> זמני התחברות ומידע טכני בסיסי
+                נאסף מידע הנדרש לתפעול השירות: פרטי חשבון (שם, דוא"ל, סיסמה מוצפנת), תוכן המשתמש (רשימות ופריטים), העדפות ונתוני התחברות בסיסיים.
               </SectionText>
 
-              <SectionTitle>8. שימוש במידע</SectionTitle>
+              <SectionTitle>8. שימוש ושיתוף</SectionTitle>
               <SectionText>
-                המידע משמש אך ורק לצורך תפעול השירות, שיתוף רשימות עם משתמשים מורשים, שליחת התראות רלוונטיות ושיפור חווית המשתמש.
+                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי. מידע מועבר רק למשתמשים ברשימות משותפות ולספקי תשתית הכרחיים.
               </SectionText>
 
-              <SectionTitle>9. שיתוף עם צדדים שלישיים</SectionTitle>
+              <SectionTitle>9. זכויות ומחיקה</SectionTitle>
               <SectionText>
-                <strong>Smart Basket אינה מוכרת מידע אישי.</strong> מידע מועבר אך ורק למשתמשים ברשימות משותפות (שם בלבד) ולספקי תשתית הכרחיים (אחסון, אימות).
-              </SectionText>
-
-              <SectionTitle>10. אבטחת מידע</SectionTitle>
-              <SectionText>
-                מיושמים אמצעי אבטחה מקובלים בתעשייה, לרבות הצפנת סיסמאות, תקשורת מוצפנת (HTTPS) ובקרת גישה מוקפדת.
-              </SectionText>
-
-              <SectionTitle>11. זכויות המשתמש</SectionTitle>
-              <SectionText>
-                למשתמש עומדות הזכויות הבאות: צפייה בפרטי החשבון, עדכון מידע אישי ומחיקת החשבון על כל המידע הנלווה באופן בלתי הפיך.
+                המשתמש רשאי לצפות, לעדכן ולמחוק את כל המידע שלו בכל עת דרך הגדרות החשבון. מחיקת החשבון היא בלתי הפיכה.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>12. עדכונים</SectionTitle>
+              <SectionTitle>10. שינויים ודין חל</SectionTitle>
               <SectionText>
-                Smart Basket רשאית לעדכן מסמך זה מעת לעת. שינויים מהותיים יפורסמו באפליקציה. המשך השימוש לאחר עדכון מהווה הסכמה לנוסח המעודכן.
-              </SectionText>
-
-              <SectionTitle>13. יצירת קשר</SectionTitle>
-              <SectionText>
-                לכל שאלה בנושא תנאי השימוש או מדיניות הפרטיות, ניתן לפנות דרך "עזרה ותמיכה" בהגדרות האפליקציה.
+                תנאים אלה עשויים להתעדכן. המשך השימוש מהווה הסכמה לנוסח המעודכן. על תנאים אלה יחולו דיני מדינת ישראל, וסמכות השיפוט הבלעדית נתונה לבתי המשפט המוסמכים בישראל.
               </SectionText>
             </>
           ) : language === 'ru' ? (
@@ -151,90 +130,69 @@ export const PrivacyPolicy = memo(() => {
               </Typography>
 
               <SectionText>
-                Настоящий документ определяет условия использования и политику конфиденциальности Smart Basket. Использование приложения означает согласие с изложенными ниже условиями.
+                Использование Smart Basket означает полное согласие с данными условиями. Если вы не согласны, не используйте приложение.
               </SectionText>
 
-              {/* Условия использования */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mt: 3, mb: 0.5 }}>
                 Условия использования
               </Typography>
 
-              <SectionTitle>1. Описание сервиса</SectionTitle>
+              <SectionTitle>1. Сервис</SectionTitle>
               <SectionText>
-                Smart Basket — платформа для управления списками покупок, позволяющая создавать, редактировать и делиться списками с другими пользователями. Сервис предоставляется бесплатно для личного и семейного использования.
+                Smart Basket — платформа для управления и совместного использования списков покупок. Сервис предоставляется «как есть» (AS IS) без каких-либо явных или подразумеваемых гарантий.
               </SectionText>
 
-              <SectionTitle>2. Аккаунт и регистрация</SectionTitle>
+              <SectionTitle>2. Ответственность пользователя</SectionTitle>
               <SectionText>
-                Пользователь несёт ответственность за сохранение конфиденциальности учётных данных и достоверность информации, предоставленной при регистрации. О любом подозрении на несанкционированный доступ необходимо сообщить немедленно.
+                Пользователь несёт исключительную ответственность за сохранность учётных данных, достоверность вводимой информации и все действия, совершённые через его аккаунт. Использование допускается только в законных целях.
               </SectionText>
 
-              <SectionTitle>3. Правила использования</SectionTitle>
+              <SectionTitle>3. Ограничение ответственности</SectionTitle>
               <SectionText>
-                Приложение допускается использовать исключительно в законных целях. Строго запрещается нарушать работу сервиса, загружать оскорбительный или незаконный контент, а также пытаться получить несанкционированный доступ к системам.
+                Smart Basket, её разработчики, владельцы и представители не несут ответственности за любой прямой, косвенный, случайный, побочный, особый или штрафной ущерб, включая потерю данных, упущенную выгоду или перебои в работе, возникшие в результате использования или невозможности использования сервиса, даже если было сообщено о возможности такого ущерба. Пользователь принимает на себя весь риск, связанный с использованием.
               </SectionText>
 
-              <SectionTitle>4. Интеллектуальная собственность</SectionTitle>
+              <SectionTitle>4. Возмещение убытков</SectionTitle>
               <SectionText>
-                Все права на приложение, включая дизайн, код и бренд, принадлежат Smart Basket. Контент, созданный пользователем, остаётся его полной собственностью.
+                Пользователь обязуется возместить Smart Basket и всем связанным с ней сторонам любые претензии, требования, убытки, расходы или потери, возникшие в результате использования сервиса или нарушения данных условий.
               </SectionText>
 
-              <SectionTitle>5. Ограничение ответственности</SectionTitle>
+              <SectionTitle>5. Интеллектуальная собственность</SectionTitle>
               <SectionText>
-                Сервис предоставляется «как есть» (AS IS) без каких-либо гарантий. Smart Basket не несёт ответственности за косвенные или побочные убытки. Компания стремится поддерживать доступность сервиса, но не гарантирует непрерывную работу.
+                Все права на приложение принадлежат Smart Basket. Контент, созданный пользователем, остаётся его собственностью.
               </SectionText>
 
-              <SectionTitle>6. Прекращение использования</SectionTitle>
+              <SectionTitle>6. Прекращение</SectionTitle>
               <SectionText>
-                Пользователь вправе удалить свой аккаунт в любое время через настройки. Smart Basket оставляет за собой право приостановить аккаунты, нарушающие данные условия.
+                Smart Basket вправе приостановить или удалить аккаунты в любое время по своему усмотрению без предварительного уведомления. Пользователь может удалить свой аккаунт в настройках.
               </SectionText>
 
               <SectionDivider />
 
-              {/* Политика конфиденциальности */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
                 Политика конфиденциальности
               </Typography>
 
-              <SectionTitle>7. Сбор информации</SectionTitle>
+              <SectionTitle>7. Собираемая информация</SectionTitle>
               <SectionText>
-                В рамках сервиса собирается следующая информация:{'\n'}
-                • <strong>Данные аккаунта:</strong> имя, адрес электронной почты и зашифрованный пароль{'\n'}
-                • <strong>Контент:</strong> списки покупок, товары и группы{'\n'}
-                • <strong>Настройки:</strong> язык, тема оформления и уведомления{'\n'}
-                • <strong>Данные безопасности:</strong> время входа и базовая техническая информация
+                Собирается информация, необходимая для работы сервиса: данные аккаунта (имя, email, зашифрованный пароль), контент пользователя (списки и товары), настройки и базовые данные входа.
               </SectionText>
 
-              <SectionTitle>8. Использование информации</SectionTitle>
+              <SectionTitle>8. Использование и передача</SectionTitle>
               <SectionText>
-                Информация используется исключительно для работы сервиса, обмена списками с авторизованными пользователями, отправки соответствующих уведомлений и улучшения пользовательского опыта.
+                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные. Данные передаются только пользователям в общих списках и необходимым поставщикам инфраструктуры.
               </SectionText>
 
-              <SectionTitle>9. Передача третьим лицам</SectionTitle>
+              <SectionTitle>9. Права и удаление</SectionTitle>
               <SectionText>
-                <strong>Smart Basket не продаёт персональные данные.</strong> Информация передаётся исключительно пользователям в общих списках (только имя) и необходимым поставщикам инфраструктуры (хостинг, аутентификация).
-              </SectionText>
-
-              <SectionTitle>10. Безопасность данных</SectionTitle>
-              <SectionText>
-                Применяются стандартные отраслевые меры безопасности, включая шифрование паролей, защищённое соединение (HTTPS) и строгий контроль доступа.
-              </SectionText>
-
-              <SectionTitle>11. Права пользователя</SectionTitle>
-              <SectionText>
-                Пользователь имеет право на просмотр информации аккаунта, обновление личных данных и безвозвратное удаление аккаунта со всей связанной информацией.
+                Пользователь может просматривать, обновлять и удалять все свои данные в любое время через настройки аккаунта. Удаление аккаунта необратимо.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>12. Обновления</SectionTitle>
+              <SectionTitle>10. Изменения и применимое право</SectionTitle>
               <SectionText>
-                Smart Basket вправе обновлять настоящий документ по мере необходимости. Существенные изменения будут опубликованы в приложении. Продолжение использования после обновления означает согласие с обновлённой редакцией.
-              </SectionText>
-
-              <SectionTitle>13. Контакты</SectionTitle>
-              <SectionText>
-                По всем вопросам, касающимся условий использования или политики конфиденциальности, обращайтесь через раздел «Помощь и поддержка» в настройках приложения.
+                Данные условия могут обновляться. Продолжение использования означает согласие с обновлённой редакцией. Настоящие условия регулируются законодательством Государства Израиль, и исключительная юрисдикция принадлежит компетентным судам Израиля.
               </SectionText>
             </>
           ) : (
@@ -244,90 +202,69 @@ export const PrivacyPolicy = memo(() => {
               </Typography>
 
               <SectionText>
-                This document outlines the Terms of Service and Privacy Policy for Smart Basket. By using the application, you agree to the terms set forth below.
+                By using Smart Basket, you fully agree to these terms. If you do not agree, do not use the application.
               </SectionText>
 
-              {/* Terms of Service */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mt: 3, mb: 0.5 }}>
                 Terms of Service
               </Typography>
 
-              <SectionTitle>1. Service Description</SectionTitle>
+              <SectionTitle>1. The Service</SectionTitle>
               <SectionText>
-                Smart Basket is a platform for managing shopping lists, enabling users to create, edit, and share lists with others. The service is provided free of charge for personal and household use.
+                Smart Basket is a platform for managing and sharing shopping lists. The service is provided on an "AS IS" basis without any warranties, representations, or guarantees of any kind, express or implied.
               </SectionText>
 
-              <SectionTitle>2. Account & Registration</SectionTitle>
+              <SectionTitle>2. User Responsibility</SectionTitle>
               <SectionText>
-                Users are responsible for maintaining the confidentiality of their login credentials and the accuracy of information provided during registration. Any suspected unauthorized access must be reported immediately.
+                Users are solely responsible for maintaining the security of their login credentials, the accuracy of information they provide, and all activity conducted through their account. Use is permitted for lawful purposes only.
               </SectionText>
 
-              <SectionTitle>3. Acceptable Use</SectionTitle>
+              <SectionTitle>3. Limitation of Liability</SectionTitle>
               <SectionText>
-                The application may only be used for lawful purposes. Disrupting the service, uploading offensive or unlawful content, and attempting unauthorized access to any system are strictly prohibited.
+                Smart Basket, its developers, owners, and representatives shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages, including but not limited to data loss, lost profits, or service interruption, arising from the use of or inability to use the service, even if advised of the possibility of such damages. Users assume all risk associated with use.
               </SectionText>
 
-              <SectionTitle>4. Intellectual Property</SectionTitle>
+              <SectionTitle>4. Indemnification</SectionTitle>
               <SectionText>
-                All rights to the application, including its design, code, and branding, are reserved by Smart Basket. Content created by users remains their sole property.
+                Users agree to indemnify and hold harmless Smart Basket and all related parties from any claims, demands, damages, expenses, or losses arising from the user's use of the service or breach of these terms.
               </SectionText>
 
-              <SectionTitle>5. Limitation of Liability</SectionTitle>
+              <SectionTitle>5. Intellectual Property</SectionTitle>
               <SectionText>
-                The service is provided on an "AS IS" basis without warranties of any kind. Smart Basket shall not be liable for any indirect or consequential damages. The company endeavors to maintain service availability but does not guarantee uninterrupted access.
+                All rights to the application are reserved by Smart Basket. Content created by users remains their property.
               </SectionText>
 
               <SectionTitle>6. Termination</SectionTitle>
               <SectionText>
-                Users may delete their account at any time via account settings. Smart Basket reserves the right to suspend accounts that violate these terms.
+                Smart Basket may suspend or terminate accounts at any time at its sole discretion without prior notice. Users may delete their account at any time via settings.
               </SectionText>
 
               <SectionDivider />
 
-              {/* Privacy Policy */}
               <Typography sx={{ fontSize: 17, fontWeight: 800, color: 'primary.main', mb: 0.5 }}>
                 Privacy Policy
               </Typography>
 
-              <SectionTitle>7. Information Collection</SectionTitle>
+              <SectionTitle>7. Information Collected</SectionTitle>
               <SectionText>
-                The following information is collected in the course of providing the service:{'\n'}
-                • <strong>Account data:</strong> Name, email address, and encrypted password{'\n'}
-                • <strong>Content:</strong> Shopping lists, items, and groups{'\n'}
-                • <strong>Preferences:</strong> Language, theme, and notification settings{'\n'}
-                • <strong>Security data:</strong> Login timestamps and basic technical information
+                Information necessary for service operation is collected: account details (name, email, encrypted password), user content (lists and items), preferences, and basic login data.
               </SectionText>
 
-              <SectionTitle>8. Use of Information</SectionTitle>
+              <SectionTitle>8. Use & Sharing</SectionTitle>
               <SectionText>
-                Information is used solely for operating the service, sharing lists with authorized users, delivering relevant notifications, and improving the user experience.
+                Information is used solely for service operation. Smart Basket does not sell personal data. Data is shared only with users in shared lists and essential infrastructure providers.
               </SectionText>
 
-              <SectionTitle>9. Third-Party Disclosure</SectionTitle>
+              <SectionTitle>9. Rights & Deletion</SectionTitle>
               <SectionText>
-                <strong>Smart Basket does not sell personal data.</strong> Information is shared only with users in shared lists (name only) and essential infrastructure providers (hosting, authentication).
-              </SectionText>
-
-              <SectionTitle>10. Data Security</SectionTitle>
-              <SectionText>
-                Industry-standard security measures are employed, including password encryption, encrypted communication (HTTPS), and strict access controls.
-              </SectionText>
-
-              <SectionTitle>11. User Rights</SectionTitle>
-              <SectionText>
-                Users have the right to view their account information, update personal details, and permanently delete their account along with all associated data.
+                Users may view, update, and delete all their data at any time via account settings. Account deletion is irreversible.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>12. Updates</SectionTitle>
+              <SectionTitle>10. Changes & Governing Law</SectionTitle>
               <SectionText>
-                Smart Basket may update this document from time to time. Material changes will be communicated within the application. Continued use following an update constitutes acceptance of the revised terms.
-              </SectionText>
-
-              <SectionTitle>13. Contact</SectionTitle>
-              <SectionText>
-                For any inquiries regarding these terms or our privacy practices, please reach out via "Help & Support" in the application settings.
+                These terms may be updated. Continued use constitutes acceptance of the revised terms. These terms are governed by the laws of the State of Israel, and exclusive jurisdiction is vested in the competent courts of Israel.
               </SectionText>
             </>
           )}
