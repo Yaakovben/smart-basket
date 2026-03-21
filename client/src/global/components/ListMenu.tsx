@@ -67,59 +67,59 @@ export const ListMenu = memo(({
         }
       }}
     >
-      {/* Mute Toggle — רק בקבוצות, תמיד למעלה */}
-      {isGroup && (
-        <Box sx={{ px: 1.5, py: 0.5 }}>
-          <Box
-            onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
-            sx={{
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              px: 2, py: 1.5,
-              borderRadius: '12px',
-              bgcolor: isMuted || mainNotificationsOff
-                ? 'rgba(239,68,68,0.08)'
-                : 'rgba(20,184,166,0.08)',
-              border: '1px solid',
-              borderColor: isMuted || mainNotificationsOff
-                ? 'rgba(239,68,68,0.15)'
-                : 'rgba(20,184,166,0.15)',
-              cursor: mainNotificationsOff ? 'default' : 'pointer',
-              opacity: mainNotificationsOff ? 0.5 : 1,
-              transition: 'all 0.15s ease',
-              '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
-            }}
-          >
-            {isMuted || mainNotificationsOff
-              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
-              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-            }
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
-                {isMuted ? t('unmuteGroup') : t('muteGroup')}
-              </Typography>
-              {mainNotificationsOff && (
-                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                  {t('notificationsOff')}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-        </Box>
+      {/* רענן, תמיד ראשון */}
+      {onRefresh && (
+        <MenuItem
+          onClick={() => { onClose(); onRefresh(); }}
+          sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+        >
+          <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+            {t('refresh')}
+          </Typography>
+        </MenuItem>
       )}
 
-      {/* רענן */}
-      {onRefresh && (
+      {/* Mute Toggle, רק בקבוצות */}
+      {isGroup && (
         <>
-          {isGroup && <Divider sx={{ my: 0.5 }} />}
-          <MenuItem
-            onClick={() => { onClose(); onRefresh(); }}
-            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-          >
-            <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-              {t('refresh')}
-            </Typography>
-          </MenuItem>
+          {onRefresh && <Divider sx={{ my: 0.5 }} />}
+          <Box sx={{ px: 1.5, py: 0.5 }}>
+            <Box
+              onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                px: 2, py: 1.5,
+                borderRadius: '12px',
+                bgcolor: isMuted || mainNotificationsOff
+                  ? 'rgba(239,68,68,0.08)'
+                  : 'rgba(20,184,166,0.08)',
+                border: '1px solid',
+                borderColor: isMuted || mainNotificationsOff
+                  ? 'rgba(239,68,68,0.15)'
+                  : 'rgba(20,184,166,0.15)',
+                cursor: mainNotificationsOff ? 'default' : 'pointer',
+                opacity: mainNotificationsOff ? 0.5 : 1,
+                transition: 'all 0.15s ease',
+                '&:active': mainNotificationsOff ? {} : { transform: 'scale(0.97)' }
+              }}
+            >
+              {isMuted || mainNotificationsOff
+                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'grey.400' : 'error.main', fontSize: 22 }} />
+                : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+              }
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: isMuted ? 'error.main' : 'text.primary' }}>
+                  {isMuted ? t('unmuteGroup') : t('muteGroup')}
+                </Typography>
+                {mainNotificationsOff && (
+                  <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                    {t('notificationsOff')}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Box>
         </>
       )}
 

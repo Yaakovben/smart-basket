@@ -1,3 +1,4 @@
+import { useMemo, memo } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { MemberAvatar } from './MemberAvatar';
 import type { Member, User } from '../types';
@@ -13,15 +14,16 @@ const MAX_VISIBLE = 3;
 const AVATAR_SIZE = 28;
 const AVATAR_OVERLAP = 10; // חפיפה בין אווטארים
 
-export const MembersButton = ({ members, currentUserId, onClick, onlineUserIds }: MembersButtonProps) => {
+export const MembersButton = memo(({ members, currentUserId, onClick, onlineUserIds }: MembersButtonProps) => {
   // המשתמש הנוכחי ראשון (מוצג משמאל, מעל)
-  const sortedMembers = currentUserId
+  const sortedMembers = useMemo(() => currentUserId
     ? [...members].sort((a, b) => {
         if (a.id === currentUserId) return -1;
         if (b.id === currentUserId) return 1;
         return 0;
       })
-    : members;
+    : members,
+  [members, currentUserId]);
 
   const visibleMembers = sortedMembers.slice(0, MAX_VISIBLE);
   const extraCount = members.length - MAX_VISIBLE;
@@ -82,4 +84,5 @@ export const MembersButton = ({ members, currentUserId, onClick, onlineUserIds }
       </Box>
     </Button>
   );
-};
+});
+MembersButton.displayName = 'MembersButton';

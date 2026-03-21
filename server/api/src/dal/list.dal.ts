@@ -9,14 +9,6 @@ class ListDALClass extends BaseDAL<IList> {
     super(List);
   }
 
-  async findByOwner(ownerId: string): Promise<IList[]> {
-    return this.model.find({ owner: new mongoose.Types.ObjectId(ownerId) });
-  }
-
-  async findByMember(userId: string): Promise<IList[]> {
-    return this.model.find({ 'members.user': new mongoose.Types.ObjectId(userId) });
-  }
-
   async findUserLists(userId: string): Promise<IList[]> {
     const uid = new mongoose.Types.ObjectId(userId);
     return this.model.find({
@@ -74,23 +66,6 @@ class ListDALClass extends BaseDAL<IList> {
       { $set: { 'members.$.isAdmin': isAdmin } },
       { new: true }
     );
-  }
-
-  async checkUserAccess(listId: string, userId: string): Promise<'owner' | 'admin' | 'member' | null> {
-    const list = await this.model.findById(listId);
-    if (!list) return null;
-
-    if (list.owner.toString() === userId) return 'owner';
-
-    const member = list.members.find((m) => m.user.toString() === userId);
-    if (!member) return null;
-
-    return member.isAdmin ? 'admin' : 'member';
-  }
-
-  async isOwner(listId: string, userId: string): Promise<boolean> {
-    const list = await this.model.findById(listId);
-    return list?.owner.toString() === userId;
   }
 
   async isMember(listId: string, userId: string): Promise<boolean> {
