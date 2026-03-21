@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Box, Typography, Paper, IconButton, Skeleton, TextField, InputAdornment, Button, keyframes } from '@mui/material';
+import { Box, Typography, Paper, Skeleton, TextField, InputAdornment, Button, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -179,12 +179,27 @@ export const AdminDashboard = () => {
         {/* כותרת + רענון */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton
+            <Box
+              component="button"
               onClick={() => navigate('/settings')}
-              sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)' }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                width: 36,
+                height: 36,
+                p: 0,
+                border: 'none',
+                bgcolor: 'transparent',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                outline: 'none',
+                '&:active': { transform: 'scale(0.92)' },
+              }}
             >
               {isRtl ? <ArrowForwardIcon /> : <ArrowBackIcon />}
-            </IconButton>
+            </Box>
             <Typography sx={{ color: 'white', fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>
               {t('adminDashboard')}
             </Typography>
