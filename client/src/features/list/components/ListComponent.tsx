@@ -301,7 +301,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           overflowY: 'auto',
           overflowX: 'hidden',
           p: { xs: 1.5, sm: 2.5 },
-          pb: { xs: 'calc(100px + env(safe-area-inset-bottom))', sm: 'calc(110px + env(safe-area-inset-bottom))' },
+          pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch'
         }}
         onClick={handleCloseItem}

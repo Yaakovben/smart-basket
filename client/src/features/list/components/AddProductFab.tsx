@@ -43,7 +43,7 @@ export const AddProductFab = memo(({
     <Box
       sx={{
         position: 'fixed',
-        bottom: fabPosition ? undefined : 'calc(70px + env(safe-area-inset-bottom))',
+        bottom: fabPosition ? undefined : 'calc(24px + env(safe-area-inset-bottom))',
         left: fabPosition ? undefined : '50%',
         transform: fabPosition ? undefined : 'translateX(-50%)',
         top: fabPosition ? fabPosition.y - 28 : undefined,
