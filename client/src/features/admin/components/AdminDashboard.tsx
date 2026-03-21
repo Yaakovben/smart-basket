@@ -180,8 +180,9 @@ export const AdminDashboard = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
-              component="button"
               onClick={() => navigate('/settings')}
+              role="button"
+              tabIndex={0}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -189,12 +190,8 @@ export const AdminDashboard = () => {
                 color: 'white',
                 width: 36,
                 height: 36,
-                p: 0,
-                border: 'none',
-                bgcolor: 'transparent',
                 cursor: 'pointer',
-                borderRadius: '50%',
-                outline: 'none',
+                WebkitTapHighlightColor: 'transparent',
                 '&:active': { transform: 'scale(0.92)' },
               }}
             >
@@ -205,8 +202,9 @@ export const AdminDashboard = () => {
             </Typography>
           </Box>
           <Box
-            component="button"
             onClick={handleRefresh}
+            role="button"
+            tabIndex={0}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -214,13 +212,8 @@ export const AdminDashboard = () => {
               color: 'white',
               width: 36,
               height: 36,
-              p: 0,
-              border: 'none',
-              bgcolor: 'transparent',
               cursor: 'pointer',
-              borderRadius: '50%',
-              outline: 'none',
-              transition: 'all 0.2s',
+              WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
