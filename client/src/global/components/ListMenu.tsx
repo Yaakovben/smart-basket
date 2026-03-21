@@ -5,7 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useSettings } from '../context/SettingsContext';
 
@@ -107,7 +107,7 @@ export const ListMenu = memo(({
         </Box>
       )}
 
-      {isGroup && <Divider sx={{ my: 0.5 }} />}
+      {isGroup && (onRefresh || (onClearList && hasProducts) || isOwner) && <Divider sx={{ my: 0.5 }} />}
 
       {/* Refresh */}
       {onRefresh && (
@@ -130,7 +130,7 @@ export const ListMenu = memo(({
           onClick={() => { onClose(); onClearList(); }}
           sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
         >
-          <CleaningServicesIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+          <DeleteSweepIcon sx={{ color: 'warning.main', fontSize: 22 }} />
           <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
             {t('clearList')}
           </Typography>
