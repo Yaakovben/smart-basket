@@ -9,11 +9,13 @@ import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
 import { hideInitialLoader } from "../App";
 
-// טעינה ישירה של דפים ראשיים להצגה מיידית אחרי אימות
+// טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/auth";
-import { HomePage } from "../features/home/home";
 
-// טעינה עצלה של דפים משניים
+// טעינה עצלה של כל הדפים כולל דף הבית (prefetch מיידי)
+const homeImport = () => import("../features/home/home").then(m => ({ default: m.HomePage }));
+homeImport(); // prefetch מיידי במקביל לאימות
+const HomePage = lazy(homeImport);
 const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
