@@ -11,7 +11,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
-import { isActiveToday } from '../../../global/helpers';
+import { isActiveToday, isActiveThisMonth } from '../../../global/helpers';
 import { useAdminDashboard, useOnlineUsers } from '../hooks/admin-hooks';
 import { UsersTable } from './UsersTable';
 import { RecentActivityFeed } from './RecentActivityFeed';
@@ -26,7 +26,7 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
-type UserFilter = 'all' | 'online' | 'activeToday';
+type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth';
 
 const SKELETON_INDICES = [1, 2, 3, 4] as const;
 
@@ -51,7 +51,6 @@ const getCardSx = (isSelected: boolean) => ({
   p: 1.5,
   borderRadius: '16px',
   bgcolor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.15)',
-  backdropFilter: 'blur(12px)',
   border: '1px solid',
   borderColor: isSelected ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)',
   textAlign: 'center',
@@ -61,15 +60,19 @@ const getCardSx = (isSelected: boolean) => ({
   '&:active': { transform: 'scale(0.97)' },
 });
 
-// סגנון כרטיס סטטיסטיקה משני (לא לחיץ)
-const infoCardSx = {
+// סגנון כרטיס סטטיסטיקה משני (לחיץ)
+const getInfoCardSx = (isSelected: boolean) => ({
   p: 1.5,
   borderRadius: '16px',
-  bgcolor: 'rgba(255,255,255,0.1)',
-  backdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255,255,255,0.15)',
+  bgcolor: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+  border: '1px solid',
+  borderColor: isSelected ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
   textAlign: 'center',
-};
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+  transform: isSelected ? 'scale(1.03)' : 'none',
+  '&:active': { transform: 'scale(0.97)' },
+});
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -116,9 +119,13 @@ export const AdminDashboard = () => {
     // סינון לפי כרטיס
     if (userFilter === 'online') {
       result = result.filter(u => onlineUserIds.has(u.id));
-    } else if (userFilter === 'activeToday') {
+    } else if (userFilter === 'activeToday' || userFilter === 'loginsToday') {
       result = result.filter(u =>
         isActiveToday(u.lastLoginAt) || isActiveToday(u.lastAppOpenAt)
+      );
+    } else if (userFilter === 'activeThisMonth') {
+      result = result.filter(u =>
+        isActiveThisMonth(u.lastLoginAt) || isActiveThisMonth(u.lastAppOpenAt)
       );
     }
 
@@ -174,7 +181,7 @@ export const AdminDashboard = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
               onClick={() => navigate('/settings')}
-              sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
+              sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)' }}
             >
               {isRtl ? <ArrowForwardIcon /> : <ArrowBackIcon />}
             </IconButton>
@@ -190,8 +197,8 @@ export const AdminDashboard = () => {
               width: 36,
               height: 36,
               minWidth: 36,
+              borderRadius: '50%',
               bgcolor: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.25)',
               transition: 'all 0.2s',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
@@ -256,26 +263,26 @@ export const AdminDashboard = () => {
 
         {/* שורה שנייה - מידע נוסף */}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, position: 'relative', zIndex: 1 }}>
-          <Box sx={infoCardSx}>
+          <Box sx={getInfoCardSx(userFilter === 'loginsToday')} onClick={() => handleFilterClick('loginsToday')}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              <LoginIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} />
+              <LoginIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }} />
               <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', lineHeight: 1 }}>
                 {stats.loginsToday}
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', fontWeight: 500, mt: 0.25 }}>
+            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', fontWeight: 500, mt: 0.25 }}>
               {t('loginsToday')}
             </Typography>
           </Box>
 
-          <Box sx={infoCardSx}>
+          <Box sx={getInfoCardSx(userFilter === 'activeThisMonth')} onClick={() => handleFilterClick('activeThisMonth')}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-              <CalendarMonthIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }} />
+              <CalendarMonthIcon sx={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }} />
               <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', lineHeight: 1 }}>
                 {stats.uniqueUsersThisMonth}
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', fontWeight: 500, mt: 0.25 }}>
+            <Typography sx={{ fontSize: 9, color: 'rgba(255,255,255,0.7)', fontWeight: 500, mt: 0.25 }}>
               {t('uniqueUsersThisMonth')}
             </Typography>
           </Box>

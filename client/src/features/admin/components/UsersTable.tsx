@@ -1,6 +1,5 @@
 import { useState, useMemo, memo, useCallback } from 'react';
 import { Box, Typography, Paper, Collapse, IconButton, keyframes, CircularProgress, Skeleton } from '@mui/material';
-import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -12,7 +11,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
+import { formatDateShort, formatTimeShort, getRelativeTime } from '../../../global/helpers';
 import { adminApi, type AdminUserList } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
@@ -350,50 +349,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
             </Box>
           </Box>
 
-          {/* 2. התחברות אחרונה - teal */}
-          <Box sx={{
-            mb: 1,
-            borderRadius: '12px',
-            border: '1px solid rgba(20,184,166,0.15)',
-            overflow: 'hidden',
-          }}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 1.25,
-              py: 0.75,
-              bgcolor: 'rgba(20,184,166,0.06)',
-              borderBottom: '1px solid rgba(20,184,166,0.1)',
-            }}>
-              <LoginIcon sx={{ fontSize: 15, color: EVENT_COLORS.login }} />
-              <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: EVENT_COLORS.login }}>
-                {t('lastLogin')}
-              </Typography>
-            </Box>
-            <Box sx={{ px: 1.25, py: 1 }}>
-              {user.lastLoginAt ? (
-                <>
-                  <Typography sx={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: isActiveToday(user.lastLoginAt) ? '#059669' : isActiveThisWeek(user.lastLoginAt) ? '#D97706' : (isDark ? '#D1D5DB' : '#374151')
-                  }}>
-                    {getRelativeTime(user.lastLoginAt, language)}
-                  </Typography>
-                  <Typography sx={{ fontSize: 11.5, color: '#9CA3AF', mt: 0.25 }}>
-                    {formatDateShort(user.lastLoginAt, language)} · {formatTimeShort(user.lastLoginAt, language)}
-                  </Typography>
-                </>
-              ) : (
-                <Typography sx={{ fontSize: 12, color: '#D1D5DB', fontStyle: 'italic' }}>
-                  {t('neverLoggedIn')}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-
-          {/* 3. פתיחת אפליקציה אחרונה - כחול */}
+          {/* 2. פתיחת אפליקציה אחרונה - כחול */}
           <Box sx={{
             mb: 1.5,
             borderRadius: '12px',

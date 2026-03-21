@@ -106,3 +106,10 @@ export const isActiveThisWeek = (timestamp?: string): boolean => {
   weekAgo.setDate(weekAgo.getDate() - 7);
   return new Date(timestamp) > weekAgo;
 };
+
+export const isActiveThisMonth = (timestamp?: string): boolean => {
+  if (!timestamp) return false;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  return new Date(timestamp) >= monthStart;
+};

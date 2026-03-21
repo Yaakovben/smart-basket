@@ -43,5 +43,6 @@ export {
   isToday,
   isYesterday,
   isActiveToday,
-  isActiveThisWeek
+  isActiveThisWeek,
+  isActiveThisMonth
 } from './dateFormatting';

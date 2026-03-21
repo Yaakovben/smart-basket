@@ -99,12 +99,11 @@ interface ListCardProps {
   reorderMode?: boolean;
   isDragging?: boolean;
   isDragOver?: boolean;
-  onLongPress?: (e: React.TouchEvent | React.MouseEvent) => void;
   onDragHandleTouch?: (e: React.TouchEvent) => void;
   onDragHandleMouse?: (e: React.MouseEvent) => void;
 }
 
-const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, isDragOver, onLongPress, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, isDragOver, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -112,41 +111,15 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const count = l.products.filter((p: Product) => !p.isPurchased).length;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressTriggered = useRef(false);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (reorderMode) return;
-    longPressTriggered.current = false;
-    longPressTimer.current = setTimeout(() => {
-      longPressTriggered.current = true;
-      onLongPress?.(e);
-    }, 500);
-  }, [reorderMode, onLongPress]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  const handleTouchMove = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
   const handleClick = useCallback(() => {
-    if (reorderMode || longPressTriggered.current) return;
+    if (reorderMode) return;
     onSelect(l);
   }, [reorderMode, onSelect, l]);
 
   return (
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
-      cursor: reorderMode ? 'default' : 'pointer',
+      cursor: reorderMode ? 'grab' : 'pointer',
       transition: isDragging ? 'none' : 'all 0.2s ease',
       transform: isDragOver ? 'translateY(4px)' : 'none',
       opacity: isDragging ? 0.9 : 1,
@@ -156,23 +129,14 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
       bgcolor: isDragging ? 'action.hover' : undefined,
       userSelect: reorderMode ? 'none' : 'auto',
       WebkitUserSelect: reorderMode ? 'none' : 'auto',
+      touchAction: reorderMode ? 'none' : 'auto',
     }}
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchMove}
+      onTouchStart={reorderMode ? onDragHandleTouch : undefined}
+      onMouseDown={reorderMode ? onDragHandleMouse : undefined}
     >
       {reorderMode && (
-        <Box
-          onTouchStart={onDragHandleTouch}
-          onMouseDown={onDragHandleMouse}
-          sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, touchAction: 'none', cursor: 'grab',
-            p: 1, mx: -0.5, borderRadius: '10px',
-            '&:active': { cursor: 'grabbing' },
-          }}
-        >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, p: 0.5, mx: -0.5 }}>
           <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: 22 }} />
         </Box>
       )}
@@ -427,16 +391,19 @@ export const HomeComponent = memo(({
     haptic('medium');
   }, [orderedDisplay]);
 
-  // לחיצה ארוכה על כרטיס: כניסה למצב סידור + התחלת גרירה
-  const handleLongPress = useCallback((idx: number, e: React.TouchEvent | React.MouseEvent) => {
-    if (orderedDisplay.length <= 1) return;
-    setReorderMode(true);
-    setReorderedIds(orderedDisplay.map(l => l.id));
-    haptic('heavy');
-    const clientY = 'touches' in e ? (e as React.TouchEvent).touches[0]?.clientY ?? 0 : (e as React.MouseEvent).clientY;
-    // התחלת גרירה קלה אחרי render
-    requestAnimationFrame(() => handleDragStart(idx, clientY));
-  }, [orderedDisplay, handleDragStart]);
+  // בדיקה אם הסדר השתנה
+  const hasOrderChanges = useMemo(() => {
+    if (!reorderedIds) return false;
+    const original = user.listOrder || orderedDisplay.map(l => l.id);
+    if (reorderedIds.length !== original.length) return true;
+    return reorderedIds.some((id, i) => id !== original[i]);
+  }, [reorderedIds, user.listOrder, orderedDisplay]);
+
+  // ביטול מצב סידור
+  const handleCancelReorder = useCallback(() => {
+    setReorderMode(false);
+    setReorderedIds(null);
+  }, []);
 
   // מצב אישור עזיבת רשימה
   const [confirmLeaveList, setConfirmLeaveList] = useState<List | null>(null);
@@ -601,20 +568,31 @@ export const HomeComponent = memo(({
         ) : (<>
           <Box sx={{ mb: 1, px: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: reorderMode ? 'primary.main' : 'text.secondary' }}>
                 {reorderMode ? t('reorderLists') : `${orderedDisplay.length} ${t('listsCount')}`}
               </Typography>
               {orderedDisplay.length > 1 && (
                 reorderMode ? (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={handleSaveOrder}
-                    startIcon={<DoneIcon sx={{ fontSize: 18 }} />}
-                    sx={{ fontSize: 13, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 2, py: 0.5, minWidth: 'auto', boxShadow: '0 2px 8px rgba(20,184,166,0.3)' }}
-                  >
-                    {t('reorderDone')}
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={handleCancelReorder}
+                      sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', color: 'text.secondary', borderColor: 'divider' }}
+                    >
+                      {t('cancel')}
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleSaveOrder}
+                      disabled={!hasOrderChanges}
+                      startIcon={<DoneIcon sx={{ fontSize: 16 }} />}
+                      sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
+                    >
+                      {t('reorderDone')}
+                    </Button>
+                  </Box>
                 ) : (
                   <IconButton
                     size="small"
@@ -647,7 +625,6 @@ export const HomeComponent = memo(({
               reorderMode={reorderMode}
               isDragging={reorderMode && dragIndex === idx}
               isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
-              onLongPress={!reorderMode && orderedDisplay.length > 1 ? (e) => handleLongPress(idx, e) : undefined}
               onDragHandleTouch={reorderMode ? (e: React.TouchEvent) => {
                 e.stopPropagation();
                 handleDragStart(idx, e.touches[0].clientY);
