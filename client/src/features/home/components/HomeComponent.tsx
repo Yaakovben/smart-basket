@@ -119,11 +119,11 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   return (
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
-      cursor: reorderMode ? 'grab' : 'pointer',
-      transition: isDragging ? 'none' : 'all 0.2s ease',
-      transform: isDragOver ? 'translateY(4px)' : 'none',
-      opacity: isDragging ? 0.9 : 1,
-      boxShadow: isDragging ? '0 4px 16px rgba(0,0,0,0.12)' : isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
+      cursor: reorderMode ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
+      transition: isDragging ? 'box-shadow 0.15s' : 'all 0.2s ease',
+      transform: isDragging ? 'scale(1.03)' : isDragOver ? 'translateY(4px)' : 'none',
+      opacity: isDragging ? 0.95 : 1,
+      boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.18)' : isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
       position: 'relative',
       zIndex: isDragging ? 10 : 'auto',
       bgcolor: isDragging ? 'action.hover' : undefined,
@@ -280,6 +280,7 @@ export const HomeComponent = memo(({
   const [dragOverIndex, setDragOverIndex] = useState(-1);
   const dragStartY = useRef(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const originalOrderRef = useRef<string[]>([]);
 
   // חישוב סדר תצוגה עם סדר מותאם אישית
   const orderedDisplay = useMemo(() => {
@@ -386,18 +387,20 @@ export const HomeComponent = memo(({
   }, [reorderedIds, user, showToast, t]);
 
   const handleEnterReorder = useCallback(() => {
+    const ids = orderedDisplay.map(l => l.id);
+    originalOrderRef.current = ids;
     setReorderMode(true);
-    setReorderedIds(orderedDisplay.map(l => l.id));
+    setReorderedIds(ids);
     haptic('medium');
   }, [orderedDisplay]);
 
   // בדיקה אם הסדר השתנה
   const hasOrderChanges = useMemo(() => {
     if (!reorderedIds) return false;
-    const original = user.listOrder || orderedDisplay.map(l => l.id);
+    const original = originalOrderRef.current;
     if (reorderedIds.length !== original.length) return true;
     return reorderedIds.some((id, i) => id !== original[i]);
-  }, [reorderedIds, user.listOrder, orderedDisplay]);
+  }, [reorderedIds]);
 
   // ביטול מצב סידור
   const handleCancelReorder = useCallback(() => {
