@@ -151,13 +151,13 @@ export const ListHeader = memo(({
   return (
     <Box sx={{
       background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
-      p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
-      borderRadius: '0 0 24px 24px',
+      p: { xs: 'max(44px, env(safe-area-inset-top) + 10px) 14px 14px', sm: '48px 20px 20px' },
+      borderRadius: { xs: '0 0 20px 20px', sm: '0 0 24px 24px' },
       flexShrink: 0,
       boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(79, 70, 229, 0.15)'
     }}>
       {/* Title Row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 } }}>
         <IconButton
           onClick={onBack}
           sx={glassButtonSx}
@@ -209,7 +209,7 @@ export const ListHeader = memo(({
 
       {/* Members Row (Group Only) */}
       {list.isGroup && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 1, sm: 1.5 } }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton
             onClick={onShowInvite}
@@ -239,7 +239,7 @@ export const ListHeader = memo(({
 
       {/* Search Button Row (Private Lists Only) */}
       {!list.isGroup && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 1.5 } }}>
           <IconButton
             onClick={handleToggleSearch}
             sx={{
@@ -307,7 +307,7 @@ export const ListHeader = memo(({
       </Collapse>
 
       {/* Quick Add - Mobile First Design */}
-      <Box sx={{ mb: 1.5 }}>
+      <Box sx={{ mb: { xs: 1, sm: 1.5 } }}>
         <TextField
           inputRef={inputRef}
           fullWidth
@@ -325,7 +325,7 @@ export const ListHeader = memo(({
             '& .MuiOutlinedInput-root': {
               bgcolor: 'background.paper',
               borderRadius: '14px',
-              height: 52,
+              height: { xs: 46, sm: 52 },
               pr: 0.75,
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               '&.Mui-focused': {
@@ -395,10 +395,10 @@ export const ListHeader = memo(({
           '& .MuiTabs-indicator': { display: 'none' },
           '& .MuiTab-root': {
             borderRadius: '10px',
-            py: 1.5,
+            py: { xs: 1, sm: 1.5 },
             px: 2,
-            minHeight: 48,
-            fontSize: 15,
+            minHeight: { xs: 42, sm: 48 },
+            fontSize: { xs: 14, sm: 15 },
             fontWeight: 600,
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',

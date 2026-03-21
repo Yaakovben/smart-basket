@@ -66,34 +66,34 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct
   return (
     <Box sx={{
       textAlign: 'center',
-      p: { xs: 4, sm: 5 },
+      p: { xs: 2.5, sm: 5 },
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 340
+      minHeight: { xs: 220, sm: 340 }
     }}>
       <Box
         sx={{
-          width: { xs: 80, sm: 100 },
-          height: { xs: 80, sm: 100 },
+          width: { xs: 72, sm: 100 },
+          height: { xs: 72, sm: 100 },
           borderRadius: '50%',
           background: config.gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          mb: { xs: 2, sm: 2.5 },
-          fontSize: { xs: 44, sm: 56 }
+          mb: { xs: 1.5, sm: 2.5 },
+          fontSize: { xs: 38, sm: 56 }
         }}
         role="img"
         aria-label={config.title}
       >
         {config.icon}
       </Box>
-      <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+      <Typography sx={{ fontSize: { xs: 15, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>
         {config.title}
       </Typography>
-      <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 } }}>
+      <Typography sx={{ fontSize: { xs: 12.5, sm: 14 }, color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
         {config.description}
       </Typography>
       {/* כפתור ניקוי כשהכל נקנה */}
