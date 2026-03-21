@@ -107,72 +107,83 @@ export const ListMenu = memo(({
         </Box>
       )}
 
-      {/* פעולות רגילות: רענן, עריכה */}
-      {(onRefresh || isOwner) && (
+      {/* רענן */}
+      {onRefresh && (
         <>
           {isGroup && <Divider sx={{ my: 0.5 }} />}
-          {onRefresh && (
-            <MenuItem
-              onClick={() => { onClose(); onRefresh(); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-                {t('refresh')}
-              </Typography>
-            </MenuItem>
-          )}
-          {isOwner && (
-            <MenuItem
-              onClick={() => { onClose(); onEdit(); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-                {isGroup ? t('editGroup') : t('editList')}
-              </Typography>
-            </MenuItem>
-          )}
+          <MenuItem
+            onClick={() => { onClose(); onRefresh(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <RefreshIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {t('refresh')}
+            </Typography>
+          </MenuItem>
         </>
       )}
 
-      {/* פעולות הרסניות: נקה, מחק, עזוב */}
-      {((onClearList && hasProducts) || isOwner || (!isOwner && isGroup && onLeave)) && (
+      {/* עריכה */}
+      {isOwner && (
         <>
           <Divider sx={{ my: 0.5 }} />
-          {onClearList && hasProducts && (
-            <MenuItem
-              onClick={() => { onClose(); onClearList(); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
-                {t('clearList')}
-              </Typography>
-            </MenuItem>
-          )}
-          {isOwner && (
-            <MenuItem
-              onClick={() => { onClose(); onDelete(); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
-                {isGroup ? t('deleteGroup') : t('deleteList')}
-              </Typography>
-            </MenuItem>
-          )}
-          {!isOwner && isGroup && onLeave && (
-            <MenuItem
-              onClick={() => { onClose(); onLeave(); }}
-              sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
-            >
-              <LogoutIcon sx={{ color: 'error.main', fontSize: 22 }} />
-              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
-                {t('leaveGroup')}
-              </Typography>
-            </MenuItem>
-          )}
+          <MenuItem
+            onClick={() => { onClose(); onEdit(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {isGroup ? t('editGroup') : t('editList')}
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+
+      {/* ניקוי רשימה */}
+      {onClearList && hasProducts && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => { onClose(); onClearList(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {t('clearList')}
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+
+      {/* מחיקת רשימה */}
+      {isOwner && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => { onClose(); onDelete(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
+              {isGroup ? t('deleteGroup') : t('deleteList')}
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+
+      {/* עזיבת רשימה */}
+      {!isOwner && isGroup && onLeave && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => { onClose(); onLeave(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <LogoutIcon sx={{ color: 'error.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'error.main' }}>
+              {t('leaveGroup')}
+            </Typography>
+          </MenuItem>
         </>
       )}
     </Menu>
