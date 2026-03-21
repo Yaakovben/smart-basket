@@ -3,6 +3,23 @@ import { notificationsApi, type PersistedNotification } from '../../services/api
 import type { User } from '../types';
 import type { LocalNotification } from './useSocketNotifications';
 
+// בדיקת כפילות לפי תוכן (מונע כפילויות מ-reconnect של socket או חפיפה עם DB)
+const DEDUP_WINDOW_MS = 10000;
+const isContentDuplicate = (
+  existing: PersistedNotification[],
+  listId: string,
+  type: string,
+  actorId: string,
+  productName: string | undefined,
+  timestamp: number
+): boolean => existing.some(n =>
+  n.listId === listId &&
+  n.type === type &&
+  n.actorId === actorId &&
+  n.productName === productName &&
+  Math.abs(new Date(n.createdAt).getTime() - timestamp) < DEDUP_WINDOW_MS
+);
+
 export interface InitialNotificationsData {
   notifications: PersistedNotification[];
   unreadCount: number;
@@ -73,26 +90,28 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   }, [authLoading, user?.id, fetchNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      // עדכון מקומי מיידי (סימון קריאה הוא פעולה קלה שלא צריכה להמתין לשרת)
-      let wasUnread = false;
-      setPersistedNotifications(prev =>
-        prev.map(n => {
-          if (n.id === notificationId && !n.read) {
-            wasUnread = true;
-            return { ...n, read: true };
-          }
-          return n;
-        })
-      );
-      if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
+    // עדכון מקומי מיידי
+    let wasUnread = false;
+    setPersistedNotifications(prev =>
+      prev.map(n => {
+        if (n.id === notificationId && !n.read) {
+          wasUnread = true;
+          return { ...n, read: true };
+        }
+        return n;
+      })
+    );
+    if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
 
+    // התראות מקומיות (מ-socket) אינן קיימות ב-DB, דילוג על קריאת API
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(notificationId);
+    if (!isObjectId) return;
+
+    try {
       await notificationsApi.markAsRead(notificationId);
     } catch (error) {
-      // התעלמות מ-404 (ההתראה לא קיימת ב-DB - ה-state המקומי כבר עודכן)
       const apiError = error as { response?: { status?: number } };
       if (apiError.response?.status === 404) return;
-      // שחזור בשגיאות אחרות
       fetchNotifications();
     }
   }, [fetchNotifications]);
@@ -118,14 +137,10 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
   // הוספת התראה חדשה מ-socket לרשימה המקומית
   const addNotification = useCallback((notification: LocalNotification) => {
+    const mappedType = notification.type === 'product_edit' ? 'product_update' : notification.type;
     const persistedFormat: PersistedNotification = {
       id: notification.id,
-      type: notification.type === 'product_edit' ? 'product_update' :
-            notification.type === 'product_add' ? 'product_add' :
-            notification.type === 'product_delete' ? 'product_delete' :
-            notification.type === 'product_purchase' ? 'product_purchase' :
-            notification.type === 'product_unpurchase' ? 'product_unpurchase' :
-            notification.type,
+      type: mappedType,
       listId: notification.listId,
       listName: notification.listName,
       actorId: notification.userId,
@@ -136,15 +151,25 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
       createdAt: notification.timestamp.toISOString(),
     };
 
+    const notifTime = notification.timestamp.getTime();
+
     setPersistedNotifications(prev => {
+      // בדיקת כפילות לפי ID
       if (prev.some(n => n.id === notification.id)) return prev;
+
+      // בדיקת כפילות לפי תוכן (מונע כפילויות מ-reconnect או מ-DB + socket)
+      if (isContentDuplicate(prev, notification.listId, mappedType, notification.userId, notification.productName, notifTime)) {
+        return prev;
+      }
+
+      // התראה חדשה, עדכון ספירה מתוך ה-callback לסנכרון מושלם
+      if (!notification.read) {
+        setUnreadCount(c => c + 1);
+      }
+
       const newList = [persistedFormat, ...prev];
       return newList.slice(0, 50);
     });
-
-    if (!notification.read) {
-      setUnreadCount(prev => prev + 1);
-    }
   }, []);
 
   const getUnreadCountForList = useCallback((listId: string) => {
