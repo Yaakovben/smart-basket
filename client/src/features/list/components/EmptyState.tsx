@@ -71,7 +71,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '40vh'
+      minHeight: 340
     }}>
       <Box
         sx={{
