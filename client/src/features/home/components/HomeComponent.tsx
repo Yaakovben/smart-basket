@@ -971,12 +971,34 @@ export const HomeComponent = memo(({
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              {/* כותרת + כפתור סמן הכל כנקרא */}
-              <Box sx={{ mb: 2, px: 0.5 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', mb: 1.5, textAlign: 'center' }}>
-                  {allNotifications.length}{' '}
-                  {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
-                </Typography>
+              {/* כותרת */}
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', mb: 1.5, textAlign: 'center', px: 0.5 }}>
+                {allNotifications.length}{' '}
+                {allNotifications.length === 1 ? t('newNotification') : t('newNotifications')}
+              </Typography>
+
+              {/* Notification list */}
+              <Box sx={{
+                maxHeight: '55vh',
+                overflowY: 'auto',
+                overscrollBehavior: 'contain',
+                mx: -0.5,
+                px: 0.5,
+                pb: 1,
+              }}>
+                {allNotifications.map((n, index) => (
+                  <NotificationItem
+                    key={n.id}
+                    notification={n}
+                    index={index}
+                    isDismissing={dismissingNotifications.has(n.id)}
+                    onDismiss={handleDismissNotification}
+                  />
+                ))}
+              </Box>
+
+              {/* כפתור סמן הכל כנקרא */}
+              <Box sx={{ pt: 1.5, px: 0.5 }}>
                 <Button
                   fullWidth
                   size="small"
@@ -996,28 +1018,6 @@ export const HomeComponent = memo(({
                 >
                   {t('markAllAsRead')}
                 </Button>
-              </Box>
-
-              {/* Notification list */}
-              <Box sx={{
-                maxHeight: '60vh',
-                overflowY: 'auto',
-                overscrollBehavior: 'contain',
-                mx: -0.5,
-                px: 0.5,
-                pb: 1,
-                maskImage: 'linear-gradient(to bottom, black 0%, black 94%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 94%, transparent 100%)',
-              }}>
-                {allNotifications.map((n, index) => (
-                  <NotificationItem
-                    key={n.id}
-                    notification={n}
-                    index={index}
-                    isDismissing={dismissingNotifications.has(n.id)}
-                    onDismiss={handleDismissNotification}
-                  />
-                ))}
               </Box>
             </Box>
           )}
