@@ -109,12 +109,10 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
     try {
       await notificationsApi.markAsRead(notificationId);
-    } catch (error) {
-      const apiError = error as { response?: { status?: number } };
-      if (apiError.response?.status === 404) return;
-      fetchNotifications();
+    } catch {
+      // שגיאה בסימון קריאה בשרת, המצב המקומי כבר מעודכן
     }
-  }, [fetchNotifications]);
+  }, []);
 
   const markAllAsRead = useCallback(async (listId?: string) => {
     try {
@@ -131,9 +129,9 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
 
       await notificationsApi.markAllAsRead(listId);
     } catch {
-      fetchNotifications();
+      // שגיאה בסימון קריאה בשרת, המצב המקומי כבר מעודכן
     }
-  }, [fetchNotifications]);
+  }, []);
 
   // הוספת התראה חדשה מ-socket לרשימה המקומית
   const addNotification = useCallback((notification: LocalNotification) => {
