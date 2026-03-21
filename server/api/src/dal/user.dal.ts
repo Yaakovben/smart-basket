@@ -77,6 +77,15 @@ class UserDALClass extends BaseDAL<IUser> {
     return { users, total };
   }
 
+  async updateListOrder(userId: string, listOrder: string[]): Promise<IUser | null> {
+    return this.model.findByIdAndUpdate(userId, { listOrder }, { new: true });
+  }
+
+  async getListOrder(userId: string): Promise<string[]> {
+    const user = await this.model.findById(userId).select('listOrder').lean();
+    return (user as { listOrder?: string[] })?.listOrder || [];
+  }
+
   async findAllSorted(): Promise<IUser[]> {
     return this.model.find().sort({ createdAt: -1 }).lean() as unknown as IUser[];
   }

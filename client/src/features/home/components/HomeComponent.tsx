@@ -13,6 +13,9 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import DoneIcon from '@mui/icons-material/Done';
 import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
@@ -24,6 +27,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
 import { usePushNotifications } from '../../../global/hooks';
 import { NotificationItem } from './NotificationItem';
+import { authApi } from '../../../services/api';
 
 // ===== אנימציות =====
 const checkmarkPopKeyframes = {
@@ -92,9 +96,14 @@ interface ListCardProps {
   onLeaveList?: (list: List) => void;
   onToggleMute: (listId: string) => void;
   t: (key: TranslationKeys) => string;
+  reorderMode?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t }: ListCardProps) => {
+const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, onMoveUp, onMoveDown, isFirst, isLast }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -104,7 +113,27 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const menuOpen = Boolean(anchorEl);
 
   return (
-    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1, cursor: 'pointer' }} onClick={() => onSelect(l)}>
+    <Card sx={{ display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1, cursor: reorderMode ? 'default' : 'pointer', transition: 'transform 0.15s' }} onClick={() => !reorderMode && onSelect(l)}>
+      {reorderMode && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, flexShrink: 0 }}>
+          <IconButton
+            size="small"
+            onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
+            disabled={isFirst}
+            sx={{ p: 0.25, color: isFirst ? 'text.disabled' : 'primary.main' }}
+          >
+            <Box sx={{ fontSize: 18, lineHeight: 1 }}>▲</Box>
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
+            disabled={isLast}
+            sx={{ p: 0.25, color: isLast ? 'text.disabled' : 'primary.main' }}
+          >
+            <Box sx={{ fontSize: 18, lineHeight: 1 }}>▼</Box>
+          </IconButton>
+        </Box>
+      )}
       <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
         {l.icon}
       </Box>
@@ -118,8 +147,8 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           {l.isGroup && <Typography component="span" sx={{ fontSize: 12, color: 'text.disabled' }}>{' '}· {l.members.length + 1} {t('members')}</Typography>}
         </Typography>
       </Box>
-      {/* אייקון מושתק + תפריט שלוש נקודות */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0 }}>
+      {/* אייקון מושתק + תפריט שלוש נקודות (מוסתר במצב סידור) */}
+      {!reorderMode && <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0 }}>
         {isMuted && <NotificationsOffIcon sx={{ fontSize: 22, color: 'text.disabled' }} />}
         <IconButton
           size="small"
@@ -142,7 +171,10 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           onLeave={!isOwner && l.isGroup && onLeaveList ? () => onLeaveList(l) : undefined}
           stopPropagation
         />
-      </Box>
+      </Box>}
+      {reorderMode && (
+        <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: 22, flexShrink: 0 }} />
+      )}
     </Card>
   );
 });
@@ -237,6 +269,54 @@ export const HomeComponent = memo(({
     editList.icon !== editListOriginal.current.icon ||
     editList.color !== editListOriginal.current.color
   ));
+
+  // מצב סידור רשימות
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reorderedIds, setReorderedIds] = useState<string[] | null>(null);
+
+  // חישוב סדר תצוגה עם סדר מותאם אישית
+  const orderedDisplay = useMemo(() => {
+    const order = reorderedIds || user.listOrder;
+    if (!order || order.length === 0) return display;
+    const orderMap = new Map(order.map((id, idx) => [id, idx]));
+    return [...display].sort((a, b) => {
+      const aIdx = orderMap.get(a.id);
+      const bIdx = orderMap.get(b.id);
+      if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
+      if (aIdx !== undefined) return -1;
+      if (bIdx !== undefined) return 1;
+      return 0;
+    });
+  }, [display, reorderedIds, user.listOrder]);
+
+  const handleMoveItem = useCallback((fromIndex: number, direction: 'up' | 'down') => {
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    const currentIds = orderedDisplay.map(l => l.id);
+    const newIds = [...currentIds];
+    [newIds[fromIndex], newIds[toIndex]] = [newIds[toIndex], newIds[fromIndex]];
+    setReorderedIds(newIds);
+    haptic('light');
+  }, [orderedDisplay]);
+
+  const handleSaveOrder = useCallback(async () => {
+    if (reorderedIds) {
+      try {
+        await authApi.updateListOrder(reorderedIds);
+        user.listOrder = reorderedIds;
+        showToast(t('orderSaved'));
+      } catch {
+        showToast(t('errorOccurred'), 'error');
+      }
+    }
+    setReorderMode(false);
+    setReorderedIds(null);
+  }, [reorderedIds, user, showToast, t]);
+
+  const handleEnterReorder = useCallback(() => {
+    setReorderMode(true);
+    setReorderedIds(orderedDisplay.map(l => l.id));
+    haptic('medium');
+  }, [orderedDisplay]);
 
   // מצב אישור עזיבת רשימה
   const [confirmLeaveList, setConfirmLeaveList] = useState<List | null>(null);
@@ -399,10 +479,32 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : (<>
-          <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary', mb: 1, px: 0.5 }}>
-            {display.length} {t('listsCount')}
-          </Typography>
-          {display.map((l: List) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+            <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'text.secondary' }}>
+              {orderedDisplay.length} {t('listsCount')}
+            </Typography>
+            {orderedDisplay.length > 1 && (
+              reorderMode ? (
+                <Button
+                  size="small"
+                  onClick={handleSaveOrder}
+                  startIcon={<DoneIcon sx={{ fontSize: 16 }} />}
+                  sx={{ fontSize: 12, fontWeight: 600, color: 'primary.main', textTransform: 'none', borderRadius: '8px', px: 1.5, py: 0.3, minWidth: 'auto', bgcolor: 'rgba(20,184,166,0.08)', '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' } }}
+                >
+                  {t('reorderDone')}
+                </Button>
+              ) : (
+                <IconButton
+                  size="small"
+                  onClick={handleEnterReorder}
+                  sx={{ color: 'text.secondary', p: 0.5 }}
+                >
+                  <SwapVertIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )
+            )}
+          </Box>
+          {orderedDisplay.map((l: List, idx: number) => (
           <ListCard
             key={l.id}
             list={l}
@@ -414,6 +516,11 @@ export const HomeComponent = memo(({
             onLeaveList={onLeaveList ? (list) => setConfirmLeaveList(list) : undefined}
             onToggleMute={toggleGroupMute}
             t={t}
+            reorderMode={reorderMode}
+            onMoveUp={() => handleMoveItem(idx, 'up')}
+            onMoveDown={() => handleMoveItem(idx, 'down')}
+            isFirst={idx === 0}
+            isLast={idx === orderedDisplay.length - 1}
           />
         ))}
         </>)}

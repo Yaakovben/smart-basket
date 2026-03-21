@@ -19,6 +19,10 @@ export const userValidator = {
     groupId: commonSchemas.objectId.required(),
   }),
 
+  updateListOrder: Joi.object({
+    listOrder: Joi.array().items(commonSchemas.objectId).required(),
+  }),
+
   changePassword: Joi.object({
     currentPassword: Joi.string().min(1).required().messages({
       'string.min': 'Current password is required',

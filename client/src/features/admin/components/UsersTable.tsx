@@ -52,9 +52,10 @@ interface UserRowProps {
   language: Language;
   isOnline: boolean;
   userActivities: LoginActivity[];
+  isDark: boolean;
 }
 
-const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps) => {
+const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: UserRowProps) => {
   const { t, settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
   const isGoogle = user.registrationMethod === 'google';
@@ -75,10 +76,12 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
         overflow: 'hidden',
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
         border: '1px solid',
-        borderColor: isOnline ? 'rgba(34,197,94,0.2)' : 'rgba(0,0,0,0.04)',
+        borderColor: isOnline
+          ? (isDark ? 'rgba(34,197,94,0.25)' : 'rgba(34,197,94,0.2)')
+          : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
         background: isOnline
           ? `linear-gradient(${isRtl ? '270deg' : '90deg'}, rgba(34,197,94,0.05), transparent 60%)`
-          : 'white',
+          : (isDark ? 'rgba(255,255,255,0.03)' : 'white'),
       }}
     >
       {/* שורה ראשית */}
@@ -91,7 +94,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
           gap: 1.25,
           cursor: 'pointer',
           transition: 'background-color 0.15s',
-          '&:active': { bgcolor: 'rgba(0,0,0,0.02)' }
+          '&:active': { bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }
         }}
       >
         {/* אווטאר עם נקודת אונליין */}
@@ -108,7 +111,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
               color: 'white',
               fontWeight: 700,
               fontSize: user.avatarEmoji ? 20 : 16,
-              boxShadow: isOnline ? '0 0 0 2.5px rgba(34,197,94,0.3)' : '0 1px 3px rgba(0,0,0,0.1)',
+              boxShadow: isOnline ? '0 0 0 2.5px rgba(34,197,94,0.3)' : (isDark ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'),
             }}
           >
             {user.avatarEmoji || user.name.charAt(0).toUpperCase()}
@@ -122,8 +125,8 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
               width: 13,
               height: 13,
               borderRadius: '50%',
-              bgcolor: isOnline ? '#22C55E' : '#D1D5DB',
-              border: '2.5px solid white',
+              bgcolor: isOnline ? '#22C55E' : (isDark ? '#4B5563' : '#D1D5DB'),
+              border: `2.5px solid ${isDark ? '#1F2937' : 'white'}`,
               ...(isOnline && { animation: `${pulse} 2.5s ease-in-out infinite` }),
             }}
           />
@@ -135,7 +138,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
             sx={{
               fontSize: 14,
               fontWeight: 600,
-              color: '#1F2937',
+              color: isDark ? '#F3F4F6' : '#1F2937',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
@@ -143,7 +146,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
           >
             {user.name}
           </Typography>
-          <Typography sx={{ fontSize: 11.5, color: isOnline ? '#16A34A' : '#9CA3AF', fontWeight: isOnline ? 500 : 400 }}>
+          <Typography sx={{ fontSize: 11.5, color: isOnline ? '#16A34A' : (isDark ? '#6B7280' : '#9CA3AF'), fontWeight: isOnline ? 500 : 400 }}>
             {isOnline
               ? t('onlineNow')
               : lastActivity
@@ -207,7 +210,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
               </Typography>
             </Box>
             <Box sx={{ px: 1.25, py: 1 }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: isDark ? '#D1D5DB' : '#374151' }}>
                 {formatDateShort(user.createdAt, language)} · {formatTimeShort(user.createdAt, language)}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
@@ -253,7 +256,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
                   <Typography sx={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: isActiveToday(user.lastLoginAt) ? '#059669' : isActiveThisWeek(user.lastLoginAt) ? '#D97706' : '#374151'
+                    color: isActiveToday(user.lastLoginAt) ? '#059669' : isActiveThisWeek(user.lastLoginAt) ? '#D97706' : (isDark ? '#D1D5DB' : '#374151')
                   }}>
                     {getRelativeTime(user.lastLoginAt, language)}
                   </Typography>
@@ -293,7 +296,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities }: UserRowProps
             <Box sx={{ px: 1.25, py: 1 }}>
               {user.lastAppOpenAt ? (
                 <>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: isDark ? '#D1D5DB' : '#374151' }}>
                     {getRelativeTime(user.lastAppOpenAt, language)}
                   </Typography>
                   <Typography sx={{ fontSize: 11.5, color: '#9CA3AF', mt: 0.25 }}>
@@ -383,9 +386,10 @@ interface UsersTableProps {
   activities: LoginActivity[];
   language: Language;
   onlineUserIds: Set<string>;
+  isDark: boolean;
 }
 
-export const UsersTable = ({ users, activities, language, onlineUserIds }: UsersTableProps) => {
+export const UsersTable = ({ users, activities, language, onlineUserIds, isDark }: UsersTableProps) => {
   const { t } = useSettings();
 
   const sortedUsers = useMemo(() => {
@@ -427,6 +431,7 @@ export const UsersTable = ({ users, activities, language, onlineUserIds }: Users
           language={language}
           isOnline={onlineUserIds.has(user.id)}
           userActivities={activitiesByUser.get(user.id) || []}
+          isDark={isDark}
         />
       ))}
     </Box>

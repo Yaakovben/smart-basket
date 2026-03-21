@@ -6,6 +6,7 @@ export interface User {
   password?: string;
   avatarColor?: string;
   avatarEmoji?: string;
+  listOrder?: string[];
 }
 
 // ===== מוצר =====

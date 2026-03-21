@@ -96,9 +96,25 @@ export async function refreshAccessToken(): Promise<string | null> {
     } catch (error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-      // שגיאת אימות (401/403): refresh token לא תקף, מנקים טוקנים
+      // שגיאת אימות (401/403): ייתכן שטאב אחר כבר סיבב את הטוקן
       if (status === 401 || status === 403) {
-        clearTokens();
+        // בדיקה אם הטוקן ב-localStorage השתנה (טאב אחר סיבב אותו)
+        const currentRefreshToken = getRefreshToken();
+        if (currentRefreshToken && currentRefreshToken !== refreshToken) {
+          // טאב אחר כבר רענן, ננסה שוב עם הטוקן החדש
+          try {
+            const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {
+              refreshToken: currentRefreshToken,
+            }, { timeout: 10000 });
+            const { accessToken, refreshToken: newRefreshToken } = retryResponse.data.data;
+            setTokens(accessToken, newRefreshToken);
+            return accessToken;
+          } catch {
+            clearTokens();
+          }
+        } else {
+          clearTokens();
+        }
       }
       // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
@@ -110,6 +126,19 @@ export async function refreshAccessToken(): Promise<string | null> {
   } finally {
     sharedRefreshPromise = null;
   }
+}
+
+// רענון פרואקטיבי כשהאפליקציה חוזרת מרקע (חזרה מ-sleep של מובייל)
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && getAccessToken() && isTokenExpired()) {
+      refreshAccessToken().then(newToken => {
+        if (newToken) {
+          socketService.updateToken(newToken);
+        }
+      });
+    }
+  });
 }
 
 // ===== Request Interceptor =====

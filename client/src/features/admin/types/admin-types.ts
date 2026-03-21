@@ -12,6 +12,12 @@ export interface UserWithLastLogin extends User {
 export interface DashboardStats {
   totalUsers: number;
   uniqueUsersToday: number;
+  totalLists: number;
+  totalGroupLists: number;
+  totalProducts: number;
+  loginsToday: number;
+  loginsThisMonth: number;
+  uniqueUsersThisMonth: number;
 }
 
 export interface UseAdminDashboardReturn {

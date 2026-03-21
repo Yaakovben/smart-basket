@@ -23,9 +23,10 @@ interface RecentActivityFeedProps {
   activities: LoginActivity[];
   language: Language;
   defaultExpanded?: boolean;
+  isDark?: boolean;
 }
 
-export const RecentActivityFeed = ({ activities, language, defaultExpanded = false }: RecentActivityFeedProps) => {
+export const RecentActivityFeed = ({ activities, language, defaultExpanded = false, isDark = false }: RecentActivityFeedProps) => {
   const { t } = useSettings();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const displayActivities = activities.slice(0, MAX_ENTRIES);
@@ -71,10 +72,11 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
       {/* לוג */}
       <Collapse in={expanded}>
         <Box sx={{
-          bgcolor: 'white',
+          bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'white',
           borderRadius: '14px',
-          border: '1px solid rgba(0,0,0,0.06)',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.04)',
           overflow: 'hidden',
         }}>
           {displayActivities.map((activity, i) => {
@@ -88,9 +90,10 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
                   <Box sx={{
                     px: 1.25,
                     py: 0.5,
-                    bgcolor: '#F9FAFB',
-                    borderBottom: '1px solid rgba(0,0,0,0.04)',
-                    ...(i > 0 && { borderTop: '1px solid rgba(0,0,0,0.04)' }),
+                    bgcolor: isDark ? 'rgba(255,255,255,0.03)' : '#F9FAFB',
+                    borderBottom: '1px solid',
+                    borderBottomColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                    ...(i > 0 && { borderTop: '1px solid', borderTopColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }),
                   }}>
                     <Typography sx={{
                       fontSize: 10.5,
@@ -112,8 +115,9 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
                     gap: 1,
                     px: 1.25,
                     py: 0.7,
-                    borderBottom: i < displayActivities.length - 1 ? '1px solid rgba(0,0,0,0.03)' : 'none',
-                    '&:hover': { bgcolor: 'rgba(0,0,0,0.01)' },
+                    borderBottom: i < displayActivities.length - 1 ? '1px solid' : 'none',
+                    borderBottomColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                    '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' },
                   }}
                 >
                   {/* אייקון צבעוני */}
@@ -141,7 +145,7 @@ export const RecentActivityFeed = ({ activities, language, defaultExpanded = fal
                   <Typography sx={{
                     fontSize: 12,
                     fontWeight: 500,
-                    color: '#374151',
+                    color: isDark ? '#D1D5DB' : '#374151',
                     flex: 1,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',

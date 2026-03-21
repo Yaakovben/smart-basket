@@ -80,6 +80,12 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const stats: DashboardStats = useMemo(() => ({
     totalUsers: serverStats?.totalUsers || allUsers.length,
     uniqueUsersToday: serverStats?.uniqueUsersToday || 0,
+    totalLists: serverStats?.totalLists || 0,
+    totalGroupLists: serverStats?.totalGroupLists || 0,
+    totalProducts: serverStats?.totalProducts || 0,
+    loginsToday: serverStats?.loginsToday || 0,
+    loginsThisMonth: serverStats?.loginsThisMonth || 0,
+    uniqueUsersThisMonth: serverStats?.uniqueUsersThisMonth || 0,
   }), [serverStats, allUsers]);
 
   const refreshData = useCallback(() => {

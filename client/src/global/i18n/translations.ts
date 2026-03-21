@@ -376,7 +376,17 @@ type TranslationKey =
   | 'increaseQuantity'
   | 'addAnyway'
   // Refresh
-  | 'refresh';
+  | 'refresh'
+  // Admin Dashboard Extra
+  | 'totalLists'
+  | 'totalProducts'
+  | 'loginsToday'
+  | 'loginsThisMonth'
+  | 'uniqueUsersThisMonth'
+  // List reorder
+  | 'reorderLists'
+  | 'reorderDone'
+  | 'orderSaved';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -755,6 +765,16 @@ export const translations: Record<Language, Translations> = {
     increaseQuantity: 'הגדל כמות',
     addAnyway: 'הוסף בכל זאת',
     refresh: 'רענון',
+    // Admin Dashboard Extra
+    totalLists: 'רשימות',
+    totalProducts: 'מוצרים',
+    loginsToday: 'כניסות היום',
+    loginsThisMonth: 'כניסות החודש',
+    uniqueUsersThisMonth: 'פעילים החודש',
+    // List reorder
+    reorderLists: 'סדר רשימות',
+    reorderDone: 'סיום',
+    orderSaved: 'הסדר נשמר',
   },
   en: {
     // General
@@ -1130,6 +1150,16 @@ export const translations: Record<Language, Translations> = {
     increaseQuantity: 'Increase quantity',
     addAnyway: 'Add anyway',
     refresh: 'Refresh',
+    // Admin Dashboard Extra
+    totalLists: 'Lists',
+    totalProducts: 'Products',
+    loginsToday: 'Logins Today',
+    loginsThisMonth: 'Logins This Month',
+    uniqueUsersThisMonth: 'Active This Month',
+    // List reorder
+    reorderLists: 'Reorder Lists',
+    reorderDone: 'Done',
+    orderSaved: 'Order saved',
   },
   ru: {
     // General
@@ -1505,6 +1535,16 @@ export const translations: Record<Language, Translations> = {
     increaseQuantity: 'Увеличить количество',
     addAnyway: 'Добавить всё равно',
     refresh: 'Обновить',
+    // Admin Dashboard Extra
+    totalLists: 'Списки',
+    totalProducts: 'Продукты',
+    loginsToday: 'Входы сегодня',
+    loginsThisMonth: 'Входы за месяц',
+    uniqueUsersThisMonth: 'Активных за месяц',
+    // List reorder
+    reorderLists: 'Упорядочить списки',
+    reorderDone: 'Готово',
+    orderSaved: 'Порядок сохранён',
   }
 };
 

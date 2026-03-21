@@ -123,6 +123,11 @@ export const authApi = {
     return response.data.data;
   },
 
+  // עדכון סדר רשימות
+  async updateListOrder(listOrder: string[]): Promise<void> {
+    await apiClient.put('/users/me/list-order', { listOrder });
+  },
+
   // רישום פתיחת אפליקציה לאדמין
   logAppOpen: () => apiClient.post('/auth/app-open').catch(() => {}),
 

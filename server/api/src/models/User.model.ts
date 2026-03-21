@@ -11,6 +11,7 @@ export interface IUser extends Document {
   googleId?: string;
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
+  listOrder: string[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -58,6 +59,9 @@ const userSchema = new Schema<IUser>(
     mutedGroupIds: [{
       type: Schema.Types.ObjectId,
       ref: 'List',
+    }],
+    listOrder: [{
+      type: String,
     }],
   },
   {

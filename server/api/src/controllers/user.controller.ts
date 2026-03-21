@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { UserService } from '../services';
+import { UserDAL } from '../dal';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 import type { UpdateProfileInput, ChangePasswordInput } from '../validators';
@@ -45,6 +46,17 @@ export class UserController {
     res.json({
       success: true,
       data: { mutedGroupIds },
+    });
+  });
+
+  static updateListOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user!.id;
+    const { listOrder } = req.body as { listOrder: string[] };
+    await UserDAL.updateListOrder(userId, listOrder);
+
+    res.json({
+      success: true,
+      data: { listOrder },
     });
   });
 
