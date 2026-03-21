@@ -158,8 +158,8 @@ export const useList = ({
   }, [editListData, list.name, list.icon, list.color]);
 
   // ===== אפקטים =====
-  // FAB מוצג כשיש מוצרים ברשימה, מיקום נשמר בין טאבים
-  const showFab = (pending.length + purchased.length) > 0;
+  // FAB מוצג תמיד, מיקום קבוע למטה שלא תלוי בתוכן הרשימה
+  const showFab = true;
 
   useEffect(() => () => clearTimeout(celebrationTimer.current), []);
 

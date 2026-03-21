@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -11,12 +10,12 @@ interface EmptyStateProps {
   filter: ListFilter;
   totalProducts: number;
   hasSearch?: boolean;
-  onAddProduct: () => void;
+  onAddProduct?: () => void;
   onClearPurchased?: () => void;
 }
 
 // ===== קומפוננטה =====
-export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct, onClearPurchased }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurchased }: EmptyStateProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
@@ -117,25 +116,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct
           <span>{t('clearPurchased')}</span>
         </Button>
       )}
-      {/* Only show button on pending tab when no products at all (FAB handles purchased tab) */}
-      {!hasSearch && !isAllDone && filter === 'pending' && totalProducts === 0 && (
-        <Button
-          variant="contained"
-          onClick={() => { haptic('light'); onAddProduct(); }}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: { xs: 2.5, sm: 3 },
-            py: { xs: 1.25, sm: 1.5 },
-            fontSize: { xs: 14, sm: 15 }
-          }}
-          aria-label={t('addProduct')}
-        >
-          <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-          <span>{t('addProduct')}</span>
-        </Button>
-      )}
+      {/* כפתור הוספה לא מוצג כאן, ה-FAB הקבוע למטה תמיד זמין */}
     </Box>
   );
 });
