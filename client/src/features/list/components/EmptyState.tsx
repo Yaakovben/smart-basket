@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -11,10 +12,11 @@ interface EmptyStateProps {
   totalProducts: number;
   hasSearch?: boolean;
   onAddProduct: () => void;
+  onClearPurchased?: () => void;
 }
 
 // ===== קומפוננטה =====
-export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct, onClearPurchased }: EmptyStateProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
@@ -94,6 +96,27 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 } }}>
         {config.description}
       </Typography>
+      {/* כפתור ניקוי כשהכל נקנה */}
+      {isAllDone && onClearPurchased && (
+        <Button
+          variant="outlined"
+          onClick={() => { haptic('light'); onClearPurchased(); }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: { xs: 2.5, sm: 3 },
+            py: { xs: 1, sm: 1.25 },
+            fontSize: { xs: 13, sm: 14 },
+            borderColor: 'warning.main',
+            color: 'warning.main',
+            '&:hover': { borderColor: 'warning.dark', bgcolor: 'rgba(245,158,11,0.04)' }
+          }}
+        >
+          <DeleteSweepIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+          <span>{t('clearPurchased')}</span>
+        </Button>
+      )}
       {/* Only show button on pending tab when no products at all (FAB handles purchased tab) */}
       {!hasSearch && !isAllDone && filter === 'pending' && totalProducts === 0 && (
         <Button

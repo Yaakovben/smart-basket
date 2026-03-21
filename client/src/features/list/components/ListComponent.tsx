@@ -315,7 +315,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
         {/* Products List or Empty State */}
         {items.length === 0 ? (
-          <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} />
+          <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
         ) : (
           items.map((p: Product) => (
             <SwipeItem
