@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import PlaylistRemoveIcon from '@mui/icons-material/DeleteSweep';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -113,7 +113,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onAddProduct
             '&:hover': { borderColor: 'warning.dark', bgcolor: 'rgba(245,158,11,0.04)' }
           }}
         >
-          <DeleteSweepIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+          <PlaylistRemoveIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
           <span>{t('clearPurchased')}</span>
         </Button>
       )}

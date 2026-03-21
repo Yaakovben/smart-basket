@@ -5,7 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import PlaylistRemoveIcon from '@mui/icons-material/DeleteSweep';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useSettings } from '../context/SettingsContext';
 
@@ -145,7 +145,7 @@ export const ListMenu = memo(({
               onClick={() => { onClose(); onClearList(); }}
               sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
             >
-              <DeleteSweepIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+              <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
               <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
                 {t('clearList')}
               </Typography>
