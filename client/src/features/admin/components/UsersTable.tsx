@@ -1,13 +1,19 @@
 import { useState, useMemo, memo, useCallback } from 'react';
-import { Box, Typography, Paper, Collapse, IconButton, keyframes } from '@mui/material';
+import { Box, Typography, Paper, Collapse, IconButton, keyframes, CircularProgress, Skeleton } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import GroupIcon from '@mui/icons-material/Group';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime, isActiveToday, isActiveThisWeek } from '../../../global/helpers';
+import { adminApi, type AdminUserList } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
 
@@ -46,6 +52,87 @@ const MethodBadge = ({ method, size = 28 }: { method: string; size?: number }) =
   );
 };
 
+// כרטיס רשימה בודד בפרטים מורחבים
+const ListCard = ({ list, isDark }: { list: AdminUserList; isDark: boolean }) => {
+  const { t } = useSettings();
+  const progress = list.productCount > 0 ? Math.round((list.purchasedCount / list.productCount) * 100) : 0;
+
+  return (
+    <Box sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      px: 1.25,
+      py: 0.75,
+      borderRadius: '10px',
+      bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)',
+      border: '1px solid',
+      borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    }}>
+      {/* אייקון רשימה */}
+      <Box sx={{
+        width: 32,
+        height: 32,
+        borderRadius: '8px',
+        bgcolor: list.isGroup ? 'rgba(59,130,246,0.1)' : 'rgba(20,184,166,0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        {list.isGroup
+          ? <GroupIcon sx={{ fontSize: 16, color: '#3B82F6' }} />
+          : <ListAltIcon sx={{ fontSize: 16, color: '#14B8A6' }} />
+        }
+      </Box>
+
+      {/* שם + מידע */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography sx={{
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: isDark ? '#E5E7EB' : '#374151',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {list.name}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
+          {list.isGroup && (
+            <Typography sx={{ fontSize: 10, color: '#9CA3AF' }}>
+              {list.membersCount} {t('members')}
+            </Typography>
+          )}
+          {list.isOwner && (
+            <Typography sx={{ fontSize: 9.5, color: '#14B8A6', fontWeight: 600 }}>
+              {t('owner')}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+
+      {/* מוצרים */}
+      <Box sx={{ textAlign: 'center', flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <ShoppingCartIcon sx={{ fontSize: 12, color: '#9CA3AF' }} />
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: isDark ? '#D1D5DB' : '#374151' }}>
+            {list.productCount}
+          </Typography>
+        </Box>
+        {list.productCount > 0 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mt: 0.25 }}>
+            <CheckCircleIcon sx={{ fontSize: 10, color: '#22C55E' }} />
+            <Typography sx={{ fontSize: 9.5, color: '#22C55E', fontWeight: 500 }}>
+              {progress}%
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
 // ===== UserRow =====
 interface UserRowProps {
   user: UserWithLastLogin;
@@ -58,6 +145,9 @@ interface UserRowProps {
 const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: UserRowProps) => {
   const { t, settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [userLists, setUserLists] = useState<AdminUserList[] | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const isGoogle = user.registrationMethod === 'google';
   const isRtl = settings.language === 'he';
 
@@ -65,16 +155,47 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
     setIsExpanded(prev => !prev);
   }, []);
 
+  // טעינת פרטים מורחבים (רשימות + מוצרים)
+  const handleShowDetails = useCallback(async () => {
+    if (showDetails) {
+      setShowDetails(false);
+      return;
+    }
+    if (userLists) {
+      setShowDetails(true);
+      return;
+    }
+    setDetailsLoading(true);
+    setShowDetails(true);
+    try {
+      const data = await adminApi.getUserDetails(user.id);
+      setUserLists(data.lists);
+    } catch {
+      setUserLists([]);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }, [showDetails, userLists, user.id]);
+
   const lastActivity = user.lastAppOpenAt && user.lastLoginAt
     ? (new Date(user.lastAppOpenAt) > new Date(user.lastLoginAt) ? user.lastAppOpenAt : user.lastLoginAt)
     : user.lastAppOpenAt || user.lastLoginAt;
+
+  // סיכום רשימות
+  const listsSummary = userLists ? {
+    total: userLists.length,
+    totalProducts: userLists.reduce((sum, l) => sum + l.productCount, 0),
+    groups: userLists.filter(l => l.isGroup).length,
+  } : null;
 
   return (
     <Paper
       sx={{
         borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        boxShadow: isOnline
+          ? (isDark ? '0 2px 8px rgba(34,197,94,0.15)' : '0 2px 8px rgba(34,197,94,0.1)')
+          : '0 1px 4px rgba(0,0,0,0.06)',
         border: '1px solid',
         borderColor: isOnline
           ? (isDark ? 'rgba(34,197,94,0.25)' : 'rgba(34,197,94,0.2)')
@@ -311,9 +432,104 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
             </Box>
           </Box>
 
+          {/* כפתור פרטים נוספים */}
+          <Box
+            onClick={handleShowDetails}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.75,
+              py: 0.75,
+              borderRadius: '10px',
+              cursor: 'pointer',
+              bgcolor: showDetails
+                ? (isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.06)')
+                : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'),
+              border: '1px solid',
+              borderColor: showDetails
+                ? 'rgba(20,184,166,0.2)'
+                : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+              transition: 'all 0.2s',
+              '&:active': { transform: 'scale(0.98)' },
+              mb: userActivities.length > 0 ? 1.5 : 0,
+            }}
+          >
+            {detailsLoading ? (
+              <CircularProgress size={14} sx={{ color: '#14B8A6' }} />
+            ) : (
+              <InfoOutlinedIcon sx={{ fontSize: 15, color: '#14B8A6' }} />
+            )}
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#14B8A6' }}>
+              {t('moreDetails')}
+            </Typography>
+            <ExpandMoreIcon sx={{
+              fontSize: 16,
+              color: '#14B8A6',
+              transition: 'transform 0.2s',
+              transform: showDetails ? 'rotate(180deg)' : 'none',
+            }} />
+          </Box>
+
+          {/* פרטים מורחבים: רשימות + מוצרים */}
+          <Collapse in={showDetails}>
+            <Box sx={{ mt: 1 }}>
+              {detailsLoading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} variant="rounded" height={48} sx={{ borderRadius: '10px' }} />
+                  ))}
+                </Box>
+              ) : userLists && userLists.length > 0 ? (
+                <>
+                  {/* סיכום */}
+                  {listsSummary && (
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 1.5,
+                      mb: 1,
+                      px: 0.5,
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ListAltIcon sx={{ fontSize: 13, color: '#14B8A6' }} />
+                        <Typography sx={{ fontSize: 11.5, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}>
+                          {listsSummary.total} {t('lists')}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ShoppingCartIcon sx={{ fontSize: 13, color: '#3B82F6' }} />
+                        <Typography sx={{ fontSize: 11.5, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}>
+                          {listsSummary.totalProducts} {t('products')}
+                        </Typography>
+                      </Box>
+                      {listsSummary.groups > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <GroupIcon sx={{ fontSize: 13, color: '#8B5CF6' }} />
+                          <Typography sx={{ fontSize: 11.5, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}>
+                            {listsSummary.groups} {t('groups')}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                  {/* רשימת הרשימות */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    {userLists.map(list => (
+                      <ListCard key={list.id} list={list} isDark={isDark} />
+                    ))}
+                  </Box>
+                </>
+              ) : (
+                <Typography sx={{ fontSize: 12, color: '#9CA3AF', textAlign: 'center', py: 1, fontStyle: 'italic' }}>
+                  {t('noLists')}
+                </Typography>
+              )}
+            </Box>
+          </Collapse>
+
           {/* ציר זמן פעילות */}
           {userActivities.length > 0 && (
-            <Box>
+            <Box sx={{ mt: showDetails ? 1.5 : 0 }}>
               <Typography sx={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600, mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('recentActivity')}
               </Typography>
@@ -328,7 +544,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
                   top: 6,
                   bottom: 6,
                   width: 2,
-                  bgcolor: '#E5E7EB',
+                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB',
                   borderRadius: 1,
                 }} />
                 {userActivities.slice(0, 8).map((activity) => {
@@ -356,7 +572,7 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
                         height: 8,
                         borderRadius: '50%',
                         bgcolor: dotColor,
-                        border: '2px solid white',
+                        border: `2px solid ${isDark ? '#1F2937' : 'white'}`,
                         boxShadow: `0 0 0 1px ${dotColor}40`,
                       }} />
                       <Typography sx={{ fontSize: 11, color: '#9CA3AF', minWidth: 38 }}>

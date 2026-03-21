@@ -116,6 +116,16 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
   async countByListId(listId: string): Promise<number> {
     return this.model.countDocuments({ listId });
   }
+
+  // ספירת מוצרים לפי רשימות (למנהל)
+  async countGroupedByListIds(listIds: mongoose.Types.ObjectId[]): Promise<Map<string, { total: number; purchased: number }>> {
+    if (listIds.length === 0) return new Map();
+    const results = await this.model.aggregate([
+      { $match: { listId: { $in: listIds } } },
+      { $group: { _id: '$listId', total: { $sum: 1 }, purchased: { $sum: { $cond: ['$isPurchased', 1, 0] } } } },
+    ]);
+    return new Map(results.map((r: { _id: mongoose.Types.ObjectId; total: number; purchased: number }) => [r._id.toString(), { total: r.total, purchased: r.purchased }]));
+  }
 }
 
 export const ProductDAL = new ProductDALClass();

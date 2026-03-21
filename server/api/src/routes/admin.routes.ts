@@ -16,6 +16,7 @@ const userIdParams = Joi.object({ userId: commonSchemas.objectId.required() });
 router.get('/users', AdminController.getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), AdminController.getLoginActivity);
 router.get('/stats', AdminController.getStats);
+router.get('/users/:userId/details', validate({ params: userIdParams }), AdminController.getUserDetails);
 router.delete('/users/:userId', validate({ params: userIdParams }), AdminController.deleteUser);
 
 export default router;

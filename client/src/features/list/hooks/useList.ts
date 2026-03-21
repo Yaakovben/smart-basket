@@ -159,10 +159,8 @@ export const useList = ({
   }, [editListData, list.name, list.icon, list.color]);
 
   // ===== אפקטים =====
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- הסתרת FAB כשמספר הפריטים קטן
-    if (items.length <= FAB_VISIBILITY_THRESHOLD) setFabPosition(null);
-  }, [items.length]);
+  // FAB מוסתר כש-items.length קטן, אבל לא מאפסים מיקום (נשמר לטאב אחר)
+  const showFab = items.length > FAB_VISIBILITY_THRESHOLD;
 
   useEffect(() => () => clearTimeout(celebrationTimer.current), []);
 
@@ -714,6 +712,7 @@ export const useList = ({
     addError,
     refreshing,
     fabPosition,
+    showFab,
     isDragging,
 
     pending,

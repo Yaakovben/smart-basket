@@ -352,7 +352,7 @@ export const AdminDashboard = () => {
 
         {/* פיד פעילות אחרונה */}
         {!loading && activities.length > 0 && (
-          <RecentActivityFeed activities={activities} language={settings.language} defaultExpanded isDark={isDark} />
+          <RecentActivityFeed activities={activities} language={settings.language} isDark={isDark} />
         )}
 
         {/* ריווח תחתון */}

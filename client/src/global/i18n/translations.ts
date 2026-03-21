@@ -387,7 +387,12 @@ type TranslationKey =
   // List reorder
   | 'reorderLists'
   | 'reorderDone'
-  | 'orderSaved';
+  | 'orderSaved'
+  // Admin user details
+  | 'moreDetails'
+  | 'lists'
+  | 'products'
+  | 'owner';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -777,6 +782,11 @@ export const translations: Record<Language, Translations> = {
     reorderLists: 'סדר רשימות',
     reorderDone: 'סיום',
     orderSaved: 'הסדר נשמר',
+    // פרטי משתמש למנהל
+    moreDetails: 'פרטים נוספים',
+    lists: 'רשימות',
+    products: 'מוצרים',
+    owner: 'בעלים',
   },
   en: {
     // General
@@ -1163,6 +1173,10 @@ export const translations: Record<Language, Translations> = {
     reorderLists: 'Reorder Lists',
     reorderDone: 'Done',
     orderSaved: 'Order saved',
+    moreDetails: 'More Details',
+    lists: 'lists',
+    products: 'products',
+    owner: 'Owner',
   },
   ru: {
     // General
@@ -1549,6 +1563,10 @@ export const translations: Record<Language, Translations> = {
     reorderLists: 'Упорядочить списки',
     reorderDone: 'Готово',
     orderSaved: 'Порядок сохранён',
+    moreDetails: 'Подробнее',
+    lists: 'списков',
+    products: 'товаров',
+    owner: 'Владелец',
   }
 };
 

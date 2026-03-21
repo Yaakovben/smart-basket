@@ -40,13 +40,24 @@ export interface PaginatedActivity {
 
 export interface AdminStats {
   totalUsers: number;
-  totalLists: number;
-  totalGroupLists: number;
-  totalProducts: number;
   loginsToday: number;
   uniqueUsersToday: number;
   loginsThisMonth: number;
   uniqueUsersThisMonth: number;
+}
+
+export interface AdminUserList {
+  id: string;
+  name: string;
+  isGroup: boolean;
+  isOwner: boolean;
+  membersCount: number;
+  productCount: number;
+  purchasedCount: number;
+}
+
+export interface AdminUserDetails {
+  lists: AdminUserList[];
 }
 
 export const adminApi = {
@@ -64,6 +75,11 @@ export const adminApi = {
 
   async getStats(): Promise<AdminStats> {
     const response = await apiClient.get<{ data: AdminStats }>('/admin/stats');
+    return response.data.data;
+  },
+
+  async getUserDetails(userId: string): Promise<AdminUserDetails> {
+    const response = await apiClient.get<{ data: AdminUserDetails }>(`/admin/users/${userId}/details`);
     return response.data.data;
   },
 };

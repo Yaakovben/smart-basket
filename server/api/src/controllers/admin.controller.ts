@@ -1,7 +1,8 @@
 import type { Response } from 'express';
+import mongoose from 'mongoose';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL } from '../dal';
 import { UserService } from '../services/user.service';
-import { ForbiddenError } from '../errors';
+import { ForbiddenError, NotFoundError } from '../errors';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 
@@ -60,18 +61,9 @@ export class AdminController {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [
-      totalUsers,
-      totalLists,
-      totalGroupLists,
-      totalProducts,
-      todayStats,
-      monthStats,
-    ] = await Promise.all([
+    // שאילתות קלות בלבד, ללא ספירות כבדות שלא מוצגות
+    const [totalUsers, todayStats, monthStats] = await Promise.all([
       UserDAL.count({}),
-      ListDAL.count({}),
-      ListDAL.count({ isGroup: true }),
-      ProductDAL.count({}),
       LoginActivityDAL.getStatsSince(todayStart),
       LoginActivityDAL.getStatsSince(monthStart),
     ]);
@@ -80,14 +72,44 @@ export class AdminController {
       success: true,
       data: {
         totalUsers,
-        totalLists,
-        totalGroupLists,
-        totalProducts,
         loginsToday: todayStats.totalLogins,
         uniqueUsersToday: todayStats.uniqueUsers,
         loginsThisMonth: monthStats.totalLogins,
         uniqueUsersThisMonth: monthStats.uniqueUsers,
       },
+    });
+  });
+
+  // פרטי משתמש מורחבים: רשימות + מספר מוצרים בכל רשימה
+  static getUserDetails = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { userId } = req.params;
+
+    const user = await UserDAL.findById(userId);
+    if (!user) throw NotFoundError.user();
+
+    const uid = new mongoose.Types.ObjectId(userId);
+
+    // רשימות שהמשתמש בעלים או חבר בהן
+    const lists = await ListDAL.find({
+      $or: [{ owner: uid }, { 'members.user': uid }],
+    });
+
+    // ספירת מוצרים לכל רשימה
+    const countsMap = await ProductDAL.countGroupedByListIds(lists.map(l => l._id));
+
+    const listsData = lists.map(list => ({
+      id: list._id.toString(),
+      name: list.name,
+      isGroup: list.isGroup,
+      isOwner: list.owner.toString() === userId,
+      membersCount: (list.members?.length || 0) + 1,
+      productCount: countsMap.get(list._id.toString())?.total || 0,
+      purchasedCount: countsMap.get(list._id.toString())?.purchased || 0,
+    }));
+
+    res.json({
+      success: true,
+      data: { lists: listsData },
     });
   });
 

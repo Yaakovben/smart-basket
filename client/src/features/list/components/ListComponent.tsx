@@ -223,7 +223,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     showMembers, showShareList, showEditList, editListData,
     confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
     refreshing,
-    fabPosition, isDragging,
+    fabPosition, showFab, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
     setFilter, setSearch, setShowAdd, setShowDetails,
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
@@ -335,8 +335,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         )}
       </Box>
 
-      {/* FAB - Add Product Button (show when: has items, or on purchased tab, or products exist but filtered) */}
-      {(items.length > 0 || filter === 'purchased' || (pending.length + purchased.length) > 0) && (
+      {/* FAB - Add Product Button */}
+      {showFab && (
         <AddProductFab
           itemCount={items.length}
           fabPosition={fabPosition}

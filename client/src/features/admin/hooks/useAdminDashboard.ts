@@ -26,10 +26,11 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     setLoading(true);
     setError(null);
     try {
-      const [usersData, activityData, statsData] = await Promise.all([
+      // טעינה מהירה: משתמשים וסטטיסטיקות קודם, פעילות בנפרד
+      const [usersData, statsData, activityData] = await Promise.all([
         adminApi.getUsers(),
-        adminApi.getLoginActivity(1, 500),
         adminApi.getStats(),
+        adminApi.getLoginActivity(1, 100),
       ]);
 
       setAllUsers(usersData);
@@ -80,9 +81,6 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const stats: DashboardStats = useMemo(() => ({
     totalUsers: serverStats?.totalUsers || allUsers.length,
     uniqueUsersToday: serverStats?.uniqueUsersToday || 0,
-    totalLists: serverStats?.totalLists || 0,
-    totalGroupLists: serverStats?.totalGroupLists || 0,
-    totalProducts: serverStats?.totalProducts || 0,
     loginsToday: serverStats?.loginsToday || 0,
     loginsThisMonth: serverStats?.loginsThisMonth || 0,
     uniqueUsersThisMonth: serverStats?.uniqueUsersThisMonth || 0,
