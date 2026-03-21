@@ -278,7 +278,7 @@ export const HomeComponent = memo(({
   const [reorderedIds, setReorderedIds] = useState<string[] | null>(null);
   const [dragIndex, setDragIndex] = useState(-1);
   const [dragOverIndex, setDragOverIndex] = useState(-1);
-  const dragStartY = useRef(0);
+  const dragIndexRef = useRef(-1);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const originalOrderRef = useRef<string[]>([]);
 
@@ -309,47 +309,42 @@ export const HomeComponent = memo(({
     return cardRefs.current.length - 1;
   }, []);
 
-  // גרירה: החלפת מיקום בסדר
-  const moveItem = useCallback((from: number, to: number) => {
-    setReorderedIds(prev => {
-      if (!prev) return prev;
-      const newIds = [...prev];
-      const [moved] = newIds.splice(from, 1);
-      newIds.splice(to, 0, moved);
-      return newIds;
-    });
-    haptic('light');
-  }, []);
-
-  // גרירה: התחלת גרירה (touch)
-  const handleDragStart = useCallback((index: number, clientY: number) => {
+  // גרירה: התחלת גרירה
+  const handleDragStart = useCallback((index: number, _clientY: number) => {
+    dragIndexRef.current = index;
     setDragIndex(index);
     setDragOverIndex(index);
-    dragStartY.current = clientY;
     haptic('medium');
   }, []);
 
-  // גרירה: תנועה (touch/mouse)
+  // גרירה: תנועה - ref מונע stale closures בגרירה מהירה
   const handleDragMove = useCallback((clientY: number) => {
-    if (dragIndex < 0) return;
+    const currentIdx = dragIndexRef.current;
+    if (currentIdx < 0) return;
     const targetIdx = getTargetIndex(clientY);
-    if (targetIdx !== dragOverIndex) {
-      setDragOverIndex(targetIdx);
-    }
-    if (targetIdx !== dragIndex) {
-      moveItem(dragIndex, targetIdx);
+    if (targetIdx !== currentIdx) {
+      setReorderedIds(prev => {
+        if (!prev) return prev;
+        const newIds = [...prev];
+        const [moved] = newIds.splice(currentIdx, 1);
+        newIds.splice(targetIdx, 0, moved);
+        return newIds;
+      });
+      dragIndexRef.current = targetIdx;
       setDragIndex(targetIdx);
       setDragOverIndex(targetIdx);
+      haptic('light');
     }
-  }, [dragIndex, dragOverIndex, getTargetIndex, moveItem]);
+  }, [getTargetIndex]);
 
   // גרירה: סיום
   const handleDragEnd = useCallback(() => {
+    dragIndexRef.current = -1;
     setDragIndex(-1);
     setDragOverIndex(-1);
   }, []);
 
-  // touch event handlers
+  // touch/mouse event handlers
   useEffect(() => {
     if (dragIndex < 0) return;
     const onTouchMove = (e: TouchEvent) => {
