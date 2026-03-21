@@ -266,12 +266,10 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
           >
             {user.name}
           </Typography>
-          <Typography sx={{ fontSize: 11.5, color: isOnline ? '#16A34A' : (isDark ? '#6B7280' : '#9CA3AF'), fontWeight: isOnline ? 500 : 400 }}>
-            {isOnline
-              ? t('onlineNow')
-              : lastActivity
-                ? getRelativeTime(lastActivity, language)
-                : t('neverLoggedIn')
+          <Typography sx={{ fontSize: 11.5, color: isDark ? '#6B7280' : '#9CA3AF' }}>
+            {lastActivity
+              ? getRelativeTime(lastActivity, language)
+              : t('neverLoggedIn')
             }
           </Typography>
         </Box>
