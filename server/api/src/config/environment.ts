@@ -46,7 +46,7 @@ const envSchema = Joi.object({
 
   // זמני תפוגה
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
-  JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('90d'),
 
   // אימות Google
   GOOGLE_CLIENT_ID: Joi.string().required().messages({

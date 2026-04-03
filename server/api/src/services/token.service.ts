@@ -20,9 +20,9 @@ export class TokenService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken();
 
-    // תפוגה של refresh token - 30 יום
+    // תפוגה של refresh token - 90 יום
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setDate(expiresAt.getDate() + 90);
 
     await TokenDAL.createToken(userId, refreshToken, expiresAt);
 
@@ -57,7 +57,7 @@ export class TokenService {
       tokenDoc._id.toString(),
       refreshToken,
       newRefreshToken,
-      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 יום
+      new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 יום
     );
 
     // בקשה אחרת כבר החליפה את הטוקן
