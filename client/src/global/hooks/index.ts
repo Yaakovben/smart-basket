@@ -77,6 +77,9 @@ export function useToast() {
   return { message: toast.message, toastType: toast.type, toastKey: toast.key, showToast, hideToast };
 }
 
+// דגל מודולרי למניעת רישום כפול של פתיחת אפליקציה (שורד StrictMode re-mount)
+let _appOpenLogged = false;
+
 // טיפוס נתונים ראשוניים לטעינה מקבילית
 export interface InitialData {
   lists: ApiList[] | null;
@@ -110,8 +113,6 @@ export function useAuth() {
   const [loading, setLoading] = useState(() => !!getAccessToken());
   // נתונים שנטענו מראש במקביל לפרופיל לטעינה מהירה
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
-  const appOpenLoggedRef = useRef(false);
-
   // בדיקת סשן קיים בטעינה
   useEffect(() => {
     const checkAuth = async () => {
@@ -161,8 +162,8 @@ export function useAuth() {
         socketService.connect();
 
         // רישום פתיחת אפליקציה לאדמין (פעם אחת בלבד)
-        if (!appOpenLoggedRef.current) {
-          appOpenLoggedRef.current = true;
+        if (!_appOpenLogged) {
+          _appOpenLogged = true;
           authApi.logAppOpen();
         }
       } catch (error) {
