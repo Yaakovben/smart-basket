@@ -264,7 +264,7 @@ export const AppRouter = () => {
             <ProtectedRoute user={user}>
               <HomePage
                 lists={lists}
-                listsFetchError={listsFetchError}
+                listsFetchError={listsFetchError || initialData.connectionError}
                 user={user!}
                 onSelectList={(list: List) => navigate(`/list/${list.id}`)}
                 onCreateList={handleCreateList}

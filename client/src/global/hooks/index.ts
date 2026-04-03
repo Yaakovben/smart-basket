@@ -81,6 +81,7 @@ export function useToast() {
 export interface InitialData {
   lists: ApiList[] | null;
   notifications: { notifications: import('../../services/api').PersistedNotification[]; unreadCount: number } | null;
+  connectionError?: boolean;
 }
 
 // ===== useAuth Hook =====
@@ -172,6 +173,8 @@ export function useAuth() {
           setUser(null);
         }
         // בשגיאת רשת, המשתמש השמור נשאר (ישן אבל פונקציונלי)
+        // סימון שגיאת חיבור כדי להציג הודעה למשתמש
+        setInitialData(prev => ({ ...prev, connectionError: true }));
       }
       setLoading(false);
     };
