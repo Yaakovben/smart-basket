@@ -154,12 +154,29 @@
         </svg>
       </div>
 
-      <!-- נקודות טעינה, מופיעות רק אחרי 3 שניות (absolute כדי לא לזוז את האייקון) -->
+      <!-- שם משתמש חוזר -->
+      <p id="welcome-name" style="color: white; font-size: 16px; font-weight: 600; margin: 16px 0 0; opacity: 0; transition: opacity 0.3s;"></p>
+
+      <!-- נקודות טעינה, מופיעות רק אחרי 1.5 שניות -->
       <div class="loading-dots" style="position: absolute; bottom: 38%;">
         <span></span>
         <span></span>
         <span></span>
       </div>
+
+      <script>
+        // הצגת שם משתמש חוזר מיידית מ-localStorage
+        try {
+          var raw = localStorage.getItem('cached_user');
+          if (raw) {
+            var name = JSON.parse(raw).name;
+            if (name) {
+              var el = document.getElementById('welcome-name');
+              if (el) { el.textContent = '👋 ' + name; el.style.opacity = '1'; }
+            }
+          }
+        } catch(e) {}
+      </script>
 
       <!-- Fallback error message (hidden by default, shown after 15s or on error) -->
       <div id="load-error" style="display: none; position: absolute; bottom: 20%; text-align: center; padding: 0 20px;">
@@ -203,7 +220,7 @@
           display: flex;
           gap: 6px;
           opacity: 0;
-          animation: showDots 0.3s ease-out 3s forwards;
+          animation: showDots 0.3s ease-out 1.5s forwards;
         }
 
         .loading-dots span {
@@ -212,7 +229,7 @@
           background: rgba(255,255,255,0.8);
           border-radius: 50%;
           animation: dot 1.4s ease-in-out infinite;
-          animation-delay: calc(3s + var(--i) * 0.2s);
+          animation-delay: calc(1.5s + var(--i) * 0.2s);
         }
 
         .loading-dots span:nth-child(1) { --i: 0; }

@@ -156,26 +156,6 @@ export const AdminDashboard = () => {
           overflow: 'hidden',
         }}
       >
-        {/* עיגולים דקורטיביים */}
-        <Box sx={{
-          position: 'absolute',
-          top: -40,
-          [isRtl ? 'left' : 'right']: -40,
-          width: 160,
-          height: 160,
-          borderRadius: '50%',
-          bgcolor: 'rgba(255,255,255,0.08)',
-        }} />
-        <Box sx={{
-          position: 'absolute',
-          bottom: 20,
-          [isRtl ? 'right' : 'left']: -30,
-          width: 100,
-          height: 100,
-          borderRadius: '50%',
-          bgcolor: 'rgba(255,255,255,0.05)',
-        }} />
-
         {/* כותרת + רענון */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

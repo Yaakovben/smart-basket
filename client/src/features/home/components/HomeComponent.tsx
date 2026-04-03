@@ -285,6 +285,7 @@ export const HomeComponent = memo(({
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
+  const lastMoveTimeRef = useRef(0);
 
   // חישוב סדר תצוגה עם סדר מותאם אישית
   const orderedDisplay = useMemo(() => {
@@ -321,10 +322,15 @@ export const HomeComponent = memo(({
     haptic('medium');
   }, []);
 
-  // גרירה: תנועה - ref מונע stale closures בגרירה מהירה
+  // גרירה: תנועה - throttle למניעת עומס ברשימות ארוכות
   const handleDragMove = useCallback((clientY: number) => {
     const currentIdx = dragIndexRef.current;
     if (currentIdx < 0) return;
+
+    // throttle: מקסימום עדכון כל 50ms
+    const now = Date.now();
+    if (now - lastMoveTimeRef.current < 50) return;
+    lastMoveTimeRef.current = now;
 
     // גלילה אוטומטית כשגוררים לקצוות המסך
     const SCROLL_ZONE = 80;
@@ -825,7 +831,6 @@ export const HomeComponent = memo(({
               <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
             </Box>
             <TextField
-              autoFocus
               fullWidth
               value={joinCode}
               onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setJoinError(''); }}
@@ -957,6 +962,10 @@ export const HomeComponent = memo(({
         }}
         onConvertToGroup={!editList.isGroup ? (password: string) => {
           onEditList({ ...editList, isGroup: true, password });
+          setEditList(null);
+        } : undefined}
+        onConvertToPrivate={editList.isGroup && editList.members.length === 0 ? () => {
+          onEditList({ ...editList, isGroup: false, password: null });
           setEditList(null);
         } : undefined}
       />}

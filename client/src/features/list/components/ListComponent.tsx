@@ -422,6 +422,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             showToast(t('errorOccurred'), 'error');
           }
         } : undefined}
+        onConvertToPrivate={list.isGroup && list.members.length === 0 ? async () => {
+          try {
+            await onUpdateList({ ...list, isGroup: false, password: null });
+            setShowEditList(false);
+          } catch {
+            showToast(t('errorOccurred'), 'error');
+          }
+        } : undefined}
       />
 
       {/* Confirm Modals */}

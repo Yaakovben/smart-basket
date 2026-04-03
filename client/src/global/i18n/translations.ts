@@ -373,6 +373,8 @@ type TranslationKey =
   // Convert list to group
   | 'convertToGroup'
   | 'convertToGroupHint'
+  | 'convertToPrivate'
+  | 'convertToPrivateHint'
   | 'setGroupPassword'
   // Duplicate product
   | 'productExists'
@@ -773,6 +775,8 @@ export const translations: Record<Language, Translations> = {
     sessionExpired: 'החיבור פג תוקף, יש להתחבר מחדש',
     convertToGroup: 'הפוך לרשימה משותפת',
     convertToGroupHint: 'שתף את הרשימה עם אחרים',
+    convertToPrivate: 'הפוך לרשימה פרטית',
+    convertToPrivateHint: 'הסר את אפשרות השיתוף',
     setGroupPassword: 'הגדר סיסמת קבוצה (4 ספרות)',
     productExists: 'מוצר קיים',
     productExistsMessage: '"{name}" כבר ברשימה ({quantity} {unit}). מה לעשות?',
@@ -1168,6 +1172,8 @@ export const translations: Record<Language, Translations> = {
     sessionExpired: 'Session expired, please log in again',
     convertToGroup: 'Convert to shared list',
     convertToGroupHint: 'Share this list with others',
+    convertToPrivate: 'Convert to private list',
+    convertToPrivateHint: 'Remove sharing capability',
     setGroupPassword: 'Set group password (4 digits)',
     productExists: 'Product exists',
     productExistsMessage: '"{name}" is already in the list ({quantity} {unit}). What to do?',
@@ -1562,6 +1568,8 @@ export const translations: Record<Language, Translations> = {
     sessionExpired: 'Сессия истекла, войдите снова',
     convertToGroup: 'Сделать совместным списком',
     convertToGroupHint: 'Поделитесь списком с другими',
+    convertToPrivate: 'Сделать личным списком',
+    convertToPrivateHint: 'Убрать возможность совместного доступа',
     setGroupPassword: 'Установите пароль группы (4 цифры)',
     productExists: 'Продукт существует',
     productExistsMessage: '"{name}" уже в списке ({quantity} {unit}). Что делать?',

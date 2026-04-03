@@ -9,6 +9,7 @@ import { NotificationService } from './notification.service';
 import { ListMembershipService } from './list-membership.service';
 import { transformList, transformListsWithProducts } from './list-transform.helper';
 import { checkListAccess, checkListOwner } from './list-access.helper';
+import { ForbiddenError } from '../errors';
 
 export class ListService {
   // ==================== CRUD ראשי ====================
@@ -59,6 +60,16 @@ export class ListService {
       if (data.password) {
         list.password = data.password;
       }
+    }
+
+    // המרת קבוצה לרשימה פרטית (רק אם אין חברים נוספים)
+    if (data.isGroup === false && list.isGroup) {
+      if (list.members.length > 0) {
+        throw new ForbiddenError('לא ניתן להמיר לפרטית כשיש חברים נוספים');
+      }
+      list.isGroup = false;
+      list.inviteCode = undefined;
+      list.password = undefined;
     }
 
     // הסרת isGroup מהנתונים לפני Object.assign (כבר טיפלנו בזה)

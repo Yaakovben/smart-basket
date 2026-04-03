@@ -110,6 +110,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(() => !!getAccessToken());
   // נתונים שנטענו מראש במקביל לפרופיל לטעינה מהירה
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
+  const appOpenLoggedRef = useRef(false);
 
   // בדיקת סשן קיים בטעינה
   useEffect(() => {
@@ -159,8 +160,11 @@ export function useAuth() {
         // חיבור socket אחרי אימות מוצלח
         socketService.connect();
 
-        // רישום פתיחת אפליקציה לאדמין
-        authApi.logAppOpen();
+        // רישום פתיחת אפליקציה לאדמין (פעם אחת בלבד)
+        if (!appOpenLoggedRef.current) {
+          appOpenLoggedRef.current = true;
+          authApi.logAppOpen();
+        }
       } catch (error) {
         clearTimeout(timeoutId!);
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
@@ -365,13 +369,15 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // מציאת רשימה ישנה להשוואה מה השתנה
       const oldList = lists.find((l) => l.id === updatedList.id);
 
-      // בדיקה אם יש המרה מרשימה פרטית לקבוצה
-      const isConverting = updatedList.isGroup && oldList && !oldList.isGroup;
+      // בדיקה אם יש המרה מרשימה פרטית לקבוצה או להפך
+      const isConvertingToGroup = updatedList.isGroup && oldList && !oldList.isGroup;
+      const isConvertingToPrivate = !updatedList.isGroup && oldList && oldList.isGroup;
       const updated = await listsApi.updateList(updatedList.id, {
         name: updatedList.name,
         icon: updatedList.icon,
         color: updatedList.color,
-        ...(isConverting ? { isGroup: true, password: updatedList.password || undefined } : {}),
+        ...(isConvertingToGroup ? { isGroup: true, password: updatedList.password || undefined } : {}),
+        ...(isConvertingToPrivate ? { isGroup: false } : {}),
       });
       setLists((prev) =>
         prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
