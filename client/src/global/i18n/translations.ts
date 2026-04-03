@@ -245,6 +245,8 @@ type TranslationKey =
   | 'deleteConfirmMessage'
   | 'deleteDataWarning'
   | 'errorOccurred'
+  | 'connectionErrorTitle'
+  | 'connectionErrorDesc'
   | 'noNotifications'
   | 'home'
   | 'new'
@@ -644,6 +646,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
     deleteDataWarning: 'פעולה זו תמחק:\n• כל הרשימות הפרטיות שלך\n• רשימות משותפות שיצרת יועברו לחבר אחר\n• תוסר מרשימות שהצטרפת אליהן\n• כל ההגדרות וההעדפות\n• חשבונך לצמיתות\n\nפעולה זו לא ניתנת לביטול!',
     errorOccurred: 'אירעה שגיאה',
+    connectionErrorTitle: 'בעיית חיבור',
+    connectionErrorDesc: 'לא ניתן להתחבר לשרת כרגע',
     noNotifications: 'אין התראות חדשות',
     home: 'בית',
     new: 'חדש',
@@ -1037,6 +1041,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'This action cannot be undone',
     deleteDataWarning: 'This will:\n• Delete all your private lists\n• Transfer shared lists you own to another member\n• Remove you from lists you joined\n• Delete all settings and preferences\n• Delete your account permanently\n\nThis action cannot be undone!',
     errorOccurred: 'An error occurred',
+    connectionErrorTitle: 'Connection error',
+    connectionErrorDesc: 'Unable to connect to the server right now',
     noNotifications: 'No new notifications',
     home: 'Home',
     new: 'New',
@@ -1429,6 +1435,8 @@ export const translations: Record<Language, Translations> = {
     deleteConfirmMessage: 'Это действие нельзя отменить',
     deleteDataWarning: 'Это действие:\n• Удалит все ваши личные списки\n• Передаст ваши совместные списки другому участнику\n• Удалит вас из списков, в которых вы состоите\n• Удалит все настройки и предпочтения\n• Удалит ваш аккаунт навсегда\n\nЭто действие нельзя отменить!',
     errorOccurred: 'Произошла ошибка',
+    connectionErrorTitle: 'Ошибка подключения',
+    connectionErrorDesc: 'Не удалось подключиться к серверу',
     noNotifications: 'Нет новых уведомлений',
     home: 'Главная',
     new: 'Новый',

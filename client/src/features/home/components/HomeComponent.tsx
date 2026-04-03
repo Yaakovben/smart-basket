@@ -15,6 +15,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
 import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
@@ -187,6 +189,7 @@ ListCard.displayName = 'ListCard';
 // ===== ממשק Props =====
 interface HomePageProps {
   lists: List[];
+  listsFetchError?: boolean;
   user: User;
   onSelectList: (list: List) => void;
   onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;
@@ -204,7 +207,7 @@ interface HomePageProps {
 }
 
 export const HomeComponent = memo(({
-  lists, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
+  lists, listsFetchError = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
@@ -543,7 +546,29 @@ export const HomeComponent = memo(({
 
       {/* Content */}
       <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
-        {display.length === 0 ? (
+        {/* מצב שגיאת חיבור: השרת למטה ואין רשימות */}
+        {listsFetchError && lists.length === 0 ? (
+          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: '50%', bgcolor: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 } }}>
+              <CloudOffIcon sx={{ fontSize: { xs: 48, sm: 56 }, color: 'error.main', opacity: 0.8 }} />
+            </Box>
+            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.primary', mb: 1 }}>
+              {t('connectionErrorTitle')}
+            </Typography>
+            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
+              {t('connectionErrorDesc')}
+            </Typography>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => window.location.reload()}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 2.5, sm: 3 }, py: { xs: 1.25, sm: 1.5 }, fontSize: { xs: 14, sm: 15 } }}
+            >
+              <RefreshIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+              <span>{t('tryAgain')}</span>
+            </Button>
+          </Box>
+        ) : display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
             <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
               {tab === 'groups' ? '👥' : '📝'}
