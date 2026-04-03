@@ -14,6 +14,16 @@ interface GoogleUserInfo {
   picture?: string;
 }
 
+// יצירת טוקנים + רישום פעילות כניסה
+async function createTokensAndLog(
+  userId: string, email: string, name: string,
+  loginMethod: 'email' | 'google', ipAddress?: string, userAgent?: string
+): Promise<AuthTokens> {
+  const tokens = await TokenService.createTokens(userId, email, name);
+  await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, ipAddress, userAgent });
+  return tokens;
+}
+
 export class AuthService {
   static async checkEmail(email: string): Promise<{ exists: boolean; isGoogleAccount: boolean }> {
     // שימוש ב-findByEmailWithPassword כי ה-password field הוא select: false
@@ -48,25 +58,9 @@ export class AuthService {
       isAdmin,
     });
 
-    const tokens = await TokenService.createTokens(
-      user._id.toString(),
-      user.email,
-      user.name
-    );
+    const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'email', ipAddress, userAgent);
 
-    await LoginActivityDAL.logActivity({
-      userId: user._id.toString(),
-      userName: user.name,
-      userEmail: user.email,
-      loginMethod: 'email',
-      ipAddress,
-      userAgent,
-    });
-
-    return {
-      user: user.toJSON() as IUserResponse,
-      tokens,
-    };
+    return { user: user.toJSON() as IUserResponse, tokens };
   }
 
   static async login(
@@ -86,25 +80,9 @@ export class AuthService {
       throw AuthError.invalidCredentials();
     }
 
-    const tokens = await TokenService.createTokens(
-      user._id.toString(),
-      user.email,
-      user.name
-    );
+    const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'email', ipAddress, userAgent);
 
-    await LoginActivityDAL.logActivity({
-      userId: user._id.toString(),
-      userName: user.name,
-      userEmail: user.email,
-      loginMethod: 'email',
-      ipAddress,
-      userAgent,
-    });
-
-    return {
-      user: user.toJSON() as IUserResponse,
-      tokens,
-    };
+    return { user: user.toJSON() as IUserResponse, tokens };
   }
 
   static async googleAuth(
@@ -163,25 +141,9 @@ export class AuthService {
       user.googleId = googleUser.sub;
     }
 
-    const tokens = await TokenService.createTokens(
-      user._id.toString(),
-      user.email,
-      user.name
-    );
+    const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'google', ipAddress, userAgent);
 
-    await LoginActivityDAL.logActivity({
-      userId: user._id.toString(),
-      userName: user.name,
-      userEmail: user.email,
-      loginMethod: 'google',
-      ipAddress,
-      userAgent,
-    });
-
-    return {
-      user: user.toJSON() as IUserResponse,
-      tokens,
-    };
+    return { user: user.toJSON() as IUserResponse, tokens };
   }
 
   static async refreshToken(

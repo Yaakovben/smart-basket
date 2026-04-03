@@ -7,6 +7,11 @@ import { logger } from '../config';
 import type { AuthRequest } from '../types';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 
+const getClientInfo = (req: Request) => ({
+  ipAddress: req.ip || req.socket.remoteAddress,
+  userAgent: req.get('User-Agent'),
+});
+
 export class AuthController {
   // בדיקת קיום מייל
   static checkEmail = asyncHandler(async (req: Request, res: Response) => {
@@ -21,8 +26,7 @@ export class AuthController {
 
   static register = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as RegisterInput;
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.get('User-Agent');
+    const { ipAddress, userAgent } = getClientInfo(req);
     const result = await AuthService.register(data, ipAddress, userAgent);
 
     res.status(201).json({
@@ -33,8 +37,7 @@ export class AuthController {
 
   static login = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as LoginInput;
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.get('User-Agent');
+    const { ipAddress, userAgent } = getClientInfo(req);
     const result = await AuthService.login(data, ipAddress, userAgent);
 
     res.json({
@@ -45,8 +48,7 @@ export class AuthController {
 
   static googleAuth = asyncHandler(async (req: Request, res: Response) => {
     const data = req.body as GoogleAuthInput;
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.get('User-Agent');
+    const { ipAddress, userAgent } = getClientInfo(req);
     const result = await AuthService.googleAuth(data, ipAddress, userAgent);
 
     res.json({
@@ -72,8 +74,7 @@ export class AuthController {
   // רישום פתיחת אפליקציה
   static logAppOpen = asyncHandler(async (req: AuthRequest, res: Response) => {
     const user = req.user!;
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.get('User-Agent');
+    const { ipAddress, userAgent } = getClientInfo(req);
 
     LoginActivityDAL.logActivity({
       userId: user.id,

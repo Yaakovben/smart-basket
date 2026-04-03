@@ -83,33 +83,24 @@ export const getRelativeTime = (timestamp: string, language: Language): string =
 };
 
 // ===== בדיקות תאריך =====
-export const isToday = (dateStr: string): boolean => {
-  const today = new Date().toISOString().split('T')[0];
-  return dateStr === today;
-};
+const todayStr = () => new Date().toISOString().split('T')[0];
+
+export const isToday = (dateStr: string): boolean => dateStr === todayStr();
 
 export const isYesterday = (dateStr: string): boolean => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return dateStr === yesterday.toISOString().split('T')[0];
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return dateStr === d.toISOString().split('T')[0];
 };
 
-export const isActiveToday = (timestamp?: string): boolean => {
-  if (!timestamp) return false;
-  const today = new Date().toISOString().split('T')[0];
-  return timestamp.startsWith(today);
-};
+export const isActiveToday = (timestamp?: string): boolean =>
+  !!timestamp && timestamp.startsWith(todayStr());
 
-export const isActiveThisWeek = (timestamp?: string): boolean => {
-  if (!timestamp) return false;
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  return new Date(timestamp) > weekAgo;
-};
+export const isActiveThisWeek = (timestamp?: string): boolean =>
+  !!timestamp && new Date(timestamp) > new Date(Date.now() - 7 * 86400000);
 
 export const isActiveThisMonth = (timestamp?: string): boolean => {
   if (!timestamp) return false;
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  return new Date(timestamp) >= monthStart;
+  return new Date(timestamp) >= new Date(now.getFullYear(), now.getMonth(), 1);
 };

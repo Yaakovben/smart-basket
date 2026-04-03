@@ -5,6 +5,8 @@ import { logger } from '../config';
 import type { INotificationDoc, NotificationType } from '../models';
 import { PushService } from './push.service';
 
+const PUSH_ICON = '/icon-192x192.png';
+
 export interface CreateNotificationInput {
   type: NotificationType;
   listId: string;
@@ -142,8 +144,8 @@ export class NotificationService {
     const pushMessage = generatePushMessage(data.type, data.actorName, data.listName, data.productName);
     PushService.sendToUser(data.targetUserId, {
       ...pushMessage,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
+      icon: PUSH_ICON,
+      badge: PUSH_ICON,
       data: {
         listId: data.listId,
         type: data.type,
@@ -229,8 +231,8 @@ export class NotificationService {
     const eventId = new mongoose.Types.ObjectId().toString();
     PushService.sendToUsers(activeTargetIds, {
       ...pushMessage,
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
+      icon: PUSH_ICON,
+      badge: PUSH_ICON,
       data: {
         listId,
         type,
