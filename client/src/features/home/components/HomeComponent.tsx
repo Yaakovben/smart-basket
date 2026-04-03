@@ -329,7 +329,7 @@ export const HomeComponent = memo(({
 
     // גלילה אוטומטית כשגוררים לקצוות המסך (תמיד, ללא throttle)
     const SCROLL_ZONE = 100;
-    const SCROLL_SPEED = 10;
+    const SCROLL_SPEED = 5;
     const container = contentRef.current;
     if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
     if (container) {
