@@ -203,39 +203,37 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
           </Button>
 
           {error && !showEmailForm && (
-            <Alert severity="warning" sx={{ mt: 2, borderRadius: '12px', fontSize: 13, alignItems: 'center' }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-              <Box>
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="warning" sx={{ borderRadius: '12px', fontSize: 13, alignItems: 'center' }} role="alert" aria-live="assertive">
                 {error}
-                {error.includes(':') && error === t('cacheError') && (
-                  <Button
-                    onClick={handleClearCache}
-                    disabled={clearing}
-                    variant="contained"
-                    fullWidth
-                    sx={{
-                      mt: 1.5,
-                      fontWeight: 700,
-                      fontSize: 14,
-                      textTransform: 'none',
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      borderRadius: '12px',
-                      py: 1.5,
-                      boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-                      '&:hover': { bgcolor: 'primary.dark' },
-                      '&:active': { transform: 'scale(0.97)' },
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {clearing ? (
-                      <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
-                    ) : (
-                      <>🔄 {t('clearCacheAndReload')}</>
-                    )}
-                  </Button>
-                )}
-              </Box>
-            </Alert>
+              </Alert>
+              {error === t('cacheError') && (
+                <Button
+                  onClick={handleClearCache}
+                  disabled={clearing}
+                  variant="contained"
+                  fullWidth
+                  sx={{
+                    mt: 1.5,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    textTransform: 'none',
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    borderRadius: '12px',
+                    py: 1.25,
+                    '&:hover': { bgcolor: 'primary.dark' },
+                    '&:active': { transform: 'scale(0.97)' },
+                  }}
+                >
+                  {clearing ? (
+                    <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
+                  ) : (
+                    t('clearCacheAndReload')
+                  )}
+                </Button>
+              )}
+            </Box>
           )}
 
           {/* Email Login Toggle */}
@@ -380,39 +378,37 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
                 </Collapse>
 
                 {error && showEmailForm && (
-                  <Alert severity="warning" sx={{ mt: 2, borderRadius: '12px', fontSize: 12, alignItems: 'center' }} icon={<span aria-hidden="true">⚠️</span>} role="alert" aria-live="assertive">
-                    <Box>
+                  <Box sx={{ mt: 2 }}>
+                    <Alert severity="warning" sx={{ borderRadius: '12px', fontSize: 12, alignItems: 'center' }} role="alert" aria-live="assertive">
                       {error}
-                      {error.includes(':') && error === t('cacheError') && (
-                        <Button
-                          onClick={handleClearCache}
-                          disabled={clearing}
-                          variant="contained"
-                          fullWidth
-                          sx={{
-                            mt: 1.5,
-                            fontWeight: 700,
-                            fontSize: 14,
-                            textTransform: 'none',
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '12px',
-                            py: 1.5,
-                            boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-                            '&:hover': { bgcolor: 'primary.dark' },
-                            '&:active': { transform: 'scale(0.97)' },
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          {clearing ? (
-                            <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
-                          ) : (
-                            <>🔄 {t('clearCacheAndReload')}</>
-                          )}
-                        </Button>
-                      )}
-                    </Box>
-                  </Alert>
+                    </Alert>
+                    {error === t('cacheError') && (
+                      <Button
+                        onClick={handleClearCache}
+                        disabled={clearing}
+                        variant="contained"
+                        fullWidth
+                        sx={{
+                          mt: 1.5,
+                          fontWeight: 600,
+                          fontSize: 14,
+                          textTransform: 'none',
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          borderRadius: '12px',
+                          py: 1.25,
+                          '&:hover': { bgcolor: 'primary.dark' },
+                          '&:active': { transform: 'scale(0.97)' },
+                        }}
+                      >
+                        {clearing ? (
+                          <><CircularProgress size={18} sx={{ color: 'white', mr: 1 }} /> {t('clearCacheSubtitle')}</>
+                        ) : (
+                          t('clearCacheAndReload')
+                        )}
+                      </Button>
+                    )}
+                  </Box>
                 )}
 
                 {/* Status text for existing users - between password and button */}
