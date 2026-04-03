@@ -101,10 +101,11 @@ interface NotificationItemProps {
   index: number;
   isDismissing: boolean;
   onDismiss: (listId: string, notificationId: string) => void;
+  onNavigate?: (listId: string) => void;
 }
 
 // ===== קומפוננטה =====
-export const NotificationItem = memo(({ notification: n, index, isDismissing, onDismiss }: NotificationItemProps) => {
+export const NotificationItem = memo(({ notification: n, index, isDismissing, onDismiss, onNavigate }: NotificationItemProps) => {
   const { t, settings } = useSettings();
   const accent = getAccentColor(n.type);
 
@@ -128,6 +129,7 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
 
   return (
     <Box
+      onClick={() => onNavigate?.(n.listId)}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -140,12 +142,13 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
         borderInlineStart: `3.5px solid ${accent}`,
         transition: 'background-color 0.2s',
+        cursor: onNavigate ? 'pointer' : 'default',
         ...notificationSlideInKeyframes,
         ...(isDismissing
           ? { ...notificationDismissKeyframes, animation: 'notificationDismiss 0.5s ease-out forwards' }
           : { animation: `notificationSlideIn 0.35s ease-out ${index * 0.05}s both` }
         ),
-        '&:active': { bgcolor: 'rgba(0,0,0,0.04)' },
+        '&:active': onNavigate ? { bgcolor: 'rgba(0,0,0,0.08)' } : { bgcolor: 'rgba(0,0,0,0.04)' },
         '&:last-child': { mb: 0 },
       }}
     >
