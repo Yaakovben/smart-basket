@@ -39,8 +39,6 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
       maxWidth="xs"
       PaperProps={{
         sx: {
-          position: 'fixed',
-          bottom: 0,
           m: 0,
           borderRadius: '20px 20px 0 0',
           maxHeight: '90vh',
@@ -51,6 +49,9 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
         }
       }}
       sx={{
+        '& .MuiDialog-container': {
+          alignItems: 'flex-end',
+        },
         '& .MuiBackdrop-root': {
           backdropFilter: 'blur(4px)',
           bgcolor: 'rgba(0,0,0,0.4)'
