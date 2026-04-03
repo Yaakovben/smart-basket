@@ -327,22 +327,26 @@ export const HomeComponent = memo(({
     const currentIdx = dragIndexRef.current;
     if (currentIdx < 0) return;
 
-    // throttle: מקסימום עדכון כל 50ms
+    // גלילה אוטומטית כשגוררים לקצוות המסך (תמיד, ללא throttle)
+    const SCROLL_ZONE = 100;
+    const SCROLL_SPEED = 10;
+    const container = contentRef.current;
+    if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      if (clientY < rect.top + SCROLL_ZONE) {
+        const tick = () => { container.scrollBy(0, -SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
+        autoScrollRef.current = requestAnimationFrame(tick);
+      } else if (clientY > rect.bottom - SCROLL_ZONE) {
+        const tick = () => { container.scrollBy(0, SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
+        autoScrollRef.current = requestAnimationFrame(tick);
+      }
+    }
+
+    // throttle: מקסימום עדכון סדר כל 50ms
     const now = Date.now();
     if (now - lastMoveTimeRef.current < 50) return;
     lastMoveTimeRef.current = now;
-
-    // גלילה אוטומטית כשגוררים לקצוות המסך
-    const SCROLL_ZONE = 80;
-    const SCROLL_SPEED = 8;
-    if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
-    if (clientY < SCROLL_ZONE) {
-      const tick = () => { window.scrollBy(0, -SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
-      autoScrollRef.current = requestAnimationFrame(tick);
-    } else if (clientY > window.innerHeight - SCROLL_ZONE) {
-      const tick = () => { window.scrollBy(0, SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
-      autoScrollRef.current = requestAnimationFrame(tick);
-    }
 
     const targetIdx = getTargetIndex(clientY);
     if (targetIdx !== currentIdx) {
