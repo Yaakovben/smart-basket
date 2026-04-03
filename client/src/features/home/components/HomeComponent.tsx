@@ -283,6 +283,7 @@ export const HomeComponent = memo(({
   const [dragOverIndex, setDragOverIndex] = useState(-1);
   const dragIndexRef = useRef(-1);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
 
   // חישוב סדר תצוגה עם סדר מותאם אישית
@@ -324,6 +325,19 @@ export const HomeComponent = memo(({
   const handleDragMove = useCallback((clientY: number) => {
     const currentIdx = dragIndexRef.current;
     if (currentIdx < 0) return;
+
+    // גלילה אוטומטית כשגוררים לקצוות המסך
+    const SCROLL_ZONE = 80;
+    const SCROLL_SPEED = 8;
+    if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
+    if (clientY < SCROLL_ZONE) {
+      const tick = () => { window.scrollBy(0, -SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
+      autoScrollRef.current = requestAnimationFrame(tick);
+    } else if (clientY > window.innerHeight - SCROLL_ZONE) {
+      const tick = () => { window.scrollBy(0, SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
+      autoScrollRef.current = requestAnimationFrame(tick);
+    }
+
     const targetIdx = getTargetIndex(clientY);
     if (targetIdx !== currentIdx) {
       setReorderedIds(prev => {
@@ -342,6 +356,7 @@ export const HomeComponent = memo(({
 
   // גרירה: סיום
   const handleDragEnd = useCallback(() => {
+    if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     dragIndexRef.current = -1;
     setDragIndex(-1);
     setDragOverIndex(-1);
@@ -601,7 +616,7 @@ export const HomeComponent = memo(({
                       size="small"
                       variant="outlined"
                       onClick={handleCancelReorder}
-                      sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', color: 'text.secondary', borderColor: 'divider' }}
+                      sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', color: 'error.main', borderColor: 'error.main', '&:hover': { borderColor: 'error.dark', bgcolor: 'rgba(239,68,68,0.04)' } }}
                     >
                       {t('cancel')}
                     </Button>
@@ -611,7 +626,7 @@ export const HomeComponent = memo(({
                       onClick={handleSaveOrder}
                       disabled={!hasOrderChanges}
                       startIcon={<DoneIcon sx={{ fontSize: 16 }} />}
-                      sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.4, minWidth: 'auto', gap: 0.75, boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
+                      sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', gap: 0.75, boxShadow: hasOrderChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
                     >
                       {t('reorderDone')}
                     </Button>

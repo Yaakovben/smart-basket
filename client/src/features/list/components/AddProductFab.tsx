@@ -39,15 +39,18 @@ export const AddProductFab = memo(({
     }
   };
 
+  // מיקום FAB מגרירה רלוונטי רק במצב FAB עגול, לא בכפתור רגיל
+  const useCustomPosition = isDraggable && fabPosition;
+
   return (
     <Box
       sx={{
         position: 'fixed',
-        bottom: fabPosition ? undefined : 'calc(24px + env(safe-area-inset-bottom))',
-        left: fabPosition ? undefined : '50%',
-        transform: fabPosition ? undefined : 'translateX(-50%)',
-        top: fabPosition ? fabPosition.y - 28 : undefined,
-        right: fabPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
+        bottom: useCustomPosition ? undefined : 'calc(24px + env(safe-area-inset-bottom))',
+        left: useCustomPosition ? undefined : '50%',
+        transform: useCustomPosition ? undefined : 'translateX(-50%)',
+        top: useCustomPosition ? fabPosition.y - 28 : undefined,
+        right: useCustomPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
         zIndex: 5,
         touchAction: isDraggable ? 'none' : 'auto'
       }}

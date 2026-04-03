@@ -98,14 +98,20 @@ const ListCard = ({ list, isDark }: { list: AdminUserList; isDark: boolean }) =>
           {list.name}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.25 }}>
-          {list.isGroup && (
-            <Typography sx={{ fontSize: 10, color: '#9CA3AF' }}>
-              {list.membersCount} {t('members')}
-            </Typography>
-          )}
-          {list.isOwner && (
-            <Typography sx={{ fontSize: 9.5, color: '#14B8A6', fontWeight: 600 }}>
-              {t('owner')}
+          {list.isGroup ? (
+            <>
+              <Typography sx={{ fontSize: 10, color: '#9CA3AF' }}>
+                {list.membersCount} {t('members')}
+              </Typography>
+              {list.isOwner && (
+                <Typography sx={{ fontSize: 9.5, color: '#14B8A6', fontWeight: 600 }}>
+                  {t('owner')}
+                </Typography>
+              )}
+            </>
+          ) : (
+            <Typography sx={{ fontSize: 9.5, color: 'text.secondary' }}>
+              {t('privateList')}
             </Typography>
           )}
         </Box>

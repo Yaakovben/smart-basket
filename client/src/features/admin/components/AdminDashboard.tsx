@@ -318,7 +318,7 @@ export const AdminDashboard = () => {
             <Button
               variant="contained"
               onClick={handleRefresh}
-              sx={{ bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' }, borderRadius: 2 }}
+              sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: 2 }}
             >
               {t('tryAgain')}
             </Button>
@@ -341,8 +341,8 @@ export const AdminDashboard = () => {
                 boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
                 border: 'none',
                 '& fieldset': { border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' },
-                '&:hover fieldset': { borderColor: '#14B8A6' },
-                '&.Mui-focused fieldset': { borderColor: '#14B8A6', borderWidth: 1.5 },
+                '&:hover fieldset': { borderColor: 'primary.main' },
+                '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: 1.5 },
               },
               '& .MuiOutlinedInput-input': { color: isDark ? '#E5E7EB' : undefined },
             }}

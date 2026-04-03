@@ -787,7 +787,7 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'פעילים החודש',
     // List reorder
     reorderLists: 'סדר רשימות',
-    reorderDone: 'סיום',
+    reorderDone: 'שמור סדר',
     reorderHint: 'גרור ☰ כדי לשנות סדר',
     orderSaved: 'הסדר נשמר',
     // פרטי משתמש למנהל
@@ -1182,7 +1182,7 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'Active This Month',
     // List reorder
     reorderLists: 'Reorder Lists',
-    reorderDone: 'Done',
+    reorderDone: 'Save Order',
     reorderHint: 'Drag ☰ to reorder',
     orderSaved: 'Order saved',
     moreDetails: 'More Details',
@@ -1576,7 +1576,7 @@ export const translations: Record<Language, Translations> = {
     uniqueUsersThisMonth: 'Активных за месяц',
     // List reorder
     reorderLists: 'Упорядочить списки',
-    reorderDone: 'Готово',
+    reorderDone: 'Сохранить порядок',
     reorderHint: 'Перетащите ☰ для сортировки',
     orderSaved: 'Порядок сохранён',
     moreDetails: 'Подробнее',

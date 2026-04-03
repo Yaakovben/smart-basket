@@ -57,6 +57,15 @@
     body.app-loaded {
       background: none;
     }
+    /* מניעת הבזק לבן - רקע ברירת מחדל עד שהתמה נטענת */
+    #root {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #14B8A6;
+    }
+    body.app-loaded #root {
+      background: none;
+    }
   </style>
   <!-- Force unregister old service workers (v2.0 migration) -->
   <script>
