@@ -1046,7 +1046,7 @@ export const HomeComponent = memo(({
                     index={index}
                     isDismissing={dismissingNotifications.has(n.id)}
                     onDismiss={handleDismissNotification}
-                    onNavigate={(listId) => { navigate(`/list/${listId}`); }}
+                    onNavigate={(listId) => { setShowNotifications(false); setTimeout(() => navigate(`/list/${listId}`), 300); }}
                   />
                 ))}
               </Box>
