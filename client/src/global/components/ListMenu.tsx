@@ -126,7 +126,7 @@ export const ListMenu = memo(({
       {/* עריכה */}
       {isOwner && (
         <>
-          <Divider sx={{ my: 0.5 }} />
+          {(onRefresh || isGroup) && <Divider sx={{ my: 0.5 }} />}
           <MenuItem
             onClick={() => { onClose(); onEdit(); }}
             sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
