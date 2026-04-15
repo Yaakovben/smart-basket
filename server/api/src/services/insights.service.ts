@@ -34,10 +34,8 @@ export class InsightsService {
       return this.emptyInsights();
     }
 
-    // כל המוצרים של המשתמש מכל הרשימות
-    const allProducts = await Product.find({ listId: { $in: listIds } })
-      .sort({ createdAt: -1 })
-      .lean();
+    // שליפה ישירה עם lean לביצועים (analytics בלבד, לא צריך populate)
+    const allProducts = await Product.find({ listId: { $in: listIds } }).lean();
 
     if (allProducts.length === 0) {
       return this.emptyInsights();
@@ -85,9 +83,9 @@ export class InsightsService {
     const maxDayIdx = dayCounts.indexOf(Math.max(...dayCounts));
 
     // ===== תדירות קנייה =====
-    const purchaseDates = purchasedProducts
-      .map(p => new Date(p.updatedAt).toDateString())
-      .filter((v, i, a) => a.indexOf(v) === i)
+    const dateSet = new Set<string>();
+    for (const p of purchasedProducts) dateSet.add(new Date(p.updatedAt).toDateString());
+    const purchaseDates = Array.from(dateSet)
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     let avgDaysBetween = 0;
@@ -102,10 +100,12 @@ export class InsightsService {
 
     // ===== מוצרים שאולי שכחת =====
     // מוצרים שהופיעו ביותר מרשימה אחת אבל לא ברשימות הפעילות
-    const activeListIds = new Set(lists.filter(l => {
-      const products = allProducts.filter(p => p.listId.toString() === l._id.toString());
-      return products.some(p => !p.isPurchased);
-    }).map(l => l._id.toString()));
+    // מיפוי חד-פעמי: רשימות עם מוצרים שלא נקנו
+    const listsWithPending = new Set<string>();
+    for (const p of allProducts) {
+      if (!p.isPurchased) listsWithPending.add(p.listId.toString());
+    }
+    const activeListIds = listsWithPending;
 
     const recentProductNames = new Set(
       allProducts

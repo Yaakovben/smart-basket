@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useMemo } from 'react';
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Box, Typography, Button, Chip, keyframes } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -244,19 +244,15 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   // סינון לפי קטגוריה
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
-  // איפוס סינון קטגוריה כשמחליפים טאב
-  const prevFilterRef = useRef(filter);
-  if (prevFilterRef.current !== filter) {
-    prevFilterRef.current = filter;
-    if (categoryFilter) setCategoryFilter(null);
-  }
+  // איפוס סינון קטגוריה כשמחליפים טאב (useEffect כי filter הוא prop חיצוני)
+  useEffect(() => { setCategoryFilter(null); }, [filter]);
 
-  // קטגוריות לפי הטאב הנוכחי (לא מושפע מחיפוש)
-  const activeCategories = useMemo(() => {
+  // ספירת מוצרים לפי קטגוריה (חישוב חד-פעמי, לא בכל chip)
+  const { activeCategories, categoryCounts } = useMemo(() => {
     const source = filter === 'purchased' ? purchased : filter === 'pending' ? pending : [...pending, ...purchased];
-    const cats = new Set<string>();
-    source.forEach(p => cats.add(p.category));
-    return Array.from(cats);
+    const counts = new Map<string, number>();
+    for (const p of source) counts.set(p.category, (counts.get(p.category) || 0) + 1);
+    return { activeCategories: Array.from(counts.keys()), categoryCounts: counts };
   }, [filter, pending, purchased]);
 
   // סינון מוצרים לפי קטגוריה
@@ -363,7 +359,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               }}
             />
             {activeCategories.map(cat => {
-              const count = items.filter(p => p.category === cat).length;
+              const count = categoryCounts.get(cat) || 0;
               const icon = CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS] || '📦';
               const key = CATEGORY_TRANSLATION_KEYS[cat as keyof typeof CATEGORY_TRANSLATION_KEYS];
               const isActive = categoryFilter === cat;

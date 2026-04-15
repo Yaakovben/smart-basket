@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Paper, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -10,6 +10,15 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, type InsightsData } from '../../../services/api';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS } from '../../../global/constants';
 
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const cardAnimation = (delay: number) => ({
+  animation: `${fadeInUp} 0.4s ease ${delay}s both`,
+});
+
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
@@ -17,7 +26,6 @@ export const InsightsPage = memo(() => {
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const isRtl = settings.language === 'he';
 
   useEffect(() => {
     setLoading(true);
@@ -65,7 +73,7 @@ export const InsightsPage = memo(() => {
   const { topProducts, categoryBreakdown, stats, forgotten, shoppingFrequency } = data;
 
   return (
-    <Box dir={isRtl ? 'rtl' : 'ltr'} sx={{
+    <Box sx={{
       minHeight: '100vh',
       bgcolor: 'background.default',
       pb: 4,
@@ -97,8 +105,7 @@ export const InsightsPage = memo(() => {
             <Box key={i} sx={{
               textAlign: 'center', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '14px',
               p: { xs: 1.25, sm: 1.5 }, backdropFilter: 'blur(10px)',
-              animation: `fadeInUp 0.4s ease ${i * 0.1}s both`,
-              '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+              ...cardAnimation(i * 0.1),
             }}>
               <Typography sx={{ fontSize: { xs: 18, sm: 22 }, mb: 0.25 }}>{s.icon}</Typography>
               <Typography sx={{ fontSize: { xs: 18, sm: 20 }, fontWeight: 800, color: 'white' }}>{s.value}</Typography>
@@ -110,7 +117,7 @@ export const InsightsPage = memo(() => {
 
       <Box sx={{ px: 2, mt: 2.5 }}>
         {/* הרגלי קנייה */}
-        <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.3s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
+        <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', ...cardAnimation(0.3) }} elevation={0}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <CalendarTodayIcon sx={{ color: '#8B5CF6', fontSize: 20 }} />
             <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('shoppingHabits')}</Typography>
@@ -139,7 +146,7 @@ export const InsightsPage = memo(() => {
 
         {/* מוצרים נפוצים */}
         {topProducts.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', ...cardAnimation(0.4) }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <TrendingUpIcon sx={{ color: '#14B8A6', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('topProducts')}</Typography>
@@ -164,7 +171,7 @@ export const InsightsPage = memo(() => {
 
         {/* פילוח קטגוריות */}
         {categoryBreakdown.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', ...cardAnimation(0.4) }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <ShoppingCartIcon sx={{ color: '#3B82F6', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('categoryBreakdown')}</Typography>
@@ -194,7 +201,7 @@ export const InsightsPage = memo(() => {
 
         {/* מוצרים שאולי שכחת */}
         {forgotten.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', ...cardAnimation(0.4) }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <LightbulbIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('maybeForgot')}</Typography>

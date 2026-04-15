@@ -606,14 +606,15 @@ export const useList = ({
 
   // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") =====
   const handleResetList = useCallback(() => {
-    const purchasedItems = list.products.filter(p => p.isPurchased);
-    if (purchasedItems.length === 0) return;
+    if (!productsRef.current.some(p => p.isPurchased)) return;
 
     setConfirm({
       title: t('resetList'),
       message: t('resetListConfirm'),
       onConfirm: async () => {
         setConfirm(null);
+        // snapshot נוכחי של מוצרים שנקנו (מה-ref, לא מ-closure ישן)
+        const purchasedIds = new Set(productsRef.current.filter(p => p.isPurchased).map(p => p.id));
         haptic('medium');
         onUpdateProductsForList(list.id, (current) =>
           current.map(p => p.isPurchased ? { ...p, isPurchased: false } : p)
@@ -623,13 +624,13 @@ export const useList = ({
           showToast(t('listReset'), 'success');
         } catch {
           onUpdateProductsForList(list.id, (current) =>
-            current.map(p => purchasedItems.some(pi => pi.id === p.id) ? { ...p, isPurchased: true } : p)
+            current.map(p => purchasedIds.has(p.id) ? { ...p, isPurchased: true } : p)
           );
           showToast(t('errorOccurred'), 'error');
         }
       }
     });
-  }, [list.id, list.products, onUpdateProductsForList, showToast, t]);
+  }, [list.id, onUpdateProductsForList, showToast, t]);
 
   // ===== מטפלי עריכת רשימה =====
   const handleEditList = useCallback(() => {
