@@ -107,8 +107,7 @@ function buildLookupMap(): Map<string, string> {
 
 /**
  * זיהוי קטגוריה לפי שם מוצר
- * מחפש התאמה מדויקת, אחרי כן מילה שמתחילה עם, ולבסוף מילה שמכילה
- * מחזיר 'אחר' אם לא נמצאה התאמה
+ * סדר: מילון מובנה → חיפוש חלקי → אחר
  */
 export function detectCategory(productName: string): string {
   const map = buildLookupMap();
@@ -132,7 +131,7 @@ export function detectCategory(productName: string): string {
     if (found) return found;
   }
 
-  // חיפוש חלקי - מילת מפתח שמופיעה בתוך השם
+  // חיפוש חלקי
   for (const [keyword, category] of map) {
     if (keyword.length >= 3 && name.includes(keyword)) {
       return category;
