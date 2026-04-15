@@ -129,7 +129,7 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
 
   return (
     <Box
-      onClick={() => onNavigate?.(n.listId)}
+      onClick={(e) => { e.stopPropagation(); onNavigate?.(n.listId); }}
       sx={{
         display: 'flex',
         alignItems: 'center',

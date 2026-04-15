@@ -456,12 +456,6 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
                           {listsSummary.total} {t('lists')}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ShoppingCartIcon sx={{ fontSize: 13, color: '#3B82F6' }} />
-                        <Typography sx={{ fontSize: 11.5, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}>
-                          {listsSummary.totalProducts} {t('products')}
-                        </Typography>
-                      </Box>
                       {listsSummary.groups > 0 && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <GroupIcon sx={{ fontSize: 13, color: '#8B5CF6' }} />
@@ -470,6 +464,12 @@ const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: User
                           </Typography>
                         </Box>
                       )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ShoppingCartIcon sx={{ fontSize: 13, color: '#3B82F6' }} />
+                        <Typography sx={{ fontSize: 11.5, color: isDark ? '#9CA3AF' : '#6B7280', fontWeight: 500 }}>
+                          {listsSummary.totalProducts} {t('products')}
+                        </Typography>
+                      </Box>
                     </Box>
                   )}
                   {/* רשימת הרשימות */}

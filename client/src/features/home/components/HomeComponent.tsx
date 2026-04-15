@@ -147,7 +147,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</Typography>
+          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{l.name}</Typography>
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
@@ -212,7 +212,7 @@ export const HomeComponent = memo(({
 }: HomePageProps) => {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
-  const { t, settings, isGroupMuted, toggleGroupMute } = useSettings();
+  const { t, settings, isGroupMuted, toggleGroupMute, updateNotifications } = useSettings();
   const isDark = settings.theme === 'dark';
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
@@ -969,6 +969,9 @@ export const HomeComponent = memo(({
           setEditList(null);
         } : undefined}
         onConvertToPrivate={editList.isGroup && editList.members.length === 0 ? () => {
+          if (isGroupMuted(editList.id)) {
+            updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== editList.id) });
+          }
           onEditList({ ...editList, isGroup: false, password: null });
           setEditList(null);
         } : undefined}

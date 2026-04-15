@@ -317,14 +317,14 @@ export const AdminDashboard = () => {
               mb: 2,
               '& .MuiOutlinedInput-root': {
                 borderRadius: '14px',
-                bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+                bgcolor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'white',
                 boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
                 border: 'none',
-                '& fieldset': { border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' },
+                '& fieldset': { border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)' },
                 '&:hover fieldset': { borderColor: 'primary.main' },
                 '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: 1.5 },
               },
-              '& .MuiOutlinedInput-input': { color: isDark ? '#E5E7EB' : undefined },
+              '& .MuiOutlinedInput-input': { color: isDark ? '#E5E7EB' : undefined, '&::placeholder': { color: isDark ? '#6B7280' : undefined, opacity: 1 } },
             }}
             InputProps={{
               startAdornment: (

@@ -69,13 +69,12 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if ('focus' in client) {
           client.focus();
-          if (url && 'navigate' in client) {
-            (client as WindowClient).navigate(url);
-          }
+          // שליחת הודעה לאפליקציה לנווט דרך React Router (בלי reload)
+          client.postMessage({ type: 'NOTIFICATION_CLICK', url });
           return;
         }
       }
-      // פתיחת חלון חדש אם אין
+      // פתיחת חלון חדש אם אין אפליקציה פתוחה
       if (self.clients.openWindow) {
         return self.clients.openWindow(url);
       }

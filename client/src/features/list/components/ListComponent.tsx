@@ -215,7 +215,7 @@ interface ListPageProps {
 
 // ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
-  const { t, settings, toggleGroupMute, isGroupMuted } = useSettings();
+  const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
   const isMuteToggling = useRef(false);
 
   const {
@@ -317,21 +317,32 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
         ) : (
-          items.map((p: Product) => (
-            <SwipeItem
-              key={p.id}
-              product={p}
-              isPurchased={p.isPurchased}
-              isOpen={openItemId === p.id}
-              currentUserName={user.name}
-              onOpen={setOpenItemId}
-              onClose={handleCloseItem}
-              onToggle={toggleProduct}
-              onEdit={openEditProduct}
-              onDelete={deleteProduct}
-              onClick={handleShowDetails}
-            />
-          ))
+          <>
+            {items.map((p: Product) => (
+              <SwipeItem
+                key={p.id}
+                product={p}
+                isPurchased={p.isPurchased}
+                isOpen={openItemId === p.id}
+                currentUserName={user.name}
+                onOpen={setOpenItemId}
+                onClose={handleCloseItem}
+                onToggle={toggleProduct}
+                onEdit={openEditProduct}
+                onDelete={deleteProduct}
+                onClick={handleShowDetails}
+              />
+            ))}
+            {filter === 'purchased' && items.length > 0 && (
+              <Button
+                onClick={() => handleClearList('purchased')}
+                startIcon={<DeleteSweepIcon />}
+                sx={{ mt: 2, mx: 'auto', display: 'flex', color: 'error.main', fontSize: 13, textTransform: 'none' }}
+              >
+                {t('clearPurchased')}
+              </Button>
+            )}
+          </>
         )}
       </Box>
 
@@ -424,6 +435,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         } : undefined}
         onConvertToPrivate={list.isGroup && list.members.length === 0 ? async () => {
           try {
+            if (isGroupMuted(list.id)) {
+              updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== list.id) });
+            }
             await onUpdateList({ ...list, isGroup: false, password: null });
             setShowEditList(false);
           } catch {
