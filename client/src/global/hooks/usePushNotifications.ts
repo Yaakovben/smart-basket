@@ -92,6 +92,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         const subscribed = !!subscription;
         setIsSubscribed(subscribed);
         notifySubscriptionChange(subscribed);
+
+        // סנכרון: אם יש subscription בדפדפן, שליחה מחדש לשרת למקרה שה-DB נמחק/שוחזר
+        if (subscription) {
+          pushApi.subscribeToPush(subscription).catch(() => {});
+        }
       } catch {
         setIsSubscribed(false);
       }
