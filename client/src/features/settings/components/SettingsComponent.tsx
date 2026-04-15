@@ -338,6 +338,15 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Box>
         </Paper>
 
+        {/* תובנות */}
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/insights')}>
+            <Box component="span" sx={{ fontSize: 22 }}>💡</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('insights')}</Typography>
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+          </Box>
+        </Paper>
+
         {/* Admin Dashboard - Below terms for admin users */}
         {isAdmin && (
           <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>

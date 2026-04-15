@@ -6,3 +6,4 @@ export { productsApi, type CreateProductData, type UpdateProductData } from './p
 export { adminApi, type AdminUser, type AdminLoginActivity, type PaginatedActivity, type AdminStats, type AdminUserList, type AdminUserDetails } from './admin.api';
 export { notificationsApi, type Notification as PersistedNotification, type NotificationType, type PaginatedNotifications, type GetNotificationsOptions } from './notifications.api';
 export { pushApi } from './push.api';
+export { insightsApi, type InsightsData } from './insights.api';

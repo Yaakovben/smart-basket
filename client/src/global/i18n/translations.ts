@@ -246,6 +246,17 @@ type TranslationKey =
   | 'deleteListTitle'
   | 'deleteConfirmMessage'
   | 'deleteDataWarning'
+  // תובנות
+  | 'insights'
+  | 'noInsightsYet'
+  | 'noInsightsDesc'
+  | 'shoppingHabits'
+  | 'avgDaysBetween'
+  | 'mostActiveDay'
+  | 'avgPerList'
+  | 'topProducts'
+  | 'categoryBreakdown'
+  | 'maybeForgot'
   | 'errorOccurred'
   | 'connectionErrorTitle'
   | 'connectionErrorDesc'
@@ -651,6 +662,17 @@ export const translations: Record<Language, Translations> = {
     deleteListTitle: 'מחיקת רשימה',
     deleteConfirmMessage: 'פעולה זו לא ניתנת לביטול',
     deleteDataWarning: 'פעולה זו תמחק:\n• כל הרשימות הפרטיות שלך\n• רשימות משותפות שיצרת יועברו לחבר אחר\n• תוסר מרשימות שהצטרפת אליהן\n• כל ההגדרות וההעדפות\n• חשבונך לצמיתות\n\nפעולה זו לא ניתנת לביטול!',
+    // תובנות
+    insights: 'תובנות',
+    noInsightsYet: 'אין תובנות עדיין',
+    noInsightsDesc: 'התחל להוסיף מוצרים לרשימות ונציג לך תובנות חכמות',
+    shoppingHabits: 'הרגלי קנייה',
+    avgDaysBetween: 'ימים בין קניות',
+    mostActiveDay: 'יום פעיל',
+    avgPerList: 'ממוצע לרשימה',
+    topProducts: 'המוצרים הנפוצים',
+    categoryBreakdown: 'פילוח לפי קטגוריה',
+    maybeForgot: 'אולי שכחת?',
     errorOccurred: 'אירעה שגיאה',
     connectionErrorTitle: 'בעיית חיבור',
     connectionErrorDesc: 'לא ניתן להתחבר לשרת כרגע',
@@ -1050,6 +1072,16 @@ export const translations: Record<Language, Translations> = {
     deleteListTitle: 'Delete List',
     deleteConfirmMessage: 'This action cannot be undone',
     deleteDataWarning: 'This will:\n• Delete all your private lists\n• Transfer shared lists you own to another member\n• Remove you from lists you joined\n• Delete all settings and preferences\n• Delete your account permanently\n\nThis action cannot be undone!',
+    insights: 'Insights',
+    noInsightsYet: 'No insights yet',
+    noInsightsDesc: 'Start adding products to lists and we\'ll show you smart insights',
+    shoppingHabits: 'Shopping habits',
+    avgDaysBetween: 'Days between shops',
+    mostActiveDay: 'Active day',
+    avgPerList: 'Avg per list',
+    topProducts: 'Top products',
+    categoryBreakdown: 'Category breakdown',
+    maybeForgot: 'Maybe you forgot?',
     errorOccurred: 'An error occurred',
     connectionErrorTitle: 'Connection error',
     connectionErrorDesc: 'Unable to connect to the server right now',
@@ -1448,6 +1480,16 @@ export const translations: Record<Language, Translations> = {
     deleteListTitle: 'Удалить список',
     deleteConfirmMessage: 'Это действие нельзя отменить',
     deleteDataWarning: 'Это действие:\n• Удалит все ваши личные списки\n• Передаст ваши совместные списки другому участнику\n• Удалит вас из списков, в которых вы состоите\n• Удалит все настройки и предпочтения\n• Удалит ваш аккаунт навсегда\n\nЭто действие нельзя отменить!',
+    insights: 'Аналитика',
+    noInsightsYet: 'Пока нет данных',
+    noInsightsDesc: 'Начните добавлять продукты в списки, и мы покажем вам умную аналитику',
+    shoppingHabits: 'Привычки покупок',
+    avgDaysBetween: 'Дней между покупками',
+    mostActiveDay: 'Активный день',
+    avgPerList: 'Среднее на список',
+    topProducts: 'Популярные продукты',
+    categoryBreakdown: 'По категориям',
+    maybeForgot: 'Возможно забыли?',
     errorOccurred: 'Произошла ошибка',
     connectionErrorTitle: 'Ошибка подключения',
     connectionErrorDesc: 'Не удалось подключиться к серверу',

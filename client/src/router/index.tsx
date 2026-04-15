@@ -22,6 +22,7 @@ const SettingsPage = lazy(() => import("../features/settings/settings").then(m =
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
+const InsightsPage = lazy(() => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage })));
 
 // מסך טעינה, שלד עמוד במקום גרדיאנט ריק
 const PageLoader = PageSkeleton;
@@ -340,6 +341,14 @@ export const AppRouter = () => {
             <AdminRoute user={user}>
               <AdminPage />
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/insights"
+          element={
+            <ProtectedRoute user={user}>
+              <InsightsPage />
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

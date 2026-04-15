@@ -1,5 +1,5 @@
-import { memo, useRef, useCallback, useMemo } from 'react';
-import { Box, Typography, Button, keyframes } from '@mui/material';
+import { memo, useState, useRef, useCallback, useMemo } from 'react';
+import { Box, Typography, Button, Chip, keyframes } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
@@ -8,6 +8,7 @@ import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
+import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS } from '../../../global/constants';
 
 // ===== אנימציות חגיגה =====
 const floatUp = keyframes`
@@ -240,6 +241,22 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
 
+  // סינון לפי קטגוריה
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  // קטגוריות שיש בהן מוצרים (להצגת chips רלוונטיים בלבד)
+  const activeCategories = useMemo(() => {
+    const cats = new Set<string>();
+    items.forEach(p => cats.add(p.category));
+    return Array.from(cats);
+  }, [items]);
+
+  // סינון מוצרים לפי קטגוריה
+  const filteredItems = useMemo(() => {
+    if (!categoryFilter) return items;
+    return items.filter(p => p.category === categoryFilter);
+  }, [items, categoryFilter]);
+
   const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
   const handleShowDetails = useCallback((product: Product) => {
     setShowDetails(product);
@@ -315,12 +332,48 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           <SwipeHint onDismiss={dismissHint} />
         )}
 
+        {/* סינון לפי קטגוריה */}
+        {items.length > 0 && activeCategories.length > 1 && (
+          <Box sx={{ display: 'flex', gap: 0.75, mb: 1.5, overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
+            <Chip
+              label={`${t('all')} (${items.length})`}
+              size="small"
+              onClick={() => setCategoryFilter(null)}
+              sx={{
+                fontSize: 12, fontWeight: 600, flexShrink: 0,
+                bgcolor: !categoryFilter ? 'primary.main' : 'action.hover',
+                color: !categoryFilter ? 'white' : 'text.primary',
+                '&:hover': { bgcolor: !categoryFilter ? 'primary.dark' : 'action.selected' },
+              }}
+            />
+            {activeCategories.map(cat => {
+              const count = items.filter(p => p.category === cat).length;
+              const icon = CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS] || '📦';
+              const key = CATEGORY_TRANSLATION_KEYS[cat as keyof typeof CATEGORY_TRANSLATION_KEYS];
+              return (
+                <Chip
+                  key={cat}
+                  label={`${icon} ${key ? t(key) : cat} (${count})`}
+                  size="small"
+                  onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                  sx={{
+                    fontSize: 12, fontWeight: 600, flexShrink: 0,
+                    bgcolor: categoryFilter === cat ? 'primary.main' : 'action.hover',
+                    color: categoryFilter === cat ? 'white' : 'text.primary',
+                    '&:hover': { bgcolor: categoryFilter === cat ? 'primary.dark' : 'action.selected' },
+                  }}
+                />
+              );
+            })}
+          </Box>
+        )}
+
         {/* Products List or Empty State */}
         {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
         ) : (
           <>
-            {items.map((p: Product) => (
+            {filteredItems.map((p: Product) => (
               <SwipeItem
                 key={p.id}
                 product={p}
