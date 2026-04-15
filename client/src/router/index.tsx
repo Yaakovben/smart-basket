@@ -130,6 +130,17 @@ export const AppRouter = () => {
     }
   }, [authLoading]);
 
+  // ניווט מלחיצה על push notification (מ-Service Worker)
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
+        navigate(event.data.url);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, [navigate]);
+
   // התראות שמורות, נטענות מהשרת ומתעדכנות בזמן אמת
   const {
     notifications: persistedNotifications,
