@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useSettings } from '../context/SettingsContext';
 
@@ -22,6 +23,8 @@ interface ListMenuProps {
   onDelete: () => void;
   onRefresh?: () => void;
   onClearList?: () => void;
+  onResetList?: () => void;
+  hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
   stopPropagation?: boolean;
@@ -39,6 +42,8 @@ export const ListMenu = memo(({
   onEdit,
   onDelete,
   onRefresh,
+  onResetList,
+  hasPurchased = false,
   onClearList,
   hasProducts = false,
   onLeave,
@@ -150,6 +155,22 @@ export const ListMenu = memo(({
             <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
             <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
               {t('clearList')}
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+
+      {/* איפוס רשימה */}
+      {onResetList && hasPurchased && (
+        <>
+          <Divider sx={{ my: 0.5 }} />
+          <MenuItem
+            onClick={() => { onClose(); onResetList(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <RestartAltIcon sx={{ color: 'info.main', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {t('resetList')}
             </Typography>
           </MenuItem>
         </>

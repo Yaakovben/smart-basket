@@ -72,6 +72,8 @@ interface ListHeaderProps {
   onRefresh: () => void;
   refreshing?: boolean;
   onClearList?: () => void;
+  onResetList?: () => void;
+  hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
 }
@@ -102,6 +104,8 @@ export const ListHeader = memo(({
   onRefresh,
   refreshing = false,
   onClearList,
+  onResetList,
+  hasPurchased = false,
   hasProducts = false,
   onLeave
 }: ListHeaderProps) => {
@@ -136,9 +140,11 @@ export const ListHeader = memo(({
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const text = event.results[0]?.[0]?.transcript?.trim();
-      if (text) {
+      if (text && text.length >= 2 && onQuickAdd) {
+        onQuickAdd(text);
+        haptic('light');
+      } else if (text) {
         setQuickAddValue(text);
-        inputRef.current?.focus();
       }
     };
     recognition.onend = () => setIsListening(false);
@@ -252,6 +258,8 @@ export const ListHeader = memo(({
         onDelete={onDeleteList}
         onRefresh={onRefresh}
         onClearList={onClearList}
+        onResetList={onResetList}
+        hasPurchased={hasPurchased}
         hasProducts={hasProducts}
         onLeave={onLeave}
       />

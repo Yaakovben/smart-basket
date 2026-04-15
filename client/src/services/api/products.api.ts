@@ -48,6 +48,12 @@ export const productsApi = {
     return response.data.data.deletedCount;
   },
 
+  async resetProducts(listId: string): Promise<number> {
+    validateId(listId, 'listId');
+    const response = await apiClient.post<{ data: { resetCount: number } }>(`/lists/${listId}/products/reset`);
+    return response.data.data.resetCount;
+  },
+
   async deleteProduct(listId: string, productId: string): Promise<void> {
     validateId(listId, 'listId');
     validateId(productId, 'productId');

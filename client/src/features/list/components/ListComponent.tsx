@@ -235,7 +235,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
-    refreshList, showClearList, setShowClearList, handleClearList, showCelebration
+    refreshList, showClearList, setShowClearList, handleClearList, handleResetList, showCelebration
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -290,6 +290,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onRefresh={refreshList}
         refreshing={refreshing}
         onClearList={() => setShowClearList(true)}
+        onResetList={handleResetList}
+        hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? leaveList : undefined}
       />
@@ -335,9 +337,16 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             ))}
             {filter === 'purchased' && items.length > 0 && (
               <Button
+                variant="outlined"
                 onClick={() => handleClearList('purchased')}
-                startIcon={<DeleteSweepIcon />}
-                sx={{ mt: 2, mx: 'auto', display: 'flex', color: 'error.main', fontSize: 13, textTransform: 'none' }}
+                startIcon={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
+                sx={{
+                  mt: 3, mb: 1, mx: 'auto', display: 'flex',
+                  color: 'error.main', borderColor: 'rgba(239,68,68,0.3)',
+                  fontSize: 13, fontWeight: 600, textTransform: 'none',
+                  borderRadius: '12px', px: 3, py: 1,
+                  '&:hover': { borderColor: 'error.main', bgcolor: 'rgba(239,68,68,0.04)' }
+                }}
               >
                 {t('clearPurchased')}
               </Button>

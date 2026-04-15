@@ -115,5 +115,6 @@ export interface UseListReturn {
   showClearList: boolean;
   setShowClearList: (show: boolean) => void;
   handleClearList: (filter: 'all' | 'purchased' | 'pending') => void;
+  handleResetList: () => void;
   showCelebration: boolean;
 }

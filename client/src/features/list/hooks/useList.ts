@@ -604,6 +604,29 @@ export const useList = ({
     setAddError('');
   }, []);
 
+  // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") =====
+  const handleResetList = useCallback(async () => {
+    const purchasedItems = list.products.filter(p => p.isPurchased);
+    if (purchasedItems.length === 0) return;
+
+    haptic('medium');
+    // עדכון אופטימיסטי
+    onUpdateProductsForList(list.id, (current) =>
+      current.map(p => p.isPurchased ? { ...p, isPurchased: false } : p)
+    );
+
+    try {
+      await productsApi.resetProducts(list.id);
+      showToast(t('listReset'), 'success');
+    } catch {
+      // שחזור
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => purchasedItems.some(pi => pi.id === p.id) ? { ...p, isPurchased: true } : p)
+      );
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [list.id, list.products, onUpdateProductsForList, showToast, t]);
+
   // ===== מטפלי עריכת רשימה =====
   const handleEditList = useCallback(() => {
     setEditListData({ name: list.name, icon: list.icon, color: list.color });
@@ -766,6 +789,7 @@ export const useList = ({
     showClearList,
     setShowClearList,
     handleClearList,
+    handleResetList,
     showCelebration
   };
 };

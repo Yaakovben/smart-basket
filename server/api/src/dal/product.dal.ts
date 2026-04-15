@@ -113,6 +113,15 @@ class ProductDALClass extends BaseDAL<IProductDoc> {
     return result.deletedCount;
   }
 
+  // איפוס כל המוצרים ל"לא נקנה"
+  async resetAll(listId: string): Promise<number> {
+    const result = await this.model.updateMany(
+      { listId, isPurchased: true },
+      { $set: { isPurchased: false } }
+    );
+    return result.modifiedCount;
+  }
+
   async countByListId(listId: string): Promise<number> {
     return this.model.countDocuments({ listId });
   }

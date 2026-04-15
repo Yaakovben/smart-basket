@@ -100,6 +100,17 @@ export class ProductService {
     return deletedCount;
   }
 
+  // איפוס כל המוצרים ל"לא נקנה" (רשימה קבועה)
+  static async resetProducts(
+    listId: string,
+    userId: string
+  ): Promise<number> {
+    await checkListAccess(listId, userId);
+    const count = await ProductDAL.resetAll(listId);
+    await ListDAL.touchUpdatedAt(listId);
+    return count;
+  }
+
   static async reorderProducts(
     listId: string,
     userId: string,
