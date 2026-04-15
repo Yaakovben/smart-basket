@@ -4,6 +4,8 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ShareIcon from '@mui/icons-material/Share';
 import AddIcon from '@mui/icons-material/Add';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
@@ -108,8 +110,44 @@ export const ListHeader = memo(({
   const [quickAddValue, setQuickAddValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // זיהוי קולי
+  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  const toggleSpeech = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const text = event.results[0]?.[0]?.transcript?.trim();
+      if (text) {
+        setQuickAddValue(text);
+        inputRef.current?.focus();
+      }
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+    haptic('medium');
+  }, [isListening, settings.language]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
@@ -347,7 +385,28 @@ export const ListHeader = memo(({
             endAdornment: (() => {
               const ready = quickAddValue.trim().length >= 2;
               return (
-                <InputAdornment position="end">
+                <InputAdornment position="end" sx={{ gap: 0.5 }}>
+                  {speechSupported && !ready && (
+                    <IconButton
+                      onClick={toggleSpeech}
+                      sx={{
+                        width: 36, height: 36,
+                        borderRadius: '10px',
+                        color: isListening ? 'white' : 'text.secondary',
+                        background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'transparent',
+                        animation: isListening ? 'pulse 1.5s infinite' : 'none',
+                        '@keyframes pulse': {
+                          '0%, 100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.4)' },
+                          '50%': { boxShadow: '0 0 0 8px rgba(239,68,68,0)' },
+                        },
+                        transition: 'all 0.2s ease',
+                        '&:active': { transform: 'scale(0.92)' },
+                      }}
+                      aria-label={isListening ? 'Stop recording' : 'Start recording'}
+                    >
+                      {isListening ? <MicOffIcon sx={{ fontSize: 20 }} /> : <MicIcon sx={{ fontSize: 20 }} />}
+                    </IconButton>
+                  )}
                   <IconButton
                     onClick={handleQuickAddButton}
                     disabled={!ready}
