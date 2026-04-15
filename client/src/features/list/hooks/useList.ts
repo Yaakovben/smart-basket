@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Product, List, User, Member, ToastType } from '../../../global/types';
 import { haptic } from '../../../global/helpers';
+import { detectCategory } from '../../../global/helpers/categoryDetector';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce, convertApiProduct, convertApiList } from '../../../global/hooks';
 import { StorageService } from '../../../global/services/storage';
@@ -317,7 +318,10 @@ export const useList = ({
       name: newProduct.name.trim(),
       quantity: newProduct.quantity,
       unit: newProduct.unit,
-      category: newProduct.category,
+      // זיהוי אוטומטי אם המשתמש לא בחר קטגוריה
+      category: newProduct.category === 'אחר' as Product['category']
+        ? detectCategory(newProduct.name.trim()) as Product['category']
+        : newProduct.category,
     };
 
     // בדיקת כפילות
@@ -341,12 +345,13 @@ export const useList = ({
     const trimmedName = name.trim();
     if (trimmedName.length < 2) return;
 
-    // בדיקת כפילות
+    const category = detectCategory(trimmedName) as Product['category'];
+
     const existing = checkDuplicate(trimmedName);
     if (existing) {
       setDuplicateProduct({
         existing,
-        newData: { name: trimmedName, quantity: 1, unit: 'יח׳' as Product['unit'], category: 'אחר' as Product['category'] }
+        newData: { name: trimmedName, quantity: 1, unit: 'יח׳' as Product['unit'], category }
       });
       return;
     }
@@ -355,7 +360,7 @@ export const useList = ({
       name: trimmedName,
       quantity: 1,
       unit: 'יח׳' as Product['unit'],
-      category: 'אחר' as Product['category'],
+      category,
     });
   }, [addProductToServer, checkDuplicate]);
 
