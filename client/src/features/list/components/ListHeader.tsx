@@ -420,10 +420,10 @@ export const ListHeader = memo(({
                     <IconButton
                       onClick={toggleSpeech}
                       sx={{
-                        width: 36, height: 36,
+                        width: 40, height: 40,
                         borderRadius: '10px',
                         color: isListening ? 'white' : 'text.secondary',
-                        background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'transparent',
+                        background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'action.hover',
                         animation: isListening ? 'pulse 1.5s infinite' : 'none',
                         '@keyframes pulse': {
                           '0%, 100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.4)' },
@@ -432,7 +432,6 @@ export const ListHeader = memo(({
                         transition: 'all 0.2s ease',
                         '&:active': { transform: 'scale(0.92)' },
                       }}
-                      aria-label={isListening ? 'Stop recording' : 'Start recording'}
                     >
                       {isListening ? <MicOffIcon sx={{ fontSize: 20 }} /> : <MicIcon sx={{ fontSize: 20 }} />}
                     </IconButton>

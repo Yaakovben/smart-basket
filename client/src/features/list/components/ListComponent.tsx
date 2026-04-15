@@ -342,33 +342,44 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
         {/* סינון לפי קטגוריה */}
         {items.length > 0 && activeCategories.length > 1 && (
-          <Box sx={{ display: 'flex', gap: 0.75, mb: 1.5, overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
+          <Box sx={{
+            display: 'flex', gap: 0.75, mb: 1.5, overflowX: 'auto', pb: 0.5,
+            mx: -1.5, px: 1.5,
+            '&::-webkit-scrollbar': { display: 'none' },
+            maskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',
+            WebkitMaskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',
+          }}>
             <Chip
               label={`${t('all')} (${items.length})`}
               size="small"
               onClick={() => setCategoryFilter(null)}
               sx={{
-                fontSize: 12, fontWeight: 600, flexShrink: 0,
+                fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
                 bgcolor: !categoryFilter ? 'primary.main' : 'action.hover',
                 color: !categoryFilter ? 'white' : 'text.primary',
-                '&:hover': { bgcolor: !categoryFilter ? 'primary.dark' : 'action.selected' },
+                boxShadow: !categoryFilter ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
+                transition: 'all 0.2s ease',
+                '&:active': { transform: 'scale(0.95)' },
               }}
             />
             {activeCategories.map(cat => {
               const count = items.filter(p => p.category === cat).length;
               const icon = CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS] || '📦';
               const key = CATEGORY_TRANSLATION_KEYS[cat as keyof typeof CATEGORY_TRANSLATION_KEYS];
+              const isActive = categoryFilter === cat;
               return (
                 <Chip
                   key={cat}
                   label={`${icon} ${key ? t(key) : cat} (${count})`}
                   size="small"
-                  onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                  onClick={() => setCategoryFilter(isActive ? null : cat)}
                   sx={{
-                    fontSize: 12, fontWeight: 600, flexShrink: 0,
-                    bgcolor: categoryFilter === cat ? 'primary.main' : 'action.hover',
-                    color: categoryFilter === cat ? 'white' : 'text.primary',
-                    '&:hover': { bgcolor: categoryFilter === cat ? 'primary.dark' : 'action.selected' },
+                    fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
+                    bgcolor: isActive ? 'primary.main' : 'action.hover',
+                    color: isActive ? 'white' : 'text.primary',
+                    boxShadow: isActive ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
+                    transition: 'all 0.2s ease',
+                    '&:active': { transform: 'scale(0.95)' },
                   }}
                 />
               );
@@ -412,7 +423,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   color: 'error.main', borderColor: 'rgba(239,68,68,0.3)',
                   fontSize: 13, fontWeight: 600, textTransform: 'none',
                   borderRadius: '12px', px: 3, py: 1,
-                  '&:hover': { borderColor: 'error.main', bgcolor: 'rgba(239,68,68,0.04)' }
+                  '&:hover': { borderColor: 'error.main', bgcolor: 'rgba(239,68,68,0.04)' },
+                  '&:active': { transform: 'scale(0.97)' },
                 }}
               >
                 {t('clearPurchased')}

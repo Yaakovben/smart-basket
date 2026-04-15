@@ -148,7 +148,8 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
           ? { ...notificationDismissKeyframes, animation: 'notificationDismiss 0.5s ease-out forwards' }
           : { animation: `notificationSlideIn 0.35s ease-out ${index * 0.05}s both` }
         ),
-        '&:active': onNavigate ? { bgcolor: 'rgba(0,0,0,0.08)' } : { bgcolor: 'rgba(0,0,0,0.04)' },
+        '&:hover': onNavigate ? { bgcolor: 'action.selected' } : {},
+        '&:active': onNavigate ? { bgcolor: 'rgba(0,0,0,0.08)', transform: 'scale(0.99)' } : { bgcolor: 'rgba(0,0,0,0.04)' },
         '&:last-child': { mb: 0 },
       }}
     >

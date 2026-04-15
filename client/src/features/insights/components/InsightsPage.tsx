@@ -94,10 +94,15 @@ export const InsightsPage = memo(() => {
             { value: stats.totalProducts, label: t('products'), icon: '🛒' },
             { value: stats.totalPurchased, label: t('purchased'), icon: '✅' },
           ].map((s, i) => (
-            <Box key={i} sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '14px', p: 1.5, backdropFilter: 'blur(10px)' }}>
-              <Typography sx={{ fontSize: 22, mb: 0.25 }}>{s.icon}</Typography>
-              <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white' }}>{s.value}</Typography>
-              <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{s.label}</Typography>
+            <Box key={i} sx={{
+              textAlign: 'center', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '14px',
+              p: { xs: 1.25, sm: 1.5 }, backdropFilter: 'blur(10px)',
+              animation: `fadeInUp 0.4s ease ${i * 0.1}s both`,
+              '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+            }}>
+              <Typography sx={{ fontSize: { xs: 18, sm: 22 }, mb: 0.25 }}>{s.icon}</Typography>
+              <Typography sx={{ fontSize: { xs: 18, sm: 20 }, fontWeight: 800, color: 'white' }}>{s.value}</Typography>
+              <Typography sx={{ fontSize: { xs: 10, sm: 11 }, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{s.label}</Typography>
             </Box>
           ))}
         </Box>
@@ -105,7 +110,7 @@ export const InsightsPage = memo(() => {
 
       <Box sx={{ px: 2, mt: 2.5 }}>
         {/* הרגלי קנייה */}
-        <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper' }} elevation={0}>
+        <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.3s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <CalendarTodayIcon sx={{ color: '#8B5CF6', fontSize: 20 }} />
             <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('shoppingHabits')}</Typography>
@@ -134,7 +139,7 @@ export const InsightsPage = memo(() => {
 
         {/* מוצרים נפוצים */}
         {topProducts.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper' }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <TrendingUpIcon sx={{ color: '#14B8A6', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('topProducts')}</Typography>
@@ -159,7 +164,7 @@ export const InsightsPage = memo(() => {
 
         {/* פילוח קטגוריות */}
         {categoryBreakdown.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper' }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <ShoppingCartIcon sx={{ color: '#3B82F6', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('categoryBreakdown')}</Typography>
@@ -189,7 +194,7 @@ export const InsightsPage = memo(() => {
 
         {/* מוצרים שאולי שכחת */}
         {forgotten.length > 0 && (
-          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper' }} elevation={0}>
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', animation: 'fadeInUp 0.4s ease 0.4s both', '@keyframes fadeInUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'translateY(0)' } } }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <LightbulbIcon sx={{ color: '#F59E0B', fontSize: 20 }} />
               <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{t('maybeForgot')}</Typography>
