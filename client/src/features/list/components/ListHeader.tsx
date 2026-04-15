@@ -111,6 +111,7 @@ export const ListHeader = memo(({
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [isListening, setIsListening] = useState(false);
+  const [micDenied, setMicDenied] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -141,12 +142,22 @@ export const ListHeader = memo(({
       }
     };
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (event: Event) => {
+      setIsListening(false);
+      // הסתרת כפתור אם המשתמש סירב להרשאת מיקרופון
+      if ((event as { error?: string }).error === 'not-allowed') {
+        setMicDenied(true);
+      }
+    };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-    haptic('medium');
+    try {
+      recognition.start();
+      setIsListening(true);
+      haptic('medium');
+    } catch {
+      setMicDenied(true);
+    }
   }, [isListening, settings.language]);
 
   const handleToggleSearch = useCallback(() => {
@@ -386,7 +397,7 @@ export const ListHeader = memo(({
               const ready = quickAddValue.trim().length >= 2;
               return (
                 <InputAdornment position="end" sx={{ gap: 0.5 }}>
-                  {speechSupported && !ready && (
+                  {speechSupported && !micDenied && !ready && (
                     <IconButton
                       onClick={toggleSpeech}
                       sx={{
