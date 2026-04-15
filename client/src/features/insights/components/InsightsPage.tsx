@@ -16,11 +16,15 @@ export const InsightsPage = memo(() => {
   const isDark = settings.theme === 'dark';
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const isRtl = settings.language === 'he';
 
   useEffect(() => {
+    setLoading(true);
+    setError(false);
     insightsApi.getInsights()
       .then(setData)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -28,6 +32,19 @@ export const InsightsPage = memo(() => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
         <CircularProgress sx={{ color: 'primary.main' }} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', p: 3 }}>
+        <Box sx={{ fontSize: 64, mb: 2 }}>⚠️</Box>
+        <Typography sx={{ fontSize: 18, fontWeight: 700, mb: 1 }}>{t('connectionErrorTitle')}</Typography>
+        <Typography sx={{ fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 3 }}>{t('connectionErrorDesc')}</Typography>
+        <IconButton onClick={() => navigate(-1)} sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' } }}>
+          <ArrowForwardIcon />
+        </IconButton>
       </Box>
     );
   }
@@ -48,7 +65,7 @@ export const InsightsPage = memo(() => {
   const { topProducts, categoryBreakdown, stats, forgotten, shoppingFrequency } = data;
 
   return (
-    <Box sx={{
+    <Box dir={isRtl ? 'rtl' : 'ltr'} sx={{
       minHeight: '100vh',
       bgcolor: 'background.default',
       pb: 4,

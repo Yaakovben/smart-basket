@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, CircularProgress, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -123,9 +123,16 @@ export const ListHeader = memo(({
   // זיהוי קולי
   const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
+  // ניקוי זיהוי קולי בפירוק הקומפוננטה
+  useEffect(() => {
+    return () => { recognitionRef.current?.abort(); };
+  }, []);
+
   const toggleSpeech = useCallback(() => {
+    // עצירה אם כבר מאזין
     if (isListening) {
       recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setIsListening(false);
       return;
     }
@@ -133,13 +140,17 @@ export const ListHeader = memo(({
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
+    // עצירת מופע קודם אם קיים
+    recognitionRef.current?.abort();
+
     const recognition = new SpeechRecognition();
     recognition.lang = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const text = event.results[0]?.[0]?.transcript?.trim();
+      const result = event.results[0]?.[0];
+      const text = result?.transcript?.trim();
       if (text && text.length >= 2 && onQuickAdd) {
         onQuickAdd(text);
         haptic('light');
@@ -147,10 +158,10 @@ export const ListHeader = memo(({
         setQuickAddValue(text);
       }
     };
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
     recognition.onerror = (event: Event) => {
       setIsListening(false);
-      // הסתרת כפתור אם המשתמש סירב להרשאת מיקרופון
+      recognitionRef.current = null;
       if ((event as { error?: string }).error === 'not-allowed') {
         setMicDenied(true);
       }
@@ -164,7 +175,7 @@ export const ListHeader = memo(({
     } catch {
       setMicDenied(true);
     }
-  }, [isListening, settings.language]);
+  }, [isListening, settings.language, onQuickAdd]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {

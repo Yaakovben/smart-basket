@@ -244,12 +244,20 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   // סינון לפי קטגוריה
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
-  // קטגוריות שיש בהן מוצרים (להצגת chips רלוונטיים בלבד)
+  // איפוס סינון קטגוריה כשמחליפים טאב
+  const prevFilterRef = useRef(filter);
+  if (prevFilterRef.current !== filter) {
+    prevFilterRef.current = filter;
+    if (categoryFilter) setCategoryFilter(null);
+  }
+
+  // קטגוריות לפי הטאב הנוכחי (לא מושפע מחיפוש)
   const activeCategories = useMemo(() => {
+    const source = filter === 'purchased' ? purchased : filter === 'pending' ? pending : [...pending, ...purchased];
     const cats = new Set<string>();
-    items.forEach(p => cats.add(p.category));
+    source.forEach(p => cats.add(p.category));
     return Array.from(cats);
-  }, [items]);
+  }, [filter, pending, purchased]);
 
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
@@ -371,6 +379,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         {/* Products List or Empty State */}
         {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
+        ) : filteredItems.length === 0 && categoryFilter ? (
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Typography sx={{ fontSize: 40, mb: 1 }}>{CATEGORY_ICONS[categoryFilter as keyof typeof CATEGORY_ICONS] || '📦'}</Typography>
+            <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2 }}>{t('noProductsInCategory')}</Typography>
+            <Button size="small" onClick={() => setCategoryFilter(null)} sx={{ textTransform: 'none', fontSize: 13 }}>{t('showAll')}</Button>
+          </Box>
         ) : (
           <>
             {filteredItems.map((p: Product) => (
@@ -388,7 +402,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 onClick={handleShowDetails}
               />
             ))}
-            {filter === 'purchased' && items.length > 0 && (
+            {filter === 'purchased' && filteredItems.length > 0 && (
               <Button
                 variant="outlined"
                 onClick={() => handleClearList('purchased')}

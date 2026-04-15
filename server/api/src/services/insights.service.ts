@@ -25,6 +25,7 @@ export interface InsightsData {
 
 export class InsightsService {
   static async getUserInsights(userId: string): Promise<InsightsData> {
+    try {
     // מציאת כל הרשימות של המשתמש
     const lists = await ListDAL.findUserLists(userId);
     const listIds = lists.map(l => l._id);
@@ -151,6 +152,9 @@ export class InsightsService {
         lastShoppingDate: purchaseDates[0] ? new Date(purchaseDates[0]).toISOString() : null,
       },
     };
+    } catch {
+      return this.emptyInsights();
+    }
   }
 
   private static emptyInsights(): InsightsData {

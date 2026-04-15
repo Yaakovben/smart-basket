@@ -257,6 +257,9 @@ type TranslationKey =
   | 'topProducts'
   | 'categoryBreakdown'
   | 'maybeForgot'
+  | 'resetListConfirm'
+  | 'noProductsInCategory'
+  | 'showAll'
   | 'errorOccurred'
   | 'connectionErrorTitle'
   | 'connectionErrorDesc'
@@ -514,6 +517,7 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
     listReset: 'הרשימה אופסה',
+    resetListConfirm: 'כל המוצרים שסומנו כנקנו יחזרו לרשימה',
     clearList: 'נקה רשימה',
     clearAll: 'מחק הכל',
     clearAllDesc: 'מחיקת כל המוצרים מהרשימה',
@@ -673,6 +677,8 @@ export const translations: Record<Language, Translations> = {
     topProducts: 'המוצרים הנפוצים',
     categoryBreakdown: 'פילוח לפי קטגוריה',
     maybeForgot: 'אולי שכחת?',
+    noProductsInCategory: 'אין מוצרים בקטגוריה זו',
+    showAll: 'הצג הכל',
     errorOccurred: 'אירעה שגיאה',
     connectionErrorTitle: 'בעיית חיבור',
     connectionErrorDesc: 'לא ניתן להתחבר לשרת כרגע',
@@ -924,6 +930,7 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'Clear purchased products',
     resetList: 'Reset list',
     listReset: 'List has been reset',
+    resetListConfirm: 'All purchased items will be returned to the list',
     clearList: 'Clear list',
     clearAll: 'Delete all',
     clearAllDesc: 'Delete all products from the list',
@@ -1082,6 +1089,8 @@ export const translations: Record<Language, Translations> = {
     topProducts: 'Top products',
     categoryBreakdown: 'Category breakdown',
     maybeForgot: 'Maybe you forgot?',
+    noProductsInCategory: 'No products in this category',
+    showAll: 'Show all',
     errorOccurred: 'An error occurred',
     connectionErrorTitle: 'Connection error',
     connectionErrorDesc: 'Unable to connect to the server right now',
@@ -1332,6 +1341,7 @@ export const translations: Record<Language, Translations> = {
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
     listReset: 'Список сброшен',
+    resetListConfirm: 'Все купленные товары вернутся в список',
     clearList: 'Очистить список',
     clearAll: 'Удалить всё',
     clearAllDesc: 'Удалить все товары из списка',
@@ -1490,6 +1500,8 @@ export const translations: Record<Language, Translations> = {
     topProducts: 'Популярные продукты',
     categoryBreakdown: 'По категориям',
     maybeForgot: 'Возможно забыли?',
+    noProductsInCategory: 'Нет товаров в этой категории',
+    showAll: 'Показать все',
     errorOccurred: 'Произошла ошибка',
     connectionErrorTitle: 'Ошибка подключения',
     connectionErrorDesc: 'Не удалось подключиться к серверу',
