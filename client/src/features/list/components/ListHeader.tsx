@@ -149,13 +149,17 @@ export const ListHeader = memo(({
     recognition.interimResults = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const result = event.results[0]?.[0];
-      const text = result?.transcript?.trim();
-      if (text && text.length >= 2 && onQuickAdd) {
-        onQuickAdd(text);
-        haptic('light');
-      } else if (text) {
-        setQuickAddValue(text);
+      const text = event.results[0]?.[0]?.transcript?.trim();
+      if (!text) return;
+      // שמירה בשדה כדי שהמשתמש יראה מה זוהה
+      setQuickAddValue(text);
+      // הוספה אוטומטית אם ארוך מספיק
+      if (text.length >= 2 && onQuickAdd) {
+        setTimeout(() => {
+          onQuickAdd(text);
+          setQuickAddValue('');
+          haptic('light');
+        }, 300);
       }
     };
     recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
@@ -416,7 +420,7 @@ export const ListHeader = memo(({
               const ready = quickAddValue.trim().length >= 2;
               return (
                 <InputAdornment position="end" sx={{ gap: 0.5 }}>
-                  {speechSupported && !micDenied && !ready && (
+                  {speechSupported && !micDenied && (!ready || isListening) && (
                     <IconButton
                       onClick={toggleSpeech}
                       sx={{

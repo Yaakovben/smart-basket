@@ -413,9 +413,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               <Button
                 variant="outlined"
                 onClick={() => handleClearList('purchased')}
-                startIcon={<CheckCircleOutlineIcon sx={{ fontSize: 18 }} />}
+                startIcon={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
                 sx={{
-                  mt: 3, mb: 1, mx: 'auto', display: 'flex',
+                  mt: 3, mb: 1, mx: 'auto', display: 'flex', gap: 1,
                   color: 'error.main', borderColor: 'rgba(239,68,68,0.3)',
                   fontSize: 13, fontWeight: 600, textTransform: 'none',
                   borderRadius: '12px', px: 3, py: 1,
