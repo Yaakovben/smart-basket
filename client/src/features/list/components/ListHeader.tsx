@@ -120,16 +120,22 @@ export const ListHeader = memo(({
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // זיהוי קולי
-  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  // זיהוי קולי - נתמך ב-Chrome, Edge, Android. לא נתמך ב-Safari/iOS
+  const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
-  // ניקוי זיהוי קולי בפירוק הקומפוננטה
   useEffect(() => {
     return () => { recognitionRef.current?.abort(); };
   }, []);
 
   const toggleSpeech = useCallback(() => {
-    // עצירה אם כבר מאזין
+    if (micDenied) {
+      // הרשאה נדחתה - הסבר למשתמש
+      alert(settings.language === 'he'
+        ? 'הגישה למיקרופון נחסמה.\nלחץ על סמל המנעול ליד כתובת האתר ← הרשאות ← מיקרופון ← אפשר'
+        : 'Microphone access was blocked.\nClick the lock icon near the URL → Permissions → Microphone → Allow');
+      return;
+    }
+
     if (isListening) {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
@@ -140,7 +146,6 @@ export const ListHeader = memo(({
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // עצירת מופע קודם אם קיים
     recognitionRef.current?.abort();
 
     const recognition = new SpeechRecognition();
@@ -151,9 +156,7 @@ export const ListHeader = memo(({
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const text = event.results[0]?.[0]?.transcript?.trim();
       if (!text) return;
-      // שמירה בשדה כדי שהמשתמש יראה מה זוהה
       setQuickAddValue(text);
-      // הוספה אוטומטית אם ארוך מספיק
       if (text.length >= 2 && onQuickAdd) {
         setTimeout(() => {
           onQuickAdd(text);
@@ -168,6 +171,9 @@ export const ListHeader = memo(({
       recognitionRef.current = null;
       if ((event as { error?: string }).error === 'not-allowed') {
         setMicDenied(true);
+        alert(settings.language === 'he'
+          ? 'הגישה למיקרופון נחסמה.\nלחץ על סמל המנעול ליד כתובת האתר ← הרשאות ← מיקרופון ← אפשר'
+          : 'Microphone access was blocked.\nClick the lock icon near the URL → Permissions → Microphone → Allow');
       }
     };
 
@@ -179,7 +185,7 @@ export const ListHeader = memo(({
     } catch {
       setMicDenied(true);
     }
-  }, [isListening, settings.language, onQuickAdd]);
+  }, [isListening, micDenied, settings.language, onQuickAdd]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
@@ -420,14 +426,15 @@ export const ListHeader = memo(({
               const ready = quickAddValue.trim().length >= 2;
               return (
                 <InputAdornment position="end" sx={{ gap: 0.5 }}>
-                  {speechSupported && !micDenied && (!ready || isListening) && (
+                  {speechSupported && (!ready || isListening) && (
                     <IconButton
                       onClick={toggleSpeech}
                       sx={{
                         width: 40, height: 40,
                         borderRadius: '10px',
-                        color: isListening ? 'white' : 'text.secondary',
+                        color: isListening ? 'white' : micDenied ? 'text.disabled' : 'text.secondary',
                         background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'action.hover',
+                        opacity: micDenied ? 0.5 : 1,
                         animation: isListening ? 'pulse 1.5s infinite' : 'none',
                         '@keyframes pulse': {
                           '0%, 100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.4)' },
