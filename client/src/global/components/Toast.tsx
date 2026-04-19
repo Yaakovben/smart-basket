@@ -109,6 +109,21 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           >
             {t('cancel')}
           </Box>
+          <Box
+            onClick={(e) => { e.stopPropagation(); onDismiss?.(); }}
+            sx={{
+              width: 28, height: 28,
+              borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              fontSize: 14, color: 'rgba(255,255,255,0.5)',
+              '&:active': { transform: 'scale(0.9)', bgcolor: 'rgba(255,255,255,0.2)' },
+            }}
+          >
+            ✕
+          </Box>
         </Box>
         <LinearProgress
           variant="determinate"

@@ -57,13 +57,10 @@ interface InviteModalProps {
 export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteModalProps) => {
   const { t } = useSettings();
   const [showQR, setShowQR] = useState(false);
-  // מניעת גלילת רקע כשמודאל פתוח
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
+      return () => { document.body.style.overflow = ''; setShowQR(false); };
     }
   }, [isOpen]);
 
@@ -182,7 +179,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               }}
             >
               <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
-                {t('close')}
+                QR Code ✕
               </Typography>
             </Box>
           </Box>

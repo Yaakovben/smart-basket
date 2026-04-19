@@ -655,13 +655,21 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 for (const id of ids) {
                   productsApi.deleteProduct(list.id, id).catch(() => {});
                 }
-                showToast(`${count} ${t('deleted')}`, 'success', () => {
-                  // undo - שחזור כל המוצרים
-                  onUpdateProductsForList(list.id, (current) => [...current, ...deletedProducts]);
-                  for (const p of deletedProducts) {
-                    productsApi.addProduct(list.id, {
-                      name: p.name, quantity: p.quantity, unit: p.unit, category: p.category,
-                    }).catch(() => {});
+                showToast(`${count} ${t('deleted')}`, 'success', async () => {
+                  // undo - שחזור כל המוצרים עם ID חדש מהשרת
+                  const tempProducts = deletedProducts.map(p => ({ ...p, id: `temp-undo-${Date.now()}-${Math.random()}` }));
+                  onUpdateProductsForList(list.id, (current) => [...current, ...tempProducts]);
+                  for (let i = 0; i < deletedProducts.length; i++) {
+                    const p = deletedProducts[i];
+                    const tempId = tempProducts[i].id;
+                    try {
+                      const serverProduct = await productsApi.addProduct(list.id, {
+                        name: p.name, quantity: p.quantity, unit: p.unit, category: p.category,
+                      });
+                      onUpdateProductsForList(list.id, (current) =>
+                        current.map(c => c.id === tempId ? { ...c, id: serverProduct.id } : c)
+                      );
+                    } catch { /* ignore */ }
                   }
                 });
               }}
