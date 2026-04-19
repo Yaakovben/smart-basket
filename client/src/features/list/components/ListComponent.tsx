@@ -655,7 +655,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 for (const id of ids) {
                   productsApi.deleteProduct(list.id, id).catch(() => {});
                 }
-                showToast(`${count} ${t('deleted')}`, 'success', async () => {
+                showToast(`${count} ${t('bulkDeleted')}`, 'success', async () => {
                   // undo - שחזור כל המוצרים עם ID חדש מהשרת
                   const tempProducts = deletedProducts.map(p => ({ ...p, id: `temp-undo-${Date.now()}-${Math.random()}` }));
                   onUpdateProductsForList(list.id, (current) => [...current, ...tempProducts]);
@@ -690,7 +690,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   onUpdateProductsForList(list.id, (current) =>
                     current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
                   );
-                  showToast(`${count} ${t('markedAsNotPurchased')}`);
+                  showToast(`${count} ${t('bulkReturnedToList')}`);
                   for (const id of ids) {
                     productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
                   }
@@ -711,7 +711,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   onUpdateProductsForList(list.id, (current) =>
                     current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
                   );
-                  showToast(`${count} ${t('markedAsPurchased')}`);
+                  showToast(`${count} ${t('bulkMarkedPurchased')}`);
                   for (const id of ids) {
                     productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
                   }
