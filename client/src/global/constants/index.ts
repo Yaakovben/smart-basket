@@ -17,6 +17,22 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'אחר': '📦'
 };
 
+// ===== צבעי קטגוריות =====
+export const CATEGORY_COLORS: Record<ProductCategory, string> = {
+  'מוצרי חלב': '#0EA5E9',
+  'מאפים': '#F59E0B',
+  'ירקות': '#22C55E',
+  'פירות': '#EF4444',
+  'בשר': '#B91C1C',
+  'משקאות': '#8B5CF6',
+  'ממתקים': '#EC4899',
+  'קפואים': '#06B6D4',
+  'שימורים ויבשים': '#D97706',
+  'תבלינים ורטבים': '#F97316',
+  'ניקיון': '#14B8A6',
+  'אחר': '#6B7280',
+};
+
 // ===== מפתחות תרגום קטגוריות =====
 export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys> = {
   'מוצרי חלב': 'catDairy',

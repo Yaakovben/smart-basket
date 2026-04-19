@@ -12,6 +12,7 @@ export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
 export {
   CATEGORY_ICONS,
   CATEGORY_TRANSLATION_KEYS,
+  CATEGORY_COLORS,
   MEMBER_COLORS,
   LIST_ICONS,
   GROUP_ICONS,

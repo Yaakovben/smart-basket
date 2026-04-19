@@ -1,7 +1,8 @@
-import { memo, useRef, useCallback } from 'react';
-import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, Chip, CircularProgress } from '@mui/material';
+import { memo, useRef, useCallback, useMemo } from 'react';
+import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl, CircularProgress } from '@mui/material';
 import type { Product, ProductUnit, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES, formatDateShort, formatTimeShort } from '../../../global/helpers';
+import { detectCategory } from '../../../global/helpers/categoryDetector';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { NewProductForm } from '../types/list-types';
@@ -52,6 +53,32 @@ export const AddProductModal = memo(({
 
   const isNameValid = newProduct.name.trim().length >= 2;
 
+  // זיהוי אוטומטי של קטגוריה בזמן הקלדה
+  const detectedCategory = useMemo(() => {
+    const name = newProduct.name.trim();
+    if (name.length < 2) return null;
+    const detected = detectCategory(name);
+    return detected !== 'אחר' ? detected : null;
+  }, [newProduct.name]);
+
+  // עדכון קטגוריה אוטומטי אם המשתמש לא בחר ידנית
+  const userChangedCategory = useRef(false);
+  const handleNameChange = useCallback((value: string) => {
+    onUpdateField('name', value);
+    if (!userChangedCategory.current) {
+      const detected = detectCategory(value.trim());
+      if (detected !== 'אחר') {
+        onUpdateField('category', detected as ProductCategory);
+      }
+    }
+  }, [onUpdateField]);
+
+  const handleCategoryClick = useCallback((cat: ProductCategory) => {
+    haptic('light');
+    userChangedCategory.current = true;
+    onUpdateField('category', cat);
+  }, [onUpdateField]);
+
   const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -83,13 +110,20 @@ export const AddProductModal = memo(({
         </Alert>
       )}
       <Box sx={{ mb: 2 }}>
-        <Typography component="label" htmlFor="product-name" sx={labelSx}>{t('name')}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography component="label" htmlFor="product-name" sx={labelSx}>{t('name')}</Typography>
+          {detectedCategory && (
+            <Typography sx={{ fontSize: 11, color: 'primary.main', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {CATEGORY_ICONS[detectedCategory as ProductCategory]} {t(CATEGORY_TRANSLATION_KEYS[detectedCategory as ProductCategory])}
+            </Typography>
+          )}
+        </Box>
         <TextField
           autoFocus
           id="product-name"
           fullWidth
           value={newProduct.name}
-          onChange={e => onUpdateField('name', e.target.value)}
+          onChange={e => handleNameChange(e.target.value)}
           onKeyDown={handleNameKeyDown}
           placeholder={t('productName')}
           aria-required="true"
@@ -157,7 +191,7 @@ export const AddProductModal = memo(({
             return (
               <Box
                 key={cat}
-                onClick={() => { haptic('light'); onUpdateField('category', cat as ProductCategory); }}
+                onClick={() => handleCategoryClick(cat as ProductCategory)}
                 role="radio"
                 aria-checked={isSelected}
                 sx={{
@@ -329,19 +363,52 @@ export const EditProductModal = memo(({
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('category')}>
-          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
-            <Chip
-              key={cat}
-              label={`${icon} ${t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}`}
-              onClick={() => onUpdateField('category', cat as ProductCategory)}
-              variant={product.category === cat ? 'filled' : 'outlined'}
-              color={product.category === cat ? 'primary' : 'default'}
-              sx={{ cursor: 'pointer' }}
-              role="radio"
-              aria-checked={product.category === cat}
-            />
-          ))}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
+          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => {
+            const isSelected = product.category === cat;
+            return (
+              <Box
+                key={cat}
+                onClick={() => { haptic('light'); onUpdateField('category', cat as ProductCategory); }}
+                role="radio"
+                aria-checked={isSelected}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  py: 1.25,
+                  px: 0.25,
+                  borderRadius: '14px',
+                  cursor: 'pointer',
+                  border: '2px solid',
+                  borderColor: isSelected ? 'primary.main' : 'transparent',
+                  bgcolor: isSelected ? 'rgba(20,184,166,0.1)' : 'action.hover',
+                  boxShadow: isSelected ? '0 2px 8px rgba(20,184,166,0.2)' : 'none',
+                  transition: 'all 0.2s',
+                  '&:active': { transform: 'scale(0.93)' },
+                }}
+              >
+                <Box sx={{
+                  width: 36, height: 36, borderRadius: '10px',
+                  bgcolor: isSelected ? 'rgba(20,184,166,0.15)' : 'background.paper',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, transition: 'all 0.2s',
+                }}>
+                  {icon}
+                </Box>
+                <Typography sx={{
+                  fontSize: 9.5, fontWeight: isSelected ? 700 : 500,
+                  color: isSelected ? 'primary.main' : 'text.secondary',
+                  textAlign: 'center', lineHeight: 1.15,
+                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
       </Box>
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>

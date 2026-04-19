@@ -8,7 +8,7 @@ import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
-import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS } from '../../../global/constants';
+import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
 // ===== אנימציות חגיגה =====
 const floatUp = keyframes`
@@ -362,6 +362,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               const count = categoryCounts.get(cat) || 0;
               const icon = CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS] || '📦';
               const key = CATEGORY_TRANSLATION_KEYS[cat as keyof typeof CATEGORY_TRANSLATION_KEYS];
+              const color = CATEGORY_COLORS[cat as keyof typeof CATEGORY_COLORS] || '#6B7280';
               const isActive = categoryFilter === cat;
               return (
                 <Chip
@@ -371,9 +372,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   onClick={() => setCategoryFilter(isActive ? null : cat)}
                   sx={{
                     fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
-                    bgcolor: isActive ? 'primary.main' : 'action.hover',
+                    bgcolor: isActive ? color : 'action.hover',
                     color: isActive ? 'white' : 'text.primary',
-                    boxShadow: isActive ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
+                    boxShadow: isActive ? `0 2px 8px ${color}40` : 'none',
                     transition: 'all 0.2s ease',
                     '&:active': { transform: 'scale(0.95)' },
                   }}
