@@ -120,8 +120,9 @@ export const ListHeader = memo(({
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // זיהוי קולי - נתמך ב-Chrome, Edge, Android. לא נתמך ב-Safari/iOS
-  const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  // זיהוי קולי - נתמך ב-Chrome, Edge, Android בדפדפן (לא ב-PWA/Safari)
+  const SpeechRecognitionClass = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+  const speechSupported = !!SpeechRecognitionClass;
 
   useEffect(() => {
     return () => { recognitionRef.current?.abort(); };
@@ -129,10 +130,11 @@ export const ListHeader = memo(({
 
   const toggleSpeech = useCallback(() => {
     if (micDenied) {
-      // הרשאה נדחתה - הסבר למשתמש
       alert(settings.language === 'he'
-        ? 'הגישה למיקרופון נחסמה.\nלחץ על סמל המנעול ליד כתובת האתר ← הרשאות ← מיקרופון ← אפשר'
-        : 'Microphone access was blocked.\nClick the lock icon near the URL → Permissions → Microphone → Allow');
+        ? 'הגישה למיקרופון נחסמה.\nכדי לאפשר:\n1. לחץ על סמל המנעול ליד כתובת האתר\n2. הרשאות ← מיקרופון ← אפשר\n3. רענן את הדף'
+        : settings.language === 'ru'
+        ? 'Доступ к микрофону заблокирован.\nЧтобы разрешить:\n1. Нажмите на значок замка рядом с URL\n2. Разрешения → Микрофон → Разрешить\n3. Обновите страницу'
+        : 'Microphone access was blocked.\nTo allow:\n1. Click the lock icon near the URL\n2. Permissions → Microphone → Allow\n3. Refresh the page');
       return;
     }
 
@@ -143,37 +145,41 @@ export const ListHeader = memo(({
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
+    if (!SpeechRecognitionClass) return;
     recognitionRef.current?.abort();
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionClass();
     recognition.lang = settings.language === 'he' ? 'he-IL' : settings.language === 'ru' ? 'ru-RU' : 'en-US';
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const text = event.results[0]?.[0]?.transcript?.trim();
+      const result = event.results[0];
+      const text = result?.[0]?.transcript?.trim();
       if (!text) return;
+      // הצגת טקסט בזמן אמת
       setQuickAddValue(text);
-      if (text.length >= 2 && onQuickAdd) {
+      // הוספה אוטומטית רק כשהתוצאה סופית
+      if (result.isFinal && text.length >= 2 && onQuickAdd) {
         setTimeout(() => {
           onQuickAdd(text);
           setQuickAddValue('');
           haptic('light');
-        }, 300);
+        }, 200);
       }
     };
     recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
     recognition.onerror = (event: Event) => {
       setIsListening(false);
       recognitionRef.current = null;
-      if ((event as { error?: string }).error === 'not-allowed') {
+      const error = (event as { error?: string }).error;
+      if (error === 'not-allowed') {
         setMicDenied(true);
         alert(settings.language === 'he'
-          ? 'הגישה למיקרופון נחסמה.\nלחץ על סמל המנעול ליד כתובת האתר ← הרשאות ← מיקרופון ← אפשר'
-          : 'Microphone access was blocked.\nClick the lock icon near the URL → Permissions → Microphone → Allow');
+          ? 'הגישה למיקרופון נחסמה.\nכדי לאפשר:\n1. לחץ על סמל המנעול ליד כתובת האתר\n2. הרשאות ← מיקרופון ← אפשר\n3. רענן את הדף'
+          : 'Microphone access was blocked.\nTo allow:\n1. Click the lock icon near the URL\n2. Permissions → Microphone → Allow\n3. Refresh the page');
+      } else if (error === 'network') {
+        alert(settings.language === 'he' ? 'שגיאת רשת. בדוק חיבור לאינטרנט' : 'Network error. Check internet connection');
       }
     };
 
@@ -185,7 +191,7 @@ export const ListHeader = memo(({
     } catch {
       setMicDenied(true);
     }
-  }, [isListening, micDenied, settings.language, onQuickAdd]);
+  }, [isListening, micDenied, settings.language, onQuickAdd, SpeechRecognitionClass]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
