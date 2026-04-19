@@ -151,33 +151,57 @@ export const AddProductModal = memo(({
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }} role="radiogroup" aria-label={t('category')}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
           {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => {
             const isSelected = newProduct.category === cat;
             return (
               <Box
                 key={cat}
-                onClick={() => onUpdateField('category', cat as ProductCategory)}
+                onClick={() => { haptic('light'); onUpdateField('category', cat as ProductCategory); }}
                 role="radio"
                 aria-checked={isSelected}
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 0.25,
-                  py: 1,
-                  px: 0.5,
-                  borderRadius: '12px',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  py: 1.25,
+                  px: 0.25,
+                  borderRadius: '14px',
                   cursor: 'pointer',
                   border: '2px solid',
-                  borderColor: isSelected ? 'primary.main' : 'divider',
-                  bgcolor: isSelected ? 'primary.light' : 'transparent',
-                  transition: 'all 0.15s',
-                  '&:active': { transform: 'scale(0.95)' },
+                  borderColor: isSelected ? 'primary.main' : 'transparent',
+                  bgcolor: isSelected ? 'rgba(20,184,166,0.1)' : 'action.hover',
+                  boxShadow: isSelected ? '0 2px 8px rgba(20,184,166,0.2)' : 'none',
+                  transition: 'all 0.2s',
+                  '&:active': { transform: 'scale(0.93)' },
                 }}
               >
-                <Typography sx={{ fontSize: 22, lineHeight: 1 }}>{icon}</Typography>
-                <Typography sx={{ fontSize: 10, fontWeight: isSelected ? 700 : 500, color: isSelected ? 'primary.main' : 'text.secondary', textAlign: 'center', lineHeight: 1.2 }}>
+                <Box sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '10px',
+                  bgcolor: isSelected ? 'rgba(20,184,166,0.15)' : 'background.paper',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  transition: 'all 0.2s',
+                }}>
+                  {icon}
+                </Box>
+                <Typography sx={{
+                  fontSize: 9.5,
+                  fontWeight: isSelected ? 700 : 500,
+                  color: isSelected ? 'primary.main' : 'text.secondary',
+                  textAlign: 'center',
+                  lineHeight: 1.15,
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
                   {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
                 </Typography>
               </Box>
