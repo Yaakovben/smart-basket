@@ -120,10 +120,9 @@ export const ListHeader = memo(({
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // זיהוי קולי - Web Speech API (Chrome/Edge/Android) או fallback לפוקוס על השדה (iOS)
+  // זיהוי קולי - נתמך רק בדפדפנים עם Web Speech API (Chrome, Edge, Android)
   const SpeechRecognitionClass = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
-  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const speechSupported = !!SpeechRecognitionClass || isIOS;
+  const speechSupported = !!SpeechRecognitionClass;
 
   useEffect(() => {
     return () => { recognitionRef.current?.abort(); };
@@ -146,12 +145,7 @@ export const ListHeader = memo(({
       return;
     }
 
-    // iOS: אין Web Speech API, פותח את השדה כדי שהמשתמש ישתמש במיקרופון של המקלדת
-    if (!SpeechRecognitionClass) {
-      inputRef.current?.focus();
-      haptic('light');
-      return;
-    }
+    if (!SpeechRecognitionClass) return;
     recognitionRef.current?.abort();
 
     const recognition = new SpeechRecognitionClass();
