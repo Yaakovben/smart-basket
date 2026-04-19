@@ -57,11 +57,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     }
   }, [isOpen, offset]);
 
-  // ניקוי סגנונות body ב-unmount
+  // ניקוי ב-unmount
   useEffect(() => {
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, []);
 
@@ -109,19 +107,14 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     lastX.current = touch.clientX;
     lastTime.current = now;
 
-    // נעילת כיוון אחרי 5px תנועה
-    if (!directionLocked.current && (absDx > 5 || absDy > 5)) {
-      // אופקי אם dx >= dy
-      if (absDx >= absDy) {
+    // נעילת כיוון אחרי 8px תנועה (סף גבוה יותר למניעת נעילה שגויה)
+    if (!directionLocked.current && (absDx > 8 || absDy > 8)) {
+      if (absDx > absDy * 1.2) {
         directionLocked.current = 'horizontal';
         setSwiping(true);
-        // חסימת גלילה
         e.preventDefault();
-        document.body.style.overflow = 'hidden';
-        document.body.style.touchAction = 'none';
       } else {
         directionLocked.current = 'vertical';
-        // לאפשר גלילה
         return;
       }
     }
@@ -150,9 +143,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, [calcOffset, onOpen, product.id]);
 
   const handleTouchEnd = useCallback(() => {
-    // שחזור סגנונות body
-    document.body.style.overflow = '';
-    document.body.style.touchAction = '';
 
     if (directionLocked.current !== 'horizontal') {
       directionLocked.current = null;
@@ -202,8 +192,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, [offset, isOpen, onClose]);
 
   const handleTouchCancel = useCallback(() => {
-    document.body.style.overflow = '';
-    document.body.style.touchAction = '';
     directionLocked.current = null;
     setSwiping(false);
     // הצמדה למצב הקרוב

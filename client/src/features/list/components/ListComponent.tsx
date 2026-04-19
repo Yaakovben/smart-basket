@@ -235,7 +235,7 @@ interface ListPageProps {
   onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUserIds?: Set<string>;
 }
 
@@ -368,7 +368,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           overflowX: 'hidden',
           p: { xs: 1.5, sm: 2.5 },
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          willChange: 'scroll-position',
         }}
         onClick={handleCloseItem}
         role="main"
