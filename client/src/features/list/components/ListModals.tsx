@@ -128,59 +128,51 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         </Box>
 
         {/* QR Code */}
-        {list.inviteCode && !showQR && (
+        {list.inviteCode && (
           <Box
-            onClick={() => setShowQR(true)}
+            onClick={() => setShowQR(prev => !prev)}
             sx={{
               mt: 2, py: 1.25, borderRadius: '12px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-              bgcolor: 'transparent',
               cursor: 'pointer',
               '&:active': { opacity: 0.7 },
             }}
           >
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
-              QR Code
+              {showQR ? `${t('close')} QR` : 'QR Code'}
             </Typography>
           </Box>
         )}
-        {showQR && list.inviteCode && (
+        {list.inviteCode && (
           <Box sx={{
-            mt: 2, borderRadius: '20px', overflow: 'hidden',
-            bgcolor: 'white',
-            boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
-            animation: 'qrIn 0.3s ease-out',
-            '@keyframes qrIn': { from: { opacity: 0, maxHeight: 0 }, to: { opacity: 1, maxHeight: 300 } },
+            overflow: 'hidden',
+            maxHeight: showQR ? 300 : 0,
+            opacity: showQR ? 1 : 0,
+            transition: 'max-height 0.35s ease, opacity 0.3s ease',
           }}>
-            <Box sx={{ p: 3, textAlign: 'center' }}>
-              <Box sx={{
-                display: 'inline-block', p: 2, borderRadius: '16px',
-                bgcolor: '#F8FFFE',
-                border: '1px solid rgba(20,184,166,0.1)',
-              }}>
-                <QRCodeSVG
-                  value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={160}
-                  level="H"
-                  fgColor="#0F766E"
-                  style={{ display: 'block' }}
-                />
+            <Box sx={{
+              borderRadius: '20px',
+              bgcolor: 'white',
+              boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
+            }}>
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Box sx={{
+                  display: 'inline-block', p: 2, borderRadius: '16px',
+                  bgcolor: '#F8FFFE',
+                  border: '1px solid rgba(20,184,166,0.1)',
+                }}>
+                  <QRCodeSVG
+                    value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                    size={160}
+                    level="H"
+                    fgColor="#0F766E"
+                    style={{ display: 'block' }}
+                  />
+                </Box>
+                <Typography sx={{ fontSize: 13, color: '#6B7280', mt: 2, fontWeight: 500 }}>
+                  {t('shareDetails')}
+                </Typography>
               </Box>
-              <Typography sx={{ fontSize: 13, color: '#6B7280', mt: 2, fontWeight: 500 }}>
-                {t('shareDetails')}
-              </Typography>
-            </Box>
-            <Box
-              onClick={() => setShowQR(false)}
-              sx={{
-                py: 1.25, textAlign: 'center',
-                cursor: 'pointer',
-                '&:active': { opacity: 0.7 },
-              }}
-            >
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
-                QR Code ✕
-              </Typography>
             </Box>
           </Box>
         )}
