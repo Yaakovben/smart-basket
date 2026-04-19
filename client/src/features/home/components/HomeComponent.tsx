@@ -521,8 +521,8 @@ export const HomeComponent = memo(({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <IconButton onClick={() => setShowNotifications(true)} sx={glassButtonSx}>
-              <Badge badgeContent={notificationsLoading ? 0 : totalUnreadCount} color="error" invisible={notificationsLoading} sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
-                <NotificationsIcon sx={{ color: 'white', fontSize: 22 }} />
+              <Badge badgeContent={totalUnreadCount} color="error" invisible={totalUnreadCount === 0} sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
+                <NotificationsIcon sx={{ color: 'white', fontSize: 22, opacity: notificationsLoading ? 0.5 : 1, transition: 'opacity 0.2s' }} />
               </Badge>
             </IconButton>
             <IconButton onClick={() => navigate('/settings')} sx={glassButtonSx}>

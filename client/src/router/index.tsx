@@ -61,7 +61,7 @@ const ListPageWrapper = ({
   updateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
   leaveList: (id: string) => void;
   deleteList: (id: string) => void;
-  showToast: (msg: string, type?: ToastType) => void;
+  showToast: (msg: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUsers: Record<string, string[]>;
 }) => {
   const navigate = useNavigate();
@@ -116,7 +116,7 @@ export const AppRouter = () => {
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
   const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
-  const { message: toast, toastType, toastKey, showToast, hideToast } = useToast();
+  const { message: toast, toastType, toastKey, onUndo, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
@@ -360,7 +360,7 @@ export const AppRouter = () => {
       </Routes>
       </Box>
       </Suspense>
-      <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} />
+      <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
     </>
   );
 }

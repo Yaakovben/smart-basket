@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import { useSettings } from '../context/SettingsContext';
 
 interface ListMenuProps {
@@ -24,6 +25,7 @@ interface ListMenuProps {
   onRefresh?: () => void;
   onClearList?: () => void;
   onResetList?: () => void;
+  onShoppingMode?: () => void;
   hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
@@ -43,6 +45,7 @@ export const ListMenu = memo(({
   onDelete,
   onRefresh,
   onResetList,
+  onShoppingMode,
   hasPurchased = false,
   onClearList,
   hasProducts = false,
@@ -83,6 +86,22 @@ export const ListMenu = memo(({
             {t('refresh')}
           </Typography>
         </MenuItem>
+      )}
+
+      {/* מצב קנייה */}
+      {onShoppingMode && hasProducts && (
+        <>
+          {onRefresh && <Divider sx={{ my: 0.5 }} />}
+          <MenuItem
+            onClick={() => { onClose(); onShoppingMode(); }}
+            sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+          >
+            <ShoppingCartCheckoutIcon sx={{ color: '#22C55E', fontSize: 22 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>
+              {t('shoppingMode')}
+            </Typography>
+          </MenuItem>
+        </>
       )}
 
       {/* Mute Toggle, רק בקבוצות */}

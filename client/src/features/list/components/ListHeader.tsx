@@ -73,6 +73,7 @@ interface ListHeaderProps {
   refreshing?: boolean;
   onClearList?: () => void;
   onResetList?: () => void;
+  onShoppingMode?: () => void;
   hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
@@ -105,6 +106,7 @@ export const ListHeader = memo(({
   refreshing = false,
   onClearList,
   onResetList,
+  onShoppingMode,
   hasPurchased = false,
   hasProducts = false,
   onLeave
@@ -319,6 +321,7 @@ export const ListHeader = memo(({
         onRefresh={onRefresh}
         onClearList={onClearList}
         onResetList={onResetList}
+        onShoppingMode={onShoppingMode}
         hasPurchased={hasPurchased}
         hasProducts={hasProducts}
         onLeave={onLeave}

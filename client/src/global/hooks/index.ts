@@ -19,6 +19,7 @@ interface ToastState {
   message: string;
   type: ToastType;
   key: number;
+  onUndo?: () => void;
 }
 
 // משך הצגה לפי סוג, התראות מידע מוצגות יותר זמן
@@ -38,15 +39,15 @@ export function useToast() {
   const shownAtRef = useRef(0);
 
   const showToast = useCallback(
-    (msg: string, type: ToastType = "success") => {
+    (msg: string, type: ToastType = "success", onUndo?: () => void) => {
       const now = Date.now();
       const elapsed = now - shownAtRef.current;
 
       const display = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         shownAtRef.current = Date.now();
-        setToast((prev) => ({ message: msg, type, key: prev.key + 1 }));
-        const duration = TOAST_DURATIONS[type];
+        setToast((prev) => ({ message: msg, type, key: prev.key + 1, onUndo }));
+        const duration = onUndo ? 4000 : TOAST_DURATIONS[type];
         timeoutRef.current = setTimeout(() => {
           setToast((prev) => ({ message: "", type: "success", key: prev.key }));
           timeoutRef.current = null;
@@ -74,7 +75,7 @@ export function useToast() {
     setToast((prev) => ({ message: "", type: "success", key: prev.key }));
   }, []);
 
-  return { message: toast.message, toastType: toast.type, toastKey: toast.key, showToast, hideToast };
+  return { message: toast.message, toastType: toast.type, toastKey: toast.key, onUndo: toast.onUndo, showToast, hideToast };
 }
 
 // דגל מודולרי למניעת רישום כפול של פתיחת אפליקציה (שורד StrictMode re-mount)

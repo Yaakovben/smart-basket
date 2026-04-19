@@ -9,6 +9,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
+import { haptic } from '../../../global/helpers';
 
 // ===== אנימציות חגיגה =====
 const floatUp = keyframes`
@@ -266,7 +267,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
 
-  // סינון לפי קטגוריה
+  const [shoppingMode, setShoppingMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   // איפוס סינון קטגוריה כשמחליפים טאב (useEffect כי filter הוא prop חיצוני)
@@ -355,6 +356,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         refreshing={refreshing}
         onClearList={() => setShowClearList(true)}
         onResetList={handleResetList}
+        onShoppingMode={() => setShoppingMode(true)}
         hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? leaveList : undefined}
@@ -590,6 +592,77 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
       {/* Celebration - all products purchased */}
       {showCelebration && <CelebrationOverlay />}
+
+      {/* מצב קנייה */}
+      {shoppingMode && (
+        <Box sx={{
+          position: 'fixed', inset: 0, zIndex: 1200,
+          bgcolor: 'background.default',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <Box sx={{
+            p: 2, pt: 'max(16px, env(safe-area-inset-top))',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            bgcolor: 'background.paper', boxShadow: 1,
+          }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700 }}>🛒 {t('shoppingMode')}</Typography>
+            <Button size="small" onClick={() => setShoppingMode(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>
+              {t('exitShoppingMode')}
+            </Button>
+          </Box>
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5, pb: 'calc(20px + env(safe-area-inset-bottom))' }}>
+            {pending.map(p => (
+              <Box
+                key={p.id}
+                onClick={() => { haptic('medium'); toggleProduct(p.id); }}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 2,
+                  p: 2, mb: 1, borderRadius: '16px',
+                  bgcolor: 'background.paper',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.98)', bgcolor: 'action.hover' },
+                }}
+              >
+                <Box sx={{
+                  width: 52, height: 52, borderRadius: '14px',
+                  bgcolor: 'rgba(20,184,166,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 26, flexShrink: 0,
+                }}>
+                  {CATEGORY_ICONS[p.category as keyof typeof CATEGORY_ICONS] || '📦'}
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 18, fontWeight: 600 }}>{p.name}</Typography>
+                  <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>
+                    {p.quantity} {p.unit}
+                  </Typography>
+                </Box>
+                <Box sx={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  border: '3px solid',
+                  borderColor: 'primary.main',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, flexShrink: 0,
+                  '&:active': { bgcolor: 'primary.main', color: 'white' },
+                }}>
+                  ✓
+                </Box>
+              </Box>
+            ))}
+            {pending.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography sx={{ fontSize: 48, mb: 2 }}>🎉</Typography>
+                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'success.main' }}>{t('allDone')}</Typography>
+                <Button onClick={() => setShoppingMode(false)} sx={{ mt: 3, textTransform: 'none' }} variant="contained">
+                  {t('exitShoppingMode')}
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )}
 
       {/* Clear List Modal */}
       {showClearList && (

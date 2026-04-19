@@ -42,7 +42,7 @@ interface UseListParams {
   onLeaveList: (listId: string) => void | Promise<void>;
   onDeleteList: (listId: string) => void | Promise<void>;
   onBack: () => void;
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
 }
 
 export const useList = ({
@@ -437,7 +437,16 @@ export const useList = ({
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
-      showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'), 'success');
+      showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'), 'success', () => {
+        // undo - החזרה למצב הקודם
+        onUpdateProductsForList(list.id, (currentProducts) =>
+          currentProducts.map((p: Product) =>
+            p.id === productId ? { ...p, isPurchased: !newIsPurchased } : p
+          )
+        );
+        productsApi.updateProduct(list.id, productId, { isPurchased: !newIsPurchased }).catch(() => {});
+        socketService.emitProductToggled(list.id, productId, product.name, !newIsPurchased, user.name);
+      });
     } catch (error) {
       // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });

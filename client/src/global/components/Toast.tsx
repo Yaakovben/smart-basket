@@ -7,6 +7,7 @@ interface ToastProps {
   msg: string;
   type?: ToastType;
   onDismiss?: () => void;
+  onUndo?: () => void;
 }
 
 const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg: string; border: string }; dark: { color: string; bg: string; border: string } }> = {
@@ -18,7 +19,7 @@ const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg
 
 const SWIPE_THRESHOLD = 60;
 
-export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
+export const Toast = ({ msg, type = 'success', onDismiss, onUndo }: ToastProps) => {
   const { settings } = useSettings();
   const startY = useRef(0);
   const currentY = useRef(0);
@@ -138,6 +139,24 @@ export const Toast = ({ msg, type = 'success', onDismiss }: ToastProps) => {
         }}>
           {msg}
         </Typography>
+        {onUndo && (
+          <Box
+            onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
+            sx={{
+              px: 1.5, py: 0.5,
+              borderRadius: '8px',
+              bgcolor: `${config.color}20`,
+              color: config.color,
+              fontSize: 13, fontWeight: 700,
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.15s',
+              '&:active': { transform: 'scale(0.95)' },
+            }}
+          >
+            ↩
+          </Box>
+        )}
       </Box>
     </Snackbar>
   );

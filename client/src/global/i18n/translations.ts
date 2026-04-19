@@ -99,6 +99,8 @@ type TranslationKey =
   | 'clearList'
   | 'resetList'
   | 'listReset'
+  | 'shoppingMode'
+  | 'exitShoppingMode'
   | 'clearAll'
   | 'clearAllDesc'
   | 'clearPurchasedDesc'
@@ -519,6 +521,8 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'הוחזר לרשימה',
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
+    shoppingMode: 'מצב קנייה',
+    exitShoppingMode: 'יציאה ממצב קנייה',
     listReset: 'הרשימה אופסה',
     resetListConfirm: 'כל המוצרים שסומנו כנקנו יחזרו לרשימה',
     clearList: 'נקה רשימה',
@@ -935,6 +939,8 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'Returned to list',
     clearPurchased: 'Clear purchased products',
     resetList: 'Reset list',
+    shoppingMode: 'Shopping mode',
+    exitShoppingMode: 'Exit shopping mode',
     listReset: 'List has been reset',
     resetListConfirm: 'All purchased items will be returned to the list',
     clearList: 'Clear list',
@@ -1349,6 +1355,8 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'Возвращено в список',
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
+    shoppingMode: 'Режим покупок',
+    exitShoppingMode: 'Выйти из режима покупок',
     listReset: 'Список сброшен',
     resetListConfirm: 'Все купленные товары вернутся в список',
     clearList: 'Очистить список',

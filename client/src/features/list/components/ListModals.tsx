@@ -1,4 +1,5 @@
 import { memo, useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -320,6 +321,20 @@ export const ShareListModal = memo(({
             )}
           </Box>
         </Box>
+        {/* QR Code */}
+        {list.isGroup && list.inviteCode && (
+          <Box sx={{ textAlign: 'center', mb: 2.5, p: 2, bgcolor: 'white', borderRadius: '16px' }}>
+            <QRCodeSVG
+              value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+              size={160}
+              level="M"
+              style={{ display: 'block', margin: '0 auto' }}
+            />
+            <Typography sx={{ fontSize: 12, color: '#6B7280', mt: 1, fontWeight: 500 }}>
+              {t('groupCode')}: {list.inviteCode}
+            </Typography>
+          </Box>
+        )}
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
             onClick={() => {
