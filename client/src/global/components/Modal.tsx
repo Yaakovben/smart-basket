@@ -62,21 +62,21 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
       <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mt: 1.5 }} />
 
       {/* כותרת וכפתור סגירה */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', px: 2, pt: 1.5, pb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', px: 2, pt: 1.5, pb: 1, minHeight: 44 }}>
         <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, fontSize: 17, p: 0, color: 'text.primary' }}>
           {title}
         </DialogTitle>
         <IconButton
           onClick={handleClose}
           aria-label="Close"
+          disableRipple
           sx={{
             position: 'absolute',
-            left: 12,
+            left: 8,
             bgcolor: 'action.hover',
-            width: 40,
-            height: 40,
-            '&:hover': { bgcolor: 'action.selected' },
-            '&:active': { transform: 'scale(0.95)' }
+            width: 44,
+            height: 44,
+            '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
           }}
         >
           <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />

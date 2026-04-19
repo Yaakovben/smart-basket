@@ -459,37 +459,37 @@ export const useList = ({
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint]);
 
-  const deleteProduct = useCallback((productId: string) => {
-    if (isTempId(productId)) return; // מוצר עדיין לא אושר מהשרת
-    const product = list.products.find((p: Product) => p.id === productId);
+  const deleteProduct = useCallback(async (productId: string) => {
+    if (isTempId(productId)) return;
+    const product = productsRef.current.find((p: Product) => p.id === productId);
     if (!product) return;
 
-    setConfirm({
-      title: t('deleteProduct'),
-      message: `${t('delete')} "${product.name}"?`,
-      onConfirm: async () => {
-        setConfirm(null);
-        // מניעת חגיגה שגויה - מחיקה לא נחשבת כסימון נקנה
-        justMarkedPurchased.current = false;
+    justMarkedPurchased.current = false;
 
-        // מחיקה אופטימיסטית מיידית
-        onUpdateProductsForList(list.id, (current) =>
-          current.filter(p => p.id !== productId)
-        );
+    // מחיקה מיידית עם אפשרות undo
+    onUpdateProductsForList(list.id, (current) =>
+      current.filter(p => p.id !== productId)
+    );
 
-        try {
-          await productsApi.deleteProduct(list.id, productId);
-          showToast(t('deleted'));
-          socketService.emitProductDeleted(list.id, productId, product.name, user.name);
-        } catch (error) {
-          // שחזור במקרה של שגיאה
-          if (import.meta.env.DEV) console.error('Failed to delete product:', error);
-          onUpdateProductsForList(list.id, (current) => [...current, product]);
-          showToast(t('errorOccurred'), 'error');
-        }
-      }
-    });
-  }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t]);
+    try {
+      await productsApi.deleteProduct(list.id, productId);
+      showToast(`"${product.name}" ${t('deleted')}`, 'success', () => {
+        // undo - שחזור המוצר
+        onUpdateProductsForList(list.id, (current) => [...current, product]);
+        productsApi.addProduct(list.id, {
+          name: product.name,
+          quantity: product.quantity,
+          unit: product.unit,
+          category: product.category,
+        }).catch(() => {});
+      });
+      socketService.emitProductDeleted(list.id, productId, product.name, user.name);
+    } catch (error) {
+      if (import.meta.env.DEV) console.error('Failed to delete product:', error);
+      onUpdateProductsForList(list.id, (current) => [...current, product]);
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   // ===== ניקוי רשימה =====
   const [showClearList, setShowClearList] = useState(false);
