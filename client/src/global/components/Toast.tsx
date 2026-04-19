@@ -1,5 +1,5 @@
-import { useRef, useCallback } from 'react';
-import { Snackbar, Box, Typography } from '@mui/material';
+import { useRef, useCallback, useState, useEffect } from 'react';
+import { Snackbar, Box, Typography, LinearProgress } from '@mui/material';
 import type { ToastType } from '../types';
 import { useSettings } from '../context/SettingsContext';
 
@@ -10,9 +10,49 @@ interface ToastProps {
   onUndo?: () => void;
 }
 
+const UNDO_DURATION = 4000;
+
 const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; onDismiss?: () => void }) => {
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
+  const [progress, setProgress] = useState(100);
+  const startRef = useRef(Date.now());
+  const boxRef = useRef<HTMLDivElement>(null);
+  const startY = useRef(0);
+
+  // סרגל התקדמות שנספר לאחור
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = Date.now() - startRef.current;
+      const remaining = Math.max(0, 100 - (elapsed / UNDO_DURATION) * 100);
+      setProgress(remaining);
+      if (remaining > 0) requestAnimationFrame(tick);
+    };
+    const id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  // swipe down to dismiss
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    startY.current = e.touches[0].clientY;
+  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const diff = e.touches[0].clientY - startY.current;
+    if (diff > 0 && boxRef.current) {
+      boxRef.current.style.transform = `translateY(${diff}px)`;
+      boxRef.current.style.opacity = `${Math.max(0, 1 - diff / 120)}`;
+    }
+  }, []);
+  const handleTouchEnd = useCallback(() => {
+    const diff = (boxRef.current?.getBoundingClientRect().top || 0) - startY.current;
+    if (diff > 50 || (boxRef.current?.style.opacity && parseFloat(boxRef.current.style.opacity) < 0.5)) {
+      onDismiss?.();
+    } else if (boxRef.current) {
+      boxRef.current.style.transform = '';
+      boxRef.current.style.opacity = '';
+    }
+  }, [onDismiss]);
+
   return (
     <Snackbar
       open
@@ -24,41 +64,64 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
         width: 'auto', maxWidth: 'calc(100vw - 32px)',
       }}
     >
-      <Box sx={{
-        display: 'flex', alignItems: 'center', gap: 2,
-        px: 2.5, py: 1.5,
-        bgcolor: isDark ? '#1E293B' : '#1F2937',
-        borderRadius: '14px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        animation: 'undoIn 0.3s ease-out',
-        '@keyframes undoIn': {
-          from: { transform: 'translateY(20px)', opacity: 0 },
-          to: { transform: 'translateY(0)', opacity: 1 },
-        },
-        minWidth: 260,
-      }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'white', flex: 1 }}>
-          {msg}
-        </Typography>
-        <Box
-          onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
-          sx={{
-            px: 2, py: 0.75,
-            borderRadius: '10px',
-            bgcolor: 'rgba(20,184,166,0.2)',
-            color: '#5EEAD4',
-            fontSize: 14, fontWeight: 700,
-            cursor: 'pointer',
-            flexShrink: 0,
-            minHeight: 36,
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'all 0.15s',
-            '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.35)' },
-          }}
-        >
-          {t('cancel')}
+      <Box
+        ref={boxRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        sx={{
+          bgcolor: isDark ? '#1E293B' : '#1F2937',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          overflow: 'hidden',
+          animation: 'undoIn 0.3s ease-out',
+          '@keyframes undoIn': {
+            from: { transform: 'translateY(20px)', opacity: 0 },
+            to: { transform: 'translateY(0)', opacity: 1 },
+          },
+          minWidth: 280,
+          transition: 'transform 0.15s, opacity 0.15s',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 2, py: 1.5 }}>
+          <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+            🗑️
+          </Box>
+          <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: 'white', flex: 1 }}>
+            {msg}
+          </Typography>
+          <Box
+            onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
+            sx={{
+              px: 2, py: 0.75,
+              borderRadius: '10px',
+              bgcolor: 'rgba(20,184,166,0.2)',
+              color: '#5EEAD4',
+              fontSize: 13.5, fontWeight: 700,
+              cursor: 'pointer',
+              flexShrink: 0,
+              minHeight: 36,
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'all 0.15s',
+              '&:active': { transform: 'scale(0.93)', bgcolor: 'rgba(20,184,166,0.4)' },
+            }}
+          >
+            {t('cancel')}
+          </Box>
         </Box>
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{
+            height: 3,
+            bgcolor: 'rgba(255,255,255,0.08)',
+            '& .MuiLinearProgress-bar': {
+              bgcolor: '#5EEAD4',
+              transition: 'none',
+            },
+          }}
+        />
       </Box>
     </Snackbar>
   );
