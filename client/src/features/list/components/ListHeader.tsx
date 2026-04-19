@@ -120,8 +120,9 @@ export const ListHeader = memo(({
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // זיהוי קולי - נתמך רק בדפדפנים עם Web Speech API (Chrome, Edge, Android)
-  const SpeechRecognitionClass = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+  // זיהוי קולי - רק Chrome/Edge/Android, לא Safari/iOS (מדווח תמיכה אבל לא עובד)
+  const isApple = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || /^((?!chrome|android).)*safari/i.test(navigator.userAgent));
+  const SpeechRecognitionClass = !isApple && typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
   const speechSupported = !!SpeechRecognitionClass;
 
   useEffect(() => {
