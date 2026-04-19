@@ -150,19 +150,22 @@ export const AddProductModal = memo(({
         </Box>
       </Box>
       <Box sx={{ mb: 2 }}>
-        <Typography component="label" htmlFor="product-category" sx={labelSx}>{t('category')}</Typography>
-        <FormControl fullWidth>
-          <Select
-            id="product-category"
-            value={newProduct.category}
-            onChange={e => onUpdateField('category', e.target.value as ProductCategory)}
-            aria-label={t('category')}
-          >
-            {Object.keys(CATEGORY_ICONS).map(c => (
-              <MenuItem key={c} value={c}>{t(CATEGORY_TRANSLATION_KEYS[c as ProductCategory])}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Typography sx={labelSx}>{t('category')}</Typography>
+        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('category')}>
+          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
+            <Chip
+              key={cat}
+              label={`${icon} ${t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}`}
+              onClick={() => onUpdateField('category', cat as ProductCategory)}
+              variant={newProduct.category === cat ? 'filled' : 'outlined'}
+              color={newProduct.category === cat ? 'primary' : 'default'}
+              size="small"
+              sx={{ cursor: 'pointer' }}
+              role="radio"
+              aria-checked={newProduct.category === cat}
+            />
+          ))}
+        </Box>
       </Box>
       <Button
         variant="contained"
