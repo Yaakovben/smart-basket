@@ -151,20 +151,38 @@ export const AddProductModal = memo(({
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
-        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }} role="radiogroup" aria-label={t('category')}>
-          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
-            <Chip
-              key={cat}
-              label={`${icon} ${t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}`}
-              onClick={() => onUpdateField('category', cat as ProductCategory)}
-              variant={newProduct.category === cat ? 'filled' : 'outlined'}
-              color={newProduct.category === cat ? 'primary' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-              role="radio"
-              aria-checked={newProduct.category === cat}
-            />
-          ))}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }} role="radiogroup" aria-label={t('category')}>
+          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => {
+            const isSelected = newProduct.category === cat;
+            return (
+              <Box
+                key={cat}
+                onClick={() => onUpdateField('category', cat as ProductCategory)}
+                role="radio"
+                aria-checked={isSelected}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 0.25,
+                  py: 1,
+                  px: 0.5,
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  border: '2px solid',
+                  borderColor: isSelected ? 'primary.main' : 'divider',
+                  bgcolor: isSelected ? 'primary.light' : 'transparent',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.95)' },
+                }}
+              >
+                <Typography sx={{ fontSize: 22, lineHeight: 1 }}>{icon}</Typography>
+                <Typography sx={{ fontSize: 10, fontWeight: isSelected ? 700 : 500, color: isSelected ? 'primary.main' : 'text.secondary', textAlign: 'center', lineHeight: 1.2 }}>
+                  {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
       </Box>
       <Button
