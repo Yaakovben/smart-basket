@@ -10,6 +10,9 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'בשר': '🥩',
   'משקאות': '☕',
   'ממתקים': '🍬',
+  'קפואים': '🧊',
+  'שימורים ויבשים': '🥫',
+  'תבלינים ורטבים': '🧂',
   'ניקיון': '🧹',
   'אחר': '📦'
 };
@@ -23,6 +26,9 @@ export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys>
   'בשר': 'catMeat',
   'משקאות': 'catBeverages',
   'ממתקים': 'catSweets',
+  'קפואים': 'catFrozen',
+  'שימורים ויבשים': 'catCanned',
+  'תבלינים ורטבים': 'catSpices',
   'ניקיון': 'catCleaning',
   'אחר': 'catOther',
 };
