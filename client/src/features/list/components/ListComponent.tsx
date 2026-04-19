@@ -639,45 +639,69 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             <Box sx={{ flex: 1 }} />
             <Button
               variant="outlined"
-              color="warning"
+              color="error"
               size="small"
-              onClick={async () => {
+              onClick={() => {
                 haptic('medium');
                 const ids = Array.from(selectedProducts);
                 const count = ids.length;
                 setSelectedProducts(new Set());
                 onUpdateProductsForList(list.id, (current) =>
-                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
+                  current.filter(p => !ids.includes(p.id))
                 );
-                showToast(`${count} ${t('markedAsNotPurchased')}`);
+                showToast(`${count} ${t('deleted')}`);
                 for (const id of ids) {
-                  productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
+                  productsApi.deleteProduct(list.id, id).catch(() => {});
                 }
               }}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
             >
-              ↩ {t('returnToList')}
+              🗑️ {t('delete')}
             </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={async () => {
-                haptic('medium');
-                const ids = Array.from(selectedProducts);
-                const count = ids.length;
-                setSelectedProducts(new Set());
-                onUpdateProductsForList(list.id, (current) =>
-                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
-                );
-                showToast(`${count} ${t('markedAsPurchased')}`);
-                for (const id of ids) {
-                  productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
-                }
-              }}
-              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
-            >
-              ✓ {t('markPurchased')}
-            </Button>
+            {filter === 'purchased' ? (
+              <Button
+                variant="contained"
+                color="warning"
+                size="small"
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  setSelectedProducts(new Set());
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
+                  );
+                  showToast(`${count} ${t('markedAsNotPurchased')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
+                  }
+                }}
+                sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
+              >
+                ↩ {t('returnToList')}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  setSelectedProducts(new Set());
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
+                  );
+                  showToast(`${count} ${t('markedAsPurchased')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
+                  }
+                }}
+                sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
+              >
+                ✓ {t('markPurchased')}
+              </Button>
+            )}
           </Box>
         </Box>
       )}
