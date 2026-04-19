@@ -115,12 +115,19 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         {/* QR Code */}
         {showQR && list.inviteCode && (
           <Box sx={{
-            textAlign: 'center', mb: 2, p: 2.5,
+            textAlign: 'center', mb: 2, p: 2.5, position: 'relative',
             bgcolor: 'white', borderRadius: '16px',
             border: '2px solid', borderColor: 'rgba(20,184,166,0.15)',
             animation: 'qrIn 0.25s ease-out',
             '@keyframes qrIn': { from: { opacity: 0, transform: 'scale(0.9)' }, to: { opacity: 1, transform: 'scale(1)' } },
           }}>
+            <IconButton
+              onClick={() => setShowQR(false)}
+              size="small"
+              sx={{ position: 'absolute', top: 6, right: 6, width: 28, height: 28, bgcolor: '#F3F4F6' }}
+            >
+              <CloseIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
+            </IconButton>
             <QRCodeSVG
               value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
               size={180}
@@ -128,8 +135,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               fgColor="#0D9488"
               style={{ display: 'block', margin: '0 auto' }}
             />
-            <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 1.5 }}>
-              {t('groupCode')}: <strong style={{ color: '#0D9488', letterSpacing: 2 }}>{list.inviteCode}</strong>
+            <Typography sx={{ fontSize: 12, color: '#6B7280', mt: 1.5, fontWeight: 500 }}>
+              {t('inviteFriends')}
             </Typography>
           </Box>
         )}
@@ -151,14 +158,31 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Button>
         </Box>
         {list.inviteCode && (
-          <Button
+          <Box
             onClick={() => setShowQR(!showQR)}
-            fullWidth
-            variant="text"
-            sx={{ mt: 1.5, textTransform: 'none', fontSize: 13, fontWeight: 600, gap: 1, borderRadius: '12px', py: 1 }}
+            sx={{
+              mt: 2, p: 1.5, borderRadius: '14px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5,
+              bgcolor: showQR ? 'rgba(20,184,166,0.08)' : 'action.hover',
+              border: '1.5px dashed',
+              borderColor: showQR ? 'primary.main' : 'divider',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:active': { transform: 'scale(0.98)' },
+            }}
           >
-            📱 {showQR ? t('close') : 'QR Code'}
-          </Button>
+            <Box sx={{ fontSize: 22 }}>📱</Box>
+            <Box>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, color: showQR ? 'primary.main' : 'text.primary' }}>
+                {showQR ? t('close') : 'QR Code'}
+              </Typography>
+              {!showQR && (
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                  {t('shareDetails')}
+                </Typography>
+              )}
+            </Box>
+          </Box>
         )}
       </Box>
     </>

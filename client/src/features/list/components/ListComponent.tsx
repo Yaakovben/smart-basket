@@ -6,7 +6,7 @@ import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import { ConfirmModal, Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { authApi } from '../../../services/api';
+import { authApi, productsApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic } from '../../../global/helpers';
@@ -640,12 +640,24 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             <Button
               variant="contained"
               color={filter === 'purchased' ? 'warning' : 'primary'}
-              onClick={() => {
+              onClick={async () => {
                 haptic('medium');
-                const count = selectedProducts.size;
-                selectedProducts.forEach(id => toggleProduct(id, true));
+                const ids = Array.from(selectedProducts);
+                const count = ids.length;
+                const newIsPurchased = filter !== 'purchased';
                 setSelectedProducts(new Set());
-                showToast(`${count} ${t(filter === 'purchased' ? 'markedAsNotPurchased' : 'markedAsPurchased')}`);
+
+                // עדכון אופטימיסטי של כל המוצרים בבת אחת
+                onUpdateProductsForList(list.id, (current) =>
+                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: newIsPurchased } : p)
+                );
+
+                showToast(`${count} ${t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased')}`);
+
+                // שליחה לשרת ברקע אחד אחד
+                for (const id of ids) {
+                  productsApi.updateProduct(list.id, id, { isPurchased: newIsPurchased }).catch(() => {});
+                }
               }}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3, gap: 1 }}
             >
