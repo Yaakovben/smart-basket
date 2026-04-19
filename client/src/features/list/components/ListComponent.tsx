@@ -629,7 +629,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           animation: 'slideUp 0.25s ease-out',
           '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               onClick={() => setSelectedProducts(new Set())}
               sx={{ minWidth: 0, color: 'text.secondary', fontSize: 13, textTransform: 'none' }}
@@ -638,30 +638,45 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             </Button>
             <Box sx={{ flex: 1 }} />
             <Button
-              variant="contained"
-              color={filter === 'purchased' ? 'warning' : 'primary'}
+              variant="outlined"
+              color="warning"
+              size="small"
               onClick={async () => {
                 haptic('medium');
                 const ids = Array.from(selectedProducts);
                 const count = ids.length;
-                const newIsPurchased = filter !== 'purchased';
                 setSelectedProducts(new Set());
-
-                // עדכון אופטימיסטי של כל המוצרים בבת אחת
                 onUpdateProductsForList(list.id, (current) =>
-                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: newIsPurchased } : p)
+                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
                 );
-
-                showToast(`${count} ${t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased')}`);
-
-                // שליחה לשרת ברקע אחד אחד
+                showToast(`${count} ${t('markedAsNotPurchased')}`);
                 for (const id of ids) {
-                  productsApi.updateProduct(list.id, id, { isPurchased: newIsPurchased }).catch(() => {});
+                  productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
                 }
               }}
-              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3, gap: 1 }}
+              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
             >
-              {filter === 'purchased' ? `↩ ${t('markedAsNotPurchased')}` : `✓ ${t('markedAsPurchased')}`}
+              ↩ {t('returnToList')}
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={async () => {
+                haptic('medium');
+                const ids = Array.from(selectedProducts);
+                const count = ids.length;
+                setSelectedProducts(new Set());
+                onUpdateProductsForList(list.id, (current) =>
+                  current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
+                );
+                showToast(`${count} ${t('markedAsPurchased')}`);
+                for (const id of ids) {
+                  productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
+                }
+              }}
+              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
+            >
+              ✓ {t('markPurchased')}
             </Button>
           </Box>
         </Box>

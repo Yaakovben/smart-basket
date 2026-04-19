@@ -31,8 +31,9 @@ const JoinRedirect = () => {
   const code = params.get('code') || '';
   const password = params.get('password') || '';
   if (code) {
-    sessionStorage.setItem('sb_join_code', code);
-    if (password) sessionStorage.setItem('sb_join_password', password);
+    // localStorage כדי שהנתונים יהיו זמינים גם ב-PWA
+    localStorage.setItem('sb_join_code', code);
+    if (password) localStorage.setItem('sb_join_password', password);
   }
   return <Navigate to="/" replace />;
 };

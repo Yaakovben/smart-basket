@@ -64,13 +64,13 @@ export const useHome = ({
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
 
-  // פתיחת הצטרפות מ-QR code
+  // פתיחת הצטרפות מ-QR code (localStorage משותף בין דפדפן ל-PWA)
   useEffect(() => {
-    const code = sessionStorage.getItem('sb_join_code');
+    const code = localStorage.getItem('sb_join_code');
     if (code) {
-      sessionStorage.removeItem('sb_join_code');
-      const password = sessionStorage.getItem('sb_join_password') || '';
-      sessionStorage.removeItem('sb_join_password');
+      localStorage.removeItem('sb_join_code');
+      const password = localStorage.getItem('sb_join_password') || '';
+      localStorage.removeItem('sb_join_password');
       setShowJoin(true);
       setTimeout(() => {
         setJoinCode(code.toUpperCase());
