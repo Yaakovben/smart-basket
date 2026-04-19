@@ -97,6 +97,9 @@ type TranslationKey =
   | 'markedAsNotPurchased'
   | 'markPurchased'
   | 'returnToList'
+  | 'bulkDeleted'
+  | 'bulkMarkedPurchased'
+  | 'bulkReturnedToList'
   | 'clearPurchased'
   | 'clearList'
   | 'resetList'
@@ -523,6 +526,9 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'הוחזר לרשימה',
     markPurchased: 'סמן כנקנה',
     returnToList: 'החזר לרשימה',
+    bulkDeleted: 'נמחקו',
+    bulkMarkedPurchased: 'סומנו כנקנו',
+    bulkReturnedToList: 'הוחזרו לרשימה',
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
     shoppingMode: 'מצב קנייה',
@@ -943,6 +949,9 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'Returned to list',
     markPurchased: 'Mark purchased',
     returnToList: 'Return to list',
+    bulkDeleted: 'deleted',
+    bulkMarkedPurchased: 'marked as purchased',
+    bulkReturnedToList: 'returned to list',
     clearPurchased: 'Clear purchased products',
     resetList: 'Reset list',
     shoppingMode: 'Shopping mode',
@@ -1361,6 +1370,9 @@ export const translations: Record<Language, Translations> = {
     markedAsNotPurchased: 'Возвращено в список',
     markPurchased: 'Отметить купленным',
     returnToList: 'Вернуть в список',
+    bulkDeleted: 'удалено',
+    bulkMarkedPurchased: 'отмечено как купленное',
+    bulkReturnedToList: 'возвращено в список',
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
     shoppingMode: 'Режим покупок',
