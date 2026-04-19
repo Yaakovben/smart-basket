@@ -8,11 +8,14 @@ interface SwipeItemProps {
   product: Product;
   isPurchased: boolean;
   isOpen: boolean;
+  isSelected?: boolean;
+  selectionMode?: boolean;
   currentUserName: string;
   onToggle: (productId: string) => void;
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
   onClick: (product: Product) => void;
+  onLongPress?: (productId: string) => void;
   onOpen: (productId: string) => void;
   onClose: () => void;
 }
@@ -29,11 +32,12 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, isPurchased, isOpen, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, isPurchased, isOpen, isSelected, selectionMode, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Refs למעקב אחר מחוות
   const startX = useRef(0);
@@ -89,11 +93,18 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
     directionLocked.current = null;
     hasCalledOpen.current = false;
     setSwiping(false);
-  }, [offset]);
+    // long press לבחירה מרובה
+    if (onLongPress && !selectionMode) {
+      longPressTimer.current = setTimeout(() => { onLongPress(product.id); }, 500);
+    }
+  }, [offset, onLongPress, selectionMode, product.id]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // ביטול long press בתזוזה
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+
     const touch = e.touches[0];
-    const dx = startX.current - touch.clientX; // positive = swipe left (open)
+    const dx = startX.current - touch.clientX;
     const dy = touch.clientY - startY.current;
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
@@ -143,6 +154,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
   }, [calcOffset, onOpen, product.id]);
 
   const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
 
     if (directionLocked.current !== 'horizontal') {
       directionLocked.current = null;
@@ -251,7 +263,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
         overflow: 'hidden',
         touchAction: swiping ? 'none' : 'pan-y',
         WebkitUserSelect: 'none',
-        userSelect: 'none'
+        userSelect: 'none',
+        ...(isSelected ? {
+          outline: '2.5px solid',
+          outlineColor: 'primary.main',
+          outlineOffset: -1,
+        } : {}),
       }}
     >
       {/* Action buttons */}
@@ -304,6 +321,18 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
           WebkitTapHighlightColor: 'transparent'
         }}
       >
+        {selectionMode && (
+          <Box sx={{
+            width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+            border: '2.5px solid', borderColor: isSelected ? 'primary.main' : 'text.disabled',
+            bgcolor: isSelected ? 'primary.main' : 'transparent',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontSize: 14, fontWeight: 700,
+            transition: 'all 0.15s',
+          }}>
+            {isSelected && '✓'}
+          </Box>
+        )}
         <Box
           sx={{
             width: 40,

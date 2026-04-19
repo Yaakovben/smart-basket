@@ -1,7 +1,7 @@
 import { Dialog, DialogTitle, DialogContent, Box, Slide, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { TransitionProps } from '@mui/material/transitions';
-import { forwardRef, useState, useCallback } from 'react';
+import { forwardRef, useCallback, useRef } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
 
@@ -19,20 +19,18 @@ const Transition = forwardRef(function Transition(
 });
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {
-  const [isClosing, setIsClosing] = useState(false);
+  const closingRef = useRef(false);
 
   const handleClose = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
     haptic('light');
-    setIsClosing(true);
-    // המתנה לסיום אנימציית slide
-    setTimeout(() => {
-      onClose();
-    }, 250);
+    onClose();
   }, [onClose]);
 
   return (
     <Dialog
-      open={!isClosing}
+      open={true}
       onClose={handleClose}
       TransitionComponent={Transition}
       fullWidth

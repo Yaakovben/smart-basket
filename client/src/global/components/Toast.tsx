@@ -10,6 +10,57 @@ interface ToastProps {
   onUndo?: () => void;
 }
 
+const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; onDismiss?: () => void }) => {
+  const { settings } = useSettings();
+  const isDark = settings.theme === 'dark';
+  return (
+    <Snackbar
+      open
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      sx={{
+        bottom: 'max(16px, env(safe-area-inset-bottom))',
+        left: '50%', right: 'auto',
+        transform: 'translateX(-50%)',
+        width: 'auto', maxWidth: 'calc(100vw - 32px)',
+      }}
+    >
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 2,
+        px: 2.5, py: 1.5,
+        bgcolor: isDark ? '#1E293B' : '#1F2937',
+        borderRadius: '14px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        animation: 'undoIn 0.3s ease-out',
+        '@keyframes undoIn': {
+          from: { transform: 'translateY(20px)', opacity: 0 },
+          to: { transform: 'translateY(0)', opacity: 1 },
+        },
+        minWidth: 260,
+      }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'white', flex: 1 }}>
+          {msg}
+        </Typography>
+        <Box
+          onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
+          sx={{
+            px: 2, py: 0.75,
+            borderRadius: '10px',
+            bgcolor: 'rgba(20,184,166,0.2)',
+            color: '#5EEAD4',
+            fontSize: 14, fontWeight: 700,
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'all 0.15s',
+            '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.35)' },
+          }}
+        >
+          ביטול
+        </Box>
+      </Box>
+    </Snackbar>
+  );
+};
+
 const TOAST_CONFIG: Record<ToastType, { icon: string; light: { color: string; bg: string; border: string }; dark: { color: string; bg: string; border: string } }> = {
   success: { icon: '✓', light: { color: '#059669', bg: '#ECFDF5', border: '#05966930' }, dark: { color: '#6EE7B7', bg: 'rgba(16, 185, 129, 0.22)', border: 'rgba(110, 231, 183, 0.3)' } },
   error: { icon: '✕', light: { color: '#DC2626', bg: '#FEF2F2', border: '#DC262630' }, dark: { color: '#FCA5A5', bg: 'rgba(239, 68, 68, 0.22)', border: 'rgba(252, 165, 165, 0.3)' } },
@@ -57,6 +108,10 @@ export const Toast = ({ msg, type = 'success', onDismiss, onUndo }: ToastProps) 
   }, [onDismiss]);
 
   if (!msg) return null;
+
+  // undo bar בתחתית - רק למחיקה
+  if (onUndo) return <UndoBar msg={msg} onUndo={onUndo} onDismiss={onDismiss} />;
+
   const entry = TOAST_CONFIG[type];
   const isDark = settings.theme === 'dark';
   const config = isDark ? entry.dark : entry.light;
@@ -139,24 +194,6 @@ export const Toast = ({ msg, type = 'success', onDismiss, onUndo }: ToastProps) 
         }}>
           {msg}
         </Typography>
-        {onUndo && (
-          <Box
-            onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
-            sx={{
-              px: 1.5, py: 0.5,
-              borderRadius: '8px',
-              bgcolor: `${config.color}20`,
-              color: config.color,
-              fontSize: 13, fontWeight: 700,
-              cursor: 'pointer',
-              flexShrink: 0,
-              transition: 'all 0.15s',
-              '&:active': { transform: 'scale(0.95)' },
-            }}
-          >
-            ↩
-          </Box>
-        )}
       </Box>
     </Snackbar>
   );

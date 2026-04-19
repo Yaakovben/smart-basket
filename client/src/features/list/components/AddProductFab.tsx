@@ -46,13 +46,20 @@ export const AddProductFab = memo(({
     <Box
       sx={{
         position: 'fixed',
-        bottom: useCustomPosition ? undefined : 'calc(24px + env(safe-area-inset-bottom))',
-        left: useCustomPosition ? undefined : '50%',
-        transform: useCustomPosition ? undefined : 'translateX(-50%)',
-        top: useCustomPosition ? fabPosition.y - 28 : undefined,
-        right: useCustomPosition ? window.innerWidth - fabPosition.x - 28 : undefined,
+        ...(useCustomPosition ? {
+          top: fabPosition.y - 28,
+          right: window.innerWidth - fabPosition.x - 28,
+        } : {
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }),
         zIndex: 5,
-        touchAction: isDraggable ? 'none' : 'auto'
+        touchAction: isDraggable ? 'none' : 'auto',
+        '& > *': { pointerEvents: 'auto' },
       }}
       onTouchStart={isDraggable ? (e) => onDragStart(e.touches[0].clientX, e.touches[0].clientY) : undefined}
       onTouchMove={isDraggable ? (e) => onDragMove(e.touches[0].clientX, e.touches[0].clientY) : undefined}

@@ -267,8 +267,23 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
 
-  const [shoppingMode, setShoppingMode] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
+  const handleShowDetails = useCallback((product: Product) => {
+    setShowDetails(product);
+    dismissHint();
+  }, [setShowDetails, dismissHint]);
+
+  const handleLongPress = useCallback((productId: string) => {
+    haptic('medium');
+    setSelectedProducts(prev => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+  }, []);
 
   // איפוס סינון קטגוריה כשמחליפים טאב (useEffect כי filter הוא prop חיצוני)
   useEffect(() => { setCategoryFilter(null); }, [filter]);
@@ -305,11 +320,18 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     }, []);
   }, [pending, purchased]);
 
-  const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
-  const handleShowDetails = useCallback((product: Product) => {
-    setShowDetails(product);
-    dismissHint();
-  }, [setShowDetails, dismissHint]);
+  const handleProductClick = useCallback((product: Product) => {
+    if (selectedProducts.size > 0) {
+      setSelectedProducts(prev => {
+        const next = new Set(prev);
+        if (next.has(product.id)) next.delete(product.id);
+        else next.add(product.id);
+        return next;
+      });
+    } else {
+      handleShowDetails(product);
+    }
+  }, [selectedProducts.size, handleShowDetails]);
 
   return (
     <Box sx={{
@@ -356,7 +378,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         refreshing={refreshing}
         onClearList={() => setShowClearList(true)}
         onResetList={handleResetList}
-        onShoppingMode={() => setShoppingMode(true)}
         hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? leaveList : undefined}
@@ -447,13 +468,16 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 product={p}
                 isPurchased={p.isPurchased}
                 isOpen={openItemId === p.id}
+                isSelected={selectedProducts.has(p.id)}
+                selectionMode={selectedProducts.size > 0}
                 currentUserName={user.name}
                 onOpen={setOpenItemId}
                 onClose={handleCloseItem}
                 onToggle={toggleProduct}
                 onEdit={openEditProduct}
                 onDelete={deleteProduct}
-                onClick={handleShowDetails}
+                onClick={handleProductClick}
+                onLongPress={handleLongPress}
               />
             ))}
             {filter === 'purchased' && filteredItems.length > 0 && (
@@ -593,73 +617,37 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       {/* Celebration - all products purchased */}
       {showCelebration && <CelebrationOverlay />}
 
-      {/* מצב קנייה */}
-      {shoppingMode && (
+      {/* בר פעולות בחירה מרובה */}
+      {selectedProducts.size > 0 && (
         <Box sx={{
-          position: 'fixed', inset: 0, zIndex: 1200,
-          bgcolor: 'background.default',
-          display: 'flex', flexDirection: 'column',
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200,
+          pb: 'max(16px, env(safe-area-inset-bottom))',
+          px: 2, pt: 1.5,
+          bgcolor: 'background.paper',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+          borderRadius: '20px 20px 0 0',
+          animation: 'slideUp 0.25s ease-out',
+          '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{
-            p: 2, pt: 'max(16px, env(safe-area-inset-top))',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            bgcolor: 'background.paper', boxShadow: 1,
-          }}>
-            <Typography sx={{ fontSize: 18, fontWeight: 700 }}>🛒 {t('shoppingMode')}</Typography>
-            <Button size="small" onClick={() => setShoppingMode(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>
-              {t('exitShoppingMode')}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Button
+              onClick={() => setSelectedProducts(new Set())}
+              sx={{ minWidth: 0, color: 'text.secondary', fontSize: 13, textTransform: 'none' }}
+            >
+              ✕ {selectedProducts.size}
             </Button>
-          </Box>
-          <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5, pb: 'calc(20px + env(safe-area-inset-bottom))' }}>
-            {pending.map(p => (
-              <Box
-                key={p.id}
-                onClick={() => { haptic('medium'); toggleProduct(p.id); }}
-                sx={{
-                  display: 'flex', alignItems: 'center', gap: 2,
-                  p: 2, mb: 1, borderRadius: '16px',
-                  bgcolor: 'background.paper',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  '&:active': { transform: 'scale(0.98)', bgcolor: 'action.hover' },
-                }}
-              >
-                <Box sx={{
-                  width: 52, height: 52, borderRadius: '14px',
-                  bgcolor: 'rgba(20,184,166,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 26, flexShrink: 0,
-                }}>
-                  {CATEGORY_ICONS[p.category as keyof typeof CATEGORY_ICONS] || '📦'}
-                </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: 18, fontWeight: 600 }}>{p.name}</Typography>
-                  <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>
-                    {p.quantity} {p.unit}
-                  </Typography>
-                </Box>
-                <Box sx={{
-                  width: 48, height: 48, borderRadius: '50%',
-                  border: '3px solid',
-                  borderColor: 'primary.main',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 24, flexShrink: 0,
-                  '&:active': { bgcolor: 'primary.main', color: 'white' },
-                }}>
-                  ✓
-                </Box>
-              </Box>
-            ))}
-            {pending.length === 0 && (
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography sx={{ fontSize: 48, mb: 2 }}>🎉</Typography>
-                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'success.main' }}>{t('allDone')}</Typography>
-                <Button onClick={() => setShoppingMode(false)} sx={{ mt: 3, textTransform: 'none' }} variant="contained">
-                  {t('exitShoppingMode')}
-                </Button>
-              </Box>
-            )}
+            <Box sx={{ flex: 1 }} />
+            <Button
+              variant="contained"
+              onClick={() => {
+                haptic('medium');
+                selectedProducts.forEach(id => toggleProduct(id));
+                setSelectedProducts(new Set());
+              }}
+              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3, gap: 1 }}
+            >
+              ✓ {t('markedAsPurchased')}
+            </Button>
           </Box>
         </Box>
       )}
