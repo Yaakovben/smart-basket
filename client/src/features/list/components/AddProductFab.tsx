@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Box, Fab, Button } from '@mui/material';
+import { Box, Fab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -77,30 +77,23 @@ export const AddProductFab = memo(({
           <AddIcon sx={{ fontSize: { xs: 22, sm: 24 } }} />
         </Fab>
       ) : (
-        <Button
-          variant="contained"
+        <Fab
+          color="primary"
+          variant="extended"
           onClick={handleClick}
           aria-label={t('addProduct')}
           sx={{
-            borderRadius: { xs: '14px', sm: '16px' },
-            px: { xs: 2.5, sm: 3 },
-            py: { xs: 1.25, sm: 1.5 },
-            fontSize: { xs: 14, sm: 15 },
+            px: 2.5,
+            gap: 0.75,
             fontWeight: 600,
-            background: 'linear-gradient(135deg, #14B8A6, #10B981)',
-            boxShadow: '0 8px 24px rgba(20, 184, 166, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #0D9488, #059669)',
-              boxShadow: '0 10px 28px rgba(20, 184, 166, 0.5)'
-            }
+            fontSize: 14,
+            textTransform: 'none',
+            boxShadow: '0 6px 20px rgba(20, 184, 166, 0.4)',
           }}
         >
-          <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-          <span>{t('addProduct')}</span>
-        </Button>
+          <AddIcon sx={{ fontSize: 20 }} />
+          {t('addProduct')}
+        </Fab>
       )}
     </Box>
   );
