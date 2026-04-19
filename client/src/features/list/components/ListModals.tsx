@@ -177,12 +177,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               onClick={() => setShowQR(false)}
               sx={{
                 py: 1.25, textAlign: 'center',
-                borderTop: '1px solid', borderColor: 'divider',
                 cursor: 'pointer',
-                '&:active': { bgcolor: 'action.hover' },
+                '&:active': { opacity: 0.7 },
               }}
             >
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
                 {t('close')}
               </Typography>
             </Box>

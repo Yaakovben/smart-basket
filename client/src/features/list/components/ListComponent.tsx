@@ -638,21 +638,32 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             </Button>
             <Box sx={{ flex: 1 }} />
             <Button
-              variant="outlined"
+              variant="contained"
               color="error"
               size="small"
               onClick={() => {
                 haptic('medium');
                 const ids = Array.from(selectedProducts);
                 const count = ids.length;
+                // שמירת המוצרים לפני מחיקה ל-undo
+                const deletedProducts = list.products.filter((p: Product) => ids.includes(p.id));
                 setSelectedProducts(new Set());
                 onUpdateProductsForList(list.id, (current) =>
                   current.filter(p => !ids.includes(p.id))
                 );
-                showToast(`${count} ${t('deleted')}`);
+                // מחיקה מהשרת
                 for (const id of ids) {
                   productsApi.deleteProduct(list.id, id).catch(() => {});
                 }
+                showToast(`${count} ${t('deleted')}`, 'success', () => {
+                  // undo - שחזור כל המוצרים
+                  onUpdateProductsForList(list.id, (current) => [...current, ...deletedProducts]);
+                  for (const p of deletedProducts) {
+                    productsApi.addProduct(list.id, {
+                      name: p.name, quantity: p.quantity, unit: p.unit, category: p.category,
+                    }).catch(() => {});
+                  }
+                });
               }}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
             >
