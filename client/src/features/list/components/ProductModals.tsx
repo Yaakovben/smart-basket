@@ -27,10 +27,17 @@ const quantityBtnSx = {
 };
 
 // ===== מודאל הוספת מוצר =====
+interface ProductSuggestion {
+  name: string;
+  category: ProductCategory;
+  unit: ProductUnit;
+}
+
 interface AddProductModalProps {
   isOpen: boolean;
   newProduct: NewProductForm;
   error: string;
+  suggestions?: ProductSuggestion[];
   onClose: () => void;
   onAdd: () => void;
   onUpdateField: <K extends keyof NewProductForm>(field: K, value: NewProductForm[K]) => void;
@@ -42,6 +49,7 @@ export const AddProductModal = memo(({
   isOpen,
   newProduct,
   error,
+  suggestions = [],
   onClose,
   onAdd,
   onUpdateField,
@@ -52,6 +60,23 @@ export const AddProductModal = memo(({
   const quantityRef = useRef<HTMLInputElement>(null);
 
   const isNameValid = newProduct.name.trim().length >= 2;
+
+  // הצעות מוצרים מהיסטוריה
+  const filteredSuggestions = useMemo(() => {
+    const query = newProduct.name.trim().toLowerCase();
+    if (query.length < 2 || !suggestions.length) return [];
+    return suggestions
+      .filter(s => s.name.toLowerCase().includes(query) && s.name.toLowerCase() !== query)
+      .slice(0, 5);
+  }, [newProduct.name, suggestions]);
+
+  const applySuggestion = useCallback((s: ProductSuggestion) => {
+    onUpdateField('name', s.name);
+    onUpdateField('category', s.category);
+    onUpdateField('unit', s.unit);
+    userChangedCategory.current = true;
+    haptic('light');
+  }, [onUpdateField]);
 
   // זיהוי אוטומטי של קטגוריה בזמן הקלדה
   const detectedCategory = useMemo(() => {
@@ -132,6 +157,31 @@ export const AddProductModal = memo(({
             maxLength: 100
           }}
         />
+        {filteredSuggestions.length > 0 && (
+          <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            {filteredSuggestions.map(s => (
+              <Box
+                key={s.name}
+                onClick={() => applySuggestion(s)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  bgcolor: 'action.hover',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:active': { transform: 'scale(0.95)' },
+                }}
+              >
+                <Typography sx={{ fontSize: 13 }}>{CATEGORY_ICONS[s.category] || '📦'}</Typography>
+                <Typography sx={{ fontSize: 12, color: 'text.primary', fontWeight: 500 }}>{s.name}</Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
       <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
         <Box sx={{ flex: 1 }}>

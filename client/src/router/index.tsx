@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton } from "../global/components";
@@ -263,6 +264,10 @@ export const AppRouter = () => {
   return (
     <>
       <Suspense fallback={<PageLoader />}>
+      <Box sx={{
+        '@keyframes pageIn': { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+        animation: 'pageIn 0.25s ease-out',
+      }}>
       <Routes>
         <Route
           path="/login"
@@ -353,6 +358,7 @@ export const AppRouter = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} />
     </>

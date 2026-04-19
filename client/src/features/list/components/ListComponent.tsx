@@ -34,8 +34,20 @@ const flashBg = keyframes`
   100% { opacity: 0; }
 `;
 
+const celebText = keyframes`
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  40% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  60% { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+`;
+
+const celebFade = keyframes`
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+`;
+
 const COLORS = ['#14B8A6', '#F59E0B', '#EC4899', '#8B5CF6', '#22C55E', '#3B82F6', '#06B6D4', '#FBBF24', '#A78BFA', '#34D399'];
-const EMOJIS = ['🎉', '✨', '⭐', '🛒', '✅', '🎊'];
+const EMOJIS = ['🎉', '✨', '⭐', '🛒', '✅', '🎊', '🥳', '💪', '🏆', '👏'];
 
 type ParticleType = 'confetti' | 'emoji' | 'sparkle';
 
@@ -111,6 +123,19 @@ const CelebrationOverlay = memo(() => {
         background: 'radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.3), transparent 70%)',
         animation: `${flashBg} 1.5s ease-out forwards`
       }} />
+
+      {/* טקסט מרכזי */}
+      <Box sx={{
+        position: 'absolute', top: '35%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center',
+        animation: `${celebText} 0.6s ease-out 0.2s both, ${celebFade} 3s ease-out forwards`,
+      }}>
+        <Typography sx={{ fontSize: 48, lineHeight: 1 }}>🎉</Typography>
+        <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#22C55E', textShadow: '0 2px 8px rgba(34,197,94,0.3)', mt: 0.5 }}>
+          ✓
+        </Typography>
+      </Box>
 
       {particles.map(p => (
         <Box key={p.id} sx={{
@@ -255,11 +280,29 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     return { activeCategories: Array.from(counts.keys()), categoryCounts: counts };
   }, [filter, pending, purchased]);
 
+  // איפוס קטגוריה אם נגמרו מוצרים בה (למשל אחרי סימון כנקנה)
+  useEffect(() => {
+    if (categoryFilter && !activeCategories.includes(categoryFilter)) {
+      setCategoryFilter(null);
+    }
+  }, [categoryFilter, activeCategories]);
+
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
     if (!categoryFilter) return items;
     return items.filter(p => p.category === categoryFilter);
   }, [items, categoryFilter]);
+
+  // הצעות מוצרים מהרשימה הנוכחית (שמות ייחודיים)
+  const productSuggestions = useMemo(() => {
+    const all = [...pending, ...purchased];
+    const seen = new Set<string>();
+    return all.reduce<{ name: string; category: Product['category']; unit: Product['unit'] }[]>((acc, p) => {
+      const key = p.name.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); acc.push({ name: p.name, category: p.category, unit: p.unit }); }
+      return acc;
+    }, []);
+  }, [pending, purchased]);
 
   const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
   const handleShowDetails = useCallback((product: Product) => {
@@ -449,6 +492,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         isOpen={showAdd}
         newProduct={newProduct}
         error={addError}
+        suggestions={productSuggestions}
         onClose={closeAddModal}
         onAdd={handleAdd}
         onUpdateField={updateNewProductField}

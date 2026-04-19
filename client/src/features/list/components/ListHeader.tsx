@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef, useEffect } from 'react';
+import { memo, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Box, Typography, TextField, IconButton, Tabs, Tab, InputAdornment, Collapse, CircularProgress, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -112,7 +112,25 @@ export const ListHeader = memo(({
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [quickAddValue, setQuickAddValue] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  // הצעות השלמה אוטומטית מהמוצרים הקיימים
+  const suggestions = useMemo(() => {
+    const val = quickAddValue.trim().toLowerCase();
+    if (val.length < 1) return [];
+    const existing = new Set(list.products.map(p => p.name.toLowerCase()));
+    // היסטוריית מוצרים מ-localStorage
+    let history: string[] = [];
+    try {
+      const stored = localStorage.getItem('sb_product_history');
+      if (stored) history = JSON.parse(stored);
+    } catch { /* */ }
+    // סינון הצעות שמתחילות עם הטקסט ולא קיימות ברשימה
+    return history
+      .filter(h => h.toLowerCase().startsWith(val) && !existing.has(h.toLowerCase()))
+      .slice(0, 5);
+  }, [quickAddValue, list.products]);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
@@ -204,25 +222,39 @@ export const ListHeader = memo(({
     }
   }, [showSearch, onSearchChange]);
 
-  // סגירת מקלדת אחרי הוספה
+  // שמירת מוצר בהיסטוריה להשלמה אוטומטית
+  const saveToHistory = useCallback((name: string) => {
+    try {
+      const stored = localStorage.getItem('sb_product_history');
+      const history: string[] = stored ? JSON.parse(stored) : [];
+      const lower = name.toLowerCase();
+      if (!history.some(h => h.toLowerCase() === lower)) {
+        history.unshift(name);
+        if (history.length > 100) history.pop();
+        localStorage.setItem('sb_product_history', JSON.stringify(history));
+      }
+    } catch { /* */ }
+  }, []);
+
   const handleQuickAddButton = useCallback(() => {
     const trimmed = quickAddValue.trim();
     if (trimmed.length < 2 || !onQuickAdd) return;
 
     haptic('light');
+    saveToHistory(trimmed);
     onQuickAdd(trimmed);
     setQuickAddValue('');
-
-    // הסתרת מקלדת במובייל
+    setShowSuggestions(false);
     inputRef.current?.blur();
-  }, [quickAddValue, onQuickAdd]);
+  }, [quickAddValue, onQuickAdd, saveToHistory]);
 
-  // Enter - שמירת מקלדת פתוחה להוספה רציפה
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const trimmed = quickAddValue.trim();
       if (trimmed.length < 2 || !onQuickAdd) return;
+      saveToHistory(trimmed);
+      setShowSuggestions(false);
 
       haptic('light');
       onQuickAdd(trimmed);
@@ -392,13 +424,15 @@ export const ListHeader = memo(({
       </Collapse>
 
       {/* Quick Add - Mobile First Design */}
-      <Box sx={{ mb: { xs: 1, sm: 1.5 } }}>
+      <Box sx={{ mb: { xs: 1, sm: 1.5 }, position: 'relative' }}>
         <TextField
           inputRef={inputRef}
           fullWidth
           placeholder={t('quickAddPlaceholder')}
           value={quickAddValue}
-          onChange={(e) => setQuickAddValue(e.target.value)}
+          onChange={(e) => { setQuickAddValue(e.target.value); setShowSuggestions(true); }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           onKeyDown={handleKeyDown}
           size="small"
           inputProps={{
@@ -485,6 +519,31 @@ export const ListHeader = memo(({
             'aria-label': t('quickAddPlaceholder')
           }}
         />
+        {/* הצעות השלמה אוטומטית */}
+        {showSuggestions && suggestions.length > 0 && (
+          <Box sx={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+            bgcolor: 'background.paper', borderRadius: '0 0 14px 14px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            overflow: 'hidden', mt: -0.5,
+          }}>
+            {suggestions.map((s, i) => (
+              <Box
+                key={i}
+                onMouseDown={(e) => { e.preventDefault(); setQuickAddValue(s); setShowSuggestions(false); if (onQuickAdd) { saveToHistory(s); onQuickAdd(s); setQuickAddValue(''); } }}
+                sx={{
+                  px: 2, py: 1.25, cursor: 'pointer',
+                  fontSize: 14, color: 'text.primary',
+                  borderTop: i > 0 ? '1px solid' : 'none', borderColor: 'divider',
+                  '&:hover': { bgcolor: 'action.hover' },
+                  '&:active': { bgcolor: 'action.selected' },
+                }}
+              >
+                {s}
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
 
       {/* Filter Tabs - Larger Touch Targets */}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Product, ProductCategory } from '../../../global/types';
-import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
+import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -318,31 +318,18 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, i
       >
         <Box
           sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '11px',
+            bgcolor: isPurchased ? 'action.hover' : `${CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}15`,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: 0.25,
+            justifyContent: 'center',
+            fontSize: 20,
             flexShrink: 0,
-            width: 48,
           }}
         >
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '11px',
-              bgcolor: isPurchased ? 'action.hover' : `${CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}15`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20,
-            }}
-          >
-            {icon}
-          </Box>
-          <Typography sx={{ fontSize: 8, color: 'text.secondary', lineHeight: 1, textAlign: 'center', maxWidth: 48, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {t(CATEGORY_TRANSLATION_KEYS[product.category as ProductCategory] || 'catOther')}
-          </Typography>
+          {icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
