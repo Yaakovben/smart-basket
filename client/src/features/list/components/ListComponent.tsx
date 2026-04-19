@@ -641,8 +641,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               variant="contained"
               onClick={() => {
                 haptic('medium');
-                selectedProducts.forEach(id => toggleProduct(id));
+                const count = selectedProducts.size;
+                selectedProducts.forEach(id => toggleProduct(id, true));
                 setSelectedProducts(new Set());
+                showToast(`${count} ${t('markedAsPurchased')}`);
               }}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3, gap: 1 }}
             >

@@ -11,7 +11,7 @@ interface ToastProps {
 }
 
 const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; onDismiss?: () => void }) => {
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   return (
     <Snackbar
@@ -50,11 +50,14 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
             fontSize: 14, fontWeight: 700,
             cursor: 'pointer',
             flexShrink: 0,
+            minHeight: 36,
+            display: 'flex',
+            alignItems: 'center',
             transition: 'all 0.15s',
             '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.35)' },
           }}
         >
-          ביטול
+          {t('cancel')}
         </Box>
       </Box>
     </Snackbar>

@@ -411,7 +411,7 @@ export const useList = ({
     setDuplicateProduct(null);
   }, []);
 
-  const toggleProduct = useCallback(async (productId: string) => {
+  const toggleProduct = useCallback(async (productId: string, silent = false) => {
     const product = productsRef.current.find((p: Product) => p.id === productId);
     if (!product) return;
 
@@ -437,7 +437,7 @@ export const useList = ({
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
-      showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'));
+      if (!silent) showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'));
     } catch (error) {
       // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
@@ -465,14 +465,25 @@ export const useList = ({
     try {
       await productsApi.deleteProduct(list.id, productId);
       showToast(`"${product.name}" ${t('deleted')}`, 'success', () => {
-        // undo - שחזור המוצר
-        onUpdateProductsForList(list.id, (current) => [...current, product]);
+        // undo - שחזור המוצר בשרת וקבלת ID חדש
+        const tempId = `temp-undo-${Date.now()}`;
+        const restoredProduct = { ...product, id: tempId };
+        onUpdateProductsForList(list.id, (current) => [...current, restoredProduct]);
         productsApi.addProduct(list.id, {
           name: product.name,
           quantity: product.quantity,
           unit: product.unit,
           category: product.category,
-        }).catch(() => {});
+        }).then((serverProduct) => {
+          // החלפת ID זמני ב-ID אמיתי מהשרת
+          onUpdateProductsForList(list.id, (current) =>
+            current.map(p => p.id === tempId ? { ...p, id: serverProduct.id } : p)
+          );
+        }).catch(() => {
+          // שגיאה - הסרת המוצר הזמני
+          onUpdateProductsForList(list.id, (current) => current.filter(p => p.id !== tempId));
+          showToast(t('errorOccurred'), 'error');
+        });
       });
       socketService.emitProductDeleted(list.id, productId, product.name, user.name);
     } catch (error) {

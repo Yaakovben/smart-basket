@@ -25,7 +25,18 @@ const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ defa
 const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
 const InsightsPage = lazy(() => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage })));
 
-// מסך טעינה, שלד עמוד במקום גרדיאנט ריק
+// ניתוב QR - שומר code+password ומפנה לדף הבית
+const JoinRedirect = () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code') || '';
+  const password = params.get('password') || '';
+  if (code) {
+    sessionStorage.setItem('sb_join_code', code);
+    if (password) sessionStorage.setItem('sb_join_password', password);
+  }
+  return <Navigate to="/" replace />;
+};
+
 const PageLoader = PageSkeleton;
 
 // עטיפת נתיב מוגן
@@ -356,6 +367,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/join" element={<JoinRedirect />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Box>
