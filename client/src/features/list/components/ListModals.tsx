@@ -56,7 +56,7 @@ interface InviteModalProps {
 
 export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteModalProps) => {
   const { t } = useSettings();
-
+  const [showQR, setShowQR] = useState(false);
   // מניעת גלילת רקע כשמודאל פתוח
   useEffect(() => {
     if (isOpen) {
@@ -112,6 +112,27 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
           )}
         </Box>
+        {/* QR Code */}
+        {showQR && list.inviteCode && (
+          <Box sx={{
+            textAlign: 'center', mb: 2, p: 2.5,
+            bgcolor: 'white', borderRadius: '16px',
+            border: '2px solid', borderColor: 'rgba(20,184,166,0.15)',
+            animation: 'qrIn 0.25s ease-out',
+            '@keyframes qrIn': { from: { opacity: 0, transform: 'scale(0.9)' }, to: { opacity: 1, transform: 'scale(1)' } },
+          }}>
+            <QRCodeSVG
+              value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+              size={180}
+              level="H"
+              fgColor="#0D9488"
+              style={{ display: 'block', margin: '0 auto' }}
+            />
+            <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 1.5 }}>
+              {t('groupCode')}: <strong style={{ color: '#0D9488', letterSpacing: 2 }}>{list.inviteCode}</strong>
+            </Typography>
+          </Box>
+        )}
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
             onClick={() => {
@@ -129,6 +150,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             📋 {t('copy')}
           </Button>
         </Box>
+        {list.inviteCode && (
+          <Button
+            onClick={() => setShowQR(!showQR)}
+            fullWidth
+            variant="text"
+            sx={{ mt: 1.5, textTransform: 'none', fontSize: 13, fontWeight: 600, gap: 1, borderRadius: '12px', py: 1 }}
+          >
+            📱 {showQR ? t('close') : 'QR Code'}
+          </Button>
+        )}
       </Box>
     </>
   );
@@ -321,20 +352,6 @@ export const ShareListModal = memo(({
             )}
           </Box>
         </Box>
-        {/* QR Code */}
-        {list.isGroup && list.inviteCode && (
-          <Box sx={{ textAlign: 'center', mb: 2.5, p: 2, bgcolor: 'white', borderRadius: '16px' }}>
-            <QRCodeSVG
-              value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-              size={160}
-              level="M"
-              style={{ display: 'block', margin: '0 auto' }}
-            />
-            <Typography sx={{ fontSize: 12, color: '#6B7280', mt: 1, fontWeight: 500 }}>
-              {t('groupCode')}: {list.inviteCode}
-            </Typography>
-          </Box>
-        )}
         <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
             onClick={() => {

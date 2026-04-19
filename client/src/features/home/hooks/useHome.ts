@@ -64,6 +64,22 @@ export const useHome = ({
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
 
+  // פתיחת הצטרפות מ-QR code
+  useEffect(() => {
+    const code = sessionStorage.getItem('sb_join_code');
+    if (code) {
+      sessionStorage.removeItem('sb_join_code');
+      const password = sessionStorage.getItem('sb_join_password') || '';
+      sessionStorage.removeItem('sb_join_password');
+      setShowJoin(true);
+      setTimeout(() => {
+        setJoinCode(code.toUpperCase());
+        if (password) setJoinPass(password);
+      }, 100);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ===== מצב טפסים =====
   const [newL, setNewL] = useState<NewListForm>(DEFAULT_NEW_LIST);
   const [joinCode, setJoinCode] = useState('');

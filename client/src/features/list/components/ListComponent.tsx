@@ -639,16 +639,17 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             <Box sx={{ flex: 1 }} />
             <Button
               variant="contained"
+              color={filter === 'purchased' ? 'warning' : 'primary'}
               onClick={() => {
                 haptic('medium');
                 const count = selectedProducts.size;
                 selectedProducts.forEach(id => toggleProduct(id, true));
                 setSelectedProducts(new Set());
-                showToast(`${count} ${t('markedAsPurchased')}`);
+                showToast(`${count} ${t(filter === 'purchased' ? 'markedAsNotPurchased' : 'markedAsPurchased')}`);
               }}
               sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, px: 3, gap: 1 }}
             >
-              ✓ {t('markedAsPurchased')}
+              {filter === 'purchased' ? `↩ ${t('markedAsNotPurchased')}` : `✓ ${t('markedAsPurchased')}`}
             </Button>
           </Box>
         </Box>
