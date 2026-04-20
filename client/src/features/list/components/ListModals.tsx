@@ -137,7 +137,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             )}
           </Box>
 
-          {/* צד אחורי - QR */}
+          {/* צד אחורי - QR קומפקטי */}
           <Box sx={{
             backfaceVisibility: 'hidden',
             transform: showQR ? 'rotateY(0deg)' : 'rotateY(-180deg)',
@@ -146,47 +146,40 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             inset: showQR ? 'auto' : 0,
             pointerEvents: showQR ? 'auto' : 'none',
           }}>
-            <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-              <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-                <PersonAddIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography sx={{ fontSize: 20, fontWeight: 700 }}>הזמנה לרשימה</Typography>
-              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>"{list.name}"</Typography>
-            </Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 700, textAlign: 'center', mb: 1.5 }}>
+              סרוק להצטרפות ל"{list.name}"
+            </Typography>
             <Box sx={{
-              bgcolor: 'rgba(20,184,166,0.04)', borderRadius: '20px',
-              border: '1.5px solid', borderColor: 'rgba(20,184,166,0.15)',
-              p: 2.5, mb: 2.5, textAlign: 'center',
+              bgcolor: 'white', borderRadius: '16px',
+              p: 2, mb: 2, textAlign: 'center',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             }} id="qr-container">
               <QRCodeSVG
                 value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                size={180} level="H" fgColor="#0D9488"
+                size={150} level="H" fgColor="#0D9488"
                 style={{ display: 'block', margin: '0 auto' }}
               />
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.5, fontWeight: 500 }}>
-                סרוק כדי להצטרף
-              </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
               <Button
-                fullWidth
+                fullWidth size="small"
                 onClick={() => {
                   const svg = document.querySelector('#qr-container svg');
                   if (!svg) return;
                   const svgData = new XMLSerializer().serializeToString(svg);
                   const canvas = document.createElement('canvas');
-                  canvas.width = 600; canvas.height = 600;
+                  canvas.width = 500; canvas.height = 500;
                   const ctx = canvas.getContext('2d')!;
                   ctx.fillStyle = 'white';
-                  ctx.fillRect(0, 0, 600, 600);
+                  ctx.fillRect(0, 0, 500, 500);
                   const img = new Image();
                   img.onload = () => {
-                    ctx.drawImage(img, 50, 50, 500, 500);
+                    ctx.drawImage(img, 50, 50, 400, 400);
                     canvas.toBlob(blob => {
                       if (!blob) return;
                       if (navigator.share) {
                         const file = new File([blob], `${list.name}-qr.png`, { type: 'image/png' });
-                        navigator.share({ title: `הזמנה ל"${list.name}"`, files: [file] }).catch(() => {});
+                        navigator.share({ title: `הצטרף ל"${list.name}"`, files: [file] }).catch(() => {});
                       } else {
                         const a = document.createElement('a');
                         a.href = URL.createObjectURL(blob);
@@ -197,31 +190,27 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   };
                   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
                 }}
-                sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+                sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: '10px', py: 1, textTransform: 'none', fontWeight: 600, fontSize: 12 }}
               >
-                📤 שתף תמונת QR
+                📤 שתף תמונה
               </Button>
               <Button
-                variant="outlined"
-                fullWidth
+                variant="outlined" fullWidth size="small"
                 onClick={() => {
                   const url = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
                   if (navigator.share) {
-                    navigator.share({ title: `הזמנה ל"${list.name}"`, url }).catch(() => {});
+                    navigator.share({ title: `הצטרף ל"${list.name}"`, url }).catch(() => {});
                   } else {
                     navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
                   }
                 }}
-                sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+                sx={{ borderRadius: '10px', py: 1, textTransform: 'none', fontWeight: 600, fontSize: 12 }}
               >
                 🔗 שתף קישור
               </Button>
             </Box>
-            <Box onClick={() => setShowQR(false)} sx={{
-              py: 1.25, borderRadius: '12px', textAlign: 'center', cursor: 'pointer',
-              '&:active': { transform: 'scale(0.97)' },
-            }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>← חזרה להזמנה</Typography>
+            <Box onClick={() => setShowQR(false)} sx={{ textAlign: 'center', cursor: 'pointer', py: 0.5, '&:active': { opacity: 0.6 } }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'primary.main' }}>← חזרה</Typography>
             </Box>
           </Box>
         </Box>
