@@ -180,14 +180,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           {/* QR */}
           <Box sx={{
             bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
-            p: 2.5, mb: 2.5, textAlign: 'center',
+            p: 2, mb: 2, textAlign: 'center',
           }} id="qr-container">
             <QRCodeSVG
               value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-              size={180} level="H" fgColor="#0D9488"
+              size={150} level="H" fgColor="#0D9488"
               style={{ display: 'block', margin: '0 auto' }}
             />
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1.5 }}>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1.25 }}>
               סרוק להצטרפות מיידית
             </Typography>
           </Box>
