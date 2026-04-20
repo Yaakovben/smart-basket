@@ -4,17 +4,26 @@ import type { TranslationKeys } from '../i18n/translations';
 type TranslateFn = (key: TranslationKeys) => string;
 
 /** יצירת הודעת WhatsApp מעוצבת להזמנת חברים לרשימה */
-export const generateInviteMessage = (list: List, t: TranslateFn): string => {
+export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   const joinUrl = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
   const lines = [
-    `🛒 *${t('joinGroup')} "${list.name}"*`,
+    `🛒 *הוזמנת לרשימת קניות משותפת!*`,
     ``,
-    `📋 ${t('groupCode')}: *${list.inviteCode}*`,
+    `📝 שם הרשימה: *"${list.name}"*`,
+    ``,
+    `להצטרפות:`,
+    `📋 קוד: *${list.inviteCode}*`,
   ];
   if (list.password) {
-    lines.push(`🔑 ${t('password')}: *${list.password}*`);
+    lines.push(`🔑 סיסמה: *${list.password}*`);
   }
-  lines.push(``, `👉 ${joinUrl}`, ``, `_SmartBasket_`);
+  lines.push(
+    ``,
+    `👇 *לחץ על הקישור להצטרפות מיידית:*`,
+    joinUrl,
+    ``,
+    `_או פתח את SmartBasket ← הצטרף לקבוצה ← הכנס את הקוד_`
+  );
   return lines.join('\n');
 };
 
