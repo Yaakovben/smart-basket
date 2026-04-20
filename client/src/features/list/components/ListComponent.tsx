@@ -637,7 +637,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           animation: 'slideUp 0.25s ease-out',
           '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
             <Box
               onClick={() => setSelectedProducts(new Set())}
               sx={{
@@ -665,25 +665,41 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 else setSelectedProducts(allIds);
               }}
               sx={{
-                px: 1.75, py: 0.75,
-                borderRadius: '10px',
-                bgcolor: 'rgba(20,184,166,0.1)',
-                border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
+                height: 32, px: 1.5,
+                borderRadius: '16px',
+                background: selectedProducts.size === filteredItems.length
+                  ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
+                  : 'transparent',
+                border: '1.5px solid',
+                borderColor: selectedProducts.size === filteredItems.length ? 'transparent' : 'primary.main',
+                boxShadow: selectedProducts.size === filteredItems.length ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
                 cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 0.5,
-                '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.2)' },
-                transition: 'all 0.15s',
+                display: 'flex', alignItems: 'center', gap: 0.75,
+                '&:active': { transform: 'scale(0.95)' },
+                transition: 'all 0.2s',
               }}
             >
-              <Typography sx={{ fontSize: 14 }}>
-                {selectedProducts.size === filteredItems.length ? '☑' : '☐'}
-              </Typography>
-              <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
-                {selectedProducts.size === filteredItems.length ? 'בטל הכל' : 'בחר הכל'}
+              <Box sx={{
+                width: 16, height: 16, borderRadius: '4px',
+                border: '2px solid',
+                borderColor: selectedProducts.size === filteredItems.length ? 'white' : 'primary.main',
+                bgcolor: selectedProducts.size === filteredItems.length ? 'white' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}>
+                {selectedProducts.size === filteredItems.length && (
+                  <Typography sx={{ fontSize: 11, fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>✓</Typography>
+                )}
+              </Box>
+              <Typography sx={{
+                fontSize: 12, fontWeight: 700,
+                color: selectedProducts.size === filteredItems.length ? 'white' : 'primary.main',
+              }}>
+                {selectedProducts.size === filteredItems.length ? 'בטל' : 'הכל'}
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: 'row-reverse', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
               color="error"
@@ -692,7 +708,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 haptic('medium');
                 const ids = Array.from(selectedProducts);
                 const count = ids.length;
-                // שמירת המוצרים לפני מחיקה ל-undo
                 const deletedProducts = list.products.filter((p: Product) => ids.includes(p.id));
                 setSelectedProducts(new Set());
                 onUpdateProductsForList(list.id, (current) =>
