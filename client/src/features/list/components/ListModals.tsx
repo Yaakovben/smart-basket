@@ -2,7 +2,6 @@ import { memo, useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
 import type { List, User, Member, Product } from '../../../global/types';
 import { haptic, COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
@@ -56,189 +55,165 @@ interface InviteModalProps {
 
 export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteModalProps) => {
   const { t } = useSettings();
-  const [showQR, setShowQR] = useState(false);
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; setShowQR(false); };
-    }
-  }, [isOpen]);
+  const [tab, setTab] = useState<'text' | 'qr'>('text');
+
+  useEffect(() => { if (!isOpen) setTab('text'); }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(generateInviteMessage(list, t))
-      .then(() => { showToast(t('copied')); onClose(); })
+      .then(() => showToast(t('copied')))
       .catch(() => showToast(t('copyError')));
   };
 
-  return (
-    <>
-      <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
-      <Box sx={modalContainerSx} role="dialog" aria-labelledby="invite-title">
-        <IconButton onClick={onClose} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
-          <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-        </IconButton>
+  const handleShareQR = () => {
+    const svg = document.querySelector('#qr-container svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    canvas.width = 500; canvas.height = 500;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 500, 500);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 50, 50, 400, 400);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        if (navigator.share) {
+          const file = new File([blob], `${list.name}-qr.png`, { type: 'image/png' });
+          navigator.share({ title: `הצטרף ל"${list.name}"`, files: [file] }).catch(() => {});
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `${list.name}-qr.png`;
+          a.click();
+          showToast(t('saved'));
+        }
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
 
-        <Box sx={{
-          perspective: '800px',
-          position: 'relative',
-          minHeight: showQR ? 420 : 'auto',
-          transition: 'min-height 0.3s ease',
-        }}>
-          {/* צד קדמי - הזמנה */}
-          <Box sx={{
-            backfaceVisibility: 'hidden',
-            transform: showQR ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            transition: 'transform 0.5s ease',
-            position: showQR ? 'absolute' : 'relative',
-            inset: showQR ? 0 : 'auto',
-            pointerEvents: showQR ? 'none' : 'auto',
-          }}>
-            <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-              <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-                <PersonAddIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Typography id="invite-title" sx={{ fontSize: 20, fontWeight: 700 }}>{t('inviteFriends')}</Typography>
-              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>הזמנה לרשימת "{list.name}"</Typography>
+  return (
+    <Modal title={`${t('inviteFriends')} - "${list.name}"`} onClose={onClose}>
+      {/* Tabs */}
+      <Box sx={{ display: 'flex', gap: 0, mb: 2.5, bgcolor: 'action.hover', borderRadius: '12px', p: 0.5 }}>
+        <Box
+          onClick={() => setTab('text')}
+          sx={{
+            flex: 1, py: 1, textAlign: 'center', borderRadius: '10px', cursor: 'pointer',
+            bgcolor: tab === 'text' ? 'background.paper' : 'transparent',
+            boxShadow: tab === 'text' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+            transition: 'all 0.2s',
+          }}
+        >
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: tab === 'text' ? 'primary.main' : 'text.secondary' }}>
+            💬 הזמנה
+          </Typography>
+        </Box>
+        {list.inviteCode && (
+          <Box
+            onClick={() => setTab('qr')}
+            sx={{
+              flex: 1, py: 1, textAlign: 'center', borderRadius: '10px', cursor: 'pointer',
+              bgcolor: tab === 'qr' ? 'background.paper' : 'transparent',
+              boxShadow: tab === 'qr' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+              transition: 'all 0.2s',
+            }}
+          >
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: tab === 'qr' ? 'primary.main' : 'text.secondary' }}>
+              📱 QR Code
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {tab === 'text' ? (
+        <>
+          {/* קוד + סיסמה */}
+          <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
+              <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
+              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
             </Box>
-            <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-                <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
-              </Box>
-              {list.password && (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-                  <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
-                </Box>
-              )}
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
-              <Button
-                onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); }}
-                fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
-              >
-                <WhatsAppIcon /> שתף הזמנה
-              </Button>
-              <Button variant="outlined" fullWidth onClick={handleCopy} sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}>
-                📋 העתק
-              </Button>
-            </Box>
-            {list.inviteCode && (
-              <Box onClick={() => setShowQR(true)} sx={{
-                py: 1.25, borderRadius: '12px', textAlign: 'center', cursor: 'pointer',
-                border: '1.5px dashed', borderColor: 'rgba(20,184,166,0.3)',
-                '&:active': { transform: 'scale(0.97)' },
-                transition: 'all 0.15s',
-              }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>📱 הצג QR Code</Typography>
+            {list.password && (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
               </Box>
             )}
           </Box>
-
-          {/* צד אחורי - QR */}
-          <Box sx={{
-            backfaceVisibility: 'hidden',
-            transform: showQR ? 'rotateY(0deg)' : 'rotateY(-180deg)',
-            transition: 'transform 0.5s ease',
-            position: showQR ? 'relative' : 'absolute',
-            inset: showQR ? 'auto' : 0,
-            pointerEvents: showQR ? 'auto' : 'none',
-          }}>
-            <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-              <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-                <Typography sx={{ fontSize: 28 }}>📱</Typography>
-              </Avatar>
-              <Typography sx={{ fontSize: 20, fontWeight: 700 }}>QR Code</Typography>
-              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>סרוק להצטרפות ל"{list.name}"</Typography>
-            </Box>
-            <Box sx={{
-              bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
-              p: 2.5, mb: 2.5, textAlign: 'center',
-            }} id="qr-container">
-              <QRCodeSVG
-                value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                size={160} level="H" fgColor="#0D9488"
-                style={{ display: 'block', margin: '0 auto' }}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
-              <Button
-                fullWidth
-                onClick={() => {
-                  const svg = document.querySelector('#qr-container svg');
-                  if (!svg) return;
-                  const svgData = new XMLSerializer().serializeToString(svg);
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 500; canvas.height = 500;
-                  const ctx = canvas.getContext('2d')!;
-                  ctx.fillStyle = 'white';
-                  ctx.fillRect(0, 0, 500, 500);
-                  const img = new Image();
-                  img.onload = () => {
-                    ctx.drawImage(img, 50, 50, 400, 400);
-                    canvas.toBlob(blob => {
-                      if (!blob) return;
-                      if (navigator.share) {
-                        const file = new File([blob], `${list.name}-qr.png`, { type: 'image/png' });
-                        navigator.share({ title: `הצטרף ל"${list.name}"`, files: [file] }).catch(() => {});
-                      } else {
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = `${list.name}-qr.png`;
-                        a.click();
-                      }
-                    }, 'image/png');
-                  };
-                  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-                }}
-                sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
-              >
-                📤 שתף תמונה
-              </Button>
-              <Button
-                variant="outlined" fullWidth
-                onClick={() => {
-                  const svg = document.querySelector('#qr-container svg');
-                  if (!svg) return;
-                  const svgData = new XMLSerializer().serializeToString(svg);
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 500; canvas.height = 500;
-                  const ctx = canvas.getContext('2d')!;
-                  ctx.fillStyle = 'white';
-                  ctx.fillRect(0, 0, 500, 500);
-                  const img = new Image();
-                  img.onload = () => {
-                    ctx.drawImage(img, 50, 50, 400, 400);
-                    canvas.toBlob(blob => {
-                      if (!blob) return;
-                      const a = document.createElement('a');
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `${list.name}-qr.png`;
-                      a.click();
-                      showToast(t('saved'));
-                    }, 'image/png');
-                  };
-                  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-                }}
-                sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
-              >
-                💾 שמור תמונה
-              </Button>
-            </Box>
-            <Box onClick={() => setShowQR(false)} sx={{
-              py: 1.25, borderRadius: '12px', textAlign: 'center', cursor: 'pointer',
-              border: '1.5px dashed', borderColor: 'rgba(20,184,166,0.3)',
-              '&:active': { transform: 'scale(0.97)' },
-              transition: 'all 0.15s',
-            }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>← חזרה להזמנה</Typography>
-            </Box>
+          {/* כפתורים */}
+          <Box sx={{ display: 'flex', gap: 1.25 }}>
+            <Button
+              onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); }}
+              fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+            >
+              <WhatsAppIcon /> שתף
+            </Button>
+            <Button variant="outlined" fullWidth onClick={handleCopy} sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}>
+              📋 העתק
+            </Button>
           </Box>
-        </Box>
-      </Box>
-    </>
+        </>
+      ) : (
+        <>
+          {/* QR */}
+          <Box sx={{
+            bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
+            p: 2.5, mb: 2.5, textAlign: 'center',
+          }} id="qr-container">
+            <QRCodeSVG
+              value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+              size={180} level="H" fgColor="#0D9488"
+              style={{ display: 'block', margin: '0 auto' }}
+            />
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1.5 }}>
+              סרוק להצטרפות מיידית
+            </Typography>
+          </Box>
+          {/* כפתורים */}
+          <Box sx={{ display: 'flex', gap: 1.25 }}>
+            <Button
+              fullWidth onClick={handleShareQR}
+              sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+            >
+              📤 שתף תמונה
+            </Button>
+            <Button
+              variant="outlined" fullWidth
+              onClick={() => {
+                const svg = document.querySelector('#qr-container svg');
+                if (!svg) return;
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const canvas = document.createElement('canvas');
+                canvas.width = 500; canvas.height = 500;
+                const ctx = canvas.getContext('2d')!;
+                ctx.fillStyle = 'white'; ctx.fillRect(0, 0, 500, 500);
+                const img = new Image();
+                img.onload = () => {
+                  ctx.drawImage(img, 50, 50, 400, 400);
+                  canvas.toBlob(blob => {
+                    if (!blob) return;
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${list.name}-qr.png`;
+                    a.click();
+                    showToast(t('saved'));
+                  }, 'image/png');
+                };
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+              }}
+              sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+            >
+              💾 שמור
+            </Button>
+          </Box>
+        </>
+      )}
+    </Modal>
   );
 });
 

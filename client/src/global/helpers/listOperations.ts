@@ -7,12 +7,7 @@ type TranslateFn = (key: TranslationKeys) => string;
 export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   const joinUrl = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
   const lines = [
-    `🛒 *SmartBasket*`,
-    `━━━━━━━━━━━━━━`,
-    ``,
-    `היי! 👋`,
-    `הוזמנת להצטרף לרשימת הקניות`,
-    `📝 *"${list.name}"*`,
+    `🛒 הצטרף לרשימת *"${list.name}"*`,
     ``,
     `📋 קוד: *${list.inviteCode}*`,
   ];
@@ -21,11 +16,7 @@ export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   }
   lines.push(
     ``,
-    `👇 *לחץ להצטרפות:*`,
-    joinUrl,
-    ``,
-    `━━━━━━━━━━━━━━`,
-    `_ניהול רשימות קניות חכם_ ✨`,
+    `👇 ${joinUrl}`,
   );
   return lines.join('\n');
 };
