@@ -148,7 +148,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
       </Box>
 
       {tab === 'text' ? (
-        <Box key="text" sx={{ minHeight: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(-90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
+        <Box key="text" sx={{ height: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(-90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
           {/* קוד + סיסמה */}
           <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
@@ -176,20 +176,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
         </Box>
       ) : (
-        <Box key="qr" sx={{ minHeight: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
+        <Box key="qr" sx={{ height: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
           {/* QR */}
           <Box sx={{
             bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
-            p: 2, mb: 2, textAlign: 'center',
+            p: 1.25, mb: 1.5, textAlign: 'center',
           }} id="qr-container">
             <QRCodeSVG
               value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-              size={150} level="H" fgColor="#0D9488"
+              size={120} level="H" fgColor="#0D9488"
               style={{ display: 'block', margin: '0 auto' }}
             />
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 1.25 }}>
-              סרוק להצטרפות מיידית
-            </Typography>
           </Box>
           {/* כפתורים */}
           <Box sx={{ display: 'flex', gap: 1.25 }}>
