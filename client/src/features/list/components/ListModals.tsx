@@ -97,8 +97,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   };
 
   return (
-    <Modal title={`${t('inviteFriends')} - "${list.name}"`} onClose={onClose}>
-      {/* Tabs */}
+    <>
+      <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
+      <Box sx={modalContainerSx} role="dialog" aria-labelledby="invite-title">
+        <IconButton onClick={onClose} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
+          <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+        </IconButton>
+
+        <Typography id="invite-title" sx={{ fontSize: 18, fontWeight: 700, textAlign: 'center', mb: 2 }}>
+          {t('inviteFriends')} - "{list.name}"
+        </Typography>
+
+        {/* Tabs */}
       <Box sx={{ display: 'flex', gap: 0, mb: 2.5, bgcolor: 'action.hover', borderRadius: '12px', p: 0.5 }}>
         <Box
           onClick={() => setTab('text')}
@@ -213,7 +223,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
         </Box>
       )}
-    </Modal>
+      </Box>
+    </>
   );
 });
 

@@ -70,16 +70,17 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         sx={{
-          bgcolor: isDark ? '#1E293B' : '#1F2937',
-          borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          bgcolor: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(55,65,81,0.95)',
+          borderRadius: '14px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          backdropFilter: 'blur(12px)',
           overflow: 'hidden',
           animation: 'undoIn 0.3s ease-out',
           '@keyframes undoIn': {
             from: { transform: 'translateY(20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 },
           },
-          minWidth: 280,
+          minWidth: 240, maxWidth: 320,
           transition: 'transform 0.15s, opacity 0.15s',
         }}
       >
