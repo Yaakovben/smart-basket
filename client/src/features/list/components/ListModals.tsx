@@ -121,22 +121,26 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </>
         ) : (
           <>
-            {/* מסך QR */}
-            <Box sx={{ textAlign: 'center', animation: 'fadeIn 0.25s ease', '@keyframes fadeIn': { from: { opacity: 0 }, to: { opacity: 1 } } }}>
-              <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 0.5 }}>{t('joinGroup')}</Typography>
-              <Typography sx={{ fontSize: 18, fontWeight: 700, mb: 2.5 }}>"{list.name}"</Typography>
-              <Box sx={{ display: 'inline-block', p: 2, borderRadius: '16px', bgcolor: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }} id="qr-container">
+            {/* מסך QR - עיצוב אחיד עם צד ההזמנה */}
+            <Box sx={{ animation: 'fadeIn 0.25s ease', '@keyframes fadeIn': { from: { opacity: 0 }, to: { opacity: 1 } } }}>
+              <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+                <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+                  <Typography sx={{ fontSize: 28 }}>📱</Typography>
+                </Avatar>
+                <Typography sx={{ fontSize: 20, fontWeight: 700 }}>{t('joinGroup')}</Typography>
+                <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>"{list.name}"</Typography>
+              </Box>
+              <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '16px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', p: 2.5, mb: 2.5, textAlign: 'center' }} id="qr-container">
                 <QRCodeSVG
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={200}
+                  size={180}
                   level="H"
-                  fgColor="#1F2937"
-                  style={{ display: 'block' }}
+                  fgColor="#0D9488"
+                  style={{ display: 'block', margin: '0 auto' }}
                 />
               </Box>
-              <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
+              <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
                 <Button
-                  variant="outlined"
                   fullWidth
                   onClick={() => {
                     const url = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
@@ -146,9 +150,9 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                       navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
                     }
                   }}
-                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', fontSize: 13 }}
+                  sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25 }}
                 >
-                  🔗 {t('copy')}
+                  🔗 {t('shareList')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -180,13 +184,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     };
                     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
                   }}
-                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', fontSize: 13 }}
+                  sx={{ borderRadius: '12px', py: 1.25 }}
                 >
-                  📤 QR
+                  📤 {t('copy')}
                 </Button>
               </Box>
-              <Box onClick={() => setShowQR(false)} sx={{ mt: 1.5, py: 1, cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>← {t('back')}</Typography>
+              <Box onClick={() => setShowQR(false)} sx={{ py: 1, textAlign: 'center', cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>← {t('back')}</Typography>
               </Box>
             </Box>
           </>
