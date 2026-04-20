@@ -80,8 +80,11 @@ export const InsightsPage = memo(() => {
     </Box>
   );
 
-  const { topProducts, categoryBreakdown, stats, forgotten, smartTips, shoppingScore, groupStats } = data;
+  const { topProducts, categoryBreakdown, stats, forgotten, smartTips, shoppingScore, groupStats, shoppingPersonality, streaks, monthComparison, weeklyTrends, weekdayActivity } = data;
   const sd = getScoreData(shoppingScore);
+  const dayLabels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+  const maxWeekday = Math.max(...(weekdayActivity || []), 1);
+  const maxWeeklyTrend = Math.max(...(weeklyTrends || []).map(w => Math.max(w.added, w.purchased)), 1);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>

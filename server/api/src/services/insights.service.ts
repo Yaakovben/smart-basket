@@ -192,25 +192,85 @@ export class InsightsService {
       smartTips.push(`${forgotten.length} מוצרים שהפסקת לקנות, אולי שכחת?`);
     }
 
+    // ===== פעילות לפי יום בשבוע =====
+    const weekdayActivity = [...dayCounts];
+
+    // ===== חיזוי תאריך קנייה הבא =====
+    let predictedNextDate: string | null = null;
+    if (purchaseDates[0] && avgDaysBetween > 0) {
+      const last = new Date(purchaseDates[0]);
+      const next = new Date(last.getTime() + avgDaysBetween * 86400000);
+      if (next.getTime() < Date.now()) next.setTime(Date.now() + 86400000);
+      predictedNextDate = next.toISOString();
+    }
+
+    // ===== אישיות קנייה =====
+    const personality = this.detectPersonality(completionRate, avgDaysBetween, categoryBreakdown.length, forgotten.length, hourlyActivity);
+
+    // ===== סטריקים שבועיים =====
+    const weekSet = new Set<string>();
+    for (const p of purchasedProducts) {
+      const d = new Date(p.updatedAt);
+      const wk = Math.ceil(((d.getTime() - new Date(d.getFullYear(), 0, 1).getTime()) / 86400000 + 1) / 7);
+      weekSet.add(`${d.getFullYear()}-${wk}`);
+    }
+    const sortedWeeks = Array.from(weekSet).sort().reverse();
+    let currentWeeks = 0; let longestWeeks = 0; let streak = 0;
+    for (let i = 0; i < sortedWeeks.length; i++) {
+      if (i === 0) { streak = 1; continue; }
+      const [py, pw] = sortedWeeks[i - 1].split('-').map(Number);
+      const [cy, cw] = sortedWeeks[i].split('-').map(Number);
+      if ((py === cy && pw - cw === 1) || (py - cy === 1 && cw >= 52 && pw <= 1)) { streak++; }
+      else { if (currentWeeks === 0) currentWeeks = streak; longestWeeks = Math.max(longestWeeks, streak); streak = 1; }
+    }
+    longestWeeks = Math.max(longestWeeks, streak);
+    if (currentWeeks === 0) currentWeeks = streak;
+
+    // ===== השוואה לחודש קודם =====
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisMonthProducts = allProducts.filter(p => new Date(p.createdAt) >= thisMonthStart);
+    const prevMonthProducts = allProducts.filter(p => new Date(p.createdAt) >= prevMonthStart && new Date(p.createdAt) < thisMonthStart);
+    const prevPurchased = prevMonthProducts.filter(p => p.isPurchased);
+    const prevCompletionRate = prevMonthProducts.length > 0 ? Math.round((prevPurchased.length / prevMonthProducts.length) * 100) : 0;
+    const productsGrowth = prevMonthProducts.length > 0 ? Math.round(((thisMonthProducts.length - prevMonthProducts.length) / prevMonthProducts.length) * 100) : 0;
+
+    // ===== מגמות שבועיות (8 שבועות) =====
+    const weeklyTrends: InsightsData['weeklyTrends'] = [];
+    for (let i = 7; i >= 0; i--) {
+      const ws = new Date(now.getTime() - (i * 7 + now.getDay()) * 86400000);
+      const we = new Date(ws.getTime() + 7 * 86400000);
+      weeklyTrends.push({
+        week: `${ws.getDate()}/${ws.getMonth() + 1}`,
+        added: allProducts.filter(p => new Date(p.createdAt) >= ws && new Date(p.createdAt) < we).length,
+        purchased: purchasedProducts.filter(p => new Date(p.updatedAt) >= ws && new Date(p.updatedAt) < we).length,
+      });
+    }
+
+    // תובנות מהנתונים החדשים
+    if (predictedNextDate) {
+      const daysUntil = Math.ceil((new Date(predictedNextDate).getTime() - Date.now()) / 86400000);
+      if (daysUntil <= 2) smartTips.push(`🔔 הקנייה הבאה צפויה ${daysUntil === 0 ? 'היום' : daysUntil === 1 ? 'מחר' : 'מחרתיים'}`);
+    }
+    if (currentWeeks >= 3) smartTips.push(`🔥 סטריק! ${currentWeeks} שבועות רצופים`);
+    if (productsGrowth > 20) smartTips.push(`📈 עלייה של ${productsGrowth}% לעומת חודש שעבר`);
+    else if (productsGrowth < -20) smartTips.push(`📉 ירידה של ${Math.abs(productsGrowth)}% לעומת חודש שעבר`);
+
     return {
-      topProducts,
-      categoryBreakdown,
+      topProducts, categoryBreakdown,
       stats: {
-        totalProducts: allProducts.length,
-        totalPurchased: purchasedProducts.length,
-        totalLists: lists.length,
-        avgProductsPerList: Math.round(allProducts.length / lists.length),
-        mostActiveDay: dayNames[maxDayIdx],
-        completionRate,
+        totalProducts: allProducts.length, totalPurchased: purchasedProducts.length,
+        totalLists: lists.length, avgProductsPerList: Math.round(allProducts.length / lists.length),
+        mostActiveDay: dayNames[maxDayIdx], completionRate,
       },
       forgotten,
-      shoppingFrequency: {
-        avgDaysBetween,
-        lastShoppingDate: purchaseDates[0] ? new Date(purchaseDates[0]).toISOString() : null,
-      },
-      smartTips,
-      hourlyActivity,
-      shoppingScore: score,
+      shoppingFrequency: { avgDaysBetween, lastShoppingDate: purchaseDates[0] ? new Date(purchaseDates[0]).toISOString() : null, predictedNextDate },
+      smartTips, hourlyActivity, weekdayActivity, shoppingScore: score,
+      shoppingPersonality: personality,
+      streaks: { currentWeeks, longestWeeks },
+      monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length },
+      weeklyTrends,
       groupStats: await this.getGroupStats(lists, userId),
     };
     } catch {
@@ -220,16 +280,46 @@ export class InsightsService {
 
   private static emptyInsights(): InsightsData {
     return {
-      topProducts: [],
-      categoryBreakdown: [],
+      topProducts: [], categoryBreakdown: [],
       stats: { totalProducts: 0, totalPurchased: 0, totalLists: 0, avgProductsPerList: 0, mostActiveDay: '', completionRate: 0 },
       forgotten: [],
-      shoppingFrequency: { avgDaysBetween: 0, lastShoppingDate: null },
-      smartTips: [],
-      hourlyActivity: new Array(24).fill(0),
+      shoppingFrequency: { avgDaysBetween: 0, lastShoppingDate: null, predictedNextDate: null },
+      smartTips: [], hourlyActivity: new Array(24).fill(0), weekdayActivity: new Array(7).fill(0),
       shoppingScore: 0,
-      groupStats: [],
+      shoppingPersonality: { type: 'מתחיל', emoji: '🌱', description: 'התחל להשתמש באפליקציה כדי לגלות את הפרופיל שלך' },
+      streaks: { currentWeeks: 0, longestWeeks: 0 },
+      monthComparison: { productsGrowth: 0, completionGrowth: 0, previousTotal: 0 },
+      weeklyTrends: [], groupStats: [],
     };
+  }
+
+  private static detectPersonality(
+    completionRate: number, avgDays: number, catCount: number, forgottenCount: number, hourly: number[]
+  ): InsightsData['shoppingPersonality'] {
+    const peakHour = hourly.indexOf(Math.max(...hourly));
+    const isEarlyBird = peakHour < 12;
+    const isConsistent = avgDays > 0 && avgDays <= 7;
+    const isDiverse = catCount >= 5;
+
+    if (completionRate >= 85 && isConsistent) {
+      return { type: 'המתכנן', emoji: '🎯', description: 'קונה בקביעות, משלים רשימות, מאורגן' };
+    }
+    if (isDiverse && completionRate >= 60) {
+      return { type: 'השף', emoji: '👨‍🍳', description: 'קונה ממגוון קטגוריות, אוהב גיוון' };
+    }
+    if (isConsistent && isEarlyBird) {
+      return { type: 'המשכים', emoji: '🌅', description: 'קונה בבוקר, שגרה קבועה ויציבה' };
+    }
+    if (forgottenCount >= 3) {
+      return { type: 'הספונטני', emoji: '🎲', description: 'רשימות מגוונות, אוהב להתנסות בדברים חדשים' };
+    }
+    if (completionRate >= 70) {
+      return { type: 'היעיל', emoji: '⚡', description: 'משלים את מה שמתכנן, חסכוני בזמן' };
+    }
+    if (avgDays > 14) {
+      return { type: 'המאגר', emoji: '🏔️', description: 'קונה בכמויות, פחות תכוף אבל מסודר' };
+    }
+    return { type: 'הגולש', emoji: '🏄', description: 'קונה לפי מצב רוח, גמיש ופתוח' };
   }
 
   private static async getGroupStats(lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[], _userId: string): Promise<InsightsData['groupStats']> {

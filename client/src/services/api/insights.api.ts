@@ -15,10 +15,16 @@ export interface InsightsData {
   shoppingFrequency: {
     avgDaysBetween: number;
     lastShoppingDate: string | null;
+    predictedNextDate: string | null;
   };
   smartTips: string[];
   hourlyActivity: number[];
+  weekdayActivity: number[];
   shoppingScore: number;
+  shoppingPersonality: { type: string; emoji: string; description: string };
+  streaks: { currentWeeks: number; longestWeeks: number };
+  monthComparison: { productsGrowth: number; completionGrowth: number; previousTotal: number };
+  weeklyTrends: { week: string; added: number; purchased: number }[];
   groupStats: {
     name: string;
     icon: string;
