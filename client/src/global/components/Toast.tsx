@@ -80,30 +80,27 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
             from: { transform: 'translateY(20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 },
           },
-          minWidth: 240, maxWidth: 320,
+          minWidth: 200, maxWidth: 280,
           transition: 'transform 0.15s, opacity 0.15s',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 2, py: 1.5 }}>
-          <Box sx={{ width: 28, height: 28, borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1 }}>
+          <Box sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
             🗑️
           </Box>
-          <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: 'white', flex: 1 }}>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'white', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {msg}
           </Typography>
           <Box
             onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
             sx={{
-              px: 2, py: 0.75,
-              borderRadius: '10px',
+              px: 1.25, py: 0.5,
+              borderRadius: '8px',
               bgcolor: 'rgba(20,184,166,0.2)',
               color: '#5EEAD4',
-              fontSize: 13.5, fontWeight: 700,
+              fontSize: 12, fontWeight: 700,
               cursor: 'pointer',
               flexShrink: 0,
-              minHeight: 36,
-              display: 'flex',
-              alignItems: 'center',
               transition: 'all 0.15s',
               '&:active': { transform: 'scale(0.93)', bgcolor: 'rgba(20,184,166,0.4)' },
             }}
@@ -113,13 +110,13 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           <Box
             onClick={(e) => { e.stopPropagation(); onDismiss?.(); }}
             sx={{
-              width: 28, height: 28,
+              width: 22, height: 22,
               borderRadius: '50%',
               bgcolor: 'rgba(255,255,255,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
               flexShrink: 0,
-              fontSize: 14, color: 'rgba(255,255,255,0.5)',
+              fontSize: 11, color: 'rgba(255,255,255,0.5)',
               '&:active': { transform: 'scale(0.9)', bgcolor: 'rgba(255,255,255,0.2)' },
             }}
           >
