@@ -90,6 +90,9 @@ export const useList = ({
   // דגל שמסמן שהמשתמש סימן מוצר כנקנה (לזיהוי חגיגה ב-useEffect)
   const justMarkedPurchased = useRef(false);
 
+  // ===== תור מחיקות ל-undo =====
+  const deletedStackRef = useRef<{ product: Product; index: number }[]>([]);
+
   // ===== מצב גרירת FAB =====
   const [fabPosition, setFabPosition] = useState<FabPosition | null>(() => {
     try {
@@ -452,43 +455,75 @@ export const useList = ({
 
   const deleteProduct = useCallback(async (productId: string) => {
     if (isTempId(productId)) return;
-    const product = productsRef.current.find((p: Product) => p.id === productId);
-    if (!product) return;
+    const currentProducts = productsRef.current;
+    const index = currentProducts.findIndex((p: Product) => p.id === productId);
+    if (index === -1) return;
+    const product = currentProducts[index];
 
     justMarkedPurchased.current = false;
 
-    // מחיקה מיידית עם אפשרות undo
+    // שמירה בתור מחיקות לשחזור
+    deletedStackRef.current.push({ product, index });
+
     onUpdateProductsForList(list.id, (current) =>
       current.filter(p => p.id !== productId)
     );
 
     try {
       await productsApi.deleteProduct(list.id, productId);
-      showToast(`"${product.name}" ${t('deleted')}`, 'success', () => {
-        // undo - שחזור המוצר בשרת וקבלת ID חדש
-        const tempId = `temp-undo-${Date.now()}`;
-        const restoredProduct = { ...product, id: tempId };
-        onUpdateProductsForList(list.id, (current) => [...current, restoredProduct]);
-        productsApi.addProduct(list.id, {
-          name: product.name,
-          quantity: product.quantity,
-          unit: product.unit,
-          category: product.category,
-        }).then((serverProduct) => {
-          // החלפת ID זמני ב-ID אמיתי מהשרת
-          onUpdateProductsForList(list.id, (current) =>
-            current.map(p => p.id === tempId ? { ...p, id: serverProduct.id } : p)
-          );
-        }).catch(() => {
-          // שגיאה - הסרת המוצר הזמני
-          onUpdateProductsForList(list.id, (current) => current.filter(p => p.id !== tempId));
-          showToast(t('errorOccurred'), 'error');
-        });
-      });
+      const stackSize = deletedStackRef.current.length;
+      showToast(
+        stackSize > 1
+          ? `${stackSize} ${t('deleted')}`
+          : `"${product.name}" ${t('deleted')}`,
+        'success',
+        () => {
+          // undo - שחזור כל המוצרים שנמחקו
+          const toRestore = [...deletedStackRef.current];
+          deletedStackRef.current = [];
+
+          // שחזור למיקומים המקוריים
+          onUpdateProductsForList(list.id, (current) => {
+            const restored = [...current];
+            for (const item of toRestore.sort((a, b) => a.index - b.index)) {
+              const tempId = `temp-undo-${Date.now()}-${Math.random()}`;
+              const pos = Math.min(item.index, restored.length);
+              restored.splice(pos, 0, { ...item.product, id: tempId });
+              // שחזור בשרת
+              productsApi.addProduct(list.id, {
+                name: item.product.name,
+                quantity: item.product.quantity,
+                unit: item.product.unit,
+                category: item.product.category,
+              }).then((serverProduct) => {
+                onUpdateProductsForList(list.id, (c) =>
+                  c.map(p => p.id === tempId ? { ...p, id: serverProduct.id } : p)
+                );
+              }).catch(() => {
+                onUpdateProductsForList(list.id, (c) => c.filter(p => p.id !== tempId));
+              });
+            }
+            return restored;
+          });
+        }
+      );
       socketService.emitProductDeleted(list.id, productId, product.name, user.name);
+
+      // ניקוי תור אחרי timeout (אם המשתמש לא לחץ undo)
+      setTimeout(() => {
+        deletedStackRef.current = deletedStackRef.current.filter(
+          d => d.product.id !== productId
+        );
+      }, 5000);
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to delete product:', error);
-      onUpdateProductsForList(list.id, (current) => [...current, product]);
+      // שחזור למיקום המקורי
+      onUpdateProductsForList(list.id, (current) => {
+        const restored = [...current];
+        restored.splice(Math.min(index, restored.length), 0, product);
+        return restored;
+      });
+      deletedStackRef.current = deletedStackRef.current.filter(d => d.product.id !== productId);
       showToast(t('errorOccurred'), 'error');
     }
   }, [list.id, user.name, onUpdateProductsForList, showToast, t]);

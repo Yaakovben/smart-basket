@@ -132,12 +132,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Box
             onClick={() => setShowQR(prev => !prev)}
             sx={{
-              mt: 2, py: 1.25, borderRadius: '12px',
+              mt: 2, py: 1.25, borderRadius: '14px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
               cursor: 'pointer',
-              '&:active': { opacity: 0.7 },
+              bgcolor: showQR ? 'rgba(20,184,166,0.08)' : 'transparent',
+              border: '1.5px dashed',
+              borderColor: showQR ? 'primary.main' : 'rgba(20,184,166,0.3)',
+              transition: 'all 0.2s',
+              '&:active': { transform: 'scale(0.97)' },
             }}
           >
+            <Typography sx={{ fontSize: 18 }}>📱</Typography>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
               {showQR ? `${t('close')} QR` : 'QR Code'}
             </Typography>
@@ -146,20 +151,22 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         {list.inviteCode && (
           <Box sx={{
             overflow: 'hidden',
-            maxHeight: showQR ? 300 : 0,
+            maxHeight: showQR ? 400 : 0,
             opacity: showQR ? 1 : 0,
             transition: 'max-height 0.35s ease, opacity 0.3s ease',
           }}>
             <Box sx={{
+              mt: 1.5,
               borderRadius: '20px',
-              bgcolor: 'white',
-              boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
+              background: 'linear-gradient(145deg, #F0FDFA, #ECFDF5)',
+              border: '1.5px solid rgba(20,184,166,0.15)',
+              overflow: 'hidden',
             }}>
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <Box sx={{
-                  display: 'inline-block', p: 2, borderRadius: '16px',
-                  bgcolor: '#F8FFFE',
-                  border: '1px solid rgba(20,184,166,0.1)',
+                  display: 'inline-block', p: 2.5, borderRadius: '20px',
+                  bgcolor: 'white',
+                  boxShadow: '0 4px 20px rgba(20,184,166,0.12)',
                 }}>
                   <QRCodeSVG
                     value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
@@ -169,7 +176,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     style={{ display: 'block' }}
                   />
                 </Box>
-                <Typography sx={{ fontSize: 13, color: '#6B7280', mt: 2, fontWeight: 500 }}>
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                  <Typography sx={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>
+                    {t('groupCode')}:
+                  </Typography>
+                  <Typography sx={{ fontSize: 14, color: 'primary.main', fontWeight: 700, letterSpacing: 2, fontFamily: 'monospace' }}>
+                    {list.inviteCode}
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 0.5 }}>
                   {t('shareDetails')}
                 </Typography>
               </Box>
