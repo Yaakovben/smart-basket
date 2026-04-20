@@ -5,15 +5,16 @@ type TranslateFn = (key: TranslationKeys) => string;
 
 /** יצירת הודעת WhatsApp מעוצבת להזמנת חברים לרשימה */
 export const generateInviteMessage = (list: List, t: TranslateFn): string => {
+  const joinUrl = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
   const lines = [
-    `🛒 ${t('joinGroup')} *${list.name}*`,
+    `🛒 *${t('joinGroup')} "${list.name}"*`,
     ``,
-    `${t('groupCode')}: ${list.inviteCode}`,
+    `📋 ${t('groupCode')}: *${list.inviteCode}*`,
   ];
   if (list.password) {
-    lines.push(`${t('password')}: ${list.password}`);
+    lines.push(`🔑 ${t('password')}: *${list.password}*`);
   }
-  lines.push(``, `SmartBasket`);
+  lines.push(``, `👉 ${joinUrl}`, ``, `_SmartBasket_`);
   return lines.join('\n');
 };
 

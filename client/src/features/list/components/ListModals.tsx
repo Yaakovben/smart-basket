@@ -120,7 +120,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             </Box>
             <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
               <Button
-                onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); onClose(); }}
+                onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); }}
                 fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
               >
                 <WhatsAppIcon />
@@ -141,24 +141,26 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             transform: 'rotateY(180deg)',
             bgcolor: 'background.paper', borderRadius: '20px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-            textAlign: 'center', p: 3,
+            p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <Typography sx={{ fontSize: 18, fontWeight: 700, mb: 0.5 }}>📱 QR Code</Typography>
-            <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2.5 }}>{t('shareDetails')}</Typography>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 0.5 }}>
+              {list.name}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>{t('shareDetails')}</Typography>
             <Box sx={{
-              display: 'inline-block', p: 2, borderRadius: '16px',
-              bgcolor: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              border: '1px solid', borderColor: 'divider',
+              p: 2.5, borderRadius: '20px',
+              bgcolor: 'white',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
             }}>
               <QRCodeSVG
                 value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                size={180}
+                size={200}
                 level="H"
-                fgColor="#0F766E"
+                fgColor="#1F2937"
                 style={{ display: 'block' }}
               />
             </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, mt: 2.5 }}>
+            <Box sx={{ display: 'flex', gap: 1.25, mt: 2.5, width: '100%' }}>
               <Button
                 variant="outlined"
                 fullWidth
@@ -170,15 +172,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
                   }
                 }}
-                sx={{ gap: 1 }}
+                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px' }}
               >
-                🔗 {t('copy')}
+                🔗 {t('shareList')}
               </Button>
               <Button
-                variant="contained"
+                variant="text"
                 fullWidth
                 onClick={() => setShowQR(false)}
-                sx={{ gap: 1 }}
+                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', color: 'text.secondary' }}
               >
                 ← {t('back')}
               </Button>
@@ -382,7 +384,6 @@ export const ShareListModal = memo(({
             onClick={() => {
               const message = generateShareListMessage(list, t);
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-              onClose();
             }}
             fullWidth
             sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}

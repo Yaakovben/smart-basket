@@ -47,11 +47,11 @@ export const AddProductFab = memo(({
           position: 'fixed',
           ...(fabPosition ? {
             top: fabPosition.y - 28,
-            right: window.innerWidth - fabPosition.x - 28,
+            left: fabPosition.x - 28,
           } : {
             bottom: 'calc(24px + env(safe-area-inset-bottom))',
-            left: 0, right: 0,
-            display: 'flex', justifyContent: 'center',
+            left: '50%',
+            transform: 'translateX(-50%)',
             pointerEvents: 'none',
           }),
           zIndex: 5,
