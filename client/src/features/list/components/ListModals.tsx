@@ -460,6 +460,7 @@ export const EditListModal = memo(({
   const [convertPassword, setConvertPassword] = useState('');
   const [converting, setConverting] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
   // איפוס state מקומי כשהמודאל נסגר
@@ -563,40 +564,60 @@ export const EditListModal = memo(({
           ))}
         </Box>
       </Box>
+      {/* שינוי סיסמה - מעל כפתור שמירה, נפתח בלחיצה */}
+      {list.isGroup && onChangePassword && (
+        <>
+          <Box
+            onClick={() => setShowChangePassword(!showChangePassword)}
+            sx={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              py: 1.25, px: 0.5, cursor: 'pointer', mb: showChangePassword ? 0 : 2,
+              '&:active': { opacity: 0.7 },
+            }}
+          >
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+              🔑 {t('password')}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: 'primary.main', fontWeight: 600 }}>
+              {showChangePassword ? '▲' : '▼'}
+            </Typography>
+          </Box>
+          {showChangePassword && (
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="1234"
+                  size="small"
+                  fullWidth
+                  inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 6 } }}
+                />
+                <Button
+                  variant="outlined"
+                  disabled={newPassword.length !== 4 || newPassword === (list.password || '') || savingPassword}
+                  onClick={async () => {
+                    setSavingPassword(true);
+                    try {
+                      await onChangePassword(newPassword);
+                      setNewPassword('');
+                      setShowChangePassword(false);
+                    } finally {
+                      setSavingPassword(false);
+                    }
+                  }}
+                  sx={{ minWidth: 80, fontSize: 13, fontWeight: 600 }}
+                >
+                  {savingPassword ? <CircularProgress size={18} /> : t('save')}
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </>
+      )}
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
       </Button>
-      {list.isGroup && (
-        <Box sx={{ mt: 2.5 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: 1 }}>{t('password')}</Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="1234"
-              size="small"
-              fullWidth
-              inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 6 } }}
-            />
-            <Button
-              variant="outlined"
-              disabled={newPassword.length !== 4 || newPassword === (list.password || '') || savingPassword}
-              onClick={async () => {
-                setSavingPassword(true);
-                try {
-                  await onChangePassword!(newPassword);
-                  setNewPassword('');
-                } finally {
-                  setSavingPassword(false);
-                }
-              }}
-              sx={{ minWidth: 80, fontSize: 13, fontWeight: 600 }}
-            >
-              {savingPassword ? <CircularProgress size={18} /> : t('save')}
-            </Button>
-          </Box>
-        </Box>
-      )}
       {!list.isGroup && onConvertToGroup && !showPasswordStep && (
         <Box
           onClick={() => setShowPasswordStep(true)}
