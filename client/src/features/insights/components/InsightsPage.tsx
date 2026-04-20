@@ -241,6 +241,87 @@ export const InsightsPage = memo(() => {
                 </Box>
               </Paper>
             )}
+
+            {/* אישיות קנייה */}
+            {shoppingPersonality && (
+              <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, textAlign: 'center', border: '1px solid', borderColor: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.08)', animation: `${slideIn} 0.4s ease 0.5s both` }} elevation={0}>
+                <Typography sx={{ fontSize: 48, mb: 0.5 }}>{shoppingPersonality.emoji}</Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 800, mb: 0.5 }}>{shoppingPersonality.type}</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{shoppingPersonality.description}</Typography>
+              </Paper>
+            )}
+
+            {/* סטריקים + חודש */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2, animation: `${slideIn} 0.4s ease 0.55s both` }}>
+              <Paper sx={{ p: 2, borderRadius: '16px', textAlign: 'center' }} elevation={0}>
+                <Typography sx={{ fontSize: 28, fontWeight: 800, color: '#F59E0B' }}>🔥 {streaks?.currentWeeks || 0}</Typography>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 600 }}>שבועות רצופים</Typography>
+                <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>שיא: {streaks?.longestWeeks || 0}</Typography>
+              </Paper>
+              <Paper sx={{ p: 2, borderRadius: '16px', textAlign: 'center' }} elevation={0}>
+                <Typography sx={{ fontSize: 28, fontWeight: 800, color: monthComparison?.productsGrowth >= 0 ? '#22C55E' : '#EF4444' }}>
+                  {monthComparison?.productsGrowth > 0 ? '📈' : monthComparison?.productsGrowth < 0 ? '📉' : '➡️'} {monthComparison?.productsGrowth || 0}%
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 600 }}>לעומת חודש שעבר</Typography>
+                <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>{monthComparison?.previousTotal || 0} מוצרים</Typography>
+              </Paper>
+            </Box>
+
+            {/* מגמות שבועיות */}
+            {weeklyTrends && weeklyTrends.length > 0 && (
+              <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, animation: `${slideIn} 0.4s ease 0.6s both` }} elevation={0}>
+                <Typography sx={{ fontSize: 14, fontWeight: 700, mb: 2 }}>📊 מגמות שבועיות</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 70, mb: 1 }}>
+                  {weeklyTrends.map((w, i) => (
+                    <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1px', height: '100%', justifyContent: 'flex-end' }}>
+                      <Box sx={{ height: `${(w.purchased / maxWeeklyTrend) * 100}%`, bgcolor: '#22C55E', borderRadius: '3px 3px 0 0', minHeight: w.purchased > 0 ? 3 : 0 }} />
+                      <Box sx={{ height: `${((w.added - w.purchased) / maxWeeklyTrend) * 100}%`, bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.25)', borderRadius: '3px 3px 0 0', minHeight: w.added - w.purchased > 0 ? 2 : 0 }} />
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  {weeklyTrends.map((w, i) => (
+                    <Typography key={i} sx={{ fontSize: 8, color: 'text.disabled', flex: 1, textAlign: 'center' }}>{w.week}</Typography>
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: 1, bgcolor: '#22C55E' }} />
+                    <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>נקנו</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: 1, bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.25)' }} />
+                    <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>ממתינים</Typography>
+                  </Box>
+                </Box>
+              </Paper>
+            )}
+
+            {/* heatmap ימים בשבוע */}
+            {weekdayActivity && (
+              <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, animation: `${slideIn} 0.4s ease 0.65s both` }} elevation={0}>
+                <Typography sx={{ fontSize: 14, fontWeight: 700, mb: 2 }}>📅 פעילות לפי ימים</Typography>
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                  {weekdayActivity.map((count, i) => {
+                    const intensity = count / maxWeekday;
+                    return (
+                      <Box key={i} sx={{ textAlign: 'center' }}>
+                        <Box sx={{
+                          width: 36, height: 36, borderRadius: '10px',
+                          bgcolor: count === 0 ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')
+                            : `rgba(20,184,166,${0.15 + intensity * 0.6})`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          mb: 0.5,
+                        }}>
+                          <Typography sx={{ fontSize: 11, fontWeight: 700, color: count > 0 ? 'white' : 'text.disabled' }}>{count}</Typography>
+                        </Box>
+                        <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'text.secondary' }}>{dayLabels[i]}</Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Paper>
+            )}
           </>
         )}
 

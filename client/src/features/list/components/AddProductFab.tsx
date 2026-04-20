@@ -83,14 +83,15 @@ export const AddProductFab = memo(({
     );
   }
 
-  // מצב כפתור רגיל - sticky בתוך ה-flow, לא fixed
+  // מצב כפתור רגיל - fixed, ממורכז, לא מגיב לנגיעה על ה-wrapper
   return (
     <Box sx={{
-      position: 'sticky',
-      bottom: 'calc(16px + env(safe-area-inset-bottom))',
+      position: 'fixed',
+      bottom: 'calc(20px + env(safe-area-inset-bottom))',
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'center',
-      py: 1,
       zIndex: 5,
       pointerEvents: 'none',
     }}>
@@ -107,6 +108,7 @@ export const AddProductFab = memo(({
           textTransform: 'none',
           boxShadow: '0 6px 20px rgba(20, 184, 166, 0.4)',
           pointerEvents: 'auto',
+          touchAction: 'manipulation',
         }}
       >
         <AddIcon sx={{ fontSize: 20 }} />

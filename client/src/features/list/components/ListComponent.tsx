@@ -127,7 +127,7 @@ const CelebrationOverlay = memo(() => {
 
       {/* טקסט מרכזי */}
       <Box sx={{
-        position: 'absolute', top: '35%', left: '50%',
+        position: 'absolute', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center',
         animation: `${celebText} 0.6s ease-out 0.2s both, ${celebFade} 3s ease-out forwards`,
