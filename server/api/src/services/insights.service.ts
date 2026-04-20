@@ -17,12 +17,18 @@ export interface InsightsData {
     avgDaysBetween: number;
     lastShoppingDate: string | null;
   };
-  // תובנות חכמות
   smartTips: string[];
-  // פעילות לפי שעה
   hourlyActivity: number[];
-  // ציון קנייה
   shoppingScore: number;
+  // סטטיסטיקות קבוצות
+  groupStats: {
+    name: string;
+    icon: string;
+    membersCount: number;
+    topContributor: { name: string; count: number } | null;
+    topBuyer: { name: string; count: number } | null;
+    memberBreakdown: { name: string; added: number; purchased: number }[];
+  }[];
 }
 
 export class InsightsService {

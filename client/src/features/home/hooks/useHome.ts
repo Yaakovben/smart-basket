@@ -113,10 +113,14 @@ export const useHome = ({
   }, [joinCooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps -- רק בדיקה אם קיים cooldown
 
   // ===== ערכים מחושבים =====
-  const userLists = useMemo(() => lists.filter((l: List) => {
-    if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
-    return l.owner.id === user.id;
-  }), [lists, user.id]);
+  const userLists = useMemo(() => {
+    const filtered = lists.filter((l: List) => {
+      if (l.isGroup) return l.owner.id === user.id || l.members.some((m: Member) => m.id === user.id);
+      return l.owner.id === user.id;
+    });
+    // קבוצות מוצגות קודם, אח"כ פרטיות
+    return filtered.sort((a, b) => (a.isGroup === b.isGroup ? 0 : a.isGroup ? -1 : 1));
+  }, [lists, user.id]);
 
   const { my, groups } = useMemo(() => ({
     my: userLists.filter((l: List) => !l.isGroup),
