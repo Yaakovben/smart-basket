@@ -19,6 +19,14 @@ export interface InsightsData {
   smartTips: string[];
   hourlyActivity: number[];
   shoppingScore: number;
+  groupStats: {
+    name: string;
+    icon: string;
+    membersCount: number;
+    topContributor: { name: string; count: number } | null;
+    topBuyer: { name: string; count: number } | null;
+    memberBreakdown: { name: string; added: number; purchased: number }[];
+  }[];
 }
 
 export const insightsApi = {

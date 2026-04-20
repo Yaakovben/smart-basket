@@ -47,7 +47,7 @@ export const InsightsPage = memo(() => {
     </Box>
   );
 
-  const { topProducts, categoryBreakdown, stats, forgotten, shoppingFrequency, smartTips, hourlyActivity, shoppingScore } = data;
+  const { topProducts, categoryBreakdown, stats, forgotten, shoppingFrequency, smartTips, hourlyActivity, shoppingScore, groupStats } = data;
   const maxHourly = Math.max(...hourlyActivity, 1);
 
   return (
@@ -258,6 +258,68 @@ export const InsightsPage = memo(() => {
                 );
               })}
             </Box>
+          </Paper>
+        )}
+        {/* סטטיסטיקות קבוצות */}
+        {groupStats.length > 0 && (
+          <Paper sx={{ p: 2.5, borderRadius: '16px', mb: 2, bgcolor: 'background.paper', ...anim(0.65) }} elevation={0}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Typography sx={{ fontSize: 20 }}>👥</Typography>
+              <Typography sx={{ fontSize: 15, fontWeight: 700 }}>סטטיסטיקות קבוצות</Typography>
+            </Box>
+            {groupStats.map((group, gi) => (
+              <Box key={gi} sx={{
+                mb: gi < groupStats.length - 1 ? 2.5 : 0,
+                pb: gi < groupStats.length - 1 ? 2.5 : 0,
+                borderBottom: gi < groupStats.length - 1 ? '1px solid' : 'none',
+                borderColor: 'divider',
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                    {group.icon}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>{group.name}</Typography>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{group.membersCount} חברים</Typography>
+                  </Box>
+                </Box>
+
+                {/* מדליות */}
+                <Box sx={{ display: 'flex', gap: 1.5, mb: 1.5 }}>
+                  {group.topContributor && (
+                    <Box sx={{ flex: 1, textAlign: 'center', bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.06)', borderRadius: '10px', p: 1 }}>
+                      <Typography sx={{ fontSize: 16 }}>✏️</Typography>
+                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#14B8A6' }}>{group.topContributor.name}</Typography>
+                      <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{group.topContributor.count} הוסיף/ה</Typography>
+                    </Box>
+                  )}
+                  {group.topBuyer && group.topBuyer.count > 0 && (
+                    <Box sx={{ flex: 1, textAlign: 'center', bgcolor: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.06)', borderRadius: '10px', p: 1 }}>
+                      <Typography sx={{ fontSize: 16 }}>🛒</Typography>
+                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#F59E0B' }}>{group.topBuyer.name}</Typography>
+                      <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{group.topBuyer.count} קנה/תה</Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* חלוקת עבודה */}
+                {group.memberBreakdown.length > 1 && group.memberBreakdown.map((m, mi) => {
+                  const total = group.memberBreakdown.reduce((s, x) => s + x.added + x.purchased, 0);
+                  const memberTotal = m.added + m.purchased;
+                  const pct = total > 0 ? Math.round((memberTotal / total) * 100) : 0;
+                  return (
+                    <Box key={mi} sx={{ mb: 0.75 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{m.name}</Typography>
+                        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{pct}%</Typography>
+                      </Box>
+                      <LinearProgress variant="determinate" value={pct}
+                        sx={{ height: 5, borderRadius: 3, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', '& .MuiLinearProgress-bar': { bgcolor: ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6'][mi % 5], borderRadius: 3 } }} />
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
           </Paper>
         )}
       </Box>
