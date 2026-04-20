@@ -637,29 +637,51 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           animation: 'slideUp 0.25s ease-out',
           '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Button
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+            <Box
               onClick={() => setSelectedProducts(new Set())}
-              size="small"
-              sx={{ minWidth: 0, color: 'text.secondary', fontSize: 13, textTransform: 'none', gap: 0.5 }}
-            >
-              ✕ {selectedProducts.size}/{filteredItems.length}
-            </Button>
-            <Box sx={{ flex: 1 }} />
-            <Button
-              size="small"
-              onClick={() => {
-                const allIds = new Set(filteredItems.map(p => p.id));
-                if (selectedProducts.size === filteredItems.length) {
-                  setSelectedProducts(new Set());
-                } else {
-                  setSelectedProducts(allIds);
-                }
+              sx={{
+                width: 32, height: 32, borderRadius: '50%',
+                bgcolor: 'action.hover',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', flexShrink: 0,
+                '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
+                transition: 'all 0.15s',
               }}
-              sx={{ fontSize: 12, textTransform: 'none', fontWeight: 600, color: 'primary.main' }}
             >
-              {selectedProducts.size === filteredItems.length ? t('cancel') : t('all')}
-            </Button>
+              <Typography sx={{ fontSize: 16, color: 'text.secondary' }}>✕</Typography>
+            </Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
+              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800, fontSize: 16 }}>
+                {selectedProducts.size}
+              </Typography>
+              {` / ${filteredItems.length} נבחרו`}
+            </Typography>
+            <Box
+              onClick={() => {
+                haptic('light');
+                const allIds = new Set(filteredItems.map(p => p.id));
+                if (selectedProducts.size === filteredItems.length) setSelectedProducts(new Set());
+                else setSelectedProducts(allIds);
+              }}
+              sx={{
+                px: 1.75, py: 0.75,
+                borderRadius: '10px',
+                bgcolor: 'rgba(20,184,166,0.1)',
+                border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 0.5,
+                '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.2)' },
+                transition: 'all 0.15s',
+              }}
+            >
+              <Typography sx={{ fontSize: 14 }}>
+                {selectedProducts.size === filteredItems.length ? '☑' : '☐'}
+              </Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
+                {selectedProducts.size === filteredItems.length ? 'בטל הכל' : 'בחר הכל'}
+              </Typography>
+            </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button

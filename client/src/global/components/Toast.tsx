@@ -70,9 +70,9 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         sx={{
-          bgcolor: isDark ? 'rgba(30,41,59,0.95)' : 'rgba(55,65,81,0.95)',
+          bgcolor: isDark ? 'rgba(51,65,85,0.95)' : 'rgba(100,116,139,0.95)',
           borderRadius: '14px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
           backdropFilter: 'blur(12px)',
           overflow: 'hidden',
           animation: 'undoIn 0.3s ease-out',

@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
 import type { List, User, Member, Product } from '../../../global/types';
 import { haptic, COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
@@ -104,9 +105,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
         </IconButton>
 
-        <Typography id="invite-title" sx={{ fontSize: 18, fontWeight: 700, textAlign: 'center', mb: 2 }}>
-          {t('inviteFriends')} - "{list.name}"
-        </Typography>
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Avatar sx={{ width: 56, height: 56, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 1.5, boxShadow: '0 6px 18px rgba(20,184,166,0.3)' }}>
+            <PersonAddIcon sx={{ fontSize: 28 }} />
+          </Avatar>
+          <Typography id="invite-title" sx={{ fontSize: 18, fontWeight: 700 }}>
+            {t('inviteFriends')}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>"{list.name}"</Typography>
+        </Box>
 
         {/* Tabs */}
       <Box sx={{ display: 'flex', gap: 0, mb: 2.5, bgcolor: 'action.hover', borderRadius: '12px', p: 0.5 }}>
