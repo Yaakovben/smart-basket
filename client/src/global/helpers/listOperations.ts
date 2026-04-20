@@ -7,17 +7,13 @@ type TranslateFn = (key: TranslationKeys) => string;
 export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   const joinUrl = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
   const lines = [
-    `🛒 הצטרף לרשימת *"${list.name}"*`,
+    `🛒 *הוזמנת לרשימת קניות משותפת!*`,
+    `📝 שם: *${list.name}*`,
+    `📋 קוד: *${list.inviteCode}*${list.password ? ` 🔑 סיסמה: *${list.password}*` : ''}`,
     ``,
-    `📋 קוד: *${list.inviteCode}*`,
+    `👇 לחץ להצטרפות:`,
+    joinUrl,
   ];
-  if (list.password) {
-    lines.push(`🔑 סיסמה: *${list.password}*`);
-  }
-  lines.push(
-    ``,
-    `👇 ${joinUrl}`,
-  );
   return lines.join('\n');
 };
 
