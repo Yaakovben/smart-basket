@@ -10,7 +10,6 @@ import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../.
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
 const slideIn = keyframes`from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}`;
 const scaleIn = keyframes`from{transform:scale(0)}to{transform:scale(1)}`;
-const shimmer = keyframes`0%{background-position:-200% 0}100%{background-position:200% 0}`;
 const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
 
 const scoreColor = (s: number) => s >= 80 ? '#22C55E' : s >= 60 ? '#F59E0B' : s >= 40 ? '#F97316' : '#EF4444';
@@ -97,16 +96,34 @@ export const InsightsPage = memo(() => {
         <Box sx={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.05)' }} />
         <Box sx={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.03)' }} />
 
-        {/* BETA */}
+        {/* BETA - באלכסון עם אפקט מכחול */}
         <Box sx={{
-          background: 'linear-gradient(90deg, #14B8A6, #0D9488)',
-          borderRadius: '10px', py: 0.5, px: 2, mb: 2,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75,
-          backgroundSize: '200% 100%', animation: `${shimmer} 3s linear infinite`,
+          position: 'absolute', top: { xs: 48, sm: 16 }, left: -32,
+          transform: 'rotate(-35deg)',
+          transformOrigin: 'center',
+          zIndex: 1,
         }}>
-          <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'white' }}>
-            🧪 גרסת BETA — הנתונים עשויים להיות חלקיים
-          </Typography>
+          <Box sx={{
+            position: 'relative',
+            px: 5, py: 0.75,
+          }}>
+            {/* אפקט מכחול */}
+            <Box sx={{
+              position: 'absolute', inset: 0,
+              bgcolor: 'rgba(20,184,166,0.85)',
+              borderRadius: '4px',
+              transform: 'skewX(-5deg)',
+              boxShadow: '0 2px 8px rgba(20,184,166,0.4)',
+            }} />
+            <Typography sx={{
+              position: 'relative', zIndex: 1,
+              fontSize: 10, fontWeight: 900, color: 'white',
+              letterSpacing: 3, textTransform: 'uppercase',
+              fontFamily: '"Courier New", monospace',
+            }}>
+              BETA
+            </Typography>
+          </Box>
         </Box>
 
         {/* חזרה + כותרת */}
@@ -394,26 +411,34 @@ export const InsightsPage = memo(() => {
                   )}
                 </Box>
 
-                {group.memberBreakdown.length > 1 && (
-                  <>
-                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 1 }}>חלוקת עבודה</Typography>
-                    {group.memberBreakdown.map((m, mi) => {
-                      const total = group.memberBreakdown.reduce((s, x) => s + x.added + x.purchased, 0);
-                      const pct = total > 0 ? Math.round(((m.added + m.purchased) / total) * 100) : 0;
-                      const colors = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6'];
-                      return (
-                        <Box key={mi} sx={{ mb: 0.75 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.25 }}>
-                            <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{m.name}</Typography>
-                            <Typography sx={{ fontSize: 11, fontWeight: 800, color: colors[mi % 5] }}>{pct}%</Typography>
+                {group.memberBreakdown.length > 1 && (() => {
+                  const total = group.memberBreakdown.reduce((s, x) => s + x.added + x.purchased, 0);
+                  const colors = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6'];
+                  return (
+                    <>
+                      <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 1 }}>חלוקת עבודה</Typography>
+                      {/* גרף בר אופקי מחולק */}
+                      <Box sx={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', mb: 1.5 }}>
+                        {group.memberBreakdown.map((m, mi) => {
+                          const pct = total > 0 ? (m.added + m.purchased) / total * 100 : 0;
+                          return <Box key={mi} sx={{ width: `${pct}%`, bgcolor: colors[mi % 5], transition: 'width 0.8s ease' }} />;
+                        })}
+                      </Box>
+                      {/* פירוט לפי חבר */}
+                      {group.memberBreakdown.map((m, mi) => {
+                        const pct = total > 0 ? Math.round(((m.added + m.purchased) / total) * 100) : 0;
+                        return (
+                          <Box key={mi} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: colors[mi % 5], flexShrink: 0 }} />
+                            <Typography sx={{ fontSize: 12, fontWeight: 600, flex: 1 }}>{m.name}</Typography>
+                            <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{m.added} הוסיף · {m.purchased} קנה</Typography>
+                            <Typography sx={{ fontSize: 11, fontWeight: 800, color: colors[mi % 5], minWidth: 30, textAlign: 'left' }}>{pct}%</Typography>
                           </Box>
-                          <LinearProgress variant="determinate" value={pct}
-                            sx={{ height: 5, borderRadius: 3, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', '& .MuiLinearProgress-bar': { bgcolor: colors[mi % 5], borderRadius: 3 } }} />
-                        </Box>
-                      );
-                    })}
-                  </>
-                )}
+                        );
+                      })}
+                    </>
+                  );
+                })()}
               </Paper>
             ))}
           </>
