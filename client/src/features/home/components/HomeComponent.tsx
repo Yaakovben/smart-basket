@@ -270,7 +270,7 @@ const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) =
                 {t('appName')}
               </Typography>
               <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-                {ios ? t('installIosHint') : t('installAndroidHint')}
+                {t('installIosHint')}
               </Typography>
             </Box>
             <IconButton onClick={handleDismiss} size="small" sx={{ color: 'text.secondary' }}>
@@ -278,34 +278,28 @@ const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) =
             </IconButton>
           </Box>
 
-          {ios ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
-                <Typography sx={{ fontSize: 20 }}>1️⃣</Typography>
-                <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
-                  {t('installStep1Ios')}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
-                <Typography sx={{ fontSize: 20 }}>2️⃣</Typography>
-                <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
-                  {t('installStep2Ios')}
-                </Typography>
-              </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
+              <Typography sx={{ fontSize: 18 }}>1️⃣</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
+                {ios ? t('installStep1Ios') : t('installStep1Android')}
+              </Typography>
             </Box>
-          ) : (
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={handleDismiss}
-              sx={{
-                borderRadius: '12px', textTransform: 'none', fontWeight: 600, py: 1.25,
-                fontSize: 14,
-              }}
-            >
-              {t('installAndroidButton')}
-            </Button>
-          )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
+              <Typography sx={{ fontSize: 18 }}>2️⃣</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
+                {ios ? t('installStep2Ios') : t('installStep2Android')}
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleDismiss}
+            sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, py: 1.25, fontSize: 14 }}
+          >
+            {t('installDismiss')}
+          </Button>
         </Box>
       </Box>
     </Box>

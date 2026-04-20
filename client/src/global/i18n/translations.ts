@@ -101,10 +101,11 @@ type TranslationKey =
   | 'bulkMarkedPurchased'
   | 'bulkReturnedToList'
   | 'installIosHint'
-  | 'installAndroidHint'
   | 'installStep1Ios'
   | 'installStep2Ios'
-  | 'installAndroidButton'
+  | 'installStep1Android'
+  | 'installStep2Android'
+  | 'installDismiss'
   | 'clearPurchased'
   | 'clearList'
   | 'resetList'
@@ -535,10 +536,11 @@ export const translations: Record<Language, Translations> = {
     bulkMarkedPurchased: 'סומנו כנקנו',
     bulkReturnedToList: 'הוחזרו לרשימה',
     installIosHint: 'הוסף למסך הבית לחוויה מלאה',
-    installAndroidHint: 'התקן את האפליקציה לגישה מהירה',
     installStep1Ios: 'לחץ על כפתור השיתוף ⬆️ למטה',
     installStep2Ios: 'בחר "הוסף למסך הבית" ➕',
-    installAndroidButton: 'הבנתי, תודה!',
+    installStep1Android: 'לחץ על ⋮ (תפריט) למעלה',
+    installStep2Android: 'בחר "התקן אפליקציה" או "הוסף למסך הבית"',
+    installDismiss: 'הבנתי, תודה!',
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
     shoppingMode: 'מצב קנייה',
@@ -964,10 +966,11 @@ export const translations: Record<Language, Translations> = {
     bulkReturnedToList: 'returned to list',
     clearPurchased: 'Clear purchased products',
     installIosHint: 'Add to home screen for the best experience',
-    installAndroidHint: 'Install the app for quick access',
     installStep1Ios: 'Tap the share button ⬆️ below',
     installStep2Ios: 'Select "Add to Home Screen" ➕',
-    installAndroidButton: 'Got it, thanks!',
+    installStep1Android: 'Tap ⋮ (menu) at the top',
+    installStep2Android: 'Select "Install app" or "Add to Home Screen"',
+    installDismiss: 'Got it, thanks!',
     resetList: 'Reset list',
     shoppingMode: 'Shopping mode',
     exitShoppingMode: 'Exit shopping mode',
@@ -1389,10 +1392,11 @@ export const translations: Record<Language, Translations> = {
     bulkMarkedPurchased: 'отмечено как купленное',
     bulkReturnedToList: 'возвращено в список',
     installIosHint: 'Добавьте на главный экран для лучшего опыта',
-    installAndroidHint: 'Установите приложение для быстрого доступа',
     installStep1Ios: 'Нажмите кнопку "Поделиться" ⬆️ внизу',
     installStep2Ios: 'Выберите "На экран Домой" ➕',
-    installAndroidButton: 'Понятно, спасибо!',
+    installStep1Android: 'Нажмите ⋮ (меню) вверху',
+    installStep2Android: 'Выберите "Установить" или "Добавить на главный экран"',
+    installDismiss: 'Понятно, спасибо!',
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
     shoppingMode: 'Режим покупок',

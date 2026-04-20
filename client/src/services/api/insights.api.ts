@@ -9,12 +9,16 @@ export interface InsightsData {
     totalLists: number;
     avgProductsPerList: number;
     mostActiveDay: string;
+    completionRate: number;
   };
   forgotten: { name: string; lastSeen: string; category: string }[];
   shoppingFrequency: {
     avgDaysBetween: number;
     lastShoppingDate: string | null;
   };
+  smartTips: string[];
+  hourlyActivity: number[];
+  shoppingScore: number;
 }
 
 export const insightsApi = {

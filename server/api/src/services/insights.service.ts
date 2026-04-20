@@ -2,25 +2,27 @@ import { Product } from '../models';
 import { ListDAL } from '../dal';
 
 export interface InsightsData {
-  // מוצרים שנקנים הכי הרבה
   topProducts: { name: string; count: number; category: string }[];
-  // פילוח לפי קטגוריה
   categoryBreakdown: { category: string; count: number; percentage: number }[];
-  // סטטיסטיקות כלליות
   stats: {
     totalProducts: number;
     totalPurchased: number;
     totalLists: number;
     avgProductsPerList: number;
     mostActiveDay: string;
+    completionRate: number;
   };
-  // מוצרים שאולי שכחת (היו ברשימות ישנות אבל לא באחרונה)
   forgotten: { name: string; lastSeen: string; category: string }[];
-  // תדירות קנייה
   shoppingFrequency: {
     avgDaysBetween: number;
     lastShoppingDate: string | null;
   };
+  // תובנות חכמות
+  smartTips: string[];
+  // פעילות לפי שעה
+  hourlyActivity: number[];
+  // ציון קנייה
+  shoppingScore: number;
 }
 
 export class InsightsService {
@@ -136,6 +138,49 @@ export class InsightsService {
         category: data.category,
       }));
 
+    // ===== פעילות לפי שעה =====
+    const hourlyActivity = new Array(24).fill(0);
+    for (const p of allProducts) {
+      hourlyActivity[new Date(p.createdAt).getHours()]++;
+    }
+
+    // ===== אחוז השלמה =====
+    const completionRate = allProducts.length > 0
+      ? Math.round((purchasedProducts.length / allProducts.length) * 100)
+      : 0;
+
+    // ===== ציון קנייה (0-100) =====
+    let score = 50;
+    if (completionRate > 80) score += 15;
+    else if (completionRate > 50) score += 8;
+    if (avgDaysBetween > 0 && avgDaysBetween <= 7) score += 10;
+    if (topProducts.length >= 5) score += 5;
+    if (categoryBreakdown.length >= 4) score += 10;
+    if (forgotten.length === 0) score += 10;
+    score = Math.min(100, Math.max(0, score));
+
+    // ===== תובנות חכמות =====
+    const smartTips: string[] = [];
+    if (topProducts.length > 0) {
+      smartTips.push(`המוצר הנפוץ שלך הוא "${topProducts[0].name}" (${topProducts[0].count} פעמים)`);
+    }
+    if (categoryBreakdown.length > 0) {
+      smartTips.push(`הקטגוריה הדומיננטית: ${categoryBreakdown[0].category} (${categoryBreakdown[0].percentage}%)`);
+    }
+    const peakHour = hourlyActivity.indexOf(Math.max(...hourlyActivity));
+    if (hourlyActivity[peakHour] > 0) {
+      smartTips.push(`השעה הכי פעילה שלך: ${peakHour}:00`);
+    }
+    if (avgDaysBetween > 0) {
+      smartTips.push(`קצב קנייה ממוצע: כל ${avgDaysBetween} ימים`);
+    }
+    if (completionRate < 50) {
+      smartTips.push('טיפ: נסה לסיים יותר מוצרים מהרשימה לפני שמתחיל חדשה');
+    }
+    if (forgotten.length > 0) {
+      smartTips.push(`${forgotten.length} מוצרים שהפסקת לקנות, אולי שכחת?`);
+    }
+
     return {
       topProducts,
       categoryBreakdown,
@@ -145,12 +190,16 @@ export class InsightsService {
         totalLists: lists.length,
         avgProductsPerList: Math.round(allProducts.length / lists.length),
         mostActiveDay: dayNames[maxDayIdx],
+        completionRate,
       },
       forgotten,
       shoppingFrequency: {
         avgDaysBetween,
         lastShoppingDate: purchaseDates[0] ? new Date(purchaseDates[0]).toISOString() : null,
       },
+      smartTips,
+      hourlyActivity,
+      shoppingScore: score,
     };
     } catch {
       return this.emptyInsights();
@@ -161,9 +210,12 @@ export class InsightsService {
     return {
       topProducts: [],
       categoryBreakdown: [],
-      stats: { totalProducts: 0, totalPurchased: 0, totalLists: 0, avgProductsPerList: 0, mostActiveDay: '' },
+      stats: { totalProducts: 0, totalPurchased: 0, totalLists: 0, avgProductsPerList: 0, mostActiveDay: '', completionRate: 0 },
       forgotten: [],
       shoppingFrequency: { avgDaysBetween: 0, lastShoppingDate: null },
+      smartTips: [],
+      hourlyActivity: new Array(24).fill(0),
+      shoppingScore: 0,
     };
   }
 }
