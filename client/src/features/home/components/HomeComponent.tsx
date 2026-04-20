@@ -908,24 +908,30 @@ export const HomeComponent = memo(({
 
       {/* Join Group Modal */}
       {showJoin && (
-        <Modal title={t('joinGroup')} onClose={() => !joiningGroup && closeJoinModal()}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <>
+          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)', touchAction: 'none' }} onClick={() => !joiningGroup && closeJoinModal()} />
+          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', borderRadius: '20px', p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '85vh', overflowY: 'auto' }} role="dialog">
+            <IconButton onClick={() => !joiningGroup && closeJoinModal()} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
+              <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            </IconButton>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, textAlign: 'center', mb: 2 }}>{t('joinGroup')}</Typography>
+          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
             <Box sx={{
-              width: 72,
-              height: 72,
-              borderRadius: '20px',
+              width: 56,
+              height: 56,
+              borderRadius: '16px',
               background: 'linear-gradient(135deg, #14B8A6, #10B981)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 32,
+              fontSize: 26,
               mx: 'auto',
-              mb: 2,
-              boxShadow: '0 8px 24px rgba(20, 184, 166, 0.25)'
+              mb: 1.5,
+              boxShadow: '0 6px 16px rgba(20, 184, 166, 0.25)'
             }}>
               🔗
             </Box>
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
               {t('enterCodeAndPasswordHint')}
             </Typography>
           </Box>
@@ -1049,7 +1055,8 @@ export const HomeComponent = memo(({
               t('joinGroup')
             )}
           </Button>
-        </Modal>
+          </Box>
+        </>
       )}
 
       {/* Edit List Modal */}
