@@ -422,6 +422,7 @@ interface EditListModalProps {
   onUpdateData: (data: EditListForm) => void;
   onConvertToGroup?: (password: string) => void | Promise<void>;
   onConvertToPrivate?: () => void | Promise<void>;
+  onChangePassword?: (password: string) => void | Promise<void>;
 }
 
 export const EditListModal = memo(({
@@ -545,6 +546,37 @@ export const EditListModal = memo(({
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
       </Button>
+      {list.isGroup && (
+        <Box sx={{ mt: 2.5 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary', mb: 1 }}>{t('password')}</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="1234"
+              size="small"
+              fullWidth
+              inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 6 } }}
+            />
+            <Button
+              variant="outlined"
+              disabled={newPassword.length !== 4 || newPassword === (list.password || '') || savingPassword}
+              onClick={async () => {
+                setSavingPassword(true);
+                try {
+                  await onChangePassword!(newPassword);
+                  setNewPassword('');
+                } finally {
+                  setSavingPassword(false);
+                }
+              }}
+              sx={{ minWidth: 80, fontSize: 13, fontWeight: 600 }}
+            >
+              {savingPassword ? <CircularProgress size={18} /> : t('save')}
+            </Button>
+          </Box>
+        </Box>
+      )}
       {!list.isGroup && onConvertToGroup && !showPasswordStep && (
         <Box
           onClick={() => setShowPasswordStep(true)}

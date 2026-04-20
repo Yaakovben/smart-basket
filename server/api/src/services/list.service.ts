@@ -72,8 +72,13 @@ export class ListService {
       list.password = undefined;
     }
 
-    // הסרת isGroup מהנתונים לפני Object.assign (כבר טיפלנו בזה)
-    const { isGroup: _isGroup, ...sanitizedData } = { ...data };
+    // עדכון סיסמה לקבוצה קיימת
+    if (data.password !== undefined && list.isGroup) {
+      list.password = data.password;
+    }
+
+    // הסרת שדות שטופלו בנפרד
+    const { isGroup: _isGroup, password: _password, ...sanitizedData } = { ...data };
     if (sanitizedData.name) {
       sanitizedData.name = sanitizeText(sanitizedData.name);
     }
