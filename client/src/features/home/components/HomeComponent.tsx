@@ -909,13 +909,7 @@ export const HomeComponent = memo(({
 
       {/* Join Group Modal */}
       {showJoin && (
-        <>
-          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)', touchAction: 'none' }} onClick={() => !joiningGroup && closeJoinModal()} />
-          <Box sx={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'background.paper', borderRadius: '20px', p: 3, zIndex: 1001, width: '90%', maxWidth: 340, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '85vh', overflowY: 'auto' }} role="dialog">
-            <IconButton onClick={() => !joiningGroup && closeJoinModal()} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
-              <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            </IconButton>
-            <Typography sx={{ fontSize: 18, fontWeight: 700, textAlign: 'center', mb: 2 }}>{t('joinGroup')}</Typography>
+        <Modal title={t('joinGroup')} onClose={() => !joiningGroup && closeJoinModal()}>
           <Box sx={{ textAlign: 'center', mb: 2.5 }}>
             <Box sx={{
               width: 56,
@@ -1056,8 +1050,7 @@ export const HomeComponent = memo(({
               t('joinGroup')
             )}
           </Button>
-          </Box>
-        </>
+        </Modal>
       )}
 
       {/* Edit List Modal */}
