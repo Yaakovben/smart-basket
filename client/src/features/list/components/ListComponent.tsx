@@ -629,14 +629,31 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           animation: 'slideUp 0.25s ease-out',
           '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Button
               onClick={() => setSelectedProducts(new Set())}
-              sx={{ minWidth: 0, color: 'text.secondary', fontSize: 13, textTransform: 'none' }}
+              size="small"
+              sx={{ minWidth: 0, color: 'text.secondary', fontSize: 13, textTransform: 'none', gap: 0.5 }}
             >
-              ✕ {selectedProducts.size}
+              ✕ {selectedProducts.size}/{filteredItems.length}
             </Button>
             <Box sx={{ flex: 1 }} />
+            <Button
+              size="small"
+              onClick={() => {
+                const allIds = new Set(filteredItems.map(p => p.id));
+                if (selectedProducts.size === filteredItems.length) {
+                  setSelectedProducts(new Set());
+                } else {
+                  setSelectedProducts(allIds);
+                }
+              }}
+              sx={{ fontSize: 12, textTransform: 'none', fontWeight: 600, color: 'primary.main' }}
+            >
+              {selectedProducts.size === filteredItems.length ? t('cancel') : t('all')}
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               variant="contained"
               color="error"
