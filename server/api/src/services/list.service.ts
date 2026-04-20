@@ -74,7 +74,7 @@ export class ListService {
 
     // עדכון סיסמה לקבוצה קיימת
     if (data.password !== undefined && list.isGroup) {
-      list.password = data.password;
+      list.password = data.password || undefined;
     }
 
     // הסרת שדות שטופלו בנפרד

@@ -1076,6 +1076,10 @@ export const HomeComponent = memo(({
           onEditList({ ...editList, isGroup: false, password: null });
           setEditList(null);
         } : undefined}
+        onChangePassword={editList.isGroup ? (password: string) => {
+          onEditList({ ...editList, password });
+          setEditList(null);
+        } : undefined}
       />}
 
       {/* Confirm Delete */}

@@ -600,6 +600,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             showToast(t('errorOccurred'), 'error');
           }
         } : undefined}
+        onChangePassword={list.isGroup ? async (password: string) => {
+          try {
+            await onUpdateList({ ...list, password });
+            showToast(t('saved'));
+          } catch {
+            showToast(t('errorOccurred'), 'error');
+          }
+        } : undefined}
       />
 
       {/* Confirm Modals */}

@@ -374,12 +374,14 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
       // בדיקה אם יש המרה מרשימה פרטית לקבוצה או להפך
       const isConvertingToGroup = updatedList.isGroup && oldList && !oldList.isGroup;
       const isConvertingToPrivate = !updatedList.isGroup && oldList && oldList.isGroup;
+      const passwordChanged = updatedList.isGroup && oldList?.isGroup && updatedList.password !== oldList.password;
       const updated = await listsApi.updateList(updatedList.id, {
         name: updatedList.name,
         icon: updatedList.icon,
         color: updatedList.color,
         ...(isConvertingToGroup ? { isGroup: true, password: updatedList.password || undefined } : {}),
         ...(isConvertingToPrivate ? { isGroup: false } : {}),
+        ...(passwordChanged ? { password: updatedList.password || undefined } : {}),
       });
       setLists((prev) =>
         prev.map((l) => (l.id === updated.id ? convertApiList(updated) : l)),
