@@ -75,30 +75,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   return (
     <>
       <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
-      <Box sx={{
-        ...modalContainerSx,
-        perspective: '1000px',
-        p: 0, overflow: 'visible', bgcolor: 'transparent', boxShadow: 'none',
-      }} role="dialog" aria-labelledby="invite-title">
-        <Box sx={{
-          position: 'relative',
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.5s ease',
-          transform: showQR ? 'rotateY(180deg)' : 'rotateY(0)',
-        }}>
-          {/* צד קדמי - הזמנה */}
-          <Box sx={{
-            backfaceVisibility: 'hidden',
-            bgcolor: 'background.paper', borderRadius: '20px', p: 3,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          }}>
-            <IconButton
-              onClick={onClose}
-              sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover' }}
-              size="small"
-            >
-              <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            </IconButton>
+      <Box sx={modalContainerSx} role="dialog" aria-labelledby="invite-title">
+        <IconButton onClick={onClose} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
+          <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+        </IconButton>
+
+        {!showQR ? (
+          <>
+            {/* מסך הזמנה */}
             <Box sx={{ textAlign: 'center', mb: 2.5 }}>
               <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
                 <PersonAddIcon sx={{ fontSize: 32 }} />
@@ -121,72 +105,92 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
               <Button
                 onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); }}
-                fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
+                fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25 }}
               >
                 <WhatsAppIcon />
               </Button>
-              <Button variant="outlined" fullWidth onClick={handleCopy}>📋 {t('copy')}</Button>
+              <Button variant="outlined" fullWidth onClick={handleCopy} sx={{ borderRadius: '12px', py: 1.25 }}>
+                📋 {t('copy')}
+              </Button>
             </Box>
             {list.inviteCode && (
-              <Box onClick={() => setShowQR(true)} sx={{ py: 1, textAlign: 'center', cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
+              <Box onClick={() => setShowQR(true)} sx={{ py: 1.25, textAlign: 'center', cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
                 <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>📱 QR Code</Typography>
               </Box>
             )}
-          </Box>
-
-          {/* צד אחורי - QR */}
-          <Box sx={{
-            position: 'absolute', top: 0, left: 0, right: 0,
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-            bgcolor: 'background.paper', borderRadius: '20px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-            p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          }}>
-            <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 0.5 }}>
-              {list.name}
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 2 }}>{t('shareDetails')}</Typography>
-            <Box sx={{
-              p: 2.5, borderRadius: '20px',
-              bgcolor: 'white',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-            }}>
-              <QRCodeSVG
-                value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                size={200}
-                level="H"
-                fgColor="#1F2937"
-                style={{ display: 'block' }}
-              />
+          </>
+        ) : (
+          <>
+            {/* מסך QR */}
+            <Box sx={{ textAlign: 'center', animation: 'fadeIn 0.25s ease', '@keyframes fadeIn': { from: { opacity: 0 }, to: { opacity: 1 } } }}>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 0.5 }}>{t('joinGroup')}</Typography>
+              <Typography sx={{ fontSize: 18, fontWeight: 700, mb: 2.5 }}>"{list.name}"</Typography>
+              <Box sx={{ display: 'inline-block', p: 2, borderRadius: '16px', bgcolor: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }} id="qr-container">
+                <QRCodeSVG
+                  value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                  size={200}
+                  level="H"
+                  fgColor="#1F2937"
+                  style={{ display: 'block' }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => {
+                    const url = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
+                    if (navigator.share) {
+                      navigator.share({ title: `${t('joinGroup')} "${list.name}"`, url }).catch(() => {});
+                    } else {
+                      navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
+                    }
+                  }}
+                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', fontSize: 13 }}
+                >
+                  🔗 {t('copy')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => {
+                    const svg = document.querySelector('#qr-container svg');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 600; canvas.height = 600;
+                    const ctx = canvas.getContext('2d')!;
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, 600, 600);
+                    const img = new Image();
+                    img.onload = () => {
+                      ctx.drawImage(img, 50, 50, 500, 500);
+                      canvas.toBlob(blob => {
+                        if (!blob) return;
+                        if (navigator.share) {
+                          const file = new File([blob], `${list.name}-qr.png`, { type: 'image/png' });
+                          navigator.share({ title: `${t('joinGroup')} "${list.name}"`, files: [file] }).catch(() => {});
+                        } else {
+                          const a = document.createElement('a');
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `${list.name}-qr.png`;
+                          a.click();
+                        }
+                      }, 'image/png');
+                    };
+                    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                  }}
+                  sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', fontSize: 13 }}
+                >
+                  📤 QR
+                </Button>
+              </Box>
+              <Box onClick={() => setShowQR(false)} sx={{ mt: 1.5, py: 1, cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>← {t('back')}</Typography>
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, mt: 2.5, width: '100%' }}>
-              <Button
-                variant="outlined"
-                fullWidth
-                onClick={() => {
-                  const url = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
-                  if (navigator.share) {
-                    navigator.share({ title: list.name, text: t('inviteFriends'), url }).catch(() => {});
-                  } else {
-                    navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
-                  }
-                }}
-                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px' }}
-              >
-                🔗 {t('shareList')}
-              </Button>
-              <Button
-                variant="text"
-                fullWidth
-                onClick={() => setShowQR(false)}
-                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '12px', color: 'text.secondary' }}
-              >
-                ← {t('back')}
-              </Button>
-            </Box>
-          </Box>
-        </Box>
+          </>
+        )}
       </Box>
     </>
   );
