@@ -146,9 +146,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             inset: showQR ? 'auto' : 0,
             pointerEvents: showQR ? 'auto' : 'none',
           }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 700, textAlign: 'center', mb: 1.5 }}>
-              סרוק להצטרפות ל"{list.name}"
-            </Typography>
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+              <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 1.5, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+                <Typography sx={{ fontSize: 28 }}>📱</Typography>
+              </Avatar>
+              <Typography sx={{ fontSize: 18, fontWeight: 700 }}>QR Code</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>סרוק להצטרפות ל"{list.name}"</Typography>
+            </Box>
             <Box sx={{
               bgcolor: 'white', borderRadius: '16px',
               p: 2, mb: 2, textAlign: 'center',
