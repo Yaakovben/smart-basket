@@ -206,6 +206,7 @@ export class InsightsService {
       smartTips,
       hourlyActivity,
       shoppingScore: score,
+      groupStats: await this.getGroupStats(lists, userId),
     };
     } catch {
       return this.emptyInsights();
@@ -222,6 +223,54 @@ export class InsightsService {
       smartTips: [],
       hourlyActivity: new Array(24).fill(0),
       shoppingScore: 0,
+      groupStats: [],
     };
+  }
+
+  private static async getGroupStats(lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[], _userId: string): Promise<InsightsData['groupStats']> {
+    const groupLists = lists.filter(l => l.isGroup && l.members.length > 0);
+    if (groupLists.length === 0) return [];
+
+    const results: InsightsData['groupStats'] = [];
+
+    for (const list of groupLists.slice(0, 5)) {
+      const products = await Product.find({ listId: list._id })
+        .populate('addedBy', 'name')
+        .lean();
+
+      if (products.length === 0) continue;
+
+      // ספירה לפי משתמש: מי הוסיף ומי קנה
+      const memberStats = new Map<string, { name: string; added: number; purchased: number }>();
+
+      for (const p of products) {
+        const addedByName = (p.addedBy && typeof p.addedBy === 'object' && 'name' in p.addedBy)
+          ? (p.addedBy as { name: string }).name : 'Unknown';
+        const addedById = (p.addedBy && typeof p.addedBy === 'object' && '_id' in p.addedBy)
+          ? (p.addedBy as { _id: any })._id.toString() : '';
+
+        if (!memberStats.has(addedById)) {
+          memberStats.set(addedById, { name: addedByName, added: 0, purchased: 0 });
+        }
+        const stat = memberStats.get(addedById)!;
+        stat.added++;
+        if (p.isPurchased) stat.purchased++;
+      }
+
+      const breakdown = Array.from(memberStats.values()).sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
+      const topContributor = breakdown.length > 0 ? { name: breakdown[0].name, count: breakdown[0].added } : null;
+      const topBuyer = breakdown.reduce((best, cur) => cur.purchased > (best?.count || 0) ? { name: cur.name, count: cur.purchased } : best, null as { name: string; count: number } | null);
+
+      results.push({
+        name: list.name,
+        icon: list.icon,
+        membersCount: list.members.length + 1,
+        topContributor,
+        topBuyer,
+        memberBreakdown: breakdown,
+      });
+    }
+
+    return results;
   }
 }
