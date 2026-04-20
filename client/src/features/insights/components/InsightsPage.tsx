@@ -96,42 +96,20 @@ export const InsightsPage = memo(() => {
         <Box sx={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.05)' }} />
         <Box sx={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.03)' }} />
 
-        {/* BETA - באלכסון עם אפקט מכחול */}
-        <Box sx={{
-          position: 'absolute', top: { xs: 48, sm: 16 }, left: -32,
-          transform: 'rotate(-35deg)',
-          transformOrigin: 'center',
-          zIndex: 1,
-        }}>
-          <Box sx={{
-            position: 'relative',
-            px: 5, py: 0.75,
-          }}>
-            {/* אפקט מכחול */}
-            <Box sx={{
-              position: 'absolute', inset: 0,
-              bgcolor: 'rgba(20,184,166,0.85)',
-              borderRadius: '4px',
-              transform: 'skewX(-5deg)',
-              boxShadow: '0 2px 8px rgba(20,184,166,0.4)',
-            }} />
-            <Typography sx={{
-              position: 'relative', zIndex: 1,
-              fontSize: 10, fontWeight: 900, color: 'white',
-              letterSpacing: 3, textTransform: 'uppercase',
-              fontFamily: '"Courier New", monospace',
-            }}>
-              BETA
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* חזרה + כותרת */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
+        {/* חזרה + כותרת + BETA */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'white', flex: 1, letterSpacing: -0.5 }}>💡 {t('insights')}</Typography>
+        </Box>
+        <Box sx={{
+          bgcolor: '#14B8A6', borderRadius: '12px', py: 1, px: 2, mb: 2,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+          boxShadow: '0 2px 10px rgba(20,184,166,0.4)',
+        }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 900, color: 'white', letterSpacing: 2 }}>🧪 BETA</Typography>
+          <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>הנתונים עשויים להיות חלקיים</Typography>
         </Box>
 
         {/* ציון */}
@@ -370,21 +348,31 @@ export const InsightsPage = memo(() => {
               </Box>
             ) : groupStats.map((group, gi) => (
               <Paper key={gi} sx={{
-                p: 2, borderRadius: '16px', mb: 2,
-                border: '1px solid', borderColor: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.08)',
+                p: 0, borderRadius: '18px', mb: 2.5, overflow: 'hidden',
+                border: '1.5px solid', borderColor: isDark ? 'rgba(139,92,246,0.2)' : 'rgba(139,92,246,0.12)',
                 animation: `${fadeIn} 0.4s ease ${gi * 0.1}s both`,
               }} elevation={0}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                  <Box sx={{
-                    width: 44, height: 44, borderRadius: '14px', fontSize: 22,
-                    bgcolor: isDark ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.06)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{group.icon}</Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontSize: 15, fontWeight: 800 }}>{group.name}</Typography>
-                    <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{group.membersCount} חברים</Typography>
+                {/* כותרת קבוצה עם רקע */}
+                <Box sx={{
+                  background: isDark ? 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))' : 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.02))',
+                  p: 2, borderBottom: '1px solid', borderColor: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.08)',
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{
+                      width: 48, height: 48, borderRadius: '14px', fontSize: 24,
+                      bgcolor: isDark ? 'rgba(139,92,246,0.2)' : 'rgba(139,92,246,0.1)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '1.5px solid', borderColor: 'rgba(139,92,246,0.15)',
+                    }}>{group.icon}</Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography sx={{ fontSize: 16, fontWeight: 900 }}>{group.name}</Typography>
+                      <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                        {group.membersCount} חברים · {group.memberBreakdown.map(m => m.name).join(', ')}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
+                <Box sx={{ p: 2 }}>
 
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                   {group.topContributor && (
@@ -439,6 +427,7 @@ export const InsightsPage = memo(() => {
                     </>
                   );
                 })()}
+                </Box>
               </Paper>
             ))}
           </>
