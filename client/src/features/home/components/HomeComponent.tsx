@@ -9,6 +9,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -924,12 +925,12 @@ export const HomeComponent = memo(({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 26,
+              color: 'white',
               mx: 'auto',
               mb: 1.5,
               boxShadow: '0 6px 16px rgba(20, 184, 166, 0.25)'
             }}>
-              🔗
+              <PersonAddIcon sx={{ fontSize: 28 }} />
             </Box>
             <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
               {t('enterCodeAndPasswordHint')}
