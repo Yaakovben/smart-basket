@@ -4,6 +4,9 @@ import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularP
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
+import IosShareIcon from '@mui/icons-material/IosShare';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
 import type { List, User, Member, Product } from '../../../global/types';
 import { haptic, COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
@@ -165,13 +168,21 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           {/* כפתורים */}
           <Box sx={{ display: 'flex', gap: 1.25 }}>
             <Button
-              onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); }}
-              fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+              onClick={() => {
+                const msg = generateInviteMessage(list, t);
+                if (navigator.share) {
+                  navigator.share({ title: `הזמנה ל"${list.name}"`, text: msg }).catch(() => {});
+                } else {
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                }
+              }}
+              fullWidth startIcon={<IosShareIcon />}
+              sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
             >
-              <WhatsAppIcon /> שתף
+              שתף
             </Button>
-            <Button variant="outlined" fullWidth onClick={handleCopy} sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}>
-              📋 העתק
+            <Button variant="outlined" fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />} sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}>
+              העתק
             </Button>
           </Box>
         </Box>
@@ -195,9 +206,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Box sx={{ display: 'flex', gap: 1.25 }}>
             <Button
               fullWidth onClick={handleShareQR}
-              sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+              startIcon={<IosShareIcon />}
+              sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
             >
-              📤 שתף תמונה
+              שתף תמונה
             </Button>
             <Button
               variant="outlined" fullWidth
@@ -223,9 +235,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 };
                 img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
               }}
+              startIcon={<DownloadIcon />}
               sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
             >
-              💾 שמור
+              שמור
             </Button>
           </Box>
         </Box>
