@@ -59,24 +59,20 @@ export const InsightsPage = memo(() => {
         borderRadius: '0 0 28px 28px',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* באנר גרסה ראשונית */}
-        <Box sx={{
-          position: 'absolute', top: { xs: 52, sm: 14 }, right: { xs: -28, sm: -24 },
-          transform: 'rotate(35deg)',
-          bgcolor: 'rgba(255,255,255,0.15)',
-          px: 5, py: 0.5,
-          fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.8)',
-          letterSpacing: 1, textTransform: 'uppercase',
-          backdropFilter: 'blur(4px)',
-        }}>
-          BETA
-        </Box>
-
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', width: 40, height: 40 }}>
             <ArrowForwardIcon />
           </IconButton>
           <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'white', flex: 1 }}>💡 {t('insights')}</Typography>
+          <Box sx={{
+            px: 1.5, py: 0.5,
+            borderRadius: '8px',
+            bgcolor: 'rgba(255,255,255,0.2)',
+            fontSize: 13, fontWeight: 800, color: 'white',
+            letterSpacing: 1.5,
+          }}>
+            BETA
+          </Box>
         </Box>
 
         {/* ציון קנייה */}
