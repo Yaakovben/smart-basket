@@ -100,6 +100,11 @@ type TranslationKey =
   | 'bulkDeleted'
   | 'bulkMarkedPurchased'
   | 'bulkReturnedToList'
+  | 'installIosHint'
+  | 'installAndroidHint'
+  | 'installStep1Ios'
+  | 'installStep2Ios'
+  | 'installAndroidButton'
   | 'clearPurchased'
   | 'clearList'
   | 'resetList'
@@ -529,6 +534,11 @@ export const translations: Record<Language, Translations> = {
     bulkDeleted: 'נמחקו',
     bulkMarkedPurchased: 'סומנו כנקנו',
     bulkReturnedToList: 'הוחזרו לרשימה',
+    installIosHint: 'הוסף למסך הבית לחוויה מלאה',
+    installAndroidHint: 'התקן את האפליקציה לגישה מהירה',
+    installStep1Ios: 'לחץ על כפתור השיתוף ⬆️ למטה',
+    installStep2Ios: 'בחר "הוסף למסך הבית" ➕',
+    installAndroidButton: 'הבנתי, תודה!',
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
     shoppingMode: 'מצב קנייה',
@@ -953,6 +963,11 @@ export const translations: Record<Language, Translations> = {
     bulkMarkedPurchased: 'marked as purchased',
     bulkReturnedToList: 'returned to list',
     clearPurchased: 'Clear purchased products',
+    installIosHint: 'Add to home screen for the best experience',
+    installAndroidHint: 'Install the app for quick access',
+    installStep1Ios: 'Tap the share button ⬆️ below',
+    installStep2Ios: 'Select "Add to Home Screen" ➕',
+    installAndroidButton: 'Got it, thanks!',
     resetList: 'Reset list',
     shoppingMode: 'Shopping mode',
     exitShoppingMode: 'Exit shopping mode',
@@ -1373,6 +1388,11 @@ export const translations: Record<Language, Translations> = {
     bulkDeleted: 'удалено',
     bulkMarkedPurchased: 'отмечено как купленное',
     bulkReturnedToList: 'возвращено в список',
+    installIosHint: 'Добавьте на главный экран для лучшего опыта',
+    installAndroidHint: 'Установите приложение для быстрого доступа',
+    installStep1Ios: 'Нажмите кнопку "Поделиться" ⬆️ внизу',
+    installStep2Ios: 'Выберите "На экран Домой" ➕',
+    installAndroidButton: 'Понятно, спасибо!',
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
     shoppingMode: 'Режим покупок',

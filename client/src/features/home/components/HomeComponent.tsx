@@ -206,6 +206,113 @@ interface HomePageProps {
   onClearAllPersistedNotifications?: (listId?: string) => void;
 }
 
+// בדיקה אם רץ בדפדפן (לא PWA מותקן)
+const isInBrowser = () => {
+  if ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone) return false;
+  if (window.matchMedia('(display-mode: standalone)').matches) return false;
+  if (window.matchMedia('(display-mode: fullscreen)').matches) return false;
+  return true;
+};
+
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) => {
+  const [show, setShow] = useState(false);
+  const { settings } = useSettings();
+  const isDark = settings.theme === 'dark';
+
+  useEffect(() => {
+    // הצגה רק אם: בדפדפן, לא הוצג בעבר, ולא PWA
+    const dismissed = localStorage.getItem('pwa_install_seen');
+    if (!dismissed && isInBrowser()) {
+      const timer = setTimeout(() => setShow(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    setShow(false);
+    localStorage.setItem('pwa_install_seen', '1');
+  }, []);
+
+  if (!show) return null;
+
+  const ios = isIOS();
+
+  return (
+    <Box sx={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300,
+      pb: 'max(16px, env(safe-area-inset-bottom))',
+      px: 2, pt: 0,
+      animation: 'pwaSlideUp 0.4s ease-out',
+      '@keyframes pwaSlideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
+    }}>
+      <Box sx={{
+        bgcolor: isDark ? '#1E293B' : 'white',
+        borderRadius: '20px',
+        boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        overflow: 'hidden',
+      }}>
+        <Box sx={{ p: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+            <Box sx={{
+              width: 44, height: 44, borderRadius: '12px',
+              background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 22, flexShrink: 0,
+            }}>
+              📲
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'text.primary' }}>
+                {t('appName')}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                {ios ? t('installIosHint') : t('installAndroidHint')}
+              </Typography>
+            </Box>
+            <IconButton onClick={handleDismiss} size="small" sx={{ color: 'text.secondary' }}>
+              <CloseIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Box>
+
+          {ios ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
+                <Typography sx={{ fontSize: 20 }}>1️⃣</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
+                  {t('installStep1Ios')}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : '#F8FAFB', borderRadius: '12px' }}>
+                <Typography sx={{ fontSize: 20 }}>2️⃣</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.primary' }}>
+                  {t('installStep2Ios')}
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleDismiss}
+              sx={{
+                borderRadius: '12px', textTransform: 'none', fontWeight: 600, py: 1.25,
+                fontSize: 14,
+              }}
+            >
+              {t('installAndroidButton')}
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+});
+PwaInstallPrompt.displayName = 'PwaInstallPrompt';
+
 export const HomeComponent = memo(({
   lists, listsFetchError = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
@@ -1138,6 +1245,8 @@ export const HomeComponent = memo(({
           </Box>
         </>
       )}
+
+      <PwaInstallPrompt t={t} />
 
       {/* Bottom Navigation */}
       <Box

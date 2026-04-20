@@ -75,122 +75,116 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   return (
     <>
       <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
-      <Box sx={modalContainerSx} role="dialog" aria-labelledby="invite-title">
-        <IconButton
-          onClick={onClose}
-          sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover' }}
-          size="small"
-          aria-label={t('close')}
-        >
-          <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-        </IconButton>
-        <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-          <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-            <PersonAddIcon sx={{ fontSize: 32 }} />
-          </Avatar>
-          <Typography id="invite-title" sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>
-            {t('inviteFriends')}
-          </Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
-        </Box>
-        <Box sx={{ bgcolor: 'rgba(20, 184, 166, 0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20, 184, 166, 0.3)', mb: 2.5, overflow: 'hidden' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20, 184, 166, 0.3)' }}>
-            <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-            <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>
-              {list.inviteCode}
-            </Typography>
-          </Box>
-          {list.password && (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
-            <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-            <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>
-              {list.password}
-            </Typography>
-          </Box>
-          )}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1.25 }}>
-          <Button
-            onClick={() => {
-              const message = generateInviteMessage(list, t);
-              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-              onClose();
-            }}
-            fullWidth
-            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
-            aria-label="WhatsApp"
-          >
-            <WhatsAppIcon />
-          </Button>
-          <Button variant="outlined" fullWidth onClick={handleCopy} aria-label={t('copy')}>
-            📋 {t('copy')}
-          </Button>
-        </Box>
-
-        {/* QR Code */}
-        {list.inviteCode && (
-          <Box
-            onClick={() => setShowQR(prev => !prev)}
-            sx={{
-              mt: 2, py: 1.25, borderRadius: '14px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-              cursor: 'pointer',
-              bgcolor: showQR ? 'rgba(20,184,166,0.08)' : 'transparent',
-              border: '1.5px dashed',
-              borderColor: showQR ? 'primary.main' : 'rgba(20,184,166,0.3)',
-              transition: 'all 0.2s',
-              '&:active': { transform: 'scale(0.97)' },
-            }}
-          >
-            <Typography sx={{ fontSize: 18 }}>📱</Typography>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>
-              {showQR ? `${t('close')} QR` : 'QR Code'}
-            </Typography>
-          </Box>
-        )}
-        {list.inviteCode && (
+      <Box sx={{
+        ...modalContainerSx,
+        perspective: '1000px',
+        p: 0, overflow: 'visible', bgcolor: 'transparent', boxShadow: 'none',
+      }} role="dialog" aria-labelledby="invite-title">
+        <Box sx={{
+          position: 'relative',
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.5s ease',
+          transform: showQR ? 'rotateY(180deg)' : 'rotateY(0)',
+        }}>
+          {/* צד קדמי - הזמנה */}
           <Box sx={{
-            overflow: 'hidden',
-            maxHeight: showQR ? 400 : 0,
-            opacity: showQR ? 1 : 0,
-            transition: 'max-height 0.35s ease, opacity 0.3s ease',
+            backfaceVisibility: 'hidden',
+            bgcolor: 'background.paper', borderRadius: '20px', p: 3,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
           }}>
-            <Box sx={{
-              mt: 1.5,
-              borderRadius: '20px',
-              background: 'linear-gradient(145deg, #F0FDFA, #ECFDF5)',
-              border: '1.5px solid rgba(20,184,166,0.15)',
-              overflow: 'hidden',
-            }}>
-              <Box sx={{ p: 3, textAlign: 'center' }}>
-                <Box sx={{
-                  display: 'inline-block', p: 2.5, borderRadius: '20px',
-                  bgcolor: 'white',
-                  boxShadow: '0 4px 20px rgba(20,184,166,0.12)',
-                }}>
-                  <QRCodeSVG
-                    value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                    size={160}
-                    level="H"
-                    fgColor="#0F766E"
-                    style={{ display: 'block' }}
-                  />
-                </Box>
-                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                  <Typography sx={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>
-                    {t('groupCode')}:
-                  </Typography>
-                  <Typography sx={{ fontSize: 14, color: 'primary.main', fontWeight: 700, letterSpacing: 2, fontFamily: 'monospace' }}>
-                    {list.inviteCode}
-                  </Typography>
-                </Box>
-                <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 0.5 }}>
-                  {t('shareDetails')}
-                </Typography>
+            <IconButton
+              onClick={onClose}
+              sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover' }}
+              size="small"
+            >
+              <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            </IconButton>
+            <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+              <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+                <PersonAddIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+              <Typography id="invite-title" sx={{ fontSize: 20, fontWeight: 700 }}>{t('inviteFriends')}</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>{t('shareDetails')}</Typography>
+            </Box>
+            <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
               </Box>
+              {list.password && (
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
+                  <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+                </Box>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
+              <Button
+                onClick={() => { const msg = generateInviteMessage(list, t); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); onClose(); }}
+                fullWidth sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
+              >
+                <WhatsAppIcon />
+              </Button>
+              <Button variant="outlined" fullWidth onClick={handleCopy}>📋 {t('copy')}</Button>
+            </Box>
+            {list.inviteCode && (
+              <Box onClick={() => setShowQR(true)} sx={{ py: 1, textAlign: 'center', cursor: 'pointer', '&:active': { opacity: 0.7 } }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'primary.main' }}>📱 QR Code</Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* צד אחורי - QR */}
+          <Box sx={{
+            position: 'absolute', top: 0, left: 0, right: 0,
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            bgcolor: 'background.paper', borderRadius: '20px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            textAlign: 'center', p: 3,
+          }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, mb: 0.5 }}>📱 QR Code</Typography>
+            <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2.5 }}>{t('shareDetails')}</Typography>
+            <Box sx={{
+              display: 'inline-block', p: 2, borderRadius: '16px',
+              bgcolor: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+              border: '1px solid', borderColor: 'divider',
+            }}>
+              <QRCodeSVG
+                value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                size={180}
+                level="H"
+                fgColor="#0F766E"
+                style={{ display: 'block' }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.25, mt: 2.5 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => {
+                  const url = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
+                  if (navigator.share) {
+                    navigator.share({ title: list.name, text: t('inviteFriends'), url }).catch(() => {});
+                  } else {
+                    navigator.clipboard?.writeText(url).then(() => showToast(t('copied'))).catch(() => {});
+                  }
+                }}
+                sx={{ gap: 1 }}
+              >
+                🔗 {t('copy')}
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => setShowQR(false)}
+                sx={{ gap: 1 }}
+              >
+                ← {t('back')}
+              </Button>
             </Box>
           </Box>
-        )}
+        </Box>
       </Box>
     </>
   );
