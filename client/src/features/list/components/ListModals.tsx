@@ -153,6 +153,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               העתק
             </Button>
           </Box>
+          {list.inviteCode && (
+            <Box sx={{ textAlign: 'center', mt: 1.5 }}>
+              <Typography
+                onClick={() => setTab('qr')}
+                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 12.5, fontWeight: 600, color: 'primary.main', cursor: 'pointer', '&:active': { opacity: 0.6 } }}
+              >
+                📱 הצג QR לסריקה מהירה →
+              </Typography>
+            </Box>
+          )}
         </Box>
       ) : (
         <Box key="qr" sx={{ height: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
@@ -208,6 +218,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             >
               שמור
             </Button>
+          </Box>
+          <Box sx={{ textAlign: 'center', mt: 1.5 }}>
+            <Typography
+              onClick={() => setTab('text')}
+              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 12.5, fontWeight: 600, color: 'primary.main', cursor: 'pointer', '&:active': { opacity: 0.6 } }}
+            >
+              ← חזור לקוד וסיסמה
+            </Typography>
           </Box>
         </Box>
       )}
