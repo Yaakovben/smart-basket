@@ -118,39 +118,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>"{list.name}"</Typography>
         </Box>
 
-        {/* Tabs */}
-      <Box sx={{ display: 'flex', gap: 0, mb: 2.5, bgcolor: 'action.hover', borderRadius: '12px', p: 0.5 }}>
-        <Box
-          onClick={() => setTab('text')}
-          sx={{
-            flex: 1, py: 1, textAlign: 'center', borderRadius: '10px', cursor: 'pointer',
-            bgcolor: tab === 'text' ? 'background.paper' : 'transparent',
-            boxShadow: tab === 'text' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-            transition: 'all 0.2s',
-          }}
-        >
-          <Typography sx={{ fontSize: 13, fontWeight: 700, color: tab === 'text' ? 'primary.main' : 'text.secondary' }}>
-            💬 הזמנה
-          </Typography>
-        </Box>
-        {list.inviteCode && (
-          <Box
-            onClick={() => setTab('qr')}
-            sx={{
-              flex: 1, py: 1, textAlign: 'center', borderRadius: '10px', cursor: 'pointer',
-              bgcolor: tab === 'qr' ? 'background.paper' : 'transparent',
-              boxShadow: tab === 'qr' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: tab === 'qr' ? 'primary.main' : 'text.secondary' }}>
-              📱 QR Code
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {tab === 'text' ? (
+        {tab === 'text' ? (
         <Box key="text" sx={{ height: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(-90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
           {/* קוד + סיסמה */}
           <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
