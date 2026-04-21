@@ -159,7 +159,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
       >
         {tab === 'text' ? (
           <Box key="text" sx={{
-            display: 'flex', flexDirection: 'column',
+            display: 'flex', flexDirection: 'column', flex: 1,
             animation: 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
             '@keyframes slideInUp': {
               from: { transform: 'translateY(100%)', opacity: 0 },
@@ -171,7 +171,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.04))',
               borderRadius: '16px',
               border: '1.5px solid rgba(20,184,166,0.2)',
-              mb: 1.5, overflow: 'hidden',
+              overflow: 'hidden',
               boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.5, borderBottom: list.password ? '1px solid rgba(20,184,166,0.15)' : 'none', '@media (max-width: 360px)': { px: 1.5, py: 1 } }}>
@@ -185,25 +185,25 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 </Box>
               )}
             </Box>
-            {/* כפתורים */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* כפתורים - נדחפים לתחתית הקונטיינר */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
               <Button
                 onClick={() => {
                   const msg = generateInviteMessage(list, t);
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                fullWidth startIcon={<WhatsAppIcon />}
+                fullWidth disableRipple startIcon={<WhatsAppIcon />}
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
-                  '&:active': { transform: 'translateY(0)' },
-                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)` },
+                  '&:active': { opacity: 0.85 },
+                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
-                    py: 1, fontSize: 12, borderRadius: '12px',
+                    height: 40, fontSize: 12, borderRadius: '12px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
                   },
                 }}
@@ -211,18 +211,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 WhatsApp
               </Button>
               <Button
-                fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />}
+                fullWidth disableRipple onClick={handleCopy} startIcon={<ContentCopyIcon />}
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
-                  '&:active': { transform: 'translateY(0)' },
-                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
+                  '&:active': { opacity: 0.85 },
+                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
-                    py: 1, fontSize: 12, borderRadius: '12px',
+                    height: 40, fontSize: 12, borderRadius: '12px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
                   },
                 }}
@@ -233,7 +233,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
         ) : (
           <Box key="qr" sx={{
-            display: 'flex', flexDirection: 'column',
+            display: 'flex', flexDirection: 'column', flex: 1,
             animation: 'slideInDown 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
             '@keyframes slideInDown': {
               from: { transform: 'translateY(-100%)', opacity: 0 },
@@ -247,7 +247,6 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.04))',
                 borderRadius: '16px',
                 border: '1.5px solid rgba(20,184,166,0.2)',
-                mb: 1.5,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -275,22 +274,22 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
-            {/* כפתורים */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* כפתורים - נדחפים לתחתית הקונטיינר */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
               <Button
-                fullWidth onClick={handleShareQR}
+                fullWidth disableRipple onClick={handleShareQR}
                 startIcon={<WhatsAppIcon />}
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
-                  '&:active': { transform: 'translateY(0)' },
-                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)` },
+                  '&:active': { opacity: 0.85 },
+                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
-                    py: 1, fontSize: 12, borderRadius: '12px',
+                    height: 40, fontSize: 12, borderRadius: '12px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
                   },
                 }}
@@ -298,7 +297,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 שלח QR
               </Button>
               <Button
-                fullWidth
+                fullWidth disableRipple
                 onClick={() => {
                   const svg = document.querySelector('#qr-container svg');
                   if (!svg) return;
@@ -325,14 +324,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
-                  '&:active': { transform: 'translateY(0)' },
-                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
+                  '&:active': { opacity: 0.85 },
+                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'all 0.2s',
+                  transition: 'background 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
-                    py: 1, fontSize: 12, borderRadius: '12px',
+                    height: 40, fontSize: 12, borderRadius: '12px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
                   },
                 }}

@@ -70,57 +70,52 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         sx={{
-          bgcolor: isDark ? 'rgba(51,65,85,0.95)' : 'rgba(100,116,139,0.95)',
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(30,41,59,0.97), rgba(15,23,42,0.97))'
+            : 'linear-gradient(135deg, rgba(30,41,59,0.96), rgba(51,65,85,0.96))',
           borderRadius: '14px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(16px)',
           overflow: 'hidden',
           animation: 'undoIn 0.3s ease-out',
           '@keyframes undoIn': {
             from: { transform: 'translateY(20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 },
           },
-          minWidth: 200, maxWidth: 280,
+          minWidth: 220, maxWidth: 300,
           transition: 'transform 0.15s, opacity 0.15s',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1 }}>
-          <Box sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1 }}>
+          <Box sx={{
+            width: 26, height: 26, borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.18))',
+            border: '1px solid rgba(252,165,165,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, flexShrink: 0
+          }}>
             🗑️
           </Box>
-          <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: 'white', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.92)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em' }}>
             {msg}
           </Typography>
           <Box
             onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
             sx={{
-              px: 1.25, py: 0.5,
-              borderRadius: '8px',
-              bgcolor: 'rgba(20,184,166,0.2)',
+              px: 1.5, py: 0.6,
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.3), rgba(13,148,136,0.25))',
+              border: '1px solid rgba(94,234,212,0.35)',
               color: '#5EEAD4',
-              fontSize: 12, fontWeight: 700,
+              fontSize: 12.5, fontWeight: 700,
+              letterSpacing: '0.02em',
               cursor: 'pointer',
               flexShrink: 0,
-              transition: 'all 0.15s',
-              '&:active': { transform: 'scale(0.93)', bgcolor: 'rgba(20,184,166,0.4)' },
+              transition: 'background 0.15s, opacity 0.1s',
+              '&:active': { opacity: 0.75 },
             }}
           >
             {t('cancel')}
-          </Box>
-          <Box
-            onClick={(e) => { e.stopPropagation(); onDismiss?.(); }}
-            sx={{
-              width: 22, height: 22,
-              borderRadius: '50%',
-              bgcolor: 'rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-              fontSize: 11, color: 'rgba(255,255,255,0.5)',
-              '&:active': { transform: 'scale(0.9)', bgcolor: 'rgba(255,255,255,0.2)' },
-            }}
-          >
-            ✕
           </Box>
         </Box>
         <LinearProgress
@@ -128,9 +123,9 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           value={progress}
           sx={{
             height: 3,
-            bgcolor: 'rgba(255,255,255,0.08)',
+            bgcolor: 'rgba(255,255,255,0.06)',
             '& .MuiLinearProgress-bar': {
-              bgcolor: '#5EEAD4',
+              background: 'linear-gradient(90deg, #5EEAD4, #14B8A6)',
               transition: 'none',
             },
           }}
