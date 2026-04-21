@@ -499,7 +499,7 @@ export const ListHeader = memo(({
                         ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
                         : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                       color: 'white',
-                      width: 40, height: 40,
+                      width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
                       borderRadius: '10px',
                       boxShadow: ready ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
                       transition: 'all 0.2s ease',
@@ -514,7 +514,7 @@ export const ListHeader = memo(({
                     }}
                     aria-label={t('add')}
                   >
-                    <AddIcon sx={{ fontSize: 22 }} />
+                    <AddIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
                   </IconButton>
                 </InputAdornment>
               );
@@ -563,10 +563,10 @@ export const ListHeader = memo(({
           '& .MuiTabs-indicator': { display: 'none' },
           '& .MuiTab-root': {
             borderRadius: '10px',
-            py: { xs: 1, sm: 1.5 },
-            px: 2,
-            minHeight: { xs: 42, sm: 48 },
-            fontSize: { xs: 14, sm: 15 },
+            py: { xs: 0.75, sm: 1.5 },
+            px: { xs: 1, sm: 2 },
+            minHeight: { xs: 36, sm: 48 },
+            fontSize: { xs: 13, sm: 15 },
             fontWeight: 600,
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',
