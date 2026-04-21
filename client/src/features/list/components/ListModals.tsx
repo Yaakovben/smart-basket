@@ -186,21 +186,36 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
         ) : (
           <Box key="qr" sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            {/* QR - ממלא את החלל */}
-            <Box sx={{ flex: 1, mb: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} id="qr-container">
+            {/* QR - בתוך כרטיס מסגרת זהה לכרטיס הקוד והסיסמה */}
+            <Box
+              id="qr-container"
+              sx={{
+                flex: 1,
+                bgcolor: 'rgba(20,184,166,0.06)',
+                borderRadius: '14px',
+                border: '1.5px solid',
+                borderColor: 'rgba(20,184,166,0.25)',
+                mb: 1.5,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                py: 1.5,
+              }}
+            >
               <Box sx={{
-                p: 1.5,
-                borderRadius: '16px',
+                p: 1,
+                borderRadius: '12px',
                 bgcolor: 'white',
-                boxShadow: '0 4px 20px rgba(20,184,166,0.15)',
+                boxShadow: '0 4px 16px rgba(20,184,166,0.2)',
               }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={150} level="H" fgColor="#0D9488"
+                  size={130} level="H" fgColor="#0D9488"
                   style={{ display: 'block' }}
                 />
               </Box>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, fontWeight: 500 }}>
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
