@@ -708,7 +708,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 const ids = Array.from(selectedProducts);
                 const count = ids.length;
                 const deletedProducts = list.products.filter((p: Product) => ids.includes(p.id));
-                setSelectedProducts(new Set());
+                exitSelectionMode();
                 onUpdateProductsForList(list.id, (current) =>
                   current.filter(p => !ids.includes(p.id))
                 );
@@ -747,7 +747,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   haptic('medium');
                   const ids = Array.from(selectedProducts);
                   const count = ids.length;
-                  setSelectedProducts(new Set());
+                  exitSelectionMode();
                   onUpdateProductsForList(list.id, (current) =>
                     current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
                   );
@@ -768,7 +768,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   haptic('medium');
                   const ids = Array.from(selectedProducts);
                   const count = ids.length;
-                  setSelectedProducts(new Set());
+                  exitSelectionMode();
                   onUpdateProductsForList(list.id, (current) =>
                     current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
                   );
