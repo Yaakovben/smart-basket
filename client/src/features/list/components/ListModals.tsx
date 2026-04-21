@@ -168,10 +168,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             <Button
               fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />}
               sx={{
-                bgcolor: 'primary.main', color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
-                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(20,184,166,0.3)',
+                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                color: 'white',
+                '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)' },
+                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                transition: 'all 0.2s',
               }}
             >
               העתק
@@ -224,15 +227,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             </Typography>
           </Box>
           {/* כפתורים */}
-          <Box sx={{ display: 'flex', gap: 1.25 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               fullWidth onClick={handleShareQR}
               startIcon={<WhatsAppIcon />}
               sx={{
-                bgcolor: BRAND_COLORS.whatsapp, color: 'white',
-                '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
-                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
+                background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                color: 'white',
+                '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)' },
+                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                transition: 'all 0.2s',
               }}
             >
               שלח QR
@@ -263,10 +269,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               }}
               startIcon={<DownloadIcon />}
               sx={{
-                bgcolor: 'primary.main', color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
-                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(20,184,166,0.3)',
+                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                color: 'white',
+                '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)' },
+                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                transition: 'all 0.2s',
               }}
             >
               שמור
