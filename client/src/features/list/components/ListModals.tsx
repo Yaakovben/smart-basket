@@ -104,45 +104,78 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   return (
     <>
       <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
-      <Box key={tab} sx={{
-        ...modalContainerSx,
-        p: 2.5,
-        perspective: '1400px',
-        transformStyle: 'preserve-3d',
-        animation: 'modalFlip 0.85s cubic-bezier(0.23, 1, 0.32, 1)',
-        '@keyframes modalFlip': {
-          '0%': { transform: 'translate(-50%, -50%) rotateY(-180deg) scale(0.85)', opacity: 0, filter: 'blur(4px)' },
-          '50%': { opacity: 1, filter: 'blur(0)' },
-          '100%': { transform: 'translate(-50%, -50%) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0)' }
-        },
-      }} role="dialog" aria-labelledby="invite-title">
+      <Box
+        sx={{
+          ...modalContainerSx,
+          p: 2.5,
+          '@media (max-width: 360px)': { p: 1.75, borderRadius: '16px' },
+        }}
+        role="dialog"
+        aria-labelledby="invite-title"
+      >
         <IconButton onClick={onClose} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
         </IconButton>
 
-        <Box sx={{ textAlign: 'center', mb: 1.75 }}>
-          <Avatar sx={{ width: 60, height: 60, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 1.25, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-            <PersonAddIcon sx={{ fontSize: 30 }} />
+        <Box sx={{ textAlign: 'center', mb: 1.75, '@media (max-width: 360px)': { mb: 1 } }}>
+          <Avatar
+            sx={{
+              width: 60, height: 60,
+              background: COMMON_STYLES.gradients.header,
+              mx: 'auto', mb: 1.25,
+              boxShadow: '0 8px 24px rgba(20,184,166,0.3)',
+              '@media (max-width: 360px)': { width: 44, height: 44, mb: 0.5 },
+            }}
+          >
+            <PersonAddIcon sx={{ fontSize: 30, '@media (max-width: 360px)': { fontSize: 22 } }} />
           </Avatar>
-          <Typography id="invite-title" sx={{ fontSize: 19, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+          <Typography
+            id="invite-title"
+            sx={{
+              fontSize: 19, fontWeight: 700, color: 'text.primary', lineHeight: 1.2,
+              '@media (max-width: 360px)': { fontSize: 15 },
+            }}
+          >
             {t('inviteFriends')}
           </Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>רשימת: "{list.name}"</Typography>
+          <Typography
+            sx={{
+              color: 'text.secondary', fontSize: 13, mt: 0.25,
+              '@media (max-width: 360px)': { fontSize: 11 },
+            }}
+          >
+            רשימת: "{list.name}"
+          </Typography>
         </Box>
 
-      <Box sx={{ height: 250, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          height: 250,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          '@media (max-width: 360px)': { height: 180 },
+        }}
+      >
         {tab === 'text' ? (
-          <Box key="text" sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <Box key="text" sx={{
+            display: 'flex', flexDirection: 'column', flex: 1,
+            animation: 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
+            '@keyframes slideInUp': {
+              from: { transform: 'translateY(100%)', opacity: 0 },
+              to: { transform: 'translateY(0)', opacity: 1 },
+            },
+          }}>
             {/* קוד + סיסמה - ממלא את כל החלל */}
             <Box sx={{ flex: 1, bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)', '@media (max-width: 360px)': { px: 1.25 } }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('groupCode')}</Typography>
+                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 15, letterSpacing: 1 } }}>{list.inviteCode}</Typography>
               </Box>
               {list.password && (
-                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2 }}>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-                  <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, '@media (max-width: 360px)': { px: 1.25 } }}>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('password')}</Typography>
+                  <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 15, letterSpacing: 1 } }}>{list.password}</Typography>
                 </Box>
               )}
             </Box>
@@ -163,6 +196,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '@media (max-width: 360px)': {
+                    py: 1, fontSize: 12, borderRadius: '12px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
+                  },
                 }}
               >
                 WhatsApp
@@ -178,6 +215,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '@media (max-width: 360px)': {
+                    py: 1, fontSize: 12, borderRadius: '12px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                  },
                 }}
               >
                 העתק
@@ -185,7 +226,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             </Box>
           </Box>
         ) : (
-          <Box key="qr" sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <Box key="qr" sx={{
+            display: 'flex', flexDirection: 'column', flex: 1,
+            animation: 'slideInDown 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
+            '@keyframes slideInDown': {
+              from: { transform: 'translateY(-100%)', opacity: 0 },
+              to: { transform: 'translateY(0)', opacity: 1 },
+            },
+          }}>
             {/* QR - בתוך כרטיס מסגרת זהה לכרטיס הקוד והסיסמה */}
             <Box
               id="qr-container"
@@ -201,6 +249,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 alignItems: 'center',
                 justifyContent: 'center',
                 py: 1.5,
+                '@media (max-width: 360px)': { py: 0.75 },
               }}
             >
               <Box sx={{
@@ -208,14 +257,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 borderRadius: '12px',
                 bgcolor: 'white',
                 boxShadow: '0 4px 16px rgba(20,184,166,0.2)',
+                '@media (max-width: 360px)': { p: 0.5, borderRadius: '8px' },
               }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={130} level="H" fgColor="#0D9488"
+                  size={window.innerWidth <= 360 ? 95 : 130}
+                  level="H"
+                  fgColor="#0D9488"
                   style={{ display: 'block' }}
                 />
               </Box>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, fontWeight: 500 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, fontWeight: 500, '@media (max-width: 360px)': { fontSize: 10, mt: 0.25 } }}>
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
@@ -233,6 +285,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '@media (max-width: 360px)': {
+                    py: 1, fontSize: 12, borderRadius: '12px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
+                  },
                 }}
               >
                 שלח QR
@@ -271,6 +327,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '@media (max-width: 360px)': {
+                    py: 1, fontSize: 12, borderRadius: '12px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                  },
                 }}
               >
                 שמור
@@ -282,7 +342,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
       {/* מחליף עדין ללא רקע - מיקום קבוע לשתי התצוגות */}
       {list.inviteCode && (
-        <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 1 } }}>
           <Box
             component="button"
             onClick={() => { haptic('light'); setTab(tab === 'text' ? 'qr' : 'text'); }}
