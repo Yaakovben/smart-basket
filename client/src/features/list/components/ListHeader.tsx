@@ -447,8 +447,8 @@ export const ListHeader = memo(({
             '& .MuiOutlinedInput-root': {
               bgcolor: 'background.paper',
               borderRadius: '14px',
-              height: { xs: 46, sm: 52 },
-              pr: 0.75,
+              height: { xs: 44, sm: 52 },
+              pr: 0.5,
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               '&.Mui-focused': {
                 boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)'
@@ -469,12 +469,12 @@ export const ListHeader = memo(({
             endAdornment: (() => {
               const ready = quickAddValue.trim().length >= 2;
               return (
-                <InputAdornment position="end" sx={{ gap: 0.5 }}>
+                <InputAdornment position="end" sx={{ gap: 0.25 }}>
                   {speechSupported && (!ready || isListening) && (
                     <IconButton
                       onClick={toggleSpeech}
                       sx={{
-                        width: 40, height: 40,
+                        width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
                         borderRadius: '10px',
                         color: isListening ? 'white' : micDenied ? 'text.disabled' : 'text.secondary',
                         background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'action.hover',
@@ -488,7 +488,7 @@ export const ListHeader = memo(({
                         '&:active': { transform: 'scale(0.92)' },
                       }}
                     >
-                      {isListening ? <MicOffIcon sx={{ fontSize: 20 }} /> : <MicIcon sx={{ fontSize: 20 }} />}
+                      {isListening ? <MicOffIcon sx={{ fontSize: { xs: 18, sm: 20 } }} /> : <MicIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                     </IconButton>
                   )}
                   <IconButton

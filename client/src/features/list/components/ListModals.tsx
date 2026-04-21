@@ -119,14 +119,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
         </IconButton>
 
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Avatar sx={{ width: 56, height: 56, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 1.5, boxShadow: '0 6px 18px rgba(20,184,166,0.3)' }}>
-            <PersonAddIcon sx={{ fontSize: 28 }} />
+        <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+          <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+            <PersonAddIcon sx={{ fontSize: 32 }} />
           </Avatar>
-          <Typography id="invite-title" sx={{ fontSize: 18, fontWeight: 700 }}>
+          <Typography id="invite-title" sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>
             {t('inviteFriends')}
           </Typography>
-          <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>"{list.name}"</Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>"{list.name}"</Typography>
         </Box>
 
       {tab === 'text' ? (
@@ -180,20 +180,19 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 1,
+                gap: 0.75,
                 mt: 2,
-                py: 1.25,
-                borderRadius: '12px',
-                border: '1.5px dashed',
-                borderColor: 'primary.main',
+                py: 1,
+                borderRadius: '10px',
+                bgcolor: 'rgba(20,184,166,0.08)',
                 cursor: 'pointer',
                 transition: 'all 0.18s ease',
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
                 '&:active': { transform: 'scale(0.98)' }
               }}
             >
-              <QrCode2Icon sx={{ fontSize: 20, color: 'primary.main' }} />
-              <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}>
+              <QrCode2Icon sx={{ fontSize: 18, color: 'primary.main' }} />
+              <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'primary.main' }}>
                 הצג קוד QR
               </Typography>
             </Box>
@@ -275,20 +274,19 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 1,
+              gap: 0.75,
               mt: 2,
-              py: 1.25,
-              borderRadius: '12px',
-              border: '1.5px dashed',
-              borderColor: 'primary.main',
+              py: 1,
+              borderRadius: '10px',
+              bgcolor: 'rgba(20,184,166,0.08)',
               cursor: 'pointer',
               transition: 'all 0.18s ease',
-              '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
+              '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
               '&:active': { transform: 'scale(0.98)' }
             }}
           >
-            <VpnKeyOutlinedIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}>
+            <VpnKeyOutlinedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+            <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'primary.main' }}>
               חזרה לקוד וסיסמה
             </Typography>
           </Box>
