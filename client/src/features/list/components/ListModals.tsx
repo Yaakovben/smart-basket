@@ -130,179 +130,177 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>"{list.name}"</Typography>
         </Box>
 
-      {tab === 'text' ? (
-        <Box key="text" sx={{ minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          {/* קוד + סיסמה */}
-          <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px', borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
-              <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('groupCode')}</Typography>
-              <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
-            </Box>
-            {list.password && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px' }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('password')}</Typography>
-                <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+      <Box sx={{ height: 250, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        {tab === 'text' ? (
+          <Box key="text">
+            {/* קוד + סיסמה */}
+            <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px', borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('groupCode')}</Typography>
+                <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
               </Box>
-            )}
+              {list.password && (
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px' }}>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('password')}</Typography>
+                  <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+                </Box>
+              )}
+            </Box>
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                onClick={() => {
+                  const msg = generateInviteMessage(list, t);
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                }}
+                fullWidth startIcon={<WhatsAppIcon />}
+                sx={{
+                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                  color: 'white',
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
+                  '&:active': { transform: 'translateY(0)' },
+                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                WhatsApp
+              </Button>
+              <Button
+                fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />}
+                sx={{
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  color: 'white',
+                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
+                  '&:active': { transform: 'translateY(0)' },
+                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                העתק
+              </Button>
+            </Box>
           </Box>
-          {/* כפתורים */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              onClick={() => {
-                const msg = generateInviteMessage(list, t);
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-              }}
-              fullWidth startIcon={<WhatsAppIcon />}
-              sx={{
-                background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
-                color: 'white',
-                '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)' },
-                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                transition: 'all 0.2s',
-              }}
-            >
-              WhatsApp
-            </Button>
-            <Button
-              fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />}
-              sx={{
-                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                color: 'white',
-                '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)' },
-                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                transition: 'all 0.2s',
-              }}
-            >
-              העתק
-            </Button>
-          </Box>
-          {list.inviteCode && (
-            <Box
-              onClick={() => { haptic('light'); setTab('qr'); }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 0.75,
-                mt: 2,
-                py: 1,
-                borderRadius: '10px',
-                bgcolor: 'rgba(20,184,166,0.08)',
-                cursor: 'pointer',
-                transition: 'all 0.18s ease',
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
-                '&:active': { transform: 'scale(0.98)' }
-              }}
-            >
-              <QrCode2Icon sx={{ fontSize: 18, color: 'primary.main' }} />
-              <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'primary.main' }}>
-                הצג קוד QR
+        ) : (
+          <Box key="qr">
+            {/* QR */}
+            <Box sx={{ mb: 1.5, textAlign: 'center' }} id="qr-container">
+              <Box sx={{
+                display: 'inline-block',
+                p: 1.5,
+                borderRadius: '16px',
+                bgcolor: 'white',
+                boxShadow: '0 4px 20px rgba(20,184,166,0.15)',
+              }}>
+                <QRCodeSVG
+                  value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                  size={130} level="H" fgColor="#0D9488"
+                  style={{ display: 'block' }}
+                />
+              </Box>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.25 }}>
+                סרוק להצטרפות מיידית
               </Typography>
             </Box>
-          )}
-        </Box>
-      ) : (
-        <Box key="qr" sx={{ height: 305, display: 'flex', flexDirection: 'column', justifyContent: 'center', /* flip animation on parent */ }}>
-          {/* QR */}
-          <Box sx={{ mb: 1.5, textAlign: 'center' }} id="qr-container">
-            <Box sx={{
-              display: 'inline-block',
-              p: 1.5,
-              borderRadius: '16px',
-              bgcolor: 'white',
-              boxShadow: '0 4px 20px rgba(20,184,166,0.15)',
-            }}>
-              <QRCodeSVG
-                value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                size={130} level="H" fgColor="#0D9488"
-                style={{ display: 'block' }}
-              />
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                fullWidth onClick={handleShareQR}
+                startIcon={<WhatsAppIcon />}
+                sx={{
+                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                  color: 'white',
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
+                  '&:active': { transform: 'translateY(0)' },
+                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                שלח QR
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => {
+                  const svg = document.querySelector('#qr-container svg');
+                  if (!svg) return;
+                  const svgData = new XMLSerializer().serializeToString(svg);
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 500; canvas.height = 500;
+                  const ctx = canvas.getContext('2d')!;
+                  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, 500, 500);
+                  const img = new Image();
+                  img.onload = () => {
+                    ctx.drawImage(img, 50, 50, 400, 400);
+                    canvas.toBlob(blob => {
+                      if (!blob) return;
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `${list.name}-qr.png`;
+                      a.click();
+                      showToast(t('saved'));
+                    }, 'image/png');
+                  };
+                  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                }}
+                startIcon={<DownloadIcon />}
+                sx={{
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  color: 'white',
+                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
+                  '&:active': { transform: 'translateY(0)' },
+                  borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                  boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                שמור
+              </Button>
             </Box>
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.25 }}>
-              סרוק להצטרפות מיידית
-            </Typography>
           </Box>
-          {/* כפתורים */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              fullWidth onClick={handleShareQR}
-              startIcon={<WhatsAppIcon />}
-              sx={{
-                background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
-                color: 'white',
-                '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)' },
-                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                transition: 'all 0.2s',
-              }}
-            >
-              שלח QR
-            </Button>
-            <Button
-              fullWidth
-              onClick={() => {
-                const svg = document.querySelector('#qr-container svg');
-                if (!svg) return;
-                const svgData = new XMLSerializer().serializeToString(svg);
-                const canvas = document.createElement('canvas');
-                canvas.width = 500; canvas.height = 500;
-                const ctx = canvas.getContext('2d')!;
-                ctx.fillStyle = 'white'; ctx.fillRect(0, 0, 500, 500);
-                const img = new Image();
-                img.onload = () => {
-                  ctx.drawImage(img, 50, 50, 400, 400);
-                  canvas.toBlob(blob => {
-                    if (!blob) return;
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = `${list.name}-qr.png`;
-                    a.click();
-                    showToast(t('saved'));
-                  }, 'image/png');
-                };
-                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-              }}
-              startIcon={<DownloadIcon />}
-              sx={{
-                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                color: 'white',
-                '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)', transform: 'translateY(-1px)' },
-                '&:active': { transform: 'translateY(0)' },
-                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                transition: 'all 0.2s',
-              }}
-            >
-              שמור
-            </Button>
-          </Box>
+        )}
+      </Box>
+
+      {/* מחליף תצוגה מאוחד - מיקום קבוע לשתי התצוגות */}
+      {list.inviteCode && (
+        <Box sx={{ mt: 1.75, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider', opacity: 0.6 }} />
           <Box
-            onClick={() => { haptic('light'); setTab('text'); }}
+            onClick={() => { haptic('light'); setTab(tab === 'text' ? 'qr' : 'text'); }}
             sx={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 0.75,
-              mt: 2,
-              py: 1,
-              borderRadius: '10px',
-              bgcolor: 'rgba(20,184,166,0.08)',
+              gap: 0.5,
+              px: 1.25,
+              py: 0.5,
               cursor: 'pointer',
-              transition: 'all 0.18s ease',
-              '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
-              '&:active': { transform: 'scale(0.98)' }
+              borderRadius: '8px',
+              transition: 'all 0.2s ease',
+              '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
+              '&:active': { transform: 'scale(0.96)' }
             }}
           >
-            <VpnKeyOutlinedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-            <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'primary.main' }}>
-              חזרה לקוד וסיסמה
+            {tab === 'text' ? (
+              <QrCode2Icon sx={{ fontSize: 15, color: 'primary.main', opacity: 0.75 }} />
+            ) : (
+              <VpnKeyOutlinedIcon sx={{ fontSize: 15, color: 'primary.main', opacity: 0.75 }} />
+            )}
+            <Typography
+              sx={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                color: 'primary.main',
+                opacity: 0.85,
+                textDecoration: 'underline',
+                textDecorationColor: 'rgba(20,184,166,0.35)',
+                textUnderlineOffset: '3px',
+              }}
+            >
+              {tab === 'text' ? 'הצג קוד QR במקום' : 'הצג קוד וסיסמה'}
             </Typography>
           </Box>
+          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider', opacity: 0.6 }} />
         </Box>
       )}
       </Box>

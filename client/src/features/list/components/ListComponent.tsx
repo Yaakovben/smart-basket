@@ -719,9 +719,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 }}
                 sx={{
                   flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25,
-                  bgcolor: '#F59E0B', '&:hover': { bgcolor: '#D97706' },
-                  boxShadow: '0 2px 12px rgba(245,158,11,0.3)',
+                  fontSize: 14, py: 1.25, color: 'white',
+                  backgroundColor: '#F59E0B !important',
+                  '&:hover': { backgroundColor: '#D97706 !important' },
+                  boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
                 }}
               >
                 {t('returnToList')}
@@ -745,9 +746,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 }}
                 sx={{
                   flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25,
-                  bgcolor: '#22C55E', '&:hover': { bgcolor: '#16A34A' },
-                  boxShadow: '0 2px 12px rgba(34,197,94,0.3)',
+                  fontSize: 14, py: 1.25, color: 'white',
+                  backgroundColor: '#22C55E !important',
+                  '&:hover': { backgroundColor: '#16A34A !important' },
+                  boxShadow: '0 4px 12px rgba(34,197,94,0.35)',
                 }}
               >
                 {t('markPurchased')}
