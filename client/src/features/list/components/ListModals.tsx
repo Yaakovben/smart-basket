@@ -150,37 +150,36 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
       <Box
         sx={{
-          height: 250,
+          minHeight: 200,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          '@media (max-width: 360px)': { height: 180 },
+          '@media (max-width: 360px)': { minHeight: 160 },
         }}
       >
         {tab === 'text' ? (
           <Box key="text" sx={{
-            display: 'flex', flexDirection: 'column', flex: 1,
+            display: 'flex', flexDirection: 'column',
             animation: 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
             '@keyframes slideInUp': {
               from: { transform: 'translateY(100%)', opacity: 0 },
               to: { transform: 'translateY(0)', opacity: 1 },
             },
           }}>
-            {/* קוד + סיסמה - ממלא את כל החלל, עיצוב חלק ונקי */}
+            {/* קוד + סיסמה - גובה טבעי */}
             <Box sx={{
-              flex: 1,
               background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.04))',
               borderRadius: '16px',
               border: '1.5px solid rgba(20,184,166,0.2)',
-              mb: 1.5, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+              mb: 1.5, overflow: 'hidden',
               boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
             }}>
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, borderBottom: list.password ? '1px solid rgba(20,184,166,0.15)' : 'none', '@media (max-width: 360px)': { px: 1.5 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.5, borderBottom: list.password ? '1px solid rgba(20,184,166,0.15)' : 'none', '@media (max-width: 360px)': { px: 1.5, py: 1 } }}>
                 <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('groupCode')}</Typography>
                 <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.inviteCode}</Typography>
               </Box>
               {list.password && (
-                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, '@media (max-width: 360px)': { px: 1.5 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.5, '@media (max-width: 360px)': { px: 1.5, py: 1 } }}>
                   <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('password')}</Typography>
                   <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.password}</Typography>
                 </Box>
@@ -234,29 +233,27 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Box>
         ) : (
           <Box key="qr" sx={{
-            display: 'flex', flexDirection: 'column', flex: 1,
+            display: 'flex', flexDirection: 'column',
             animation: 'slideInDown 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
             '@keyframes slideInDown': {
               from: { transform: 'translateY(-100%)', opacity: 0 },
               to: { transform: 'translateY(0)', opacity: 1 },
             },
           }}>
-            {/* QR - בתוך כרטיס מסגרת זהה לכרטיס הקוד והסיסמה */}
+            {/* QR - גובה טבעי */}
             <Box
               id="qr-container"
               sx={{
-                flex: 1,
-                bgcolor: 'rgba(20,184,166,0.06)',
-                borderRadius: '14px',
-                border: '1.5px solid',
-                borderColor: 'rgba(20,184,166,0.25)',
+                background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.04))',
+                borderRadius: '16px',
+                border: '1.5px solid rgba(20,184,166,0.2)',
                 mb: 1.5,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                py: 1.5,
-                '@media (max-width: 360px)': { py: 0.75 },
+                py: 2,
+                '@media (max-width: 360px)': { py: 1 },
               }}
             >
               <Box sx={{

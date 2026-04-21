@@ -276,6 +276,15 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     setSelectedProducts(new Set());
   }, []);
 
+  // עוטף פונקציה: אם במצב בחירה מרובה — יוצא ממנו ואז מפעיל את הפעולה
+  const withExitSelection = useCallback(<A extends unknown[]>(fn: ((...args: A) => void) | undefined) => {
+    if (!fn) return fn;
+    return (...args: A) => {
+      if (selectionMode) exitSelectionMode();
+      fn(...args);
+    };
+  }, [selectionMode, exitSelectionMode]);
+
   const handleCloseItem = useCallback((e?: React.MouseEvent) => {
     setOpenItemId(null);
     // בבחירה מרובה - לחיצה על אזור ריק (לא על פריט) מבטלת את הבחירה
