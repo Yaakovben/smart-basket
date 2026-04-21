@@ -127,7 +127,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Typography id="invite-title" sx={{ fontSize: 19, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
             {t('inviteFriends')}
           </Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>"{list.name}"</Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>רשימת: "{list.name}"</Typography>
         </Box>
 
       <Box sx={{ height: 250, display: 'flex', flexDirection: 'column' }}>
@@ -162,7 +162,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                 }}
               >
                 WhatsApp
@@ -177,7 +177,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                 }}
               >
                 העתק
@@ -217,7 +217,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                 }}
               >
                 שלח QR
@@ -255,7 +255,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                 }}
               >
                 שמור
