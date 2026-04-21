@@ -698,11 +698,75 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             </Box>
             );
           })()}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: 'row-reverse', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>
+            {/* כפתור ראשי - פעולה חיובית */}
+            {filter === 'purchased' ? (
+              <Button
+                variant="contained"
+                disabled={selectedProducts.size === 0}
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  exitSelectionMode();
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
+                  );
+                  showToast(`${count} ${t('bulkReturnedToList')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
+                  }
+                }}
+                sx={{
+                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
+                  fontSize: 14, py: 1.25, gap: 0.75,
+                  bgcolor: '#F59E0B', '&:hover': { bgcolor: '#D97706' },
+                  boxShadow: '0 2px 12px rgba(245,158,11,0.3)',
+                }}
+              >
+                ↩ {t('returnToList')}
+                {selectedProducts.size > 0 && (
+                  <Box sx={{ bgcolor: 'rgba(255,255,255,0.25)', borderRadius: '10px', px: 1, py: 0.15, fontSize: 12, fontWeight: 800 }}>
+                    {selectedProducts.size}
+                  </Box>
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                disabled={selectedProducts.size === 0}
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  exitSelectionMode();
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
+                  );
+                  showToast(`${count} ${t('bulkMarkedPurchased')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
+                  }
+                }}
+                sx={{
+                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
+                  fontSize: 14, py: 1.25, gap: 0.75,
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
+                  boxShadow: '0 2px 12px rgba(20,184,166,0.3)',
+                }}
+              >
+                ✓ {t('markPurchased')}
+                {selectedProducts.size > 0 && (
+                  <Box sx={{ bgcolor: 'rgba(255,255,255,0.25)', borderRadius: '10px', px: 1, py: 0.15, fontSize: 12, fontWeight: 800 }}>
+                    {selectedProducts.size}
+                  </Box>
+                )}
+              </Button>
+            )}
+            {/* כפתור משני - מחיקה */}
             <Button
-              variant="contained"
-              color="error"
-              size="small"
+              disabled={selectedProducts.size === 0}
               onClick={() => {
                 haptic('medium');
                 const ids = Array.from(selectedProducts);
@@ -712,12 +776,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 onUpdateProductsForList(list.id, (current) =>
                   current.filter(p => !ids.includes(p.id))
                 );
-                // מחיקה מהשרת
                 for (const id of ids) {
                   productsApi.deleteProduct(list.id, id).catch(() => {});
                 }
                 showToast(`${count} ${t('bulkDeleted')}`, 'success', async () => {
-                  // undo - שחזור כל המוצרים עם ID חדש מהשרת
                   const tempProducts = deletedProducts.map(p => ({ ...p, id: `temp-undo-${Date.now()}-${Math.random()}` }));
                   onUpdateProductsForList(list.id, (current) => [...current, ...tempProducts]);
                   for (let i = 0; i < deletedProducts.length; i++) {
@@ -734,54 +796,17 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   }
                 });
               }}
-              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
+              sx={{
+                minWidth: 54, borderRadius: '14px', py: 1.25,
+                bgcolor: 'rgba(239,68,68,0.1)',
+                color: '#EF4444',
+                border: '1.5px solid rgba(239,68,68,0.3)',
+                '&:hover': { bgcolor: 'rgba(239,68,68,0.15)' },
+                '&.Mui-disabled': { opacity: 0.4, color: '#EF4444' },
+              }}
             >
-              🗑️ {t('delete')}
+              🗑️
             </Button>
-            {filter === 'purchased' ? (
-              <Button
-                variant="contained"
-                color="warning"
-                size="small"
-                onClick={() => {
-                  haptic('medium');
-                  const ids = Array.from(selectedProducts);
-                  const count = ids.length;
-                  exitSelectionMode();
-                  onUpdateProductsForList(list.id, (current) =>
-                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
-                  );
-                  showToast(`${count} ${t('bulkReturnedToList')}`);
-                  for (const id of ids) {
-                    productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
-                  }
-                }}
-                sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
-              >
-                ↩ {t('returnToList')}
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  haptic('medium');
-                  const ids = Array.from(selectedProducts);
-                  const count = ids.length;
-                  exitSelectionMode();
-                  onUpdateProductsForList(list.id, (current) =>
-                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
-                  );
-                  showToast(`${count} ${t('bulkMarkedPurchased')}`);
-                  for (const id of ids) {
-                    productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
-                  }
-                }}
-                sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 2, fontSize: 12 }}
-              >
-                ✓ {t('markPurchased')}
-              </Button>
-            )}
           </Box>
         </Box>
       )}
