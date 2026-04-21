@@ -277,13 +277,15 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   }, []);
 
   // עוטף פונקציה: אם במצב בחירה מרובה — יוצא ממנו ואז מפעיל את הפעולה
-  const withExitSelection = useCallback(<A extends unknown[]>(fn: ((...args: A) => void) | undefined) => {
-    if (!fn) return fn;
+  function withExitSelection<A extends unknown[]>(fn: (...args: A) => void): (...args: A) => void;
+  function withExitSelection<A extends unknown[]>(fn: ((...args: A) => void) | undefined): ((...args: A) => void) | undefined;
+  function withExitSelection<A extends unknown[]>(fn: ((...args: A) => void) | undefined): ((...args: A) => void) | undefined {
+    if (!fn) return undefined;
     return (...args: A) => {
       if (selectionMode) exitSelectionMode();
       fn(...args);
     };
-  }, [selectionMode, exitSelectionMode]);
+  }
 
   const handleCloseItem = useCallback((e?: React.MouseEvent) => {
     setOpenItemId(null);
@@ -376,11 +378,11 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         purchasedCount={purchased.length}
         allMembers={allMembers}
         isOwner={isOwner}
-        onBack={onBack}
-        onFilterChange={setFilter}
+        onBack={withExitSelection(onBack)}
+        onFilterChange={withExitSelection(setFilter)!}
         onSearchChange={setSearch}
-        onEditList={handleEditList}
-        onDeleteList={() => setConfirmDeleteList(true)}
+        onEditList={withExitSelection(handleEditList)!}
+        onDeleteList={withExitSelection(() => setConfirmDeleteList(true))!}
         onToggleMute={() => {
           if (isMuteToggling.current) return;
           isMuteToggling.current = true;
@@ -391,18 +393,18 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         }}
         isMuted={isGroupMuted(list.id)}
         mainNotificationsOff={!settings.notifications.enabled}
-        onShareList={() => setShowShareList(true)}
-        onShowMembers={() => setShowMembers(true)}
-        onShowInvite={() => setShowInvite(true)}
-        onQuickAdd={handleQuickAdd}
+        onShareList={withExitSelection(() => setShowShareList(true))!}
+        onShowMembers={withExitSelection(() => setShowMembers(true))!}
+        onShowInvite={withExitSelection(() => setShowInvite(true))!}
+        onQuickAdd={withExitSelection(handleQuickAdd)!}
         onlineUserIds={onlineUserIds}
         onRefresh={refreshList}
         refreshing={refreshing}
-        onClearList={() => setShowClearList(true)}
-        onResetList={handleResetList}
+        onClearList={withExitSelection(() => setShowClearList(true))!}
+        onResetList={withExitSelection(handleResetList)!}
         hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
-        onLeave={!isOwner && list.isGroup ? leaveList : undefined}
+        onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
       />
 
       {/* Content */}
@@ -500,6 +502,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 onDelete={deleteProduct}
                 onClick={handleProductClick}
                 onLongPress={handleLongPress}
+                onExitSelectionMode={exitSelectionMode}
               />
             ))}
             {filter === 'purchased' && filteredItems.length > 0 && (

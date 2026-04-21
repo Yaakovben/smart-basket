@@ -16,6 +16,7 @@ interface SwipeItemProps {
   onDelete: (productId: string) => void;
   onClick: (product: Product) => void;
   onLongPress?: (productId: string) => void;
+  onExitSelectionMode?: () => void;
   onOpen: (productId: string) => void;
   onClose: () => void;
 }
@@ -32,7 +33,7 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, isPurchased, isOpen, isSelected, selectionMode, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, onExitSelectionMode, isPurchased, isOpen, isSelected, selectionMode, currentUserName, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
@@ -122,6 +123,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
     if (!directionLocked.current && (absDx > 8 || absDy > 8)) {
       if (absDx > absDy * 1.2) {
         directionLocked.current = 'horizontal';
+        // במצב בחירה מרובה — גרירה אופקית יוצאת מהמצב ולא פותחת פעולות
+        if (selectionMode && onExitSelectionMode) {
+          onExitSelectionMode();
+          directionLocked.current = 'vertical';
+          return;
+        }
         setSwiping(true);
         e.preventDefault();
       } else {
@@ -151,7 +158,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
       const newOffset = calcOffset(rawOffset);
       setOffset(newOffset);
     }
-  }, [calcOffset, onOpen, product.id]);
+  }, [calcOffset, onOpen, product.id, selectionMode, onExitSelectionMode]);
 
   const handleTouchEnd = useCallback(() => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
