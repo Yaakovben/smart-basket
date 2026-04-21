@@ -442,11 +442,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               onClick={() => setCategoryFilter(null)}
               sx={{
                 fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
-                bgcolor: !categoryFilter ? 'primary.main' : 'action.hover',
-                color: !categoryFilter ? 'white' : 'text.primary',
-                boxShadow: !categoryFilter ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
-                transition: 'all 0.2s ease',
-                '&:active': { transform: 'scale(0.95)' },
+                bgcolor: 'action.hover',
+                color: 'text.primary',
+                border: '1.5px solid',
+                borderColor: !categoryFilter ? 'primary.main' : 'transparent',
+                boxShadow: !categoryFilter ? '0 2px 10px rgba(20,184,166,0.35)' : 'none',
+                transition: 'box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.1s',
+                '&:active': { opacity: 0.75 },
+                '&:hover': { bgcolor: 'action.hover' },
               }}
             />
             {activeCategories.map(cat => {
@@ -463,11 +466,14 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   onClick={() => setCategoryFilter(isActive ? null : cat)}
                   sx={{
                     fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
-                    bgcolor: isActive ? color : 'action.hover',
-                    color: isActive ? 'white' : 'text.primary',
-                    boxShadow: isActive ? `0 2px 8px ${color}55` : 'none',
-                    transition: 'all 0.2s ease',
-                    '&:active': { transform: 'scale(0.95)' },
+                    bgcolor: 'action.hover',
+                    color: 'text.primary',
+                    border: '1.5px solid',
+                    borderColor: isActive ? color : 'transparent',
+                    boxShadow: isActive ? `0 2px 10px ${color}66` : 'none',
+                    transition: 'box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.1s',
+                    '&:active': { opacity: 0.75 },
+                    '&:hover': { bgcolor: 'action.hover' },
                   }}
                 />
               );

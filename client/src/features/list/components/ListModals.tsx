@@ -61,8 +61,9 @@ interface InviteModalProps {
 export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteModalProps) => {
   const { t } = useSettings();
   const [tab, setTab] = useState<'text' | 'qr'>('text');
+  const [hasSwitched, setHasSwitched] = useState(false);
 
-  useEffect(() => { if (!isOpen) setTab('text'); }, [isOpen]);
+  useEffect(() => { if (!isOpen) { setTab('text'); setHasSwitched(false); } }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -160,7 +161,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         {tab === 'text' ? (
           <Box key="text" sx={{
             display: 'flex', flexDirection: 'column', flex: 1,
-            animation: 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
+            animation: hasSwitched ? 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)' : 'none',
             '@keyframes slideInUp': {
               from: { transform: 'translateY(100%)', opacity: 0 },
               to: { transform: 'translateY(0)', opacity: 1 },
@@ -196,11 +197,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)` },
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`, boxShadow: '0 6px 20px rgba(37,211,102,0.45)' },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'background 0.2s, opacity 0.1s',
+                  transition: 'box-shadow 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -215,11 +216,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
+                  '&:hover': { background: 'linear-gradient(135deg, #14B8A6, #0D9488)', boxShadow: '0 6px 20px rgba(20,184,166,0.45)' },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'background 0.2s, opacity 0.1s',
+                  transition: 'box-shadow 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -282,11 +283,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)` },
+                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`, boxShadow: '0 6px 20px rgba(37,211,102,0.45)' },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'background 0.2s, opacity 0.1s',
+                  transition: 'box-shadow 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -324,11 +325,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
+                  '&:hover': { background: 'linear-gradient(135deg, #14B8A6, #0D9488)', boxShadow: '0 6px 20px rgba(20,184,166,0.45)' },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'background 0.2s, opacity 0.1s',
+                  transition: 'box-shadow 0.2s, opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -348,7 +349,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 1 } }}>
           <Box
             component="button"
-            onClick={() => { haptic('light'); setTab(tab === 'text' ? 'qr' : 'text'); }}
+            onClick={() => { haptic('light'); setHasSwitched(true); setTab(tab === 'text' ? 'qr' : 'text'); }}
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
