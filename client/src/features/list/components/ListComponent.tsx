@@ -276,7 +276,13 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     setSelectedProducts(new Set());
   }, []);
 
-  const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
+  const handleCloseItem = useCallback((e?: React.MouseEvent) => {
+    setOpenItemId(null);
+    // בבחירה מרובה - לחיצה על אזור ריק (לא על פריט) מבטלת את הבחירה
+    if (selectedProducts.size > 0 && e && e.target === e.currentTarget) {
+      exitSelectionMode();
+    }
+  }, [setOpenItemId, selectedProducts.size, exitSelectionMode]);
   const handleShowDetails = useCallback((product: Product) => {
     setShowDetails(product);
     dismissHint();

@@ -162,6 +162,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
                 }}
               >
                 WhatsApp
@@ -176,6 +177,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
                 }}
               >
                 העתק
@@ -216,6 +218,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
                   transition: 'all 0.2s',
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
                 }}
               >
                 שלח QR
@@ -253,6 +256,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
                   transition: 'all 0.2s',
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px' },
                 }}
               >
                 שמור
@@ -262,45 +266,49 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         )}
       </Box>
 
-      {/* מחליף תצוגה מאוחד - מיקום קבוע לשתי התצוגות */}
+      {/* מחליף תצוגה מאוחד - מיקום קבוע, עיצוב עדין ללא רקע */}
       {list.inviteCode && (
-        <Box sx={{ mt: 1.75, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider', opacity: 0.6 }} />
+        <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center' }}>
           <Box
+            component="button"
             onClick={() => { haptic('light'); setTab(tab === 'text' ? 'qr' : 'text'); }}
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 0.5,
-              px: 1.25,
-              py: 0.5,
+              px: 0,
+              py: 0.25,
               cursor: 'pointer',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease',
-              '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
-              '&:active': { transform: 'scale(0.96)' }
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              transition: 'opacity 0.2s ease',
+              '&:hover .sw-text': { opacity: 1, textDecorationColor: 'currentColor' },
+              '&:active': { opacity: 0.7 }
             }}
           >
             {tab === 'text' ? (
-              <QrCode2Icon sx={{ fontSize: 15, color: 'primary.main', opacity: 0.75 }} />
+              <QrCode2Icon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
             ) : (
-              <VpnKeyOutlinedIcon sx={{ fontSize: 15, color: 'primary.main', opacity: 0.75 }} />
+              <VpnKeyOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
             )}
             <Typography
+              className="sw-text"
               sx={{
                 fontSize: 11.5,
-                fontWeight: 600,
-                color: 'primary.main',
-                opacity: 0.85,
+                fontWeight: 500,
+                color: 'text.secondary',
+                opacity: 0.75,
                 textDecoration: 'underline',
-                textDecorationColor: 'rgba(20,184,166,0.35)',
+                textDecorationColor: 'rgba(0,0,0,0.15)',
+                textDecorationStyle: 'dotted',
                 textUnderlineOffset: '3px',
+                transition: 'opacity 0.2s ease',
               }}
             >
-              {tab === 'text' ? 'הצג קוד QR במקום' : 'הצג קוד וסיסמה'}
+              {tab === 'text' ? 'הצג QR' : 'חזור לקוד וסיסמה'}
             </Typography>
           </Box>
-          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider', opacity: 0.6 }} />
         </Box>
       )}
       </Box>
