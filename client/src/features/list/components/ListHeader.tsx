@@ -563,11 +563,11 @@ export const ListHeader = memo(({
           '& .MuiTabs-indicator': { display: 'none' },
           '& .MuiTab-root': {
             borderRadius: '10px',
-            py: { xs: 0.75, sm: 1.5 },
-            px: { xs: 1, sm: 2 },
-            minHeight: { xs: 36, sm: 48 },
-            fontSize: { xs: 13, sm: 15 },
-            fontWeight: 600,
+            py: { xs: 1, sm: 1.75 },
+            px: { xs: 1.25, sm: 2.5 },
+            minHeight: { xs: 42, sm: 54 },
+            fontSize: { xs: 14, sm: 16 },
+            fontWeight: 700,
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',
             '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' }
