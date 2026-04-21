@@ -166,16 +166,23 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               to: { transform: 'translateY(0)', opacity: 1 },
             },
           }}>
-            {/* קוד + סיסמה - ממלא את כל החלל */}
-            <Box sx={{ flex: 1, bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)', '@media (max-width: 360px)': { px: 1.25 } }}>
+            {/* קוד + סיסמה - ממלא את כל החלל, עיצוב חלק ונקי */}
+            <Box sx={{
+              flex: 1,
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(20,184,166,0.04))',
+              borderRadius: '16px',
+              border: '1.5px solid rgba(20,184,166,0.2)',
+              mb: 1.5, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+              boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)',
+            }}>
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, borderBottom: list.password ? '1px solid rgba(20,184,166,0.15)' : 'none', '@media (max-width: 360px)': { px: 1.5 } }}>
                 <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('groupCode')}</Typography>
-                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 15, letterSpacing: 1 } }}>{list.inviteCode}</Typography>
+                <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.inviteCode}</Typography>
               </Box>
               {list.password && (
-                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, '@media (max-width: 360px)': { px: 1.25 } }}>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, '@media (max-width: 360px)': { px: 1.5 } }}>
                   <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600, '@media (max-width: 360px)': { fontSize: 11 } }}>{t('password')}</Typography>
-                  <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 15, letterSpacing: 1 } }}>{list.password}</Typography>
+                  <Typography sx={{ fontSize: 22, fontWeight: 800, color: 'primary.main', letterSpacing: 3, fontFamily: 'monospace', '@media (max-width: 360px)': { fontSize: 16, letterSpacing: 2 } }}>{list.password}</Typography>
                 </Box>
               )}
             </Box>
