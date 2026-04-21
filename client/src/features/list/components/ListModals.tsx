@@ -130,19 +130,19 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>"{list.name}"</Typography>
         </Box>
 
-      <Box sx={{ height: 250, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <Box sx={{ height: 250, display: 'flex', flexDirection: 'column' }}>
         {tab === 'text' ? (
-          <Box key="text">
-            {/* קוד + סיסמה */}
-            <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px', borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('groupCode')}</Typography>
-                <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
+          <Box key="text" sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            {/* קוד + סיסמה - ממלא את כל החלל */}
+            <Box sx={{ flex: 1, bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
+                <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
               </Box>
               {list.password && (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px' }}>
-                  <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('password')}</Typography>
-                  <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2 }}>
+                  <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
+                  <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
                 </Box>
               )}
             </Box>
@@ -185,11 +185,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             </Box>
           </Box>
         ) : (
-          <Box key="qr">
-            {/* QR */}
-            <Box sx={{ mb: 1.5, textAlign: 'center' }} id="qr-container">
+          <Box key="qr" sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            {/* QR - ממלא את החלל */}
+            <Box sx={{ flex: 1, mb: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} id="qr-container">
               <Box sx={{
-                display: 'inline-block',
                 p: 1.5,
                 borderRadius: '16px',
                 bgcolor: 'white',
@@ -197,11 +196,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={130} level="H" fgColor="#0D9488"
+                  size={150} level="H" fgColor="#0D9488"
                   style={{ display: 'block' }}
                 />
               </Box>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.25 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
@@ -266,7 +265,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         )}
       </Box>
 
-      {/* מחליף תצוגה מאוחד - מיקום קבוע, עיצוב עדין ללא רקע */}
+      {/* מחליף עדין ללא רקע - מיקום קבוע לשתי התצוגות */}
       {list.inviteCode && (
         <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center' }}>
           <Box
@@ -275,13 +274,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 0.5,
+              gap: 0.6,
               px: 0,
               py: 0.25,
               cursor: 'pointer',
               background: 'transparent',
               border: 'none',
               outline: 'none',
+              font: 'inherit',
               transition: 'opacity 0.2s ease',
               '&:hover .sw-text': { opacity: 1, textDecorationColor: 'currentColor' },
               '&:active': { opacity: 0.7 }
