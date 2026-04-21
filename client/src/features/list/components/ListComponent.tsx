@@ -725,10 +725,15 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 }}
                 sx={{
                   flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25, color: 'white',
-                  backgroundColor: '#F59E0B !important',
-                  '&:hover': { backgroundColor: '#D97706 !important' },
-                  boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
+                  fontSize: 14, py: 1.25, color: 'white !important',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706) !important',
+                  boxShadow: '0 4px 14px rgba(245,158,11,0.45)',
+                  '&:hover': { background: 'linear-gradient(135deg, #D97706, #B45309) !important', boxShadow: '0 6px 18px rgba(245,158,11,0.55)' },
+                  '&.Mui-disabled': {
+                    background: 'linear-gradient(135deg, #F59E0B, #D97706) !important',
+                    color: 'white !important',
+                    opacity: 0.55,
+                  },
                 }}
               >
                 {t('returnToList')}
@@ -752,10 +757,15 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 }}
                 sx={{
                   flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25, color: 'white',
-                  backgroundColor: '#22C55E !important',
-                  '&:hover': { backgroundColor: '#16A34A !important' },
-                  boxShadow: '0 4px 12px rgba(34,197,94,0.35)',
+                  fontSize: 14, py: 1.25, color: 'white !important',
+                  background: 'linear-gradient(135deg, #22C55E, #16A34A) !important',
+                  boxShadow: '0 4px 14px rgba(34,197,94,0.45)',
+                  '&:hover': { background: 'linear-gradient(135deg, #16A34A, #15803D) !important', boxShadow: '0 6px 18px rgba(34,197,94,0.55)' },
+                  '&.Mui-disabled': {
+                    background: 'linear-gradient(135deg, #22C55E, #16A34A) !important',
+                    color: 'white !important',
+                    opacity: 0.55,
+                  },
                 }}
               >
                 {t('markPurchased')}
