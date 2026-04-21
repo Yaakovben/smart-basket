@@ -106,9 +106,10 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
       <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
       <Box key={tab} sx={{
         ...modalContainerSx,
-        perspective: '1200px',
+        p: 2.5,
+        perspective: '1400px',
         transformStyle: 'preserve-3d',
-        animation: 'modalFlip 0.55s cubic-bezier(0.23, 1, 0.32, 1)',
+        animation: 'modalFlip 0.85s cubic-bezier(0.23, 1, 0.32, 1)',
         '@keyframes modalFlip': {
           '0%': { transform: 'translate(-50%, -50%) rotateY(-180deg) scale(0.85)', opacity: 0, filter: 'blur(4px)' },
           '50%': { opacity: 1, filter: 'blur(0)' },
@@ -119,33 +120,33 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
         </IconButton>
 
-        <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-          <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
-            <PersonAddIcon sx={{ fontSize: 32 }} />
+        <Box sx={{ textAlign: 'center', mb: 1.75 }}>
+          <Avatar sx={{ width: 60, height: 60, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 1.25, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+            <PersonAddIcon sx={{ fontSize: 30 }} />
           </Avatar>
-          <Typography id="invite-title" sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>
+          <Typography id="invite-title" sx={{ fontSize: 19, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
             {t('inviteFriends')}
           </Typography>
-          <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>"{list.name}"</Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.25 }}>"{list.name}"</Typography>
         </Box>
 
       {tab === 'text' ? (
-        <Box key="text" sx={{ height: 305, display: 'flex', flexDirection: 'column', justifyContent: 'center', /* flip animation on parent */ }}>
+        <Box key="text" sx={{ minHeight: 230, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {/* קוד + סיסמה */}
-          <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
-              <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('groupCode')}</Typography>
-              <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
+          <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '14px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.25)', mb: 1.5, overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px', borderBottom: list.password ? '1px solid' : 'none', borderColor: 'rgba(20,184,166,0.2)' }}>
+              <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('groupCode')}</Typography>
+              <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.inviteCode}</Typography>
             </Box>
             {list.password && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px' }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{t('password')}</Typography>
-                <Typography sx={{ fontSize: 18, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '10px 14px' }}>
+                <Typography sx={{ color: 'text.secondary', fontSize: 12, fontWeight: 600 }}>{t('password')}</Typography>
+                <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'primary.main', letterSpacing: 2, fontFamily: 'monospace' }}>{list.password}</Typography>
               </Box>
             )}
           </Box>
           {/* כפתורים */}
-          <Box sx={{ display: 'flex', gap: 1.25 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               onClick={() => {
                 const msg = generateInviteMessage(list, t);
@@ -153,10 +154,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               }}
               fullWidth startIcon={<WhatsAppIcon />}
               sx={{
-                bgcolor: BRAND_COLORS.whatsapp, color: 'white',
-                '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
-                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
+                background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                color: 'white',
+                '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover}, #128C7E)`, transform: 'translateY(-1px)' },
+                '&:active': { transform: 'translateY(0)' },
+                borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: 14,
+                boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                transition: 'all 0.2s',
               }}
             >
               WhatsApp
