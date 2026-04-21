@@ -699,7 +699,61 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
             );
           })()}
           <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>
-            {/* כפתור מחיקה - חצי שמאל, מעוצב שונה (outline) */}
+            {/* כפתור ראשי - סמן/החזר, בצבע מתאים */}
+            {filter === 'purchased' ? (
+              <Button
+                variant="contained"
+                disabled={selectedProducts.size === 0}
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  exitSelectionMode();
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
+                  );
+                  showToast(`${count} ${t('bulkReturnedToList')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
+                  }
+                }}
+                sx={{
+                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
+                  fontSize: 14, py: 1.25,
+                  bgcolor: '#F59E0B', '&:hover': { bgcolor: '#D97706' },
+                  boxShadow: '0 2px 12px rgba(245,158,11,0.3)',
+                }}
+              >
+                {t('returnToList')}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                disabled={selectedProducts.size === 0}
+                onClick={() => {
+                  haptic('medium');
+                  const ids = Array.from(selectedProducts);
+                  const count = ids.length;
+                  exitSelectionMode();
+                  onUpdateProductsForList(list.id, (current) =>
+                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
+                  );
+                  showToast(`${count} ${t('bulkMarkedPurchased')}`);
+                  for (const id of ids) {
+                    productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
+                  }
+                }}
+                sx={{
+                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
+                  fontSize: 14, py: 1.25,
+                  bgcolor: '#22C55E', '&:hover': { bgcolor: '#16A34A' },
+                  boxShadow: '0 2px 12px rgba(34,197,94,0.3)',
+                }}
+              >
+                {t('markPurchased')}
+              </Button>
+            )}
+            {/* כפתור מחיקה - בצד שמאל (בדום אחרון = שמאל ב-RTL), בלי אייקון */}
             <Button
               disabled={selectedProducts.size === 0}
               onClick={() => {
@@ -733,7 +787,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               }}
               sx={{
                 flex: 1, borderRadius: '14px', py: 1.25,
-                fontSize: 14, fontWeight: 700, textTransform: 'none', gap: 0.75,
+                fontSize: 14, fontWeight: 700, textTransform: 'none',
                 bgcolor: 'rgba(239,68,68,0.08)',
                 color: '#EF4444',
                 border: '1.5px solid rgba(239,68,68,0.3)',
@@ -741,63 +795,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 '&.Mui-disabled': { opacity: 0.4, color: '#EF4444' },
               }}
             >
-              🗑️ {t('delete')}
+              {t('delete')}
             </Button>
-            {/* כפתור ראשי - חצי ימין, contained מלא */}
-            {filter === 'purchased' ? (
-              <Button
-                variant="contained"
-                disabled={selectedProducts.size === 0}
-                onClick={() => {
-                  haptic('medium');
-                  const ids = Array.from(selectedProducts);
-                  const count = ids.length;
-                  exitSelectionMode();
-                  onUpdateProductsForList(list.id, (current) =>
-                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: false } : p)
-                  );
-                  showToast(`${count} ${t('bulkReturnedToList')}`);
-                  for (const id of ids) {
-                    productsApi.updateProduct(list.id, id, { isPurchased: false }).catch(() => {});
-                  }
-                }}
-                sx={{
-                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25, gap: 0.75,
-                  bgcolor: '#F59E0B', '&:hover': { bgcolor: '#D97706' },
-                  boxShadow: '0 2px 12px rgba(245,158,11,0.3)',
-                }}
-              >
-                ↩ {t('returnToList')}
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                disabled={selectedProducts.size === 0}
-                onClick={() => {
-                  haptic('medium');
-                  const ids = Array.from(selectedProducts);
-                  const count = ids.length;
-                  exitSelectionMode();
-                  onUpdateProductsForList(list.id, (current) =>
-                    current.map(p => ids.includes(p.id) ? { ...p, isPurchased: true } : p)
-                  );
-                  showToast(`${count} ${t('bulkMarkedPurchased')}`);
-                  for (const id of ids) {
-                    productsApi.updateProduct(list.id, id, { isPurchased: true }).catch(() => {});
-                  }
-                }}
-                sx={{
-                  flex: 1, borderRadius: '14px', textTransform: 'none', fontWeight: 700,
-                  fontSize: 14, py: 1.25, gap: 0.75,
-                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                  '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0F766E)' },
-                  boxShadow: '0 2px 12px rgba(20,184,166,0.3)',
-                }}
-              >
-                ✓ {t('markPurchased')}
-              </Button>
-            )}
           </Box>
         </Box>
       )}
