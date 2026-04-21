@@ -463,10 +463,13 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                   onClick={() => setCategoryFilter(isActive ? null : cat)}
                   sx={{
                     fontSize: 12, fontWeight: 600, flexShrink: 0, height: 32,
-                    bgcolor: isActive ? color : 'action.hover',
-                    color: isActive ? 'white' : 'text.primary',
-                    boxShadow: isActive ? `0 2px 8px ${color}40` : 'none',
+                    bgcolor: isActive ? color : `${color}1F`,
+                    color: isActive ? 'white' : color,
+                    border: '1px solid',
+                    borderColor: isActive ? color : `${color}55`,
+                    boxShadow: isActive ? `0 2px 8px ${color}55` : 'none',
                     transition: 'all 0.2s ease',
+                    '&:hover': { bgcolor: isActive ? color : `${color}30` },
                     '&:active': { transform: 'scale(0.95)' },
                   }}
                 />
