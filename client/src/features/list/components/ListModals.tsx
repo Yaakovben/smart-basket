@@ -4,7 +4,6 @@ import { Box, Typography, TextField, Button, IconButton, Avatar, Chip, CircularP
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ShareIcon from '@mui/icons-material/Share';
-import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
@@ -107,8 +106,14 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
       <Box sx={modalOverlaySx} onClick={onClose} aria-hidden="true" />
       <Box key={tab} sx={{
         ...modalContainerSx,
-        animation: 'modalFlip 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        '@keyframes modalFlip': { from: { transform: 'translate(-50%, -50%) rotateY(90deg)', opacity: 0 }, to: { transform: 'translate(-50%, -50%) rotateY(0deg)', opacity: 1 } },
+        perspective: '1200px',
+        transformStyle: 'preserve-3d',
+        animation: 'modalFlip 0.55s cubic-bezier(0.23, 1, 0.32, 1)',
+        '@keyframes modalFlip': {
+          '0%': { transform: 'translate(-50%, -50%) rotateY(-180deg) scale(0.85)', opacity: 0, filter: 'blur(4px)' },
+          '50%': { opacity: 1, filter: 'blur(0)' },
+          '100%': { transform: 'translate(-50%, -50%) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0)' }
+        },
       }} role="dialog" aria-labelledby="invite-title">
         <IconButton onClick={onClose} sx={{ position: 'absolute', top: 12, left: 12, bgcolor: 'action.hover', zIndex: 1 }} size="small">
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -144,18 +149,27 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             <Button
               onClick={() => {
                 const msg = generateInviteMessage(list, t);
-                if (navigator.share) {
-                  navigator.share({ title: `הזמנה ל"${list.name}"`, text: msg }).catch(() => {});
-                } else {
-                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-                }
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
               }}
-              fullWidth startIcon={<IosShareIcon />}
-              sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+              fullWidth startIcon={<WhatsAppIcon />}
+              sx={{
+                bgcolor: BRAND_COLORS.whatsapp, color: 'white',
+                '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
+                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
+              }}
             >
-              שתף
+              WhatsApp
             </Button>
-            <Button variant="outlined" fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />} sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}>
+            <Button
+              fullWidth onClick={handleCopy} startIcon={<ContentCopyIcon />}
+              sx={{
+                bgcolor: 'primary.main', color: 'white',
+                '&:hover': { bgcolor: 'primary.dark' },
+                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(20,184,166,0.3)',
+              }}
+            >
               העתק
             </Button>
           </Box>
@@ -180,7 +194,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             >
               <QrCode2Icon sx={{ fontSize: 20, color: 'primary.main' }} />
               <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}>
-                עבור לקוד QR
+                הצג קוד QR
               </Typography>
             </Box>
           )}
@@ -188,16 +202,21 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
       ) : (
         <Box key="qr" sx={{ height: 305, display: 'flex', flexDirection: 'column', justifyContent: 'center', /* flip animation on parent */ }}>
           {/* QR */}
-          <Box sx={{
-            bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
-            p: 1.5, mb: 1.5, textAlign: 'center',
-          }} id="qr-container">
-            <QRCodeSVG
-              value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-              size={120} level="H" fgColor="#0D9488"
-              style={{ display: 'block', margin: '0 auto' }}
-            />
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
+          <Box sx={{ mb: 1.5, textAlign: 'center' }} id="qr-container">
+            <Box sx={{
+              display: 'inline-block',
+              p: 1.5,
+              borderRadius: '16px',
+              bgcolor: 'white',
+              boxShadow: '0 4px 20px rgba(20,184,166,0.15)',
+            }}>
+              <QRCodeSVG
+                value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                size={130} level="H" fgColor="#0D9488"
+                style={{ display: 'block' }}
+              />
+            </Box>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.25 }}>
               סרוק להצטרפות מיידית
             </Typography>
           </Box>
@@ -205,13 +224,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Box sx={{ display: 'flex', gap: 1.25 }}>
             <Button
               fullWidth onClick={handleShareQR}
-              startIcon={<IosShareIcon />}
-              sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+              startIcon={<WhatsAppIcon />}
+              sx={{
+                bgcolor: BRAND_COLORS.whatsapp, color: 'white',
+                '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
+                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
+              }}
             >
-              שתף תמונה
+              שלח QR
             </Button>
             <Button
-              variant="outlined" fullWidth
+              fullWidth
               onClick={() => {
                 const svg = document.querySelector('#qr-container svg');
                 if (!svg) return;
@@ -235,7 +259,12 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
               }}
               startIcon={<DownloadIcon />}
-              sx={{ borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 600 }}
+              sx={{
+                bgcolor: 'primary.main', color: 'white',
+                '&:hover': { bgcolor: 'primary.dark' },
+                borderRadius: '12px', py: 1.25, textTransform: 'none', fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(20,184,166,0.3)',
+              }}
             >
               שמור
             </Button>
@@ -260,7 +289,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           >
             <VpnKeyOutlinedIcon sx={{ fontSize: 20, color: 'primary.main' }} />
             <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}>
-              עבור לקוד וסיסמה
+              חזרה לקוד וסיסמה
             </Typography>
           </Box>
         </Box>
