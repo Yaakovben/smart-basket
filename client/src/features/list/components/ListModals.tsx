@@ -7,6 +7,8 @@ import ShareIcon from '@mui/icons-material/Share';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import type { List, User, Member, Product } from '../../../global/types';
 import { haptic, COMMON_STYLES, LIST_ICONS, GROUP_ICONS, LIST_COLORS, generateInviteMessage, generateShareListMessage, BRAND_COLORS } from '../../../global/helpers';
 import { Modal, MemberAvatar } from '../../../global/components';
@@ -118,8 +120,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>"{list.name}"</Typography>
         </Box>
 
-        {tab === 'text' ? (
-        <Box key="text" sx={{ height: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(-90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
+      {tab === 'text' ? (
+        <Box key="text" sx={{ height: 305, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(-90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
           {/* קוד + סיסמה */}
           <Box sx={{ bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)', mb: 2.5, overflow: 'hidden' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: '12px 16px', borderBottom: '1px solid', borderColor: 'rgba(20,184,166,0.3)' }}>
@@ -154,18 +156,33 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             </Button>
           </Box>
           {list.inviteCode && (
-            <Box sx={{ textAlign: 'center', mt: 1.5 }}>
-              <Typography
-                onClick={() => setTab('qr')}
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 12.5, fontWeight: 600, color: 'primary.main', cursor: 'pointer', '&:active': { opacity: 0.6 } }}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Box
+                onClick={() => { haptic('light'); setTab('qr'); }}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.75,
+                  px: 2,
+                  borderRadius: '999px',
+                  bgcolor: 'rgba(20,184,166,0.08)',
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                  '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
+                  '&:active': { transform: 'scale(0.96)' }
+                }}
               >
-                📱 הצג QR לסריקה מהירה →
-              </Typography>
+                <QrCode2Icon sx={{ fontSize: 17, color: 'primary.main' }} />
+                <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: 'primary.main' }}>
+                  עדיף לסרוק? הצג קוד QR
+                </Typography>
+              </Box>
             </Box>
           )}
         </Box>
       ) : (
-        <Box key="qr" sx={{ height: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
+        <Box key="qr" sx={{ height: 305, display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'flipIn 0.35s ease', '@keyframes flipIn': { from: { opacity: 0, transform: 'rotateY(90deg) scale(0.95)' }, to: { opacity: 1, transform: 'rotateY(0) scale(1)' } } }}>
           {/* QR */}
           <Box sx={{
             bgcolor: 'rgba(20,184,166,0.06)', borderRadius: '12px', border: '1.5px solid', borderColor: 'rgba(20,184,166,0.3)',
@@ -219,13 +236,28 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               שמור
             </Button>
           </Box>
-          <Box sx={{ textAlign: 'center', mt: 1.5 }}>
-            <Typography
-              onClick={() => setTab('text')}
-              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 12.5, fontWeight: 600, color: 'primary.main', cursor: 'pointer', '&:active': { opacity: 0.6 } }}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <Box
+              onClick={() => { haptic('light'); setTab('text'); }}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                py: 0.75,
+                px: 2,
+                borderRadius: '999px',
+                bgcolor: 'rgba(20,184,166,0.08)',
+                cursor: 'pointer',
+                transition: 'all 0.18s ease',
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
+                '&:active': { transform: 'scale(0.96)' }
+              }}
             >
-              ← חזור לקוד וסיסמה
-            </Typography>
+              <VpnKeyOutlinedIcon sx={{ fontSize: 17, color: 'primary.main' }} />
+              <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: 'primary.main' }}>
+                חזרה לקוד וסיסמה
+              </Typography>
+            </Box>
           </Box>
         </Box>
       )}

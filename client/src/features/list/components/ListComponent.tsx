@@ -268,7 +268,13 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   });
 
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedProducts(new Set());
+  }, []);
 
   const handleCloseItem = useCallback(() => setOpenItemId(null), [setOpenItemId]);
   const handleShowDetails = useCallback((product: Product) => {
@@ -278,6 +284,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
   const handleLongPress = useCallback((productId: string) => {
     haptic('medium');
+    setSelectionMode(true);
     setSelectedProducts(prev => {
       const next = new Set(prev);
       next.add(productId);
@@ -321,7 +328,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   }, [pending, purchased]);
 
   const handleProductClick = useCallback((product: Product) => {
-    if (selectedProducts.size > 0) {
+    if (selectionMode) {
       setSelectedProducts(prev => {
         const next = new Set(prev);
         if (next.has(product.id)) next.delete(product.id);
@@ -331,7 +338,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     } else {
       handleShowDetails(product);
     }
-  }, [selectedProducts.size, handleShowDetails]);
+  }, [selectionMode, handleShowDetails]);
 
   return (
     <Box sx={{
@@ -469,7 +476,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 isPurchased={p.isPurchased}
                 isOpen={openItemId === p.id}
                 isSelected={selectedProducts.has(p.id)}
-                selectionMode={selectedProducts.size > 0}
+                selectionMode={selectionMode}
                 currentUserName={user.name}
                 onOpen={setOpenItemId}
                 onClose={handleCloseItem}
@@ -626,7 +633,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       {showCelebration && <CelebrationOverlay />}
 
       {/* בר פעולות בחירה מרובה */}
-      {selectedProducts.size > 0 && (
+      {selectionMode && (
         <Box sx={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200,
           pb: 'max(16px, env(safe-area-inset-bottom))',
@@ -637,68 +644,60 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           animation: 'slideUp 0.25s ease-out',
           '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
-            <Box
-              onClick={() => setSelectedProducts(new Set())}
-              sx={{
-                width: 32, height: 32, borderRadius: '50%',
-                bgcolor: 'action.hover',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', flexShrink: 0,
-                '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
-                transition: 'all 0.15s',
-              }}
-            >
-              <Typography sx={{ fontSize: 16, color: 'text.secondary' }}>✕</Typography>
-            </Box>
-            <Typography sx={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
-              <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800, fontSize: 16 }}>
-                {selectedProducts.size}
-              </Typography>
-              {` / ${filteredItems.length} נבחרו`}
-            </Typography>
-            <Box
-              onClick={() => {
-                haptic('light');
-                const allIds = new Set(filteredItems.map(p => p.id));
-                if (selectedProducts.size === filteredItems.length) setSelectedProducts(new Set());
-                else setSelectedProducts(allIds);
-              }}
-              sx={{
-                height: 32, px: 1.5,
-                borderRadius: '16px',
-                background: selectedProducts.size === filteredItems.length
-                  ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
-                  : 'transparent',
-                border: '1.5px solid',
-                borderColor: selectedProducts.size === filteredItems.length ? 'transparent' : 'primary.main',
-                boxShadow: selectedProducts.size === filteredItems.length ? '0 2px 8px rgba(20,184,166,0.3)' : 'none',
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 0.75,
-                '&:active': { transform: 'scale(0.95)' },
-                transition: 'all 0.2s',
-              }}
-            >
-              <Box sx={{
-                width: 16, height: 16, borderRadius: '4px',
-                border: '2px solid',
-                borderColor: selectedProducts.size === filteredItems.length ? 'white' : 'primary.main',
-                bgcolor: selectedProducts.size === filteredItems.length ? 'white' : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-              }}>
-                {selectedProducts.size === filteredItems.length && (
-                  <Typography sx={{ fontSize: 11, fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>✓</Typography>
-                )}
+          {(() => {
+            const allSelected = selectedProducts.size === filteredItems.length && filteredItems.length > 0;
+            return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
+              <Box
+                onClick={exitSelectionMode}
+                sx={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  bgcolor: 'action.hover',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', flexShrink: 0,
+                  '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
+                  transition: 'all 0.15s',
+                }}
+              >
+                <Typography sx={{ fontSize: 18, color: 'text.secondary', lineHeight: 1 }}>✕</Typography>
               </Box>
-              <Typography sx={{
-                fontSize: 12, fontWeight: 700,
-                color: selectedProducts.size === filteredItems.length ? 'white' : 'primary.main',
-              }}>
-                {selectedProducts.size === filteredItems.length ? 'בטל' : 'הכל'}
+              <Typography sx={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800, fontSize: 17 }}>
+                  {selectedProducts.size}
+                </Typography>
+                <Typography component="span" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: 13 }}>
+                  {` מתוך ${filteredItems.length}`}
+                </Typography>
               </Typography>
+              <Box
+                onClick={() => {
+                  haptic('light');
+                  if (allSelected) setSelectedProducts(new Set());
+                  else setSelectedProducts(new Set(filteredItems.map(p => p.id)));
+                }}
+                sx={{
+                  height: 36, px: 2,
+                  borderRadius: '18px',
+                  bgcolor: allSelected ? 'primary.main' : 'rgba(20,184,166,0.1)',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 0.75,
+                  '&:active': { transform: 'scale(0.95)' },
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Typography sx={{ fontSize: 16, color: allSelected ? 'white' : 'primary.main', lineHeight: 1 }}>
+                  {allSelected ? '☑' : '☐'}
+                </Typography>
+                <Typography sx={{
+                  fontSize: 13, fontWeight: 700,
+                  color: allSelected ? 'white' : 'primary.main',
+                }}>
+                  בחר הכל
+                </Typography>
+              </Box>
             </Box>
-          </Box>
+            );
+          })()}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexDirection: 'row-reverse', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
