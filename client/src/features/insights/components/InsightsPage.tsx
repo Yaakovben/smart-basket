@@ -76,6 +76,41 @@ const SectionCard = ({ title, children, isDark }: {
   </Paper>
 );
 
+// ===== שורת כותרת אישית בראש כל טאב — מסגור חם אחד, לא עמוס =====
+// מקבלת טקסט עשיר (עם <b> לדגשים) ואייקון. תפקידה להרגיש כמו "שלום אישי",
+// לא כמו דף סטטיסטי. מופיעה לפני תוכן הטאב ומוסיפה אופי לכל טאב.
+const HeroInsight = ({ icon, text, accent, isDark }: {
+  icon: string;
+  text: React.ReactNode;
+  accent: string;
+  isDark: boolean;
+}) => (
+  <Box sx={{
+    display: 'flex', alignItems: 'center', gap: 1.25,
+    px: 1.5, py: 1.25, mb: 1.75, borderRadius: '14px',
+    background: isDark
+      ? `linear-gradient(135deg, ${accent}18, ${accent}06 75%)`
+      : `linear-gradient(135deg, ${accent}12, ${accent}03 75%)`,
+    border: '1px solid', borderColor: isDark ? `${accent}2A` : `${accent}22`,
+    animation: `${fadeIn} 0.4s ease both`,
+  }}>
+    <Box sx={{
+      width: 36, height: 36, flexShrink: 0,
+      borderRadius: '10px', bgcolor: isDark ? `${accent}28` : `${accent}18`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 19,
+    }}>
+      {icon}
+    </Box>
+    <Typography sx={{
+      flex: 1, fontSize: 13, color: 'text.primary', lineHeight: 1.5,
+      '& b': { color: accent, fontWeight: 800 },
+    }}>
+      {text}
+    </Typography>
+  </Box>
+);
+
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
@@ -266,8 +301,15 @@ export const InsightsPage = memo(() => {
             </Box>
           );
 
+          // כותרת אישית — מנוסחת אנושית, לא רשימת מספרים
+          const groupsCount = groupStats.length;
+          const heroText = groupsCount > 0
+            ? <><b>{stats.totalLists}</b> רשימות · <b>{stats.totalProducts}</b> פריטים · פעיל ב-<b>{groupsCount}</b> {groupsCount === 1 ? 'קבוצה' : 'קבוצות'}</>
+            : <>יש לך <b>{stats.totalLists}</b> רשימות עם <b>{stats.totalProducts}</b> פריטים</>;
+
           return (
             <>
+              <HeroInsight icon="👋" text={heroText} accent="#8B5CF6" isDark={isDark} />
               {/* שורת סטטיסטיקה ממוקדת-פעילות (לא מחירים) */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
                 <StatCard
@@ -632,8 +674,15 @@ export const InsightsPage = memo(() => {
         })()}
 
         {/* ===== הרגלים ===== */}
-        {tab === 'habits' && (
+        {tab === 'habits' && (() => {
+          // כותרת אישית לטאב הרגלים — ממקד על המוצר הכי נפוץ
+          const hero = topProducts[0];
+          const heroText = hero
+            ? <>הכוכב שלך: <b>{hero.name}</b> — קנית <b>×{hero.count}</b></>
+            : <>טוב להכיר — עוד מעט תראה את הכוכב שלך</>;
+          return (
           <>
+            <HeroInsight icon="🛒" text={heroText} accent="#F59E0B" isDark={isDark} />
             {/* שורת סטטיסטיקת על */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
               <StatCard
@@ -765,11 +814,31 @@ export const InsightsPage = memo(() => {
               </SectionCard>
             )}
           </>
-        )}
+          );
+        })()}
 
         {/* ===== דופק ===== */}
-        {tab === 'pulse' && (
+        {tab === 'pulse' && (() => {
+          // כותרת אישית לטאב דופק — ממקדת על הסטריק או התחזית
+          const hasStreak = streaks && streaks.currentWeeks > 0;
+          const hasPrediction = shoppingFrequency?.predictedNextDate;
+          let heroIcon = '💪';
+          let heroText: React.ReactNode = <>ממשיכים לעקוב אחרי ההתקדמות שלך</>;
+          if (hasStreak) {
+            heroIcon = '🔥';
+            heroText = <>אתה <b>{streaks.currentWeeks} שבועות</b> ברצף — המשך כך!</>;
+          } else if (hasPrediction) {
+            const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - Date.now()) / 86_400_000));
+            heroIcon = '🛒';
+            heroText = days === 0
+              ? <>הקנייה הבאה צפויה <b>היום</b></>
+              : days === 1
+              ? <>הקנייה הבאה צפויה <b>מחר</b></>
+              : <>הקנייה הבאה צפויה <b>בעוד {days} ימים</b></>;
+          }
+          return (
           <>
+            <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
             {/* כרטיס ציון - לחיץ, מציג הסבר מפורט */}
             <Box
               role="button"
@@ -1075,7 +1144,8 @@ export const InsightsPage = memo(() => {
               </SectionCard>
             )}
           </>
-        )}
+          );
+        })()}
 
       </Box>
     </Box>
