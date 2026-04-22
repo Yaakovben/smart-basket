@@ -1,7 +1,7 @@
 import { Dialog, DialogTitle, DialogContent, Box, Slide, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { TransitionProps } from '@mui/material/transitions';
-import { forwardRef, useCallback, useRef } from 'react';
+import { forwardRef, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
 
@@ -19,11 +19,7 @@ const Transition = forwardRef(function Transition(
 });
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {
-  const closingRef = useRef(false);
-
   const handleClose = useCallback(() => {
-    if (closingRef.current) return;
-    closingRef.current = true;
     haptic('light');
     onClose();
   }, [onClose]);
@@ -68,13 +64,20 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           onClick={handleClose}
           aria-label="Close"
           disableRipple
+          disableFocusRipple
           sx={{
             position: 'absolute',
             left: 8,
+            top: '50%',
+            transform: 'translateY(-50%)',
             bgcolor: 'action.hover',
             width: 44,
             height: 44,
-            '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
+            zIndex: 2,
+            touchAction: 'manipulation',
+            transition: 'opacity 0.1s, background-color 0.15s',
+            '&:hover': { bgcolor: 'action.hover' },
+            '&:active': { opacity: 0.7, bgcolor: 'action.selected' },
           }}
         >
           <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />

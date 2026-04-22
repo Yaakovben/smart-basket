@@ -151,11 +151,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
       <Box
         sx={{
-          minHeight: 200,
+          minHeight: 260,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          '@media (max-width: 360px)': { minHeight: 160 },
+          '@media (max-width: 360px)': { minHeight: 210 },
         }}
       >
         {tab === 'text' ? (
@@ -358,7 +358,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
       {/* מחליף עדין ללא רקע - מיקום קבוע לשתי התצוגות */}
       {list.inviteCode && (
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 2 } }}>
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 2.5 } }}>
           <Box
             component="button"
             onClick={() => { haptic('light'); setHasSwitched(true); setTab(tab === 'text' ? 'qr' : 'text'); }}
