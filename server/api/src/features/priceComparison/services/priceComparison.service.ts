@@ -95,13 +95,22 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
 
   if (meaningful.length === 0) return unmatched;
 
+  // "טוקן עוגן" = המילה הארוכה ביותר של המשתמש. מילים ארוכות הן יותר ספציפיות
+  // בעברית (קנולה > שמן, עגבנייה > ירק), ולכן חייבות להופיע במוצר של הרשת
+  // כדי למנוע התאמות-על-מילה-כללית ("שמן קנולה" ↔ "סרדינים בשמן").
+  const longestUserToken = meaningful.reduce((a, b) => (a.length >= b.length ? a : b));
+
+  // סף קשיח: לפחות 2 טוקנים תואמים (או כולם אם יש פחות מ-2 במשתמש).
+  // מונע כיסוי של 50% שלפני התיקון עבר בגבול.
+  const minRequiredMatches = Math.min(meaningful.length, 2);
+
   // שאילתה אחת עם $or על עד 3 טוקנים (במקום 3 שאילתות מקבילות)
   const searchTokens = meaningful.slice(0, 3);
   let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>> = [];
   try {
     candidates = await PriceDAL.findByAnyToken(searchTokens, BETA_CHAIN_ID, 60);
   } catch {
-    return unmatched; // כשל DB לא מפיל את כל הבקשה - פשוט unmatched
+    return unmatched;
   }
   if (candidates.length === 0) return unmatched;
 
@@ -115,23 +124,35 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
 
     const intersect: string[] = [];
     for (const t of chainMeaningful) if (userSet.has(t)) intersect.push(t);
-    if (intersect.length === 0) continue;
+
+    // שתי מחסומים: מינימום טוקנים תואמים, וחובה שהעוגן (המילה הארוכה ביותר)
+    // של המשתמש יהיה בהצטלבות — אחרת ההתאמה חלשה מדי לסמוך עליה.
+    if (intersect.length < minRequiredMatches) continue;
+    if (!intersect.includes(longestUserToken)) continue;
 
     const userCoverage = intersect.length / userSet.size;
     const chainCoverage = intersect.length / chainMeaningful.length;
     let score = userCoverage * 0.7 + chainCoverage * 0.3;
 
+    // בונוס: נורמליזציה של המשתמש מופיעה כמחרוזת רציפה במוצר הרשת
     if (normalized && c.itemNameNormalized && c.itemNameNormalized.includes(normalized)) {
       score += 0.15;
     }
-    if (userCoverage >= 0.999) score += 0.05;
+    // בונוס: כל הטוקנים של המשתמש מופיעים במוצר (כיסוי מלא של הכוונה)
+    if (userCoverage >= 0.999) score += 0.15;
+    // בונוס: היצרן של המוצר ברשת מופיע בשם של המשתמש (למשל "חלב טרה")
+    if (c.manufacturerName) {
+      const manufNorm = normalizeProductName(c.manufacturerName);
+      if (manufNorm && userSet.has(manufNorm)) score += 0.2;
+    }
 
     if (!best || score > best.score) {
       best = { cand: c, score, matchedTokens: intersect, coverage: userCoverage };
     }
   }
 
-  if (!best || best.coverage < 0.5 || best.score < 0.45) return unmatched;
+  // סף ציון כולל מחמיר יותר אחרי המחסומים הקשיחים
+  if (!best || best.score < 0.55) return unmatched;
 
   const b = best.cand;
   return {
