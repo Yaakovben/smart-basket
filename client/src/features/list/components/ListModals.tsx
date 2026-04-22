@@ -149,18 +149,63 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
           </Typography>
         </Box>
 
+      {(() => {
+        const switcher = list.inviteCode ? (
+          <Box sx={{ mt: 2.25, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 1.75 } }}>
+            <Box
+              component="button"
+              onClick={() => { haptic('light'); setHasSwitched(true); setTab(tab === 'text' ? 'qr' : 'text'); }}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.6,
+                px: 0,
+                py: 0.25,
+                cursor: 'pointer',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                font: 'inherit',
+                transition: 'opacity 0.2s ease',
+                '&:hover .sw-text': { opacity: 1, textDecorationColor: 'currentColor' },
+                '&:active': { opacity: 0.7 }
+              }}
+            >
+              {tab === 'text' ? (
+                <QrCode2Icon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
+              ) : (
+                <VpnKeyOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
+              )}
+              <Typography
+                className="sw-text"
+                sx={{
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  color: 'text.secondary',
+                  opacity: 0.75,
+                  textDecoration: 'underline',
+                  textDecorationColor: 'rgba(0,0,0,0.15)',
+                  textDecorationStyle: 'dotted',
+                  textUnderlineOffset: '3px',
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                {tab === 'text' ? 'הצג QR' : 'חזור לקוד וסיסמה'}
+              </Typography>
+            </Box>
+          </Box>
+        ) : null;
+        return (
       <Box
         sx={{
-          minHeight: 260,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          '@media (max-width: 360px)': { minHeight: 210 },
         }}
       >
         {tab === 'text' ? (
           <Box key="text" sx={{
-            display: 'flex', flexDirection: 'column', flex: 1,
+            display: 'flex', flexDirection: 'column',
             animation: hasSwitched ? 'slideInUp 0.45s cubic-bezier(0.23, 1, 0.32, 1)' : 'none',
             '@keyframes slideInUp': {
               from: { transform: 'translateY(100%)', opacity: 0 },
@@ -186,8 +231,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 </Box>
               )}
             </Box>
-            {/* כפתורים - נדחפים לתחתית הקונטיינר */}
-            <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
               <Button
                 onClick={() => {
                   const msg = generateInviteMessage(list, t);
@@ -237,10 +282,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 העתק
               </Button>
             </Box>
+            {switcher}
           </Box>
         ) : (
           <Box key="qr" sx={{
-            display: 'flex', flexDirection: 'column', flex: 1,
+            display: 'flex', flexDirection: 'column',
             animation: 'slideInDown 0.45s cubic-bezier(0.23, 1, 0.32, 1)',
             '@keyframes slideInDown': {
               from: { transform: 'translateY(-100%)', opacity: 0 },
@@ -281,8 +327,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
-            {/* כפתורים - נדחפים לתחתית הקונטיינר */}
-            <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
               <Button
                 fullWidth disableRipple disableFocusRipple onClick={handleShareQR}
                 startIcon={<WhatsAppIcon />}
@@ -352,56 +398,12 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 שמור
               </Button>
             </Box>
+            {switcher}
           </Box>
         )}
       </Box>
-
-      {/* מחליף עדין ללא רקע - מיקום קבוע לשתי התצוגות */}
-      {list.inviteCode && (
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 2.5 } }}>
-          <Box
-            component="button"
-            onClick={() => { haptic('light'); setHasSwitched(true); setTab(tab === 'text' ? 'qr' : 'text'); }}
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.6,
-              px: 0,
-              py: 0.25,
-              cursor: 'pointer',
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              font: 'inherit',
-              transition: 'opacity 0.2s ease',
-              '&:hover .sw-text': { opacity: 1, textDecorationColor: 'currentColor' },
-              '&:active': { opacity: 0.7 }
-            }}
-          >
-            {tab === 'text' ? (
-              <QrCode2Icon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
-            ) : (
-              <VpnKeyOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary', opacity: 0.7 }} />
-            )}
-            <Typography
-              className="sw-text"
-              sx={{
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: 'text.secondary',
-                opacity: 0.75,
-                textDecoration: 'underline',
-                textDecorationColor: 'rgba(0,0,0,0.15)',
-                textDecorationStyle: 'dotted',
-                textUnderlineOffset: '3px',
-                transition: 'opacity 0.2s ease',
-              }}
-            >
-              {tab === 'text' ? 'הצג QR' : 'חזור לקוד וסיסמה'}
-            </Typography>
-          </Box>
-        </Box>
-      )}
+        );
+      })()}
       </Box>
     </>
   );
