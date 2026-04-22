@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import mongoose from 'mongoose';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL } from '../dal';
-import { UserService } from '../services/user.service';
+import * as UserService from '../services/user.service';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';

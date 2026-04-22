@@ -1,7 +1,7 @@
 import { UserDAL, LoginActivityDAL } from '../dal';
 import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
-import { TokenService } from './token.service';
+import * as TokenService from './token.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';

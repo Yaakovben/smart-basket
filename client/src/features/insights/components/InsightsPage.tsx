@@ -76,7 +76,10 @@ export const InsightsPage = memo(() => {
     </Box>
   );
 
-  const { topProducts, categoryBreakdown, stats, groupStats, shoppingScore, streaks, weeklyTrends } = data;
+  const {
+    topProducts, categoryBreakdown, stats, groupStats, shoppingScore, streaks,
+    weeklyTrends,
+  } = data;
   const maxWeeklyTrend = Math.max(...(weeklyTrends || []).map(w => Math.max(w.added, w.purchased)), 1);
   const groupStatsByName = new Map(groupStats.map(g => [g.name, g]));
 

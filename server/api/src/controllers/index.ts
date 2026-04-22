@@ -9,7 +9,7 @@
  */
 
 export { AuthController } from './auth.controller';
-export { UserController } from './user.controller';
+export * as UserController from './user.controller';
 export { ListController } from './list.controller';
 export { AdminController } from './admin.controller';
 export { NotificationController } from './notification.controller';
