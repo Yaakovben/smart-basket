@@ -61,6 +61,8 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           {title}
         </DialogTitle>
         <IconButton
+          // preventDefault ב-mousedown מונע מה-input לאבד פוקוס, ולכן ה-onClick נורה בלחיצה הראשונה
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleClose}
           aria-label="Close"
           disableRipple

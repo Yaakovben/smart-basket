@@ -435,8 +435,13 @@ type TranslationKey =
   | 'dailyFaithTitle'
   | 'dailyFaithReadButton'
   | 'dailyFaithManagerTitle'
+  | 'dailyFaithManagerSubtitle'
+  | 'dailyFaithManagerHint'
   | 'dailyFaithPlaceholder'
-  | 'dailyFaithEmpty';
+  | 'dailyFaithEmpty'
+  | 'dailyFaithEmptyHint'
+  | 'dailyFaithAllQuotes'
+  | 'dailyFaithLoading';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -872,8 +877,13 @@ export const translations: Record<Language, Translations> = {
     dailyFaithTitle: 'החיזוק היומי',
     dailyFaithReadButton: 'קראתי והתחזקתי',
     dailyFaithManagerTitle: 'ניהול משפטי חיזוק',
+    dailyFaithManagerSubtitle: 'משפטי חיזוק יומיים',
+    dailyFaithManagerHint: 'משפט אקראי יוצג למשתמשים פעם ביום',
     dailyFaithPlaceholder: 'כתוב משפט חיזוק חדש...',
     dailyFaithEmpty: 'אין עדיין משפטי חיזוק',
+    dailyFaithEmptyHint: 'הוסף משפט ראשון כדי להתחיל',
+    dailyFaithAllQuotes: 'כל המשפטים',
+    dailyFaithLoading: 'טוען...',
   },
   en: {
     // General
@@ -1304,8 +1314,13 @@ export const translations: Record<Language, Translations> = {
     dailyFaithTitle: 'Daily Inspiration',
     dailyFaithReadButton: 'I Read & Was Strengthened',
     dailyFaithManagerTitle: 'Manage Inspirational Quotes',
+    dailyFaithManagerSubtitle: 'Daily Inspirational Quotes',
+    dailyFaithManagerHint: 'A random quote appears to users once a day',
     dailyFaithPlaceholder: 'Write a new inspirational quote...',
     dailyFaithEmpty: 'No quotes yet',
+    dailyFaithEmptyHint: 'Add the first quote to get started',
+    dailyFaithAllQuotes: 'All Quotes',
+    dailyFaithLoading: 'Loading...',
   },
   ru: {
     // General
@@ -1736,8 +1751,13 @@ export const translations: Record<Language, Translations> = {
     dailyFaithTitle: 'Вдохновение дня',
     dailyFaithReadButton: 'Прочитал и укрепился',
     dailyFaithManagerTitle: 'Управление цитатами',
+    dailyFaithManagerSubtitle: 'Ежедневные вдохновляющие цитаты',
+    dailyFaithManagerHint: 'Случайная цитата показывается пользователям раз в день',
     dailyFaithPlaceholder: 'Напишите новую цитату...',
     dailyFaithEmpty: 'Цитат пока нет',
+    dailyFaithEmptyHint: 'Добавьте первую цитату, чтобы начать',
+    dailyFaithAllQuotes: 'Все цитаты',
+    dailyFaithLoading: 'Загрузка...',
   }
 };
 

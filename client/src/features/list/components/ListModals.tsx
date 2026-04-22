@@ -120,15 +120,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
         <Box sx={{ textAlign: 'center', mb: 1.75, '@media (max-width: 360px)': { mb: 1 } }}>
           <Avatar
+            // גודל קבוע בכל המכשירים — תואם לאייקון של ShareListModal (Avatar 64, fontSize 28)
             sx={{
-              width: 60, height: 60,
+              width: 64, height: 64,
               background: COMMON_STYLES.gradients.header,
               mx: 'auto', mb: 1.25,
               boxShadow: '0 8px 24px rgba(20,184,166,0.3)',
-              '@media (max-width: 360px)': { width: 44, height: 44, mb: 0.5 },
+              '@media (max-width: 360px)': { mb: 0.5 },
             }}
           >
-            <PersonAddIcon sx={{ fontSize: 30, '@media (max-width: 360px)': { fontSize: 22 } }} />
+            <PersonAddIcon sx={{ fontSize: 28 }} />
           </Avatar>
           <Typography
             id="invite-title"
@@ -269,10 +270,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
                   boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
+                  // אייקון בגודל קבוע 20x20 בכל המכשירים — תואם ל-WhatsAppIcon באותו פופאפ
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 20, height: 20, fontSize: 20 } },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '11px',
-                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px' },
                   },
                 }}
               >
@@ -394,10 +396,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
                   boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
+                  // אייקון בגודל קבוע 20x20 בכל המכשירים — תואם ל-WhatsAppIcon באותו פופאפ
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 20, height: 20, fontSize: 20 } },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '11px',
-                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px' },
                   },
                 }}
               >
@@ -614,8 +617,16 @@ export const ShareListModal = memo(({
           >
             <WhatsAppIcon />
           </Button>
-          <Button variant="outlined" fullWidth onClick={handleCopy} aria-label={t('copy')}>
-            📋 {t('copy')}
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={handleCopy}
+            aria-label={t('copy')}
+            startIcon={<ContentCopyIcon />}
+            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם WhatsAppIcon)
+            sx={{ gap: 1, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+          >
+            {t('copy')}
           </Button>
         </Box>
       </Box>
