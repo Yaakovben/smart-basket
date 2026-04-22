@@ -84,6 +84,8 @@ export const InsightsPage = memo(() => {
   const [scoreExplained, setScoreExplained] = useState(false);
   // יום נבחר ב-heatmap (לחיצה מדגישה ומציגה פרטים)
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
+  // שבוע נבחר בגרף המגמה (לחיצה מציגה פרטים)
+  const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
@@ -292,6 +294,12 @@ export const InsightsPage = memo(() => {
                   const purchasedPct = memberTotalAdded > 0 ? Math.round((memberTotalPurchased / memberTotalAdded) * 100) : 0;
                   // מיון החברים לפי סך פעילות יורד
                   const sortedMembers = [...members].sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
+                  // חישוב התרומה של המשתמש הנוכחי ברשימה הזו (לטקסט "התרומה שלך")
+                  const myStats = currentUserName ? members.find(m => m.name === currentUserName) : undefined;
+                  const myRank = myStats ? sortedMembers.findIndex(m => m.name === currentUserName) + 1 : 0;
+                  const myPct = myStats && memberTotalActivity > 0
+                    ? Math.round(((myStats.added + myStats.purchased) / memberTotalActivity) * 100)
+                    : 0;
 
                   // תובנה כוללת לקבוצה - אחת מ-3 אפשרויות לפי הנתונים
                   let insight: { label: string; color: string; emoji: string } | null = null;
@@ -407,6 +415,37 @@ export const InsightsPage = memo(() => {
                           </Box>
                         )}
                       </Box>
+
+                      {/* התרומה שלך - מוצג רק אם המשתמש הוא חבר בקבוצה ויש פעילות */}
+                      {L.isGroup && myStats && memberTotalActivity > 0 && (
+                        <Box sx={{
+                          mt: 1.25, p: 1, borderRadius: '10px',
+                          display: 'flex', alignItems: 'center', gap: 0.75,
+                          bgcolor: isDark ? `${L.listColor}14` : `${L.listColor}0C`,
+                          border: '1px solid', borderColor: `${L.listColor}35`,
+                        }}>
+                          <Typography sx={{ fontSize: 16 }}>
+                            {myRank === 1 ? '🏆' : myRank === 2 ? '⭐' : myRank === 3 ? '🔥' : '👤'}
+                          </Typography>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, lineHeight: 1 }}>
+                              התרומה שלך {myRank > 0 ? `· מקום ${myRank}` : ''}
+                            </Typography>
+                            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: L.listColor, lineHeight: 1.3, mt: 0.2 }}>
+                              הוספת <b>{myStats.added}</b> · קנית <b>{myStats.purchased}</b>
+                            </Typography>
+                          </Box>
+                          <Box sx={{
+                            minWidth: 44, textAlign: 'center',
+                            px: 0.75, py: 0.35, borderRadius: '8px',
+                            bgcolor: L.listColor,
+                          }}>
+                            <Typography sx={{ fontSize: 13, fontWeight: 900, color: 'white', lineHeight: 1 }}>
+                              {myPct}%
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
 
                       {/* חלוקת חברים - רק אם יש קבוצה עם יותר מחבר אחד ויש פעילות */}
                       {L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0 && (
@@ -634,6 +673,9 @@ export const InsightsPage = memo(() => {
                     const p = topProducts[mapIdx];
                     if (!p) return <Box key={mapIdx} sx={{ flex: 1 }} />;
                     const icon = CATEGORY_ICONS[p.category as keyof typeof CATEGORY_ICONS] || '📦';
+                    const categoryColor = CATEGORY_COLORS[p.category as keyof typeof CATEGORY_COLORS] || '#6B7280';
+                    const categoryKey = CATEGORY_TRANSLATION_KEYS[p.category as keyof typeof CATEGORY_TRANSLATION_KEYS];
+                    const categoryLabel = categoryKey ? t(categoryKey) : p.category;
                     const medal = ['🥇', '🥈', '🥉'][mapIdx];
                     const pct = topProductsTotalCount > 0 ? Math.round((p.count / topProductsTotalCount) * 100) : 0;
                     // פודיום: ראשון גבוה יותר
@@ -647,6 +689,7 @@ export const InsightsPage = memo(() => {
                           p: 1.25, borderRadius: '12px',
                           bgcolor: isDark ? `${accent}10` : `${accent}08`,
                           border: '1px solid', borderColor: `${accent}30`,
+                          borderBottom: `3px solid ${categoryColor}`,
                           cursor: 'default',
                           animation: `${fadeIn} 0.4s ease ${0.1 + mapIdx * 0.08}s both`,
                           transition: 'transform 0.15s ease',
@@ -657,6 +700,13 @@ export const InsightsPage = memo(() => {
                         <Typography sx={{ fontSize: 20, mb: 0.25 }}>{icon}</Typography>
                         <Typography sx={{ fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.name}
+                        </Typography>
+                        {/* תווית קטגוריה */}
+                        <Typography sx={{
+                          fontSize: 9, color: categoryColor, fontWeight: 700, mt: 0.2,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {categoryLabel}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0.35, mt: 0.35 }}>
                           <Typography sx={{ fontSize: 11, fontWeight: 900, color: accent }}>×{p.count}</Typography>
@@ -882,24 +932,77 @@ export const InsightsPage = memo(() => {
               </Paper>
             )}
 
-            {/* מגמה שבועית */}
+            {/* מגמה שבועית - בארים לחיצים */}
             {weeklyTrends && weeklyTrends.length > 0 && (
               <SectionCard title="📊 מגמה שבועית" isDark={isDark}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 70, mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 70, mb: 0.75 }}>
+                  {weeklyTrends.map((w, i) => {
+                    const isSelected = selectedWeekIdx === i;
+                    const hasActivity = w.added + w.purchased > 0;
+                    return (
+                      <Box
+                        key={i}
+                        onClick={() => {
+                          if (!hasActivity) return;
+                          haptic('light');
+                          setSelectedWeekIdx(prev => prev === i ? null : i);
+                        }}
+                        sx={{
+                          flex: 1, display: 'flex', flexDirection: 'column', gap: '2px',
+                          height: '100%', justifyContent: 'flex-end',
+                          cursor: hasActivity ? 'pointer' : 'default',
+                          borderRadius: '4px',
+                          p: isSelected ? '3px 2px' : '3px 0',
+                          bgcolor: isSelected ? (isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)') : 'transparent',
+                          transition: 'background 0.2s ease',
+                          '&:active': hasActivity ? { opacity: 0.8 } : {},
+                        }}
+                      >
+                        <Box sx={{
+                          height: `${(w.purchased / maxWeeklyTrend) * 100}%`,
+                          bgcolor: isSelected ? '#F59E0B' : '#22C55E',
+                          borderRadius: '3px 3px 0 0', minHeight: w.purchased > 0 ? 3 : 0,
+                          transition: 'background 0.2s ease',
+                        }} />
+                        <Box sx={{
+                          height: `${((w.added - w.purchased) / maxWeeklyTrend) * 100}%`,
+                          bgcolor: isSelected
+                            ? (isDark ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.4)')
+                            : (isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'),
+                          borderRadius: '3px 3px 0 0', minHeight: w.added - w.purchased > 0 ? 2 : 0,
+                          transition: 'background 0.2s ease',
+                        }} />
+                      </Box>
+                    );
+                  })}
+                </Box>
+                {/* תוויות שבועות */}
+                <Box sx={{ display: 'flex', gap: '4px', mb: 0.75 }}>
                   {weeklyTrends.map((w, i) => (
-                    <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', height: '100%', justifyContent: 'flex-end' }}>
-                      <Box sx={{
-                        height: `${(w.purchased / maxWeeklyTrend) * 100}%`,
-                        bgcolor: '#22C55E', borderRadius: '3px 3px 0 0', minHeight: w.purchased > 0 ? 3 : 0,
-                      }} />
-                      <Box sx={{
-                        height: `${((w.added - w.purchased) / maxWeeklyTrend) * 100}%`,
-                        bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)',
-                        borderRadius: '3px 3px 0 0', minHeight: w.added - w.purchased > 0 ? 2 : 0,
-                      }} />
-                    </Box>
+                    <Typography key={i} sx={{
+                      flex: 1, fontSize: 8.5, textAlign: 'center',
+                      color: selectedWeekIdx === i ? '#F59E0B' : 'text.disabled',
+                      fontWeight: selectedWeekIdx === i ? 800 : 600,
+                    }}>
+                      {w.week}
+                    </Typography>
                   ))}
                 </Box>
+                {/* פרטי השבוע הנבחר */}
+                {selectedWeekIdx !== null && weeklyTrends[selectedWeekIdx] && (
+                  <Box sx={{
+                    p: 1, borderRadius: '10px', mb: 0.75,
+                    bgcolor: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)',
+                    border: '1px solid rgba(245,158,11,0.2)',
+                    animation: `${fadeIn} 0.2s ease both`,
+                  }}>
+                    <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
+                      שבוע <b>{weeklyTrends[selectedWeekIdx].week}</b>:
+                      {' '}<b>{weeklyTrends[selectedWeekIdx].added}</b> נוספו ·
+                      {' '}<b>{weeklyTrends[selectedWeekIdx].purchased}</b> נקנו
+                    </Typography>
+                  </Box>
+                )}
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35 }}>
                     <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: '#22C55E' }} />
@@ -909,6 +1012,9 @@ export const InsightsPage = memo(() => {
                     <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)' }} />
                     <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>ממתינים</Typography>
                   </Box>
+                  {selectedWeekIdx === null && (
+                    <Typography sx={{ fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>לחץ על בר לפרטים</Typography>
+                  )}
                 </Box>
               </SectionCard>
             )}
