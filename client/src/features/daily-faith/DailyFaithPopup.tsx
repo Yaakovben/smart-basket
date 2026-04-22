@@ -1,9 +1,9 @@
-import { Dialog, Box, Typography, Button, Fade, keyframes } from '@mui/material';
+import { useEffect } from 'react';
+import { Box, Typography, Button, keyframes } from '@mui/material';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 
-// התמונה של הגוויל יושבת ב-public/ כך ש-Vite מגיש אותה ישירות ב-URL קבוע.
-// שים את קובץ הגוויל הריק ב: client/public/daily-faith/parchment.jpg
 const PARCHMENT_BG_URL = '/daily-faith/parchment.jpg';
 
 interface DailyFaithPopupProps {
@@ -11,14 +11,50 @@ interface DailyFaithPopupProps {
   onClose: () => void;
 }
 
-// זוהר עדין שמשלב זהב (הקלף) עם טורקיז של האפליקציה - מחבר בין השניים
-const appGlow = keyframes`
-  0%, 100% { filter: drop-shadow(0 10px 24px rgba(0,0,0,0.45)) drop-shadow(0 0 20px rgba(20,184,166,0.15)); }
-  50%      { filter: drop-shadow(0 14px 30px rgba(0,0,0,0.4)) drop-shadow(0 0 28px rgba(20,184,166,0.3)) drop-shadow(0 0 12px rgba(212,175,55,0.3)); }
+// סגנון בדומה ל-InviteModal - overlay כהה עם blur
+const overlaySx = {
+  position: 'fixed' as const,
+  inset: 0,
+  bgcolor: 'rgba(0,0,0,0.55)',
+  zIndex: 1000,
+  backdropFilter: 'blur(5px)',
+  touchAction: 'none' as const,
+};
+
+// כרטיס המודאל עצמו — בדיוק כמו ב-InviteModal
+const containerSx = {
+  position: 'fixed' as const,
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  bgcolor: 'background.paper',
+  borderRadius: '20px',
+  p: 2.5,
+  zIndex: 1001,
+  width: '90%',
+  maxWidth: 340,
+  boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+  overscrollBehavior: 'contain' as const,
+  maxHeight: '90vh',
+  overflowY: 'auto' as const,
+  '@media (max-width: 360px)': { p: 1.75, borderRadius: '16px', maxWidth: 300 },
+};
+
+// פעימה עדינה זהובה — קשר לעיצוב של האפליקציה ללא הגזמה
+const softGoldPulse = keyframes`
+  0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+  50%      { box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 24px rgba(212,175,55,0.3); }
 `;
 
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
+
+  // נעילת גלילה של גוף הדף
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   const handleClose = () => {
     haptic('light');
@@ -26,105 +62,95 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   };
 
   return (
-    <Dialog
-      open
-      // נסגר רק בלחיצה על הכפתור - לא ב-backdrop ולא ב-Escape
-      onClose={(_e, reason) => {
-        if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
-        handleClose();
-      }}
-      disableEscapeKeyDown
-      TransitionComponent={Fade}
-      transitionDuration={500}
-      PaperProps={{
-        sx: {
-          bgcolor: 'transparent',
-          boxShadow: 'none',
-          overflow: 'visible',
-          m: 2,
-          maxWidth: 'unset',
-          width: 'auto',
-        },
-      }}
-      sx={{
-        // רקע עם גוונים של האפליקציה - מחבר ויזואלית
-        '& .MuiBackdrop-root': {
-          bgcolor: 'rgba(12,30,32,0.85)',
-          backdropFilter: 'blur(8px)',
-          background: 'radial-gradient(ellipse at center, rgba(20,184,166,0.18), rgba(10,8,4,0.9) 60%)',
-        },
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 1.5,
-        }}
-      >
-        {/* הגוויל עם הטקסט - גובה מוגבל לפי המסך כדי שלא ישתלט */}
+    <>
+      {/* Overlay - לא נסגר בלחיצה כדי שרק הכפתור יסגור */}
+      <Box sx={overlaySx} aria-hidden="true" />
+
+      {/* Modal card */}
+      <Box sx={containerSx} role="dialog" aria-labelledby="daily-faith-title">
+        {/* תגית קטנה בסגנון האפליקציה בראש המודאל */}
+        <Box sx={{ textAlign: 'center', mb: 1.75, '@media (max-width: 360px)': { mb: 1.25 } }}>
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.6,
+              bgcolor: 'rgba(212,175,55,0.12)',
+              border: '1px solid rgba(184,134,11,0.25)',
+              color: '#8B6914',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 1.3,
+              px: 1.5,
+              py: 0.5,
+              borderRadius: '999px',
+            }}
+          >
+            <AutoStoriesIcon sx={{ fontSize: 13 }} />
+            <span>חיזוק יומי</span>
+          </Box>
+        </Box>
+
+        {/* הגוויל עצמו — ברוחב מלא של המודאל, עם aspect-ratio */}
         <Box
           sx={{
             position: 'relative',
-            // מוגבל בגובה: 58vh במסך רגיל, 52vh במסכים נמוכים
-            height: { xs: '52vh', sm: '58vh' },
-            maxHeight: 560,
-            // הרוחב נגזר מהיחס של התמונה (700:1040)
+            width: '100%',
             aspectRatio: '700 / 1040',
-            maxWidth: '92vw',
             backgroundImage: `url(${PARCHMENT_BG_URL})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            animation: `${appGlow} 5s ease-in-out infinite`,
+            backgroundPosition: 'center top',
+            borderRadius: '10px',
+            animation: `${softGoldPulse} 4s ease-in-out infinite`,
+            mb: 2,
           }}
         >
-          {/* "החיזוק היומי" בראש הגוויל - על החלק המגולגל */}
+          {/* "החיזוק היומי" על החלק המגולגל בראש */}
           <Typography
+            id="daily-faith-title"
             sx={{
               position: 'absolute',
               top: '14.5%',
               left: '50%',
               transform: 'translateX(-50%)',
-              fontSize: { xs: 12, sm: 14 },
+              fontSize: { xs: 11, sm: 12.5 },
               fontWeight: 800,
               color: '#5D3A0A',
               fontFamily: '"Frank Ruhl Libre", "David Libre", serif',
               letterSpacing: 2,
               whiteSpace: 'nowrap',
               textShadow: '0 1px 0 rgba(255,230,180,0.5)',
-              opacity: 0.9,
+              opacity: 0.88,
             }}
           >
             החיזוק היומי
           </Typography>
 
-          {/* "בס״ד" בתוך הגוויל - בפינה ימנית למעלה של אזור הכתיבה */}
+          {/* "בס״ד" בתוך אזור הכתיבה של הקלף */}
           <Typography
             sx={{
               position: 'absolute',
-              top: '32%',
+              top: '30%',
               right: '21%',
-              fontSize: { xs: 10, sm: 12 },
+              fontSize: { xs: 9, sm: 10 },
               fontWeight: 700,
               color: '#3E2F0E',
-              fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
+              fontFamily: '"Frank Ruhl Libre", "David Libre", serif',
               opacity: 0.75,
-              letterSpacing: 0.3,
             }}
           >
             בס״ד
           </Typography>
 
-          {/* אזור הטקסט המרכזי - ממוקם אחרי ה-בס״ד */}
+          {/* אזור הטקסט — מוגבל בגבולות של הגוויל, עם line-clamp וחיתוך מילים חכם */}
           <Box
             sx={{
               position: 'absolute',
-              top: '38%',
-              bottom: '36%',
-              left: { xs: '19%', sm: '20%' },
-              right: { xs: '19%', sm: '20%' },
+              top: '35%',
+              bottom: '37%',
+              left: '17%',
+              right: '17%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -133,19 +159,23 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           >
             <Typography
               sx={{
-                fontSize: { xs: 13, sm: 16 },
+                fontSize: { xs: 12, sm: 13.5 },
                 fontWeight: 500,
-                lineHeight: 1.55,
+                lineHeight: 1.5,
                 color: '#3E2F0E',
                 fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
                 whiteSpace: 'pre-wrap',
+                // wrapping חכם - שובר כל מקום צריך כדי לא לגלוש
+                overflowWrap: 'anywhere',
                 wordBreak: 'break-word',
-                letterSpacing: 0.2,
-                // חיתוך חכם לטקסט ארוך במקום גלישה מחוץ לגוויל
+                hyphens: 'auto',
+                letterSpacing: 0.15,
+                // חיתוך 7 שורות עם ... אם הטקסט ארוך מדי
                 display: '-webkit-box',
-                WebkitLineClamp: 6,
+                WebkitLineClamp: 7,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                width: '100%',
               }}
             >
               {text}
@@ -153,34 +183,32 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           </Box>
         </Box>
 
-        {/* כפתור "קראתי והתחזקתי" - משלב זהב וטורקיז של האפליקציה */}
+        {/* כפתור רוחב מלא בסגנון של InviteModal */}
         <Button
+          fullWidth
           onClick={handleClose}
           sx={{
-            px: 3.5,
-            py: 1.2,
             borderRadius: '14px',
-            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #14B8A6 100%)',
+            py: 1.25,
+            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #B8860B 100%)',
             color: 'white',
             fontWeight: 800,
-            fontSize: 14,
-            boxShadow: '0 4px 16px rgba(184,134,11,0.45), 0 0 18px rgba(20,184,166,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
+            fontSize: 14.5,
             textTransform: 'none',
-            letterSpacing: 0.4,
-            border: '1px solid rgba(255,220,130,0.35)',
+            letterSpacing: 0.5,
+            boxShadow: '0 4px 14px rgba(184,134,11,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+            border: '1px solid rgba(255,220,130,0.3)',
             transition: 'transform 0.12s, box-shadow 0.2s',
             '&:hover': {
-              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 50%, #0D9488 100%)',
-              boxShadow: '0 6px 20px rgba(184,134,11,0.55), 0 0 22px rgba(20,184,166,0.35)',
+              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 50%, #9C7209 100%)',
+              boxShadow: '0 6px 18px rgba(184,134,11,0.5)',
             },
-            '&:active': {
-              transform: 'scale(0.97)',
-            },
+            '&:active': { transform: 'scale(0.98)' },
           }}
         >
           {t('dailyFaithReadButton')}
         </Button>
       </Box>
-    </Dialog>
+    </>
   );
 };
