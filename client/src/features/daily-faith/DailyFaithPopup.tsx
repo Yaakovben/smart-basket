@@ -11,10 +11,10 @@ interface DailyFaithPopupProps {
   onClose: () => void;
 }
 
-// זוהר עדין סביב הגוויל - כאילו מואר מאחור
+// זוהר עדין סביב הגוויל
 const subtleGlow = keyframes`
-  0%, 100% { filter: drop-shadow(0 16px 36px rgba(0,0,0,0.6)); }
-  50%      { filter: drop-shadow(0 18px 44px rgba(255,200,90,0.2)) drop-shadow(0 16px 36px rgba(0,0,0,0.55)); }
+  0%, 100% { filter: drop-shadow(0 12px 28px rgba(0,0,0,0.55)); }
+  50%      { filter: drop-shadow(0 14px 34px rgba(255,200,90,0.18)) drop-shadow(0 12px 28px rgba(0,0,0,0.5)); }
 `;
 
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
@@ -42,14 +42,14 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: 'none',
           overflow: 'visible',
           m: 2,
-          maxWidth: 440,
-          width: '100%',
+          maxWidth: 'unset',
+          width: 'auto',
         },
       }}
       sx={{
         '& .MuiBackdrop-root': {
-          bgcolor: 'rgba(10,8,4,0.88)',
-          backdropFilter: 'blur(8px)',
+          bgcolor: 'rgba(10,8,4,0.85)',
+          backdropFilter: 'blur(6px)',
         },
       }}
     >
@@ -58,15 +58,19 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 2.5,
+          gap: 2,
         }}
       >
-        {/* הגוויל עם הטקסט */}
+        {/* הגוויל עם הטקסט - גובה מוגבל לפי המסך כדי שלא ישתלט */}
         <Box
           sx={{
             position: 'relative',
-            width: '100%',
+            // מוגבל בגובה: 58vh במסך רגיל, 52vh במסכים נמוכים
+            height: { xs: '52vh', sm: '58vh' },
+            maxHeight: 560,
+            // הרוחב נגזר מהיחס של התמונה (700:1040)
             aspectRatio: '700 / 1040',
+            maxWidth: '92vw',
             backgroundImage: `url(${PARCHMENT_BG_URL})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -78,14 +82,14 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           <Typography
             sx={{
               position: 'absolute',
-              top: '24%',
-              right: '20%',
-              fontSize: { xs: 11, sm: 13 },
+              top: '25%',
+              right: '22%',
+              fontSize: { xs: 10, sm: 12 },
               fontWeight: 700,
               color: '#3E2F0E',
               fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
-              opacity: 0.8,
-              letterSpacing: 0.5,
+              opacity: 0.75,
+              letterSpacing: 0.3,
             }}
           >
             בס״ד
@@ -95,10 +99,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           <Box
             sx={{
               position: 'absolute',
-              top: '30%',
-              bottom: '38%',
-              left: { xs: '16%', sm: '18%' },
-              right: { xs: '16%', sm: '18%' },
+              top: '32%',
+              bottom: '36%',
+              left: { xs: '17%', sm: '18%' },
+              right: { xs: '17%', sm: '18%' },
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -107,15 +111,19 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           >
             <Typography
               sx={{
-                fontSize: { xs: 14, sm: 17 },
+                fontSize: { xs: 13, sm: 16 },
                 fontWeight: 500,
-                lineHeight: 1.65,
+                lineHeight: 1.55,
                 color: '#3E2F0E',
                 fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
-                // אותיות עם תחושת כתב יד קליל
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
+                // חיתוך חכם לטקסט ארוך במקום גלישה מחוץ לגוויל
+                display: '-webkit-box',
+                WebkitLineClamp: 6,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
               }}
             >
               {text}
@@ -123,25 +131,25 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           </Box>
         </Box>
 
-        {/* כפתור "קראתי והתחזקתי" - מתחת לגוויל, בצבעים תואמים */}
+        {/* כפתור "קראתי והתחזקתי" - מתחת לגוויל, קומפקטי */}
         <Button
           onClick={handleClose}
           sx={{
-            px: 4.5,
-            py: 1.35,
-            borderRadius: '14px',
+            px: 3.5,
+            py: 1.1,
+            borderRadius: '12px',
             background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 55%, #B8860B 100%)',
             color: 'white',
             fontWeight: 800,
-            fontSize: 15,
-            boxShadow: '0 6px 20px rgba(184, 134, 11, 0.55), inset 0 1px 0 rgba(255,255,255,0.3)',
+            fontSize: 14,
+            boxShadow: '0 4px 14px rgba(184, 134, 11, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
             textTransform: 'none',
-            letterSpacing: 0.5,
+            letterSpacing: 0.4,
             border: '1px solid rgba(255,220,130,0.3)',
             transition: 'transform 0.12s, box-shadow 0.2s',
             '&:hover': {
               background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 55%, #9C7209 100%)',
-              boxShadow: '0 8px 24px rgba(184, 134, 11, 0.65), inset 0 1px 0 rgba(255,255,255,0.35)',
+              boxShadow: '0 6px 18px rgba(184, 134, 11, 0.6)',
             },
             '&:active': {
               transform: 'scale(0.97)',
