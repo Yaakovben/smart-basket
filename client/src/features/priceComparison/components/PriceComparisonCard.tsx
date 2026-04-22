@@ -150,9 +150,14 @@ const UnmatchedRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) =
 ));
 UnmatchedRow.displayName = 'UnmatchedRow';
 
-// כרטיס רשימה - מראה סה"כ + ניתן לפתוח לראות פריטים
-const ListCard = memo(({ group, isDark }: { group: PriceListGroup; isDark?: boolean }) => {
-  const [open, setOpen] = useState(false);
+// כרטיס רשימה - מראה סה"כ + ניתן לפתוח לראות פריטים (open נשלט מבחוץ לצורך אקורדיון)
+interface ListCardProps {
+  group: PriceListGroup;
+  isDark?: boolean;
+  open: boolean;
+  onToggle: () => void;
+}
+const ListCard = memo(({ group, isDark, open, onToggle }: ListCardProps) => {
   const coverage = group.pendingCount > 0 ? Math.round((group.matchedCount / group.pendingCount) * 100) : 0;
   const matched = group.matches.filter(m => m.matched);
   const unmatched = group.matches.filter(m => !m.matched);
@@ -169,7 +174,7 @@ const ListCard = memo(({ group, isDark }: { group: PriceListGroup; isDark?: bool
     >
       {/* כותרת הרשימה - תמיד גלויה */}
       <Box
-        onClick={() => setOpen(v => !v)}
+        onClick={onToggle}
         sx={{
           display: 'flex', alignItems: 'center', gap: 1.25, p: 1.5,
           cursor: 'pointer', '&:active': { opacity: 0.9 },
@@ -249,6 +254,9 @@ const ListCard = memo(({ group, isDark }: { group: PriceListGroup; isDark?: bool
 ListCard.displayName = 'ListCard';
 
 export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
+  // אקורדיון: רק רשימה אחת פתוחה בו-זמנית
+  const [openListId, setOpenListId] = useState<string | null>(null);
+
   if (loading || !data) return null;
 
   const freshness = formatRelative(data.lastUpdatedISO);
@@ -328,7 +336,15 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
       {data.enabled && hasLists && (
         <>
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            {data.lists.map(g => <ListCard key={g.listId} group={g} isDark={isDark} />)}
+            {data.lists.map(g => (
+              <ListCard
+                key={g.listId}
+                group={g}
+                isDark={isDark}
+                open={openListId === g.listId}
+                onToggle={() => setOpenListId(prev => prev === g.listId ? null : g.listId)}
+              />
+            ))}
           </Box>
 
           {/* סיכום-על */}

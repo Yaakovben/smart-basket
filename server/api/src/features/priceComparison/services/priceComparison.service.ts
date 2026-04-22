@@ -64,11 +64,18 @@ async function getLastUpdatedISO(): Promise<string | null> {
   return latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
 }
 
+// מסנן טוקנים: זורק מילים של אות אחת ומספרים בלבד (לא נושאי משמעות)
+function meaningfulTokens(tokens: string[]): string[] {
+  return tokens.filter(t => t.length >= 2 && !/^\d+$/.test(t));
+}
+
 // ניסיון התאמה של שם מוצר בודד למאגר המחירים
 async function tryMatchProduct(productId: string, name: string, quantity: number): Promise<PriceMatch> {
   const normalized = normalizeProductName(name);
-  const userTokensArr = normalized ? normalized.split(' ').filter(Boolean) : [];
-  const userTokens = new Set(userTokensArr);
+  const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
+  const meaningful = meaningfulTokens(rawTokens);
+  const userTokensForApi = rawTokens; // מציגים למשתמש את מה שהוא כתב
+  const userSet = new Set(meaningful);
 
   const unmatchedBase: PriceMatch = {
     productId,
@@ -83,47 +90,76 @@ async function tryMatchProduct(productId: string, name: string, quantity: number
     barcode: '',
     matchConfidence: 0,
     matchedTokens: [],
-    userTokens: userTokensArr,
+    userTokens: userTokensForApi,
   };
 
-  if (!normalized || userTokensArr.length === 0) return unmatchedBase;
+  if (meaningful.length === 0) return unmatchedBase;
 
-  // חיפוש מועמדים לפי המילה הראשונה
-  const candidates = await PriceDAL.findByNormalizedName(userTokensArr[0], BETA_CHAIN_ID, 20);
-
-  let best: typeof candidates[number] | null = null;
-  let bestScore = 0;
-  let bestMatchedTokens: string[] = [];
-  for (const c of candidates) {
-    const chainTokens = (c.itemNameNormalized || '').split(' ').filter(Boolean);
-    const matched: string[] = [];
-    for (const t of chainTokens) if (userTokens.has(t)) matched.push(t);
-    if (matched.length > bestScore) {
-      bestScore = matched.length;
-      best = c;
-      bestMatchedTokens = matched;
+  // חיפוש מקבילי על עד 3 טוקנים המשמעותיים הראשונים, למיזוג מועמדים
+  const searchTokens = meaningful.slice(0, 3);
+  const candidateArrays = await Promise.all(
+    searchTokens.map(t => PriceDAL.findByNormalizedName(t, BETA_CHAIN_ID, 30))
+  );
+  // דה-דופליקציה לפי _id
+  const seen = new Set<string>();
+  const candidates: typeof candidateArrays[number] = [];
+  for (const arr of candidateArrays) {
+    for (const c of arr) {
+      const id = String(c._id);
+      if (!seen.has(id)) { seen.add(id); candidates.push(c); }
     }
   }
 
-  const confidence = userTokens.size > 0 ? bestScore / userTokens.size : 0;
-  const threshold = Math.min(2, userTokens.size);
+  if (candidates.length === 0) return unmatchedBase;
 
-  if (best && bestScore >= threshold) {
-    return {
-      ...unmatchedBase,
-      matched: true,
-      chainId: best.chainId,
-      chainName: best.chainName,
-      itemName: best.itemName,
-      itemNameNormalized: best.itemNameNormalized,
-      price: best.price,
-      barcode: best.barcode,
-      matchConfidence: Math.round(confidence * 100) / 100,
-      matchedTokens: bestMatchedTokens,
-      manufacturerName: best.manufacturerName,
-    };
+  type Scored = { cand: typeof candidates[number]; score: number; matchedTokens: string[]; coverage: number };
+  let best: Scored | null = null;
+
+  for (const c of candidates) {
+    const chainTokensRaw = (c.itemNameNormalized || '').split(' ').filter(Boolean);
+    const chainMeaningful = meaningfulTokens(chainTokensRaw);
+    if (chainMeaningful.length === 0) continue;
+
+    const intersect: string[] = [];
+    for (const t of chainMeaningful) if (userSet.has(t)) intersect.push(t);
+    if (intersect.length === 0) continue;
+
+    const userCoverage = intersect.length / userSet.size;          // כמה מהכוונה של המשתמש כוסתה
+    const chainCoverage = intersect.length / chainMeaningful.length; // כמה ספציפי המוצר של הרשת
+    // ציון משוכלל: מעדיף כיסוי של כוונת המשתמש, עם בונוס על ספציפיות
+    let score = userCoverage * 0.7 + chainCoverage * 0.3;
+
+    // בונוס: אם הנורמליזציה של המשתמש מופיעה כמחרוזת רציפה במוצר של הרשת
+    if (normalized && c.itemNameNormalized && c.itemNameNormalized.includes(normalized)) {
+      score += 0.15;
+    }
+
+    // בונוס קטן: אם כל הטוקנים של המשתמש נמצאו (כיסוי מלא של הכוונה)
+    if (userCoverage >= 0.999) score += 0.05;
+
+    if (!best || score > best.score) {
+      best = { cand: c, score, matchedTokens: intersect, coverage: userCoverage };
+    }
   }
-  return unmatchedBase;
+
+  // סף התאמה: לפחות 50% מכוונת המשתמש חייבת לכוסות, וציון כולל הגיוני
+  if (!best || best.coverage < 0.5 || best.score < 0.45) return unmatchedBase;
+
+  const b = best.cand;
+  return {
+    ...unmatchedBase,
+    matched: true,
+    chainId: b.chainId,
+    chainName: b.chainName,
+    itemName: b.itemName,
+    itemNameNormalized: b.itemNameNormalized,
+    price: b.price,
+    barcode: b.barcode,
+    // ודאות שמוצגת למשתמש: מבוססת על כיסוי כוונת המשתמש (יותר אינטואיטיבי ממדד משוכלל)
+    matchConfidence: Math.round(best.coverage * 100) / 100,
+    matchedTokens: best.matchedTokens,
+    manufacturerName: b.manufacturerName,
+  };
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
