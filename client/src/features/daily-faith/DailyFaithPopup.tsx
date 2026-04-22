@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useLayoutEffect, useState } from 'react';
 import { Box, Typography, Button, keyframes } from '@mui/material';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { useSettings } from '../../global/context/SettingsContext';
@@ -6,12 +6,23 @@ import { haptic } from '../../global/helpers';
 
 const PARCHMENT_BG_URL = '/daily-faith/parchment.jpg';
 
+// ===== הגדרות קבועות של אזורי הטקסט על תמונת הגוויל =====
+// כל הערכים באחוזים מגובה/רוחב הקונטיינר של התמונה.
+// המספרים נמדדו מהתמונה הספציפית. אם מחליפים תמונה — לעדכן כאן.
+const SCROLL_LAYOUT = {
+  // אזור הטקסט — בתוך שטח הכתיבה הפתוח של הגוויל בלבד
+  body: { top: '38%', bottom: '34%', left: '30%', right: '30%' },
+  // מקדמים דינמיים — הגודל מחושב לפי רוחב האזור בפועל, לא ערך קבוע בפיקסלים
+  fontMinRatio: 0.06,  // 6% מרוחב התיבה (בערך 9px על תיבה של 150px)
+  fontMaxRatio: 0.13,  // 13% מרוחב התיבה (בערך 20px על תיבה של 150px)
+  fontAbsoluteMin: 9,  // רצפה מוחלטת - לא קטן מזה גם על מסכים זעירים
+} as const;
+
 interface DailyFaithPopupProps {
   text: string;
   onClose: () => void;
 }
 
-// סגנון בדומה ל-InviteModal - overlay כהה עם blur
 const overlaySx = {
   position: 'fixed' as const,
   inset: 0,
@@ -21,7 +32,6 @@ const overlaySx = {
   touchAction: 'none' as const,
 };
 
-// כרטיס המודאל עצמו — בדיוק כמו ב-InviteModal
 const containerSx = {
   position: 'fixed' as const,
   top: '50%',
@@ -31,25 +41,84 @@ const containerSx = {
   borderRadius: '20px',
   p: 2.5,
   zIndex: 1001,
-  width: '90%',
-  maxWidth: 340,
+  width: '94%',
+  maxWidth: 420,
   boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
   overscrollBehavior: 'contain' as const,
-  maxHeight: '90vh',
+  // 95vh במצב רגיל, dvh (dynamic viewport) לסמארטפונים עם חלל כתובת משתנה
+  maxHeight: 'min(95dvh, 95vh)',
   overflowY: 'auto' as const,
-  '@media (max-width: 360px)': { p: 1.75, borderRadius: '16px', maxWidth: 300 },
+  // נייד צר - פחות padding ו-border radius
+  '@media (max-width: 360px)': { p: 1.75, borderRadius: '16px', maxWidth: 340 },
+  // מצב landscape - מגביל גובה חזק יותר כדי שהתמונה לא תתפוס את כל המסך
+  '@media (orientation: landscape) and (max-height: 500px)': {
+    maxHeight: '92dvh',
+    p: 1.5,
+  },
 };
 
-// פעימה עדינה זהובה — קשר לעיצוב של האפליקציה ללא הגזמה
 const softGoldPulse = keyframes`
   0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
   50%      { box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 24px rgba(212,175,55,0.3); }
 `;
 
+// Hook - מתאים את גודל הטקסט כדי שימלא את התיבה בדיוק, בלי לגלוש
+// עובד גנרית: טקסט קצר יהיה גדול, טקסט ארוך יתכווץ. מגיב ל-resize של המסך.
+function useAutoFitFontSize(text: string, containerRef: React.RefObject<HTMLDivElement | null>) {
+  const textRef = useRef<HTMLDivElement>(null);
+  const [fontSize, setFontSize] = useState<number>(14);
+
+  useLayoutEffect(() => {
+    const el = textRef.current;
+    const container = containerRef.current;
+    if (!el || !container) return;
+
+    const fit = () => {
+      // גודל פונט דינמי: מחושב לפי רוחב התיבה בפועל, לא ערך קבוע.
+      // תיבה קטנה -> טווח קטן, תיבה גדולה -> טווח גדול, יחסית לרוחב.
+      const w = container.clientWidth;
+      const rawMin = Math.round(w * SCROLL_LAYOUT.fontMinRatio);
+      const rawMax = Math.round(w * SCROLL_LAYOUT.fontMaxRatio);
+      const lo0 = Math.max(SCROLL_LAYOUT.fontAbsoluteMin, rawMin);
+      const hi0 = Math.max(lo0, rawMax);
+
+      // חיפוש בינארי של הגודל המקסימלי שמכניס את הטקסט בתיבה
+      let lo = lo0;
+      let hi = hi0;
+      let best = lo;
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) * 2) / 2; // חצאי פיקסלים
+        el.style.fontSize = `${mid}px`;
+        const fits =
+          el.scrollHeight <= container.clientHeight &&
+          el.scrollWidth <= container.clientWidth;
+        if (fits) {
+          best = mid;
+          lo = mid + 0.5;
+        } else {
+          hi = mid - 0.5;
+        }
+      }
+      el.style.fontSize = `${best}px`;
+      // line-height דינמי: טקסט גדול -> ריווח צפוף יותר, קטן -> ריווח רחב יותר לקריאה
+      el.style.lineHeight = best >= 16 ? '1.45' : best >= 12 ? '1.55' : '1.65';
+      setFontSize(best);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [text, containerRef]);
+
+  return { textRef, fontSize };
+}
+
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
+  const bodyContainerRef = useRef<HTMLDivElement>(null);
+  const { textRef } = useAutoFitFontSize(text, bodyContainerRef);
 
-  // נעילת גלילה של גוף הדף
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -63,13 +132,70 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
 
   return (
     <>
-      {/* Overlay - לא נסגר בלחיצה כדי שרק הכפתור יסגור */}
       <Box sx={overlaySx} aria-hidden="true" />
 
-      {/* Modal card */}
       <Box sx={containerSx} role="dialog" aria-labelledby="daily-faith-title">
-        {/* תגית קטנה בסגנון האפליקציה בראש המודאל */}
-        <Box sx={{ textAlign: 'center', mb: 1.75, '@media (max-width: 360px)': { mb: 1.25 } }}>
+        {/* הגוויל - תמונה כאלמנט אמיתי כך שהקופסה מתאימה בדיוק לממדיו.
+            כל האלמנטים בתוך האחוזים שלמטה מתמקמים לפי התמונה בדיוק, בלי letterboxing. */}
+        <Box
+          sx={{
+            position: 'relative',
+            width: '100%',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            animation: `${softGoldPulse} 4s ease-in-out infinite`,
+            mb: 1.5,
+            lineHeight: 0,
+          }}
+        >
+          <Box
+            component="img"
+            src={PARCHMENT_BG_URL}
+            alt=""
+            sx={{ display: 'block', width: '100%', height: 'auto', userSelect: 'none', pointerEvents: 'none' }}
+            draggable={false}
+          />
+          {/* אזור הטקסט - קופסה מוגדרת היטב, האוטו-פיט מתאים גודל לתוכו */}
+          <Box
+            ref={bodyContainerRef}
+            id="daily-faith-title"
+            sx={{
+              position: 'absolute',
+              top: SCROLL_LAYOUT.body.top,
+              bottom: SCROLL_LAYOUT.body.bottom,
+              left: SCROLL_LAYOUT.body.left,
+              right: SCROLL_LAYOUT.body.right,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            <Typography
+              ref={textRef}
+              sx={{
+                fontWeight: 500,
+                color: '#3E2F0E',
+                fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
+                whiteSpace: 'pre-wrap',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+                letterSpacing: 0.1,
+                width: '100%',
+                // text-wrap: balance שובר שורות בצורה מאוזנת יותר כשאפשרי
+                textWrap: 'balance',
+                // מונע התאמת קנה-מידה אוטומטי של iOS שעשוי להתנגש עם ה-auto-fit
+                WebkitTextSizeAdjust: '100%',
+              }}
+            >
+              {text}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* תגית "חיזוק יומי" - מתחת לגוויל, מעל הכפתור */}
+        <Box sx={{ textAlign: 'center', mb: 1.5 }}>
           <Box
             sx={{
               display: 'inline-flex',
@@ -91,99 +217,6 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           </Box>
         </Box>
 
-        {/* הגוויל עצמו — ברוחב מלא של המודאל, עם aspect-ratio */}
-        <Box
-          sx={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '700 / 1040',
-            backgroundImage: `url(${PARCHMENT_BG_URL})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center top',
-            borderRadius: '10px',
-            animation: `${softGoldPulse} 4s ease-in-out infinite`,
-            mb: 2,
-          }}
-        >
-          {/* "החיזוק היומי" על החלק המגולגל בראש */}
-          <Typography
-            id="daily-faith-title"
-            sx={{
-              position: 'absolute',
-              top: '14.5%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              fontSize: { xs: 11, sm: 12.5 },
-              fontWeight: 800,
-              color: '#5D3A0A',
-              fontFamily: '"Frank Ruhl Libre", "David Libre", serif',
-              letterSpacing: 2,
-              whiteSpace: 'nowrap',
-              textShadow: '0 1px 0 rgba(255,230,180,0.5)',
-              opacity: 0.88,
-            }}
-          >
-            החיזוק היומי
-          </Typography>
-
-          {/* "בס״ד" בתוך אזור הכתיבה של הקלף */}
-          <Typography
-            sx={{
-              position: 'absolute',
-              top: '30%',
-              right: '21%',
-              fontSize: { xs: 9, sm: 10 },
-              fontWeight: 700,
-              color: '#3E2F0E',
-              fontFamily: '"Frank Ruhl Libre", "David Libre", serif',
-              opacity: 0.75,
-            }}
-          >
-            בס״ד
-          </Typography>
-
-          {/* אזור הטקסט — מוגבל בגבולות של הגוויל, עם line-clamp וחיתוך מילים חכם */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '35%',
-              bottom: '37%',
-              left: '17%',
-              right: '17%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: 12, sm: 13.5 },
-                fontWeight: 500,
-                lineHeight: 1.5,
-                color: '#3E2F0E',
-                fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
-                whiteSpace: 'pre-wrap',
-                // wrapping חכם - שובר כל מקום צריך כדי לא לגלוש
-                overflowWrap: 'anywhere',
-                wordBreak: 'break-word',
-                hyphens: 'auto',
-                letterSpacing: 0.15,
-                // חיתוך 7 שורות עם ... אם הטקסט ארוך מדי
-                display: '-webkit-box',
-                WebkitLineClamp: 7,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                width: '100%',
-              }}
-            >
-              {text}
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* כפתור רוחב מלא בסגנון של InviteModal */}
         <Button
           fullWidth
           onClick={handleClose}

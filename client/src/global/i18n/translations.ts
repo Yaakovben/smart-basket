@@ -287,6 +287,7 @@ type TranslationKey =
   | 'privacyPolicy'
   | 'termsOfService'
   | 'termsAndPrivacy'
+  | 'clearCache'
   | 'consentTitle'
   | 'consentDescription'
   | 'accept'
@@ -733,6 +734,7 @@ export const translations: Record<Language, Translations> = {
     privacyPolicy: 'מדיניות פרטיות',
     termsOfService: 'תנאי שימוש',
     termsAndPrivacy: 'תנאי שימוש ופרטיות',
+    clearCache: 'ניקוי מטמון',
     consentTitle: 'הסכמה לשימוש בנתונים',
     consentDescription: 'אנו משתמשים באחסון מקומי (LocalStorage) כדי לשמור את ההעדפות שלך ואת נתוני האפליקציה במכשיר שלך. המידע נשאר במכשירך ואינו נשלח לשרתים חיצוניים.',
     accept: 'מסכים',
@@ -1171,6 +1173,7 @@ export const translations: Record<Language, Translations> = {
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
     termsAndPrivacy: 'Terms & Privacy',
+    clearCache: 'Clear Cache',
     consentTitle: 'Data Usage Consent',
     consentDescription: 'We use local storage (LocalStorage) to save your preferences and app data on your device. The information stays on your device and is not sent to external servers.',
     accept: 'Accept',
@@ -1608,6 +1611,7 @@ export const translations: Record<Language, Translations> = {
     privacyPolicy: 'Политика конфиденциальности',
     termsOfService: 'Условия использования',
     termsAndPrivacy: 'Условия и конфиденциальность',
+    clearCache: 'Очистить кеш',
     consentTitle: 'Согласие на использование данных',
     consentDescription: 'Мы используем локальное хранилище (LocalStorage) для сохранения ваших настроек и данных приложения на вашем устройстве. Информация остаётся на вашем устройстве и не отправляется на внешние серверы.',
     accept: 'Принять',
