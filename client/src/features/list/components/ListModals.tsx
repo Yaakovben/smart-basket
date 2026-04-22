@@ -365,11 +365,22 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   const img = new Image();
                   img.onload = () => {
                     ctx.drawImage(img, 50, 50, 400, 400);
-                    canvas.toBlob(blob => {
+                    canvas.toBlob(async blob => {
                       if (!blob) return;
+                      const fileName = `${list.name}-qr.png`;
+                      const file = new File([blob], fileName, { type: 'image/png' });
+                      // ניסיון לפתוח share sheet של המערכת כדי לאפשר שמירה לגלריה
+                      if (navigator.canShare?.({ files: [file] })) {
+                        try {
+                          await navigator.share({ files: [file], title: list.name });
+                          return;
+                        } catch {
+                          // המשתמש ביטל או נכשל — ניפול להורדה רגילה
+                        }
+                      }
                       const a = document.createElement('a');
                       a.href = URL.createObjectURL(blob);
-                      a.download = `${list.name}-qr.png`;
+                      a.download = fileName;
                       a.click();
                       showToast(t('saved'));
                     }, 'image/png');
