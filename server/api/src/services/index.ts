@@ -15,8 +15,8 @@ export * as UserService from './user.service';
 
 // עדיין class-based - בהמשך יומרו:
 export * as AuthService from './auth.service';
-export { ListService } from './list.service';
-export { ListMembershipService } from './list-membership.service';
+export * as ListService from './list.service';
+export * as ListMembershipService from './list-membership.service';
 export * as NotificationService from './notification.service';
 export * as PushService from './push.service';
 export type { PushPayload } from './push.service';

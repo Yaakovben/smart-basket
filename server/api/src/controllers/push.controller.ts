@@ -1,11 +1,22 @@
-import type { Request, Response } from 'express';
-import { PushService } from '../services';
-import { asyncHandler } from '../utils';
-import type { AuthRequest } from '../types';
+/**
+ * push.controller.ts
+ *
+ * Controller של הרשמת Push Notifications.
+ * מותקן ב-/api/push. כל הנתיבים (למעט vapid-key) דורשים אימות.
+ */
 
-/** קבלת מפתח VAPID ציבורי */
+import type { Request, Response } from 'express';
+import type { AuthRequest } from '../types';
+import { asyncHandler } from '../utils';
+import * as pushService from '../services/push.service';
+
+/**
+ * GET /api/push/vapid-public-key
+ * החזרת מפתח VAPID הציבורי (לצד הלקוח לצורך יצירת subscription).
+ * אם השרת לא מוגדר עם VAPID - מחזיר 503.
+ */
 export const getVapidPublicKey = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
-  const publicKey = PushService.getPublicKey();
+  const publicKey = pushService.getPublicKey();
 
   if (!publicKey) {
     res.status(503).json({
@@ -15,45 +26,39 @@ export const getVapidPublicKey = asyncHandler(async (_req: Request, res: Respons
     return;
   }
 
-  res.json({
-    success: true,
-    data: { publicKey },
-  });
+  res.json({ success: true, data: { publicKey } });
 });
 
-/** הרשמה להתראות push */
+/**
+ * POST /api/push/subscribe
+ * רישום מנוי Push חדש למשתמש המחובר.
+ */
 export const subscribe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const { subscription } = req.body;
 
-  await PushService.subscribe(userId, subscription);
-
-  res.json({
-    success: true,
-    message: 'Subscribed to push notifications',
-  });
+  await pushService.subscribe(userId, subscription);
+  res.json({ success: true, message: 'Subscribed to push notifications' });
 });
 
-/** ביטול הרשמה להתראות push */
+/**
+ * POST /api/push/unsubscribe
+ * ביטול מנוי Push. עם endpoint בגוף - רק את המכשיר הנוכחי. בלי - את כולם.
+ */
 export const unsubscribe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const { endpoint } = req.body;
 
-  await PushService.unsubscribe(userId, endpoint);
-
-  res.json({
-    success: true,
-    message: 'Unsubscribed from push notifications',
-  });
+  await pushService.unsubscribe(userId, endpoint);
+  res.json({ success: true, message: 'Unsubscribed from push notifications' });
 });
 
-/** בדיקת מנוי push */
+/**
+ * GET /api/push/status
+ * בדיקה האם למשתמש יש מנוי Push פעיל כלשהו.
+ */
 export const getStatus = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
-  const hasSubscription = await PushService.hasSubscription(userId);
-
-  res.json({
-    success: true,
-    data: { subscribed: hasSubscription },
-  });
+  const subscribed = await pushService.hasSubscription(userId);
+  res.json({ success: true, data: { subscribed } });
 });

@@ -10,6 +10,6 @@
 
 export * as AuthController from './auth.controller';
 export * as UserController from './user.controller';
-export { ListController } from './list.controller';
+export * as ListController from './list.controller';
 export * as AdminController from './admin.controller';
 export * as NotificationController from './notification.controller';
