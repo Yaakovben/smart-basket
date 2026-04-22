@@ -69,6 +69,17 @@ function meaningfulTokens(tokens: string[]): string[] {
   return tokens.filter(t => t.length >= 2 && !/^\d+$/.test(t));
 }
 
+// מילות-מקדם שמופיעות בתחילת שם מוצר כדי לציין קטגוריה-צד (לא הקטגוריה הרגילה).
+// אם המשתמש לא ביקש אחת מהן אבל המוצר ברשת מתחיל איתה — סיכוי גבוה שזה לא מה שרצה.
+// דוג׳: משתמש מבקש "חלב" → מוצר "שוקולד חלב" מתחיל ב"שוקולד" (סטייה מהקטגוריה).
+const CATEGORY_MODIFIERS = new Set([
+  'שוקולד', 'שוקו', 'משקה', 'מיץ', 'אבקת', 'אבקה', 'סירופ',
+  'ריבת', 'ריבה', 'מרק', 'מרקים', 'דייסת', 'דייסה', 'מחית',
+  'ממרח', 'קצף', 'גלידת', 'גלידה', 'עוגת', 'עוגה', 'עוגיות',
+  'ביסקוויט', 'ביסקוויטים', 'קרקר', 'קרקרים', 'תבלין', 'תבלינים',
+  'מאפה', 'מאפי', 'רוטב', 'רטבי', 'תחליף', 'שמנת',
+]);
+
 // תוצאת התאמה מופשטת - ללא productId/quantity ששייכים לשורה הספציפית.
 // זה מאפשר לקשט את אותה "התאמת שם" להרבה מוצרים ללא שאילתות חוזרות.
 type NameMatch = Omit<PriceMatch, 'productId' | 'userProductName' | 'userQuantity'>;
@@ -146,7 +157,23 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
       if (manufNorm && userSet.has(manufNorm)) score += 0.2;
     }
 
-    if (!best || score > best.score) {
+    // בונוס חזק: המוצר ברשת מתחיל באחת ממילות המשתמש (הקטגוריה העיקרית שלו).
+    // דוג׳: משתמש מבקש "חלב" → מעדיפים "חלב 3% 1ל" על פני "שוקולד חלב 500מל".
+    const chainFirstToken = chainMeaningful[0];
+    if (chainFirstToken && userSet.has(chainFirstToken)) {
+      score += 0.2;
+    }
+
+    // קנס כבד: המוצר מתחיל במילת-מקדם (שוקולד/ריבה/תבלין/...) שהמשתמש לא ביקש.
+    // זה מונע סטייה לקטגוריה-צד כשהמשתמש ביקש את הקטגוריה הרגילה.
+    if (chainFirstToken && !userSet.has(chainFirstToken) && CATEGORY_MODIFIERS.has(chainFirstToken)) {
+      score -= 0.3;
+    }
+
+    if (!best || score > best.score ||
+        // שובר-שוויון: בציון דומה (עד 0.05 פער) מעדיפים את הזול יותר —
+        // משתמשים מצפים למוצר הבסיסי לשאילתות כלליות ("נקניק" = לא ב-100 ש"ח).
+        (Math.abs(score - best.score) < 0.05 && c.price < best.cand.price)) {
       best = { cand: c, score, matchedTokens: intersect, coverage: userCoverage };
     }
   }
