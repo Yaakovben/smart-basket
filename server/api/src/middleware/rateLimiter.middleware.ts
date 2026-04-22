@@ -12,16 +12,23 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// הגבלת קצב לנתיבי אימות
+// הגבלת קצב כללית לנתיבי אימות.
+// משמשת את כל /api/auth/* כולל check-email, refresh, logout, app-open.
+// אבטחה אמיתית נגד brute-force מסופקת ע״י loginLimiter (5/15min).
+// לכן כאן הגבול רחב יותר — 100 בקשות ל-15 דק׳, מה שמאפשר:
+// boot של האפליקציה + רענוני טוקן סדירים + הפעלות מרובות מאותו IP (NAT/משפחה)
+// בלי להיחסם.
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 דקות
-  max: 20, // 20 בקשות (כולל רענון טוקן)
+  max: 100,
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later',
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // לא סופרים רענוני טוקן מוצלחים — מונע חסימה של משתמש תקף
+  skipSuccessfulRequests: true,
 });
 
 // הגבלת התחברות - 5 ניסיונות ל-15 דקות
@@ -38,11 +45,11 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, // לא סופר התחברויות מוצלחות
 });
 
-// הגבלת הרשמה - 3 ניסיונות לשעה
-// מונע יצירת חשבונות ספאם
+// הגבלת הרשמה - 10 ניסיונות לשעה
+// מונע ספאם, אך סובלני למשתמשים שנכשלים בוולידציה או מתקנים שדות
 export const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: 10,
   message: {
     success: false,
     message: 'Too many registration attempts, please try again later',

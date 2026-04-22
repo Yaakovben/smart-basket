@@ -13,8 +13,10 @@ import { ForbiddenError } from './errors';
 
 const app = express();
 
-// פרוקסי מהימן (נדרש ל-Render, Railway וכו')
-app.set('trust proxy', 1);
+// פרוקסי מהימן - `true` במקום `1` כי Render משתמש בשרשרת proxies.
+// בלי זה req.ip מחזיר את ה-IP של ה-proxy ולא של המשתמש, וכל המשתמשים
+// חולקים את אותו דלי rate-limit → "יותר מידי ניסיונות" אפילו בחיבור ראשון.
+app.set('trust proxy', true);
 
 app.use(helmet());
 
