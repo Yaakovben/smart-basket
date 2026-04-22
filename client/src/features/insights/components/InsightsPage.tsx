@@ -206,7 +206,7 @@ export const InsightsPage = memo(() => {
         background: isDark ? 'linear-gradient(160deg, #312E81, #5B21B6, #7C3AED)' : 'linear-gradient(160deg, #6D28D9, #7C3AED, #A78BFA)',
         // Padding-top מוגדל לפנות מקום לריבון BETA בגודל lg מעל שורת הכותרת
         // בלי שיידרוס כפתור או את ה-pill של הציון.
-        p: { xs: 'max(90px, env(safe-area-inset-top) + 56px) 16px 22px', sm: '94px 20px 26px' },
+        p: { xs: 'max(70px, env(safe-area-inset-top) + 38px) 16px 22px', sm: '74px 20px 26px' },
         borderRadius: '0 0 24px 24px',
         position: 'relative', overflow: 'hidden',
         mb: 2,

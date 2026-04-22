@@ -22,14 +22,14 @@ interface Props {
 export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0, size = 'lg' }: Props) => {
   const isLeft = corner === 'top-left';
   const isLarge = size === 'lg';
-  // מימדי הריבון - המידה "lg" גדולה משמעותית ויותר בולטת
-  const boxSize = isLarge ? 150 : 110;
-  const innerWidth = isLarge ? 220 : 160;
-  const innerTop = isLarge ? 34 : 22;
-  const innerOffset = isLarge ? -42 : -32;
-  const fontSize = isLarge ? 13 : 11;
-  const letterSpacing = isLarge ? 4 : 3;
-  const padY = isLarge ? 1 : 0.6;
+  // מימדי הריבון - מותאם לפון, קצר יחסית אבל עדיין בולט ב-lg
+  const boxSize = isLarge ? 125 : 110;
+  const innerWidth = isLarge ? 200 : 160;
+  const innerTop = isLarge ? 22 : 20;
+  const innerOffset = isLarge ? -38 : -32;
+  const fontSize = isLarge ? 12 : 11;
+  const letterSpacing = isLarge ? 3.5 : 3;
+  const padY = isLarge ? 0.75 : 0.6;
   const shadowStrength = isLarge ? '0 4px 18px rgba(20,184,166,0.55)' : '0 3px 12px rgba(20,184,166,0.45)';
 
   // מיקום פיזי דרך style prop - עוקף את ה-RTL-flip של MUI sx
