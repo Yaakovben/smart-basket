@@ -10,11 +10,13 @@ const PARCHMENT_BG_URL = '/daily-faith/parchment.jpg';
 // כל הערכים באחוזים מגובה/רוחב הקונטיינר של התמונה.
 // המספרים נמדדו מהתמונה הספציפית. אם מחליפים תמונה — לעדכן כאן.
 const SCROLL_LAYOUT = {
-  // אזור הטקסט — בתוך שטח הכתיבה הפתוח של הגוויל בלבד
-  body: { top: '38%', bottom: '34%', left: '30%', right: '30%' },
+  // אזור הטקסט — ממורכז בדיוק בתוך השטח החלק של הגוויל (אחרי הגליל העליון, לפני התחתון).
+  // top+bottom מגדירים את גבולות העל/תחת של השטח הפתוח.
+  // left+right סימטריים כדי לשמור מרכוז אופקי מושלם.
+  body: { top: '30%', bottom: '34%', left: '22%', right: '22%' },
   // מקדמים דינמיים — הגודל מחושב לפי רוחב האזור בפועל, לא ערך קבוע בפיקסלים
-  fontMinRatio: 0.06,  // 6% מרוחב התיבה (בערך 9px על תיבה של 150px)
-  fontMaxRatio: 0.13,  // 13% מרוחב התיבה (בערך 20px על תיבה של 150px)
+  fontMinRatio: 0.05,  // 5% מרוחב התיבה
+  fontMaxRatio: 0.11,  // 11% מרוחב התיבה
   fontAbsoluteMin: 9,  // רצפה מוחלטת - לא קטן מזה גם על מסכים זעירים
 } as const;
 
@@ -178,12 +180,15 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 fontWeight: 500,
                 color: '#3E2F0E',
                 fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
+                // pre-wrap: שומר רווחים אבל מאפשר גלישת שורות אוטומטית בין מילים.
+                // ללא overflowWrap/wordBreak — כך מילים לא ייחתכו באמצע.
                 whiteSpace: 'pre-wrap',
-                overflowWrap: 'break-word',
-                wordBreak: 'break-word',
+                wordBreak: 'keep-all',        // לא שובר מילים לעולם
+                overflowWrap: 'normal',       // לא שובר גם אם מילה ארוכה מהשורה
+                hyphens: 'none',              // ללא מקפים אוטומטיים
                 letterSpacing: 0.1,
                 width: '100%',
-                // text-wrap: balance שובר שורות בצורה מאוזנת יותר כשאפשרי
+                // text-wrap: balance שובר שורות בצורה מאוזנת בין מילים
                 textWrap: 'balance',
                 // מונע התאמת קנה-מידה אוטומטי של iOS שעשוי להתנגש עם ה-auto-fit
                 WebkitTextSizeAdjust: '100%',
