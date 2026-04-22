@@ -34,6 +34,9 @@ export default defineConfig({
         start_url: '/',
         dir: 'rtl',
         lang: 'he',
+        // רק purpose: any — האייקונים הנוכחיים ללא safe-zone של 10%, ולכן אסור להכריז עליהם
+        // כ-maskable (אחרת אנדרואיד מודרני חותך את הלוגו ומוצג לא עקבי בין מכשירים).
+        // כשתוחלף תמונה עם padding מתאים, אפשר להוסיף maskable בקובץ נפרד.
         icons: [
           {
             src: 'icon-192x192.png',
@@ -46,18 +49,6 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
-          },
-          {
-            src: 'icon-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: 'icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
           }
         ]
       },
