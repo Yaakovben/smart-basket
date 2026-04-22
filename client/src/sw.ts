@@ -89,17 +89,17 @@ self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// הפעלה, ניקוי מטמון, עדכון לקוחות ותפיסת שליטה
+// הפעלה - תופס שליטה על הטאבים הפתוחים ומודיע ללקוחות לרענן.
+// לא מוחק caches בקפדנות: עם injectManifest + globPatterns ריק אין cache של אפליקציה,
+// רק של workbox. מחיקה אגרסיבית בזמן activate שולחת את ה-PWA למצב לא עקבי אחרי deploy.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => Promise.all(cacheNames.map((name) => caches.delete(name))))
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
-        });
-      })
-      .then(() => self.clients.claim())
+    self.clients.claim().then(() =>
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    ).then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
+      });
+    })
   );
 });

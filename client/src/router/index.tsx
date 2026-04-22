@@ -145,11 +145,20 @@ export const AppRouter = () => {
     }
   }, [authLoading]);
 
-  // ניווט מלחיצה על push notification (מ-Service Worker)
+  // הודעות מ-Service Worker: ניווט מהתראות, ורענון כשה-SW התעדכן.
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
         navigate(event.data.url);
+      }
+      // אחרי deploy חדש ה-SW מפעיל SW_ACTIVATED — רענון כפוי מונע חוסר עקביות
+      // בין JS ישן שכבר רץ לבין SW חדש שתפס שליטה. בלי זה, ה-PWA "נתקע".
+      if (event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload') {
+        // sessionStorage מונע לולאת רענון אינסופית — מרעננים פעם אחת בלבד לכל סשן
+        if (!sessionStorage.getItem('sb_sw_reloaded')) {
+          sessionStorage.setItem('sb_sw_reloaded', '1');
+          window.location.reload();
+        }
       }
     };
     navigator.serviceWorker?.addEventListener('message', handler);
