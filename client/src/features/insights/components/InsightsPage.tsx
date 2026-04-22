@@ -312,10 +312,18 @@ export const InsightsPage = memo(() => {
                   const hiddenMembersCount = sortedMembers.length - membersToShow.length;
 
                   return (
-                    <Paper
+                    <Box
                       key={L.listId}
-                      elevation={0}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => { haptic('light'); navigate(`/list/${L.listId}`); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          haptic('light');
+                          navigate(`/list/${L.listId}`);
+                        }
+                      }}
                       sx={{
                         p: 1.5, borderRadius: '14px', cursor: 'pointer',
                         border: '1px solid',
@@ -324,11 +332,15 @@ export const InsightsPage = memo(() => {
                           ? `linear-gradient(135deg, ${L.listColor}14, transparent 75%)`
                           : `linear-gradient(135deg, ${L.listColor}0A, transparent 75%)`,
                         animation: `${fadeIn} 0.35s ease ${idx * 0.06}s both`,
-                        transition: 'transform 0.15s ease, box-shadow 0.2s ease',
+                        transition: 'opacity 0.1s, box-shadow 0.2s ease',
+                        userSelect: 'none',
+                        outline: 'none',
+                        WebkitTapHighlightColor: 'transparent',
                         '&:hover': {
                           boxShadow: isDark ? `0 4px 16px ${L.listColor}25` : `0 4px 14px ${L.listColor}20`,
                         },
-                        '&:active': { transform: 'scale(0.98)' },
+                        '&:active': { opacity: 0.85 },
+                        '&:focus-visible': { boxShadow: `0 0 0 2px ${L.listColor}` },
                       }}
                     >
                       {/* Header: icon + name + members badge */}
@@ -555,7 +567,7 @@ export const InsightsPage = memo(() => {
                           פתח רשימה ←
                         </Typography>
                       </Box>
-                    </Paper>
+                    </Box>
                   );
                 }) : (
                   // Fallback: רק groupStats
@@ -713,16 +725,28 @@ export const InsightsPage = memo(() => {
         {/* ===== דופק ===== */}
         {tab === 'pulse' && (
           <>
-            {/* כרטיס ציון עם progress ring - לחיץ, מציג הסבר מפורט */}
-            <Paper
-              elevation={0}
+            {/* כרטיס ציון - לחיץ, מציג הסבר מפורט */}
+            <Box
+              role="button"
+              tabIndex={0}
               onClick={() => { haptic('light'); setScoreExplained(v => !v); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  haptic('light');
+                  setScoreExplained(v => !v);
+                }
+              }}
               sx={{
                 p: 2, mb: 2, borderRadius: '16px', cursor: 'pointer',
                 border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                transition: 'transform 0.12s ease, box-shadow 0.2s ease',
+                bgcolor: 'background.paper',
+                userSelect: 'none', outline: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'opacity 0.1s, box-shadow 0.2s ease',
                 '&:hover': { boxShadow: isDark ? '0 4px 16px rgba(20,184,166,0.15)' : '0 4px 14px rgba(20,184,166,0.1)' },
-                '&:active': { transform: 'scale(0.99)' },
+                '&:active': { opacity: 0.9 },
+                '&:focus-visible': { boxShadow: '0 0 0 2px #14B8A6' },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
@@ -786,7 +810,7 @@ export const InsightsPage = memo(() => {
                   </Box>
                 </Box>
               )}
-            </Paper>
+            </Box>
 
             {/* מגמה + סטריק + חודש - שורה של 3 */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 2 }}>
