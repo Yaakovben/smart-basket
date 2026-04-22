@@ -11,14 +11,12 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../hooks/useAuth';
 import { getPasswordStrength } from '../helpers/auth-helpers';
 
-// ===== לוגו האפליקציה =====
+// ===== לוגו האפליקציה - זהה ל-favicon.svg (אותם paths, viewBox 512) =====
 const AppLogo = () => (
-  <svg width="56" height="56" viewBox="0 0 64 64">
-    <g fill="white">
-      <path d="M18 26 L22 44 C22 46 23 47 25 47 L39 47 C41 47 42 46 42 44 L46 26 Z" opacity="0.95"/>
-      <path d="M22 26 C22 26 22 20 32 20 C42 20 42 26 42 26" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M26 32 L30 36 L38 28" stroke="#14B8A6" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-    </g>
+  <svg width="56" height="56" viewBox="0 0 512 512">
+    <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white"/>
+    <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" strokeWidth="22" fill="none" strokeLinecap="round"/>
+    <path d="M216 286 L248 318 L304 258" stroke="#14B8A6" strokeWidth="20" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
