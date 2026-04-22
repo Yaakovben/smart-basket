@@ -5,6 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, type InsightsData, type PriceComparisonData } from '../../../services/api';
 import { PriceComparisonCard } from './PriceComparisonCard';
+import { BetaBadge } from './BetaBadge';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
 // אנימציות
@@ -104,20 +105,16 @@ export const InsightsPage = memo(() => {
         <Box sx={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.03)' }} />
 
         {/* חזרה + כותרת + BETA */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'white', flex: 1, letterSpacing: -0.5 }}>💡 {t('insights')}</Typography>
+          <BetaBadge />
         </Box>
-        <Box sx={{
-          bgcolor: '#14B8A6', borderRadius: '12px', py: 1, px: 2, mb: 2,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-          boxShadow: '0 2px 10px rgba(20,184,166,0.4)',
-        }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 900, color: 'white', letterSpacing: 2 }}>🧪 BETA</Typography>
-          <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>הנתונים עשויים להיות חלקיים</Typography>
-        </Box>
+        <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', mb: 2, fontWeight: 500, textAlign: 'center' }}>
+          הנתונים עשויים להיות חלקיים · עובדים על שיפורים
+        </Typography>
 
         {/* ציון */}
         <Box sx={{
@@ -155,14 +152,37 @@ export const InsightsPage = memo(() => {
         </Box>
       </Box>
 
-      {/* טאבים */}
-      <Box sx={{ px: 2, mt: -1.5, animation: `${fadeIn} 0.4s ease 0.3s both` }}>
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }} elevation={0}>
+      {/* טאבים - עיצוב pill-style מודרני */}
+      <Box sx={{ px: 2, mt: -2.5, animation: `${fadeIn} 0.4s ease 0.3s both`, position: 'relative', zIndex: 2 }}>
+        <Paper sx={{
+          borderRadius: '999px',
+          overflow: 'hidden',
+          p: 0.5,
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(124,58,237,0.12)',
+          boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(124,58,237,0.12)',
+          bgcolor: isDark ? 'rgba(30,27,75,0.85)' : 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(12px)',
+        }} elevation={0}>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="fullWidth"
             sx={{
-              minHeight: 44,
-              '& .MuiTab-root': { minHeight: 44, fontSize: 13, fontWeight: 700, textTransform: 'none', color: 'text.secondary', '&.Mui-selected': { color: 'primary.main' } },
-              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0', bgcolor: '#7C3AED' },
+              minHeight: 40,
+              '& .MuiTabs-flexContainer': { gap: 0.5 },
+              '& .MuiTab-root': {
+                minHeight: 36,
+                fontSize: 12.5,
+                fontWeight: 700,
+                textTransform: 'none',
+                color: 'text.secondary',
+                borderRadius: '999px',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&.Mui-selected': {
+                  color: 'white',
+                  background: 'linear-gradient(135deg, #7C3AED, #8B5CF6)',
+                  boxShadow: '0 2px 8px rgba(124,58,237,0.35)',
+                },
+              },
+              '& .MuiTabs-indicator': { display: 'none' },
             }}
           >
             <Tab value="overview" label="📊 סקירה" />
@@ -173,28 +193,37 @@ export const InsightsPage = memo(() => {
       </Box>
 
       {/* תוכן */}
-      <Box sx={{ px: 2, mt: 2 }} key={tab}>
+      <Box sx={{ px: 2, mt: 2.5 }} key={tab}>
 
         {/* ===== סקירה ===== */}
         {tab === 'overview' && (
           <>
-            {/* מספרים */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, mb: 2 }}>
+            {/* מספרים — כרטיסים בולטים עם רקע גרדיאנטי */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1.25, mb: 2 }}>
               {[
-                { v: stats.totalLists, l: 'רשימות', e: '📋', c: '#8B5CF6' },
-                { v: stats.totalPurchased, l: 'נקנו', e: '✅', c: '#22C55E' },
-                { v: stats.avgProductsPerList, l: 'ממוצע', e: '📊', c: '#F59E0B' },
+                { v: stats.totalLists, l: 'רשימות', e: '📋', c: '#8B5CF6', g: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' },
+                { v: stats.totalPurchased, l: 'נקנו', e: '✅', c: '#22C55E', g: 'linear-gradient(135deg, #22C55E, #4ADE80)' },
+                { v: stats.avgProductsPerList, l: 'ממוצע', e: '📊', c: '#F59E0B', g: 'linear-gradient(135deg, #F59E0B, #FBBF24)' },
               ].map((s, i) => (
                 <Paper key={i} sx={{
-                  textAlign: 'center', py: 1.75, borderRadius: '16px',
-                  border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.05)' : `${s.c}15`,
+                  textAlign: 'center', py: 2, px: 1, borderRadius: '18px',
+                  border: '1px solid', borderColor: isDark ? `${s.c}25` : `${s.c}20`,
+                  background: isDark ? `linear-gradient(160deg, ${s.c}18, ${s.c}05)` : `linear-gradient(160deg, ${s.c}10, ${s.c}02)`,
+                  position: 'relative', overflow: 'hidden',
                   animation: `${slideIn} 0.4s ease ${0.1 + i * 0.1}s both`,
+                  transition: 'transform 0.2s',
+                  '&:hover': { transform: 'translateY(-2px)' },
                 }} elevation={0}>
-                  <Typography sx={{ fontSize: 18, mb: 0.5 }}>{s.e}</Typography>
-                  <Typography sx={{ fontSize: 22, fontWeight: 900, color: s.c }}>
+                  {/* דקורציית רקע */}
+                  <Box sx={{
+                    position: 'absolute', top: -12, left: -12, width: 50, height: 50,
+                    borderRadius: '50%', background: s.g, opacity: 0.12, filter: 'blur(8px)',
+                  }} />
+                  <Typography sx={{ fontSize: 22, mb: 0.5, position: 'relative' }}>{s.e}</Typography>
+                  <Typography sx={{ fontSize: 26, fontWeight: 900, color: s.c, lineHeight: 1, position: 'relative' }}>
                     <AnimatedNumber value={typeof s.v === 'number' ? s.v : 0} />
                   </Typography>
-                  <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600 }}>{s.l}</Typography>
+                  <Typography sx={{ fontSize: 10.5, color: 'text.secondary', fontWeight: 700, mt: 0.5, letterSpacing: 0.3, position: 'relative' }}>{s.l}</Typography>
                 </Paper>
               ))}
             </Box>

@@ -1,4 +1,4 @@
-import { Product } from '../models';
+import { Product, Price } from '../models';
 import { ListDAL, PriceDAL } from '../dal';
 import { normalizeProductName } from '../chains';
 
@@ -10,8 +10,13 @@ export interface PriceMatch {
   chainId: string;
   chainName: string;
   itemName: string;
+  itemNameNormalized?: string;
   price: number;
   barcode: string;
+  matchConfidence: number; // 0 עד 1 — אחוז ה-tokens של המשתמש שנמצאו במוצר
+  matchedTokens: string[];
+  userTokens: string[];
+  manufacturerName?: string;
 }
 
 export interface PriceComparisonData {
@@ -22,26 +27,48 @@ export interface PriceComparisonData {
   topMatches: PriceMatch[];
   estimatedBasketTotal: number | null;
   disclaimer: string;
+  lastUpdatedISO: string | null;       // מתי המאגר עודכן לאחרונה
+  sourceName: string;                   // מקור הנתונים
+  sourceUrl: string;                    // URL למקור הציבורי
 }
 
 const BETA_CHAIN_ID = 'osher_ad';
 const BETA_CHAIN_NAME = 'אושר עד';
+const SOURCE_NAME = 'פורטל שקיפות המחירים הממשלתי';
+const SOURCE_URL = 'https://url.publishedprices.co.il';
+
+const BASE_DISCLAIMER = 'הנתונים מגיעים ממאגר השקיפות הציבורי של אושר עד. הפיצ\'ר בפיתוח - ההתאמה בין שמות המוצרים שלך למוצרי הרשת מבוססת על התאמת מילים ועשויה להיות לא מדויקת. מחירים מתעדכנים מדי יום.';
+
+// מקבל את התאריך של הרשומה האחרונה שעודכנה במאגר — אינדיקטור לטריות הנתונים
+async function getLastUpdatedISO(): Promise<string | null> {
+  const latest = await Price.findOne({ chainId: BETA_CHAIN_ID }).sort({ updatedAt: -1 }).select('updatedAt').lean();
+  return latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
+}
 
 export class PriceComparisonService {
   // תובנות השוואת מחירים עבור משתמש — מבוסס על המוצרים הנקנים שלו
   static async getComparisonForUser(userId: string): Promise<PriceComparisonData> {
     const totalPrices = await PriceDAL.countByChain(BETA_CHAIN_ID);
+    const lastUpdatedISO = totalPrices > 0 ? await getLastUpdatedISO() : null;
+
+    const baseResponse = {
+      chainName: BETA_CHAIN_NAME,
+      sourceName: SOURCE_NAME,
+      sourceUrl: SOURCE_URL,
+      disclaimer: BASE_DISCLAIMER,
+      lastUpdatedISO,
+    };
 
     // אם אין נתונים עדיין, מחזירים מצב "מושבת"
     if (totalPrices === 0) {
       return {
+        ...baseResponse,
         enabled: false,
-        chainName: BETA_CHAIN_NAME,
         totalPrices: 0,
         matchedCount: 0,
         topMatches: [],
         estimatedBasketTotal: null,
-        disclaimer: 'מאגר המחירים עדיין לא נטען. יבוא נתונים ראשוני יתבצע בקרוב.',
+        disclaimer: 'מאגר המחירים עדיין לא נטען. ייבוא נתונים ראשוני יתבצע בקרוב.',
       };
     }
 
@@ -49,13 +76,12 @@ export class PriceComparisonService {
     const listIds = lists.map(l => l._id);
     if (listIds.length === 0) {
       return {
+        ...baseResponse,
         enabled: true,
-        chainName: BETA_CHAIN_NAME,
         totalPrices,
         matchedCount: 0,
         topMatches: [],
         estimatedBasketTotal: null,
-        disclaimer: 'הנתונים מגיעים ממאגר השקיפות של אושר עד ומתעדכנים מדי יום. פיצ\'ר בפיתוח, ייתכנו אי דיוקים.',
       };
     }
 
@@ -63,13 +89,12 @@ export class PriceComparisonService {
     const allProducts = await Product.find({ listId: { $in: listIds } }).lean();
     if (allProducts.length === 0) {
       return {
+        ...baseResponse,
         enabled: true,
-        chainName: BETA_CHAIN_NAME,
         totalPrices,
         matchedCount: 0,
         topMatches: [],
         estimatedBasketTotal: null,
-        disclaimer: 'הנתונים מגיעים ממאגר השקיפות של אושר עד ומתעדכנים מדי יום. פיצ\'ר בפיתוח, ייתכנו אי דיוקים.',
       };
     }
 
@@ -92,27 +117,36 @@ export class PriceComparisonService {
       .slice(0, 10)
       .map(([name, info]) => ({ name, ...info }));
 
-    // נסיון התאמה לכל שם — תחילה בהחזר ממאגר על נירמול
+    // נסיון התאמה לכל שם — חיפוש על הטוקן הראשון ואז דירוג לפי מילים חופפות
     const topMatches: PriceMatch[] = [];
     for (const tp of topNames) {
       const normalized = normalizeProductName(tp.name);
       if (!normalized) continue;
-      // בחיפוש הנוכחי אנחנו עושים לפי שם כי אין לנו ברקוד בצד המשתמש. נחזיר את הראשון הכי קרוב.
-      const matches = await PriceDAL.findByNormalizedName(normalized.split(' ')[0], 'osher_ad', 10);
-      // מציאת ההתאמה הטובה ביותר לפי מילים חופפות
-      const userTokens = new Set(normalized.split(' ').filter(Boolean));
+      const userTokensArr = normalized.split(' ').filter(Boolean);
+      const userTokens = new Set(userTokensArr);
+      // חיפוש מועמדים לפי המילה הראשונה
+      const matches = await PriceDAL.findByNormalizedName(userTokensArr[0] || '', 'osher_ad', 20);
+
       let best: typeof matches[number] | null = null;
       let bestScore = 0;
+      let bestMatchedTokens: string[] = [];
       for (const m of matches) {
         const chainTokens = (m.itemNameNormalized || '').split(' ').filter(Boolean);
-        let score = 0;
-        for (const t of chainTokens) if (userTokens.has(t)) score += 1;
-        if (score > bestScore) {
-          bestScore = score;
+        const matchedTokens: string[] = [];
+        for (const t of chainTokens) {
+          if (userTokens.has(t)) matchedTokens.push(t);
+        }
+        if (matchedTokens.length > bestScore) {
+          bestScore = matchedTokens.length;
           best = m;
+          bestMatchedTokens = matchedTokens;
         }
       }
-      if (best && bestScore >= Math.min(2, userTokens.size)) {
+
+      const confidence = userTokens.size > 0 ? bestScore / userTokens.size : 0;
+      const threshold = Math.min(2, userTokens.size);
+
+      if (best && bestScore >= threshold) {
         topMatches.push({
           userProductName: tp.name,
           userQuantity: tp.quantity,
@@ -121,8 +155,13 @@ export class PriceComparisonService {
           chainId: best.chainId,
           chainName: best.chainName,
           itemName: best.itemName,
+          itemNameNormalized: best.itemNameNormalized,
           price: best.price,
           barcode: best.barcode,
+          matchConfidence: Math.round(confidence * 100) / 100,
+          matchedTokens: bestMatchedTokens,
+          userTokens: userTokensArr,
+          manufacturerName: best.manufacturerName,
         });
       } else {
         topMatches.push({
@@ -135,6 +174,9 @@ export class PriceComparisonService {
           itemName: '',
           price: 0,
           barcode: '',
+          matchConfidence: 0,
+          matchedTokens: [],
+          userTokens: userTokensArr,
         });
       }
     }
@@ -146,13 +188,12 @@ export class PriceComparisonService {
       : null;
 
     return {
+      ...baseResponse,
       enabled: true,
-      chainName: BETA_CHAIN_NAME,
       totalPrices,
       matchedCount: matched.length,
       topMatches: topMatches.slice(0, 5),
       estimatedBasketTotal: estimatedBasketTotal ? Math.round(estimatedBasketTotal * 100) / 100 : null,
-      disclaimer: 'הנתונים מגיעים ממאגר השקיפות של אושר עד ומתעדכנים מדי יום. פיצ\'ר בפיתוח, ייתכנו אי דיוקים בהתאמת השמות.',
     };
   }
 }

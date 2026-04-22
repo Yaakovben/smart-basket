@@ -44,8 +44,13 @@ export interface PriceMatch {
   chainId: string;
   chainName: string;
   itemName: string;
+  itemNameNormalized?: string;
   price: number;
   barcode: string;
+  matchConfidence: number;
+  matchedTokens: string[];
+  userTokens: string[];
+  manufacturerName?: string;
 }
 
 export interface PriceComparisonData {
@@ -56,6 +61,9 @@ export interface PriceComparisonData {
   topMatches: PriceMatch[];
   estimatedBasketTotal: number | null;
   disclaimer: string;
+  lastUpdatedISO: string | null;
+  sourceName: string;
+  sourceUrl: string;
 }
 
 export const insightsApi = {
