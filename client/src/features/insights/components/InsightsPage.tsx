@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, CircularProgress, Paper, keyframes, Linear
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, type InsightsData } from '../../../services/api';
-import { PriceComparisonCard, BetaBadge, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
+import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
 // אנימציות
@@ -99,17 +99,15 @@ export const InsightsPage = memo(() => {
         borderRadius: '0 0 28px 28px',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* דקורציה */}
-        <Box sx={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.05)' }} />
-        <Box sx={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.03)' }} />
+        {/* ריבון BETA אלכסוני בפינה שמאלית עליונה */}
+        <BetaRibbon corner="top-left" />
 
-        {/* חזרה + כותרת + BETA */}
+        {/* חזרה + כותרת */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
-          <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'white', flex: 1, letterSpacing: -0.5 }}>💡 {t('insights')}</Typography>
-          <BetaBadge />
+          <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'white', flex: 1, letterSpacing: -0.5, textAlign: 'center' }}>💡 {t('insights')}</Typography>
         </Box>
         <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', mb: 2, fontWeight: 500, textAlign: 'center' }}>
           הנתונים עשויים להיות חלקיים · עובדים על שיפורים
@@ -208,21 +206,15 @@ export const InsightsPage = memo(() => {
                   textAlign: 'center', py: 2, px: 1, borderRadius: '18px',
                   border: '1px solid', borderColor: isDark ? `${s.c}25` : `${s.c}20`,
                   background: isDark ? `linear-gradient(160deg, ${s.c}18, ${s.c}05)` : `linear-gradient(160deg, ${s.c}10, ${s.c}02)`,
-                  position: 'relative', overflow: 'hidden',
                   animation: `${slideIn} 0.4s ease ${0.1 + i * 0.1}s both`,
                   transition: 'transform 0.2s',
                   '&:hover': { transform: 'translateY(-2px)' },
                 }} elevation={0}>
-                  {/* דקורציית רקע */}
-                  <Box sx={{
-                    position: 'absolute', top: -12, left: -12, width: 50, height: 50,
-                    borderRadius: '50%', background: s.g, opacity: 0.12, filter: 'blur(8px)',
-                  }} />
-                  <Typography sx={{ fontSize: 22, mb: 0.5, position: 'relative' }}>{s.e}</Typography>
-                  <Typography sx={{ fontSize: 26, fontWeight: 900, color: s.c, lineHeight: 1, position: 'relative' }}>
+                  <Typography sx={{ fontSize: 22, mb: 0.5 }}>{s.e}</Typography>
+                  <Typography sx={{ fontSize: 26, fontWeight: 900, color: s.c, lineHeight: 1 }}>
                     <AnimatedNumber value={typeof s.v === 'number' ? s.v : 0} />
                   </Typography>
-                  <Typography sx={{ fontSize: 10.5, color: 'text.secondary', fontWeight: 700, mt: 0.5, letterSpacing: 0.3, position: 'relative' }}>{s.l}</Typography>
+                  <Typography sx={{ fontSize: 10.5, color: 'text.secondary', fontWeight: 700, mt: 0.5, letterSpacing: 0.3 }}>{s.l}</Typography>
                 </Paper>
               ))}
             </Box>
@@ -239,19 +231,10 @@ export const InsightsPage = memo(() => {
                   background: isDark
                     ? 'linear-gradient(135deg, rgba(245,158,11,0.05), rgba(139,92,246,0.03))'
                     : 'linear-gradient(135deg, rgba(245,158,11,0.03), rgba(139,92,246,0.02))',
-                  position: 'relative', overflow: 'hidden',
                   animation: `${fadeIn} 0.5s ease 0.4s both`,
                 }} elevation={0}>
-                  {/* רקע דקורטיבי */}
-                  <Box sx={{
-                    position: 'absolute', top: -40, right: -40, width: 140, height: 140,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(245,158,11,0.08), transparent 70%)',
-                    pointerEvents: 'none',
-                  }} />
-
                   {/* כותרת עם ספירה */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.75, position: 'relative' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.75 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                       <Typography sx={{ fontSize: 20 }}>✨</Typography>
                       <Typography sx={{ fontSize: 15, fontWeight: 900, letterSpacing: -0.2 }}>תובנות חכמות</Typography>
@@ -265,8 +248,8 @@ export const InsightsPage = memo(() => {
                     </Box>
                   </Box>
 
-                  {/* רשימת tips — כל אחד עם צבע שונה, רייל צבעוני בצד שמאל */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, position: 'relative' }}>
+                  {/* רשימת tips — כל אחד עם צבע שונה */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
                     {smartTips.slice(0, 4).map((tip, i) => {
                       const color = tipColors[i % tipColors.length];
                       const emoji = tipEmojis[i % tipEmojis.length];

@@ -38,6 +38,7 @@ const confidenceColor = (c: number) => c >= 0.75 ? '#14B8A6' : c >= 0.5 ? '#F59E
 const MatchRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) => {
   const [open, setOpen] = useState(false);
   const clickable = m.matched;
+  const subtotal = m.matched ? m.price * m.userQuantity : 0;
 
   return (
     <Box
@@ -64,15 +65,12 @@ const MatchRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) => {
           <HelpOutlineIcon sx={{ fontSize: 16, color: 'text.disabled', flexShrink: 0 }} />
         )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {m.userProductName}
-          </Typography>
-          {m.matched && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-              <Typography sx={{ fontSize: 10.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                ↔ {m.itemName}
-              </Typography>
-              {/* תג דיוק */}
+          {/* שם המוצר + דיוק */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+              {m.userProductName}
+            </Typography>
+            {m.matched && (
               <Box sx={{
                 bgcolor: `${confidenceColor(m.matchConfidence)}20`,
                 color: confidenceColor(m.matchConfidence),
@@ -81,19 +79,30 @@ const MatchRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) => {
               }}>
                 {Math.round(m.matchConfidence * 100)}%
               </Box>
+            )}
+          </Box>
+          {/* נוסחה ברורה: ₪מחיר × כמות = ₪סה"כ */}
+          {m.matched && (
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mt: 0.4 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', fontFamily: 'monospace' }}>
+                ₪{m.price.toFixed(2)}
+              </Typography>
+              <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>×</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', fontFamily: 'monospace', fontWeight: 600 }}>
+                {m.userQuantity}
+              </Typography>
+              <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>=</Typography>
+              <Typography sx={{ fontSize: 12, color: '#0D9488', fontFamily: 'monospace', fontWeight: 800 }}>
+                ₪{subtotal.toFixed(2)}
+              </Typography>
             </Box>
           )}
         </Box>
         {m.matched ? (
-          <>
-            <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488', flexShrink: 0 }}>
-              ₪{m.price.toFixed(2)}
-            </Typography>
-            <ExpandMoreIcon sx={{
-              fontSize: 16, color: 'text.disabled', flexShrink: 0,
-              transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            }} />
-          </>
+          <ExpandMoreIcon sx={{
+            fontSize: 16, color: 'text.disabled', flexShrink: 0,
+            transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }} />
         ) : (
           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', flexShrink: 0 }}>
             לא נמצא
@@ -155,13 +164,6 @@ const MatchRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) => {
               {confidenceLabel(m.matchConfidence)} ({Math.round(m.matchConfidence * 100)}%)
             </Typography>
 
-            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>כמות ברשימה:</Typography>
-            <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>×{m.userQuantity}</Typography>
-
-            <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>סה״כ משוער:</Typography>
-            <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#0D9488' }}>
-              ₪{(m.price * m.userQuantity).toFixed(2)}
-            </Typography>
           </Box>
         </Box>
       </Collapse>
@@ -186,27 +188,18 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
           ? 'linear-gradient(135deg, rgba(20,184,166,0.1), rgba(20,184,166,0.02) 60%)'
           : 'linear-gradient(135deg, rgba(20,184,166,0.06), rgba(20,184,166,0.01) 60%)',
         animation: `${fadeIn} 0.5s ease 0.45s both`,
-        position: 'relative',
-        overflow: 'hidden',
       }}
       elevation={0}
     >
-      {/* דקורציית רקע */}
-      <Box sx={{
-        position: 'absolute', top: -30, left: -30, width: 110, height: 110,
-        borderRadius: '50%', bgcolor: 'rgba(20,184,166,0.06)', pointerEvents: 'none',
-      }} />
-
       {/* כותרת */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Typography sx={{ fontSize: 15, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
         <BetaBadge size="sm" />
       </Box>
 
       {/* שורת מקור + טריות */}
       <Box sx={{
-        display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1,
-        mb: 1.5, position: 'relative',
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.5,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, fontSize: 11, color: 'text.secondary' }}>
           <InventoryIcon sx={{ fontSize: 12 }} />
@@ -254,33 +247,49 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
       {/* מצב 3: יש התאמות */}
       {data.enabled && hasMatches && (
         <>
-          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mb: 1, fontStyle: 'italic' }}>
-            💡 לחצ/י על כל שורה כדי לראות איך התאמנו
+          <Typography sx={{ fontSize: 10, color: 'text.disabled', mb: 0.75 }}>
+            💡 לחצ/י על פריט כדי לראות איך התאמנו את השם
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             {data.topMatches.map((m, i) => <MatchRow key={i} m={m} isDark={isDark} />)}
           </Box>
 
-          {/* סה"כ משוער + כמה התאמות */}
+          {/* סה"כ משוער — מחבר ויזואלית את כל השורות למעלה בסימן סכימה */}
           {data.estimatedBasketTotal !== null && (
-            <Box sx={{
-              mt: 1.5, p: 1.25, borderRadius: '12px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-              boxShadow: '0 3px 12px rgba(20,184,166,0.3)',
-            }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'white' }}>
-                  סה"כ משוער לסל
-                </Typography>
-                <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.8)' }}>
-                  בהתבסס על {data.matchedCount} התאמות
+            <Box sx={{ mt: 1, position: 'relative' }}>
+              {/* סימן סכימה שמרמז שמדובר בסכום של השורות שמעל */}
+              <Box sx={{
+                display: 'flex', alignItems: 'center', gap: 1, mb: 0.75, pr: 1,
+              }}>
+                <Box sx={{ flex: 1, height: '2px', bgcolor: '#0D9488', opacity: 0.4, borderRadius: '2px' }} />
+                <Box sx={{
+                  fontSize: 14, fontWeight: 900, color: '#0D9488',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.1)',
+                  width: 26, height: 26, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  Σ
+                </Box>
+              </Box>
+              <Box sx={{
+                p: 1.5, borderRadius: '14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                boxShadow: '0 3px 12px rgba(20,184,166,0.3)',
+              }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'white' }}>
+                    סיכום {data.matchedCount} הפריטים
+                  </Typography>
+                  <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.8)', mt: 0.15 }}>
+                    חיבור של כל השורות המסומנות ✓ למעלה
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: 18, fontWeight: 900, color: 'white', fontFamily: 'monospace' }}>
+                  ₪{data.estimatedBasketTotal.toFixed(2)}
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: 17, fontWeight: 900, color: 'white' }}>
-                ₪{data.estimatedBasketTotal.toFixed(2)}
-              </Typography>
             </Box>
           )}
         </>
