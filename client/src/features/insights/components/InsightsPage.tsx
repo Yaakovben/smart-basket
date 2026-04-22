@@ -126,10 +126,6 @@ export const InsightsPage = memo(() => {
   const bestDayIdx = weekdayActivity ? weekdayActivity.indexOf(maxWeekday) : -1;
   const bestDayLabel = bestDayIdx >= 0 ? dayLabels[bestDayIdx] : '—';
 
-  // אגרגטים ל-lists
-  const totalPending = priceData?.totalPending ?? 0;
-  const totalMatched = priceData?.totalMatched ?? 0;
-
   // פורמט תאריך יחסי קצר
   const formatRelativeDate = (iso: string | null): string => {
     if (!iso) return '—';
@@ -227,193 +223,227 @@ export const InsightsPage = memo(() => {
         )}
 
         {/* ===== רשימות ===== */}
-        {tab === 'lists' && (
-          <>
-            {(priceData?.lists && priceData.lists.length > 0) || groupStats.length > 0 ? (
-              <>
-                {/* שורת סטטיסטיקה */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
-                  <StatCard
-                    value={<AnimatedNumber value={stats.totalLists} />}
-                    label="רשימות"
-                    color="#8B5CF6"
-                    bg={isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.05)'}
-                    border="rgba(139,92,246,0.15)"
-                  />
-                  <StatCard
-                    value={<AnimatedNumber value={totalPending} />}
-                    label="ממתינים"
-                    color="#14B8A6"
-                    bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
-                    border="rgba(20,184,166,0.15)"
-                  />
-                  <StatCard
-                    value={<AnimatedNumber value={totalMatched} />}
-                    label="תומחרו"
-                    color="#22C55E"
-                    bg={isDark ? 'rgba(34,197,94,0.08)' : 'rgba(34,197,94,0.05)'}
-                    border="rgba(34,197,94,0.15)"
-                  />
-                </Box>
+        {tab === 'lists' && (() => {
+          // פלטת צבעים קבועה לחברי קבוצה
+          const memberPalette = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6', '#22C55E', '#EF4444'];
+          // מקור האמת: priceData.lists (כל הרשימות הפעילות עם מטא-דאטה), עם fallback ל-groupStats.
+          const listsToShow = priceData?.lists && priceData.lists.length > 0 ? priceData.lists : null;
+          const hasAnything = (listsToShow && listsToShow.length > 0) || groupStats.length > 0;
+          // חברים ייחודיים בכל הקבוצות — "חברים פעילים"
+          const uniqueMembers = new Set<string>();
+          groupStats.forEach(g => g.memberBreakdown.forEach(m => uniqueMembers.add(m.name)));
 
-                {/* כרטיסי רשימה */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {priceData?.lists && priceData.lists.length > 0 ? (
-                    priceData.lists.map((L, idx) => {
-                      const matchGroup = L.isGroup ? groupStatsByName.get(L.listName) : undefined;
-                      const coverage = L.pendingCount > 0 ? Math.round((L.matchedCount / L.pendingCount) * 100) : 0;
-                      const memberBreakdown = matchGroup?.memberBreakdown || [];
-                      const memberTotal = memberBreakdown.reduce((s, m) => s + m.added + m.purchased, 0);
-                      const palette = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6'];
-                      return (
-                        <Paper key={L.listId} elevation={0} sx={{
-                          p: 1.5, borderRadius: '14px',
-                          border: '1px solid',
-                          borderColor: isDark ? `${L.listColor}28` : `${L.listColor}22`,
-                          background: isDark
-                            ? `linear-gradient(135deg, ${L.listColor}14, transparent 75%)`
-                            : `linear-gradient(135deg, ${L.listColor}0A, transparent 75%)`,
-                          animation: `${fadeIn} 0.35s ease ${idx * 0.06}s both`,
-                        }}>
-                          {/* שורה עליונה */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                            <Box sx={{
-                              width: 44, height: 44, flexShrink: 0, borderRadius: '12px', fontSize: 22,
-                              bgcolor: `${L.listColor}28`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: '1.5px solid', borderColor: `${L.listColor}45`,
-                            }}>{L.listIcon}</Box>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                                <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{L.listName}</Typography>
-                                {L.isGroup && (
-                                  <Box sx={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 0.25,
-                                    px: 0.65, py: 0.15, borderRadius: '6px',
-                                    bgcolor: 'rgba(139,92,246,0.12)',
-                                    border: '1px solid rgba(139,92,246,0.25)',
-                                  }}>
-                                    <GroupIcon sx={{ fontSize: 11, color: '#8B5CF6' }} />
-                                    <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>
-                                      {matchGroup?.membersCount || 0}
-                                    </Typography>
-                                  </Box>
-                                )}
-                              </Box>
-                              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
-                                {L.pendingCount} ממתינים · {L.matchedCount} תומחרו{L.unmatchedCount > 0 ? ` · ${L.unmatchedCount} לא` : ''}
-                              </Typography>
-                            </Box>
-                            <Box sx={{ textAlign: 'left', flexShrink: 0 }}>
-                              {L.estimatedTotal > 0 ? (
-                                <>
-                                  <Typography sx={{ fontSize: 16, fontWeight: 900, color: '#0D9488', fontFamily: 'monospace', lineHeight: 1 }}>
-                                    ₪{L.estimatedTotal.toFixed(0)}
-                                  </Typography>
-                                  <Typography sx={{ fontSize: 9, color: 'text.disabled', mt: 0.25 }}>משוער</Typography>
-                                </>
-                              ) : (
-                                <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>אין תמחור</Typography>
-                              )}
-                            </Box>
-                          </Box>
+          if (!hasAnything) return (
+            <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+              <Typography sx={{ fontSize: 40, mb: 1, animation: `${float} 2s ease infinite` }}>📋</Typography>
+              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>אין רשימות פעילות</Typography>
+              <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.5 }}>
+                צור רשימה כדי לראות פה פעילות
+              </Typography>
+            </Box>
+          );
 
-                          {/* פס כיסוי */}
-                          {L.pendingCount > 0 && (
-                            <Box sx={{ mt: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.4 }}>
-                                <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 600 }}>כיסוי תמחור</Typography>
-                                <Typography sx={{ fontSize: 9.5, fontWeight: 800, color: L.listColor }}>{coverage}%</Typography>
-                              </Box>
-                              <Box sx={{ height: 4, borderRadius: 2, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-                                <Box sx={{ height: '100%', width: `${coverage}%`, bgcolor: L.listColor, transition: 'width 0.8s ease' }} />
-                              </Box>
-                            </Box>
-                          )}
-
-                          {/* חלוקת עבודה + תורמים */}
-                          {matchGroup && memberBreakdown.length > 1 && memberTotal > 0 && (
-                            <Box sx={{ mt: 1.25 }}>
-                              <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 600, mb: 0.5 }}>חלוקת עבודה</Typography>
-                              <Box sx={{ display: 'flex', height: 6, borderRadius: 1.5, overflow: 'hidden', mb: 0.75 }}>
-                                {memberBreakdown.map((m, mi) => {
-                                  const pct = ((m.added + m.purchased) / memberTotal) * 100;
-                                  return <Box key={mi} sx={{ width: `${pct}%`, bgcolor: palette[mi % palette.length] }} />;
-                                })}
-                              </Box>
-                              {(matchGroup.topContributor || (matchGroup.topBuyer && matchGroup.topBuyer.count > 0)) && (
-                                <Box sx={{ display: 'flex', gap: 0.75 }}>
-                                  {matchGroup.topContributor && (
-                                    <Box sx={{
-                                      flex: 1, px: 0.9, py: 0.6, borderRadius: '8px',
-                                      bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.07)',
-                                      display: 'flex', alignItems: 'center', gap: 0.5,
-                                    }}>
-                                      <Typography sx={{ fontSize: 12 }}>✏️</Typography>
-                                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography sx={{ fontSize: 9, color: 'text.disabled', lineHeight: 1 }}>מוסיף</Typography>
-                                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#14B8A6', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                          {matchGroup.topContributor.name} · {matchGroup.topContributor.count}
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  )}
-                                  {matchGroup.topBuyer && matchGroup.topBuyer.count > 0 && (
-                                    <Box sx={{
-                                      flex: 1, px: 0.9, py: 0.6, borderRadius: '8px',
-                                      bgcolor: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.07)',
-                                      display: 'flex', alignItems: 'center', gap: 0.5,
-                                    }}>
-                                      <Typography sx={{ fontSize: 12 }}>🛒</Typography>
-                                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography sx={{ fontSize: 9, color: 'text.disabled', lineHeight: 1 }}>קונה</Typography>
-                                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                          {matchGroup.topBuyer.name} · {matchGroup.topBuyer.count}
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  )}
-                                </Box>
-                              )}
-                            </Box>
-                          )}
-                        </Paper>
-                      );
-                    })
-                  ) : (
-                    groupStats.map((g, gi) => (
-                      <Paper key={gi} elevation={0} sx={{
-                        p: 1.5, borderRadius: '14px',
-                        border: '1px solid', borderColor: isDark ? 'rgba(139,92,246,0.22)' : 'rgba(139,92,246,0.18)',
-                        background: isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)',
-                      }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                          <Box sx={{
-                            width: 44, height: 44, flexShrink: 0, borderRadius: '12px', fontSize: 22,
-                            bgcolor: 'rgba(139,92,246,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>{g.icon}</Box>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{g.name}</Typography>
-                            <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                              {g.membersCount} חברים{g.topContributor ? ` · הכי מוסיף: ${g.topContributor.name}` : ''}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Paper>
-                    ))
-                  )}
-                </Box>
-              </>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-                <Typography sx={{ fontSize: 40, mb: 1, animation: `${float} 2s ease infinite` }}>📋</Typography>
-                <Typography sx={{ fontSize: 14, fontWeight: 600 }}>אין רשימות פעילות</Typography>
-                <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.5 }}>
-                  צור רשימה כדי לראות פה פעילות ועלויות
-                </Typography>
+          return (
+            <>
+              {/* שורת סטטיסטיקה ממוקדת-פעילות (לא מחירים) */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
+                <StatCard
+                  value={<AnimatedNumber value={stats.totalLists} />}
+                  label="רשימות"
+                  color="#8B5CF6"
+                  bg={isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.05)'}
+                  border="rgba(139,92,246,0.15)"
+                />
+                <StatCard
+                  value={<AnimatedNumber value={stats.totalProducts} />}
+                  label="פריטים בס״ה"
+                  color="#14B8A6"
+                  bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
+                  border="rgba(20,184,166,0.15)"
+                />
+                <StatCard
+                  value={uniqueMembers.size > 0 ? <AnimatedNumber value={uniqueMembers.size} /> : '—'}
+                  label="חברים פעילים"
+                  color="#F59E0B"
+                  bg={isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)'}
+                  border="rgba(245,158,11,0.15)"
+                />
               </Box>
-            )}
-          </>
-        )}
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                {listsToShow ? listsToShow.map((L, idx) => {
+                  const g = L.isGroup ? groupStatsByName.get(L.listName) : undefined;
+                  const members = g?.memberBreakdown || [];
+                  const memberTotalAdded = members.reduce((s, m) => s + m.added, 0);
+                  const memberTotalPurchased = members.reduce((s, m) => s + m.purchased, 0);
+                  const memberTotalActivity = memberTotalAdded + memberTotalPurchased;
+                  const purchasedPct = memberTotalAdded > 0 ? Math.round((memberTotalPurchased / memberTotalAdded) * 100) : 0;
+                  // מיון החברים לפי סך פעילות יורד
+                  const sortedMembers = [...members].sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
+
+                  return (
+                    <Paper key={L.listId} elevation={0} sx={{
+                      p: 1.5, borderRadius: '14px',
+                      border: '1px solid',
+                      borderColor: isDark ? `${L.listColor}28` : `${L.listColor}22`,
+                      background: isDark
+                        ? `linear-gradient(135deg, ${L.listColor}14, transparent 75%)`
+                        : `linear-gradient(135deg, ${L.listColor}0A, transparent 75%)`,
+                      animation: `${fadeIn} 0.35s ease ${idx * 0.06}s both`,
+                    }}>
+                      {/* Header: icon + name + members badge */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Box sx={{
+                          width: 44, height: 44, flexShrink: 0, borderRadius: '12px', fontSize: 22,
+                          bgcolor: `${L.listColor}28`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: '1.5px solid', borderColor: `${L.listColor}45`,
+                        }}>{L.listIcon}</Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                            <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{L.listName}</Typography>
+                            {L.isGroup ? (
+                              <Box sx={{
+                                display: 'inline-flex', alignItems: 'center', gap: 0.25,
+                                px: 0.7, py: 0.2, borderRadius: '6px',
+                                bgcolor: 'rgba(139,92,246,0.14)',
+                                border: '1px solid rgba(139,92,246,0.3)',
+                              }}>
+                                <GroupIcon sx={{ fontSize: 12, color: '#8B5CF6' }} />
+                                <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>
+                                  {g?.membersCount || 0} חברים
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Box sx={{
+                                px: 0.7, py: 0.2, borderRadius: '6px',
+                                bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                              }}>
+                                <Typography sx={{ fontSize: 9.5, fontWeight: 700, color: 'text.secondary' }}>פרטית</Typography>
+                              </Box>
+                            )}
+                          </Box>
+                          {/* סיכום פעילות — לא מחירים */}
+                          {L.isGroup && g && memberTotalAdded > 0 ? (
+                            <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
+                              <b>{memberTotalAdded}</b> נוספו · <b>{memberTotalPurchased}</b> נקנו
+                              <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
+                                ({purchasedPct}%)
+                              </Typography>
+                            </Typography>
+                          ) : (
+                            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
+                              רשימה פעילה
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+
+                      {/* חלוקת חברים - רק אם יש קבוצה עם יותר מחבר אחד ויש פעילות */}
+                      {L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0 && (
+                        <>
+                          {/* Stacked bar - תרומה כוללת לפי חבר */}
+                          <Box sx={{ mt: 1.25 }}>
+                            <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 700, mb: 0.4, letterSpacing: 0.3 }}>
+                              חלוקת פעילות
+                            </Typography>
+                            <Box sx={{
+                              display: 'flex', height: 7, borderRadius: 2, overflow: 'hidden',
+                              boxShadow: isDark ? 'inset 0 1px 0 rgba(255,255,255,0.05)' : 'inset 0 1px 0 rgba(0,0,0,0.04)',
+                            }}>
+                              {sortedMembers.map((m, mi) => {
+                                const pct = ((m.added + m.purchased) / memberTotalActivity) * 100;
+                                return <Box key={mi} title={`${m.name}: ${Math.round(pct)}%`} sx={{ width: `${pct}%`, bgcolor: memberPalette[mi % memberPalette.length] }} />;
+                              })}
+                            </Box>
+                          </Box>
+
+                          {/* רשימת חברים מלאה עם מי/מה/כמה */}
+                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {sortedMembers.map((m, mi) => {
+                              const color = memberPalette[mi % memberPalette.length];
+                              const totalForMember = m.added + m.purchased;
+                              const pct = memberTotalActivity > 0 ? Math.round((totalForMember / memberTotalActivity) * 100) : 0;
+                              const initial = m.name.charAt(0).toUpperCase();
+                              return (
+                                <Box key={mi} sx={{
+                                  display: 'flex', alignItems: 'center', gap: 0.9,
+                                  px: 0.6, py: 0.55, borderRadius: '8px',
+                                  bgcolor: isDark ? `${color}12` : `${color}0A`,
+                                  border: '1px solid',
+                                  borderColor: isDark ? `${color}22` : `${color}18`,
+                                }}>
+                                  {/* אווטאר-אות */}
+                                  <Box sx={{
+                                    width: 26, height: 26, flexShrink: 0,
+                                    borderRadius: '50%',
+                                    bgcolor: color, color: 'white',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: 11, fontWeight: 800, boxShadow: `0 2px 6px ${color}50`,
+                                  }}>{initial}</Box>
+                                  <Typography sx={{
+                                    fontSize: 12.5, fontWeight: 700, flex: 1,
+                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                  }}>{m.name}</Typography>
+                                  {/* Added badge */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                    <Typography sx={{ fontSize: 11 }}>✏️</Typography>
+                                    <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.added}</Typography>
+                                  </Box>
+                                  {/* Purchased badge */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                    <Typography sx={{ fontSize: 11 }}>✅</Typography>
+                                    <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.purchased}</Typography>
+                                  </Box>
+                                  {/* Percent pill */}
+                                  <Box sx={{
+                                    minWidth: 36, textAlign: 'center',
+                                    px: 0.5, py: 0.15, borderRadius: '6px',
+                                    bgcolor: color,
+                                  }}>
+                                    <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'white' }}>{pct}%</Typography>
+                                  </Box>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </>
+                      )}
+
+                      {/* קבוצה עם חבר יחיד או בלי פעילות */}
+                      {L.isGroup && (!sortedMembers.length || memberTotalActivity === 0) && (
+                        <Typography sx={{ mt: 1, fontSize: 11, color: 'text.disabled', textAlign: 'center', py: 0.5 }}>
+                          אין עדיין פעילות של חברים
+                        </Typography>
+                      )}
+                    </Paper>
+                  );
+                }) : (
+                  // Fallback: רק groupStats
+                  groupStats.map((g, gi) => (
+                    <Paper key={gi} elevation={0} sx={{
+                      p: 1.5, borderRadius: '14px',
+                      border: '1px solid', borderColor: isDark ? 'rgba(139,92,246,0.22)' : 'rgba(139,92,246,0.18)',
+                      background: isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)',
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Box sx={{
+                          width: 44, height: 44, flexShrink: 0, borderRadius: '12px', fontSize: 22,
+                          bgcolor: 'rgba(139,92,246,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>{g.icon}</Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{g.name}</Typography>
+                          <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                            {g.membersCount} חברים
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))
+                )}
+              </Box>
+            </>
+          );
+        })()}
 
         {/* ===== הרגלים ===== */}
         {tab === 'habits' && (
