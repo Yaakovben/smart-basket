@@ -9,18 +9,20 @@ const shimmer = keyframes`
 interface Props {
   // באיזו פינה למקם את הסרט
   corner?: 'top-left' | 'top-right';
+  // offset אנכי מראש הקונטיינר - מאפשר למקם את הסרט נמוך יותר כדי לא לכסות כותרת
+  offsetTop?: number;
 }
 
 // סרט BETA אלכסוני שיושב בפינה של הקונטיינר (חייב position: relative על ההורה).
 // הסגנון: ריבון מודרני עם gradient טורקיז וטקסט BETA מודגש.
-export const BetaRibbon = memo(({ corner = 'top-left' }: Props) => {
+export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0 }: Props) => {
   const isLeft = corner === 'top-left';
 
   return (
     <Box
       sx={{
         position: 'absolute',
-        top: 0,
+        top: offsetTop,
         [isLeft ? 'left' : 'right']: 0,
         width: 110,
         height: 110,

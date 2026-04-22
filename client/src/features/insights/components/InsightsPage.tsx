@@ -99,8 +99,8 @@ export const InsightsPage = memo(() => {
         borderRadius: '0 0 28px 28px',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* ריבון BETA אלכסוני בפינה שמאלית עליונה */}
-        <BetaRibbon corner="top-left" />
+        {/* ריבון BETA אלכסוני - ממוקם נמוך יותר כדי לא לכסות את שורת הכותרת */}
+        <BetaRibbon corner="top-left" offsetTop={52} />
 
         {/* חזרה + כותרת */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
@@ -267,20 +267,8 @@ export const InsightsPage = memo(() => {
                             boxShadow: `0 3px 10px ${color}40`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: 16,
-                            position: 'relative',
                           }}>
                             {emoji}
-                            {/* מספר קטן בתחתית */}
-                            <Box sx={{
-                              position: 'absolute', bottom: -4, right: -4,
-                              width: 16, height: 16, borderRadius: '50%',
-                              bgcolor: 'background.paper',
-                              border: '2px solid', borderColor: color,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 9, fontWeight: 900, color,
-                            }}>
-                              {i + 1}
-                            </Box>
                           </Box>
                           {/* טקסט */}
                           <Box sx={{

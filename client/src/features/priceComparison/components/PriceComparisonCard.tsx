@@ -247,31 +247,27 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
       {/* מצב 3: יש התאמות */}
       {data.enabled && hasMatches && (
         <>
-          <Typography sx={{ fontSize: 10, color: 'text.disabled', mb: 0.75 }}>
-            💡 לחצ/י על פריט כדי לראות איך התאמנו את השם
-          </Typography>
+          {/* הסבר היקף - איזה פריטים נכנסים לחישוב */}
+          <Box sx={{
+            p: 1, mb: 1, borderRadius: '8px',
+            bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)',
+            border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.12)',
+          }}>
+            <Typography sx={{ fontSize: 11, color: 'text.primary', lineHeight: 1.5 }}>
+              📋 מבוסס על הפריטים <b>שטרם נקנו</b> בכל הרשימות שלך (פרטיות וקבוצתיות).
+            </Typography>
+            <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.4, lineHeight: 1.5 }}>
+              ההתאמה לפי מילות מפתח בשם המוצר — לחצ/י על פריט כדי לראות בדיוק איך זוהה.
+            </Typography>
+          </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             {data.topMatches.map((m, i) => <MatchRow key={i} m={m} isDark={isDark} />)}
           </Box>
 
-          {/* סה"כ משוער — מחבר ויזואלית את כל השורות למעלה בסימן סכימה */}
+          {/* סה"כ משוער */}
           {data.estimatedBasketTotal !== null && (
-            <Box sx={{ mt: 1, position: 'relative' }}>
-              {/* סימן סכימה שמרמז שמדובר בסכום של השורות שמעל */}
-              <Box sx={{
-                display: 'flex', alignItems: 'center', gap: 1, mb: 0.75, pr: 1,
-              }}>
-                <Box sx={{ flex: 1, height: '2px', bgcolor: '#0D9488', opacity: 0.4, borderRadius: '2px' }} />
-                <Box sx={{
-                  fontSize: 14, fontWeight: 900, color: '#0D9488',
-                  bgcolor: isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.1)',
-                  width: 26, height: 26, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  Σ
-                </Box>
-              </Box>
+            <Box sx={{ mt: 1.25 }}>
               <Box sx={{
                 p: 1.5, borderRadius: '14px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -280,10 +276,10 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
               }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'white' }}>
-                    סיכום {data.matchedCount} הפריטים
+                    סכום של {data.matchedCount} פריטים שזוהו
                   </Typography>
-                  <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.8)', mt: 0.15 }}>
-                    חיבור של כל השורות המסומנות ✓ למעלה
+                  <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.85)', mt: 0.15 }}>
+                    פריטים שלא זוהו אינם נכללים בסכום
                   </Typography>
                 </Box>
                 <Typography sx={{ fontSize: 18, fontWeight: 900, color: 'white', fontFamily: 'monospace' }}>
