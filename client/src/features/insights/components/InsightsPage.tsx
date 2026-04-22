@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, keyframes, LinearProgress, Tabs, Tab } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { insightsApi, type InsightsData, type PriceComparisonData } from '../../../services/api';
-import { PriceComparisonCard } from './PriceComparisonCard';
-import { BetaBadge } from './BetaBadge';
+import { insightsApi, type InsightsData } from '../../../services/api';
+import { PriceComparisonCard, BetaBadge, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
 // אנימציות
@@ -59,7 +58,7 @@ export const InsightsPage = memo(() => {
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
     // טעינה עצמאית של השוואת מחירים — לא חוסמת את שאר העמוד, כשלון שקט
-    insightsApi.getPriceComparison().then(setPriceData).catch(() => {});
+    priceComparisonApi.getComparison().then(setPriceData).catch(() => {});
   }, []);
 
   // מסך טעינה

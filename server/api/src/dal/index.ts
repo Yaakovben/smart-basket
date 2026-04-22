@@ -6,4 +6,4 @@ export { NotificationDAL, type CreateNotificationInput, type PaginationOptions }
 export { TokenDAL } from './token.dal';
 export { LoginActivityDAL } from './loginActivity.dal';
 export { PushSubscriptionDAL } from './pushSubscription.dal';
-export { PriceDAL, type UpsertPriceInput } from './price.dal';
+// PriceDAL הועבר ל-features/priceComparison/dal/price.dal.ts

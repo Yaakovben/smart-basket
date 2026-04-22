@@ -6,7 +6,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import UpdateIcon from '@mui/icons-material/Update';
 import InventoryIcon from '@mui/icons-material/Inventory2';
-import type { PriceComparisonData, PriceMatch } from '../../../services/api';
+import type { PriceComparisonData, PriceMatch } from '../types/priceComparison.types';
 import { BetaBadge } from './BetaBadge';
 
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;

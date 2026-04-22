@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { PriceSyncService } from '../services/priceSync.service';
-import { logger } from '../config/logger';
+import { logger } from '../../../config/logger';
 
 // NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד
 // זה מוגדר רק ברמת התהליך — לא משפיע על שום בקשת HTTPS אחרת של השרת במפורש

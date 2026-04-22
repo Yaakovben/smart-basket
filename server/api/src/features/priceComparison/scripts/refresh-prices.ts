@@ -14,10 +14,10 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { env } from '../config/environment';
-import { logger } from '../config/logger';
+import { env } from '../../../config/environment';
+import { logger } from '../../../config/logger';
 import { PriceSyncService } from '../services/priceSync.service';
-import { PriceDAL } from '../dal';
+import { PriceDAL } from '../dal/price.dal';
 
 async function main() {
   logger.info('Connecting to MongoDB...');

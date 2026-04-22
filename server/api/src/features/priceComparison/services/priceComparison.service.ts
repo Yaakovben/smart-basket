@@ -1,5 +1,7 @@
-import { Product, Price } from '../models';
-import { ListDAL, PriceDAL } from '../dal';
+import { Product } from '../../../models';
+import { ListDAL } from '../../../dal';
+import { Price } from '../models/Price.model';
+import { PriceDAL } from '../dal/price.dal';
 import { normalizeProductName } from '../chains';
 
 export interface PriceMatch {

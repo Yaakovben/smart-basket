@@ -1,5 +1,5 @@
-import { Price, type IPriceDoc, type ChainId } from '../models';
-import { BaseDAL } from './base.dal';
+import { Price, type IPriceDoc, type ChainId } from '../models/Price.model';
+import { BaseDAL } from '../../../dal/base.dal';
 
 export interface UpsertPriceInput {
   barcode: string;

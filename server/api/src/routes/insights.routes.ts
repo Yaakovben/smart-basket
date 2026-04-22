@@ -6,6 +6,6 @@ const router = Router();
 
 router.use(authenticate);
 router.get('/', InsightsController.getInsights);
-router.get('/price-comparison', InsightsController.getPriceComparison);
+// /price-comparison הועבר ל-features/priceComparison/routes (נרשם בנפרד כ-/api/price-comparison)
 
 export default router;

@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
-    "refresh-prices": "ts-node-dev --transpile-only src/scripts/refresh-prices.ts"
+    "refresh-prices": "ts-node-dev --transpile-only src/features/priceComparison/scripts/refresh-prices.ts"
   },
   "keywords": [
     "smartbasket",

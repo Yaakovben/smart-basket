@@ -7,6 +7,8 @@ import adminRoutes from './admin.routes';
 import notificationRoutes from './notification.routes';
 import pushRoutes from './push.routes';
 import insightsRoutes from './insights.routes';
+import { dailyFaithRoutes } from '../features/daily-faith';
+import { priceComparisonRoutes } from '../features/priceComparison';
 
 const router = Router();
 
@@ -18,5 +20,7 @@ router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/push', pushRoutes);
 router.use('/insights', insightsRoutes);
+router.use('/price-comparison', priceComparisonRoutes);
+router.use('/daily-faith', dailyFaithRoutes);
 
 export default router;

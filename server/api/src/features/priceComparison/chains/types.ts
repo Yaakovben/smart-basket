@@ -1,4 +1,4 @@
-import type { ChainId } from '../models';
+import type { ChainId } from '../models/Price.model';
 
 export interface ChainPriceItem {
   barcode: string;

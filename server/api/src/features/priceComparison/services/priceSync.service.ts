@@ -1,8 +1,6 @@
-import { osherAdAdapter } from '../chains';
-import { PriceDAL, type UpsertPriceInput } from '../dal';
-import { normalizeProductName } from '../chains';
-import { logger } from '../config/logger';
-import type { ChainAdapter } from '../chains';
+import { osherAdAdapter, normalizeProductName, type ChainAdapter } from '../chains';
+import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
+import { logger } from '../../../config/logger';
 
 const adapters: ChainAdapter[] = [osherAdAdapter];
 

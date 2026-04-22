@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node';
 import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
-import { startPriceSyncJob } from './jobs/priceSync.job';
+import { startPriceSyncJob } from './features/priceComparison';
 
 // אתחול Sentry לניטור שגיאות (חייב להיות ראשון)
 if (env.SENTRY_DSN) {
