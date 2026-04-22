@@ -13,10 +13,13 @@ import { ForbiddenError } from './errors';
 
 const app = express();
 
-// פרוקסי מהימן - `true` במקום `1` כי Render משתמש בשרשרת proxies.
-// בלי זה req.ip מחזיר את ה-IP של ה-proxy ולא של המשתמש, וכל המשתמשים
-// חולקים את אותו דלי rate-limit → "יותר מידי ניסיונות" אפילו בחיבור ראשון.
-app.set('trust proxy', true);
+// פרוקסי מהימן - Render שם hop אחד מול השרת.
+// חובה להשתמש במספר מפורש (1) ולא ב-true:
+// `true` נחשב לא-בטוח ע"י express-rate-limit, והוא מתעלם ממנו ונופל חזרה
+// ל-req.socket.remoteAddress = ה-IP של ה-proxy. התוצאה: כל המשתמשים חולקים
+// את אותו דלי rate-limit → "יותר מידי ניסיונות" אפילו בחיבור ראשון.
+// `1` = סומך על hop אחד של X-Forwarded-For ומזהה את ה-IP האמיתי של המשתמש.
+app.set('trust proxy', 1);
 
 app.use(helmet());
 
