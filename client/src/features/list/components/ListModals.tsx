@@ -231,15 +231,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 </Box>
               )}
             </Box>
-            {/* כפתורים - אייקונים בלבד */}
-            <Box sx={{ display: 'flex', gap: 1.25, mt: 1.5, justifyContent: 'center' }}>
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
               <Button
                 aria-label="WhatsApp"
                 onClick={() => {
                   const msg = generateInviteMessage(list, t);
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                disableRipple disableFocusRipple
+                fullWidth disableRipple disableFocusRipple
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
                   color: 'white',
@@ -248,18 +248,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  flex: 1, maxWidth: 130, minWidth: 0,
                   borderRadius: '12px', height: 44,
                   boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   transition: 'opacity 0.1s',
-                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px', maxWidth: 110 },
+                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px' },
                 }}
               >
                 <WhatsAppIcon />
               </Button>
               <Button
-                aria-label={t('copy')}
-                disableRipple disableFocusRipple onClick={handleCopy}
+                fullWidth disableRipple disableFocusRipple onClick={handleCopy} startIcon={<ContentCopyIcon />}
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
                   color: 'white',
@@ -268,14 +266,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  flex: 1, maxWidth: 130, minWidth: 0,
-                  borderRadius: '12px', height: 44,
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
                   boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px', maxWidth: 110 },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
+                  '@media (max-width: 360px)': {
+                    height: 40, fontSize: 12, borderRadius: '11px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                  },
                 }}
               >
-                <ContentCopyIcon sx={{ fontSize: 20, '@media (max-width: 360px)': { fontSize: 18 } }} />
+                העתק
               </Button>
             </Box>
             {switcher}
@@ -323,11 +324,11 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 סרוק להצטרפות מיידית
               </Typography>
             </Box>
-            {/* כפתורים - אייקונים בלבד */}
-            <Box sx={{ display: 'flex', gap: 1.25, mt: 1.5, justifyContent: 'center' }}>
+            {/* כפתורים */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
               <Button
                 aria-label="שלח QR"
-                disableRipple disableFocusRipple onClick={handleShareQR}
+                fullWidth disableRipple disableFocusRipple onClick={handleShareQR}
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
                   color: 'white',
@@ -336,17 +337,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  flex: 1, maxWidth: 130, minWidth: 0,
                   borderRadius: '12px', height: 44,
                   boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   transition: 'opacity 0.1s',
-                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px', maxWidth: 110 },
+                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px' },
                 }}
               >
                 <WhatsAppIcon />
               </Button>
               <Button
-                disableRipple disableFocusRipple
+                fullWidth disableRipple disableFocusRipple
+                startIcon={<DownloadIcon />}
                 onClick={() => {
                   const svg = document.querySelector('#qr-container svg');
                   if (!svg) return;
@@ -369,7 +370,6 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   };
                   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
                 }}
-                aria-label="שמור"
                 sx={{
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
                   color: 'white',
@@ -378,14 +378,17 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                     boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  flex: 1, maxWidth: 130, minWidth: 0,
-                  borderRadius: '12px', height: 44,
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
                   boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '@media (max-width: 360px)': { height: 40, borderRadius: '11px', maxWidth: 110 },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
+                  '@media (max-width: 360px)': {
+                    height: 40, fontSize: 12, borderRadius: '11px',
+                    '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
+                  },
                 }}
               >
-                <DownloadIcon sx={{ fontSize: 22, '@media (max-width: 360px)': { fontSize: 20 } }} />
+                שמור
               </Button>
             </Box>
             {switcher}
