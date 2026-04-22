@@ -193,15 +193,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   const msg = generateInviteMessage(list, t);
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
-                fullWidth disableRipple startIcon={<WhatsAppIcon />}
+                fullWidth disableRipple disableFocusRipple startIcon={<WhatsAppIcon />}
                 sx={{
-                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`, boxShadow: '0 6px 20px rgba(37,211,102,0.45)' },
+                  '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
+                    background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
+                    boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'box-shadow 0.2s, opacity 0.1s',
+                  transition: 'opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -212,15 +215,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 WhatsApp
               </Button>
               <Button
-                fullWidth disableRipple onClick={handleCopy} startIcon={<ContentCopyIcon />}
+                fullWidth disableRipple disableFocusRipple onClick={handleCopy} startIcon={<ContentCopyIcon />}
                 sx={{
-                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #14B8A6, #0D9488)', boxShadow: '0 6px 20px rgba(20,184,166,0.45)' },
+                  '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
+                    background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
+                    boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'box-shadow 0.2s, opacity 0.1s',
+                  transition: 'opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -278,16 +284,19 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             {/* כפתורים - נדחפים לתחתית הקונטיינר */}
             <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
               <Button
-                fullWidth disableRipple onClick={handleShareQR}
+                fullWidth disableRipple disableFocusRipple onClick={handleShareQR}
                 startIcon={<WhatsAppIcon />}
                 sx={{
-                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`,
+                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
                   color: 'white',
-                  '&:hover': { background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover})`, boxShadow: '0 6px 20px rgba(37,211,102,0.45)' },
+                  '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
+                    background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
+                    boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                  transition: 'box-shadow 0.2s, opacity 0.1s',
+                  transition: 'opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -298,7 +307,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 שלח QR
               </Button>
               <Button
-                fullWidth disableRipple
+                fullWidth disableRipple disableFocusRipple
                 onClick={() => {
                   const svg = document.querySelector('#qr-container svg');
                   if (!svg) return;
@@ -323,13 +332,16 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 }}
                 startIcon={<DownloadIcon />}
                 sx={{
-                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
                   color: 'white',
-                  '&:hover': { background: 'linear-gradient(135deg, #14B8A6, #0D9488)', boxShadow: '0 6px 20px rgba(20,184,166,0.45)' },
+                  '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
+                    background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
+                    boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  },
                   '&:active': { opacity: 0.85 },
                   borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
                   boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
-                  transition: 'box-shadow 0.2s, opacity 0.1s',
+                  transition: 'opacity 0.1s',
                   '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
                   '@media (max-width: 360px)': {
                     height: 40, fontSize: 12, borderRadius: '12px',
@@ -346,7 +358,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
 
       {/* מחליף עדין ללא רקע - מיקום קבוע לשתי התצוגות */}
       {list.inviteCode && (
-        <Box sx={{ mt: 1.75, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 1 } }}>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', '@media (max-width: 360px)': { mt: 2 } }}>
           <Box
             component="button"
             onClick={() => { haptic('light'); setHasSwitched(true); setTab(tab === 'text' ? 'qr' : 'text'); }}
@@ -749,16 +761,39 @@ export const EditListModal = memo(({
             onClick={() => setShowChangePassword(!showChangePassword)}
             sx={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              py: 1.25, px: 0.5, cursor: 'pointer', mb: showChangePassword ? 0 : 2,
-              '&:active': { opacity: 0.7 },
+              py: 1.25, px: 1.5,
+              cursor: 'pointer',
+              mb: showChangePassword ? 1 : 2,
+              borderRadius: '10px',
+              bgcolor: showChangePassword ? 'rgba(20,184,166,0.08)' : 'action.hover',
+              border: '1px solid',
+              borderColor: showChangePassword ? 'rgba(20,184,166,0.25)' : 'transparent',
+              transition: 'background 0.15s ease, border-color 0.15s ease, opacity 0.1s',
+              '&:active': { opacity: 0.75 },
             }}
           >
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
-              🔑 {t('password')}
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: 'primary.main', fontWeight: 600 }}>
-              {showChangePassword ? '▲' : '▼'}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Typography sx={{ fontSize: 14 }}>🔑</Typography>
+              <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: 'text.primary' }}>
+                שנה סיסמה
+              </Typography>
+            </Box>
+            <Box sx={{
+              display: 'flex', alignItems: 'center', gap: 0.5,
+              color: 'primary.main',
+            }}>
+              <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'primary.main' }}>
+                {showChangePassword ? 'סגור' : 'לחץ לפתיחה'}
+              </Typography>
+              <Typography sx={{
+                fontSize: 11,
+                color: 'primary.main',
+                transition: 'transform 0.2s ease',
+                transform: showChangePassword ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}>
+                ▼
+              </Typography>
+            </Box>
           </Box>
           {showChangePassword && (
             <Box sx={{ mb: 2 }}>
