@@ -134,7 +134,12 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
 
   return (
     <>
-      <Box sx={overlaySx} aria-hidden="true" />
+      {/* Backdrop כפתור - לחיצה מחוץ לפופאפ סוגרת (Safety net למקרה שהכפתור יוצא מהמסך) */}
+      <Box
+        sx={{ ...overlaySx, cursor: 'pointer' }}
+        aria-hidden="true"
+        onClick={handleClose}
+      />
 
       <Box sx={containerSx} role="dialog" aria-labelledby="daily-faith-title">
         {/* הגוויל - תמונה כאלמנט אמיתי כך שהקופסה מתאימה בדיוק לממדיו.
@@ -226,6 +231,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           fullWidth
           onClick={handleClose}
           sx={{
+            // Sticky לתחתית המודאל — מבטיח שהכפתור תמיד ניתן ללחיצה
+            // גם על מסכים קטנים שה-content נחתך
+            position: 'sticky',
+            bottom: 0,
             borderRadius: '14px',
             py: 1.25,
             background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #B8860B 100%)',
