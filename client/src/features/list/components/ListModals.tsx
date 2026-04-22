@@ -786,22 +786,16 @@ export const EditListModal = memo(({
                 שנה סיסמה
               </Typography>
             </Box>
-            <Box sx={{
-              display: 'flex', alignItems: 'center', gap: 0.5,
+            <Typography sx={{
+              fontSize: 13,
               color: 'primary.main',
+              fontWeight: 700,
+              transition: 'transform 0.25s ease',
+              transform: showChangePassword ? 'rotate(180deg)' : 'rotate(0deg)',
+              lineHeight: 1,
             }}>
-              <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'primary.main' }}>
-                {showChangePassword ? 'סגור' : 'לחץ לפתיחה'}
-              </Typography>
-              <Typography sx={{
-                fontSize: 11,
-                color: 'primary.main',
-                transition: 'transform 0.2s ease',
-                transform: showChangePassword ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}>
-                ▼
-              </Typography>
-            </Box>
+              ▼
+            </Typography>
           </Box>
           {showChangePassword && (
             <Box sx={{ mb: 2 }}>
