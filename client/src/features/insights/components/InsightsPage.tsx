@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, useRef } from 'react';
+import { useState, useEffect, memo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, keyframes, LinearProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -7,11 +7,23 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
+import { haptic } from '../../../global/helpers';
 
 // אנימציות
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
 const scaleIn = keyframes`from{transform:scale(0)}to{transform:scale(1)}`;
 const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
+
+// הגדרת הקטעים ב-page — משותף ל-chip bar ול-anchors
+type SectionId = 'price' | 'lists' | 'habits' | 'pulse';
+const SECTIONS: { id: SectionId; label: string; emoji: string; color: string }[] = [
+  { id: 'price', label: 'מחירים', emoji: '💰', color: '#0D9488' },
+  { id: 'lists', label: 'רשימות', emoji: '📋', color: '#8B5CF6' },
+  { id: 'habits', label: 'הרגלים', emoji: '🏆', color: '#F59E0B' },
+  { id: 'pulse', label: 'דופק', emoji: '📈', color: '#EF4444' },
+];
+// גובה משוער של ה-chip bar ה-sticky - משמש ל-scrollMarginTop של הקטעים
+const STICKY_NAV_OFFSET = 64;
 
 // אמוג'י לציון - מהיר ויזואלית, ללא צבע נפרד כי יושב על רקע גרדיאנט
 const scoreEmoji = (s: number) => s >= 90 ? '🏆' : s >= 80 ? '🔥' : s >= 60 ? '💪' : s >= 40 ? '📈' : '🌱';
@@ -72,10 +84,46 @@ export const InsightsPage = memo(() => {
   const [priceData, setPriceData] = useState<PriceComparisonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // קטע פעיל כרגע בתצוגה - מסונכרן עם IntersectionObserver למעקב ויזואלי
+  const [activeSection, setActiveSection] = useState<SectionId>('price');
+  // refs לכל קטע - מאפשר גלילה חלקה בלחיצה על chip
+  const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
+    price: null, lists: null, habits: null, pulse: null,
+  });
+  // דגל המנטרל את ה-observer זמנית אחרי קליק, כדי שמעבר ידני לא "יקפוץ" חזרה
+  const clickLockRef = useRef(false);
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
     priceComparisonApi.getComparison().then(setPriceData).catch(() => {});
+  }, []);
+
+  // מעקב אחרי הקטע הנראה כרגע — משנה את ה-chip הפעיל
+  useEffect(() => {
+    if (loading || error) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (clickLockRef.current) return;
+        // הקטע הכי "מרכזי" במסך (יחס intersection הגבוה ביותר)
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveSection(visible.target.id as SectionId);
+      },
+      { rootMargin: '-30% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+    Object.values(sectionRefs.current).forEach(el => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [loading, error]);
+
+  // גלילה חלקה אל קטע - עם ניטרול observer זמני למניעת "קפיצה" תוך כדי גלילה
+  const scrollToSection = useCallback((id: SectionId) => {
+    haptic('light');
+    setActiveSection(id);
+    clickLockRef.current = true;
+    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // שחרור ה-lock אחרי שהגלילה נגמרה (הערכה: ~700ms)
+    window.setTimeout(() => { clickLockRef.current = false; }, 700);
   }, []);
 
   // מסך טעינה
@@ -150,13 +198,74 @@ export const InsightsPage = memo(() => {
         </Box>
       </Box>
 
+      {/* ===== Chip Nav — sticky, מציג קטע פעיל ומקפיץ בין קטעים ===== */}
+      <Box sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        bgcolor: isDark ? 'rgba(17,24,39,0.85)' : 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+      }}>
+        <Box sx={{
+          display: 'flex', gap: 0.75, px: 2, py: 1.25,
+          overflowX: 'auto',
+          '&::-webkit-scrollbar': { display: 'none' },
+          scrollbarWidth: 'none',
+          maskImage: 'linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to left, transparent, black 16px, black calc(100% - 16px), transparent)',
+        }}>
+          {SECTIONS.map(s => {
+            const isActive = activeSection === s.id;
+            return (
+              <Box
+                key={s.id}
+                component="button"
+                onClick={() => scrollToSection(s.id)}
+                sx={{
+                  display: 'inline-flex', alignItems: 'center', gap: 0.4,
+                  flexShrink: 0, px: 1.25, py: 0.75,
+                  borderRadius: '999px',
+                  fontSize: 12.5, fontWeight: 700,
+                  cursor: 'pointer', border: '1.5px solid',
+                  color: isActive ? 'white' : 'text.primary',
+                  borderColor: isActive ? s.color : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                  background: isActive ? `linear-gradient(135deg, ${s.color}, ${s.color}DD)` : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'),
+                  boxShadow: isActive ? `0 2px 12px ${s.color}60` : 'none',
+                  transition: 'background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, opacity 0.1s',
+                  outline: 'none', font: 'inherit',
+                  '&:active': { opacity: 0.8 },
+                }}
+                aria-current={isActive ? 'true' : undefined}
+              >
+                <Typography component="span" sx={{ fontSize: 14, lineHeight: 1 }}>{s.emoji}</Typography>
+                <Typography component="span" sx={{ fontSize: 12.5, fontWeight: 700, color: 'inherit' }}>{s.label}</Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+
       {/* ===== Content ===== */}
       <Box sx={{ px: 2, mt: 2 }}>
 
         {/* ===== HERO: השוואת מחירים — הפיצ׳ר המרכזי ===== */}
-        <PriceComparisonCard data={priceData} isDark={isDark} />
+        <Box
+          id="price"
+          ref={el => { sectionRefs.current.price = el as HTMLDivElement | null; }}
+          sx={{ scrollMarginTop: `${STICKY_NAV_OFFSET}px` }}
+        >
+          <PriceComparisonCard data={priceData} isDark={isDark} />
+        </Box>
 
         {/* ===== הרשימות שלך — משלב פעילות + סלי עלויות ===== */}
+        <Box
+          id="lists"
+          ref={el => { sectionRefs.current.lists = el as HTMLDivElement | null; }}
+          sx={{ scrollMarginTop: `${STICKY_NAV_OFFSET}px` }}
+        >
         {(priceData?.lists && priceData.lists.length > 0) || groupStats.length > 0 ? (
           <SectionCard icon="📋" title="הרשימות שלך" subtitle="פעילות, עלויות משוערות ומי תורם" isDark={isDark}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
@@ -267,8 +376,14 @@ export const InsightsPage = memo(() => {
             </Box>
           </SectionCard>
         ) : null}
+        </Box>
 
         {/* ===== הרגלים: מוצרים + קטגוריות בשני כרטיסים קומפקטיים ===== */}
+        <Box
+          id="habits"
+          ref={el => { sectionRefs.current.habits = el as HTMLDivElement | null; }}
+          sx={{ scrollMarginTop: `${STICKY_NAV_OFFSET}px` }}
+        >
         {topProducts.length > 0 && (
           <SectionCard icon="🏆" title="המוצרים הנפוצים שלך" subtitle="מה אתה קונה הכי הרבה" isDark={isDark}>
             {/* Top 3 ברצף אופקי ללא פודיום - פשוט ונקי */}
@@ -345,8 +460,14 @@ export const InsightsPage = memo(() => {
             })}
           </SectionCard>
         )}
+        </Box>
 
         {/* ===== דופק: סטטיסטיקות קומפקטיות של פעילות ===== */}
+        <Box
+          id="pulse"
+          ref={el => { sectionRefs.current.pulse = el as HTMLDivElement | null; }}
+          sx={{ scrollMarginTop: `${STICKY_NAV_OFFSET}px` }}
+        >
         <SectionCard icon="📈" title="הדופק שלך" subtitle="סטריק פעיל ומגמה שבועית" isDark={isDark}>
           {/* שורת סטטיסטיקות: רשימות, נקנו, סטריק */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: weeklyTrends && weeklyTrends.length > 0 ? 1.75 : 0 }}>
@@ -406,6 +527,7 @@ export const InsightsPage = memo(() => {
             </>
           )}
         </SectionCard>
+        </Box>
 
       </Box>
     </Box>
