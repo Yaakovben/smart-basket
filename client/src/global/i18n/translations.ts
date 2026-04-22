@@ -869,7 +869,7 @@ export const translations: Record<Language, Translations> = {
     lists: 'רשימות',
     products: 'מוצרים',
     owner: 'בעלים',
-    dailyFaithTitle: 'מחשבה להתחזקות',
+    dailyFaithTitle: 'החיזוק היומי',
     dailyFaithReadButton: 'קראתי והתחזקתי',
     dailyFaithManagerTitle: 'ניהול משפטי חיזוק',
     dailyFaithPlaceholder: 'כתוב משפט חיזוק חדש...',
