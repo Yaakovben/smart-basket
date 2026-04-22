@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Box, Typography, TextField, Button, IconButton, CircularProgress, InputAdornment } from '@mui/material';
+import { Box, Typography, TextField, Button, IconButton, CircularProgress, InputAdornment, Collapse } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -35,6 +35,8 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  // האם החיפוש פתוח (מוצג כ-input). כברירת מחדל סגור - רק אייקון חיפוש
+  const [searchOpen, setSearchOpen] = useState(false);
   // מצב אישור מחיקה פנימי - מזהה של ה-quote שממתין לאישור סופי
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -114,7 +116,7 @@ export const DailyFaithManager = ({ onClose }: Props) => {
         height: 'min(70vh, 580px)',
       }}>
 
-        {/* שורת סטטיסטיקה */}
+        {/* שורת סטטיסטיקה + כפתור חיפוש (רק כשיש מספיק משפטים) */}
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 1, px: 0.25, flexShrink: 0,
         }}>
@@ -133,6 +135,33 @@ export const DailyFaithManager = ({ onClose }: Props) => {
             <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
               · מציג {filteredQuotes.length}
             </Typography>
+          )}
+          <Box sx={{ flex: 1 }} />
+          {/* כפתור חיפוש - מופיע רק כשיש מספיק משפטים להצדיק זה */}
+          {quotes.length > 3 && (
+            <IconButton
+              size="small"
+              onClick={() => {
+                const next = !searchOpen;
+                setSearchOpen(next);
+                if (!next) setSearch(''); // סגירה - מנקה גם את תוצאות הסינון
+              }}
+              sx={{
+                width: 30, height: 30,
+                color: searchOpen ? '#8B6914' : 'text.secondary',
+                bgcolor: searchOpen
+                  ? (isDark ? 'rgba(212,175,55,0.18)' : 'rgba(212,175,55,0.14)')
+                  : 'transparent',
+                border: '1px solid',
+                borderColor: searchOpen ? 'rgba(184,134,11,0.4)' : 'transparent',
+                '&:hover': {
+                  bgcolor: isDark ? 'rgba(212,175,55,0.14)' : 'rgba(212,175,55,0.1)',
+                },
+              }}
+              aria-label="חיפוש"
+            >
+              <SearchIcon sx={{ fontSize: 17 }} />
+            </IconButton>
           )}
         </Box>
 
@@ -180,11 +209,12 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           </Box>
         </Box>
 
-        {/* חיפוש - רק אם יש מספר משפטים */}
-        {quotes.length > 3 && (
-          <Box sx={{ flexShrink: 0 }}>
+        {/* חיפוש מתקפל - פתוח רק כשלוחצים על כפתור החיפוש */}
+        <Collapse in={searchOpen && quotes.length > 3} unmountOnExit>
+          <Box sx={{ flexShrink: 0, pt: 0.25 }}>
             <TextField
               fullWidth
+              autoFocus
               size="small"
               placeholder="חיפוש משפט..."
               value={search}
@@ -206,7 +236,7 @@ export const DailyFaithManager = ({ onClose }: Props) => {
               sx={goldFieldSx}
             />
           </Box>
-        )}
+        </Collapse>
 
         {/* רשימת משפטים — ממלאת את שאר החלל */}
         <Box sx={{
