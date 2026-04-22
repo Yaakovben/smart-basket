@@ -106,6 +106,7 @@ type TranslationKey =
   | 'installStep1Android'
   | 'installStep2Android'
   | 'installDismiss'
+  | 'installLater'
   | 'clearPurchased'
   | 'clearList'
   | 'resetList'
@@ -553,6 +554,7 @@ export const translations: Record<Language, Translations> = {
     installStep1Android: 'לחץ על ⋮ (תפריט) למעלה',
     installStep2Android: 'בחר "התקן אפליקציה" או "הוסף למסך הבית"',
     installDismiss: 'הבנתי, תודה!',
+    installLater: 'לא עכשיו',
     clearPurchased: 'נקה מוצרים שנקנו',
     resetList: 'איפוס רשימה',
     shoppingMode: 'מצב קנייה',
@@ -994,6 +996,7 @@ export const translations: Record<Language, Translations> = {
     installStep1Android: 'Tap ⋮ (menu) at the top',
     installStep2Android: 'Select "Install app" or "Add to Home Screen"',
     installDismiss: 'Got it, thanks!',
+    installLater: 'Not now',
     resetList: 'Reset list',
     shoppingMode: 'Shopping mode',
     exitShoppingMode: 'Exit shopping mode',
@@ -1431,6 +1434,7 @@ export const translations: Record<Language, Translations> = {
     installStep1Android: 'Нажмите ⋮ (меню) вверху',
     installStep2Android: 'Выберите "Установить" или "Добавить на главный экран"',
     installDismiss: 'Понятно, спасибо!',
+    installLater: 'Не сейчас',
     clearPurchased: 'Очистить купленные товары',
     resetList: 'Сбросить список',
     shoppingMode: 'Режим покупок',

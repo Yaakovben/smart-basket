@@ -1,11 +1,35 @@
 import { useEffect, useState } from 'react';
 import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
+import { markPopupShown } from '../../global/helpers';
 
 const STORAGE_KEY = 'sb_daily_faith_last_shown';
+const SESSION_COUNT_KEY = 'sb_session_count';      // מונה מצטבר של סשנים (בדפדפן)
+const SESSION_MARKER_KEY = 'sb_session_marker';    // דגל לסשן נוכחי (נמחק בסגירת דפדפן)
+const MIN_SESSION_FOR_FAITH = 2;                    // לקוח חדש יראה רק מסשן 2
 
 const todayStr = () => {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
+
+/**
+ * מחזיר את מספר הסשן הנוכחי של המשתמש בדפדפן הזה.
+ * סשן חדש = פעם ראשונה שנפתחה האפליקציה מאז סגירת הדפדפן (sessionStorage ריק).
+ * כל סשן חדש מקדם את המונה ב-localStorage.
+ */
+const getSessionNumber = (): number => {
+  try {
+    if (!sessionStorage.getItem(SESSION_MARKER_KEY)) {
+      const prev = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10) || 0;
+      const next = prev + 1;
+      localStorage.setItem(SESSION_COUNT_KEY, String(next));
+      sessionStorage.setItem(SESSION_MARKER_KEY, '1');
+      return next;
+    }
+    return parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '1', 10) || 1;
+  } catch {
+    return 99; // אם storage חסום, לא נגביל
+  }
 };
 
 // האם מציגים את הפופאפ בכל פתיחה (לא שומר "היום הוצג"):
@@ -29,6 +53,8 @@ export function useDailyFaith(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     if (!ALWAYS_SHOW && localStorage.getItem(STORAGE_KEY) === todayStr()) return;
+    // לקוח חדש - מדלגים על הסשן הראשון כדי לא להציף אותו בכניסה הראשונה לאפליקציה
+    if (!ALWAYS_SHOW && getSessionNumber() < MIN_SESSION_FOR_FAITH) return;
 
     let cancelled = false;
     // השהייה קצרה כדי לא להתנגש עם טעינת המסך הראשי
@@ -36,7 +62,11 @@ export function useDailyFaith(enabled: boolean) {
       dailyFaithApi
         .getRandom()
         .then((q) => {
-          if (!cancelled && q) setQuote(q);
+          if (!cancelled && q) {
+            setQuote(q);
+            // סימון בקואורדינטור שפופאפ נמצא על המסך - יחסום popups משניים בסשן זה
+            markPopupShown('daily-faith');
+          }
         })
         .catch(() => {/* שקט */});
     }, 1500);

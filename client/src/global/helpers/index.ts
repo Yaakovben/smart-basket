@@ -47,3 +47,9 @@ export {
   isActiveThisWeek,
   isActiveThisMonth
 } from './dateFormatting';
+
+// תיאום popups אוטומטיים (daily-faith / pwa-install / push-notify)
+export {
+  canShowSecondaryPopup,
+  markPopupShown,
+} from './popupCoordinator';
