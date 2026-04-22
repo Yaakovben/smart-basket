@@ -6,6 +6,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
 import { Modal } from '../../global/components/Modal';
+import { ConfirmModal } from '../../global/components/ConfirmModal';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
@@ -37,8 +38,8 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   const [search, setSearch] = useState('');
   // האם החיפוש פתוח (מוצג כ-input). כברירת מחדל סגור - רק אייקון חיפוש
   const [searchOpen, setSearchOpen] = useState(false);
-  // מצב אישור מחיקה פנימי - מזהה של ה-quote שממתין לאישור סופי
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // ה-quote שממתין לאישור מחיקה ב-popup. null = אין מחיקה פתוחה.
+  const [quoteToDelete, setQuoteToDelete] = useState<DailyFaith | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -78,7 +79,7 @@ export const DailyFaithManager = ({ onClose }: Props) => {
 
   const handleDelete = async (id: string) => {
     haptic('light');
-    setConfirmDeleteId(null);
+    setQuoteToDelete(null);
     setQuotes((prev) => prev.filter((q) => q.id !== id));
     try {
       await dailyFaithApi.remove(id);
@@ -262,7 +263,6 @@ export const DailyFaithManager = ({ onClose }: Props) => {
             </Box>
           ) : (
             filteredQuotes.map((q, idx) => {
-              const isAwaitingConfirm = confirmDeleteId === q.id;
               return (
                 <Box
                   key={q.id}
@@ -272,14 +272,9 @@ export const DailyFaithManager = ({ onClose }: Props) => {
                     gap: 1,
                     p: 1.25,
                     borderRadius: '12px',
-                    bgcolor: isAwaitingConfirm
-                      ? (isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.06)')
-                      : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)'),
+                    bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
                     border: '1px solid',
-                    borderColor: isAwaitingConfirm
-                      ? 'rgba(239,68,68,0.35)'
-                      : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
-                    transition: 'background 0.2s, border 0.2s',
+                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   }}
                 >
                   {/* מספר רץ */}
@@ -317,51 +312,35 @@ export const DailyFaithManager = ({ onClose }: Props) => {
                     </Box>
                   </Box>
 
-                  {/* כפתור מחיקה עם אישור פנימי */}
-                  {isAwaitingConfirm ? (
-                    <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => setConfirmDeleteId(null)}
-                        sx={{
-                          width: 30, height: 30,
-                          color: 'text.secondary',
-                          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                        }}
-                      >
-                        <ClearIcon sx={{ fontSize: 15 }} />
-                      </IconButton>
-                      <Button
-                        size="small"
-                        onClick={() => handleDelete(q.id)}
-                        sx={{
-                          minWidth: 0, px: 1, height: 30, borderRadius: '8px',
-                          bgcolor: '#EF4444', color: 'white', fontSize: 11, fontWeight: 700,
-                          '&:hover': { bgcolor: '#DC2626' },
-                        }}
-                      >
-                        מחק
-                      </Button>
-                    </Box>
-                  ) : (
-                    <IconButton
-                      size="small"
-                      onClick={() => setConfirmDeleteId(q.id)}
-                      sx={{
-                        color: 'text.secondary',
-                        flexShrink: 0,
-                        '&:hover': { color: 'error.main', bgcolor: 'rgba(239,68,68,0.08)' },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  )}
+                  {/* כפתור מחיקה - לחיצה פותחת popup אישור */}
+                  <IconButton
+                    size="small"
+                    onClick={() => setQuoteToDelete(q)}
+                    sx={{
+                      color: 'text.secondary',
+                      flexShrink: 0,
+                      '&:hover': { color: 'error.main', bgcolor: 'rgba(239,68,68,0.08)' },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
                 </Box>
               );
             })
           )}
         </Box>
       </Box>
+
+      {/* POPUP אישור מחיקה - מוצג רק כשנבחר משפט למחיקה */}
+      {quoteToDelete && (
+        <ConfirmModal
+          title="מחיקת משפט"
+          message={`האם למחוק את המשפט? פעולה זו לא ניתנת לביטול.\n\n"${quoteToDelete.text.slice(0, 120)}${quoteToDelete.text.length > 120 ? '…' : ''}"`}
+          confirmText="מחק"
+          onConfirm={() => handleDelete(quoteToDelete.id)}
+          onCancel={() => setQuoteToDelete(null)}
+        />
+      )}
     </Modal>
   );
 };
