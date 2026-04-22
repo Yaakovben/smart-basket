@@ -317,28 +317,21 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Box>
         </Paper>
 
+        {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} onClick={() => setShowHelp(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>❓</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('helpSupport')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => setShowAbout(true)}>
+          <Box sx={settingRowSx} onClick={() => setShowAbout(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>ℹ️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('about')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
-        </Paper>
-
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={settingRowSx} onClick={() => navigate('/privacy')}>
+          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/privacy')}>
             <Box component="span" sx={{ fontSize: 22 }}>📋</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsAndPrivacy')}</Typography>
-            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
-          </Box>
-          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/clear-cache')}>
-            <Box component="span" sx={{ fontSize: 22 }}>🧹</Box>
-            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('clearCache')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
@@ -403,7 +396,13 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Paper>
         )}
 
+        {/* מקבץ ניהול נתונים: ניקוי מטמון + מחיקת כל הנתונים */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={settingRowSx} onClick={() => navigate('/clear-cache')}>
+            <Box component="span" sx={{ fontSize: 22 }}>🧹</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('clearCache')}</Typography>
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+          </Box>
           <Box sx={{ ...settingRowSx, borderBottom: 'none', color: 'error.dark' }} onClick={() => setConfirmDelete(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>🗑️</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15, color: 'inherit' }}>{t('deleteAllData')}</Typography>
