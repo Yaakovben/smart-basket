@@ -204,13 +204,16 @@ export const InsightsPage = memo(() => {
       {/* ===== הדר גרדיאנט עם ריבון BETA אלכסוני ===== */}
       <Box sx={{
         background: isDark ? 'linear-gradient(160deg, #312E81, #5B21B6, #7C3AED)' : 'linear-gradient(160deg, #6D28D9, #7C3AED, #A78BFA)',
-        p: { xs: 'max(44px, env(safe-area-inset-top) + 10px) 16px 22px', sm: '48px 20px 26px' },
+        // Padding-top גדול יותר כדי לפנות מקום לריבון BETA מעל שורת הכותרת,
+        // בלי שיידרוס את כפתור החזרה או ה-pill של הציון.
+        p: { xs: 'max(72px, env(safe-area-inset-top) + 38px) 16px 22px', sm: '76px 20px 26px' },
         borderRadius: '0 0 24px 24px',
         position: 'relative', overflow: 'hidden',
         mb: 2,
       }}>
-        {/* בעברית RTL הציון בצד הפיזי של left; מעבירים את הריבון ל-right כדי לא לכסות את ה-pill. */}
-        <BetaRibbon corner="top-right" offsetTop={70} />
+        {/* ריבון BETA בצד הפיזי השמאלי (בעברית RTL זהו גם הצד הויזואלי של "שמאל").
+            בזכות ה-padding-top המוגדל, הריבון יושב מעל שורת הכותרת ולא דורס דבר. */}
+        <BetaRibbon corner="top-left" offsetTop={0} />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
