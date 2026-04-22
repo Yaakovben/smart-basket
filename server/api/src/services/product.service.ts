@@ -4,6 +4,7 @@ import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc } from '../models';
 import { checkListAccess } from './list-access.helper';
+import { PriceComparisonService } from '../features/priceComparison';
 
 // המרת מוצר Mongoose לאובייקט תגובת API
 const toProductResponse = (product: IProductDoc) => {
@@ -34,6 +35,9 @@ export class ProductService {
     // עדכון זמן שינוי הרשימה (מוצרים בקולקשן נפרד)
     await ListDAL.touchUpdatedAt(listId);
 
+    // אינולידציית מטמון השוואת מחירים של המשתמש - שינוי פריטים משפיע על הסה"כ
+    PriceComparisonService.invalidateUser(userId);
+
     return toProductResponse(product);
   }
 
@@ -61,6 +65,7 @@ export class ProductService {
 
     // עדכון זמן שינוי הרשימה
     await ListDAL.touchUpdatedAt(listId);
+    PriceComparisonService.invalidateUser(userId);
   }
 
   static async deleteProduct(
@@ -79,6 +84,7 @@ export class ProductService {
 
     // עדכון זמן שינוי הרשימה
     await ListDAL.touchUpdatedAt(listId);
+    PriceComparisonService.invalidateUser(userId);
   }
 
   static async clearProducts(
@@ -97,6 +103,7 @@ export class ProductService {
       deletedCount = await ProductDAL.clearAll(listId);
     }
     await ListDAL.touchUpdatedAt(listId);
+    PriceComparisonService.invalidateUser(userId);
     return deletedCount;
   }
 
@@ -108,6 +115,7 @@ export class ProductService {
     await checkListAccess(listId, userId);
     const count = await ProductDAL.resetAll(listId);
     await ListDAL.touchUpdatedAt(listId);
+    PriceComparisonService.invalidateUser(userId);
     return count;
   }
 
