@@ -430,7 +430,13 @@ type TranslationKey =
   | 'moreDetails'
   | 'lists'
   | 'products'
-  | 'owner';
+  | 'owner'
+  // Daily Faith
+  | 'dailyFaithTitle'
+  | 'dailyFaithReadButton'
+  | 'dailyFaithManagerTitle'
+  | 'dailyFaithPlaceholder'
+  | 'dailyFaithEmpty';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -863,6 +869,11 @@ export const translations: Record<Language, Translations> = {
     lists: 'רשימות',
     products: 'מוצרים',
     owner: 'בעלים',
+    dailyFaithTitle: 'מחשבה להתחזקות',
+    dailyFaithReadButton: 'קראתי והתחזקתי',
+    dailyFaithManagerTitle: 'ניהול משפטי חיזוק',
+    dailyFaithPlaceholder: 'כתוב משפט חיזוק חדש...',
+    dailyFaithEmpty: 'אין עדיין משפטי חיזוק',
   },
   en: {
     // General
@@ -1290,6 +1301,11 @@ export const translations: Record<Language, Translations> = {
     lists: 'lists',
     products: 'products',
     owner: 'Owner',
+    dailyFaithTitle: 'Daily Inspiration',
+    dailyFaithReadButton: 'I Read & Was Strengthened',
+    dailyFaithManagerTitle: 'Manage Inspirational Quotes',
+    dailyFaithPlaceholder: 'Write a new inspirational quote...',
+    dailyFaithEmpty: 'No quotes yet',
   },
   ru: {
     // General
@@ -1717,6 +1733,11 @@ export const translations: Record<Language, Translations> = {
     lists: 'списков',
     products: 'товаров',
     owner: 'Владелец',
+    dailyFaithTitle: 'Вдохновение дня',
+    dailyFaithReadButton: 'Прочитал и укрепился',
+    dailyFaithManagerTitle: 'Управление цитатами',
+    dailyFaithPlaceholder: 'Напишите новую цитату...',
+    dailyFaithEmpty: 'Цитат пока нет',
   }
 };
 

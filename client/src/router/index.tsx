@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton } from "../global/components";
+import { DailyFaithGate } from "../features/daily-faith";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
@@ -374,6 +375,7 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
+      <DailyFaithGate enabled={!!user && !authLoading} />
     </>
   );
 }
