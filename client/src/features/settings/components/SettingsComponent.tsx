@@ -317,6 +317,15 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Box>
         </Paper>
 
+        {/* תובנות — מעל מקבץ המידע כדי שיהיה נגיש מהר יותר */}
+        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/insights')}>
+            <Box component="span" sx={{ fontSize: 22 }}>💡</Box>
+            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('insights')}</Typography>
+            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+          </Box>
+        </Paper>
+
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} onClick={() => setShowHelp(true)}>
@@ -332,15 +341,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/privacy')}>
             <Box component="span" sx={{ fontSize: 22 }}>📋</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('termsAndPrivacy')}</Typography>
-            <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
-          </Box>
-        </Paper>
-
-        {/* תובנות */}
-        <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/insights')}>
-            <Box component="span" sx={{ fontSize: 22 }}>💡</Box>
-            <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('insights')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
