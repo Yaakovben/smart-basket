@@ -83,18 +83,36 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           <Box sx={cornerSx('bottom', 'left')}>✦</Box>
           <Box sx={cornerSx('bottom', 'right')}>✦</Box>
 
-          {/* כותרת */}
-          <Typography
+          {/* כותרת "החיזוק היומי" במסגרת עגולה מעוטרת - כדי שיהיה ברור שזו הכותרת */}
+          <Box
             sx={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#8B6914',
-              letterSpacing: 1.5,
-              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 2.5,
+              py: 0.85,
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #FFF4C9 0%, #FFE7A0 100%)',
+              border: '1.5px solid rgba(184, 134, 11, 0.5)',
+              boxShadow: '0 3px 10px rgba(184, 134, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
             }}
           >
-            {t('dailyFaithTitle')}
-          </Typography>
+            {/* כוכבית דקורטיבית שמאל */}
+            <Box sx={{ color: '#B8860B', fontSize: 12, opacity: 0.8 }} aria-hidden="true">✦</Box>
+            <Typography
+              sx={{
+                fontSize: 13.5,
+                fontWeight: 800,
+                color: '#8B6914',
+                letterSpacing: 1.5,
+                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+              }}
+            >
+              {t('dailyFaithTitle')}
+            </Typography>
+            {/* כוכבית דקורטיבית ימין */}
+            <Box sx={{ color: '#B8860B', fontSize: 12, opacity: 0.8 }} aria-hidden="true">✦</Box>
+          </Box>
 
           {/* קו מפריד זהב */}
           <Box sx={{ width: 40, height: 2, bgcolor: '#B8860B', borderRadius: 2, opacity: 0.6 }} />
@@ -109,7 +127,6 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
               fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
               px: 1,
               whiteSpace: 'pre-wrap',
-              // מניעת שבירת מילים באמצע
               wordBreak: 'keep-all',
               overflowWrap: 'normal',
               hyphens: 'none',
