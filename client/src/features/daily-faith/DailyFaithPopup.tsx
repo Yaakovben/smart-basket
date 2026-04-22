@@ -1,11 +1,21 @@
-import { Dialog, Box, Typography, Button, Fade } from '@mui/material';
+import { Dialog, Box, Typography, Button, Fade, keyframes } from '@mui/material';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
+
+// התמונה של הגוויל יושבת ב-public/ כך ש-Vite מגיש אותה ישירות ב-URL קבוע.
+// שים את קובץ הגוויל הריק ב: client/public/daily-faith/parchment.jpg
+const PARCHMENT_BG_URL = '/daily-faith/parchment.jpg';
 
 interface DailyFaithPopupProps {
   text: string;
   onClose: () => void;
 }
+
+// זוהר עדין סביב הגוויל - כאילו מואר מאחור
+const subtleGlow = keyframes`
+  0%, 100% { filter: drop-shadow(0 16px 36px rgba(0,0,0,0.6)); }
+  50%      { filter: drop-shadow(0 18px 44px rgba(255,200,90,0.2)) drop-shadow(0 16px 36px rgba(0,0,0,0.55)); }
+`;
 
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
@@ -18,7 +28,7 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   return (
     <Dialog
       open
-      // הפופאפ נסגר רק בלחיצה על כפתור "קראתי והתחזקתי" — לא בלחיצה מחוץ לו וגם לא ב-Escape
+      // נסגר רק בלחיצה על הכפתור - לא ב-backdrop ולא ב-Escape
       onClose={(_e, reason) => {
         if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         handleClose();
@@ -32,122 +42,115 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: 'none',
           overflow: 'visible',
           m: 2,
-          maxWidth: 400,
+          maxWidth: 440,
           width: '100%',
         },
       }}
       sx={{
         '& .MuiBackdrop-root': {
-          bgcolor: 'rgba(0,0,0,0.75)',
-          backdropFilter: 'blur(6px)',
+          bgcolor: 'rgba(10,8,4,0.88)',
+          backdropFilter: 'blur(8px)',
         },
       }}
     >
-      {/* קלף */}
       <Box
         sx={{
-          position: 'relative',
-          borderRadius: '22px',
-          p: 0.5,
-          background: 'linear-gradient(135deg, #D4AF37 0%, #F4E4A6 40%, #B8860B 100%)',
-          boxShadow: '0 20px 60px rgba(184, 134, 11, 0.5), 0 0 40px rgba(212, 175, 55, 0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2.5,
         }}
       >
+        {/* הגוויל עם הטקסט */}
         <Box
           sx={{
-            borderRadius: '18px',
-            background: 'linear-gradient(160deg, #FFF9E6 0%, #FFF3D4 50%, #FDE8B4 100%)',
-            border: '2px solid rgba(184, 134, 11, 0.3)',
-            px: 3,
-            py: 5,
-            textAlign: 'center',
             position: 'relative',
-            minHeight: 280,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3,
-            overflow: 'hidden',
+            width: '100%',
+            aspectRatio: '700 / 1040',
+            backgroundImage: `url(${PARCHMENT_BG_URL})`,
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            animation: `${subtleGlow} 4s ease-in-out infinite`,
           }}
         >
-          {/* קישוטים בפינות */}
-          <Box sx={cornerSx('top', 'left')}>✦</Box>
-          <Box sx={cornerSx('top', 'right')}>✦</Box>
-          <Box sx={cornerSx('bottom', 'left')}>✦</Box>
-          <Box sx={cornerSx('bottom', 'right')}>✦</Box>
-
+          {/* "בס"ד" בפינה הימנית העליונה של הגוויל */}
           <Typography
             sx={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#8B6914',
-              letterSpacing: 1.5,
-              textTransform: 'uppercase',
+              position: 'absolute',
+              top: '24%',
+              right: '20%',
+              fontSize: { xs: 11, sm: 13 },
+              fontWeight: 700,
+              color: '#3E2F0E',
+              fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
+              opacity: 0.8,
+              letterSpacing: 0.5,
             }}
           >
-            {t('dailyFaithTitle')}
+            בס״ד
           </Typography>
 
+          {/* אזור הטקסט המרכזי - ממורכז בתוך הגוויל */}
           <Box
             sx={{
-              width: 40,
-              height: 2,
-              bgcolor: '#B8860B',
-              borderRadius: 2,
-              opacity: 0.6,
-            }}
-          />
-
-          <Typography
-            sx={{
-              fontSize: 19,
-              fontWeight: 500,
-              lineHeight: 1.7,
-              color: '#3E2F0E',
-              fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
-              px: 1,
-              whiteSpace: 'pre-wrap',
+              position: 'absolute',
+              top: '30%',
+              bottom: '38%',
+              left: { xs: '16%', sm: '18%' },
+              right: { xs: '16%', sm: '18%' },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
             }}
           >
-            {text}
-          </Typography>
-
-          <Button
-            onClick={handleClose}
-            sx={{
-              mt: 2,
-              px: 4,
-              py: 1.25,
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: 15,
-              boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
-              textTransform: 'none',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
-              },
-              '&:active': {
-                transform: 'scale(0.97)',
-              },
-            }}
-          >
-            {t('dailyFaithReadButton')}
-          </Button>
+            <Typography
+              sx={{
+                fontSize: { xs: 14, sm: 17 },
+                fontWeight: 500,
+                lineHeight: 1.65,
+                color: '#3E2F0E',
+                fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                // אותיות עם תחושת כתב יד קליל
+                letterSpacing: 0.3,
+              }}
+            >
+              {text}
+            </Typography>
+          </Box>
         </Box>
+
+        {/* כפתור "קראתי והתחזקתי" - מתחת לגוויל, בצבעים תואמים */}
+        <Button
+          onClick={handleClose}
+          sx={{
+            px: 4.5,
+            py: 1.35,
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 55%, #B8860B 100%)',
+            color: 'white',
+            fontWeight: 800,
+            fontSize: 15,
+            boxShadow: '0 6px 20px rgba(184, 134, 11, 0.55), inset 0 1px 0 rgba(255,255,255,0.3)',
+            textTransform: 'none',
+            letterSpacing: 0.5,
+            border: '1px solid rgba(255,220,130,0.3)',
+            transition: 'transform 0.12s, box-shadow 0.2s',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 55%, #9C7209 100%)',
+              boxShadow: '0 8px 24px rgba(184, 134, 11, 0.65), inset 0 1px 0 rgba(255,255,255,0.35)',
+            },
+            '&:active': {
+              transform: 'scale(0.97)',
+            },
+          }}
+        >
+          {t('dailyFaithReadButton')}
+        </Button>
       </Box>
     </Dialog>
   );
 };
-
-const cornerSx = (v: 'top' | 'bottom', h: 'left' | 'right') => ({
-  position: 'absolute' as const,
-  [v]: 10,
-  [h]: 14,
-  color: '#B8860B',
-  fontSize: 18,
-  opacity: 0.6,
-  pointerEvents: 'none' as const,
-});
