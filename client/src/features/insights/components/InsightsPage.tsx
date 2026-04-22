@@ -228,27 +228,95 @@ export const InsightsPage = memo(() => {
               ))}
             </Box>
 
-            {/* תובנות */}
-            {smartTips.length > 0 && (
-              <Paper sx={{
-                p: 2, borderRadius: '16px', mb: 2,
-                border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)',
-                animation: `${fadeIn} 0.5s ease 0.4s both`,
-              }} elevation={0}>
-                <Typography sx={{ fontSize: 15, fontWeight: 800, mb: 1.5 }}>✨ תובנות חכמות</Typography>
-                {smartTips.slice(0, 4).map((tip, i) => (
-                  <Box key={i} sx={{
-                    display: 'flex', gap: 1.25, mb: i < smartTips.length - 1 ? 1.25 : 0,
-                    p: 1, borderRadius: '10px',
-                    bgcolor: isDark ? 'rgba(245,158,11,0.05)' : 'rgba(245,158,11,0.03)',
-                    animation: `${slideIn} 0.3s ease ${0.5 + i * 0.08}s both`,
-                  }}>
-                    <Typography sx={{ fontSize: 14 }}>💡</Typography>
-                    <Typography sx={{ fontSize: 13, color: 'text.primary', lineHeight: 1.5, fontWeight: 500 }}>{tip}</Typography>
+            {/* תובנות חכמות — עיצוב מחדש: rail בצד שמאל + נקודות ממוספרות */}
+            {smartTips.length > 0 && (() => {
+              const tipColors = ['#F59E0B', '#8B5CF6', '#14B8A6', '#EC4899'];
+              const tipEmojis = ['💡', '🎯', '⭐', '🚀'];
+              return (
+                <Paper sx={{
+                  p: 2, borderRadius: '18px', mb: 2,
+                  border: '1px solid',
+                  borderColor: isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.15)',
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(245,158,11,0.05), rgba(139,92,246,0.03))'
+                    : 'linear-gradient(135deg, rgba(245,158,11,0.03), rgba(139,92,246,0.02))',
+                  position: 'relative', overflow: 'hidden',
+                  animation: `${fadeIn} 0.5s ease 0.4s both`,
+                }} elevation={0}>
+                  {/* רקע דקורטיבי */}
+                  <Box sx={{
+                    position: 'absolute', top: -40, right: -40, width: 140, height: 140,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(245,158,11,0.08), transparent 70%)',
+                    pointerEvents: 'none',
+                  }} />
+
+                  {/* כותרת עם ספירה */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.75, position: 'relative' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Typography sx={{ fontSize: 20 }}>✨</Typography>
+                      <Typography sx={{ fontSize: 15, fontWeight: 900, letterSpacing: -0.2 }}>תובנות חכמות</Typography>
+                    </Box>
+                    <Box sx={{
+                      fontSize: 10, fontWeight: 800, color: '#F59E0B',
+                      bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)',
+                      px: 1, py: 0.25, borderRadius: '8px',
+                    }}>
+                      {Math.min(smartTips.length, 4)}/{smartTips.length}
+                    </Box>
                   </Box>
-                ))}
-              </Paper>
-            )}
+
+                  {/* רשימת tips — כל אחד עם צבע שונה, רייל צבעוני בצד שמאל */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, position: 'relative' }}>
+                    {smartTips.slice(0, 4).map((tip, i) => {
+                      const color = tipColors[i % tipColors.length];
+                      const emoji = tipEmojis[i % tipEmojis.length];
+                      return (
+                        <Box key={i} sx={{
+                          display: 'flex', gap: 1.25,
+                          position: 'relative',
+                          animation: `${slideIn} 0.4s ease ${0.5 + i * 0.08}s both`,
+                        }}>
+                          {/* איקון במעגל צבעוני עם גרדיאנט */}
+                          <Box sx={{
+                            width: 36, height: 36, flexShrink: 0,
+                            borderRadius: '12px',
+                            background: `linear-gradient(135deg, ${color}, ${color}DD)`,
+                            boxShadow: `0 3px 10px ${color}40`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 16,
+                            position: 'relative',
+                          }}>
+                            {emoji}
+                            {/* מספר קטן בתחתית */}
+                            <Box sx={{
+                              position: 'absolute', bottom: -4, right: -4,
+                              width: 16, height: 16, borderRadius: '50%',
+                              bgcolor: 'background.paper',
+                              border: '2px solid', borderColor: color,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 9, fontWeight: 900, color,
+                            }}>
+                              {i + 1}
+                            </Box>
+                          </Box>
+                          {/* טקסט */}
+                          <Box sx={{
+                            flex: 1, pt: 0.35, pb: 0.5,
+                            borderBottom: i < Math.min(smartTips.length, 4) - 1 ? '1px dashed' : 'none',
+                            borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                          }}>
+                            <Typography sx={{ fontSize: 12.5, color: 'text.primary', lineHeight: 1.55, fontWeight: 500 }}>
+                              {tip}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Paper>
+              );
+            })()}
 
             {/* השוואת מחירים (ניסיוני) */}
             <PriceComparisonCard data={priceData} isDark={isDark} />

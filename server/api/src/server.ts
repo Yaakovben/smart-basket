@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node';
 import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
+import { startPriceSyncJob } from './jobs/priceSync.job';
 
 // אתחול Sentry לניטור שגיאות (חייב להיות ראשון)
 if (env.SENTRY_DSN) {
@@ -24,6 +25,14 @@ const startServer = async () => {
     server = app.listen(env.PORT, () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
+
+    // התחלת cron job יומי לרענון מחירים מאושר עד — רק בפרודקשן
+    // בפיתוח ידני, אפשר להריץ `npm run refresh-prices`
+    if (env.NODE_ENV === 'production') {
+      startPriceSyncJob();
+    } else {
+      logger.info('[price-sync-job] Skipped in non-production environment');
+    }
   } catch (error) {
     logger.error('Failed to start server:', error);
     Sentry.captureException(error);

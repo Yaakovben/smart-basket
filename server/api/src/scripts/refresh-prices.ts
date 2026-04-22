@@ -16,63 +16,25 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import { env } from '../config/environment';
 import { logger } from '../config/logger';
-import { osherAdAdapter } from '../chains';
+import { PriceSyncService } from '../services/priceSync.service';
 import { PriceDAL } from '../dal';
-import { normalizeProductName } from '../chains';
-import type { UpsertPriceInput } from '../dal';
-
-const adapters = [osherAdAdapter];
 
 async function main() {
   logger.info('Connecting to MongoDB...');
   await mongoose.connect(env.MONGODB_URI);
   logger.info('Connected.');
 
-  for (const adapter of adapters) {
-    logger.info(`[${adapter.chainId}] Fetching latest prices...`);
-    const t0 = Date.now();
-    const result = await adapter.fetchLatestPrices();
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-
-    if (result.error) {
-      logger.error(`[${adapter.chainId}] Fetch error: ${result.error}`);
-      continue;
+  const results = await PriceSyncService.syncAllChains();
+  for (const r of results) {
+    if (r.error) {
+      logger.error(`[${r.chainId}] error: ${r.error}`);
+    } else {
+      logger.info(`[${r.chainId}] ${r.chainName}: fetched ${r.fetched}, upserted ${r.upserted} in ${(r.elapsedMs / 1000).toFixed(1)}s`);
     }
-    logger.info(`[${adapter.chainId}] Fetched ${result.items.length} items in ${elapsed}s. Upserting to DB...`);
-
-    if (result.items.length === 0) {
-      logger.warn(`[${adapter.chainId}] No items to upsert, skipping.`);
-      continue;
-    }
-
-    const inputs: UpsertPriceInput[] = result.items.map(item => ({
-      barcode: item.barcode,
-      itemName: item.itemName,
-      itemNameNormalized: normalizeProductName(item.itemName),
-      chainId: adapter.chainId,
-      chainName: adapter.chainName,
-      storeId: item.storeId,
-      price: item.price,
-      unitOfMeasure: item.unitOfMeasure,
-      manufacturerName: item.manufacturerName,
-      quantity: item.quantity,
-    }));
-
-    const BATCH_SIZE = 500;
-    let totalUpserted = 0;
-    for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
-      const batch = inputs.slice(i, i + BATCH_SIZE);
-      const affected = await PriceDAL.bulkUpsert(batch);
-      totalUpserted += affected;
-      if ((i / BATCH_SIZE) % 10 === 0) {
-        logger.info(`[${adapter.chainId}] Progress: ${i + batch.length}/${inputs.length}`);
-      }
-    }
-    logger.info(`[${adapter.chainId}] Done. ${totalUpserted} rows upserted.`);
   }
 
-  const totalOsher = await PriceDAL.countByChain('osher_ad');
-  logger.info(`Total Osher Ad prices in DB: ${totalOsher}`);
+  const total = await PriceDAL.countByChain('osher_ad');
+  logger.info(`Total Osher Ad prices in DB: ${total}`);
 
   await mongoose.disconnect();
   logger.info('Disconnected.');
