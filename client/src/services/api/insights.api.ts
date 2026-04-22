@@ -35,9 +35,36 @@ export interface InsightsData {
   }[];
 }
 
+// ===== השוואת מחירים (ניסיוני) =====
+export interface PriceMatch {
+  userProductName: string;
+  userQuantity: number;
+  normalizedName: string;
+  matched: boolean;
+  chainId: string;
+  chainName: string;
+  itemName: string;
+  price: number;
+  barcode: string;
+}
+
+export interface PriceComparisonData {
+  enabled: boolean;
+  chainName: string;
+  totalPrices: number;
+  matchedCount: number;
+  topMatches: PriceMatch[];
+  estimatedBasketTotal: number | null;
+  disclaimer: string;
+}
+
 export const insightsApi = {
   async getInsights(): Promise<InsightsData> {
     const response = await apiClient.get<{ data: InsightsData }>('/insights');
+    return response.data.data;
+  },
+  async getPriceComparison(): Promise<PriceComparisonData> {
+    const response = await apiClient.get<{ data: PriceComparisonData }>('/insights/price-comparison');
     return response.data.data;
   },
 };

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, keyframes, LinearProgress, Tabs, Tab } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { insightsApi, type InsightsData } from '../../../services/api';
+import { insightsApi, type InsightsData, type PriceComparisonData } from '../../../services/api';
+import { PriceComparisonCard } from './PriceComparisonCard';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
 // אנימציות
@@ -49,12 +50,15 @@ export const InsightsPage = memo(() => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [data, setData] = useState<InsightsData | null>(null);
+  const [priceData, setPriceData] = useState<PriceComparisonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tab, setTab] = useState<InsightTab>('overview');
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
+    // טעינה עצמאית של השוואת מחירים — לא חוסמת את שאר העמוד, כשלון שקט
+    insightsApi.getPriceComparison().then(setPriceData).catch(() => {});
   }, []);
 
   // מסך טעינה
@@ -216,6 +220,9 @@ export const InsightsPage = memo(() => {
                 ))}
               </Paper>
             )}
+
+            {/* השוואת מחירים (ניסיוני) */}
+            <PriceComparisonCard data={priceData} isDark={isDark} />
 
             {/* שכחת */}
             {forgotten.length > 0 && (

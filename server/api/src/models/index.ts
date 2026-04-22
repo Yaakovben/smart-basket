@@ -5,3 +5,4 @@ export { RefreshToken, type IRefreshToken } from './RefreshToken.model';
 export { LoginActivity, type ILoginActivity, type LoginMethod } from './LoginActivity.model';
 export { Notification, type INotification as INotificationDoc, type NotificationType } from './Notification.model';
 export { PushSubscription, type IPushSubscription } from './PushSubscription.model';
+export { Price, type IPriceDoc, type ChainId } from './Price.model';
