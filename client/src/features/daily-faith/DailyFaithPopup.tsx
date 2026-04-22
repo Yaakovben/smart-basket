@@ -11,10 +11,10 @@ interface DailyFaithPopupProps {
   onClose: () => void;
 }
 
-// זוהר עדין סביב הגוויל
-const subtleGlow = keyframes`
-  0%, 100% { filter: drop-shadow(0 12px 28px rgba(0,0,0,0.55)); }
-  50%      { filter: drop-shadow(0 14px 34px rgba(255,200,90,0.18)) drop-shadow(0 12px 28px rgba(0,0,0,0.5)); }
+// זוהר עדין שמשלב זהב (הקלף) עם טורקיז של האפליקציה - מחבר בין השניים
+const appGlow = keyframes`
+  0%, 100% { filter: drop-shadow(0 10px 24px rgba(0,0,0,0.45)) drop-shadow(0 0 20px rgba(20,184,166,0.15)); }
+  50%      { filter: drop-shadow(0 14px 30px rgba(0,0,0,0.4)) drop-shadow(0 0 28px rgba(20,184,166,0.3)) drop-shadow(0 0 12px rgba(212,175,55,0.3)); }
 `;
 
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
@@ -47,9 +47,11 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
         },
       }}
       sx={{
+        // רקע עם גוונים של האפליקציה - מחבר ויזואלית
         '& .MuiBackdrop-root': {
-          bgcolor: 'rgba(10,8,4,0.85)',
-          backdropFilter: 'blur(6px)',
+          bgcolor: 'rgba(12,30,32,0.85)',
+          backdropFilter: 'blur(8px)',
+          background: 'radial-gradient(ellipse at center, rgba(20,184,166,0.18), rgba(10,8,4,0.9) 60%)',
         },
       }}
     >
@@ -58,7 +60,7 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 2,
+          gap: 1.5,
         }}
       >
         {/* הגוויל עם הטקסט - גובה מוגבל לפי המסך כדי שלא ישתלט */}
@@ -75,15 +77,35 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
-            animation: `${subtleGlow} 4s ease-in-out infinite`,
+            animation: `${appGlow} 5s ease-in-out infinite`,
           }}
         >
-          {/* "בס"ד" בפינה הימנית העליונה של הגוויל */}
+          {/* "החיזוק היומי" בראש הגוויל - על החלק המגולגל */}
           <Typography
             sx={{
               position: 'absolute',
-              top: '25%',
-              right: '22%',
+              top: '14.5%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              fontSize: { xs: 12, sm: 14 },
+              fontWeight: 800,
+              color: '#5D3A0A',
+              fontFamily: '"Frank Ruhl Libre", "David Libre", serif',
+              letterSpacing: 2,
+              whiteSpace: 'nowrap',
+              textShadow: '0 1px 0 rgba(255,230,180,0.5)',
+              opacity: 0.9,
+            }}
+          >
+            החיזוק היומי
+          </Typography>
+
+          {/* "בס״ד" בתוך הגוויל - בפינה ימנית למעלה של אזור הכתיבה */}
+          <Typography
+            sx={{
+              position: 'absolute',
+              top: '32%',
+              right: '21%',
               fontSize: { xs: 10, sm: 12 },
               fontWeight: 700,
               color: '#3E2F0E',
@@ -95,14 +117,14 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             בס״ד
           </Typography>
 
-          {/* אזור הטקסט המרכזי - ממורכז בתוך הגוויל */}
+          {/* אזור הטקסט המרכזי - ממוקם אחרי ה-בס״ד */}
           <Box
             sx={{
               position: 'absolute',
-              top: '32%',
+              top: '38%',
               bottom: '36%',
-              left: { xs: '17%', sm: '18%' },
-              right: { xs: '17%', sm: '18%' },
+              left: { xs: '19%', sm: '20%' },
+              right: { xs: '19%', sm: '20%' },
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -131,25 +153,25 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           </Box>
         </Box>
 
-        {/* כפתור "קראתי והתחזקתי" - מתחת לגוויל, קומפקטי */}
+        {/* כפתור "קראתי והתחזקתי" - משלב זהב וטורקיז של האפליקציה */}
         <Button
           onClick={handleClose}
           sx={{
             px: 3.5,
-            py: 1.1,
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 55%, #B8860B 100%)',
+            py: 1.2,
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #14B8A6 100%)',
             color: 'white',
             fontWeight: 800,
             fontSize: 14,
-            boxShadow: '0 4px 14px rgba(184, 134, 11, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
+            boxShadow: '0 4px 16px rgba(184,134,11,0.45), 0 0 18px rgba(20,184,166,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
             textTransform: 'none',
             letterSpacing: 0.4,
-            border: '1px solid rgba(255,220,130,0.3)',
+            border: '1px solid rgba(255,220,130,0.35)',
             transition: 'transform 0.12s, box-shadow 0.2s',
             '&:hover': {
-              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 55%, #9C7209 100%)',
-              boxShadow: '0 6px 18px rgba(184, 134, 11, 0.6)',
+              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 50%, #0D9488 100%)',
+              boxShadow: '0 6px 20px rgba(184,134,11,0.55), 0 0 22px rgba(20,184,166,0.35)',
             },
             '&:active': {
               transform: 'scale(0.97)',
