@@ -7,42 +7,64 @@ const shimmer = keyframes`
 `;
 
 interface Props {
-  // באיזו פינה למקם את הסרט
+  // באיזה צד פיזי הריבון יופיע. חשוב: RTL של MUI הופך left/right ב-sx,
+  // לכן אנחנו משתמשים ב-style ולא ב-sx כדי להבטיח מיקום פיזי מדויק.
+  // בעברית (RTL) - "top-left" ייתן ריבון בצד השמאלי הפיזי/ויזואלי.
   corner?: 'top-left' | 'top-right';
   // offset אנכי מראש הקונטיינר - מאפשר למקם את הסרט נמוך יותר כדי לא לכסות כותרת
   offsetTop?: number;
+  // גודל הריבון (בא ליצור נוכחות גדולה יותר כשצריך)
+  size?: 'md' | 'lg';
 }
 
-// סרט BETA אלכסוני שיושב בפינה של הקונטיינר (חייב position: relative על ההורה).
-// הסגנון: ריבון מודרני עם gradient טורקיז וטקסט BETA מודגש.
-export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0 }: Props) => {
+// סרט BETA אלכסוני גדול בפינה של הקונטיינר (חייב position: relative על ההורה).
+// הסגנון: ריבון טורקיז בולט עם גרדיאנט, שימר וצל עמוק.
+export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0, size = 'lg' }: Props) => {
   const isLeft = corner === 'top-left';
+  const isLarge = size === 'lg';
+  // מימדי הריבון - המידה "lg" גדולה משמעותית ויותר בולטת
+  const boxSize = isLarge ? 150 : 110;
+  const innerWidth = isLarge ? 220 : 160;
+  const innerTop = isLarge ? 34 : 22;
+  const innerOffset = isLarge ? -42 : -32;
+  const fontSize = isLarge ? 13 : 11;
+  const letterSpacing = isLarge ? 4 : 3;
+  const padY = isLarge ? 1 : 0.6;
+  const shadowStrength = isLarge ? '0 4px 18px rgba(20,184,166,0.55)' : '0 3px 12px rgba(20,184,166,0.45)';
+
+  // מיקום פיזי דרך style prop - עוקף את ה-RTL-flip של MUI sx
+  // (בלי זה, בעברית הריבון קופץ לצד ההפוך מהמצופה).
+  const outerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: offsetTop,
+    left: isLeft ? 0 : 'auto',
+    right: isLeft ? 'auto' : 0,
+    width: boxSize,
+    height: boxSize,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+    zIndex: 3,
+  };
+
+  const innerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: innerTop,
+    left: isLeft ? innerOffset : 'auto',
+    right: isLeft ? 'auto' : innerOffset,
+    width: innerWidth,
+    transformOrigin: 'center',
+    transform: isLeft ? 'rotate(-38deg)' : 'rotate(38deg)',
+  };
 
   return (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: offsetTop,
-        [isLeft ? 'left' : 'right']: 0,
-        width: 110,
-        height: 110,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        zIndex: 3,
-      }}
-    >
+    <Box style={outerStyle}>
       <Box
+        style={innerStyle}
         sx={{
-          position: 'absolute',
-          top: isLeft ? 22 : 22,
-          [isLeft ? 'left' : 'right']: -32,
-          width: 160,
-          py: 0.6,
+          py: padY,
           textAlign: 'center',
-          transform: isLeft ? 'rotate(-38deg)' : 'rotate(38deg)',
-          transformOrigin: 'center',
           background: 'linear-gradient(90deg, #0D9488 0%, #14B8A6 35%, #2DD4BF 65%, #5EEAD4 100%)',
-          boxShadow: '0 3px 12px rgba(20,184,166,0.45), inset 0 1px 0 rgba(255,255,255,0.3)',
+          boxShadow: `${shadowStrength}, inset 0 1px 0 rgba(255,255,255,0.35)`,
           // שימר חולף
           '&::after': {
             content: '""',
@@ -58,7 +80,7 @@ export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0 }: Props) =
             position: 'absolute',
             left: 0, right: 0, bottom: -4,
             height: 4,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.15), transparent)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.2), transparent)',
             pointerEvents: 'none',
           },
         }}
@@ -66,11 +88,11 @@ export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0 }: Props) =
         <Typography
           sx={{
             position: 'relative',
-            fontSize: 11,
+            fontSize,
             fontWeight: 900,
             color: 'white',
-            letterSpacing: 3,
-            textShadow: '0 1px 2px rgba(0,0,0,0.25)',
+            letterSpacing,
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
             zIndex: 1,
           }}
         >
