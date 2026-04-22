@@ -93,13 +93,30 @@ export const DailyFaithManager = ({ onClose }: Props) => {
       ? '#F59E0B'
       : 'text.disabled';
 
-  return (
+    // צביעה זהובה עקבית לכל ה-inputs (תואם לצבע של משפטי החיזוק)
+    const goldFieldSx = {
+      '& .MuiOutlinedInput-root': {
+        borderRadius: '12px',
+        bgcolor: isDark ? 'rgba(212,175,55,0.06)' : 'rgba(212,175,55,0.05)',
+        '& fieldset': { borderColor: 'rgba(184,134,11,0.25)' },
+        '&:hover fieldset': { borderColor: 'rgba(184,134,11,0.5)' },
+        '&.Mui-focused fieldset': { borderColor: '#B8860B', borderWidth: '1.5px' },
+      },
+    };
+
+    return (
     <Modal title={t('dailyFaithManagerTitle')} onClose={onClose}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      {/* גובה קבוע — גם ברשימה ריקה וגם מלאה. מונע "קפיצה" של ה-popup */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        height: 'min(70vh, 580px)',
+      }}>
 
         {/* שורת סטטיסטיקה */}
         <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 1, px: 0.25,
+          display: 'flex', alignItems: 'center', gap: 1, px: 0.25, flexShrink: 0,
         }}>
           <Box sx={{
             display: 'inline-flex', alignItems: 'center', gap: 0.5,
@@ -120,8 +137,9 @@ export const DailyFaithManager = ({ onClose }: Props) => {
         </Box>
 
         {/* הוספת משפט חדש */}
-        <Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+        <Box sx={{ flexShrink: 0 }}>
+          {/* alignItems: stretch — הכפתור נמתח לאותו גובה של ה-input */}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'stretch' }}>
             <TextField
               fullWidth
               multiline
@@ -132,19 +150,19 @@ export const DailyFaithManager = ({ onClose }: Props) => {
               value={text}
               onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
               inputProps={{ maxLength: MAX_TEXT_LENGTH }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                },
-              }}
+              sx={goldFieldSx}
             />
             <Button
               variant="contained"
               onClick={handleAdd}
               disabled={saving || text.trim().length < 2}
               sx={{
-                minWidth: 48, height: 48, borderRadius: '12px', p: 0, flexShrink: 0,
+                minWidth: 48,
+                // alignSelf: stretch + height: auto יביא את הכפתור לגובה של ה-input באופן אוטומטי
+                alignSelf: 'stretch',
+                borderRadius: '12px',
+                p: 0,
+                flexShrink: 0,
                 background: 'linear-gradient(135deg, #D4AF37, #B8860B)',
                 boxShadow: '0 3px 12px rgba(184,134,11,0.35)',
                 '&:hover': { background: 'linear-gradient(135deg, #B8860B, #9C7209)' },
@@ -164,37 +182,38 @@ export const DailyFaithManager = ({ onClose }: Props) => {
 
         {/* חיפוש - רק אם יש מספר משפטים */}
         {quotes.length > 3 && (
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="חיפוש משפט..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} />
-                </InputAdornment>
-              ),
-              endAdornment: search && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearch('')} sx={{ p: 0.5 }}>
-                    <ClearIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '10px',
-                bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-              },
-            }}
-          />
+          <Box sx={{ flexShrink: 0 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="חיפוש משפט..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 18, color: '#8B6914', opacity: 0.7 }} />
+                  </InputAdornment>
+                ),
+                endAdornment: search && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearch('')} sx={{ p: 0.5 }}>
+                      <ClearIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={goldFieldSx}
+            />
+          </Box>
         )}
 
-        {/* רשימת משפטים */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85, maxHeight: '50vh', overflowY: 'auto', pr: 0.25 }}>
+        {/* רשימת משפטים — ממלאת את שאר החלל */}
+        <Box sx={{
+          display: 'flex', flexDirection: 'column', gap: 0.85,
+          flex: 1, minHeight: 0,
+          overflowY: 'auto', pr: 0.25,
+        }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress size={24} sx={{ color: '#B8860B' }} />
