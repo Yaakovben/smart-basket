@@ -62,6 +62,15 @@ class PriceDALClass extends BaseDAL<IPriceDoc> {
     return this.model.find(filter).limit(limit).lean();
   }
 
+  // חיפוש fuzzy אחד המאחד מספר טוקנים דרך $or — חוסך round-trips לעומת N שאילתות מקבילות
+  async findByAnyToken(tokens: string[], chainId: ChainId, limit = 60) {
+    if (tokens.length === 0) return [];
+    // מילוט תווים מיוחדים של regex
+    const escape = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const or = tokens.map(t => ({ itemNameNormalized: { $regex: escape(t), $options: 'i' } }));
+    return this.model.find({ chainId, $or: or }).limit(limit).lean();
+  }
+
   async countByChain(chainId: ChainId) {
     return this.model.countDocuments({ chainId });
   }
