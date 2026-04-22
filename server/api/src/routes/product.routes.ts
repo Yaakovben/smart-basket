@@ -1,18 +1,24 @@
 import { Router } from 'express';
-import { ProductController } from '../controllers';
+import {
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  clearProducts,
+  resetProducts,
+  reorderProducts,
+} from '../controllers/product.controller';
 import { authenticate, validate } from '../middleware';
 import { productValidator } from '../validators';
 
 const router = Router({ mergeParams: true });
 
-// כל נתיבי המוצרים דורשים אימות
 router.use(authenticate);
 
-router.post('/', validate({ body: productValidator.create, params: productValidator.listParams }), ProductController.addProduct);
-router.put('/reorder', validate({ body: productValidator.reorder, params: productValidator.listParams }), ProductController.reorderProducts);
-router.delete('/clear', validate({ params: productValidator.listParams }), ProductController.clearProducts);
-router.post('/reset', validate({ params: productValidator.listParams }), ProductController.resetProducts);
-router.put('/:productId', validate({ body: productValidator.update, params: productValidator.params }), ProductController.updateProduct);
-router.delete('/:productId', validate({ params: productValidator.params }), ProductController.deleteProduct);
+router.post('/', validate({ body: productValidator.create, params: productValidator.listParams }), addProduct);
+router.put('/reorder', validate({ body: productValidator.reorder, params: productValidator.listParams }), reorderProducts);
+router.delete('/clear', validate({ params: productValidator.listParams }), clearProducts);
+router.post('/reset', validate({ params: productValidator.listParams }), resetProducts);
+router.put('/:productId', validate({ body: productValidator.update, params: productValidator.params }), updateProduct);
+router.delete('/:productId', validate({ params: productValidator.params }), deleteProduct);
 
 export default router;

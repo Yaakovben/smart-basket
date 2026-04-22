@@ -203,14 +203,13 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const CACHE_TTL_MS = 60_000;
 const userCache = new Map<string, { data: PriceComparisonData; expiresAt: number }>();
 
-export class PriceComparisonService {
-  // מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר
-  static invalidateUser(userId: string): void {
-    userCache.delete(userId);
-  }
+// מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר
+export function invalidateUser(userId: string): void {
+  userCache.delete(userId);
+}
 
-  // תובנות השוואת מחירים עבור משתמש — חלוקה לפי רשימה
-  static async getComparisonForUser(userId: string): Promise<PriceComparisonData> {
+// תובנות השוואת מחירים עבור משתמש — חלוקה לפי רשימה
+export async function getComparisonForUser(userId: string): Promise<PriceComparisonData> {
     // מטמון: אם הבקשה הקודמת הייתה לאחרונה, מחזירים מייד
     const cached = userCache.get(userId);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
@@ -349,7 +348,6 @@ export class PriceComparisonService {
       grandTotal: totalMatched > 0 ? round2(grandTotal) : null,
       totalMatched,
       totalUnmatched,
-      totalPending,
-    });
-  }
+    totalPending,
+  });
 }

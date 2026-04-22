@@ -4,7 +4,7 @@ import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc } from '../models';
 import { checkListAccess } from './list-access.helper';
-import { PriceComparisonService } from '../features/priceComparison';
+import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
 
 // המרת מוצר Mongoose לאובייקט תגובת API
 const toProductResponse = (product: IProductDoc) => {
@@ -15,117 +15,107 @@ const toProductResponse = (product: IProductDoc) => {
   return json;
 };
 
-export class ProductService {
-  static async addProduct(
-    listId: string,
-    userId: string,
-    data: CreateProductInput
-  ) {
-    await checkListAccess(listId, userId);
+export async function addProduct(
+  listId: string,
+  userId: string,
+  data: CreateProductInput
+) {
+  await checkListAccess(listId, userId);
 
-    const product = await ProductDAL.createProduct({
-      listId,
-      name: sanitizeText(data.name),
-      quantity: data.quantity ?? 1,
-      unit: data.unit ?? 'יח׳',
-      category: data.category ?? 'אחר',
-      addedBy: userId,
-    });
+  const product = await ProductDAL.createProduct({
+    listId,
+    name: sanitizeText(data.name),
+    quantity: data.quantity ?? 1,
+    unit: data.unit ?? 'יח׳',
+    category: data.category ?? 'אחר',
+    addedBy: userId,
+  });
 
-    // עדכון זמן שינוי הרשימה (מוצרים בקולקשן נפרד)
-    await ListDAL.touchUpdatedAt(listId);
+  await ListDAL.touchUpdatedAt(listId);
+  invalidatePriceCacheForUser(userId);
 
-    // אינולידציית מטמון השוואת מחירים של המשתמש - שינוי פריטים משפיע על הסה"כ
-    PriceComparisonService.invalidateUser(userId);
+  return toProductResponse(product);
+}
 
-    return toProductResponse(product);
+export async function updateProduct(
+  listId: string,
+  productId: string,
+  userId: string,
+  data: UpdateProductInput
+): Promise<void> {
+  await checkListAccess(listId, userId);
+
+  const product = await ProductDAL.findById(productId);
+  if (!product || product.listId.toString() !== listId) {
+    throw NotFoundError.product();
   }
 
-  static async updateProduct(
-    listId: string,
-    productId: string,
-    userId: string,
-    data: UpdateProductInput
-  ): Promise<void> {
-    await checkListAccess(listId, userId);
+  const updates: Record<string, unknown> = {};
+  if (data.name !== undefined) updates.name = sanitizeText(data.name);
+  if (data.quantity !== undefined) updates.quantity = data.quantity;
+  if (data.unit !== undefined) updates.unit = data.unit;
+  if (data.category !== undefined) updates.category = data.category;
+  if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
 
-    const product = await ProductDAL.findById(productId);
-    if (!product || product.listId.toString() !== listId) {
-      throw NotFoundError.product();
-    }
+  await ProductDAL.updateProduct(productId, updates);
+  await ListDAL.touchUpdatedAt(listId);
+  invalidatePriceCacheForUser(userId);
+}
 
-    const updates: Record<string, unknown> = {};
-    if (data.name !== undefined) updates.name = sanitizeText(data.name);
-    if (data.quantity !== undefined) updates.quantity = data.quantity;
-    if (data.unit !== undefined) updates.unit = data.unit;
-    if (data.category !== undefined) updates.category = data.category;
-    if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
+export async function deleteProduct(
+  listId: string,
+  productId: string,
+  userId: string
+): Promise<void> {
+  await checkListAccess(listId, userId);
 
-    await ProductDAL.updateProduct(productId, updates);
-
-    // עדכון זמן שינוי הרשימה
-    await ListDAL.touchUpdatedAt(listId);
-    PriceComparisonService.invalidateUser(userId);
+  const product = await ProductDAL.findById(productId);
+  if (!product || product.listId.toString() !== listId) {
+    throw NotFoundError.product();
   }
 
-  static async deleteProduct(
-    listId: string,
-    productId: string,
-    userId: string
-  ): Promise<void> {
-    await checkListAccess(listId, userId);
+  await ProductDAL.deleteProduct(productId);
+  await ListDAL.touchUpdatedAt(listId);
+  invalidatePriceCacheForUser(userId);
+}
 
-    const product = await ProductDAL.findById(productId);
-    if (!product || product.listId.toString() !== listId) {
-      throw NotFoundError.product();
-    }
+export async function clearProducts(
+  listId: string,
+  userId: string,
+  filter: 'all' | 'purchased' | 'pending'
+): Promise<number> {
+  await checkListAccess(listId, userId);
 
-    await ProductDAL.deleteProduct(productId);
-
-    // עדכון זמן שינוי הרשימה
-    await ListDAL.touchUpdatedAt(listId);
-    PriceComparisonService.invalidateUser(userId);
+  let deletedCount: number;
+  if (filter === 'purchased') {
+    deletedCount = await ProductDAL.clearPurchased(listId);
+  } else if (filter === 'pending') {
+    deletedCount = await ProductDAL.clearPending(listId);
+  } else {
+    deletedCount = await ProductDAL.clearAll(listId);
   }
+  await ListDAL.touchUpdatedAt(listId);
+  invalidatePriceCacheForUser(userId);
+  return deletedCount;
+}
 
-  static async clearProducts(
-    listId: string,
-    userId: string,
-    filter: 'all' | 'purchased' | 'pending'
-  ): Promise<number> {
-    await checkListAccess(listId, userId);
+// איפוס כל המוצרים ל"לא נקנה" (רשימה קבועה)
+export async function resetProducts(
+  listId: string,
+  userId: string
+): Promise<number> {
+  await checkListAccess(listId, userId);
+  const count = await ProductDAL.resetAll(listId);
+  await ListDAL.touchUpdatedAt(listId);
+  invalidatePriceCacheForUser(userId);
+  return count;
+}
 
-    let deletedCount: number;
-    if (filter === 'purchased') {
-      deletedCount = await ProductDAL.clearPurchased(listId);
-    } else if (filter === 'pending') {
-      deletedCount = await ProductDAL.clearPending(listId);
-    } else {
-      deletedCount = await ProductDAL.clearAll(listId);
-    }
-    await ListDAL.touchUpdatedAt(listId);
-    PriceComparisonService.invalidateUser(userId);
-    return deletedCount;
-  }
-
-  // איפוס כל המוצרים ל"לא נקנה" (רשימה קבועה)
-  static async resetProducts(
-    listId: string,
-    userId: string
-  ): Promise<number> {
-    await checkListAccess(listId, userId);
-    const count = await ProductDAL.resetAll(listId);
-    await ListDAL.touchUpdatedAt(listId);
-    PriceComparisonService.invalidateUser(userId);
-    return count;
-  }
-
-  static async reorderProducts(
-    listId: string,
-    userId: string,
-    productIds: string[]
-  ): Promise<void> {
-    await checkListAccess(listId, userId);
-
-    await ProductDAL.reorderProducts(listId, productIds);
-  }
+export async function reorderProducts(
+  listId: string,
+  userId: string,
+  productIds: string[]
+): Promise<void> {
+  await checkListAccess(listId, userId);
+  await ProductDAL.reorderProducts(listId, productIds);
 }

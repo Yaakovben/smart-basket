@@ -16,7 +16,7 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import { env } from '../../../config/environment';
 import { logger } from '../../../config/logger';
-import { PriceSyncService } from '../services/priceSync.service';
+import { syncAllChains } from '../services/priceSync.service';
 import { PriceDAL } from '../dal/price.dal';
 
 async function main() {
@@ -24,7 +24,7 @@ async function main() {
   await mongoose.connect(env.MONGODB_URI);
   logger.info('Connected.');
 
-  const results = await PriceSyncService.syncAllChains();
+  const results = await syncAllChains();
   for (const r of results) {
     if (r.error) {
       logger.error(`[${r.chainId}] error: ${r.error}`);
