@@ -1,131 +1,19 @@
-import { useEffect, useRef, useLayoutEffect, useState } from 'react';
-import { Box, Typography, Button, keyframes } from '@mui/material';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { Dialog, Box, Typography, Button, Fade } from '@mui/material';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
-
-const PARCHMENT_BG_URL = '/daily-faith/parchment.jpg';
-
-// ===== הגדרות קבועות של אזורי הטקסט על תמונת הגוויל =====
-// כל הערכים באחוזים מגובה/רוחב הקונטיינר של התמונה.
-// המספרים נמדדו מהתמונה הספציפית. אם מחליפים תמונה — לעדכן כאן.
-const SCROLL_LAYOUT = {
-  // אזור הטקסט — ממורכז בדיוק בתוך השטח החלק של הגוויל (אחרי הגליל העליון, לפני התחתון).
-  // top+bottom מגדירים את גבולות העל/תחת של השטח הפתוח.
-  // left+right סימטריים כדי לשמור מרכוז אופקי מושלם.
-  body: { top: '30%', bottom: '34%', left: '22%', right: '22%' },
-  // מקדמים דינמיים — הגודל מחושב לפי רוחב האזור בפועל, לא ערך קבוע בפיקסלים
-  fontMinRatio: 0.05,  // 5% מרוחב התיבה
-  fontMaxRatio: 0.11,  // 11% מרוחב התיבה
-  fontAbsoluteMin: 9,  // רצפה מוחלטת - לא קטן מזה גם על מסכים זעירים
-} as const;
 
 interface DailyFaithPopupProps {
   text: string;
   onClose: () => void;
 }
 
-const overlaySx = {
-  position: 'fixed' as const,
-  inset: 0,
-  bgcolor: 'rgba(0,0,0,0.55)',
-  zIndex: 1000,
-  backdropFilter: 'blur(5px)',
-  touchAction: 'none' as const,
-};
-
-const containerSx = {
-  position: 'fixed' as const,
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  bgcolor: 'background.paper',
-  borderRadius: '20px',
-  p: 2.5,
-  zIndex: 1001,
-  width: '94%',
-  maxWidth: 420,
-  boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
-  overscrollBehavior: 'contain' as const,
-  // 95vh במצב רגיל, dvh (dynamic viewport) לסמארטפונים עם חלל כתובת משתנה
-  maxHeight: 'min(95dvh, 95vh)',
-  overflowY: 'auto' as const,
-  // נייד צר - פחות padding ו-border radius
-  '@media (max-width: 360px)': { p: 1.75, borderRadius: '16px', maxWidth: 340 },
-  // מצב landscape - מגביל גובה חזק יותר כדי שהתמונה לא תתפוס את כל המסך
-  '@media (orientation: landscape) and (max-height: 500px)': {
-    maxHeight: '92dvh',
-    p: 1.5,
-  },
-};
-
-const softGoldPulse = keyframes`
-  0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
-  50%      { box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 24px rgba(212,175,55,0.3); }
-`;
-
-// Hook - מתאים את גודל הטקסט כדי שימלא את התיבה בדיוק, בלי לגלוש
-// עובד גנרית: טקסט קצר יהיה גדול, טקסט ארוך יתכווץ. מגיב ל-resize של המסך.
-function useAutoFitFontSize(text: string, containerRef: React.RefObject<HTMLDivElement | null>) {
-  const textRef = useRef<HTMLDivElement>(null);
-  const [fontSize, setFontSize] = useState<number>(14);
-
-  useLayoutEffect(() => {
-    const el = textRef.current;
-    const container = containerRef.current;
-    if (!el || !container) return;
-
-    const fit = () => {
-      // גודל פונט דינמי: מחושב לפי רוחב התיבה בפועל, לא ערך קבוע.
-      // תיבה קטנה -> טווח קטן, תיבה גדולה -> טווח גדול, יחסית לרוחב.
-      const w = container.clientWidth;
-      const rawMin = Math.round(w * SCROLL_LAYOUT.fontMinRatio);
-      const rawMax = Math.round(w * SCROLL_LAYOUT.fontMaxRatio);
-      const lo0 = Math.max(SCROLL_LAYOUT.fontAbsoluteMin, rawMin);
-      const hi0 = Math.max(lo0, rawMax);
-
-      // חיפוש בינארי של הגודל המקסימלי שמכניס את הטקסט בתיבה
-      let lo = lo0;
-      let hi = hi0;
-      let best = lo;
-      while (lo <= hi) {
-        const mid = Math.floor((lo + hi) * 2) / 2; // חצאי פיקסלים
-        el.style.fontSize = `${mid}px`;
-        const fits =
-          el.scrollHeight <= container.clientHeight &&
-          el.scrollWidth <= container.clientWidth;
-        if (fits) {
-          best = mid;
-          lo = mid + 0.5;
-        } else {
-          hi = mid - 0.5;
-        }
-      }
-      el.style.fontSize = `${best}px`;
-      // line-height דינמי: טקסט גדול -> ריווח צפוף יותר, קטן -> ריווח רחב יותר לקריאה
-      el.style.lineHeight = best >= 16 ? '1.45' : best >= 12 ? '1.55' : '1.65';
-      setFontSize(best);
-    };
-
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [text, containerRef]);
-
-  return { textRef, fontSize };
-}
-
+/**
+ * פופאפ החיזוק היומי — גרסת קלף זהוב עם פינות מעוטרות.
+ * רקע עם gradient חם, גבול מוזהב, טקסט סריף מעוצב, בלי תמונות.
+ * Backdrop click סוגר (safety-net), כפתור "קראתי והתחזקתי" ראשי.
+ */
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
-  const bodyContainerRef = useRef<HTMLDivElement>(null);
-  const { textRef } = useAutoFitFontSize(text, bodyContainerRef);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
   const handleClose = () => {
     haptic('light');
@@ -133,129 +21,135 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   };
 
   return (
-    <>
-      {/* Backdrop כפתור - לחיצה מחוץ לפופאפ סוגרת (Safety net למקרה שהכפתור יוצא מהמסך) */}
+    <Dialog
+      open
+      onClose={handleClose}
+      TransitionComponent={Fade}
+      transitionDuration={500}
+      PaperProps={{
+        sx: {
+          bgcolor: 'transparent',
+          boxShadow: 'none',
+          overflow: 'visible',
+          m: 2,
+          maxWidth: 400,
+          width: '100%',
+        },
+      }}
+      sx={{
+        '& .MuiBackdrop-root': {
+          bgcolor: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+        },
+      }}
+    >
+      {/* קלף חיצוני - מסגרת זהובה עם gradient */}
       <Box
-        sx={{ ...overlaySx, cursor: 'pointer' }}
-        aria-hidden="true"
-        onClick={handleClose}
-      />
-
-      <Box sx={containerSx} role="dialog" aria-labelledby="daily-faith-title">
-        {/* הגוויל - תמונה כאלמנט אמיתי כך שהקופסה מתאימה בדיוק לממדיו.
-            כל האלמנטים בתוך האחוזים שלמטה מתמקמים לפי התמונה בדיוק, בלי letterboxing. */}
+        sx={{
+          position: 'relative',
+          borderRadius: '22px',
+          p: 0.5,
+          background: 'linear-gradient(135deg, #D4AF37 0%, #F4E4A6 40%, #B8860B 100%)',
+          boxShadow: '0 20px 60px rgba(184, 134, 11, 0.5), 0 0 40px rgba(212, 175, 55, 0.3)',
+        }}
+      >
+        {/* פנים הקלף - רקע קרם-זהב חם */}
         <Box
           sx={{
+            borderRadius: '18px',
+            background: 'linear-gradient(160deg, #FFF9E6 0%, #FFF3D4 50%, #FDE8B4 100%)',
+            border: '2px solid rgba(184, 134, 11, 0.3)',
+            px: 3,
+            py: 5,
+            textAlign: 'center',
             position: 'relative',
-            width: '100%',
-            borderRadius: '10px',
+            minHeight: 280,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
             overflow: 'hidden',
-            animation: `${softGoldPulse} 4s ease-in-out infinite`,
-            mb: 1.5,
-            lineHeight: 0,
           }}
         >
-          <Box
-            component="img"
-            src={PARCHMENT_BG_URL}
-            alt=""
-            sx={{ display: 'block', width: '100%', height: 'auto', userSelect: 'none', pointerEvents: 'none' }}
-            draggable={false}
-          />
-          {/* אזור הטקסט - קופסה מוגדרת היטב, האוטו-פיט מתאים גודל לתוכו */}
-          <Box
-            ref={bodyContainerRef}
-            id="daily-faith-title"
-            sx={{
-              position: 'absolute',
-              top: SCROLL_LAYOUT.body.top,
-              bottom: SCROLL_LAYOUT.body.bottom,
-              left: SCROLL_LAYOUT.body.left,
-              right: SCROLL_LAYOUT.body.right,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <Typography
-              ref={textRef}
-              sx={{
-                fontWeight: 500,
-                color: '#3E2F0E',
-                fontFamily: '"Frank Ruhl Libre", "David Libre", "Times New Roman", serif',
-                // pre-wrap: שומר רווחים אבל מאפשר גלישת שורות אוטומטית בין מילים.
-                // ללא overflowWrap/wordBreak — כך מילים לא ייחתכו באמצע.
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'keep-all',        // לא שובר מילים לעולם
-                overflowWrap: 'normal',       // לא שובר גם אם מילה ארוכה מהשורה
-                hyphens: 'none',              // ללא מקפים אוטומטיים
-                letterSpacing: 0.1,
-                width: '100%',
-                // text-wrap: balance שובר שורות בצורה מאוזנת בין מילים
-                textWrap: 'balance',
-                // מונע התאמת קנה-מידה אוטומטי של iOS שעשוי להתנגש עם ה-auto-fit
-                WebkitTextSizeAdjust: '100%',
-              }}
-            >
-              {text}
-            </Typography>
-          </Box>
-        </Box>
+          {/* קישוטים בפינות */}
+          <Box sx={cornerSx('top', 'left')}>✦</Box>
+          <Box sx={cornerSx('top', 'right')}>✦</Box>
+          <Box sx={cornerSx('bottom', 'left')}>✦</Box>
+          <Box sx={cornerSx('bottom', 'right')}>✦</Box>
 
-        {/* תגית "חיזוק יומי" - מתחת לגוויל, מעל הכפתור */}
-        <Box sx={{ textAlign: 'center', mb: 1.5 }}>
-          <Box
+          {/* כותרת */}
+          <Typography
             sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.6,
-              bgcolor: 'rgba(212,175,55,0.12)',
-              border: '1px solid rgba(184,134,11,0.25)',
+              fontSize: 14,
+              fontWeight: 600,
               color: '#8B6914',
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: 1.3,
-              px: 1.5,
-              py: 0.5,
-              borderRadius: '999px',
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
             }}
           >
-            <AutoStoriesIcon sx={{ fontSize: 13 }} />
-            <span>חיזוק יומי</span>
-          </Box>
-        </Box>
+            {t('dailyFaithTitle')}
+          </Typography>
 
-        <Button
-          fullWidth
-          onClick={handleClose}
-          sx={{
-            // Sticky לתחתית המודאל — מבטיח שהכפתור תמיד ניתן ללחיצה
-            // גם על מסכים קטנים שה-content נחתך
-            position: 'sticky',
-            bottom: 0,
-            borderRadius: '14px',
-            py: 1.25,
-            background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #B8860B 100%)',
-            color: 'white',
-            fontWeight: 800,
-            fontSize: 14.5,
-            textTransform: 'none',
-            letterSpacing: 0.5,
-            boxShadow: '0 4px 14px rgba(184,134,11,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
-            border: '1px solid rgba(255,220,130,0.3)',
-            transition: 'transform 0.12s, box-shadow 0.2s',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 50%, #9C7209 100%)',
-              boxShadow: '0 6px 18px rgba(184,134,11,0.5)',
-            },
-            '&:active': { transform: 'scale(0.98)' },
-          }}
-        >
-          {t('dailyFaithReadButton')}
-        </Button>
+          {/* קו מפריד זהב */}
+          <Box sx={{ width: 40, height: 2, bgcolor: '#B8860B', borderRadius: 2, opacity: 0.6 }} />
+
+          {/* טקסט החיזוק */}
+          <Typography
+            sx={{
+              fontSize: 19,
+              fontWeight: 500,
+              lineHeight: 1.7,
+              color: '#3E2F0E',
+              fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+              px: 1,
+              whiteSpace: 'pre-wrap',
+              // מניעת שבירת מילים באמצע
+              wordBreak: 'keep-all',
+              overflowWrap: 'normal',
+              hyphens: 'none',
+            }}
+          >
+            {text}
+          </Typography>
+
+          {/* כפתור זהב */}
+          <Button
+            onClick={handleClose}
+            sx={{
+              mt: 2,
+              px: 4,
+              py: 1.25,
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: 15,
+              boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
+              textTransform: 'none',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
+              },
+              '&:active': {
+                transform: 'scale(0.97)',
+              },
+            }}
+          >
+            {t('dailyFaithReadButton')}
+          </Button>
+        </Box>
       </Box>
-    </>
+    </Dialog>
   );
 };
+
+// סגנון הפינות המעוטרות (✦)
+const cornerSx = (v: 'top' | 'bottom', h: 'left' | 'right') => ({
+  position: 'absolute' as const,
+  [v]: 10,
+  [h]: 14,
+  color: '#B8860B',
+  fontSize: 18,
+  opacity: 0.6,
+  pointerEvents: 'none' as const,
+});
