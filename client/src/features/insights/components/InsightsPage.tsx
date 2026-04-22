@@ -7,7 +7,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { insightsApi, type InsightsData } from '../../../services/api';
+import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 
@@ -75,10 +75,14 @@ export const InsightsPage = memo(() => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tab, setTab] = useState<InsightTab>('price');
+  // שם המשתמש הנוכחי - משמש לסימון "אתה" על שורה של המשתמש ברשימת חברי קבוצה
+  const [currentUserName, setCurrentUserName] = useState<string | null>(null);
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
     priceComparisonApi.getComparison().then(setPriceData).catch(() => {});
+    // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
+    authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
   }, []);
 
   if (loading) return (
@@ -281,6 +285,19 @@ export const InsightsPage = memo(() => {
                   // מיון החברים לפי סך פעילות יורד
                   const sortedMembers = [...members].sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
 
+                  // תובנה כוללת לקבוצה - אחת מ-3 אפשרויות לפי הנתונים
+                  let insight: { label: string; color: string; emoji: string } | null = null;
+                  if (L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0) {
+                    const topPct = ((sortedMembers[0].added + sortedMembers[0].purchased) / memberTotalActivity) * 100;
+                    if (purchasedPct >= 70) {
+                      insight = { label: 'קצב מעולה', color: '#22C55E', emoji: '⚡' };
+                    } else if (topPct >= 55) {
+                      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#F59E0B', emoji: '👑' };
+                    } else if (topPct <= 45) {
+                      insight = { label: 'קבוצה מאוזנת', color: '#8B5CF6', emoji: '⚖️' };
+                    }
+                  }
+
                   return (
                     <Paper key={L.listId} elevation={0} sx={{
                       p: 1.5, borderRadius: '14px',
@@ -336,6 +353,20 @@ export const InsightsPage = memo(() => {
                             </Typography>
                           )}
                         </Box>
+                        {/* תובנת קבוצה - pill בצד, רק אם יש תובנה משמעותית */}
+                        {insight && (
+                          <Box sx={{
+                            display: 'inline-flex', alignItems: 'center', gap: 0.3, flexShrink: 0,
+                            px: 0.85, py: 0.35, borderRadius: '999px',
+                            bgcolor: isDark ? `${insight.color}20` : `${insight.color}14`,
+                            border: `1px solid ${insight.color}35`,
+                          }}>
+                            <Typography sx={{ fontSize: 11 }}>{insight.emoji}</Typography>
+                            <Typography sx={{ fontSize: 10, fontWeight: 800, color: insight.color, whiteSpace: 'nowrap' }}>
+                              {insight.label}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
 
                       {/* חלוקת חברים - רק אם יש קבוצה עם יותר מחבר אחד ויש פעילות */}
@@ -364,35 +395,66 @@ export const InsightsPage = memo(() => {
                               const totalForMember = m.added + m.purchased;
                               const pct = memberTotalActivity > 0 ? Math.round((totalForMember / memberTotalActivity) * 100) : 0;
                               const initial = m.name.charAt(0).toUpperCase();
+                              // יעילות: כמה מהמוצרים שהוסיף, הוא בעצמו סימן כנקנו
+                              const efficiency = m.added > 0 ? Math.round((m.purchased / m.added) * 100) : null;
+                              // מדליה ל-3 הראשונים
+                              const medal = mi === 0 ? '🥇' : mi === 1 ? '🥈' : mi === 2 ? '🥉' : null;
+                              // זיהוי המשתמש הנוכחי
+                              const isMe = currentUserName && m.name === currentUserName;
                               return (
                                 <Box key={mi} sx={{
                                   display: 'flex', alignItems: 'center', gap: 0.9,
                                   px: 0.6, py: 0.55, borderRadius: '8px',
                                   bgcolor: isDark ? `${color}12` : `${color}0A`,
-                                  border: '1px solid',
-                                  borderColor: isDark ? `${color}22` : `${color}18`,
+                                  border: isMe ? `2px solid ${color}` : `1px solid ${isDark ? `${color}22` : `${color}18`}`,
+                                  position: 'relative',
                                 }}>
                                   {/* אווטאר-אות */}
                                   <Box sx={{
-                                    width: 26, height: 26, flexShrink: 0,
+                                    width: 26, height: 26, flexShrink: 0, position: 'relative',
                                     borderRadius: '50%',
                                     bgcolor: color, color: 'white',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 11, fontWeight: 800, boxShadow: `0 2px 6px ${color}50`,
-                                  }}>{initial}</Box>
-                                  <Typography sx={{
-                                    fontSize: 12.5, fontWeight: 700, flex: 1,
-                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                  }}>{m.name}</Typography>
+                                  }}>
+                                    {initial}
+                                    {/* מדליה קטנה בפינה */}
+                                    {medal && (
+                                      <Box sx={{
+                                        position: 'absolute', bottom: -4, right: -4,
+                                        fontSize: 12, lineHeight: 1,
+                                      }}>{medal}</Box>
+                                    )}
+                                  </Box>
+                                  {/* שם + תג "אתה" */}
+                                  <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Typography sx={{
+                                      fontSize: 12.5, fontWeight: 700,
+                                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                    }}>{m.name}</Typography>
+                                    {isMe && (
+                                      <Box sx={{
+                                        fontSize: 9, fontWeight: 800,
+                                        px: 0.5, py: 0.1, borderRadius: '4px',
+                                        bgcolor: color, color: 'white',
+                                        letterSpacing: 0.3,
+                                      }}>אתה</Box>
+                                    )}
+                                  </Box>
                                   {/* Added badge */}
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                     <Typography sx={{ fontSize: 11 }}>✏️</Typography>
                                     <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.added}</Typography>
                                   </Box>
-                                  {/* Purchased badge */}
+                                  {/* Purchased badge עם יעילות */}
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                     <Typography sx={{ fontSize: 11 }}>✅</Typography>
                                     <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.purchased}</Typography>
+                                    {efficiency !== null && (
+                                      <Typography sx={{ fontSize: 9, color: 'text.disabled', fontWeight: 600 }}>
+                                        ({efficiency}%)
+                                      </Typography>
+                                    )}
                                   </Box>
                                   {/* Percent pill */}
                                   <Box sx={{
