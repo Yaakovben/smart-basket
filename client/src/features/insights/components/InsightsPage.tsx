@@ -14,6 +14,8 @@ import { haptic } from '../../../global/helpers';
 
 const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
 const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
+// מעבר טאבים: שילוב של fade + slide קטן — תחושת מעבר חלק בלי להסיח את העין
+const tabEnter = keyframes`from{opacity:0;transform:translateY(12px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}`;
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
 
@@ -41,14 +43,21 @@ const AnimatedNumber = ({ value }: { value: number }) => {
 const scoreEmoji = (s: number) => s >= 90 ? '🏆' : s >= 80 ? '🔥' : s >= 60 ? '💪' : s >= 40 ? '📈' : '🌱';
 
 // ===== כרטיס סטטיסטיקה קטן - לשימוש חוזר ברחבי העמוד =====
+// משתמש ב-gradient עדין במקום צבע אחיד + tabular-nums כדי שמספרים שמתאנמים יתייצבו ברוחב
 const StatCard = ({ value, label, color, bg, border }: {
   value: React.ReactNode; label: string; color: string; bg: string; border: string;
 }) => (
   <Paper elevation={0} sx={{
     p: 1.25, borderRadius: '12px', textAlign: 'center',
-    bgcolor: bg, border: `1px solid ${border}`,
+    // גרדיאנט 45° עדין מ-bg לשקוף ב-5% - משווה עומק עדין לכרטיסים שטוחים
+    background: `linear-gradient(135deg, ${bg}, ${bg} 55%, transparent 130%)`,
+    border: `1px solid ${border}`,
+    transition: 'transform 0.15s ease, box-shadow 0.2s ease',
   }}>
-    <Typography sx={{ fontSize: 20, fontWeight: 900, color, lineHeight: 1 }}>{value}</Typography>
+    <Typography sx={{
+      fontSize: 20, fontWeight: 900, color, lineHeight: 1,
+      fontVariantNumeric: 'tabular-nums',
+    }}>{value}</Typography>
     <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.4 }}>{label}</Typography>
   </Paper>
 );
@@ -186,7 +195,7 @@ export const InsightsPage = memo(() => {
             border: '1px solid rgba(255,255,255,0.15)',
           }}>
             <Typography sx={{ fontSize: 14 }}>{scoreEmoji(shoppingScore)}</Typography>
-            <Typography sx={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
               <AnimatedNumber value={shoppingScore} />
             </Typography>
           </Box>
@@ -229,7 +238,7 @@ export const InsightsPage = memo(() => {
       </Box>
 
       {/* ===== תוכן לפי טאב ===== */}
-      <Box sx={{ px: 2, animation: `${fadeIn} 0.3s ease both` }} key={tab}>
+      <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>
 
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
@@ -801,7 +810,7 @@ export const InsightsPage = memo(() => {
                     sx={{ color: '#14B8A6', position: 'absolute', '& .MuiCircularProgress-circle': { strokeLinecap: 'round', transition: 'stroke-dashoffset 1s ease' } }} />
                   <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography sx={{ fontSize: 22, lineHeight: 1 }}>{scoreEmoji(shoppingScore)}</Typography>
-                    <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.15 }}>
+                    <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.15, fontVariantNumeric: 'tabular-nums' }}>
                       <AnimatedNumber value={shoppingScore} />
                     </Typography>
                   </Box>
