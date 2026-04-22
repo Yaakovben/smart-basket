@@ -166,47 +166,87 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           )}
         </Box>
 
-        {/* הוספת משפט חדש */}
-        <Box sx={{ flexShrink: 0 }}>
-          {/* alignItems: stretch — הכפתור נמתח לאותו גובה של ה-input */}
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'stretch' }}>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={5}
-              size="small"
-              placeholder={t('dailyFaithPlaceholder')}
-              value={text}
-              onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
-              inputProps={{ maxLength: MAX_TEXT_LENGTH }}
-              sx={goldFieldSx}
-            />
+        {/* כרטיס הוספת משפט חדש - מסגרת זהב עדינה שמפרידה ויזואלית מהרשימה */}
+        <Box sx={{
+          flexShrink: 0,
+          p: 1.25,
+          borderRadius: '14px',
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(184,134,11,0.03))'
+            : 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(184,134,11,0.03))',
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(184,134,11,0.25)' : 'rgba(184,134,11,0.2)',
+        }}>
+          {/* כותרת כרטיס */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.75, px: 0.25 }}>
+            <Typography sx={{ fontSize: 14 }}>✍️</Typography>
+            <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#8B6914', letterSpacing: 0.3 }}>
+              הוספת משפט חדש
+            </Typography>
+          </Box>
+
+          {/* שדה טקסט ברוחב מלא */}
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={5}
+            size="small"
+            placeholder={t('dailyFaithPlaceholder')}
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT_LENGTH))}
+            onKeyDown={(e) => {
+              // קיצור דרך: Ctrl/Cmd + Enter לשמירה מהירה
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && text.trim().length >= 2 && !saving) {
+                e.preventDefault();
+                handleAdd();
+              }
+            }}
+            inputProps={{ maxLength: MAX_TEXT_LENGTH }}
+            sx={{
+              ...goldFieldSx,
+              '& .MuiOutlinedInput-root': {
+                ...goldFieldSx['& .MuiOutlinedInput-root'],
+                bgcolor: 'background.paper',
+              },
+            }}
+          />
+
+          {/* שורה תחתונה: מונה תווים + כפתור הוספה */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            <Typography sx={{
+              fontSize: 11, color: charCountColor, fontWeight: 700,
+              fontVariantNumeric: 'tabular-nums', flex: 1,
+            }}>
+              {textCharCount} / {MAX_TEXT_LENGTH} תווים
+            </Typography>
             <Button
               variant="contained"
               onClick={handleAdd}
               disabled={saving || text.trim().length < 2}
+              startIcon={saving ? null : <AddIcon sx={{ fontSize: 18 }} />}
               sx={{
-                minWidth: 48,
-                // alignSelf: stretch + height: auto יביא את הכפתור לגובה של ה-input באופן אוטומטי
-                alignSelf: 'stretch',
-                borderRadius: '12px',
-                p: 0,
-                flexShrink: 0,
+                minWidth: 110,
+                height: 38,
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: 13,
                 background: 'linear-gradient(135deg, #D4AF37, #B8860B)',
                 boxShadow: '0 3px 12px rgba(184,134,11,0.35)',
-                '&:hover': { background: 'linear-gradient(135deg, #B8860B, #9C7209)' },
-                '&.Mui-disabled': { background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' },
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #B8860B, #9C7209)',
+                  boxShadow: '0 4px 14px rgba(184,134,11,0.45)',
+                },
+                '&.Mui-disabled': {
+                  background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  color: 'text.disabled',
+                },
+                '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '4px' },
               }}
             >
-              {saving ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <AddIcon />}
+              {saving ? <CircularProgress size={16} sx={{ color: 'white' }} /> : 'הוסף משפט'}
             </Button>
-          </Box>
-          {/* מונה תווים */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5, px: 0.25 }}>
-            <Typography sx={{ fontSize: 10.5, color: charCountColor, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-              {textCharCount} / {MAX_TEXT_LENGTH}
-            </Typography>
           </Box>
         </Box>
 

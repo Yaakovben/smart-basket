@@ -88,9 +88,9 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             sx={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 1,
-              px: 2.5,
-              py: 0.85,
+              gap: 1.25,
+              px: 3,
+              py: 1.1,
               borderRadius: '999px',
               background: 'linear-gradient(135deg, #FFF4C9 0%, #FFE7A0 100%)',
               border: '1.5px solid rgba(184, 134, 11, 0.5)',
@@ -98,10 +98,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             }}
           >
             {/* כוכבית דקורטיבית שמאל */}
-            <Box sx={{ color: '#B8860B', fontSize: 12, opacity: 0.8 }} aria-hidden="true">✦</Box>
+            <Box sx={{ color: '#B8860B', fontSize: 15, opacity: 0.85 }} aria-hidden="true">✦</Box>
             <Typography
               sx={{
-                fontSize: 13.5,
+                fontSize: 18,
                 fontWeight: 800,
                 color: '#8B6914',
                 letterSpacing: 1.5,
@@ -111,7 +111,7 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
               {t('dailyFaithTitle')}
             </Typography>
             {/* כוכבית דקורטיבית ימין */}
-            <Box sx={{ color: '#B8860B', fontSize: 12, opacity: 0.8 }} aria-hidden="true">✦</Box>
+            <Box sx={{ color: '#B8860B', fontSize: 15, opacity: 0.85 }} aria-hidden="true">✦</Box>
           </Box>
 
           {/* קו מפריד זהב */}
