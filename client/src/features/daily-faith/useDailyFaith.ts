@@ -8,12 +8,20 @@ const todayStr = () => {
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 };
 
-// מציג את הפופאפ בכל פתיחה (לא שומר "היום הוצג") כאשר:
-// 1. רצים בסביבת פיתוח (vite dev) — לנוחות עבודה
-// 2. ה-env var VITE_DAILY_FAITH_ALWAYS מוגדר ל-"true" (משמש ב-non-prod)
-// בפרודקשן רגיל (בלי ה-env var) הפופאפ יופיע פעם ביום בלבד.
+// האם מציגים את הפופאפ בכל פתיחה (לא שומר "היום הוצג"):
+// 1. בסביבת פיתוח (vite dev) — לנוחות עבודה
+// 2. כשה-env var VITE_DAILY_FAITH_ALWAYS מוגדר ל-"true"
+// 3. כש-hostname מכיל "non-prod" או "nonprod" (זיהוי non-prod אוטומטי לפי URL)
+// בפרודקשן (hostname רגיל, בלי env var) הפופאפ יופיע פעם ביום בלבד.
+const isNonProdHost = () => {
+  if (typeof window === 'undefined') return false;
+  return /non-?prod/i.test(window.location.hostname);
+};
+
 const ALWAYS_SHOW =
-  import.meta.env.DEV || import.meta.env.VITE_DAILY_FAITH_ALWAYS === 'true';
+  import.meta.env.DEV ||
+  import.meta.env.VITE_DAILY_FAITH_ALWAYS === 'true' ||
+  isNonProdHost();
 
 export function useDailyFaith(enabled: boolean) {
   const [quote, setQuote] = useState<DailyFaith | null>(null);
