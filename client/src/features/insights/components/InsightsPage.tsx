@@ -333,7 +333,7 @@ export const InsightsPage = memo(() => {
                         }
                       }}
                       sx={{
-                        p: 1.5, borderRadius: '14px', cursor: 'pointer',
+                        p: 1.75, borderRadius: '16px', cursor: 'pointer',
                         border: '1px solid',
                         borderColor: isDark ? `${L.listColor}28` : `${L.listColor}22`,
                         background: isDark
@@ -352,15 +352,16 @@ export const InsightsPage = memo(() => {
                       }}
                     >
                       {/* Header: icon + name + members badge */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Box sx={{
-                          width: 44, height: 44, flexShrink: 0, borderRadius: '12px', fontSize: 22,
+                          width: 52, height: 52, flexShrink: 0, borderRadius: '14px', fontSize: 26,
                           bgcolor: `${L.listColor}28`, display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: '1.5px solid', borderColor: `${L.listColor}45`,
+                          boxShadow: `0 3px 10px ${L.listColor}22`,
                         }}>{L.listIcon}</Box>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                            <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{L.listName}</Typography>
+                            <Typography sx={{ fontSize: 15.5, fontWeight: 800 }}>{L.listName}</Typography>
                             {L.isGroup ? (
                               <Box sx={{
                                 display: 'inline-flex', alignItems: 'center', gap: 0.25,
@@ -474,7 +475,6 @@ export const InsightsPage = memo(() => {
                               const pct = memberTotalActivity > 0 ? Math.round((totalForMember / memberTotalActivity) * 100) : 0;
                               const initial = m.name.charAt(0).toUpperCase();
                               // יעילות: כמה מהמוצרים שהוסיף, הוא בעצמו סימן כנקנו
-                              const efficiency = m.added > 0 ? Math.round((m.purchased / m.added) * 100) : null;
                               // מדליה ל-3 הראשונים
                               const medal = mi === 0 ? '🥇' : mi === 1 ? '🥈' : mi === 2 ? '🥉' : null;
                               // זיהוי המשתמש הנוכחי
@@ -524,15 +524,10 @@ export const InsightsPage = memo(() => {
                                     <Typography sx={{ fontSize: 11 }}>✏️</Typography>
                                     <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.added}</Typography>
                                   </Box>
-                                  {/* Purchased badge עם יעילות */}
+                                  {/* Purchased badge */}
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                     <Typography sx={{ fontSize: 11 }}>✅</Typography>
                                     <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary' }}>{m.purchased}</Typography>
-                                    {efficiency !== null && (
-                                      <Typography sx={{ fontSize: 9, color: 'text.disabled', fontWeight: 600 }}>
-                                        ({efficiency}%)
-                                      </Typography>
-                                    )}
                                   </Box>
                                   {/* Percent pill */}
                                   <Box sx={{
@@ -597,15 +592,6 @@ export const InsightsPage = memo(() => {
                         </Box>
                       )}
 
-                      {/* אינדיקטור שאפשר ללחוץ */}
-                      <Box sx={{
-                        mt: 1, display: 'flex', justifyContent: 'flex-end',
-                        color: 'text.disabled',
-                      }}>
-                        <Typography sx={{ fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                          פתח רשימה ←
-                        </Typography>
-                      </Box>
                     </Box>
                   );
                 }) : (
@@ -807,25 +793,25 @@ export const InsightsPage = memo(() => {
                   transform: scoreExplained ? 'rotate(180deg)' : 'rotate(0deg)',
                 }}>▼</Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ position: 'relative', width: 88, height: 88, flexShrink: 0 }}>
-                  <CircularProgress variant="determinate" value={100} size={88} thickness={5}
-                    sx={{ color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', position: 'absolute' }} />
-                  <CircularProgress variant="determinate" value={shoppingScore} size={88} thickness={5}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.25 }}>
+                <Box sx={{ position: 'relative', width: 104, height: 104, flexShrink: 0 }}>
+                  <CircularProgress variant="determinate" value={100} size={104} thickness={4}
+                    sx={{ color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', position: 'absolute' }} />
+                  <CircularProgress variant="determinate" value={shoppingScore} size={104} thickness={4}
                     sx={{ color: '#14B8A6', position: 'absolute', '& .MuiCircularProgress-circle': { strokeLinecap: 'round', transition: 'stroke-dashoffset 1s ease' } }} />
                   <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography sx={{ fontSize: 22, lineHeight: 1 }}>{scoreEmoji(shoppingScore)}</Typography>
-                    <Typography sx={{ fontSize: 20, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.15 }}>
+                    <Typography sx={{ fontSize: 26, lineHeight: 1 }}>{scoreEmoji(shoppingScore)}</Typography>
+                    <Typography sx={{ fontSize: 26, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.25 }}>
                       <AnimatedNumber value={shoppingScore} />
                     </Typography>
                   </Box>
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'text.primary' }}>
+                  <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
                     {stats.completionRate}% השלמה
                   </Typography>
-                  <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5, lineHeight: 1.55 }}>
-                    {scoreExplained ? 'לחץ כדי לסגור' : 'הציון מחושב לפי פעילות שלך · לחץ להרחבה'}
+                  <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.75, lineHeight: 1.55 }}>
+                    {scoreExplained ? 'לחץ כדי לסגור' : 'הציון מבוסס על פעילות שלך · לחץ להרחבה'}
                   </Typography>
                 </Box>
               </Box>
@@ -1012,9 +998,6 @@ export const InsightsPage = memo(() => {
                     <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)' }} />
                     <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>ממתינים</Typography>
                   </Box>
-                  {selectedWeekIdx === null && (
-                    <Typography sx={{ fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>לחץ על בר לפרטים</Typography>
-                  )}
                 </Box>
               </SectionCard>
             )}
@@ -1079,11 +1062,6 @@ export const InsightsPage = memo(() => {
                       יום <b>{dayLabels[selectedWeekday]}</b>: <b>{weekdayActivity[selectedWeekday]}</b> פעולות — {Math.round((weekdayActivity[selectedWeekday] / maxWeekday) * 100)}% מיום השיא
                     </Typography>
                   </Box>
-                )}
-                {selectedWeekday === null && (
-                  <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: 0.5 }}>
-                    לחץ על יום כדי לראות פרטים
-                  </Typography>
                 )}
               </SectionCard>
             )}
