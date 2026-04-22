@@ -333,7 +333,7 @@ export const InsightsPage = memo(() => {
                         }
                       }}
                       sx={{
-                        p: 1.75, borderRadius: '16px', cursor: 'pointer',
+                        p: 1.5, borderRadius: '14px', cursor: 'pointer',
                         border: '1px solid',
                         borderColor: isDark ? `${L.listColor}28` : `${L.listColor}22`,
                         background: isDark
@@ -354,14 +354,14 @@ export const InsightsPage = memo(() => {
                       {/* Header: icon + name + members badge */}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Box sx={{
-                          width: 52, height: 52, flexShrink: 0, borderRadius: '14px', fontSize: 26,
+                          width: 46, height: 46, flexShrink: 0, borderRadius: '12px', fontSize: 22,
                           bgcolor: `${L.listColor}28`, display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: '1.5px solid', borderColor: `${L.listColor}45`,
-                          boxShadow: `0 3px 10px ${L.listColor}22`,
+                          boxShadow: `0 2px 8px ${L.listColor}20`,
                         }}>{L.listIcon}</Box>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                            <Typography sx={{ fontSize: 15.5, fontWeight: 800 }}>{L.listName}</Typography>
+                            <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{L.listName}</Typography>
                             {L.isGroup ? (
                               <Box sx={{
                                 display: 'inline-flex', alignItems: 'center', gap: 0.25,
@@ -793,24 +793,24 @@ export const InsightsPage = memo(() => {
                   transform: scoreExplained ? 'rotate(180deg)' : 'rotate(0deg)',
                 }}>▼</Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.25 }}>
-                <Box sx={{ position: 'relative', width: 104, height: 104, flexShrink: 0 }}>
-                  <CircularProgress variant="determinate" value={100} size={104} thickness={4}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ position: 'relative', width: 92, height: 92, flexShrink: 0 }}>
+                  <CircularProgress variant="determinate" value={100} size={92} thickness={4}
                     sx={{ color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', position: 'absolute' }} />
-                  <CircularProgress variant="determinate" value={shoppingScore} size={104} thickness={4}
+                  <CircularProgress variant="determinate" value={shoppingScore} size={92} thickness={4}
                     sx={{ color: '#14B8A6', position: 'absolute', '& .MuiCircularProgress-circle': { strokeLinecap: 'round', transition: 'stroke-dashoffset 1s ease' } }} />
                   <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography sx={{ fontSize: 26, lineHeight: 1 }}>{scoreEmoji(shoppingScore)}</Typography>
-                    <Typography sx={{ fontSize: 26, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 22, lineHeight: 1 }}>{scoreEmoji(shoppingScore)}</Typography>
+                    <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'text.primary', lineHeight: 1, mt: 0.15 }}>
                       <AnimatedNumber value={shoppingScore} />
                     </Typography>
                   </Box>
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
                     {stats.completionRate}% השלמה
                   </Typography>
-                  <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.75, lineHeight: 1.55 }}>
+                  <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5, lineHeight: 1.5 }}>
                     {scoreExplained ? 'לחץ כדי לסגור' : 'הציון מבוסס על פעילות שלך · לחץ להרחבה'}
                   </Typography>
                 </Box>

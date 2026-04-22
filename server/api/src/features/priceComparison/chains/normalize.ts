@@ -35,6 +35,35 @@ export function normalizeProductName(raw: string | undefined | null): string {
   return tokens.join(' ');
 }
 
+// "שורש" של מילה עברית - מסיר סיומות נקבה/רבים/סמיכות נפוצות
+// מאפשר התאמה בין "גבינה"↔"גבינת", "לבנה"↔"לבנת", "עגבניות"↔"עגבניה" וכד׳.
+// היוריסטיקה פשוטה שעובדת מספיק טוב למוצרי מזון ישראליים.
+export function stemHebrew(word: string): string {
+  if (word.length <= 3) return word; // קצר מדי לגזעה בטוחה
+  // סיומות רבים: ים / ות (מילים מעל 4 אותיות)
+  if (word.length > 4) {
+    const last2 = word.slice(-2);
+    if (last2 === 'ים' || last2 === 'ות' || last2 === 'יה') {
+      return word.slice(0, -2);
+    }
+  }
+  // סיומות יחיד נקבה/סמיכות: ה / ת / ן
+  const last = word[word.length - 1];
+  if (last === 'ה' || last === 'ת' || last === 'ן') {
+    return word.slice(0, -1);
+  }
+  return word;
+}
+
+// בודק אם שני טוקנים מתייחסים לאותה מילה, כולל התאמה לפי שורש
+export function tokensSimilar(a: string, b: string): boolean {
+  if (a === b) return true;
+  const sa = stemHebrew(a);
+  const sb = stemHebrew(b);
+  // שני השורשים זהים, ולפחות אחד שונה מהמילה המלאה (כלומר באמת הייתה גזעה)
+  return sa === sb && (sa !== a || sb !== b);
+}
+
 // בדיקה אם שם של מוצר מהמשתמש מתאים למוצר ברשת
 export function isLikelyMatch(userName: string, chainName: string): boolean {
   const userTokens = normalizeProductName(userName).split(' ').filter(Boolean);

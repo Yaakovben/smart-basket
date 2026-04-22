@@ -2,7 +2,7 @@ import { Product } from '../../../models';
 import { ListDAL } from '../../../dal';
 import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
-import { normalizeProductName } from '../chains';
+import { normalizeProductName, stemHebrew } from '../chains';
 
 export interface PriceMatch {
   productId: string;
@@ -107,12 +107,16 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
   if (meaningful.length === 0) return unmatched;
 
   // "טוקן עוגן" = המילה הארוכה ביותר של המשתמש. מילים ארוכות הן יותר ספציפיות
-  // בעברית (קנולה > שמן, עגבנייה > ירק), ולכן חייבות להופיע במוצר של הרשת
-  // כדי למנוע התאמות-על-מילה-כללית ("שמן קנולה" ↔ "סרדינים בשמן").
+  // בעברית (קנולה > שמן, עגבנייה > ירק), ולכן חייבות להופיע במוצר של הרשת.
   const longestUserToken = meaningful.reduce((a, b) => (a.length >= b.length ? a : b));
+  const longestUserStem = stemHebrew(longestUserToken);
+
+  // מפה מ-stem → מילה מקורית של המשתמש. מאפשרת התאמה של וריאנטים:
+  // "גבינה" של המשתמש נתפסת כ-"גבינת" ברשת כי שניהם נגזרים ל-"גבינ".
+  const userStemMap = new Map<string, string>();
+  for (const t of meaningful) userStemMap.set(stemHebrew(t), t);
 
   // סף קשיח: לפחות 2 טוקנים תואמים (או כולם אם יש פחות מ-2 במשתמש).
-  // מונע כיסוי של 50% שלפני התיקון עבר בגבול.
   const minRequiredMatches = Math.min(meaningful.length, 2);
 
   // שאילתה אחת עם $or על עד 3 טוקנים (במקום 3 שאילתות מקבילות)
@@ -133,13 +137,34 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
     const chainMeaningful = meaningfulTokens(chainTokensRaw);
     if (chainMeaningful.length === 0) continue;
 
-    const intersect: string[] = [];
-    for (const t of chainMeaningful) if (userSet.has(t)) intersect.push(t);
+    // התאמה בשתי רמות: קודם התאמה מדויקת, אחר-כך התאמה לפי שורש
+    // לכיסוי "גבינה ↔ גבינת", "עגבניה ↔ עגבניות", "לבנה ↔ לבנת" וכד׳.
+    const intersectSet = new Set<string>(); // שומר מילים של המשתמש (לא של הרשת) כדי שהעוגן ייבדק נכון
+    let anchorMatched = false;
+    for (const t of chainMeaningful) {
+      // רמה 1: התאמה מדויקת
+      if (userSet.has(t)) {
+        intersectSet.add(t);
+        if (t === longestUserToken) anchorMatched = true;
+        continue;
+      }
+      // רמה 2: התאמה לפי שורש (רק אם באמת הייתה גזעה - stemHebrew שינה את המילה)
+      const chainStem = stemHebrew(t);
+      if (chainStem !== t) {
+        const matchedUserWord = userStemMap.get(chainStem);
+        if (matchedUserWord) {
+          intersectSet.add(matchedUserWord);
+          if (matchedUserWord === longestUserToken || chainStem === longestUserStem) {
+            anchorMatched = true;
+          }
+        }
+      }
+    }
+    const intersect = Array.from(intersectSet);
 
-    // שתי מחסומים: מינימום טוקנים תואמים, וחובה שהעוגן (המילה הארוכה ביותר)
-    // של המשתמש יהיה בהצטלבות — אחרת ההתאמה חלשה מדי לסמוך עליה.
+    // שתי מחסומים: מינימום טוקנים תואמים, וחובה שהעוגן יהיה בהצטלבות.
     if (intersect.length < minRequiredMatches) continue;
-    if (!intersect.includes(longestUserToken)) continue;
+    if (!anchorMatched) continue;
 
     const userCoverage = intersect.length / userSet.size;
     const chainCoverage = intersect.length / chainMeaningful.length;
