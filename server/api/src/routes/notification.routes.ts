@@ -1,21 +1,34 @@
+/**
+ * notification.routes.ts
+ *
+ * נתיבי התראות המשתמש.
+ * מותקן ב-/api/notifications. כל הנתיבים דורשים אימות.
+ */
+
 import { Router } from 'express';
-import { NotificationController } from '../controllers/notification.controller';
+import {
+  getNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+  createNotification,
+  createNotificationsForListMembers,
+} from '../controllers/notification.controller';
 import { authenticate, validate } from '../middleware';
 import { notificationValidator } from '../validators';
 
 const router = Router();
 
-// כל נתיבי ההתראות דורשים אימות
 router.use(authenticate);
 
-// נתיבי משתמש
-router.get('/', validate({ query: notificationValidator.getAll }), NotificationController.getNotifications);
-router.get('/unread-count', NotificationController.getUnreadCount);
-router.put('/read-all', validate(notificationValidator.markAllRead), NotificationController.markAllAsRead);
-router.put('/:id/read', validate({ params: notificationValidator.params }), NotificationController.markAsRead);
+// === נתיבי משתמש ===
+router.get('/', validate({ query: notificationValidator.getAll }), getNotifications);
+router.get('/unread-count', getUnreadCount);
+router.put('/read-all', validate(notificationValidator.markAllRead), markAllAsRead);
+router.put('/:id/read', validate({ params: notificationValidator.params }), markAsRead);
 
-// נתיבים פנימיים (עבור שרת Socket)
-router.post('/', validate(notificationValidator.create), NotificationController.createNotification);
-router.post('/broadcast', validate(notificationValidator.broadcast), NotificationController.createNotificationsForListMembers);
+// === נתיבים פנימיים (משמשים ע״י שרת Socket) ===
+router.post('/', validate(notificationValidator.create), createNotification);
+router.post('/broadcast', validate(notificationValidator.broadcast), createNotificationsForListMembers);
 
 export default router;

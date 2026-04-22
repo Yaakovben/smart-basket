@@ -1,22 +1,34 @@
+/**
+ * admin.routes.ts
+ *
+ * נתיבי ניהול - כולם דורשים authenticate + isAdmin.
+ * מותקן ב-/api/admin.
+ */
+
 import { Router } from 'express';
-import { AdminController } from '../controllers';
+import Joi from 'joi';
+import {
+  getUsers,
+  getLoginActivity,
+  getStats,
+  getUserDetails,
+  deleteUser,
+} from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
-import Joi from 'joi';
 
 const router = Router();
 
-
-// כל נתיבי הניהול דורשים אימות והרשאת מנהל
+// כל הנתיבים כאן: משתמש מחובר + הרשאת אדמין
 router.use(authenticate);
 router.use(isAdmin);
 
 const userIdParams = Joi.object({ userId: commonSchemas.objectId.required() });
 
-router.get('/users', AdminController.getUsers);
-router.get('/activity', validate({ query: adminValidator.paginationQuery }), AdminController.getLoginActivity);
-router.get('/stats', AdminController.getStats);
-router.get('/users/:userId/details', validate({ params: userIdParams }), AdminController.getUserDetails);
-router.delete('/users/:userId', validate({ params: userIdParams }), AdminController.deleteUser);
+router.get('/users', getUsers);
+router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
+router.get('/stats', getStats);
+router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
+router.delete('/users/:userId', validate({ params: userIdParams }), deleteUser);
 
 export default router;

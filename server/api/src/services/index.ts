@@ -14,8 +14,9 @@ export * as UserService from './user.service';
 // ProductService הוסר לחלוטין - שימוש בנתיב ישיר
 
 // עדיין class-based - בהמשך יומרו:
-export { AuthService } from './auth.service';
+export * as AuthService from './auth.service';
 export { ListService } from './list.service';
 export { ListMembershipService } from './list-membership.service';
-export { NotificationService } from './notification.service';
-export { PushService, type PushPayload } from './push.service';
+export * as NotificationService from './notification.service';
+export * as PushService from './push.service';
+export type { PushPayload } from './push.service';

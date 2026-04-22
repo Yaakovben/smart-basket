@@ -5,7 +5,7 @@ import { sanitizeText } from '../utils';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import type { IList } from '../models';
-import { NotificationService } from './notification.service';
+import * as NotificationService from './notification.service';
 import { ListMembershipService } from './list-membership.service';
 import { transformList, transformListsWithProducts } from './list-transform.helper';
 import { checkListAccess, checkListOwner } from './list-access.helper';

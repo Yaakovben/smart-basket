@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { ListDAL, UserDAL } from '../dal';
 import { NotFoundError, ForbiddenError, ConflictError, AuthError } from '../errors';
-import { NotificationService } from './notification.service';
+import * as NotificationService from './notification.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import { transformList } from './list-transform.helper';

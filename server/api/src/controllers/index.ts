@@ -8,8 +8,8 @@
  * בלי נקודה, בלי class. ה-barrel הזה יוסר לחלוטין כשהרפקטור יושלם.
  */
 
-export { AuthController } from './auth.controller';
+export * as AuthController from './auth.controller';
 export * as UserController from './user.controller';
 export { ListController } from './list.controller';
-export { AdminController } from './admin.controller';
-export { NotificationController } from './notification.controller';
+export * as AdminController from './admin.controller';
+export * as NotificationController from './notification.controller';
