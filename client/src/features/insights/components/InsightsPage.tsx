@@ -268,7 +268,7 @@ export const InsightsPage = memo(() => {
                 />
                 <StatCard
                   value={<AnimatedNumber value={stats.totalProducts} />}
-                  label="סך פריטים"
+                  label={'פריטים בסה"כ'}
                   color="#14B8A6"
                   bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
                   border="rgba(20,184,166,0.15)"
@@ -604,7 +604,7 @@ export const InsightsPage = memo(() => {
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
               <StatCard
                 value={<AnimatedNumber value={stats.totalPurchased} />}
-                label="סך נקנו"
+                label={'נקנו בסה"כ'}
                 color="#22C55E"
                 bg={isDark ? 'rgba(34,197,94,0.08)' : 'rgba(34,197,94,0.05)'}
                 border="rgba(34,197,94,0.15)"
