@@ -18,7 +18,12 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   return (
     <Dialog
       open
-      onClose={handleClose}
+      // הפופאפ נסגר רק בלחיצה על כפתור "קראתי והתחזקתי" — לא בלחיצה מחוץ לו וגם לא ב-Escape
+      onClose={(_e, reason) => {
+        if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
+        handleClose();
+      }}
+      disableEscapeKeyDown
       TransitionComponent={Fade}
       transitionDuration={500}
       PaperProps={{
