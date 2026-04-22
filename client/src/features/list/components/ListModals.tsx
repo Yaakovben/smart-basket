@@ -244,15 +244,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   color: 'white',
                   '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
                     background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
-                    boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                    boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                  boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
+                  boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
                   '@media (max-width: 360px)': {
-                    height: 40, fontSize: 12, borderRadius: '12px',
+                    height: 38, fontSize: 12, borderRadius: '11px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
                   },
                 }}
@@ -266,15 +266,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   color: 'white',
                   '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
                     background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
-                    boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                    boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                  boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
+                  boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
                   '@media (max-width: 360px)': {
-                    height: 40, fontSize: 12, borderRadius: '12px',
+                    height: 38, fontSize: 12, borderRadius: '11px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
                   },
                 }}
@@ -337,15 +337,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   color: 'white',
                   '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
                     background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
-                    boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                    boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                  boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
+                  boxShadow: '0 3px 12px rgba(37,211,102,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
                   '@media (max-width: 360px)': {
-                    height: 40, fontSize: 12, borderRadius: '12px',
+                    height: 38, fontSize: 12, borderRadius: '11px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14 } },
                   },
                 }}
@@ -382,15 +382,15 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   color: 'white',
                   '&:hover, &:focus, &:focus-visible, &.Mui-focusVisible': {
                     background: 'linear-gradient(135deg, #14B8A6, #0D9488) !important',
-                    boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                    boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   },
                   '&:active': { opacity: 0.85 },
-                  borderRadius: '14px', height: 48, textTransform: 'none', fontWeight: 700, fontSize: 14,
-                  boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
+                  borderRadius: '12px', height: 44, textTransform: 'none', fontWeight: 700, fontSize: 13.5,
+                  boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
                   transition: 'opacity 0.1s',
-                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '14px' },
+                  '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '10px', '& svg': { width: 18, height: 18 } },
                   '@media (max-width: 360px)': {
-                    height: 40, fontSize: 12, borderRadius: '12px',
+                    height: 38, fontSize: 12, borderRadius: '11px',
                     '& .MuiButton-startIcon': { marginInlineEnd: '6px', '& svg': { width: 14, height: 14, fontSize: 14 } },
                   },
                 }}
