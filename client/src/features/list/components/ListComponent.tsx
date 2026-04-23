@@ -162,6 +162,7 @@ CelebrationOverlay.displayName = 'CelebrationOverlay';
 import { ListHeader } from './ListHeader';
 import { EmptyState } from './EmptyState';
 import { SwipeHint } from './SwipeHint';
+import { LongPressHint } from './LongPressHint';
 import { SwipeItem } from './SwipeItem';
 import { AddProductFab } from './AddProductFab';
 import { AddProductModal, EditProductModal, ProductDetailsModal } from './ProductModals';
@@ -426,6 +427,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         {showHint && items.length > 0 && (
           <SwipeHint onDismiss={dismissHint} />
         )}
+
+        {/* רמז עדין על לחיצה ארוכה - מוצג רק אחרי שהסרת את רמז ההחלקה ויש פריטים */}
+        {!showHint && items.length > 0 && <LongPressHint />}
 
         {/* סינון לפי קטגוריה */}
         {items.length > 0 && activeCategories.length > 1 && (

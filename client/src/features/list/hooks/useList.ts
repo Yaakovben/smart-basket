@@ -184,17 +184,26 @@ export const useList = ({
   }, [list.products]);
 
   // ===== מטפלי גרירת FAB =====
+  // סף גרירה - רק תנועה של 10px+ מהנקודה ההתחלתית מפעילה ממש גרירה.
+  // בלי זה, כל נגיעה עם רעד זעיר הייתה מזיזה את הכפתור.
+  const DRAG_THRESHOLD_PX = 10;
+
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
     const currentX = fabPosition?.x ?? window.innerWidth / 2;
     const currentY = fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
+    // רושם את הנקודה ההתחלתית בלבד. isDragging לא מופעל עד שהמשתמש יגרור ממש.
     dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
-    setIsDragging(true);
   }, [fabPosition]);
 
   const handleDragMove = useCallback((clientX: number, clientY: number) => {
-    if (!dragRef.current || !isDragging) return;
+    if (!dragRef.current) return;
     const deltaX = clientX - dragRef.current.startX;
     const deltaY = clientY - dragRef.current.startY;
+    // מפעיל גרירה רק אם המרחק חוצה את הסף - מבטיח שקליקים רגילים לא יזיזו את ה-FAB
+    if (!isDragging) {
+      if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) return;
+      setIsDragging(true);
+    }
     const newX = Math.max(FAB_BOUNDARY.minX, Math.min(window.innerWidth - FAB_BOUNDARY.minX, dragRef.current.startPosX + deltaX));
     const newY = Math.max(FAB_BOUNDARY.minY, Math.min(window.innerHeight - FAB_BOUNDARY.bottomOffset, dragRef.current.startPosY + deltaY));
     setFabPosition({ x: newX, y: newY });

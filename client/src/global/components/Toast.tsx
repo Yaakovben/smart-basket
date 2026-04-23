@@ -17,8 +17,13 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
   const isDark = settings.theme === 'dark';
   const [progress, setProgress] = useState(100);
   const startRef = useRef(Date.now());
-  const boxRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
+
+  // מצב גרירה - פוזיציה Y ומהירות (WhatsApp-style swipe down)
+  const [dragY, setDragY] = useState(0);          // מרחק גרירה נוכחי (תמיד >= 0 כי רק מטה)
+  const [isDragging, setIsDragging] = useState(false); // true תוך כדי גרירה - מכבה transition
+  const touchRef = useRef<{ startY: number; lastY: number; lastT: number; velocity: number }>({
+    startY: 0, lastY: 0, lastT: 0, velocity: 0,
+  });
 
   // סרגל התקדמות שנספר לאחור
   useEffect(() => {
@@ -32,24 +37,39 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // swipe down to dismiss
+  // swipe down to dismiss - WhatsApp style: גרירה חלקה, snap-back עם transition, ביטול-סף 60px או flick
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
+    const y = e.touches[0].clientY;
+    touchRef.current = { startY: y, lastY: y, lastT: Date.now(), velocity: 0 };
+    setIsDragging(true);
   }, []);
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const diff = e.touches[0].clientY - startY.current;
-    if (diff > 0 && boxRef.current) {
-      boxRef.current.style.transform = `translateY(${diff}px)`;
-      boxRef.current.style.opacity = `${Math.max(0, 1 - diff / 120)}`;
-    }
+    const y = e.touches[0].clientY;
+    const now = Date.now();
+    const r = touchRef.current;
+    const dt = Math.max(1, now - r.lastT);
+    // מהירות בפיקסלים לשניה - ישמש לזיהוי flick
+    r.velocity = ((y - r.lastY) / dt) * 1000;
+    r.lastY = y;
+    r.lastT = now;
+    const diff = y - r.startY;
+    // רק גרירה למטה (חיובי) מניעה את הטוסט. למעלה — נעול.
+    setDragY(Math.max(0, diff));
   }, []);
   const handleTouchEnd = useCallback(() => {
-    const diff = (boxRef.current?.getBoundingClientRect().top || 0) - startY.current;
-    if (diff > 50 || (boxRef.current?.style.opacity && parseFloat(boxRef.current.style.opacity) < 0.5)) {
-      onDismiss?.();
-    } else if (boxRef.current) {
-      boxRef.current.style.transform = '';
-      boxRef.current.style.opacity = '';
+    const r = touchRef.current;
+    const finalY = r.lastY - r.startY;
+    // סף של 60px או flick מהיר כלפי מטה (>500px/sec) — מבטל את הטוסט
+    const shouldDismiss = finalY > 60 || (finalY > 20 && r.velocity > 500);
+    if (shouldDismiss) {
+      // אנימציית יציאה — ממשיכים כלפי מטה עד שנעלם
+      setDragY(Math.max(finalY, 120));
+      setIsDragging(false);
+      window.setTimeout(() => onDismiss?.(), 150);
+    } else {
+      // Snap back — כיבוי isDragging מאפשר transition להחזיר לאפס
+      setIsDragging(false);
+      setDragY(0);
     }
   }, [onDismiss]);
 
@@ -65,7 +85,6 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
       }}
     >
       <Box
-        ref={boxRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -77,13 +96,22 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           boxShadow: '0 8px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05)',
           backdropFilter: 'blur(16px)',
           overflow: 'hidden',
-          animation: 'undoIn 0.3s ease-out',
+          // אנימציית כניסה רק אם אנחנו לא באמצע גרירה (אחרת הן מתנגשות)
+          animation: dragY === 0 && !isDragging ? 'undoIn 0.3s ease-out' : 'none',
           '@keyframes undoIn': {
             from: { transform: 'translateY(20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 },
           },
           minWidth: 220, maxWidth: 300,
-          transition: 'transform 0.15s, opacity 0.15s',
+          // בזמן גרירה - בלי transition (התנועה עוקבת את האצבע 1:1).
+          // ברגע שהאצבע משתחררת - transition מחזיר snap-back חלק.
+          transform: `translateY(${dragY}px)`,
+          opacity: Math.max(0, 1 - dragY / 140),
+          transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s',
+          touchAction: 'pan-y',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          cursor: 'grab',
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1 }}>

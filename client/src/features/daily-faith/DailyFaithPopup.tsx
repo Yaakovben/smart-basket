@@ -1,8 +1,19 @@
-import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
+import { useState } from 'react';
+import { Dialog, Box, Typography, Button, IconButton, Fade, keyframes } from '@mui/material';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { BRAND_COLORS } from '../../global/constants';
 import { renderFaithText, stripFaithMarkers } from './formatFaithText';
+
+// אנימציית חגיגה: אימוג'ים עפים למעלה עם סיבוב קל ודהייה
+const celebrateFloat = keyframes`
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+  15%  { opacity: 1; transform: translate(0, -20px) scale(1); }
+  100% { transform: translate(var(--drift), -260px) rotate(var(--rot)) scale(1.1); opacity: 0; }
+`;
+
+// אימוג'ים חגיגיים מתאימים ל"קראתי והתחזקתי" - גאווה יהודית + חוזק + ספר
+const CELEBRATE_EMOJIS = ['💪', '📖', '👌', '👍', '🇮🇱', '✨', '🌟', '🕊️', '🙌'];
 
 interface DailyFaithPopupProps {
   text: string;
@@ -23,10 +34,18 @@ const WhatsAppIcon = ({ size = 20 }: { size?: number }) => (
  */
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
+  // מצב חגיגה - פעיל אחרי לחיצה על "קראתי והתחזקתי". בזמן הזה אימוג'ים מרחפים
+  // למעלה, הכפתור מושבת, ואחרי ~1.2 שנ' הפופאפ נסגר בחלקלקות.
+  const [celebrating, setCelebrating] = useState(false);
 
   const handleClose = () => {
-    haptic('light');
-    onClose();
+    if (celebrating) return;
+    haptic('medium');
+    setCelebrating(true);
+    // סוגרים אחרי משך האנימציה - נותן תחושה של "זכית"
+    window.setTimeout(() => {
+      onClose();
+    }, 1200);
   };
 
   // שיתוף המשפט - מנסה share sheet נטיבי (מובייל), נופל ל-wa.me (דסקטופ)
@@ -111,6 +130,43 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           <Box sx={cornerSx('bottom', 'left')}>✦</Box>
           <Box sx={cornerSx('bottom', 'right')}>✦</Box>
 
+          {/* אפקט חגיגה - מופיע רק בזמן "קראתי והתחזקתי", מתפזר מתחתית הפופאפ */}
+          {celebrating && (
+            <Box sx={{
+              position: 'absolute', inset: 0,
+              pointerEvents: 'none',
+              zIndex: 10,
+            }} aria-hidden="true">
+              {Array.from({ length: 18 }).map((_, i) => {
+                const emoji = CELEBRATE_EMOJIS[i % CELEBRATE_EMOJIS.length];
+                // פיזור אופקי: חצי משמאל חצי מימין, קצת אקראיות
+                const leftPct = 8 + (i * 5) + (i % 3) * 3;
+                const drift = ((i % 5) - 2) * 30; // -60 עד +60 פיקסלים אופקית
+                const rot = ((i % 7) - 3) * 25; // -75° עד +75°
+                const dur = 0.9 + (i % 5) * 0.15; // משך משתנה לכל אימוג'י
+                const delay = (i % 6) * 0.06;
+                return (
+                  <Box
+                    key={i}
+                    sx={{
+                      position: 'absolute',
+                      bottom: '18%',
+                      left: `${leftPct}%`,
+                      fontSize: 26,
+                      lineHeight: 1,
+                      animation: `${celebrateFloat} ${dur}s ease-out ${delay}s forwards`,
+                      '--drift': `${drift}px`,
+                      '--rot': `${rot}deg`,
+                      willChange: 'transform, opacity',
+                    }}
+                  >
+                    {emoji}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
           {/* כותרת "החיזוק היומי" במסגרת עגולה מעוטרת - כדי שיהיה ברור שזו הכותרת */}
           <Box
             sx={{
@@ -191,26 +247,34 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
 
             <Button
               onClick={handleClose}
+              disabled={celebrating}
               sx={{
                 flex: 1,
                 px: 2,
                 py: 1.25,
                 borderRadius: '14px',
-                background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
+                background: celebrating
+                  ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)'
+                  : 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
                 color: 'white',
                 fontWeight: 700,
                 fontSize: 15,
-                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
+                boxShadow: celebrating ? '0 4px 14px rgba(34, 197, 94, 0.5)' : '0 4px 14px rgba(184, 134, 11, 0.4)',
                 textTransform: 'none',
+                transition: 'background 0.3s ease, box-shadow 0.3s ease',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
                 },
                 '&:active': {
                   transform: 'scale(0.97)',
                 },
+                '&.Mui-disabled': {
+                  color: 'white',
+                  background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
+                },
               }}
             >
-              {t('dailyFaithReadButton')}
+              {celebrating ? '✓ התחזקת!' : t('dailyFaithReadButton')}
             </Button>
           </Box>
         </Box>
