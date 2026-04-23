@@ -309,11 +309,31 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           </Box>
         </Collapse>
 
-        {/* רשימת משפטים — ממלאת את שאר החלל */}
+        {/* רשימת משפטים — ממלאת את שאר החלל.
+            גלילה: momentum חלק ב-iOS, overscrollBehavior:contain מונע bounce של הדף מאחור,
+            scrollbar דק ומודרני בדסקטופ, עם פייד עדין למעלה ולמטה שמעיד שיש עוד תוכן. */}
         <Box sx={{
           display: 'flex', flexDirection: 'column', gap: 0.85,
           flex: 1, minHeight: 0,
-          overflowY: 'auto', pr: 0.25,
+          overflowY: 'auto',
+          pr: 0.5, pl: 0.25,
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          scrollBehavior: 'smooth',
+          // פייד גרדיאנט בקצוות — מראה שיש עוד תוכן מעבר לגבול
+          maskImage: 'linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)',
+          // scrollbar דק ומודרני - בדסקטופ בלבד, בנייד לא מוצג ממילא
+          '&::-webkit-scrollbar': { width: '6px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(184,134,11,0.25)',
+            borderRadius: '3px',
+            '&:hover': { background: 'rgba(184,134,11,0.45)' },
+          },
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(184,134,11,0.3) transparent',
+          pt: '2px', // הכרחי כדי שהמסכה הצפונית לא תחתוך מיד את הכרטיס הראשון
         }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

@@ -6,6 +6,33 @@ const STORAGE_KEY = 'sb_daily_faith_last_shown';
 const SESSION_COUNT_KEY = 'sb_session_count';      // מונה מצטבר של סשנים (בדפדפן)
 const SESSION_MARKER_KEY = 'sb_session_marker';    // דגל לסשן נוכחי (נמחק בסגירת דפדפן)
 const MIN_SESSION_FOR_FAITH = 2;                    // לקוח חדש יראה רק מסשן 2
+const RECENT_SEEN_KEY = 'sb_faith_recent_seen';     // מעקב אחרי משפטים שכבר הוצגו בשבוע האחרון
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;            // שבוע במ"ש
+
+// מזהים של משפטים שהוצגו לאחרונה, עם timestamp. נשמרים רק אלה מהשבוע האחרון.
+type RecentSeen = { id: string; at: number };
+
+const getRecentSeen = (): RecentSeen[] => {
+  try {
+    const raw = localStorage.getItem(RECENT_SEEN_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as RecentSeen[];
+    const cutoff = Date.now() - WEEK_MS;
+    return Array.isArray(parsed) ? parsed.filter(r => r?.id && r.at > cutoff) : [];
+  } catch {
+    return [];
+  }
+};
+
+const markFaithSeen = (id: string): void => {
+  try {
+    const current = getRecentSeen().filter(r => r.id !== id);
+    current.push({ id, at: Date.now() });
+    localStorage.setItem(RECENT_SEEN_KEY, JSON.stringify(current));
+  } catch {
+    /* localStorage חסום - התעלמות שקטה */
+  }
+};
 
 const todayStr = () => {
   const d = new Date();
@@ -59,11 +86,15 @@ export function useDailyFaith(enabled: boolean) {
     let cancelled = false;
     // השהייה קצרה כדי לא להתנגש עם טעינת המסך הראשי
     const timer = setTimeout(() => {
+      // שולחים לשרת את המזהים שכבר ראינו השבוע, כדי שיחזיר משפט שלא נראה.
+      // getAll איננו זמין ל-non-admin, ולכן כל הסינון נעשה בשרת.
+      const seenIds = getRecentSeen().map(r => r.id);
       dailyFaithApi
-        .getRandom()
+        .getRandom(seenIds)
         .then((q) => {
           if (!cancelled && q) {
             setQuote(q);
+            markFaithSeen(q.id);
             // סימון בקואורדינטור שפופאפ נמצא על המסך - יחסום popups משניים בסשן זה
             markPopupShown('daily-faith');
           }

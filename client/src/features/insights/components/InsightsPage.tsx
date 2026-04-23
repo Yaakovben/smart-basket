@@ -9,6 +9,7 @@ import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
+import { InsightsLoader } from './InsightsLoader';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic } from '../../../global/helpers';
 
@@ -130,23 +131,19 @@ export const InsightsPage = memo(() => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   // שבוע נבחר בגרף המגמה (לחיצה מציגה פרטים)
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
+  // טעינה של נתוני מחירים - בנפרד מ-loading הראשי (שהוא עבור insightsApi)
+  const [priceLoading, setPriceLoading] = useState(true);
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
-    priceComparisonApi.getComparison().then(setPriceData).catch(() => {});
+    priceComparisonApi.getComparison().then(setPriceData).catch(() => {}).finally(() => setPriceLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
   }, []);
 
   if (loading) return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', gap: 2 }}>
-      <Box sx={{ position: 'relative' }}>
-        <CircularProgress size={56} sx={{ color: 'rgba(20,184,166,0.25)' }} />
-        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: `${float} 1.5s ease infinite` }}>
-          <Typography sx={{ fontSize: 22 }}>💡</Typography>
-        </Box>
-      </Box>
-      <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>מנתח את הנתונים שלך...</Typography>
+    <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+      <InsightsLoader text="מנתח את הנתונים שלך..." size="md" />
     </Box>
   );
 
@@ -271,7 +268,12 @@ export const InsightsPage = memo(() => {
 
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
-          <PriceComparisonCard data={priceData} isDark={isDark} />
+          priceLoading ? (
+            // בזמן שה-API של המחירים נטען — מציגים את הלודר הפנימי במקום תוכן ריק
+            <InsightsLoader text="מביא נתוני מחירים..." size="sm" />
+          ) : (
+            <PriceComparisonCard data={priceData} isDark={isDark} />
+          )
         )}
 
         {/* ===== רשימות ===== */}
