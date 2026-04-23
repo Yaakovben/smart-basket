@@ -2,7 +2,7 @@ import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { BRAND_COLORS } from '../../global/constants';
-import { renderFaithText } from './formatFaithText';
+import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 
 interface DailyFaithPopupProps {
   text: string;

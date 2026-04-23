@@ -7,6 +7,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
 import { Modal } from '../../global/components/Modal';
 import { ConfirmModal } from '../../global/components/ConfirmModal';
+import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
@@ -40,6 +41,8 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   const [searchOpen, setSearchOpen] = useState(false);
   // ה-quote שממתין לאישור מחיקה ב-popup. null = אין מחיקה פתוחה.
   const [quoteToDelete, setQuoteToDelete] = useState<DailyFaith | null>(null);
+  // מועמד לכפילות - מציג אישור להוסיף משפט למרות שקיים זהה
+  const [duplicateCandidate, setDuplicateCandidate] = useState<{ attempted: string; existing: DailyFaith } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -61,13 +64,23 @@ export const DailyFaithManager = ({ onClose }: Props) => {
     return quotes.filter(x => x.text.toLowerCase().includes(q));
   }, [quotes, search]);
 
-  const handleAdd = async () => {
-    const trimmed = text.trim();
-    if (trimmed.length < 2) return;
+  // בדיקת כפילות - משווה טקסט בנורמליזציה (בלי סימוני bold, בלי רווחים סופיים, lowercase)
+  const normalizeForCompare = useCallback((t: string) => {
+    return stripFaithMarkers(t).replace(/\s+/g, ' ').trim().toLowerCase();
+  }, []);
+
+  const findDuplicate = useCallback((raw: string): DailyFaith | null => {
+    const needle = normalizeForCompare(raw);
+    if (!needle) return null;
+    return quotes.find(q => normalizeForCompare(q.text) === needle) || null;
+  }, [quotes, normalizeForCompare]);
+
+  // ביצוע ההוספה בפועל - משותף לזרם רגיל ולאישור דריסה
+  const performAdd = async (rawText: string) => {
     try {
       setSaving(true);
       haptic('light');
-      const newQuote = await dailyFaithApi.create(trimmed);
+      const newQuote = await dailyFaithApi.create(rawText);
       setQuotes((prev) => [newQuote, ...prev]);
       setText('');
     } catch {
@@ -75,6 +88,18 @@ export const DailyFaithManager = ({ onClose }: Props) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAdd = async () => {
+    const trimmed = text.trim();
+    if (trimmed.length < 2) return;
+    // בדיקת כפילות — אם קיים משפט זהה, מציגים popup אישור במקום להוסיף מייד
+    const dup = findDuplicate(trimmed);
+    if (dup) {
+      setDuplicateCandidate({ attempted: trimmed, existing: dup });
+      return;
+    }
+    await performAdd(trimmed);
   };
 
   const handleDelete = async (id: string) => {
@@ -212,6 +237,11 @@ export const DailyFaithManager = ({ onClose }: Props) => {
             }}
           />
 
+          {/* רמז לפורמט bold */}
+          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 0.75, px: 0.25, lineHeight: 1.4 }}>
+            💡 טיפ: עטוף מילה ב־<Box component="span" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 0.4, borderRadius: '3px' }}>*כוכביות*</Box> כדי להדגיש אותה (<Box component="span" sx={{ fontWeight: 800 }}>כמו ב-WhatsApp</Box>)
+          </Typography>
+
           {/* שורה תחתונה: מונה תווים + כפתור הוספה */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
             <Typography sx={{
@@ -331,14 +361,14 @@ export const DailyFaithManager = ({ onClose }: Props) => {
                     {idx + 1}
                   </Box>
 
-                  {/* תוכן */}
+                  {/* תוכן - עם רנדור של bold (*word*) */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography sx={{
                       fontSize: 13.5, lineHeight: 1.6,
                       whiteSpace: 'pre-wrap',
                       color: 'text.primary',
                     }}>
-                      {q.text}
+                      {renderFaithText(q.text)}
                     </Typography>
                     {/* תאריך + אורך */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5, flexWrap: 'wrap' }}>
@@ -379,6 +409,21 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           confirmText="מחק"
           onConfirm={() => handleDelete(quoteToDelete.id)}
           onCancel={() => setQuoteToDelete(null)}
+        />
+      )}
+
+      {/* POPUP אזהרת כפילות - מופיע כשמנסים להוסיף משפט שכבר קיים */}
+      {duplicateCandidate && (
+        <ConfirmModal
+          title="המשפט כבר קיים"
+          message={`משפט זהה נמצא כבר ברשימה:\n\n"${duplicateCandidate.existing.text.slice(0, 150)}${duplicateCandidate.existing.text.length > 150 ? '…' : ''}"\n\nלהוסיף בכל זאת?`}
+          confirmText="הוסף בכל זאת"
+          onConfirm={async () => {
+            const attempted = duplicateCandidate.attempted;
+            setDuplicateCandidate(null);
+            await performAdd(attempted);
+          }}
+          onCancel={() => setDuplicateCandidate(null)}
         />
       )}
     </Modal>

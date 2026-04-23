@@ -211,9 +211,9 @@ export const InsightsPage = memo(() => {
         position: 'relative', overflow: 'hidden',
         mb: 2,
       }}>
-        {/* ריבון BETA גדול (lg) בצד שמאל פיזית. רכיב BetaRibbon משתמש ב-style prop
-            כדי לעקוף את ה-RTL-flip של MUI, אז "top-left" אכן מופיע בצד השמאלי הוויזואלי. */}
-        <BetaRibbon corner="top-left" offsetTop={4} size="lg" />
+        {/* ריבון BETA גדול בצד שמאל. ה-pill של הציון הוסר — הוא היה מפריע
+            לקריאות הריבון ולא הוסיף ערך (הציון המלא מופיע בטאב "דופק"). */}
+        <BetaRibbon corner="top-left" offsetTop={4} size="xl" />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
@@ -226,17 +226,8 @@ export const InsightsPage = memo(() => {
               הנתונים עשויים להיות חלקיים · עובדים על שיפורים
             </Typography>
           </Box>
-          <Box sx={{
-            display: 'flex', alignItems: 'center', gap: 0.5,
-            bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '14px',
-            px: 1.25, py: 0.75,
-            border: '1px solid rgba(255,255,255,0.15)',
-          }}>
-            <Typography sx={{ fontSize: 14 }}>{scoreEmoji(shoppingScore)}</Typography>
-            <Typography sx={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              <AnimatedNumber value={shoppingScore} />
-            </Typography>
-          </Box>
+          {/* רווח ריק מימין כדי לאזן את כפתור החזרה ולשמור על מרכוז הכותרת */}
+          <Box sx={{ width: 36, flexShrink: 0 }} />
         </Box>
       </Box>
 
