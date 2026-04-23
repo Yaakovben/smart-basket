@@ -1,16 +1,62 @@
 import cron from 'node-cron';
 import { syncAllChains } from '../services/priceSync.service';
+import { PriceDAL } from '../dal/price.dal';
 import { logger } from '../../../config/logger';
 
-// NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד
-// זה מוגדר רק ברמת התהליך — לא משפיע על שום בקשת HTTPS אחרת של השרת במפורש
-// אלא על האובייקט הגלובלי. מאחר שהסקריפט קורא רק לפורטל ציבורי, זה סביר.
+// NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד.
+// מוגדר רק בזמן הריצה של הסנכרון, משוחזר אחרי.
 
 let scheduled = false;
+let syncInProgress = false;
 
-// רענון מחירים יומי — 03:00 בזמן ישראל
-const CRON_EXPRESSION = '0 3 * * *';
+// רענון מחירים כל 6 שעות (00:00, 06:00, 12:00, 18:00 בזמן ישראל)
+const CRON_EXPRESSION = '0 */6 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
+// אם הנתונים ישנים מ-6 שעות בעת הפעלת השרת, נסנכרן מיד ברקע
+const STARTUP_STALENESS_MS = 6 * 60 * 60 * 1000;
+
+// פונקציית עזר לרענון עם טיפול ב-TLS env var - משותפת ל-cron ול-startup
+async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
+  if (syncInProgress) {
+    logger.warn(`[price-sync-job] ${trigger}: sync already in progress, skipping`);
+    return;
+  }
+  syncInProgress = true;
+  const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  try {
+    logger.info(`[price-sync-job] ${trigger}: starting sync of all chains`);
+    const results = await syncAllChains();
+    const summary = results.map(r => `${r.chainId}:${r.upserted}${r.error ? '(err)' : ''}`).join(', ');
+    logger.info(`[price-sync-job] ${trigger}: completed — ${summary}`);
+  } catch (err) {
+    logger.error(`[price-sync-job] ${trigger}: unhandled error:`, err);
+  } finally {
+    if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+    else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
+    syncInProgress = false;
+  }
+}
+
+// בדיקה אם הנתונים ישנים ומצריכים סנכרון מיידי (ב-boot)
+async function shouldRunStartupSync(): Promise<boolean> {
+  try {
+    // מחפשים את הרשומה העדכנית ביותר בכל רשת
+    const latest = await PriceDAL.findOne({}, { sort: { updatedAt: -1 } });
+    if (!latest) {
+      logger.info('[price-sync-job] Startup: no prices in DB, will trigger initial sync');
+      return true;
+    }
+    const ageMs = Date.now() - new Date(latest.updatedAt).getTime();
+    const ageHours = ageMs / (60 * 60 * 1000);
+    const stale = ageMs > STARTUP_STALENESS_MS;
+    logger.info(`[price-sync-job] Startup: latest price age=${ageHours.toFixed(1)}h, stale=${stale}`);
+    return stale;
+  } catch (err) {
+    logger.error('[price-sync-job] Startup: failed to check staleness, skipping auto-sync:', err);
+    return false;
+  }
+}
 
 export function startPriceSyncJob(): void {
   if (scheduled) {
@@ -25,26 +71,18 @@ export function startPriceSyncJob(): void {
 
   cron.schedule(
     CRON_EXPRESSION,
-    async () => {
-      logger.info('[price-sync-job] Triggered by cron');
-      // חשוב: הגדרה ברמת התהליך בלבד — רק לבקשות שנעשות מהסקריפט הזה
-      const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      try {
-        const results = await syncAllChains();
-        const summary = results.map(r => `${r.chainId}:${r.upserted}`).join(', ');
-        logger.info(`[price-sync-job] Completed: ${summary}`);
-      } catch (err) {
-        logger.error('[price-sync-job] Unhandled error:', err);
-      } finally {
-        // שחזור הערך הקודם של ה-env אחרי הסנכרון
-        if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-        else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
-      }
-    },
+    () => runSync('cron'),
     { timezone: TIMEZONE }
   );
 
   scheduled = true;
-  logger.info(`[price-sync-job] Scheduled daily at ${CRON_EXPRESSION} (${TIMEZONE})`);
+  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — every 6h`);
+
+  // בדיקת טריות בעת boot — אם הנתונים ישנים, סנכרון מיידי ברקע (לא חוסם את boot)
+  void shouldRunStartupSync().then(shouldRun => {
+    if (shouldRun) {
+      // דיליי קטן כדי לתת לשרת לסיים boot לפני שמתחיל משימה כבדה
+      setTimeout(() => runSync('startup'), 15_000);
+    }
+  });
 }
