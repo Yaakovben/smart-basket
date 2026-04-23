@@ -447,10 +447,6 @@ export const ListHeader = memo(({
             spellCheck: false
           }}
           sx={{
-            '@media (max-width: 360px)': {
-              '& .MuiOutlinedInput-root': { height: 38 },
-              '& .MuiOutlinedInput-input': { py: 0.75 },
-            },
             '& .MuiOutlinedInput-root': {
               bgcolor: 'background.paper',
               borderRadius: '14px',
@@ -465,7 +461,11 @@ export const ListHeader = memo(({
               fontSize: 16, // Prevents iOS zoom on focus
               py: 1.5,
               color: 'text.primary'
-            }
+            },
+            '@media (max-width: 360px)': {
+              '& .MuiOutlinedInput-root': { height: 38 },
+              '& .MuiOutlinedInput-input': { py: 0.75 },
+            },
           }}
           InputProps={{
             startAdornment: (
@@ -570,15 +570,6 @@ export const ListHeader = memo(({
           p: 0.75,
           minHeight: 'auto',
           '& .MuiTabs-indicator': { display: 'none' },
-          '@media (max-width: 360px)': {
-            p: 0.4,
-            '& .MuiTab-root': {
-              py: 0.5,
-              px: 0.75,
-              minHeight: 32,
-              fontSize: 11,
-            },
-          },
           '& .MuiTab-root': {
             borderRadius: '10px',
             py: { xs: 1, sm: 1.75 },
@@ -589,7 +580,16 @@ export const ListHeader = memo(({
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',
             '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' }
-          }
+          },
+          '@media (max-width: 360px)': {
+            p: 0.4,
+            '& .MuiTab-root': {
+              py: 0.5,
+              px: 0.75,
+              minHeight: 32,
+              fontSize: 11,
+            },
+          },
         }}
       >
         <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
