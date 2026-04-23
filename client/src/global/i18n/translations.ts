@@ -436,6 +436,9 @@ type TranslationKey =
   // Daily Faith
   | 'dailyFaithTitle'
   | 'dailyFaithReadButton'
+  | 'dailyFaithShareAria'
+  | 'dailyFaithShareLine'
+  | 'dailyFaithShareFooter'
   | 'dailyFaithManagerTitle'
   | 'dailyFaithManagerSubtitle'
   | 'dailyFaithManagerHint'
@@ -880,6 +883,9 @@ export const translations: Record<Language, Translations> = {
     owner: 'בעלים',
     dailyFaithTitle: 'החיזוק היומי',
     dailyFaithReadButton: 'קראתי והתחזקתי',
+    dailyFaithShareAria: 'שתף בוואטסאפ',
+    dailyFaithShareLine: '✨ החיזוק היומי שלי:',
+    dailyFaithShareFooter: 'מתוך SmartBasket 🧺',
     dailyFaithManagerTitle: 'ניהול משפטי חיזוק',
     dailyFaithManagerSubtitle: 'משפטי חיזוק יומיים',
     dailyFaithManagerHint: 'משפט אקראי יוצג למשתמשים פעם ביום',
@@ -1319,6 +1325,9 @@ export const translations: Record<Language, Translations> = {
     owner: 'Owner',
     dailyFaithTitle: 'Daily Inspiration',
     dailyFaithReadButton: 'I Read & Was Strengthened',
+    dailyFaithShareAria: 'Share on WhatsApp',
+    dailyFaithShareLine: '✨ My daily inspiration:',
+    dailyFaithShareFooter: 'From SmartBasket 🧺',
     dailyFaithManagerTitle: 'Manage Inspirational Quotes',
     dailyFaithManagerSubtitle: 'Daily Inspirational Quotes',
     dailyFaithManagerHint: 'A random quote appears to users once a day',
@@ -1758,6 +1767,9 @@ export const translations: Record<Language, Translations> = {
     owner: 'Владелец',
     dailyFaithTitle: 'Вдохновение дня',
     dailyFaithReadButton: 'Прочитал и укрепился',
+    dailyFaithShareAria: 'Поделиться в WhatsApp',
+    dailyFaithShareLine: '✨ Моё вдохновение дня:',
+    dailyFaithShareFooter: 'Из SmartBasket 🧺',
     dailyFaithManagerTitle: 'Управление цитатами',
     dailyFaithManagerSubtitle: 'Ежедневные вдохновляющие цитаты',
     dailyFaithManagerHint: 'Случайная цитата показывается пользователям раз в день',
