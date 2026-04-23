@@ -133,6 +133,9 @@ export const InsightsPage = memo(() => {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
   // טעינה של נתוני מחירים - בנפרד מ-loading הראשי (שהוא עבור insightsApi)
   const [priceLoading, setPriceLoading] = useState(true);
+  // קטגוריה מודגשת בטאב הרגלים - מוגדרת בלחיצה על מוצר מוביל, מסמנת
+  // חיבור ויזואלי בין סקציית המוצרים לסקציית הקטגוריות.
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
@@ -721,19 +724,31 @@ export const InsightsPage = memo(() => {
                     // פודיום: ראשון גבוה יותר
                     const elevation = mapIdx === 0 ? 0 : mapIdx === 1 ? 8 : 14;
                     const accent = mapIdx === 0 ? '#FBBF24' : mapIdx === 1 ? '#A1A1AA' : '#D97706';
+                    const isHighlighted = highlightedCategory === p.category;
                     return (
                       <Box
                         key={mapIdx}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          haptic('light');
+                          setHighlightedCategory(prev => prev === p.category ? null : p.category);
+                        }}
                         sx={{
                           flex: 1, textAlign: 'center', mt: `${elevation}px`,
                           p: 1.25, borderRadius: '12px',
                           bgcolor: isDark ? `${accent}10` : `${accent}08`,
-                          border: '1px solid', borderColor: `${accent}30`,
+                          border: '1px solid', borderColor: isHighlighted ? categoryColor : `${accent}30`,
                           borderBottom: `3px solid ${categoryColor}`,
-                          cursor: 'default',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          userSelect: 'none',
+                          boxShadow: isHighlighted ? `0 3px 14px ${categoryColor}55` : 'none',
                           animation: `${fadeIn} 0.4s ease ${0.1 + mapIdx * 0.08}s both`,
-                          transition: 'transform 0.15s ease',
+                          transition: 'transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease',
                           '&:active': { transform: 'translateY(1px)' },
+                          '&:focus-visible': { boxShadow: `0 0 0 2px ${categoryColor}` },
                         }}
                       >
                         <Typography sx={{ fontSize: 18, mb: 0.25 }}>{medal}</Typography>
@@ -788,17 +803,34 @@ export const InsightsPage = memo(() => {
                     return <Box key={cat.category} sx={{ width: `${cat.percentage}%`, bgcolor: color, transition: 'width 0.8s ease' }} />;
                   })}
                 </Box>
-                {/* רשימה קומפקטית עם נקודה צבעונית + שם + % */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
+                {/* רשימה קומפקטית - לחיצה על שורה מדגישה, וקליק על מוצר למעלה מדגיש את הקטגוריה המתאימה */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
                   {categoryBreakdown.slice(0, 8).map(cat => {
                     const icon = CATEGORY_ICONS[cat.category as keyof typeof CATEGORY_ICONS] || '📦';
                     const color = CATEGORY_COLORS[cat.category as keyof typeof CATEGORY_COLORS] || '#6B7280';
                     const key = CATEGORY_TRANSLATION_KEYS[cat.category as keyof typeof CATEGORY_TRANSLATION_KEYS];
+                    const isActive = highlightedCategory === cat.category;
                     return (
-                      <Box key={cat.category} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Box
+                        key={cat.category}
+                        onClick={() => {
+                          haptic('light');
+                          setHighlightedCategory(prev => prev === cat.category ? null : cat.category);
+                        }}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: 0.75,
+                          px: 0.75, py: 0.55, borderRadius: '8px',
+                          cursor: 'pointer',
+                          bgcolor: isActive ? `${color}14` : 'transparent',
+                          border: '1px solid',
+                          borderColor: isActive ? `${color}40` : 'transparent',
+                          transition: 'background 0.2s, border-color 0.2s',
+                          '&:active': { opacity: 0.8 },
+                        }}
+                      >
                         <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
                         <Typography sx={{ fontSize: 13 }}>{icon}</Typography>
-                        <Typography sx={{ fontSize: 12.5, fontWeight: 600, flex: 1 }}>
+                        <Typography sx={{ fontSize: 12.5, fontWeight: isActive ? 800 : 600, flex: 1 }}>
                           {key ? t(key) : cat.category}
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{cat.count}</Typography>
