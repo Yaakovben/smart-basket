@@ -36,15 +36,27 @@ export interface PriceListGroup {
   matches: PriceMatch[];        // הפירוט (כל הפריטים, זוהו + לא זוהו)
 }
 
+// סיכום עלות סל לרשת אחת - משמש לתצוגה השוואתית בין רשתות
+export interface PriceChainTotal {
+  chainId: string;
+  chainName: string;
+  total: number;         // סה"כ משוער (רק מוצרים שזוהו)
+  matchedCount: number;  // כמה מוצרים מהרשימות של המשתמש נמצאו ברשת
+  unmatchedCount: number;
+  isCheapest: boolean;   // רשת אחת מסומנת כזולה ביותר
+  savings: number;       // כמה חוסכים לעומת הרשת היקרה ביותר (₪)
+}
+
 export interface PriceComparisonData {
   enabled: boolean;
-  chainName: string;
-  totalPrices: number;          // כמה מוצרים יש במאגר הרשת
-  lists: PriceListGroup[];      // חלוקה לפי רשימה
-  grandTotal: number | null;    // סה"כ כל הרשימות
-  totalMatched: number;         // סה"כ פריטים שזוהו בכל הרשימות
-  totalUnmatched: number;       // סה"כ פריטים שלא זוהו
-  totalPending: number;         // סה"כ פריטים שטרם נקנו
+  chainName: string;            // הרשת ה"ראשית" (הזולה ביותר) - לתאימות אחורה
+  totalPrices: number;          // כמה מוצרים יש במאגר של הרשת הראשית
+  lists: PriceListGroup[];      // חלוקה לפי רשימה (ע"פ הרשת הראשית)
+  grandTotal: number | null;    // סה"כ כל הרשימות (בערך של הרשת הראשית)
+  totalMatched: number;
+  totalUnmatched: number;
+  totalPending: number;
+  chainTotals: PriceChainTotal[]; // השוואה בין כל הרשתות הפעילות (ממוין מהזולה ליקרה)
   disclaimer: string;
   lastUpdatedISO: string | null;
   sourceName: string;
@@ -53,6 +65,7 @@ export interface PriceComparisonData {
 
 const BETA_CHAIN_ID = 'osher_ad';
 const BETA_CHAIN_NAME = 'אושר עד';
+import type { ChainId } from '../models/Price.model';
 const SOURCE_NAME = 'פורטל שקיפות המחירים הממשלתי';
 const SOURCE_URL = 'https://url.publishedprices.co.il';
 
@@ -84,8 +97,9 @@ const CATEGORY_MODIFIERS = new Set([
 // זה מאפשר לקשט את אותה "התאמת שם" להרבה מוצרים ללא שאילתות חוזרות.
 type NameMatch = Omit<PriceMatch, 'productId' | 'userProductName' | 'userQuantity'>;
 
-// ניסיון התאמה של שם מנורמל בודד למאגר (ללא productId/quantity)
-async function matchNormalizedName(userName: string): Promise<NameMatch> {
+// ניסיון התאמה של שם מנורמל בודד למאגר (ללא productId/quantity).
+// chainId אופציונלי: אם מועבר — מתאים רק לרשת ההיא; אם undefined — חוצה רשתות.
+async function matchNormalizedName(userName: string, chainId: ChainId = BETA_CHAIN_ID, chainName: string = BETA_CHAIN_NAME): Promise<NameMatch> {
   const normalized = normalizeProductName(userName);
   const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
   const meaningful = meaningfulTokens(rawTokens);
@@ -94,8 +108,8 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
   const unmatched: NameMatch = {
     normalizedName: normalized,
     matched: false,
-    chainId: BETA_CHAIN_ID,
-    chainName: BETA_CHAIN_NAME,
+    chainId,
+    chainName,
     itemName: '',
     price: 0,
     barcode: '',
@@ -123,7 +137,7 @@ async function matchNormalizedName(userName: string): Promise<NameMatch> {
   const searchTokens = meaningful.slice(0, 3);
   let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>> = [];
   try {
-    candidates = await PriceDAL.findByAnyToken(searchTokens, BETA_CHAIN_ID, 60);
+    candidates = await PriceDAL.findByAnyToken(searchTokens, chainId, 60);
   } catch {
     return unmatched;
   }
@@ -253,6 +267,7 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
       totalMatched: 0,
       totalUnmatched: 0,
       totalPending: 0,
+      chainTotals: [] as PriceChainTotal[],
     };
 
     const cacheAndReturn = (data: PriceComparisonData): PriceComparisonData => {
@@ -365,6 +380,86 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
     const totalPending = listGroups.reduce((s, g) => s + g.pendingCount, 0);
     const grandTotal = listGroups.reduce((s, g) => s + g.estimatedTotal, 0);
 
+    // ======================================================================
+    // השוואה רב-רשתית: לכל רשת פעילה, מחשבים את סך הסל במקביל.
+    // משתמשים ב-uniqueNames (שכבר יש לנו) כדי לרוץ match לכל צירוף שם×רשת.
+    // ======================================================================
+    const activeChains = await PriceDAL.getActiveChainsWithCounts();
+    const chainTotals: PriceChainTotal[] = await Promise.all(
+      activeChains.map(async ({ chainId, chainName }) => {
+        // לרשת "הראשית" (BETA) - יש לנו כבר matchCache, לא לבצע פעם שנייה
+        const isPrimaryChain = chainId === BETA_CHAIN_ID;
+
+        const chainMatchCache = isPrimaryChain
+          ? nameMatchCache
+          : await (async () => {
+              const cache = new Map<string, NameMatch>();
+              await Promise.all(
+                uniqueNames.map(async name => {
+                  try {
+                    cache.set(name, await matchNormalizedName(name, chainId, chainName));
+                  } catch {
+                    cache.set(name, {
+                      normalizedName: '',
+                      matched: false,
+                      chainId,
+                      chainName,
+                      itemName: '',
+                      price: 0,
+                      barcode: '',
+                      matchConfidence: 0,
+                      matchedTokens: [],
+                      userTokens: [],
+                    });
+                  }
+                })
+              );
+              return cache;
+            })();
+
+        let chainTotal = 0;
+        let matched = 0;
+        let unmatched = 0;
+        for (const p of pendingProducts) {
+          const m = chainMatchCache.get(p.name)!;
+          if (m.matched) {
+            chainTotal += m.price * (p.quantity || 1);
+            matched += 1;
+          } else {
+            unmatched += 1;
+          }
+        }
+
+        return {
+          chainId,
+          chainName,
+          total: round2(chainTotal),
+          matchedCount: matched,
+          unmatchedCount: unmatched,
+          isCheapest: false,
+          savings: 0,
+        };
+      })
+    );
+
+    // סימון הזולה ביותר + חישוב חיסכון לעומת היקרה (רק רשתות עם לפחות התאמה אחת)
+    const chainsWithMatches = chainTotals.filter(c => c.matchedCount > 0);
+    if (chainsWithMatches.length > 0) {
+      const sorted = [...chainsWithMatches].sort((a, b) => a.total - b.total);
+      const cheapestId = sorted[0].chainId;
+      const maxTotal = sorted[sorted.length - 1].total;
+      for (const ct of chainTotals) {
+        if (ct.chainId === cheapestId) ct.isCheapest = true;
+        if (ct.matchedCount > 0) ct.savings = round2(maxTotal - ct.total);
+      }
+    }
+    // מיון: זולה ביותר קודם, ואז לפי חיסכון יורד. רשתות ללא התאמה בסוף.
+    chainTotals.sort((a, b) => {
+      if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
+      if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
+      return a.total - b.total;
+    });
+
     return cacheAndReturn({
       ...baseResponse,
       enabled: true,
@@ -373,6 +468,7 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
       grandTotal: totalMatched > 0 ? round2(grandTotal) : null,
       totalMatched,
       totalUnmatched,
-    totalPending,
-  });
+      totalPending,
+      chainTotals,
+    });
 }

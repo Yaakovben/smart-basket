@@ -1,8 +1,30 @@
-import { osherAdAdapter, normalizeProductName, type ChainAdapter } from '../chains';
+import {
+  osherAdAdapter,
+  ramiLevyAdapter,
+  victoryAdapter,
+  yenotBitanAdapter,
+  tivTaamAdapter,
+  haziHinamAdapter,
+  superPharmAdapter,
+  shufersalAdapter,
+  normalizeProductName,
+  type ChainAdapter,
+} from '../chains';
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { logger } from '../../../config/logger';
 
-const adapters: ChainAdapter[] = [osherAdAdapter];
+// כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
+// סדר השרירותי; אם adapter נכשל, השאר ממשיכים.
+const adapters: ChainAdapter[] = [
+  osherAdAdapter,
+  ramiLevyAdapter,
+  victoryAdapter,
+  yenotBitanAdapter,
+  tivTaamAdapter,
+  haziHinamAdapter,
+  superPharmAdapter,
+  shufersalAdapter,
+];
 
 export interface SyncResult {
   chainId: string;

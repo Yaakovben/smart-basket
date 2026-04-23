@@ -1,6 +1,14 @@
 import { Schema, model, type Document, Types } from 'mongoose';
 
-export type ChainId = 'osher_ad' | 'shufersal' | 'rami_levy' | 'victory' | 'yenot_bitan';
+export type ChainId =
+  | 'osher_ad'
+  | 'shufersal'
+  | 'rami_levy'
+  | 'victory'
+  | 'yenot_bitan'
+  | 'tiv_taam'
+  | 'hazi_hinam'
+  | 'super_pharm';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;

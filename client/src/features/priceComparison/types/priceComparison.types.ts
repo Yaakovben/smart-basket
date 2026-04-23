@@ -32,6 +32,17 @@ export interface PriceListGroup {
   matches: PriceMatch[];
 }
 
+// סיכום השוואתי לרשת - משמש לתצוגת רנק של כל הרשתות ב-UI
+export interface PriceChainTotal {
+  chainId: string;
+  chainName: string;
+  total: number;
+  matchedCount: number;
+  unmatchedCount: number;
+  isCheapest: boolean;
+  savings: number;
+}
+
 export interface PriceComparisonData {
   enabled: boolean;
   chainName: string;
@@ -41,6 +52,7 @@ export interface PriceComparisonData {
   totalMatched: number;
   totalUnmatched: number;
   totalPending: number;
+  chainTotals: PriceChainTotal[];
   disclaimer: string;
   lastUpdatedISO: string | null;
   sourceName: string;
