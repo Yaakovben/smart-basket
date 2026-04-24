@@ -85,7 +85,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: 'min(70vh, 580px)', overflowY: 'auto' }}>
+      {/* המודאל עצמו (Modal.tsx) כבר מטפל בגלילה אנכית במידת הצורך.
+          הכפלה של scroll-container גרמה לגלילה בלתי-יציבה - לכן רק flex פה. */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
