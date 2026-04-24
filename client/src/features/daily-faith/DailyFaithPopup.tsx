@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { useSettings } from '../../global/context/SettingsContext';
@@ -17,16 +16,10 @@ interface DailyFaithPopupProps {
  */
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
-  // אחרי לחיצה - הכפתור מחליף ל"כל הכבוד!" ונסגר אחרי רגע
-  const [confirmed, setConfirmed] = useState(false);
 
   const handleClose = () => {
-    if (confirmed) return;
     haptic('medium');
-    setConfirmed(true);
-    window.setTimeout(() => {
-      onClose();
-    }, 900);
+    onClose();
   };
 
   // שיתוף המשפט - מנסה share sheet נטיבי (מובייל), נופל ל-wa.me (דסקטופ)
@@ -67,6 +60,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           m: 2,
           maxWidth: 400,
           width: '100%',
+          // יציבות בגרירה: מונע תזוזה/גרירה של הפופאפ בלחיצה והחזקה על המסך
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         },
       }}
       sx={{
@@ -194,13 +191,11 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
 
             <Button
               onClick={handleClose}
-              disabled={confirmed}
               sx={{
                 flex: 1,
                 px: 2,
                 py: 1.25,
                 borderRadius: '14px',
-                // צבע זהב יציב - ללא gradient משתנה בין מצבים
                 background: '#B8860B',
                 color: 'white',
                 fontWeight: 700,
@@ -210,14 +205,9 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 transition: 'background 0.2s ease',
                 '&:hover': { background: '#9C7209' },
                 '&:active': { transform: 'scale(0.97)' },
-                '&.Mui-disabled': {
-                  color: 'white',
-                  background: '#B8860B',
-                  opacity: 1,
-                },
               }}
             >
-              {confirmed ? 'כל הכבוד!' : t('dailyFaithReadButton')}
+              {t('dailyFaithReadButton')}
             </Button>
           </Box>
         </Box>
