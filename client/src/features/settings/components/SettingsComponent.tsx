@@ -477,7 +477,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
       {confirmClearCache && (
         <ConfirmModal
           title="ניקוי מטמון"
-          message={'הפעולה תנקה את המטמון של האפליקציה ותרענן את העמוד. תישאר מחובר.'}
+          message={'הפעולה תנקה את המטמון של האפליקציה ותרענן את העמוד. ייתכן שתצטרך להתחבר מחדש.'}
           confirmText="נקה"
           onConfirm={() => { setConfirmClearCache(false); navigate('/clear-cache'); }}
           onCancel={() => setConfirmClearCache(false)}
