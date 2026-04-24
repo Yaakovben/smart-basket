@@ -1,20 +1,18 @@
 import { memo } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
 
-// לודר יצירתי לתובנות: נורה עם אימוג'ים מקיפים (📊 📈 💡 🛒) שמתחלפים במעגל.
-// משמש גם במסך הטעינה הראשי וגם בטעינות פנימיות כשמחליפים טאב או טוענים חלק.
+// לודר לתובנות: 3 עיגולים מדורגים שממלאים ומתרוקנים כמו גלי נתונים
+// שנבדקים. עיצוב אבסטרקטי ונקי — בלי אמוג'ים מסתובבים. מרגיש "ניתוח נתונים" אמיתי.
 
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+const bounceBar = keyframes`
+  0%, 100% { transform: scaleY(0.35); opacity: 0.55; }
+  50%      { transform: scaleY(1);    opacity: 1; }
 `;
 
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.08); opacity: 0.85; }
+const rippleRing = keyframes`
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
 `;
-
-const ORBIT_EMOJIS = ['📊', '📈', '💡', '🛒'];
 
 interface Props {
   // טקסט אופציונלי מתחת ללודר. אם חסר — הלודר לבד בלי טקסט.
@@ -26,72 +24,66 @@ interface Props {
 }
 
 export const InsightsLoader = memo(({ text, size = 'md', accent = '#14B8A6' }: Props) => {
-  const boxPx = size === 'sm' ? 54 : 88;
-  const centerPx = size === 'sm' ? 28 : 46;
-  const emojiPx = size === 'sm' ? 13 : 18;
-  // רדיוס המסלול - חצי מגודל הקופסה פחות גודל האמוג'י הקטן
-  const radius = boxPx / 2 - emojiPx / 2 - 2;
+  const isSmall = size === 'sm';
+  const barGap = isSmall ? 4 : 6;
+  const barWidth = isSmall ? 5 : 7;
+  const barHeightMax = isSmall ? 26 : 40;
 
   return (
     <Box sx={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      gap: size === 'sm' ? 1 : 1.5,
-      py: size === 'sm' ? 2.5 : 4,
+      gap: isSmall ? 1 : 1.5,
+      py: isSmall ? 2.5 : 4,
     }} role="status" aria-live="polite">
-      {/* קונטיינר המסלול המסתובב */}
+      {/* חלל הלודר - bars + ripple ברקע */}
       <Box sx={{
         position: 'relative',
-        width: boxPx, height: boxPx,
+        width: isSmall ? 60 : 90,
+        height: barHeightMax + 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {/* עיגול נושא מרכזי עם פעימה */}
+        {/* 2 טבעות ריפל ברקע - נותן תחושה של "קריאת נתונים" מתמשכת */}
+        {[0, 1].map(i => (
+          <Box
+            key={i}
+            sx={{
+              position: 'absolute',
+              width: barHeightMax + 6, height: barHeightMax + 6,
+              borderRadius: '50%',
+              border: `2px solid ${accent}`,
+              animation: `${rippleRing} 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite`,
+              animationDelay: `${i * 0.9}s`,
+            }}
+          />
+        ))}
+
+        {/* עמודות מדורגות - 5 ברים שמטפסים ויורדים כמו גרף חי */}
         <Box sx={{
-          position: 'absolute',
-          top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: centerPx, height: centerPx,
-          borderRadius: '50%',
-          background: `linear-gradient(135deg, ${accent}, ${accent}C0)`,
-          boxShadow: `0 4px 16px ${accent}55`,
+          position: 'relative', zIndex: 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          animation: `${pulse} 1.4s ease-in-out infinite`,
+          gap: `${barGap}px`,
+          height: barHeightMax,
         }}>
-          <Typography sx={{ fontSize: size === 'sm' ? 16 : 22, lineHeight: 1 }}>💡</Typography>
-        </Box>
-        {/* האמוג'ים המסתובבים - כל האמוג'ים מחוברים ל-box אחד שמסתובב */}
-        <Box sx={{
-          position: 'absolute', inset: 0,
-          animation: `${spin} 2.8s linear infinite`,
-        }}>
-          {ORBIT_EMOJIS.map((emoji, i) => {
-            const angle = (i / ORBIT_EMOJIS.length) * Math.PI * 2;
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-            return (
-              <Box
-                key={i}
-                sx={{
-                  position: 'absolute',
-                  top: '50%', left: '50%',
-                  width: emojiPx, height: emojiPx,
-                  marginTop: -emojiPx / 2,
-                  marginLeft: -emojiPx / 2,
-                  transform: `translate(${x}px, ${y}px)`,
-                  fontSize: emojiPx,
-                  lineHeight: 1,
-                  textAlign: 'center',
-                  opacity: 0.9,
-                }}
-              >
-                {emoji}
-              </Box>
-            );
-          })}
+          {[0, 1, 2, 3, 4].map(i => (
+            <Box
+              key={i}
+              sx={{
+                width: barWidth,
+                height: barHeightMax,
+                borderRadius: `${barWidth}px`,
+                background: `linear-gradient(180deg, ${accent}, ${accent}CC)`,
+                transformOrigin: 'center',
+                animation: `${bounceBar} 1s ease-in-out infinite`,
+                animationDelay: `${i * 0.12}s`,
+              }}
+            />
+          ))}
         </Box>
       </Box>
 
       {text && (
         <Typography sx={{
-          fontSize: size === 'sm' ? 11.5 : 13,
+          fontSize: isSmall ? 11.5 : 13,
           color: 'text.secondary',
           fontWeight: 500,
           mt: 0.5,

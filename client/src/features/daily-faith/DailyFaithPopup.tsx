@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Dialog, Box, Typography, Button, IconButton, Fade, keyframes } from '@mui/material';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
-import { BRAND_COLORS } from '../../global/constants';
 import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 
 // אנימציית חגיגה: אימוג'ים עפים למעלה עם סיבוב קל ודהייה
@@ -12,6 +12,20 @@ const celebrateFloat = keyframes`
   100% { transform: translate(var(--drift), -260px) rotate(var(--rot)) scale(1.1); opacity: 0; }
 `;
 
+// glow זהוב פועם — מוחל על הכפתור בזמן החגיגה, שומר על הזהות של הפופאפ
+const goldGlowPulse = keyframes`
+  0%   { box-shadow: 0 0 0 0 rgba(244,228,166,0.6), 0 4px 14px rgba(184,134,11,0.4); }
+  60%  { box-shadow: 0 0 0 14px rgba(244,228,166,0), 0 10px 28px rgba(212,175,55,0.75); }
+  100% { box-shadow: 0 0 0 0 rgba(244,228,166,0), 0 4px 14px rgba(184,134,11,0.4); }
+`;
+
+// Pop של אייקון הצ'ק במעבר למצב "התחזקת"
+const checkPop = keyframes`
+  0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+  70%  { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+`;
+
 // אימוג'ים חגיגיים מתאימים ל"קראתי והתחזקתי" - גאווה יהודית + חוזק + ספר
 const CELEBRATE_EMOJIS = ['💪', '📖', '👌', '👍', '🇮🇱', '✨', '🌟', '🕊️', '🙌'];
 
@@ -19,13 +33,6 @@ interface DailyFaithPopupProps {
   text: string;
   onClose: () => void;
 }
-
-// אייקון WhatsApp - SVG אינליין לשמירה על גודל אחיד
-const WhatsAppIcon = ({ size = 20 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-);
 
 /**
  * פופאפ החיזוק היומי — גרסת קלף זהוב עם פינות מעוטרות.
@@ -231,18 +238,19 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 minHeight: 46,
                 borderRadius: '14px',
                 color: 'white',
-                background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp} 0%, ${BRAND_COLORS.whatsappHover} 100%)`,
-                boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
+                // אייקון שיתוף גנרי בצבע הזהב של הפופאפ - תואם לברנדינג
+                background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
                 flexShrink: 0,
                 transition: 'transform 0.12s, box-shadow 0.2s',
                 '&:hover': {
-                  background: `linear-gradient(135deg, ${BRAND_COLORS.whatsappHover} 0%, #169c47 100%)`,
-                  boxShadow: '0 6px 18px rgba(37, 211, 102, 0.5)',
+                  background: 'linear-gradient(135deg, #B8860B 0%, #9C7209 100%)',
+                  boxShadow: '0 6px 18px rgba(184, 134, 11, 0.5)',
                 },
                 '&:active': { transform: 'scale(0.94)' },
               }}
             >
-              <WhatsAppIcon size={22} />
+              <IosShareIcon sx={{ fontSize: 22 }} />
             </IconButton>
 
             <Button
@@ -253,28 +261,41 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 px: 2,
                 py: 1.25,
                 borderRadius: '14px',
-                background: celebrating
-                  ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)'
-                  : 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
+                // הכפתור נשאר זהוב גם בחגיגה - שומרים את הזהות של הפופאפ.
+                // האפקט מגיע מ-glow זהוב שפועם + הילה חיצונית מתרחבת.
+                background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #F4E4A6 100%)',
                 color: 'white',
                 fontWeight: 700,
                 fontSize: 15,
-                boxShadow: celebrating ? '0 4px 14px rgba(34, 197, 94, 0.5)' : '0 4px 14px rgba(184, 134, 11, 0.4)',
+                boxShadow: celebrating
+                  ? '0 0 0 4px rgba(244,228,166,0.35), 0 6px 24px rgba(212,175,55,0.75), inset 0 1px 0 rgba(255,255,255,0.5)'
+                  : '0 4px 14px rgba(184, 134, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
                 textTransform: 'none',
-                transition: 'background 0.3s ease, box-shadow 0.3s ease',
+                transition: 'box-shadow 0.4s ease',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
+                  background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 50%, #D4AF37 100%)',
                 },
                 '&:active': {
                   transform: 'scale(0.97)',
                 },
                 '&.Mui-disabled': {
                   color: 'white',
-                  background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
+                  background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #F4E4A6 100%)',
+                  // פולס עדין על הכפתור בזמן החגיגה - glow זהוב שמתרחב ומתכווץ
+                  animation: celebrating ? `${goldGlowPulse} 0.6s ease-out 2` : 'none',
                 },
               }}
             >
-              {celebrating ? '✓ התחזקת!' : t('dailyFaithReadButton')}
+              {celebrating ? (
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+                  <Box component="span" sx={{ fontSize: 18, animation: `${checkPop} 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)` }}>
+                    ✦
+                  </Box>
+                  <Box component="span">התחזקת!</Box>
+                </Box>
+              ) : (
+                t('dailyFaithReadButton')
+              )}
             </Button>
           </Box>
         </Box>
