@@ -119,8 +119,31 @@ export const InsightsPage = memo(() => {
   }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-      <InsightsLoader text="מנתח את הנתונים שלך..." size="md" />
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
+      {/* הדר: באנר עליון עם כותרת וטאבים - שלד שזהה למבנה האמיתי */}
+      <Box sx={{
+        background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+        p: '48px 16px 16px',
+        borderRadius: '0 0 24px 24px',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+          <Skeleton variant="rounded" width={140} height={26} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }} />
+          <Box sx={{ width: 40 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 0.75, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '12px', p: 0.5 }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} variant="rounded" width="25%" height={34} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '8px' }} />
+          ))}
+        </Box>
+      </Box>
+      {/* תוכן: כרטיסי השוואת מחירים - שלד */}
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+        <Skeleton variant="rounded" height={48} sx={{ borderRadius: '12px' }} />
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: '14px' }} />
+        ))}
+      </Box>
     </Box>
   );
 
