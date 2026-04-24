@@ -1008,9 +1008,10 @@ export const HomeComponent = memo(({
           </Box>
 
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>
-              {t('groupCode')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
+            </Box>
             <TextField
               fullWidth
               value={joinCode}
@@ -1054,9 +1055,10 @@ export const HomeComponent = memo(({
           </Box>
 
           <Box sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>
-              {t('password')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('password')}</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('fourDigits')}</Typography>
+            </Box>
             <TextField
               fullWidth
               value={joinPass}

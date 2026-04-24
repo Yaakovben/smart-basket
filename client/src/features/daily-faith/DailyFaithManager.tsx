@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Modal } from '../../global/components/Modal';
 import { ConfirmModal } from '../../global/components/ConfirmModal';
 import { renderFaithText, stripFaithMarkers } from './formatFaithText';
@@ -43,6 +44,8 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   const [quoteToDelete, setQuoteToDelete] = useState<DailyFaith | null>(null);
   // מועמד לכפילות - מציג אישור להוסיף משפט למרות שקיים זהה
   const [duplicateCandidate, setDuplicateCandidate] = useState<{ attempted: string; existing: DailyFaith } | null>(null);
+  // האם מוצג טיפ העיצוב (*bold*) - סגור כברירת מחדל, המנהל פותח רק אם צריך
+  const [showFormatTip, setShowFormatTip] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -237,19 +240,37 @@ export const DailyFaithManager = ({ onClose }: Props) => {
             }}
           />
 
-          {/* רמז לפורמט bold */}
-          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 0.75, px: 0.25, lineHeight: 1.4 }}>
-            💡 טיפ: עטוף מילה ב־<Box component="span" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 0.4, borderRadius: '3px' }}>*כוכביות*</Box> כדי להדגיש אותה (<Box component="span" sx={{ fontWeight: 800 }}>כמו ב-WhatsApp</Box>)
-          </Typography>
+          {/* טיפ העיצוב - מופיע רק כשהמשתמש לוחץ על כפתור העזרה. לא מוצג קבוע. */}
+          <Collapse in={showFormatTip} unmountOnExit>
+            <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 0.75, px: 0.25, lineHeight: 1.45 }}>
+              💡 עטוף מילה ב־<Box component="span" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 0.4, borderRadius: '3px' }}>*כוכביות*</Box> כדי להדגיש אותה (<Box component="span" sx={{ fontWeight: 800 }}>כמו ב-WhatsApp</Box>)
+            </Typography>
+          </Collapse>
 
-          {/* שורה תחתונה: מונה תווים + כפתור הוספה */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+          {/* שורה תחתונה: מונה תווים + כפתור עזרה + כפתור הוספה */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
             <Typography sx={{
               fontSize: 11, color: charCountColor, fontWeight: 700,
               fontVariantNumeric: 'tabular-nums', flex: 1,
             }}>
               {textCharCount} / {MAX_TEXT_LENGTH} תווים
             </Typography>
+            <IconButton
+              size="small"
+              onClick={() => { haptic('light'); setShowFormatTip(v => !v); }}
+              aria-label="עזרה לעיצוב"
+              sx={{
+                width: 28, height: 28, flexShrink: 0,
+                color: showFormatTip ? '#8B6914' : 'text.disabled',
+                bgcolor: showFormatTip ? 'rgba(212,175,55,0.14)' : 'transparent',
+                border: '1px solid',
+                borderColor: showFormatTip ? 'rgba(184,134,11,0.35)' : 'transparent',
+                transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                '&:hover': { bgcolor: 'rgba(212,175,55,0.1)' },
+              }}
+            >
+              <HelpOutlineIcon sx={{ fontSize: 16 }} />
+            </IconButton>
             <Button
               variant="contained"
               onClick={handleAdd}
