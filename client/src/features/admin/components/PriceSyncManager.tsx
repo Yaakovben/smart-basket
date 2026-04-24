@@ -217,42 +217,30 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
-            {/* כפתור רענון */}
-            <Button
-              variant="contained"
-              onClick={handleRefresh}
-              disabled={syncActive}
-              startIcon={
-                syncActive ? (
-                  <CircularProgress size={18} sx={{ color: 'white' }} />
-                ) : (
-                  <RefreshIcon sx={{ animation: 'none' }} />
-                )
-              }
-              sx={{
-                py: 1.5,
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: 14.5,
-                background: syncActive
-                  ? 'linear-gradient(135deg, #6B7280, #4B5563)'
-                  : 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #0D9488, #0B7C72)',
-                },
-                '& .MuiButton-startIcon': {
-                  marginInlineEnd: '10px',
-                },
-                '& .MuiButton-startIcon svg': {
-                  fontSize: 20,
-                  animation: syncActive ? 'none' : `${spin} 0s`,
-                },
-              }}
-            >
-              {syncActive ? 'סנכרון פעיל... (יתעדכן אוטומטית)' : 'רענן מחירים עכשיו'}
-            </Button>
+            {/* כפתור רענון - נסתר בזמן סנכרון פעיל כדי שהבאנר יהיה החיווי היחיד */}
+            {!syncActive && (
+              <Button
+                variant="contained"
+                onClick={handleRefresh}
+                startIcon={<RefreshIcon />}
+                sx={{
+                  py: 1.5,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: 14.5,
+                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                  boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #0D9488, #0B7C72)',
+                  },
+                  '& .MuiButton-startIcon': { marginInlineEnd: '10px' },
+                  '& .MuiButton-startIcon svg': { fontSize: 20 },
+                }}
+              >
+                רענן מחירים עכשיו
+              </Button>
+            )}
 
             {/* פידבק אינליין */}
             {feedback && (
