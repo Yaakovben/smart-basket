@@ -188,10 +188,11 @@ export const useList = ({
   // בלי זה, כל נגיעה עם רעד זעיר הייתה מזיזה את הכפתור.
   const DRAG_THRESHOLD_PX = 10;
 
-  const handleDragStart = useCallback((clientX: number, clientY: number) => {
-    const currentX = fabPosition?.x ?? window.innerWidth / 2;
-    const currentY = fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
-    // רושם את הנקודה ההתחלתית בלבד. isDragging לא מופעל עד שהמשתמש יגרור ממש.
+  const handleDragStart = useCallback((clientX: number, clientY: number, currentCenterX?: number, currentCenterY?: number) => {
+    // אם הקומפוננטה מדדה את המיקום הנוכחי בפועל - משתמשים בו (מונע קפיצה בחציית הסף).
+    // אחרת נופלים חזרה לברירת מחדל.
+    const currentX = currentCenterX ?? fabPosition?.x ?? window.innerWidth / 2;
+    const currentY = currentCenterY ?? fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
     dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
   }, [fabPosition]);
 
