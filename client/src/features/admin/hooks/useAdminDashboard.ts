@@ -1,8 +1,12 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import type { LoginActivity } from "../../../global/types";
 import type { UseAdminDashboardReturn, DashboardStats, UserWithLastLogin } from "../types";
 import { adminApi, type AdminUser, type AdminLoginActivity, type AdminStats } from "../../../services/api";
 import { useSettings } from "../../../global/context/SettingsContext";
+
+// דילוג על refetch אם הבקשה הקודמת הסתיימה לאחרונה - מונע שאילתות מיותרות
+// כשהמשתמש עובר בין טאבים תוך שניות.
+const REFETCH_SKIP_MS = 30_000;
 
 // המרת פעילות API לטיפוס קליינט
 const convertApiActivity = (apiActivity: AdminLoginActivity): LoginActivity => ({
@@ -21,8 +25,11 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   const [serverStats, setServerStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchAtRef = useRef<number>(0);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
+    // דילוג אם הנתונים טריים (פחות מ-30 שניות) ולא נדרש רענון מפורש
+    if (!force && Date.now() - lastFetchAtRef.current < REFETCH_SKIP_MS) return;
     setLoading(true);
     setError(null);
     try {
@@ -40,6 +47,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       );
       setServerStats(statsData);
+      lastFetchAtRef.current = Date.now();
     } catch (err) {
       if (import.meta.env.DEV) console.error('Failed to fetch admin data:', err);
       setError(t('adminLoadError'));
@@ -86,8 +94,9 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     uniqueUsersThisMonth: serverStats?.uniqueUsersThisMonth || 0,
   }), [serverStats, allUsers]);
 
+  // רענון ידני תמיד מתבצע, גם אם הנתונים טריים
   const refreshData = useCallback(() => {
-    fetchData();
+    fetchData(true);
   }, [fetchData]);
 
   return {

@@ -54,20 +54,25 @@ export const InsightsPage = memo(() => {
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
-    // טעינה ראשונית - כל הרשימות (בלי פילטר).
+    // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
+    authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
+  }, []);
+
+  // טעינה עצלה של השוואת מחירים: רק כשהמשתמש לוחץ על טאב 'price'.
+  // חוסך בקשה כבדה למי שלא מעוניין בהשוואה.
+  useEffect(() => {
+    if (tab !== 'price') return;
+    if (priceData !== null || !priceLoading) return; // כבר נטען או מטען
     priceComparisonApi.getComparison()
       .then(res => {
         setPriceData(res);
-        // שומרים את רשימת הרשימות מהתוצאה הראשונה (ללא פילטר = כולן)
         if (res?.lists && res.lists.length > 0) {
           setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
         }
       })
       .catch(() => {})
       .finally(() => setPriceLoading(false));
-    // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
-    authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
-  }, []);
+  }, [tab, priceData, priceLoading]);
 
   // כשהמשתמש משנה בחירת רשימה - מרעננים את נתוני המחירים (ולא את allUserLists)
   useEffect(() => {
