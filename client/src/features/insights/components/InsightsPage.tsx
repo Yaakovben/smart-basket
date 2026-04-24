@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -66,6 +66,8 @@ export const InsightsPage = memo(() => {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
   // loading של מחירים - לא מראה לודר כשיש cache, רק בדיקה רקעית.
   const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
+  // שגיאת טעינה של השוואת מחירים - מוצגת במקום "אין נתונים" שמטעה
+  const [priceError, setPriceError] = useState(false);
   // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר בנפרד כדי שבורר הרשימות
   // יישאר זמין גם כשהתוצאה מצומצמת לרשימה אחת.
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -95,6 +97,9 @@ export const InsightsPage = memo(() => {
   // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
   useEffect(() => {
     if (tab !== 'price') return;
+    // מצב טעינה מתחיל אם אין cache, או תמיד שמתחילים בקשה חדשה (כדי להציג אינדיקטור רענון)
+    setPriceLoading(true);
+    setPriceError(false);
     priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
       .then(res => {
         setPriceData(res);
@@ -103,7 +108,7 @@ export const InsightsPage = memo(() => {
           setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
         }
       })
-      .catch(() => {})
+      .catch(() => { setPriceError(true); })
       .finally(() => setPriceLoading(false));
   }, [tab, selectedListId, userLocation]);
 
@@ -235,9 +240,32 @@ export const InsightsPage = memo(() => {
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
           !priceData ? (
-            // לודר רק כשאין שום נתון (cache ריק + שרת עוד לא חזר).
-            // אם יש נתון - מציגים אותו גם בזמן רענון, בלי להבהב.
-            <InsightsLoader text={priceLoading ? 'מביא נתוני מחירים...' : 'אין נתוני מחירים כרגע'} size="md" />
+            // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
+            priceError ? (
+              <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
+                <Box sx={{ fontSize: 48, mb: 1.5 }}>⚠️</Box>
+                <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 0.5 }}>שגיאה בטעינת נתוני מחירים</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2 }}>בדוק חיבור לאינטרנט ונסה שוב</Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setPriceError(false);
+                    setPriceLoading(true);
+                    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
+                      .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
+                      .catch(() => setPriceError(true))
+                      .finally(() => setPriceLoading(false));
+                  }}
+                  sx={{ borderRadius: '12px', px: 3, py: 1, textTransform: 'none', fontWeight: 700 }}
+                >
+                  נסה שוב
+                </Button>
+              </Box>
+            ) : priceLoading ? (
+              <InsightsLoader text="מביא נתוני מחירים..." size="md" />
+            ) : (
+              <InsightsLoader text="אין נתוני מחירים כרגע" size="md" />
+            )
           ) : (
             <>
               {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
@@ -308,6 +336,34 @@ export const InsightsPage = memo(() => {
                       </Box>
                     ))}
                   </Box>
+                </Box>
+              )}
+              {/* אינדיקטור רענון דיסקרטי - מוצג רק כשיש נתונים וגם רענון רקע בפעולה */}
+              {priceLoading && (
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  py: 0.75, mb: 1, borderRadius: '10px',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.08)',
+                  border: '1px solid',
+                  borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)',
+                }}>
+                  <CircularProgress size={12} sx={{ color: '#14B8A6' }} />
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#0D9488' }}>
+                    מרענן מחירים...
+                  </Typography>
+                </Box>
+              )}
+              {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם */}
+              {priceError && !priceLoading && (
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', gap: 1,
+                  px: 1.5, py: 0.85, mb: 1, borderRadius: '10px',
+                  bgcolor: '#F59E0B15', border: '1px solid #F59E0B40',
+                }}>
+                  <Box sx={{ fontSize: 14 }}>⚠️</Box>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#B45309', flex: 1 }}>
+                    לא התקבלו נתונים חדשים - מוצגים נתונים מה-cache
+                  </Typography>
                 </Box>
               )}
               <PriceComparisonCard
