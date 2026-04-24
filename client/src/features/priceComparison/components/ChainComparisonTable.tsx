@@ -92,11 +92,14 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
 
   if (chainTotals.length === 0) return null;
 
+  // מציגים את כל הרשתות במאגר - גם אלו שלא מצאו אף התאמה (שקוף למשתמש שחיפשנו שם).
+  // הסדר: שלמות מהזולה ליקרה, חלקיות, ולבסוף רשתות ריקות.
+  const allChains = chainTotals;
   const chainsWithData = chainTotals.filter(c => c.matchedCount > 0);
-  if (chainsWithData.length === 0) return null;
-
   // המקסימום של מוצרים זוהו - משמש כסף ל"סל שלם"
-  const maxMatched = Math.max(...chainsWithData.map(c => c.matchedCount));
+  const maxMatched = chainsWithData.length > 0
+    ? Math.max(...chainsWithData.map(c => c.matchedCount))
+    : 0;
   const completeChains = chainsWithData.filter(c => c.isComplete);
   const maxSavings = completeChains.length > 1
     ? Math.max(...completeChains.map(c => c.savings))
@@ -156,11 +159,12 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
         </Box>
       )}
 
-      {/* רשימת רשתות */}
+      {/* רשימת רשתות - כולל רשתות ללא התאמות (שם מאגר עדיין קיים) */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        {chainsWithData.map((chain) => {
+        {allChains.map((chain) => {
           const isCheapest = chain.isCheapest;
           const isComplete = chain.isComplete;
+          const isEmpty = chain.matchedCount === 0;
           const isExpanded = expandedId === chain.chainId;
 
           return (
@@ -176,10 +180,13 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                   userSelect: 'none',
                   bgcolor: isCheapest
                     ? (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)')
+                    : isEmpty
+                      ? (isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)')
                     : !isComplete
                       ? (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)')
                       : 'transparent',
-                  opacity: isComplete ? 1 : 0.72,
+                  // רשת ריקה - עוד יותר שקופה; חלקית - בינונית; שלמה - מלאה
+                  opacity: isEmpty ? 0.55 : isComplete ? 1 : 0.72,
                   '&:active': { opacity: 0.85 },
                   transition: 'background-color 0.15s',
                 }}
@@ -209,7 +216,17 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         הכי זול
                       </Box>
                     )}
-                    {!isComplete && (
+                    {isEmpty && (
+                      <Box sx={{
+                        px: 0.75, py: 0.15, borderRadius: '6px',
+                        bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                        color: 'text.disabled',
+                        fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3,
+                      }}>
+                        אין התאמות
+                      </Box>
+                    )}
+                    {!isComplete && !isEmpty && (
                       <Box sx={{
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: '#F59E0B22', color: '#F59E0B',
@@ -220,7 +237,9 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                     )}
                   </Box>
                   <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.15 }}>
-                    {chain.matchedCount} / {chain.matchedCount + chain.unmatchedCount} מוצרים זוהו
+                    {isEmpty
+                      ? `לא נמצאו מוצרים מתאימים מתוך המאגר של ${chain.chainName}`
+                      : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
                 </Box>
 
