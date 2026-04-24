@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { BrowserQRCodeReader } from '@zxing/browser';
+import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { haptic } from '../helpers';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
@@ -34,14 +35,19 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
       setError(null);
       setStarting(true);
       try {
-        const reader = new BrowserQRCodeReader();
+        // Hints: TRY_HARDER עובד עבודה יסודית יותר בכל פריים (איטי יותר אבל מזהה QR מעומעם/זוית קשה).
+        // POSSIBLE_FORMATS=[QR_CODE] מגביל לזיהוי QR בלבד במקום לחפש את כל הפורמטים - מהיר יותר לכל פריים.
+        const hints = new Map();
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+        // timeBetweenScansMillis: 150ms (ברירת מחדל 500) - סריקה תכופה יותר = זיהוי מהיר יותר.
+        const reader = new BrowserQRCodeReader(hints, { delayBetweenScanAttempts: 150, delayBetweenScanSuccess: 150 });
         const video = videoRef.current;
         if (!video) throw new Error('video element missing');
 
-        // decodeFromConstraints נותן שליטה מפורשת במצלמה (environment=אחורית).
-        // אם המכשיר לא תומך במצלמה אחורית, ייפול ל-default.
+        // רזולוציה גבוהה יותר עוזרת לזיהוי QR מרחוק או קטן.
         const controls = await reader.decodeFromConstraints(
-          { video: { facingMode: { ideal: 'environment' } } },
+          { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
           video,
           (result, _err, c) => {
             if (cancelled) return;
