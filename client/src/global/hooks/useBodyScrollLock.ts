@@ -10,38 +10,39 @@ import { useEffect } from 'react';
  *
  * שימוש: useBodyScrollLock(isOpen) בתוך רכיב modal.
  */
+// מונה גלובלי של נעולים פעילים - מונע כפילויות כשכמה קומפוננטים קוראים במקביל
+let lockCount = 0;
+let savedScrollY = 0;
+
 export function useBodyScrollLock(active: boolean): void {
   useEffect(() => {
     if (!active) return;
 
-    const scrollY = window.scrollY;
     const body = document.body;
-    // שומרים את הסגנונות המקוריים כדי לשחזר מדויק
-    const original = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
-      overflow: body.style.overflow,
-    };
-
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
-    body.style.overflow = 'hidden';
+    if (lockCount === 0) {
+      // נעילה ראשונה - שומרים scrollY ומחילים את הסגנונות
+      savedScrollY = window.scrollY;
+      body.style.position = 'fixed';
+      body.style.top = `-${savedScrollY}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+    }
+    lockCount++;
 
     return () => {
-      body.style.position = original.position;
-      body.style.top = original.top;
-      body.style.left = original.left;
-      body.style.right = original.right;
-      body.style.width = original.width;
-      body.style.overflow = original.overflow;
-      // חזרה למיקום המקורי - חשוב, אחרת העמוד "קופץ" למעלה
-      window.scrollTo(0, scrollY);
+      lockCount = Math.max(0, lockCount - 1);
+      if (lockCount === 0) {
+        // רק כשכל הנעולים נסגרו - משחררים את ה-body תמיד למצב נקי
+        body.style.position = '';
+        body.style.top = '';
+        body.style.left = '';
+        body.style.right = '';
+        body.style.width = '';
+        body.style.overflow = '';
+        window.scrollTo(0, savedScrollY);
+      }
     };
   }, [active]);
 }

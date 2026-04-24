@@ -89,7 +89,11 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
     setFileScanError(null);
 
     try {
-      const reader = new BrowserQRCodeReader();
+      // hints אגרסיביים - זהה לסריקת מצלמה (TRY_HARDER חיוני כדי לזהות QR בצבעים לא-סטנדרטיים)
+      const hints = new Map();
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+      const reader = new BrowserQRCodeReader(hints);
       const url = URL.createObjectURL(file);
       try {
         const result = await reader.decodeFromImageUrl(url);

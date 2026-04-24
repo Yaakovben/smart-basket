@@ -83,6 +83,19 @@ export const InsightsPage = memo(() => {
   // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
   const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
 
+  // Safety-net: אם בפתיחת העמוד ה-body במצב scroll-lock (נשאר מפופאפ קודם שלא ניקה), משחררים.
+  // זה מונע מצב שהמשתמש נכנס לטאב המחירים ולא יכול לגלול בכלל.
+  useEffect(() => {
+    if (document.body.style.position === 'fixed') {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+    }
+  }, []);
+
   // רענון insights ברקע - תמיד רץ, מעדכן cache מקומי לפעם הבאה.
   useEffect(() => {
     insightsApi.getInsights()
