@@ -354,8 +354,6 @@ type TranslationKey =
   | 'quickAddPlaceholder'
   | 'searchProducts'
   // What's New
-  | 'whatsNewTitle'
-  | 'letsStart'
   // Time formatting
   | 'timeNow'
   | 'timeMinutesAgo'
@@ -806,8 +804,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'הוספת מוצר מהירה...',
     searchProducts: 'חיפוש מוצרים...',
     // What's New
-    whatsNewTitle: 'מה חדש?',
-    letsStart: 'מעולה, בואו נתחיל!',
     // Time formatting
     timeNow: 'עכשיו',
     timeMinutesAgo: 'לפני {count} דק׳',
@@ -1250,8 +1246,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Quick add product...',
     searchProducts: 'Search products...',
     // What's New
-    whatsNewTitle: "What's New?",
-    letsStart: "Great, let's start!",
     // Time formatting
     timeNow: 'Now',
     timeMinutesAgo: '{count}m ago',
@@ -1693,8 +1687,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Быстро добавить товар...',
     searchProducts: 'Поиск товаров...',
     // What's New
-    whatsNewTitle: 'Что нового?',
-    letsStart: 'Отлично, начнём!',
     // Time formatting
     timeNow: 'Сейчас',
     timeMinutesAgo: '{count} мин. назад',
