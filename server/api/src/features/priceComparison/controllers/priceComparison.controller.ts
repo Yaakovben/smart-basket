@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateUser } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults } from '../services/priceSync.service';
+import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
@@ -9,15 +10,17 @@ import type { AuthRequest } from '../../../types';
 // מצב סנכרון - מונע ריצות חופפות
 let adminSyncInProgress = false;
 
-// GET /api/price-comparison[?listId=X]
+// GET /api/price-comparison[?listId=X][&lat=&lng=]
 // listId אופציונלי - מסנן את ההשוואה לרשימה יחידה. בלעדיו: איחוד כל הרשימות.
+// lat/lng אופציונליים - אם מועברים, כל רשת תכלול את הסניף הקרוב ביותר עם מרחק.
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const rawListId = req.query.listId;
   const listId = typeof rawListId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawListId)
     ? rawListId
     : undefined;
-  const data = await getComparisonForUser(userId, listId);
+  const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
+  const data = await getComparisonForUser(userId, listId, userLocation);
   res.json({ success: true, data });
 });
 

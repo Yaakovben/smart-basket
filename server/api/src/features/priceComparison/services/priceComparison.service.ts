@@ -4,6 +4,7 @@ import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { normalizeProductName, stemHebrew } from '../chains';
 import { getRegisteredChains } from './priceSync.service';
+import { findNearestBranch, type NearestBranch, type UserLocation } from './branches.service';
 
 export interface PriceMatch {
   productId: string;
@@ -52,6 +53,9 @@ export interface PriceChainTotal {
   // מאפשר ל-UI להבדיל בין "אין התאמות" (הרשת קיימת אבל מוצרי המשתמש לא נמצאו)
   // לבין "אין נתונים היום" (הרשת לא פרסמה קובץ היום)
   hasData: boolean;
+  // הסניף הקרוב ביותר למיקום המשתמש (כשהמשתמש שיתף מיקום).
+  // undefined כשהמשתמש לא שיתף מיקום או כשאין לרשת סניפים ב-seed.
+  nearestBranch?: NearestBranch;
 }
 
 export interface PriceComparisonData {
@@ -260,10 +264,18 @@ export function invalidateUser(userId: string): void {
 
 // תובנות השוואת מחירים עבור משתמש.
 // filterListId אופציונלי - אם מועבר, מחשב רק את המוצרים של הרשימה הזו.
-// אם undefined, מאחד את כל הרשימות של המשתמש (כמו קודם).
-export async function getComparisonForUser(userId: string, filterListId?: string): Promise<PriceComparisonData> {
-    // מפתח מטמון שונה לכל שילוב user+list כדי למנוע ערבוב
-    const cacheKey = filterListId ? `${userId}:${filterListId}` : userId;
+// userLocation אופציונלי - אם מועבר, מצרף לכל רשת את הסניף הקרוב ביותר ואת המרחק.
+export async function getComparisonForUser(
+  userId: string,
+  filterListId?: string,
+  userLocation?: UserLocation
+): Promise<PriceComparisonData> {
+    // מפתח מטמון שונה לכל שילוב user+list+location(מעוגל ל-500מ') כדי למנוע ערבוב.
+    // עיגול המיקום ל-3 ספרות אחרי הנקודה (~110 מ') מונע פסילת מטמון על כל תזוזה קטנה.
+    const locKey = userLocation
+      ? `:${userLocation.lat.toFixed(3)},${userLocation.lng.toFixed(3)}`
+      : '';
+    const cacheKey = filterListId ? `${userId}:${filterListId}${locKey}` : `${userId}${locKey}`;
     const cached = userCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
 
@@ -426,6 +438,10 @@ export async function getComparisonForUser(userId: string, filterListId?: string
 
     const chainTotals: PriceChainTotal[] = await Promise.all(
       activeChains.map(async ({ chainId, chainName, hasData }) => {
+        // הסניף הקרוב לרשת זו (אם המשתמש שיתף מיקום ויש לרשת סניפים ב-seed).
+        // מוצמד גם לרשתות ללא נתונים היום - המשתמש עדיין יכול לראות "הסניף הקרוב ביקרתי".
+        const nearestBranch = userLocation ? findNearestBranch(chainId, userLocation) ?? undefined : undefined;
+
         // אם אין לרשת נתונים היום - מחזירים מיד כרטיס ריק (חוסך חישובים)
         if (!hasData) {
           return {
@@ -434,6 +450,7 @@ export async function getComparisonForUser(userId: string, filterListId?: string
             unmatchedCount: pendingProducts.length,
             isCheapest: false, isComplete: false, savings: 0,
             hasData: false,
+            nearestBranch,
             matches: pendingProducts.map(p => ({
               productId: String(p._id),
               userProductName: p.name,
@@ -513,6 +530,7 @@ export async function getComparisonForUser(userId: string, filterListId?: string
           isComplete: false,
           savings: 0,
           hasData: true,
+          nearestBranch,
           matches: chainMatches,
         };
       })
