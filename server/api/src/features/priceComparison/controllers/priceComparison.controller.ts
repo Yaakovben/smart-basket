@@ -9,10 +9,15 @@ import type { AuthRequest } from '../../../types';
 // מצב סנכרון - מונע ריצות חופפות
 let adminSyncInProgress = false;
 
-// GET /api/price-comparison
+// GET /api/price-comparison[?listId=X]
+// listId אופציונלי - מסנן את ההשוואה לרשימה יחידה. בלעדיו: איחוד כל הרשימות.
 export const getComparison = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const data = await getComparisonForUser(userId);
+  const rawListId = req.query.listId;
+  const listId = typeof rawListId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawListId)
+    ? rawListId
+    : undefined;
+  const data = await getComparisonForUser(userId, listId);
   res.json({ success: true, data });
 });
 

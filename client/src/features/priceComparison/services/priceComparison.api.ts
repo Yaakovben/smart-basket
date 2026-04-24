@@ -16,9 +16,11 @@ export interface PriceSyncStatus {
 }
 
 export const priceComparisonApi = {
-  // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש
-  async getComparison(): Promise<PriceComparisonData> {
-    const response = await apiClient.get<{ data: PriceComparisonData }>('/price-comparison');
+  // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש.
+  // listId אופציונלי: אם מועבר, ההשוואה מצומצמת לרשימה הזו בלבד.
+  async getComparison(listId?: string): Promise<PriceComparisonData> {
+    const query = listId ? `?listId=${encodeURIComponent(listId)}` : '';
+    const response = await apiClient.get<{ data: PriceComparisonData }>(`/price-comparison${query}`);
     return response.data.data;
   },
 

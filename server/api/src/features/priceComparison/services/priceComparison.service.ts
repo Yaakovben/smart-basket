@@ -254,10 +254,13 @@ export function invalidateUser(userId: string): void {
   userCache.delete(userId);
 }
 
-// תובנות השוואת מחירים עבור משתמש — חלוקה לפי רשימה
-export async function getComparisonForUser(userId: string): Promise<PriceComparisonData> {
-    // מטמון: אם הבקשה הקודמת הייתה לאחרונה, מחזירים מייד
-    const cached = userCache.get(userId);
+// תובנות השוואת מחירים עבור משתמש.
+// filterListId אופציונלי - אם מועבר, מחשב רק את המוצרים של הרשימה הזו.
+// אם undefined, מאחד את כל הרשימות של המשתמש (כמו קודם).
+export async function getComparisonForUser(userId: string, filterListId?: string): Promise<PriceComparisonData> {
+    // מפתח מטמון שונה לכל שילוב user+list כדי למנוע ערבוב
+    const cacheKey = filterListId ? `${userId}:${filterListId}` : userId;
+    const cached = userCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
 
     // סופרים את כל המאגר — לא רק רשת אחת. אם לפחות רשת אחת יש בה נתונים,
@@ -281,7 +284,7 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
     };
 
     const cacheAndReturn = (data: PriceComparisonData): PriceComparisonData => {
-      userCache.set(userId, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+      userCache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS });
       return data;
     };
 
@@ -295,12 +298,22 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
       });
     }
 
-    const lists = await ListDAL.findUserLists(userId);
-    if (lists.length === 0) {
+    const allLists = await ListDAL.findUserLists(userId);
+    if (allLists.length === 0) {
       return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
     }
 
-    // שליפת כל המוצרים שטרם נקנו בכל הרשימות, ב-query אחד (יעיל)
+    // אם ביקשו רשימה ספציפית - מסננים. אחרת - כל הרשימות של המשתמש.
+    const lists = filterListId
+      ? allLists.filter(l => String(l._id) === filterListId)
+      : allLists;
+
+    if (lists.length === 0) {
+      // רשימה שהתבקשה לא שייכת למשתמש או לא קיימת
+      return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
+    }
+
+    // שליפת כל המוצרים שטרם נקנו (רק ברשימות שנבחרו)
     const listIds = lists.map(l => l._id);
     const pendingProducts = await Product.find({
       listId: { $in: listIds },
