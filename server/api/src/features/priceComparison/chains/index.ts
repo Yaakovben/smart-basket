@@ -1,11 +1,13 @@
 export { osherAdAdapter } from './osher-ad.adapter';
 export { ramiLevyAdapter } from './rami-levy.adapter';
-export { victoryAdapter } from './victory.adapter';
 export { yenotBitanAdapter } from './yenot-bitan.adapter';
 export { tivTaamAdapter } from './tiv-taam.adapter';
 export { haziHinamAdapter } from './hazi-hinam.adapter';
-export { superPharmAdapter } from './super-pharm.adapter';
 export { shufersalAdapter } from './shufersal.adapter';
+export { keshetAdapter } from './keshet.adapter';
+export { stopMarketAdapter } from './stop-market.adapter';
+export { politzerAdapter } from './politzer.adapter';
+export { doralonAdapter } from './doralon.adapter';
 export { createPublishedPricesAdapter } from './publishedPrices.factory';
 export { normalizeProductName, isLikelyMatch, stemHebrew } from './normalize';
 export type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';

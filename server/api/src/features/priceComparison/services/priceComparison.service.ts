@@ -71,9 +71,10 @@ const SOURCE_URL = 'https://url.publishedprices.co.il';
 
 const BASE_DISCLAIMER = 'הנתונים מגיעים ממאגר השקיפות הציבורי של אושר עד. הפיצ\'ר בפיתוח - ההתאמה בין שמות המוצרים שלך למוצרי הרשת מבוססת על התאמת מילים ועשויה להיות לא מדויקת. מחירים מתעדכנים מדי יום.';
 
-// מקבל את התאריך של הרשומה האחרונה שעודכנה במאגר — אינדיקטור לטריות הנתונים
+// מקבל את התאריך של הרשומה האחרונה שעודכנה במאגר — אינדיקטור לטריות הנתונים.
+// בודק על פני כל הרשתות, לא רק הראשית.
 async function getLastUpdatedISO(): Promise<string | null> {
-  const latest = await Price.findOne({ chainId: BETA_CHAIN_ID }).sort({ updatedAt: -1 }).select('updatedAt').lean();
+  const latest = await Price.findOne({}).sort({ updatedAt: -1 }).select('updatedAt').lean();
   return latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
 }
 
@@ -253,7 +254,10 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
     const cached = userCache.get(userId);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
 
-    const totalPrices = await PriceDAL.countByChain(BETA_CHAIN_ID);
+    // סופרים את כל המאגר — לא רק רשת אחת. אם לפחות רשת אחת יש בה נתונים,
+    // הפיצ'ר נחשב "זמין" ומציגים את ההשוואה.
+    const allChainsCounts = await PriceDAL.getActiveChainsWithCounts();
+    const totalPrices = allChainsCounts.reduce((sum, c) => sum + c.count, 0);
     const lastUpdatedISO = totalPrices > 0 ? await getLastUpdatedISO() : null;
 
     const baseResponse = {

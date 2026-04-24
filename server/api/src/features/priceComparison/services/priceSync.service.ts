@@ -1,12 +1,14 @@
 import {
   osherAdAdapter,
   ramiLevyAdapter,
-  victoryAdapter,
   yenotBitanAdapter,
   tivTaamAdapter,
   haziHinamAdapter,
-  superPharmAdapter,
   shufersalAdapter,
+  keshetAdapter,
+  stopMarketAdapter,
+  politzerAdapter,
+  doralonAdapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -14,15 +16,18 @@ import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { logger } from '../../../config/logger';
 
 // כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
-// סדר השרירותי; אם adapter נכשל, השאר ממשיכים.
+// אם adapter נכשל, השאר ממשיכים.
+// Victory, Super-Pharm ו-Hazi-Hinam הישנים השתמשו בפורטלים שונים; הוסרו עד שיתווסף adapter מתאים.
 const adapters: ChainAdapter[] = [
   osherAdAdapter,
   ramiLevyAdapter,
-  victoryAdapter,
   yenotBitanAdapter,
   tivTaamAdapter,
   haziHinamAdapter,
-  superPharmAdapter,
+  keshetAdapter,
+  stopMarketAdapter,
+  politzerAdapter,
+  doralonAdapter,
   shufersalAdapter,
 ];
 

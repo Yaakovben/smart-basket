@@ -85,8 +85,8 @@ export const shufersalAdapter: ChainAdapter = {
   chainName: 'שופרסל',
   async fetchLatestPrices(): Promise<ChainFetchResult> {
     try {
-      // עמוד קטלוג של PriceFull (קטגוריה=2)
-      const listRes = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=2&storeId=0`, {
+      // עמוד קטלוג של מחירים (catID=1 — הקטגוריה הנכונה לפורטל שופרסל)
+      const listRes = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=1&storeId=0`, {
         timeout: 60_000,
         headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
       });

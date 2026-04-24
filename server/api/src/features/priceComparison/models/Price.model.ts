@@ -4,11 +4,13 @@ export type ChainId =
   | 'osher_ad'
   | 'shufersal'
   | 'rami_levy'
-  | 'victory'
-  | 'yenot_bitan'
+  | 'yohananof'
   | 'tiv_taam'
   | 'hazi_hinam'
-  | 'super_pharm';
+  | 'keshet'
+  | 'stop_market'
+  | 'politzer'
+  | 'doralon';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;
