@@ -142,6 +142,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                 '&:hover': {
                   background: 'linear-gradient(135deg, #0D9488, #0B7C72)',
                 },
+                '& .MuiButton-startIcon': {
+                  marginInlineEnd: '10px',
+                },
                 '& .MuiButton-startIcon svg': {
                   fontSize: 20,
                   animation: syncActive ? 'none' : `${spin} 0s`,
