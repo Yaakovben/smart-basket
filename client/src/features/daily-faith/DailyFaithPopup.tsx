@@ -52,6 +52,8 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
         handleClose();
       }}
       disableEscapeKeyDown
+      fullWidth
+      maxWidth={false}
       TransitionComponent={Fade}
       transitionDuration={500}
       PaperProps={{
@@ -60,10 +62,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: 'none',
           overflow: 'visible',
           // מרווח גדול יותר בצדדים כדי שהמסגרת הזהובה + הצל הזוהר סביבה לא יתגלשו/ייחתכו
-          mx: 2,
+          mx: 0,
           my: 2,
-          maxWidth: 460,
-          width: 'calc(100% - 32px)',
+          maxWidth: '100%',
+          width: '100%',
           // יציבות בגרירה: מונע תזוזה/גרירה של הפופאפ בלחיצה והחזקה על המסך
           touchAction: 'none',
           userSelect: 'none',

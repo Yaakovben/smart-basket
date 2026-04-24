@@ -1114,13 +1114,15 @@ export const HomeComponent = memo(({
               onClick={() => { haptic('light'); setShowQRScanner(true); }}
               sx={{
                 display: 'inline-flex', alignItems: 'center', gap: 0.6,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                color: 'text.secondary',
-                fontSize: 12, fontWeight: 500,
-                py: 0.5, px: 1, borderRadius: '6px',
-                transition: 'color 0.12s, background 0.12s',
-                '&:hover': { color: '#0D9488', background: 'rgba(20, 184, 166, 0.06)' },
-                '&:active': { opacity: 0.6 },
+                background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(16,185,129,0.12))',
+                border: '1px solid rgba(20,184,166,0.35)', cursor: 'pointer',
+                color: '#0D9488',
+                fontSize: 12, fontWeight: 600,
+                py: 0.6, px: 1.4, borderRadius: '999px',
+                boxShadow: '0 1px 3px rgba(20,184,166,0.15)',
+                transition: 'color 0.12s, background 0.12s, transform 0.08s',
+                '&:hover': { background: 'linear-gradient(135deg, rgba(20,184,166,0.2), rgba(16,185,129,0.2))' },
+                '&:active': { opacity: 0.75, transform: 'scale(0.97)' },
               }}
             >
               <QrCodeScannerIcon sx={{ fontSize: 14 }} />
