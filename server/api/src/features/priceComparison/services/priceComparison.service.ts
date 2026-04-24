@@ -3,6 +3,7 @@ import { ListDAL } from '../../../dal';
 import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { normalizeProductName, stemHebrew } from '../chains';
+import { getRegisteredChains } from './priceSync.service';
 
 export interface PriceMatch {
   productId: string;
@@ -40,17 +41,17 @@ export interface PriceListGroup {
 export interface PriceChainTotal {
   chainId: string;
   chainName: string;
-  total: number;         // סה"כ משוער (רק מוצרים שזוהו)
-  matchedCount: number;  // כמה מוצרים מהרשימות של המשתמש נמצאו ברשת
+  total: number;
+  matchedCount: number;
   unmatchedCount: number;
-  // "הכי זול" ניתן רק לרשת עם מספר ההתאמות הגבוה ביותר (סל שלם).
-  // רשת שמצאה פחות מוצרים לא תקבל את הסימון גם אם הסה"כ שלה נמוך יותר.
   isCheapest: boolean;
-  // יש לרשת את הסל המלא (כמו הרשת עם הכי הרבה התאמות)? אם לא - השוואה לא הוגנת
   isComplete: boolean;
-  savings: number;       // כמה חוסכים לעומת הרשת היקרה ביותר (רק ברשתות מלאות)
-  // כל המוצרים של המשתמש עם המחיר ברשת הזו (זוהו ולא זוהו) - למסך הפירוט
+  savings: number;
   matches: PriceMatch[];
+  // true אם יש לרשת נתונים במאגר. false = הפורטל של הרשת לא פרסם היום.
+  // מאפשר ל-UI להבדיל בין "אין התאמות" (הרשת קיימת אבל מוצרי המשתמש לא נמצאו)
+  // לבין "אין נתונים היום" (הרשת לא פרסמה קובץ היום)
+  hasData: boolean;
 }
 
 export interface PriceComparisonData {
@@ -407,9 +408,42 @@ export async function getComparisonForUser(userId: string, filterListId?: string
     // השוואה רב-רשתית: לכל רשת פעילה, מחשבים את סך הסל במקביל.
     // משתמשים ב-uniqueNames (שכבר יש לנו) כדי לרוץ match לכל צירוף שם×רשת.
     // ======================================================================
-    const activeChains = await PriceDAL.getActiveChainsWithCounts();
+    // לוקחים את כל הרשתות הרשומות (מה-adapters), לא רק אלה עם נתונים.
+    // כך אושר עד וחצי-חינם יופיעו ב-UI גם ביום שהפורטל שלהן לא פרסם,
+    // עם אינדיקציה ברורה "אין נתונים היום".
+    const registered = getRegisteredChains();
+    const activeCountsMap = new Map(
+      (await PriceDAL.getActiveChainsWithCounts()).map(c => [c.chainId, c.count])
+    );
+    const activeChains = registered.map(r => ({
+      chainId: r.chainId as ChainId,
+      chainName: r.chainName,
+      hasData: (activeCountsMap.get(r.chainId as ChainId) ?? 0) > 0,
+    }));
+
     const chainTotals: PriceChainTotal[] = await Promise.all(
-      activeChains.map(async ({ chainId, chainName }) => {
+      activeChains.map(async ({ chainId, chainName, hasData }) => {
+        // אם אין לרשת נתונים היום - מחזירים מיד כרטיס ריק (חוסך חישובים)
+        if (!hasData) {
+          return {
+            chainId, chainName,
+            total: 0, matchedCount: 0,
+            unmatchedCount: pendingProducts.length,
+            isCheapest: false, isComplete: false, savings: 0,
+            hasData: false,
+            matches: pendingProducts.map(p => ({
+              productId: String(p._id),
+              userProductName: p.name,
+              userQuantity: p.quantity || 1,
+              normalizedName: '',
+              matched: false,
+              chainId, chainName,
+              itemName: '', price: 0, barcode: '',
+              matchConfidence: 0,
+              matchedTokens: [], userTokens: [],
+            })),
+          };
+        }
         // לרשת "הראשית" (BETA) - יש לנו כבר matchCache, לא לבצע פעם שנייה
         const isPrimaryChain = chainId === BETA_CHAIN_ID;
 
@@ -475,6 +509,7 @@ export async function getComparisonForUser(userId: string, filterListId?: string
           isCheapest: false,
           isComplete: false,
           savings: 0,
+          hasData: true,
           matches: chainMatches,
         };
       })

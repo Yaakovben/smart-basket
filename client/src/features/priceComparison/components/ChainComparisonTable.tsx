@@ -231,7 +231,16 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         הכי זול
                       </Box>
                     )}
-                    {isEmpty && (
+                    {isEmpty && !chain.hasData && (
+                      <Box sx={{
+                        px: 0.75, py: 0.15, borderRadius: '6px',
+                        bgcolor: '#F59E0B22', color: '#B45309',
+                        fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3,
+                      }}>
+                        אין נתונים היום
+                      </Box>
+                    )}
+                    {isEmpty && chain.hasData && (
                       <Box sx={{
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
@@ -252,9 +261,11 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                     )}
                   </Box>
                   <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.15 }}>
-                    {isEmpty
-                      ? `לא נמצאו מוצרים מתאימים מתוך המאגר של ${chain.chainName}`
-                      : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
+                    {isEmpty && !chain.hasData
+                      ? `${chain.chainName} לא פרסמה מחירים היום - ננסה שוב בקרוב`
+                      : isEmpty
+                        ? `לא נמצאו התאמות במאגר של ${chain.chainName}`
+                        : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
                 </Box>
 

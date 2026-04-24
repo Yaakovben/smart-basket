@@ -43,6 +43,13 @@ export interface SyncResult {
 // דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
 // הוא סוגר את ההתחברויות המאוחרות יותר. 3 שניות זה מספיק להיראות "אנושי".
 const DELAY_BETWEEN_CHAINS_MS = 3000;
+
+// רשימת כל הרשתות הרשומות (ללא תלות אם יש להן נתונים במאגר) -
+// משמש ב-UI להציג את כל הרשתות הזמינות, גם אלה שהפורטל שלהן
+// לא פרסם היום. מחושב מה-adapters המוגדרים.
+export function getRegisteredChains(): Array<{ chainId: string; chainName: string }> {
+  return adapters.map(a => ({ chainId: a.chainId, chainName: a.chainName }));
+}
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 // רענון מחירים לכל הרשתות הפעילות — משמש גם בסקריפט הידני וגם בcron

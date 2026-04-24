@@ -43,6 +43,7 @@ export interface PriceChainTotal {
   isComplete: boolean;   // יש לה את מלוא הסל? (מספר התאמות = מקסימום)
   savings: number;
   matches: PriceMatch[]; // כל המוצרים של המשתמש עם מחיר ברשת הזו
+  hasData: boolean;      // האם הרשת פרסמה מחירים היום (false = הפורטל לא פרסם)
 }
 
 export interface PriceComparisonData {
