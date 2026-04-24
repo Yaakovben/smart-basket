@@ -189,6 +189,7 @@ type TranslationKey =
   | 'catMeat'
   | 'catBeverages'
   | 'catSweets'
+  | 'catNuts'
   | 'catFrozen'
   | 'catCanned'
   | 'catSpices'
@@ -641,6 +642,7 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'בשר',
     catBeverages: 'משקאות',
     catSweets: 'ממתקים',
+    catNuts: 'פיצוחים',
     catFrozen: 'קפואים',
     catCanned: 'שימורים ויבשים',
     catSpices: 'תבלינים ורטבים',
@@ -1085,6 +1087,7 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'Meat',
     catBeverages: 'Beverages',
     catSweets: 'Sweets',
+    catNuts: 'Nuts & Seeds',
     catFrozen: 'Frozen',
     catCanned: 'Canned & Dry',
     catSpices: 'Spices & Sauces',
@@ -1527,6 +1530,7 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'Мясо',
     catBeverages: 'Напитки',
     catSweets: 'Сладости',
+    catNuts: 'Орехи и семечки',
     catFrozen: 'Замороженные',
     catCanned: 'Консервы и крупы',
     catSpices: 'Специи и соусы',
