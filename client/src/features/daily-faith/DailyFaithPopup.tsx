@@ -60,10 +60,10 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: 'none',
           overflow: 'visible',
           // מרווח גדול יותר בצדדים כדי שהמסגרת הזהובה + הצל הזוהר סביבה לא יתגלשו/ייחתכו
-          mx: 3,
+          mx: 2,
           my: 2,
-          maxWidth: 400,
-          width: 'auto',
+          maxWidth: 460,
+          width: 'calc(100% - 32px)',
           // יציבות בגרירה: מונע תזוזה/גרירה של הפופאפ בלחיצה והחזקה על המסך
           touchAction: 'none',
           userSelect: 'none',
@@ -92,7 +92,7 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
         <Box
           sx={{
             borderRadius: '18px',
-            background: 'linear-gradient(160deg, #FFF9E6 0%, #FFF3D4 50%, #FDE8B4 100%)',
+            background: 'linear-gradient(160deg, #FFFDF2 0%, #FFFAE5 50%, #FEF2CC 100%)',
             border: '2px solid rgba(184, 134, 11, 0.3)',
             px: 3,
             py: 5,
@@ -181,12 +181,12 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 background: 'rgba(255, 244, 201, 0.5)',
                 border: '1.5px solid rgba(139, 105, 20, 0.5)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
-                transition: 'background 0.2s, border-color 0.2s, transform 0.12s',
+                transition: 'background 0.08s, border-color 0.08s, transform 0.06s',
                 '&:hover': {
                   background: 'rgba(255, 231, 160, 0.7)',
                   borderColor: '#8B6914',
                 },
-                '&:active': { transform: 'scale(0.94)' },
+                '&:active': { transform: 'scale(0.94)', background: 'rgba(255, 231, 160, 0.9)' },
               }}
             >
               <ShareIcon sx={{ fontSize: 20 }} />
@@ -205,11 +205,11 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 fontSize: 15,
                 boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
                 textTransform: 'none',
-                transition: 'background 0.2s ease',
+                transition: 'background 0.08s ease, transform 0.06s ease',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
                 },
-                '&:active': { transform: 'scale(0.97)' },
+                '&:active': { transform: 'scale(0.96)', background: 'linear-gradient(135deg, #805C07 0%, #9C7209 100%)' },
               }}
             >
               {t('dailyFaithReadButton')}
