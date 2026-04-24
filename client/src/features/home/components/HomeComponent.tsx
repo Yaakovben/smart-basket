@@ -492,7 +492,8 @@ export const HomeComponent = memo(({
     return cardRefs.current.length - 1;
   }, []);
 
-  // גרירה: התחלת גרירה
+  // גרירה: התחלת גרירה (clientY מגיע מה-listener אך לא נדרש כאן)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDragStart = useCallback((index: number, _clientY: number) => {
     dragIndexRef.current = index;
     setDragIndex(index);

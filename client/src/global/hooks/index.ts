@@ -103,8 +103,9 @@ export function useAuth() {
           localStorage.removeItem('cached_user');
           return null;
         }
-        // הסרת _cachedAt מאובייקט המשתמש
-        const { _cachedAt: _, ...userData } = parsed;
+        // הסרת _cachedAt מאובייקט המשתמש (rest pattern משמיט את השדה)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _cachedAt, ...userData } = parsed;
         return userData as User;
       }
     } catch { /* ignore */ }

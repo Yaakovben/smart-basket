@@ -215,7 +215,7 @@ export const useList = ({
     dragRef.current = null;
     // שמירת מיקום FAB ב-localStorage
     if (fabPosition) {
-      try { localStorage.setItem('fab-position', JSON.stringify(fabPosition)); } catch {}
+      try { localStorage.setItem('fab-position', JSON.stringify(fabPosition)); } catch { /* storage חסום */ }
     }
   }, [fabPosition]);
 

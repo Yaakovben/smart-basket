@@ -107,7 +107,7 @@ export const ClearCachePage = () => {
     const timer = window.setTimeout(() => {
       // מונע רענון כפול: כשה-SW החדש יפעיל SW_ACTIVATED אחרי ה-redirect,
       // הראוטר בודק את הדגל הזה ולא מרענן שוב.
-      try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch {}
+      try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch { /* storage חסום */ }
       window.location.replace('/?t=' + Date.now());
     }, 500);
     return () => window.clearTimeout(timer);
