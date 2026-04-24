@@ -105,6 +105,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     ? Math.round((totalBranchesWithCoords / totalBranches) * 100)
     : 0;
 
+  // סיכום הצלחות/כשלונות - מחושב מתוצאות הסנכרון האחרון
+  const chainOutcome = (c: typeof chains[number]) => {
+    if (c.lastSyncError) return humanizeError(c.lastSyncError).severity === 'hard' ? 'failed' : 'skipped';
+    if (c.count > 0) return 'ok';
+    return 'empty';
+  };
+  const successCount = chains.filter(c => chainOutcome(c) === 'ok').length;
+  const failedCount = chains.filter(c => chainOutcome(c) === 'failed').length;
+  const skippedCount = chains.filter(c => chainOutcome(c) === 'skipped').length;
+
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
       {/* המודאל עצמו (Modal.tsx) כבר מטפל בגלילה אנכית במידת הצורך.
@@ -273,6 +283,43 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
+            {/* כרטיס סיכום הצלחות/כישלונות - מופיע רק אחרי סנכרון */}
+            {chains.length > 0 && !syncActive && (successCount + failedCount + skippedCount > 0) && (
+              <Box sx={{
+                display: 'flex', gap: 1,
+                p: 1, borderRadius: '12px',
+                bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+              }}>
+                <Box sx={{ flex: 1, textAlign: 'center', p: 1, borderRadius: '10px',
+                  bgcolor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#059669', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                    {successCount}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#065F46', mt: 0.3 }}>
+                    ✓ הצליחו
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1, textAlign: 'center', p: 1, borderRadius: '10px',
+                  bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#DC2626', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                    {failedCount}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#991B1B', mt: 0.3 }}>
+                    ✗ נכשלו
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1, textAlign: 'center', p: 1, borderRadius: '10px',
+                  bgcolor: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)' }}>
+                  <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#475569', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                    {skippedCount}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#334155', mt: 0.3 }}>
+                    ⏸ דילוגים
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
             {/* חלוקה לפי רשת */}
             {chains.length > 0 && (
               <Box sx={{
@@ -324,39 +371,76 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           <CheckCircleIcon sx={{ fontSize: 14, color: statusColor, mt: 0.3 }} />
                         )}
                         <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'text.primary' }}>
                             {c.chainName}
                           </Typography>
+                          {/* סיכום ברור של מה עבד ומה לא */}
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.35, alignItems: 'center' }}>
+                            {/* מחירים */}
+                            {c.count > 0 ? (
+                              <Box sx={{
+                                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                                px: 0.6, py: 0.2, borderRadius: '6px',
+                                bgcolor: 'rgba(16,185,129,0.1)',
+                                fontSize: 10, fontWeight: 700, color: '#059669',
+                                fontVariantNumeric: 'tabular-nums',
+                              }}>
+                                ✓ {c.count.toLocaleString('he-IL')} מחירים
+                              </Box>
+                            ) : (
+                              <Box sx={{
+                                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                                px: 0.6, py: 0.2, borderRadius: '6px',
+                                bgcolor: isHardError ? 'rgba(239,68,68,0.1)' : 'rgba(148,163,184,0.12)',
+                                fontSize: 10, fontWeight: 700,
+                                color: isHardError ? '#DC2626' : '#64748B',
+                              }}>
+                                ✗ אין מחירים
+                              </Box>
+                            )}
+                            {/* סניפים */}
+                            {!!c.branchCount && c.branchCount > 0 ? (
+                              <Box sx={{
+                                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                                px: 0.6, py: 0.2, borderRadius: '6px',
+                                bgcolor: 'rgba(124,58,237,0.1)',
+                                fontSize: 10, fontWeight: 700, color: '#7C3AED',
+                                fontVariantNumeric: 'tabular-nums',
+                              }}>
+                                <PlaceIcon sx={{ fontSize: 10 }} />
+                                {c.branchCount} סניפים
+                                {typeof c.branchesWithCoords === 'number' && c.branchesWithCoords < c.branchCount
+                                  ? ` (${c.branchesWithCoords})`
+                                  : ''}
+                              </Box>
+                            ) : c.count > 0 ? (
+                              <Box sx={{
+                                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                                px: 0.6, py: 0.2, borderRadius: '6px',
+                                bgcolor: 'rgba(148,163,184,0.12)',
+                                fontSize: 10, fontWeight: 700, color: '#64748B',
+                              }}>
+                                ✗ אין סניפים
+                              </Box>
+                            ) : null}
+                          </Box>
+                          {/* שגיאה - רק אם יש */}
                           {humanError && (
                             <Typography sx={{
                               fontSize: 10.5,
                               color: isHardError ? '#B91C1C' : 'text.secondary',
-                              mt: 0.25, wordBreak: 'break-word',
+                              mt: 0.4, wordBreak: 'break-word',
                             }}>
                               {humanError.msg}
                             </Typography>
                           )}
                           {!humanError && isEmpty && (
-                            <Typography sx={{ fontSize: 10.5, color: '#D97706', mt: 0.25 }}>
+                            <Typography sx={{ fontSize: 10.5, color: '#D97706', mt: 0.4 }}>
                               טרם סונכרן בהצלחה
                             </Typography>
                           )}
-                          {!!c.branchCount && c.branchCount > 0 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.3 }}>
-                              <PlaceIcon sx={{ fontSize: 11, color: '#7C3AED' }} />
-                              <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>
-                                {c.branchCount} סניפים
-                                {typeof c.branchesWithCoords === 'number' && c.branchesWithCoords < c.branchCount
-                                  ? ` · ${c.branchesWithCoords} עם מיקום`
-                                  : ''}
-                              </Typography>
-                            </Box>
-                          )}
                         </Box>
                       </Box>
-                      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.secondary', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                        {c.count.toLocaleString('he-IL')}
-                      </Typography>
                     </Box>
                   );
                 })}
