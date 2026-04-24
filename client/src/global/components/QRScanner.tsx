@@ -38,14 +38,20 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
         const video = videoRef.current;
         if (!video) throw new Error('video element missing');
 
-        const controls = await reader.decodeFromVideoDevice(undefined, video, (result, _err, c) => {
-          if (cancelled) return;
-          if (result) {
-            haptic('medium');
-            c.stop();
-            onScan(result.getText());
-          }
-        });
+        // decodeFromConstraints נותן שליטה מפורשת במצלמה (environment=אחורית).
+        // אם המכשיר לא תומך במצלמה אחורית, ייפול ל-default.
+        const controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' } } },
+          video,
+          (result, _err, c) => {
+            if (cancelled) return;
+            if (result) {
+              haptic('medium');
+              c.stop();
+              onScan(result.getText());
+            }
+          },
+        );
         if (cancelled) {
           controls.stop();
           return;
