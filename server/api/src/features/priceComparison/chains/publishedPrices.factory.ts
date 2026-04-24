@@ -281,7 +281,14 @@ function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
   const stores = pickAny(storesContainer, ['SubChain', 'Stores', 'Store', 'STORE'])
     ?? pickAny(root, ['Stores', 'STORES', 'Store', 'STORE']);
 
-  // נרד עד שמגיעים לרמת ה-Store. אם מצאנו רשימה נפוצה של Store
+  // מזהה אם רשומה "מריחה" כמו פריט מחיר ולא סניף (StoreId מופיע גם בקובצי מחיר,
+  // ולכן חייבים לוודא שאין שדות זיהוי של פריט: ItemCode / ItemName / ItemPrice).
+  const isPriceItem = (rec: Record<string, unknown>): boolean => {
+    const keys = Object.keys(rec).map(k => k.toLowerCase());
+    return keys.some(k => k === 'itemcode' || k === 'itemname' || k === 'itemprice');
+  };
+
+  // נרד עד שמגיעים לרמת ה-Store. לא רוצים להחזיר רשומות שנראות כמו price items.
   const collectStores = (node: unknown): unknown[] => {
     if (!node) return [];
     if (Array.isArray(node)) return node.flatMap(collectStores);
@@ -297,12 +304,31 @@ function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
     // אם יש Stores/STORES - נרד לתוכו
     const storesKey = keys.find(k => k.toLowerCase() === 'stores');
     if (storesKey) return collectStores(rec[storesKey]);
-    // אם מבנה יחיד (רשומה של סניף בודד עם שדות StoreId)
-    if ('StoreId' in rec || 'STOREID' in rec || 'storeId' in rec) return [rec];
+    // אם מבנה יחיד (רשומה של סניף בודד) - חייב לא להיראות כמו פריט מחיר
+    if (('StoreId' in rec || 'STOREID' in rec || 'storeId' in rec) && !isPriceItem(rec)) {
+      return [rec];
+    }
     return [];
   };
 
-  const storeNodes = collectStores(stores);
+  let storeNodes = collectStores(stores);
+
+  // שומר נוסף: סניף תקין חייב גם StoreName, וגם אסור שיהיה ItemCode/ItemName
+  storeNodes = storeNodes.filter(node => {
+    if (!node || typeof node !== 'object') return false;
+    const rec = node as Record<string, unknown>;
+    if (isPriceItem(rec)) return false;
+    const hasName = Object.keys(rec).some(k =>
+      ['storename', 'STORENAME'.toLowerCase()].includes(k.toLowerCase())
+    );
+    return hasName;
+  });
+
+  // ישראל כולה ~1,500 סניפי שופרסמרקט. אם קיבלנו יותר - הפרסר בטח נפל
+  // על קובץ מחירים בטעות, זרוק הכל כדי למנוע זבל במונגו.
+  if (storeNodes.length > 3000) {
+    return [];
+  }
 
   const pick = (obj: Record<string, unknown>, keys: string[]): string | undefined => {
     for (const k of keys) {
