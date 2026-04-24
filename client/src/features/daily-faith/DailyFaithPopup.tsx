@@ -160,62 +160,65 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             {renderFaithText(text)}
           </Typography>
 
-          {/* שורת כפתורים - WhatsApp (ריבוע) + קראתי והתחזקתי (רחב) */}
-          <Box sx={{ mt: 2, display: 'flex', gap: 1.25, width: '100%', alignItems: 'stretch' }}>
+          {/* שורת פעולות - עיצוב "מדליה": כפתור ראשי כמו מגילה זהובה עם כוכבים, שיתוף כחותם עגול */}
+          <Box sx={{ mt: 2, display: 'flex', gap: 1.5, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            {/* כפתור "קראתי והתחזקתי" - מגילה זהובה עם כוכבי ✦ משני הצדדים */}
+            <Button
+              onClick={handleClose}
+              sx={{
+                flex: 1,
+                position: 'relative',
+                px: 2.5,
+                py: 1.6,
+                borderRadius: '999px',
+                background: 'linear-gradient(180deg, #E5B84E 0%, #C99836 55%, #A87E28 100%)',
+                color: '#FFFBEA',
+                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+                fontWeight: 700,
+                fontSize: 17,
+                letterSpacing: 0.5,
+                textShadow: '0 1px 2px rgba(89, 55, 0, 0.45)',
+                // גבול זהב כפול - יוצר תחושת חותמת/מדליה
+                border: '1.5px solid #8B5A04',
+                boxShadow: '0 8px 20px rgba(139,90,4,0.35), inset 0 1px 0 rgba(255,255,255,0.45), inset 0 0 0 2px rgba(255,248,210,0.35)',
+                textTransform: 'none',
+                transition: 'transform 0.12s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  background: 'linear-gradient(180deg, #D9A93E 0%, #B8872B 55%, #8B6914 100%)',
+                  boxShadow: '0 10px 24px rgba(139,90,4,0.45), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 0 0 2px rgba(255,248,210,0.3)',
+                },
+                '&:active': { transform: 'scale(0.97)' },
+              }}
+            >
+              <Box component="span" sx={{ position: 'absolute', insetInlineStart: 14, fontSize: 13, opacity: 0.85, color: '#FFF8D2' }} aria-hidden="true">✦</Box>
+              {t('dailyFaithReadButton')}
+              <Box component="span" sx={{ position: 'absolute', insetInlineEnd: 14, fontSize: 13, opacity: 0.85, color: '#FFF8D2' }} aria-hidden="true">✦</Box>
+            </Button>
+
+            {/* כפתור שיתוף - חותם עגול זהב, קטן וצנוע לצד הכפתור הראשי */}
             <IconButton
               onClick={handleShare}
               aria-label={t('dailyFaithShareAria')}
               disableRipple
               sx={{
-                width: 52,
-                height: 'auto',
-                minHeight: 46,
-                borderRadius: '14px',
-                // סגנון outline - רקע שקוף עם גבול זהב ואייקון זהב. יוצר היררכיה ברורה
-                // מול הכפתור הראשי "קראתי והתחזקתי" שנשאר מלא.
-                color: '#B8860B',
-                background: 'rgba(255, 244, 201, 0.4)',
-                border: '1.5px solid rgba(184, 134, 11, 0.55)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+                width: 48,
+                height: 48,
                 flexShrink: 0,
-                transition: 'transform 0.12s, background 0.2s, border-color 0.2s',
+                borderRadius: '50%',
+                color: '#8B5A04',
+                background: 'radial-gradient(circle at 30% 30%, #FFF4C9 0%, #F4E4A6 55%, #D4AF37 100%)',
+                border: '1.5px solid #8B5A04',
+                boxShadow: '0 4px 12px rgba(139,90,4,0.3), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 0 0 2px rgba(255,248,210,0.5)',
+                transition: 'transform 0.15s ease, box-shadow 0.2s ease',
                 '&:hover': {
-                  background: 'rgba(255, 231, 160, 0.6)',
-                  borderColor: 'rgba(184, 134, 11, 0.8)',
+                  transform: 'rotate(-6deg)',
+                  boxShadow: '0 6px 16px rgba(139,90,4,0.4), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 0 2px rgba(255,248,210,0.45)',
                 },
-                '&:active': { transform: 'scale(0.94)' },
+                '&:active': { transform: 'scale(0.92) rotate(-6deg)' },
               }}
             >
-              <IosShareIcon sx={{ fontSize: 22 }} />
+              <IosShareIcon sx={{ fontSize: 20 }} />
             </IconButton>
-
-            <Button
-              onClick={handleClose}
-              sx={{
-                flex: 1,
-                px: 2,
-                py: 1.5,
-                borderRadius: '14px',
-                // זהב בהיר יותר עם גוון חם - נראה מזמין ופחות "כבד" מול הקלף הקרם
-                background: 'linear-gradient(180deg, #E5B84E 0%, #C99836 100%)',
-                color: 'white',
-                fontWeight: 800,
-                fontSize: 17,
-                letterSpacing: 0.3,
-                textShadow: '0 1px 2px rgba(139, 90, 4, 0.35)',
-                boxShadow: '0 6px 18px rgba(201, 152, 54, 0.4), inset 0 1px 0 rgba(255,255,255,0.4)',
-                border: '1px solid rgba(184, 134, 11, 0.6)',
-                textTransform: 'none',
-                transition: 'transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease',
-                '&:hover': {
-                  background: 'linear-gradient(180deg, #D9A93E 0%, #B8872B 100%)',
-                  boxShadow: '0 8px 22px rgba(201, 152, 54, 0.5), inset 0 1px 0 rgba(255,255,255,0.35)',
-                },
-                '&:active': { transform: 'scale(0.97)' },
-              }}
-            >
-              {t('dailyFaithReadButton')}
-            </Button>
           </Box>
         </Box>
       </Box>
