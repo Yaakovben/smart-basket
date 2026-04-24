@@ -112,13 +112,14 @@ async function createAuthenticatedClient(username: string, password: string): Pr
   return { client, csrftoken: sessionCsrf };
 }
 
-async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string): Promise<string | null> {
+// בקשת list של קבצים/תיקיות מנתיב נתון בפורטל
+async function listDir(client: AxiosInstance, csrftoken: string, cd: string, search: string): Promise<FileEntry[]> {
   const form = new URLSearchParams({
     sEcho: '1',
     iDisplayStart: '0',
     iDisplayLength: '1000',
-    sSearch: 'PriceFull',
-    cd: '/',
+    sSearch: search,
+    cd,
     csrftoken,
   });
 
@@ -132,14 +133,37 @@ async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string)
     },
   });
 
-  const files = res.data?.aaData || [];
-  const priceFullFiles = files
+  return res.data?.aaData || [];
+}
+
+async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string): Promise<string | null> {
+  // 1) נסיון ראשון: PriceFull ברוט
+  const rootFiles = await listDir(client, csrftoken, '/', 'PriceFull');
+  const rootPriceFull = rootFiles
     .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
     .filter(f => /PriceFull.*\.(gz|xml)/i.test(f.name))
     .sort((a, b) => b.name.localeCompare(a.name));
 
-  if (priceFullFiles.length === 0) return null;
-  return priceFullFiles[0].name;
+  if (rootPriceFull.length > 0) return rootPriceFull[0].name;
+
+  // 2) Fallback: חלק מהרשתות מפרסמות בתת-תיקיות (למשל /2025-04-24).
+  // נאתר תיקיות שנראות כמו תאריך ונחפש בהן את ה-PriceFull החדש ביותר.
+  const allFiles = await listDir(client, csrftoken, '/', '');
+  const subDirs = allFiles
+    .map(f => ({ name: f.fname || f.name || f.DT_RowId || '', type: f.type }))
+    .filter(f => f.type === 'd' && /^\d{4}-\d{2}-\d{2}|^\d{8}/.test(f.name))
+    .sort((a, b) => b.name.localeCompare(a.name));
+
+  for (const dir of subDirs.slice(0, 3)) { // מנסה רק 3 התיקיות האחרונות
+    const subFiles = await listDir(client, csrftoken, `/${dir.name}`, 'PriceFull');
+    const matches = subFiles
+      .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
+      .filter(f => /PriceFull.*\.(gz|xml)/i.test(f.name))
+      .sort((a, b) => b.name.localeCompare(a.name));
+    if (matches.length > 0) return `${dir.name}/${matches[0].name}`;
+  }
+
+  return null;
 }
 
 async function downloadFile(client: AxiosInstance, filename: string): Promise<Buffer> {

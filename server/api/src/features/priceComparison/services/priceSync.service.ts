@@ -40,11 +40,20 @@ export interface SyncResult {
   error?: string;
 }
 
+// דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
+// הוא סוגר את ההתחברויות המאוחרות יותר. 3 שניות זה מספיק להיראות "אנושי".
+const DELAY_BETWEEN_CHAINS_MS = 3000;
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
 // רענון מחירים לכל הרשתות הפעילות — משמש גם בסקריפט הידני וגם בcron
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
-  for (const adapter of adapters) {
+  for (let i = 0; i < adapters.length; i++) {
+    const adapter = adapters[i];
+    // דיליי לפני כל adapter חוץ מהראשון - מונע rate limit מהפורטל
+    if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
+
     const t0 = Date.now();
     logger.info(`[price-sync] ${adapter.chainId}: fetching latest prices...`);
 
