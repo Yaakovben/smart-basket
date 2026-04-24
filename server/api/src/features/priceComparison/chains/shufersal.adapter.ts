@@ -5,7 +5,7 @@
  * הפורטל הזה שונה מ-publishedprices.co.il:
  *  - ללא login
  *  - דף HTML שרושם קבצי XML.gz
- *  - לוחצים על הקישור, מוריד gzipped XML
+ *  - catID=0/1/2 - מחירים; catID=5 - סניפים (StoresFull)
  *
  * מבנה ה-XML זהה (Root/Items/Item) — אפשר להשתמש באותו parser.
  */
@@ -13,9 +13,14 @@
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
-import type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';
+import type {
+  ChainAdapter, ChainFetchResult, ChainPriceItem,
+  ChainStoreItem, ChainStoresFetchResult,
+} from './types';
 
 const SHUFERSAL_PORTAL = 'https://prices.shufersal.co.il';
+const FETCH_TIMEOUT_MS = 60_000;
+const DOWNLOAD_TIMEOUT_MS = 120_000;
 
 interface PriceFullXml {
   Root?: { Items?: { Item?: RawItem[] | RawItem } };
@@ -32,21 +37,47 @@ interface RawItem {
   StoreId?: string;
 }
 
-// מחלצים את קישור ההורדה הראשון מ-PriceFull הזמין בעמוד הקטלוג
-// פורטל שופרסל מראה טבלה עם <a href="/FileObject/UpdateCategory?...&FileNm=PriceFull..."> או קישור ישיר
-function extractLatestPriceFullUrl(html: string): string | null {
-  // תבנית קישור: /FileObject/UpdateCategory?... או href="https://pricesprodpublic.blob.core.windows.net/...PriceFull...gz"
-  const matches = [
-    ...html.matchAll(/href="([^"]*PriceFull[^"]*\.gz[^"]*)"/gi),
+// מחלצים את קישור ההורדה הראשון מעמוד הקטלוג.
+// שופרסל מפרסם כמה עשרות קישורים ב-URL pattern של pricesprodpublic.blob...
+// ובכמה תבניות href: במפורש, או דרך /FileObject/UpdateCategory?... + FileNm=.
+function extractLatestFileUrl(html: string, fileNamePrefix: string): string | null {
+  // 1. תבנית ישירה: href="https://pricesprodpublic.blob.core.windows.net/.../PriceFull123.gz"
+  const directMatches = [
+    ...html.matchAll(new RegExp(`href="([^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
   ];
-  if (matches.length === 0) return null;
+  if (directMatches.length > 0) {
+    const url = directMatches[0][1];
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return `${SHUFERSAL_PORTAL}${url}`;
+    return `${SHUFERSAL_PORTAL}/${url}`;
+  }
+  // 2. תבנית דרך UpdateCategory עם FileNm - חלק מהקישורים זורמים דרך endpoint פנימי
+  const relativeMatches = [
+    ...html.matchAll(new RegExp(`href="(/FileObject[^"]*FileNm=[^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
+  ];
+  if (relativeMatches.length > 0) {
+    return `${SHUFERSAL_PORTAL}${relativeMatches[0][1]}`;
+  }
+  return null;
+}
 
-  // בוחרים את הראשון (הפורטל ממיין לפי תאריך יורד)
-  const url = matches[0][1];
-  // אם זה path יחסי — מוסיפים את ה-base
-  if (url.startsWith('http')) return url;
-  if (url.startsWith('/')) return `${SHUFERSAL_PORTAL}${url}`;
-  return `${SHUFERSAL_PORTAL}/${url}`;
+async function fetchCategoryHtml(catID: number): Promise<string> {
+  const res = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=${catID}&storeId=0`, {
+    timeout: FETCH_TIMEOUT_MS,
+    headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
+  });
+  return res.data;
+}
+
+async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: boolean }> {
+  const res = await axios.get<ArrayBuffer>(url, {
+    responseType: 'arraybuffer',
+    timeout: DOWNLOAD_TIMEOUT_MS,
+    headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
+  });
+  const buf = Buffer.from(res.data);
+  const isGzipped = url.toLowerCase().includes('.gz');
+  return { buf, isGzipped };
 }
 
 function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
@@ -80,34 +111,155 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
   return results;
 }
 
+// פרסור של קובץ Stores (Asx/STORE) של שופרסל
+function parseStoresXmlShufersal(buf: Buffer, isGzipped: boolean): ChainStoreItem[] {
+  const xml = isGzipped ? gunzipSync(buf).toString('utf-8') : buf.toString('utf-8');
+  const parser = new XMLParser({ ignoreAttributes: true, parseTagValue: false, trimValues: true });
+  const parsed = parser.parse(xml) as Record<string, unknown>;
+
+  const pickAny = (obj: unknown, keys: string[]): unknown => {
+    if (!obj || typeof obj !== 'object') return undefined;
+    const rec = obj as Record<string, unknown>;
+    for (const k of keys) {
+      const found = Object.keys(rec).find(x => x.toLowerCase() === k.toLowerCase());
+      if (found && rec[found] !== undefined) return rec[found];
+    }
+    return undefined;
+  };
+
+  const root = pickAny(parsed, ['asx:abap', 'Root', 'root']);
+  // שופרסל: asx:values -> STORE (array)
+  const values = pickAny(root, ['asx:values', 'values', 'SubChains', 'Stores']);
+  let storeNodes: unknown[] = [];
+  const collected = pickAny(values, ['STORE', 'Store', 'SubChain']);
+  if (Array.isArray(collected)) storeNodes = collected;
+  else if (collected) storeNodes = [collected];
+
+  // fallback: סריקה רקורסיבית אם לא הגענו לרמת הסניף
+  if (storeNodes.length === 0) {
+    const recurse = (n: unknown): unknown[] => {
+      if (!n || typeof n !== 'object') return [];
+      if (Array.isArray(n)) return n.flatMap(recurse);
+      const rec = n as Record<string, unknown>;
+      if ('STOREID' in rec || 'StoreId' in rec) return [rec];
+      return Object.values(rec).flatMap(recurse);
+    };
+    storeNodes = recurse(parsed);
+  }
+
+  const pick = (obj: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const k of keys) {
+      const found = Object.keys(obj).find(x => x.toLowerCase() === k.toLowerCase());
+      if (found && obj[found] !== undefined && obj[found] !== null && obj[found] !== '') {
+        return String(obj[found]).trim();
+      }
+    }
+    return undefined;
+  };
+  const toNum = (v: string | undefined): number | undefined => {
+    if (!v) return undefined;
+    const n = parseFloat(v);
+    if (!Number.isFinite(n) || n === 0) return undefined;
+    return n;
+  };
+
+  const results: ChainStoreItem[] = [];
+  for (const node of storeNodes) {
+    if (!node || typeof node !== 'object') continue;
+    const rec = node as Record<string, unknown>;
+    const storeId = pick(rec, ['StoreId', 'STOREID']);
+    const storeName = pick(rec, ['StoreName', 'STORENAME']);
+    if (!storeId || !storeName) continue;
+    const lat = toNum(pick(rec, ['Latitude', 'LATITUDE']));
+    const lng = toNum(pick(rec, ['Longitude', 'LONGITUDE']));
+    const valid = lat !== undefined && lng !== undefined && lat >= 29 && lat <= 34 && lng >= 33 && lng <= 36;
+    results.push({
+      storeId,
+      storeName,
+      address: pick(rec, ['Address', 'ADDRESS']),
+      city: pick(rec, ['City', 'CITY']),
+      zipCode: pick(rec, ['ZipCode', 'ZIPCODE']),
+      lat: valid ? lat : undefined,
+      lng: valid ? lng : undefined,
+    });
+  }
+  return results;
+}
+
+// retry helper משותף - רק על תקלות רשת
+function isRetryable(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const m = err.message || '';
+  const c = (err as { code?: string }).code || '';
+  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up/i.test(m)
+    || /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED/.test(c);
+}
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); } catch (err) {
+      lastErr = err;
+      if (!isRetryable(err) || i === attempts - 1) throw err;
+      await new Promise<void>(r => setTimeout(r, 1500 * Math.pow(2, i)));
+    }
+  }
+  throw lastErr;
+}
+
 export const shufersalAdapter: ChainAdapter = {
   chainId: 'shufersal',
   chainName: 'שופרסל',
+
   async fetchLatestPrices(): Promise<ChainFetchResult> {
     try {
-      // עמוד קטלוג של מחירים (catID=1 — הקטגוריה הנכונה לפורטל שופרסל)
-      const listRes = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=1&storeId=0`, {
-        timeout: 60_000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
+      return await withRetry(async () => {
+        // מנסים כמה קטגוריות - שופרסל משנה מדי פעם: 0 (All), 1 (Prices), 2 (PriceFull)
+        const catIdsToTry = [0, 1, 2];
+        let url: string | null = null;
+        for (const cat of catIdsToTry) {
+          try {
+            const html = await fetchCategoryHtml(cat);
+            url = extractLatestFileUrl(html, 'PriceFull');
+            if (url) break;
+          } catch { /* ננסה catID הבא */ }
+        }
+        if (!url) {
+          return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
+        }
+        const { buf, isGzipped } = await downloadBuffer(url);
+        const items = parseXmlBuffer(buf, isGzipped);
+        return { chainId: 'shufersal', chainName: 'שופרסל', items, fetchedFiles: 1 };
       });
-      const url = extractLatestPriceFullUrl(listRes.data);
-      if (!url) {
-        return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
-      }
-
-      const fileRes = await axios.get<ArrayBuffer>(url, {
-        responseType: 'arraybuffer',
-        timeout: 120_000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
-      });
-      const buf = Buffer.from(fileRes.data);
-      const isGzipped = url.toLowerCase().endsWith('.gz');
-      const items = parseXmlBuffer(buf, isGzipped);
-
-      return { chainId: 'shufersal', chainName: 'שופרסל', items, fetchedFiles: 1 };
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown_error';
       return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: msg };
+    }
+  },
+
+  async fetchLatestStores(): Promise<ChainStoresFetchResult> {
+    try {
+      return await withRetry(async () => {
+        // catID=5 בשופרסל = StoresFull (קובץ הסניפים).
+        // אם הקטגוריה משתנה - ננסה גם 0 (All).
+        const catIdsToTry = [5, 0];
+        let url: string | null = null;
+        for (const cat of catIdsToTry) {
+          try {
+            const html = await fetchCategoryHtml(cat);
+            url = extractLatestFileUrl(html, 'StoresFull');
+            if (url) break;
+          } catch { /* ננסה catID הבא */ }
+        }
+        if (!url) {
+          return { chainId: 'shufersal', chainName: 'שופרסל', stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
+        }
+        const { buf, isGzipped } = await downloadBuffer(url);
+        const stores = parseStoresXmlShufersal(buf, isGzipped);
+        return { chainId: 'shufersal', chainName: 'שופרסל', stores, fetchedFiles: 1 };
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown_error';
+      return { chainId: 'shufersal', chainName: 'שופרסל', stores: [], fetchedFiles: 0, error: msg };
     }
   },
 };
