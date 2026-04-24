@@ -132,7 +132,8 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           transform: `translate(${dragX}px, ${dragY}px)`,
           opacity: Math.max(0, 1 - Math.max(dragY / 140, Math.abs(dragX) / 200)),
           transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s',
-          touchAction: 'pan-x pan-y',
+          // touchAction: none - מונע מהדפדפן לגלול את הדף כשהמשתמש גורר את הטוסט
+          touchAction: 'none',
           userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           cursor: 'grab',
