@@ -11,8 +11,8 @@
  * - לחיצה על רשת פותחת את הפירוט של כל המוצרים והמחירים באותה רשת.
  */
 
-import { memo, useState } from 'react';
-import { Box, Typography, Collapse, IconButton, keyframes } from '@mui/material';
+import { memo, useState, useMemo } from 'react';
+import { Box, Typography, Collapse, IconButton, Dialog, keyframes } from '@mui/material';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -21,8 +21,11 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NavigationIcon from '@mui/icons-material/Navigation';
+import CloseIcon from '@mui/icons-material/Close';
 import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+
+type SortMode = 'price' | 'distance' | 'combined';
 
 interface Props {
   chainTotals: PriceChainTotal[];
@@ -102,30 +105,121 @@ const ChainProductRow = memo(({ m, isDark, isCheapestInChain }: { m: PriceMatch;
 });
 ChainProductRow.displayName = 'ChainProductRow';
 
-// פותח ניווט לכתובת: ב-iOS ילך ל-Apple Maps, ב-Android ל-Waze/Google Maps,
-// בדסקטופ ל-Google Maps. המשתמש בוחר באפליקציית הניווט בעצמו (ה-OS יציע).
-const openNavigation = (branch: NearestBranch) => {
+// בוני URL לאפליקציות הניווט השונות - לא פותחים ישר, מציגים picker למשתמש.
+const buildNavUrls = (branch: NearestBranch) => {
   const { lat, lng, branchName } = branch;
   const label = encodeURIComponent(branchName);
-  // geo:lat,lng?q=... עובד יפה ב-Android; ה-OS יציע Waze/Maps.
-  // ב-iOS/desktop זה ייכשל ואנחנו נופלים ל-Google Maps.
-  const geoUrl = `geo:${lat},${lng}?q=${lat},${lng}(${label})`;
-  const fallbackUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-
-  // ננסה geo: - אם העמוד לא משתנה תוך 800 מס' נפתח את Google Maps.
-  // זה דפוס שעובד ברוב הדפדפנים הניידים.
-  const now = Date.now();
-  window.location.href = geoUrl;
-  window.setTimeout(() => {
-    // אם הדפדפן לא הצליח לפתוח את ה-geo: (עדיין בפוקוס ועברו <1500מ') - Google Maps
-    if (Date.now() - now < 1500 && document.visibilityState === 'visible') {
-      window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
-    }
-  }, 800);
+  return {
+    // Waze - הפופולרי בישראל; עובד כ-deep link ו-web fallback
+    waze: `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
+    // Google Maps - נוח לכל פלטפורמה
+    googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`,
+    // Apple Maps - ל-iOS; בדפדפנים אחרים ייכשל
+    appleMaps: `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}`,
+  };
 };
 
+// דיאלוג קטן לבחירת אפליקציית ניווט. Waze/Google/Apple Maps כפתורים גדולים
+// עם אייקונים ברורים.
+const NavigationPicker = memo(({ branch, isDark, onClose }: {
+  branch: NearestBranch | null;
+  isDark?: boolean;
+  onClose: () => void;
+}) => {
+  if (!branch) return null;
+  const urls = buildNavUrls(branch);
+  const open = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    onClose();
+  };
+  const NavButton = ({ label, emoji, color, onClick }: {
+    label: string; emoji: string; color: string; onClick: () => void;
+  }) => (
+    <Box
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+      sx={{
+        display: 'flex', alignItems: 'center', gap: 1.5,
+        p: 1.5, borderRadius: '14px',
+        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+        border: '1.5px solid', borderColor: `${color}33`,
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        transition: 'opacity 0.12s, transform 0.12s',
+        '&:hover': { bgcolor: `${color}14` },
+        '&:active': { opacity: 0.78, transform: 'scale(0.98)' },
+      }}
+    >
+      <Box sx={{
+        width: 44, height: 44, borderRadius: '12px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        bgcolor: `${color}22`,
+        fontSize: 24,
+        flexShrink: 0,
+      }}>
+        {emoji}
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
+          פתח ניווט
+        </Typography>
+      </Box>
+      <Box sx={{ color: color, fontSize: 20 }}>←</Box>
+    </Box>
+  );
+
+  return (
+    <Dialog
+      open={!!branch}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          borderRadius: '20px', p: 0, m: 2, maxWidth: 360, width: '100%',
+          bgcolor: isDark ? '#1E1B3A' : '#fff',
+        },
+      }}
+    >
+      <Box sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.75 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
+              ניווט ל{branch.branchName}
+            </Typography>
+            <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.3, lineHeight: 1.4 }}>
+              📍 {branch.city} · {branch.address} · {branch.distanceKm} ק״מ ממך
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={onClose} aria-label="סגור" sx={{ flexShrink: 0 }}>
+            <CloseIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <NavButton label="Waze" emoji="🚗" color="#33CCFF" onClick={() => open(urls.waze)} />
+          <NavButton label="Google Maps" emoji="🗺️" color="#4285F4" onClick={() => open(urls.googleMaps)} />
+          <NavButton label="Apple Maps" emoji="🍎" color="#555" onClick={() => open(urls.appleMaps)} />
+        </Box>
+
+        <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 1.5, textAlign: 'center', lineHeight: 1.4 }}>
+          אם האפליקציה לא מותקנת - תיפתח בדפדפן
+        </Typography>
+      </Box>
+    </Dialog>
+  );
+});
+NavigationPicker.displayName = 'NavigationPicker';
+
 // תג מרחק + כפתור ניווט - מוצג לכל רשת כשהמשתמש שיתף מיקום.
-const BranchInfo = memo(({ branch, isDark }: { branch: NearestBranch; isDark?: boolean }) => (
+// הלחיצה על הכפתור פותחת picker (לא ישיר לאפליקציה) - המשתמש בוחר.
+const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
+  branch: NearestBranch; isDark?: boolean; onOpenPicker: (b: NearestBranch) => void;
+}) => (
   <Box
     onClick={(e) => { e.stopPropagation(); }}
     sx={{
@@ -144,7 +238,7 @@ const BranchInfo = memo(({ branch, isDark }: { branch: NearestBranch; isDark?: b
     </Typography>
     <IconButton
       size="small"
-      onClick={(e) => { e.stopPropagation(); openNavigation(branch); }}
+      onClick={(e) => { e.stopPropagation(); onOpenPicker(branch); }}
       aria-label={`נווט ל${branch.branchName}`}
       sx={{
         width: 24, height: 24, flexShrink: 0,
@@ -159,16 +253,109 @@ const BranchInfo = memo(({ branch, isDark }: { branch: NearestBranch; isDark?: b
 ));
 BranchInfo.displayName = 'BranchInfo';
 
+// בר מיון - מוצג רק כשיש מידע מיקום לפחות ברשת אחת.
+const SortBar = memo(({ sortMode, setSortMode, isDark }: {
+  sortMode: SortMode; setSortMode: (m: SortMode) => void; isDark?: boolean;
+}) => {
+  const Chip = ({ mode, emoji, label }: { mode: SortMode; emoji: string; label: string }) => {
+    const active = sortMode === mode;
+    return (
+      <Box
+        role="button"
+        tabIndex={0}
+        onClick={() => setSortMode(mode)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSortMode(mode); }}
+        sx={{
+          flex: 1, minWidth: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
+          py: 0.75, px: 1, borderRadius: '10px',
+          cursor: 'pointer', userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          bgcolor: active
+            ? (isDark ? 'rgba(124,58,237,0.28)' : 'rgba(124,58,237,0.14)')
+            : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          border: '1.5px solid',
+          borderColor: active
+            ? '#7C3AED'
+            : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+          transition: 'all 0.12s',
+          '&:active': { opacity: 0.8 },
+        }}
+      >
+        <Box sx={{ fontSize: 14, lineHeight: 1 }}>{emoji}</Box>
+        <Typography sx={{ fontSize: 11.5, fontWeight: active ? 800 : 600, color: active ? '#7C3AED' : 'text.primary' }}>
+          {label}
+        </Typography>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ display: 'flex', gap: 0.75, px: 1.5, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Chip mode="price" emoji="💰" label="זול" />
+      <Chip mode="distance" emoji="📍" label="קרוב" />
+      <Chip mode="combined" emoji="⚖️" label="משולב" />
+    </Box>
+  );
+});
+SortBar.displayName = 'SortBar';
+
 export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // מצב מיון - נפתח רק אם יש נתוני מיקום; אחרת תמיד 'price'
+  const [sortMode, setSortMode] = useState<SortMode>('price');
+  // ה-branch שנבחר לפתיחת picker ניווט
+  const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+
+  // האם יש מיקום לפחות לרשת אחת - מפעיל את בר המיון
+  const hasAnyLocation = chainTotals.some(c => c.nearestBranch);
+
+  // מיון לפי מצב. 'price' = ההגיון המקורי (שלמות קודם, לפי מחיר).
+  // 'distance' = רשתות עם מיקום ממוינות לפי מרחק; אחרות נדחקות לסוף.
+  // 'combined' = ציון מנורמל של מחיר+מרחק במשקל שווה.
+  const sortedChains = useMemo(() => {
+    const chains = [...chainTotals];
+    if (sortMode === 'distance' && hasAnyLocation) {
+      return chains.sort((a, b) => {
+        // רשתות בלי נתונים/התאמות בסוף
+        const aEmpty = a.matchedCount === 0;
+        const bEmpty = b.matchedCount === 0;
+        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+        // רשתות עם מיקום לפני רשתות בלי מיקום
+        const aDist = a.nearestBranch?.distanceKm ?? Infinity;
+        const bDist = b.nearestBranch?.distanceKm ?? Infinity;
+        return aDist - bDist;
+      });
+    }
+    if (sortMode === 'combined' && hasAnyLocation) {
+      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch);
+      if (withData.length > 0) {
+        const prices = withData.map(c => c.total);
+        const dists = withData.map(c => c.nearestBranch!.distanceKm);
+        const minP = Math.min(...prices), maxP = Math.max(...prices);
+        const minD = Math.min(...dists), maxD = Math.max(...dists);
+        const rangeP = maxP - minP || 1;
+        const rangeD = maxD - minD || 1;
+        const score = (c: PriceChainTotal): number => {
+          if (c.matchedCount === 0) return Infinity;
+          if (!c.nearestBranch) return Infinity;
+          const p = (c.total - minP) / rangeP;
+          const d = (c.nearestBranch.distanceKm - minD) / rangeD;
+          return p * 0.5 + d * 0.5;
+        };
+        return chains.sort((a, b) => score(a) - score(b));
+      }
+    }
+    // ברירת מחדל - סדר המחיר המקורי מהשרת
+    return chains;
+  }, [chainTotals, sortMode, hasAnyLocation]);
 
   if (chainTotals.length === 0) return null;
 
   // מציגים את כל הרשתות במאגר - גם אלו שלא מצאו אף התאמה (שקוף למשתמש שחיפשנו שם).
-  // הסדר: שלמות מהזולה ליקרה, חלקיות, ולבסוף רשתות ריקות.
-  const allChains = chainTotals;
+  const allChains = sortedChains;
   const chainsWithData = chainTotals.filter(c => c.matchedCount > 0);
   // המקסימום של מוצרים זוהו - משמש כסף ל"סל שלם"
   const maxMatched = chainsWithData.length > 0
@@ -229,6 +416,9 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
           </Box>
         )}
       </Box>
+
+      {/* בר מיון - רק כשיש לפחות מיקום אחד. מאפשר זול/קרוב/משולב */}
+      {hasAnyLocation && <SortBar sortMode={sortMode} setSortMode={setSortMode} isDark={isDark} />}
 
       {/* הסבר — מופיע רק אם יש רשתות חלקיות */}
       {chainsWithData.some(c => !c.isComplete) && (
@@ -341,7 +531,7 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
                   {chain.nearestBranch && (
-                    <BranchInfo branch={chain.nearestBranch} isDark={isDark} />
+                    <BranchInfo branch={chain.nearestBranch} isDark={isDark} onOpenPicker={setNavBranch} />
                   )}
                 </Box>
 
@@ -423,6 +613,9 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
           );
         })}
       </Box>
+
+      {/* Picker לבחירת Waze/Google Maps/Apple Maps */}
+      <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
     </Box>
   );
 });
