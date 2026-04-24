@@ -43,6 +43,8 @@ const formatAge = (hours: number | null): string => {
 const humanizeError = (raw: string): { msg: string; severity: 'soft' | 'hard' } => {
   if (/no_price_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה מחירים היום', severity: 'soft' };
   if (/no_stores_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה קובץ סניפים', severity: 'soft' };
+  if (/no_stores_in_file/i.test(raw)) return { msg: 'קובץ הסניפים ריק', severity: 'soft' };
+  if (/adapter_has_no_stores_support/i.test(raw)) return { msg: 'אין תמיכה בסניפים לרשת זו', severity: 'soft' };
   if (/401|unauthorized|login|invalid.*user/i.test(raw)) return { msg: 'משתמש/סיסמה לא תקפים בפורטל', severity: 'hard' };
   if (/timeout|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) return { msg: 'תקלת רשת זמנית - ננסה שוב בסנכרון הבא', severity: 'soft' };
   if (/rate.?limit|too.?many/i.test(raw)) return { msg: 'חריגת קצב מהפורטל', severity: 'soft' };
@@ -413,13 +415,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                   : ''}
                               </Box>
                             ) : c.count > 0 ? (
-                              <Box sx={{
-                                display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                                px: 0.6, py: 0.2, borderRadius: '6px',
-                                bgcolor: 'rgba(148,163,184,0.12)',
-                                fontSize: 10, fontWeight: 700, color: '#64748B',
-                              }}>
-                                ✗ אין סניפים
+                              <Box
+                                title={c.storesError ? humanizeError(c.storesError).msg : undefined}
+                                sx={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                                  px: 0.6, py: 0.2, borderRadius: '6px',
+                                  bgcolor: 'rgba(148,163,184,0.12)',
+                                  fontSize: 10, fontWeight: 700, color: '#64748B',
+                                }}
+                              >
+                                ✗ אין סניפים{c.storesError ? ` · ${humanizeError(c.storesError).msg}` : ''}
                               </Box>
                             ) : null}
                           </Box>

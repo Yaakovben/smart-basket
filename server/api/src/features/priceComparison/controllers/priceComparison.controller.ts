@@ -88,6 +88,8 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
       lastSyncFetched: sync?.fetched ?? null,
       branchCount: branches?.count ?? 0,
       branchesWithCoords: branches?.withCoords ?? 0,
+      storesError: sync?.storesError ?? null,
+      storesFetched: sync?.storesFetched ?? null,
     };
   }).sort((a, b) => b.count - a.count);
 

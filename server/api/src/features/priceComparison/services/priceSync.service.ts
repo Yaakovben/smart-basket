@@ -44,6 +44,7 @@ export interface SyncResult {
   // מידע נלווה של סניפים שנסנכרנו עם המחירים (אופציונלי - רק אם ה-adapter תומך)
   storesFetched?: number;
   storesUpserted?: number;
+  storesError?: string;
 }
 
 // דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
@@ -89,13 +90,17 @@ export function getSyncProgress(): SyncProgress {
 // סנכרון סניפים של רשת אחת. קואורדינטות: portal > fallback-של-עיר > Nominatim (חי, מוגבל).
 async function syncStoresForChain(
   adapter: ChainAdapter
-): Promise<{ fetched?: number; upserted?: number }> {
-  if (!adapter.fetchLatestStores) return {};
+): Promise<{ fetched?: number; upserted?: number; error?: string }> {
+  if (!adapter.fetchLatestStores) return { error: 'adapter_has_no_stores_support' };
   try {
     const res = await adapter.fetchLatestStores();
-    if (res.error || res.stores.length === 0) {
-      logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${res.error || 'empty'}`);
-      return {};
+    if (res.error) {
+      logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${res.error}`);
+      return { error: res.error };
+    }
+    if (res.stores.length === 0) {
+      logger.warn(`[price-sync] ${adapter.chainId}: stores fetch returned 0 items`);
+      return { error: 'no_stores_in_file' };
     }
 
     const inputs: UpsertBranchInput[] = res.stores.map(s => {
@@ -129,8 +134,9 @@ async function syncStoresForChain(
 
     return { fetched: res.stores.length, upserted };
   } catch (err) {
-    logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${err instanceof Error ? err.message : 'unknown'}`);
-    return {};
+    const msg = err instanceof Error ? err.message : 'unknown';
+    logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${msg}`);
+    return { error: msg };
   }
 }
 
@@ -198,9 +204,10 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     // סנכרון סניפים - נפרד, לא חוסם את המחירים אם נכשל
     const storesSummary = adapter.fetchLatestStores
       ? await syncStoresForChain(adapter)
-      : { fetched: undefined as number | undefined, upserted: undefined as number | undefined };
+      : { error: 'adapter_has_no_stores_support' };
     const storesFetched = storesSummary.fetched;
     const storesUpserted = storesSummary.upserted;
+    const storesError = storesSummary.error;
 
     const elapsedMs = Date.now() - t0;
     logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
@@ -208,7 +215,7 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     const r: SyncResult = {
       chainId: adapter.chainId, chainName: adapter.chainName,
       fetched: result.items.length, upserted: totalUpserted, elapsedMs,
-      storesFetched, storesUpserted,
+      storesFetched, storesUpserted, storesError,
     };
     results.push(r);
     lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });

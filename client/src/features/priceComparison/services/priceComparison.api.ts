@@ -11,6 +11,9 @@ export interface PriceChainStatus {
   // סניפים סונכרנו - כמות כוללת וכמות עם קואורדינטות תקפות (לאחר geocoding)
   branchCount?: number;
   branchesWithCoords?: number;
+  // שגיאת סנכרון סניפים (נפרד משגיאת מחירים) - כשלא הצלחנו למשוך קובץ Stores
+  storesError?: string | null;
+  storesFetched?: number | null;
 }
 
 export interface PriceSyncProgress {
