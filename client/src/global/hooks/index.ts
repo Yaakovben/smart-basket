@@ -6,6 +6,7 @@ import { getAccessToken, clearTokens } from "../../services/api/client";
 
 // ייצוא חוזר
 export { useDebounce } from './useDebounce';
+export { useIsDark } from './useIsDark';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
