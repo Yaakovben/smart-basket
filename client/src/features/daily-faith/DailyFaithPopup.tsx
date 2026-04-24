@@ -1,4 +1,4 @@
-import { Dialog, Box, Typography, Button, Fade } from '@mui/material';
+import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
@@ -161,12 +161,12 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             {renderFaithText(text)}
           </Typography>
 
-          {/* לוחית ברונזה + רצועת שיתוף דקה מתחתיה */}
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+          {/* שורת פעולה - לוחית ברונזה ראשית + כפתור שיתוף קטן לצידה */}
+          <Box sx={{ mt: 2, display: 'flex', gap: 1, width: '100%', alignItems: 'stretch' }}>
             <Button
               onClick={handleClose}
-              fullWidth
               sx={{
+                flex: 1,
                 height: 56,
                 borderRadius: '16px',
                 background: 'linear-gradient(90deg, #8B6914 0%, #6B4710 30%, #6B4710 70%, #8B6914 100%)',
@@ -187,36 +187,30 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
               {t('dailyFaithReadButton')}
             </Button>
 
-            {/* רצועת שיתוף דקה - תואמת סגנון הלוחית, עם כוכבי ✦ משני הצדדים */}
-            <Button
+            {/* שיתוף קטן לצידו - outline קרם/זהב, מרובע, תואם גובה */}
+            <IconButton
               onClick={handleShare}
               aria-label={t('dailyFaithShareAria')}
-              fullWidth
+              disableRipple
               sx={{
-                height: 34,
-                borderRadius: '10px',
-                background: 'transparent',
+                width: 44,
+                height: 56,
+                flexShrink: 0,
+                borderRadius: '12px',
                 color: '#8B6914',
-                border: '1px dashed rgba(139, 105, 20, 0.55)',
-                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
-                fontWeight: 600,
-                fontSize: 13,
-                letterSpacing: 0.5,
-                textTransform: 'none',
-                gap: 0.75,
-                transition: 'background 0.2s, border-color 0.2s',
+                background: 'rgba(255, 244, 201, 0.5)',
+                border: '1.5px solid rgba(139, 105, 20, 0.5)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+                transition: 'background 0.2s, border-color 0.2s, transform 0.12s',
                 '&:hover': {
-                  background: 'rgba(139, 105, 20, 0.06)',
+                  background: 'rgba(255, 231, 160, 0.7)',
                   borderColor: '#8B6914',
                 },
-                '&:active': { opacity: 0.7 },
+                '&:active': { transform: 'scale(0.94)' },
               }}
             >
-              <Box component="span" sx={{ fontSize: 11, opacity: 0.8 }} aria-hidden="true">✦</Box>
-              <IosShareIcon sx={{ fontSize: 15 }} />
-              שתף עם חבר
-              <Box component="span" sx={{ fontSize: 11, opacity: 0.8 }} aria-hidden="true">✦</Box>
-            </Button>
+              <IosShareIcon sx={{ fontSize: 18 }} />
+            </IconButton>
           </Box>
         </Box>
       </Box>
