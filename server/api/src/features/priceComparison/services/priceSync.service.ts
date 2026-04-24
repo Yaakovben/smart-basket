@@ -66,6 +66,54 @@ export function getLastSyncResults(): Array<SyncResult & { completedAt: string }
   return Array.from(lastSyncResults.values());
 }
 
+// סנכרון סניפים של רשת אחת. קואורדינטות: portal > fallback-של-עיר > Nominatim (חי, מוגבל).
+async function syncStoresForChain(
+  adapter: ChainAdapter
+): Promise<{ fetched?: number; upserted?: number }> {
+  if (!adapter.fetchLatestStores) return {};
+  try {
+    const res = await adapter.fetchLatestStores();
+    if (res.error || res.stores.length === 0) {
+      logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${res.error || 'empty'}`);
+      return {};
+    }
+
+    const inputs: UpsertBranchInput[] = res.stores.map(s => {
+      let { lat, lng } = s;
+      let coordSource: 'portal' | 'geocoded' | 'unknown' = 'unknown';
+      if (lat !== undefined && lng !== undefined) {
+        coordSource = 'portal';
+      } else {
+        const fallback = cityFallbackCoords(s.city);
+        if (fallback) { lat = fallback.lat; lng = fallback.lng; coordSource = 'geocoded'; }
+      }
+      return {
+        chainId: adapter.chainId, chainName: adapter.chainName,
+        storeId: s.storeId, storeName: s.storeName,
+        address: s.address, city: s.city, zipCode: s.zipCode,
+        lat, lng, coordSource,
+      };
+    });
+
+    const upserted = await BranchDAL.bulkUpsert(inputs);
+    logger.info(`[price-sync] ${adapter.chainId}: stores fetched=${res.stores.length}, upserted=${upserted}`);
+
+    // Nominatim: 1 req/sec, מוגבל ל-20 סניפים לריצה - השאר יקבלו בסנכרון הבא
+    const needGeo = inputs.filter(b => b.coordSource !== 'portal' && (b.address || b.city)).slice(0, 20);
+    for (const b of needGeo) {
+      const coords = await geocodeAddress(b.address, b.city);
+      if (!coords) continue;
+      const doc = await BranchDAL.findOne({ chainId: b.chainId, storeId: b.storeId });
+      if (doc) await BranchDAL.updateCoords(doc._id.toString(), coords.lat, coords.lng, 'geocoded');
+    }
+
+    return { fetched: res.stores.length, upserted };
+  } catch (err) {
+    logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${err instanceof Error ? err.message : 'unknown'}`);
+    return {};
+  }
+}
+
 // רענון מחירים לכל הרשתות הפעילות — משמש גם בסקריפט הידני וגם בcron
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
@@ -116,69 +164,12 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       totalUpserted += affected;
     }
 
-    // לאחר סנכרון המחירים - אם ה-adapter תומך, מושכים גם את רשימת הסניפים
-    // הרשמית (Stores*.xml) ומעדכנים את טבלת Branch. זה מה שמזין את המרחק/ניווט
-    // ב-UI. סניפים ללא lat/lng בקובץ עוברים geocoding דרך Nominatim.
-    let storesFetched: number | undefined;
-    let storesUpserted: number | undefined;
-    if (adapter.fetchLatestStores) {
-      try {
-        const storesResult = await adapter.fetchLatestStores();
-        if (storesResult.error || storesResult.stores.length === 0) {
-          logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${storesResult.error || 'empty'}`);
-        } else {
-          const branchInputs: UpsertBranchInput[] = [];
-          for (const s of storesResult.stores) {
-            // קואורדינטות: 1) מהקובץ, 2) fallback של עיר, 3) geocoding חי
-            let lat = s.lat;
-            let lng = s.lng;
-            let coordSource: 'portal' | 'geocoded' | 'unknown' = 'unknown';
-            if (lat !== undefined && lng !== undefined) {
-              coordSource = 'portal';
-            } else {
-              const cityFallback = cityFallbackCoords(s.city);
-              if (cityFallback) {
-                lat = cityFallback.lat;
-                lng = cityFallback.lng;
-                coordSource = 'geocoded'; // מקורב - רמת עיר
-              }
-            }
-            branchInputs.push({
-              chainId: adapter.chainId,
-              chainName: adapter.chainName,
-              storeId: s.storeId,
-              storeName: s.storeName,
-              address: s.address,
-              city: s.city,
-              zipCode: s.zipCode,
-              lat, lng, coordSource,
-            });
-          }
-          storesUpserted = await BranchDAL.bulkUpsert(branchInputs);
-          storesFetched = storesResult.stores.length;
-          logger.info(`[price-sync] ${adapter.chainId}: stores fetched=${storesFetched}, upserted=${storesUpserted}`);
-
-          // בצע geocoding מדויק בלב הסנכרון רק לכמות מוגבלת כדי לא לתקוע אותו.
-          // Nominatim מגביל ל-1 בקשה/שנייה - 20 סניפים = ~22 שניות. השאר יקבלו
-          // geocoding בריצה הבאה של הסנכרון.
-          const needGeo = branchInputs
-            .filter(b => b.coordSource !== 'portal' && (b.address || b.city))
-            .slice(0, 20);
-          for (const b of needGeo) {
-            const coords = await geocodeAddress(b.address, b.city);
-            if (coords) {
-              await BranchDAL.updateCoords(
-                // chainId+storeId ייחודי, נחפש לפיו
-                (await BranchDAL.findOne({ chainId: b.chainId, storeId: b.storeId }))?._id.toString() || '',
-                coords.lat, coords.lng, 'geocoded'
-              );
-            }
-          }
-        }
-      } catch (err) {
-        logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${err instanceof Error ? err.message : 'unknown'}`);
-      }
-    }
+    // סנכרון סניפים - נפרד, לא חוסם את המחירים אם נכשל
+    const storesSummary = adapter.fetchLatestStores
+      ? await syncStoresForChain(adapter)
+      : { fetched: undefined as number | undefined, upserted: undefined as number | undefined };
+    const storesFetched = storesSummary.fetched;
+    const storesUpserted = storesSummary.upserted;
 
     const elapsedMs = Date.now() - t0;
     logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
