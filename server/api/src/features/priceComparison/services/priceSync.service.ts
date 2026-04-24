@@ -14,6 +14,7 @@ import {
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { geocodeAddress, cityFallbackCoords } from './geocoder.service';
+import { invalidateBranchCache } from './branches.service';
 import { logger } from '../../../config/logger';
 
 // כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
@@ -190,6 +191,10 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     results.push(r);
     lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
   }
+
+  // חשוב: מנקים את ה-cache של branches כדי שהסניפים החדשים יופיעו מיד
+  // במונע השוואת המחירים (אחרת ה-cache של 2 דק' יגיש רשימה ישנה/ריקה).
+  invalidateBranchCache();
 
   return results;
 }

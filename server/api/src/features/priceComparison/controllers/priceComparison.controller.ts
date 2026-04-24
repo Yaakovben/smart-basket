@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import { getComparisonForUser, invalidateUser } from '../services/priceComparison.service';
+import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults } from '../services/priceSync.service';
 import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
@@ -52,8 +52,9 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
     const results = await syncAllChains();
     const summary = results.map(r => `${r.chainId}:${r.upserted}${r.error ? '(err)' : ''}`).join(', ');
     logger.info(`[admin-refresh] Completed: ${summary}`);
-    // ניקוי מטמון תוצאות ההשוואה (כל המשתמשים) - לא קריטי אם נכשל
-    invalidateUser(req.user!.id);
+    // ניקוי מטמון של כל המשתמשים - אחרי סנכרון הנתונים הכל השתנה,
+    // כולם צריכים לראות את המחירים והסניפים המעודכנים מיד.
+    invalidateAllUsers();
   } catch (err) {
     logger.error('[admin-refresh] Unhandled error:', err);
   } finally {

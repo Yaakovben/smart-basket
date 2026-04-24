@@ -262,6 +262,12 @@ export function invalidateUser(userId: string): void {
   userCache.delete(userId);
 }
 
+// מנקה את כל מטמון המשתמשים - נקרא אחרי סנכרון גלובלי כדי שכל המשתמשים
+// יראו מיד את הנתונים החדשים (מחירים וסניפים) בלי להמתין 3 דק'.
+export function invalidateAllUsers(): void {
+  userCache.clear();
+}
+
 // תובנות השוואת מחירים עבור משתמש.
 // filterListId אופציונלי - אם מועבר, מחשב רק את המוצרים של הרשימה הזו.
 // userLocation אופציונלי - אם מועבר, מצרף לכל רשת את הסניף הקרוב ביותר ואת המרחק.
