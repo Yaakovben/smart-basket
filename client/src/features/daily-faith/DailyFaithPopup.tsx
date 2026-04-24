@@ -2,6 +2,7 @@ import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
+import { useBodyScrollLock } from '../../global/hooks/useBodyScrollLock';
 import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 
 interface DailyFaithPopupProps {
@@ -16,6 +17,7 @@ interface DailyFaithPopupProps {
  */
 export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
+  useBodyScrollLock(true);
 
   const handleClose = () => {
     haptic('medium');

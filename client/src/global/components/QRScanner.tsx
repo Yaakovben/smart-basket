@@ -5,6 +5,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { haptic } from '../helpers';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface QRScannerProps {
   open: boolean;
@@ -23,6 +24,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open) return;

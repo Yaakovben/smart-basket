@@ -27,6 +27,7 @@ import MapIcon from '@mui/icons-material/Map';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useBodyScrollLock } from '../../../global/hooks/useBodyScrollLock';
 
 type SortMode = 'price' | 'distance' | 'combined';
 
@@ -138,6 +139,7 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
   isDark?: boolean;
   onClose: () => void;
 }) => {
+  useBodyScrollLock(!!branch);
   if (!branch) return null;
   const urls = buildNavUrls(branch);
   const open = (url: string) => {
