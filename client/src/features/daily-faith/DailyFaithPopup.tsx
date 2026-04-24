@@ -172,7 +172,7 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 width: 60,
                 height: 56,
                 flexShrink: 0,
-                borderRadius: '12px',
+                borderRadius: '18px',
                 color: '#8B6914',
                 background: 'rgba(255, 244, 201, 0.5)',
                 border: '1.5px solid rgba(139, 105, 20, 0.5)',
