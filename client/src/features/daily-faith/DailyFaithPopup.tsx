@@ -59,9 +59,11 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           bgcolor: 'transparent',
           boxShadow: 'none',
           overflow: 'visible',
-          m: 2,
+          // מרווח גדול יותר בצדדים כדי שהמסגרת הזהובה + הצל הזוהר סביבה לא יתגלשו/ייחתכו
+          mx: 3,
+          my: 2,
           maxWidth: 400,
-          width: '100%',
+          width: 'auto',
           // יציבות בגרירה: מונע תזוזה/גרירה של הפופאפ בלחיצה והחזקה על המסך
           touchAction: 'none',
           userSelect: 'none',
