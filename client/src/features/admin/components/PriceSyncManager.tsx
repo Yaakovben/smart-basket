@@ -8,11 +8,13 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Box, Typography, Button, CircularProgress, keyframes } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, LinearProgress, keyframes } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import PlaceIcon from '@mui/icons-material/Place';
+import SyncIcon from '@mui/icons-material/Sync';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
@@ -83,6 +85,13 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const chains = status?.chains ?? [];
   const syncActive = !!status?.syncInProgress || refreshing;
 
+  // אגרגציות של סניפים - מוצג כהתקדמות במהלך הסנכרון
+  const totalBranches = chains.reduce((s, c) => s + (c.branchCount ?? 0), 0);
+  const totalBranchesWithCoords = chains.reduce((s, c) => s + (c.branchesWithCoords ?? 0), 0);
+  const coordsPct = totalBranches > 0
+    ? Math.round((totalBranchesWithCoords / totalBranches) * 100)
+    : 0;
+
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
       {/* המודאל עצמו (Modal.tsx) כבר מטפל בגלילה אנכית במידת הצורך.
@@ -118,6 +127,82 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                 </Typography>
               </Box>
             </Box>
+
+            {/* באנר התקדמות - מופיע במהלך סנכרון פעיל */}
+            {syncActive && (
+              <Box sx={{
+                p: 1.5, borderRadius: '12px',
+                bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
+                border: '1px solid',
+                borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.2)',
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <SyncIcon sx={{ fontSize: 18, color: '#7C3AED', animation: `${spin} 1.8s linear infinite` }} />
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#7C3AED', flex: 1 }}>
+                    סנכרון פעיל
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 600 }}>
+                    רענון כל 10ש'
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  sx={{
+                    height: 5, borderRadius: 3,
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    '& .MuiLinearProgress-bar': {
+                      background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                    },
+                  }}
+                />
+                <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.75, lineHeight: 1.5 }}>
+                  מושך מחירים וסניפים מהפורטל הממשלתי. יכול לקחת 3-5 דקות.
+                </Typography>
+              </Box>
+            )}
+
+            {/* סיכום סניפים - מוצג רק אם יש נתונים */}
+            {totalBranches > 0 && (
+              <Box sx={{
+                p: 1.5, borderRadius: '12px',
+                bgcolor: isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)',
+                border: '1px solid',
+                borderColor: isDark ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.18)',
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <PlaceIcon sx={{ fontSize: 18, color: '#059669' }} />
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', flex: 1 }}>
+                    סניפים במאגר
+                  </Typography>
+                  <Typography sx={{ fontSize: 14, fontWeight: 900, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
+                    {totalBranches}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ fontSize: 11, color: 'text.secondary', flex: 1 }}>
+                    עם קואורדינטות תקפות
+                  </Typography>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: coordsPct >= 80 ? '#059669' : '#F59E0B' }}>
+                    {totalBranchesWithCoords} ({coordsPct}%)
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={coordsPct}
+                  sx={{
+                    height: 4, borderRadius: 2, mt: 0.5,
+                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: coordsPct >= 80 ? '#10B981' : '#F59E0B',
+                    },
+                  }}
+                />
+                {coordsPct < 80 && (
+                  <Typography sx={{ fontSize: 10, color: 'text.disabled', mt: 0.6, lineHeight: 1.45 }}>
+                    סניפים ללא קואורדינטות יקבלו מיקום אוטומטית בסנכרונים הבאים (20 לריצה)
+                  </Typography>
+                )}
+              </Box>
+            )}
 
             {/* כפתור רענון */}
             <Button
@@ -219,6 +304,17 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             <Typography sx={{ fontSize: 10.5, color: '#D97706', mt: 0.25 }}>
                               טרם סונכרן בהצלחה
                             </Typography>
+                          )}
+                          {!!c.branchCount && c.branchCount > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.3 }}>
+                              <PlaceIcon sx={{ fontSize: 11, color: '#7C3AED' }} />
+                              <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>
+                                {c.branchCount} סניפים
+                                {typeof c.branchesWithCoords === 'number' && c.branchesWithCoords < c.branchCount
+                                  ? ` · ${c.branchesWithCoords} עם מיקום`
+                                  : ''}
+                              </Typography>
+                            </Box>
                           )}
                         </Box>
                       </Box>

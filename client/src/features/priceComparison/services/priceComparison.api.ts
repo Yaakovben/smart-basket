@@ -8,6 +8,9 @@ export interface PriceChainStatus {
   lastSyncError?: string | null;
   lastSyncAt?: string | null;
   lastSyncFetched?: number | null;
+  // סניפים סונכרנו - כמות כוללת וכמות עם קואורדינטות תקפות (לאחר geocoding)
+  branchCount?: number;
+  branchesWithCoords?: number;
 }
 
 export interface PriceSyncStatus {

@@ -22,6 +22,9 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import CloseIcon from '@mui/icons-material/Close';
+import NearMeIcon from '@mui/icons-material/NearMe';
+import MapIcon from '@mui/icons-material/Map';
+import DirectionsIcon from '@mui/icons-material/Directions';
 import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -119,8 +122,17 @@ const buildNavUrls = (branch: NearestBranch) => {
   };
 };
 
-// דיאלוג קטן לבחירת אפליקציית ניווט. Waze/Google/Apple Maps כפתורים גדולים
-// עם אייקונים ברורים.
+// בוחר אפליקציית ניווט - דיאלוג נקי עם 3 אפשרויות.
+// אין שימוש באימוג'י מותגים (🍎 וכו') - אייקונים נקיים מ-MUI + צבעי מותג עדינים.
+type NavApp = {
+  key: 'waze' | 'googleMaps' | 'appleMaps';
+  label: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: string;
+  url: string;
+};
+
 const NavigationPicker = memo(({ branch, isDark, onClose }: {
   branch: NearestBranch | null;
   isDark?: boolean;
@@ -132,45 +144,85 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
     window.open(url, '_blank', 'noopener,noreferrer');
     onClose();
   };
-  const NavButton = ({ label, emoji, color, onClick }: {
-    label: string; emoji: string; color: string; onClick: () => void;
-  }) => (
+
+  const apps: NavApp[] = [
+    {
+      key: 'waze',
+      label: 'Waze',
+      subtitle: 'ניווט בזמן אמת',
+      icon: <NearMeIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      color: '#33CCFF',
+      url: urls.waze,
+    },
+    {
+      key: 'googleMaps',
+      label: 'Google Maps',
+      subtitle: 'מפות Google',
+      icon: <DirectionsIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      color: '#1A73E8',
+      url: urls.googleMaps,
+    },
+    {
+      key: 'appleMaps',
+      label: 'מפות (iOS)',
+      subtitle: 'Apple Maps',
+      icon: <MapIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      color: '#64748B',
+      url: urls.appleMaps,
+    },
+  ];
+
+  const NavRow = ({ app }: { app: NavApp }) => (
     <Box
       role="button"
       tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+      onClick={() => open(app.url)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
       sx={{
         display: 'flex', alignItems: 'center', gap: 1.5,
-        p: 1.5, borderRadius: '14px',
-        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
-        border: '1.5px solid', borderColor: `${color}33`,
+        px: 1.5, py: 1.25, borderRadius: '14px',
         cursor: 'pointer',
         userSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
-        transition: 'opacity 0.12s, transform 0.12s',
-        '&:hover': { bgcolor: `${color}14` },
-        '&:active': { opacity: 0.78, transform: 'scale(0.98)' },
+        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+        transition: 'background-color 0.12s, transform 0.12s, border-color 0.12s',
+        '&:hover': {
+          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+          borderColor: `${app.color}66`,
+        },
+        '&:active': { transform: 'scale(0.985)' },
       }}
     >
+      {/* אייקון במסגרת צבועה בצבע המותג - נראה מקצועי בלי אימוג'י */}
       <Box sx={{
-        width: 44, height: 44, borderRadius: '12px',
+        width: 42, height: 42, borderRadius: '12px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        bgcolor: `${color}22`,
-        fontSize: 24,
+        background: `linear-gradient(135deg, ${app.color}, ${app.color}CC)`,
+        boxShadow: `0 3px 10px ${app.color}55`,
         flexShrink: 0,
       }}>
-        {emoji}
+        {app.icon}
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-          {label}
+          {app.label}
         </Typography>
-        <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
-          פתח ניווט
+        <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.2, lineHeight: 1.3 }}>
+          {app.subtitle}
         </Typography>
       </Box>
-      <Box sx={{ color: color, fontSize: 20 }}>←</Box>
+      <Box sx={{
+        width: 28, height: 28, borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+        color: 'text.secondary',
+        flexShrink: 0,
+        fontSize: 16, fontWeight: 700,
+      }}>
+        ←
+      </Box>
     </Box>
   );
 
@@ -180,36 +232,93 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
       onClose={onClose}
       PaperProps={{
         sx: {
-          borderRadius: '20px', p: 0, m: 2, maxWidth: 360, width: '100%',
+          borderRadius: '22px', p: 0, m: 2, maxWidth: 380, width: '100%',
           bgcolor: isDark ? '#1E1B3A' : '#fff',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
         },
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.75 }}>
+      {/* כותרת עם גרדיאנט סגול עדין - מקבץ של סניף + מרחק בראש, נראה מקצועי */}
+      <Box sx={{
+        background: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+        color: 'white',
+        px: 2, py: 1.75,
+        borderRadius: '22px 22px 0 0',
+        position: 'relative',
+      }}>
+        <IconButton
+          size="small"
+          onClick={onClose}
+          aria-label="סגור"
+          sx={{
+            position: 'absolute', top: 8, insetInlineEnd: 8,
+            color: 'rgba(255,255,255,0.9)',
+            bgcolor: 'rgba(255,255,255,0.15)',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+            width: 28, height: 28,
+          }}
+        >
+          <CloseIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, pe: 4 }}>
+          <Box sx={{
+            width: 40, height: 40, borderRadius: '12px',
+            bgcolor: 'rgba(255,255,255,0.22)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <LocationOnIcon sx={{ fontSize: 22, color: 'white' }} />
+          </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
-              ניווט ל{branch.branchName}
+            <Typography sx={{ fontSize: 10.5, opacity: 0.85, fontWeight: 700, letterSpacing: 0.3, lineHeight: 1 }}>
+              ניווט אל
             </Typography>
-            <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.3, lineHeight: 1.4 }}>
-              📍 {branch.city} · {branch.address} · {branch.distanceKm} ק״מ ממך
+            <Typography sx={{
+              fontSize: 15, fontWeight: 800, lineHeight: 1.3, mt: 0.3,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {branch.branchName}
             </Typography>
           </Box>
-          <IconButton size="small" onClick={onClose} aria-label="סגור" sx={{ flexShrink: 0 }}>
-            <CloseIcon sx={{ fontSize: 18 }} />
-          </IconButton>
+          <Box sx={{
+            flexShrink: 0, textAlign: 'center',
+            px: 1, py: 0.4, borderRadius: '8px',
+            bgcolor: 'rgba(255,255,255,0.2)',
+          }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              {branch.distanceKm}
+            </Typography>
+            <Typography sx={{ fontSize: 9, opacity: 0.9, mt: 0.15 }}>
+              ק״מ
+            </Typography>
+          </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <NavButton label="Waze" emoji="🚗" color="#33CCFF" onClick={() => open(urls.waze)} />
-          <NavButton label="Google Maps" emoji="🗺️" color="#4285F4" onClick={() => open(urls.googleMaps)} />
-          <NavButton label="Apple Maps" emoji="🍎" color="#555" onClick={() => open(urls.appleMaps)} />
-        </Box>
-
-        <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 1.5, textAlign: 'center', lineHeight: 1.4 }}>
-          אם האפליקציה לא מותקנת - תיפתח בדפדפן
-        </Typography>
+        {(branch.city || branch.address) && (
+          <Typography sx={{
+            fontSize: 11, opacity: 0.92, mt: 0.85, lineHeight: 1.4,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {[branch.city, branch.address].filter(Boolean).join(' · ')}
+          </Typography>
+        )}
       </Box>
+
+      {/* רשימת האפליקציות */}
+      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.85 }}>
+        <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.disabled', px: 0.5, letterSpacing: 0.4 }}>
+          בחר אפליקציית ניווט
+        </Typography>
+        {apps.map(app => <NavRow key={app.key} app={app} />)}
+      </Box>
+
+      <Typography sx={{
+        fontSize: 10, color: 'text.disabled', textAlign: 'center',
+        pb: 1.5, px: 2, lineHeight: 1.45,
+      }}>
+        אם האפליקציה לא מותקנת היא תיפתח בדפדפן
+      </Typography>
     </Dialog>
   );
 });
