@@ -31,8 +31,9 @@ const shimmer = keyframes`
   50% { background-position: 100% 50%; }
 `;
 
-// שורה בודדת של מוצר בתוך הפירוט של רשת
-const ChainProductRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }) => {
+// שורה בודדת של מוצר בתוך הפירוט של רשת.
+// isCheapestInChain מוסיף badge "הכי זול ברשת" - משמש ל-3 הזולים בפירוט.
+const ChainProductRow = memo(({ m, isDark, isCheapestInChain }: { m: PriceMatch; isDark?: boolean; isCheapestInChain?: boolean }) => {
   const subtotal = m.price * m.userQuantity;
   if (!m.matched) {
     // לא זוהה ברשת זו
@@ -61,13 +62,27 @@ const ChainProductRow = memo(({ m, isDark }: { m: PriceMatch; isDark?: boolean }
       display: 'flex', alignItems: 'flex-start', gap: 1,
       py: 0.85, px: 1.25,
       borderRadius: '8px',
-      bgcolor: isDark ? 'rgba(20,184,166,0.05)' : 'rgba(20,184,166,0.03)',
+      bgcolor: isCheapestInChain
+        ? (isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)')
+        : (isDark ? 'rgba(20,184,166,0.05)' : 'rgba(20,184,166,0.03)'),
+      border: isCheapestInChain ? '1px solid rgba(16,185,129,0.35)' : 'none',
     }}>
-      <CheckCircleIcon sx={{ fontSize: 14, color: '#14B8A6', flexShrink: 0, mt: 0.2 }} />
+      <CheckCircleIcon sx={{ fontSize: 14, color: isCheapestInChain ? '#059669' : '#14B8A6', flexShrink: 0, mt: 0.2 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
-          {m.userProductName}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
+            {m.userProductName}
+          </Typography>
+          {isCheapestInChain && (
+            <Box sx={{
+              px: 0.6, py: 0.1, borderRadius: '4px',
+              bgcolor: '#10B981', color: 'white',
+              fontSize: 9, fontWeight: 800, letterSpacing: 0.3,
+            }}>
+              זול
+            </Box>
+          )}
+        </Box>
         <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.3, mt: 0.15 }}>
           {m.itemName}
         </Typography>
@@ -266,16 +281,45 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                 }} />
               </Box>
 
-              {/* פירוט המוצרים - מתרחב בלחיצה */}
+              {/* פירוט המוצרים - מתרחב בלחיצה.
+                  מיון: קודם מוצרים שזוהו מהזול ליקר (לפי מחיר יחידה), אחר כך לא זוהו.
+                  3 הזולים ביותר מקבלים badge "הכי זול ברשת". */}
               <Collapse in={isExpanded} timeout={200} unmountOnExit>
                 <Box sx={{
                   px: 1.25, py: 1.25,
                   display: 'flex', flexDirection: 'column', gap: 0.5,
                   bgcolor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.015)',
                 }}>
-                  {chain.matches.map(m => (
-                    <ChainProductRow key={m.productId} m={m} isDark={isDark} />
-                  ))}
+                  {(() => {
+                    const matched = [...chain.matches].filter(m => m.matched).sort((a, b) => a.price - b.price);
+                    const unmatched = chain.matches.filter(m => !m.matched);
+                    const cheapestIds = new Set(matched.slice(0, 3).map(m => m.productId));
+                    return (
+                      <>
+                        {matched.length > 0 && (
+                          <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#0D9488', px: 0.5, mb: 0.25, letterSpacing: 0.5 }}>
+                            הזולים ביותר ברשת
+                          </Typography>
+                        )}
+                        {matched.map(m => (
+                          <ChainProductRow
+                            key={m.productId}
+                            m={m}
+                            isDark={isDark}
+                            isCheapestInChain={cheapestIds.has(m.productId)}
+                          />
+                        ))}
+                        {unmatched.length > 0 && (
+                          <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', px: 0.5, mt: matched.length > 0 ? 0.75 : 0, mb: 0.25 }}>
+                            לא זוהו ({unmatched.length})
+                          </Typography>
+                        )}
+                        {unmatched.map(m => (
+                          <ChainProductRow key={m.productId} m={m} isDark={isDark} />
+                        ))}
+                      </>
+                    );
+                  })()}
                 </Box>
               </Collapse>
             </Box>
