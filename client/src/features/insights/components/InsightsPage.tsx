@@ -1,6 +1,6 @@
-import { useState, useEffect, memo, useRef } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, keyframes } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -12,105 +12,12 @@ import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparis
 import { InsightsLoader } from './InsightsLoader';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic } from '../../../global/helpers';
-
-const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
-const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
-// מעבר טאבים: שילוב של fade + slide קטן — תחושת מעבר חלק בלי להסיח את העין
-const tabEnter = keyframes`from{opacity:0;transform:translateY(12px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}`;
+import {
+  float, fadeIn, tabEnter, dayLabels, scoreEmoji,
+  AnimatedNumber, StatCard, SectionCard, HeroInsight,
+} from './insightsShared';
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
-
-const dayLabels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-
-// ספירה אנימטיבית
-const AnimatedNumber = ({ value }: { value: number }) => {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef<number>(0);
-  useEffect(() => {
-    const start = Date.now();
-    const dur = 700;
-    const tick = () => {
-      const p = Math.min(1, (Date.now() - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(eased * value));
-      if (p < 1) ref.current = requestAnimationFrame(tick);
-    };
-    ref.current = requestAnimationFrame(tick);
-    return () => { if (ref.current) cancelAnimationFrame(ref.current); };
-  }, [value]);
-  return <>{display}</>;
-};
-
-const scoreEmoji = (s: number) => s >= 90 ? '🏆' : s >= 80 ? '🔥' : s >= 60 ? '💪' : s >= 40 ? '📈' : '🌱';
-
-// ===== כרטיס סטטיסטיקה קטן - לשימוש חוזר ברחבי העמוד =====
-// משתמש ב-gradient עדין במקום צבע אחיד + tabular-nums כדי שמספרים שמתאנמים יתייצבו ברוחב
-const StatCard = ({ value, label, color, bg, border }: {
-  value: React.ReactNode; label: string; color: string; bg: string; border: string;
-}) => (
-  <Paper elevation={0} sx={{
-    p: 1.25, borderRadius: '12px', textAlign: 'center',
-    // גרדיאנט 45° עדין מ-bg לשקוף ב-5% - משווה עומק עדין לכרטיסים שטוחים
-    background: `linear-gradient(135deg, ${bg}, ${bg} 55%, transparent 130%)`,
-    border: `1px solid ${border}`,
-    transition: 'transform 0.15s ease, box-shadow 0.2s ease',
-  }}>
-    <Typography sx={{
-      fontSize: 20, fontWeight: 900, color, lineHeight: 1,
-      fontVariantNumeric: 'tabular-nums',
-    }}>{value}</Typography>
-    <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.4 }}>{label}</Typography>
-  </Paper>
-);
-
-// ===== כרטיס קטע (ספציפי לעמוד) =====
-const SectionCard = ({ title, children, isDark }: {
-  title: string; children: React.ReactNode; isDark: boolean;
-}) => (
-  <Paper elevation={0} sx={{
-    p: 2, mb: 2, borderRadius: '16px',
-    border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-    animation: `${fadeIn} 0.35s ease both`,
-  }}>
-    <Typography sx={{ fontSize: 14, fontWeight: 800, mb: 1.5 }}>{title}</Typography>
-    {children}
-  </Paper>
-);
-
-// ===== שורת כותרת אישית בראש כל טאב — מסגור חם אחד, לא עמוס =====
-// מקבלת טקסט עשיר (עם <b> לדגשים) ואייקון. תפקידה להרגיש כמו "שלום אישי",
-// לא כמו דף סטטיסטי. מופיעה לפני תוכן הטאב ומוסיפה אופי לכל טאב.
-const HeroInsight = ({ icon, text, accent, isDark }: {
-  icon: string;
-  text: React.ReactNode;
-  accent: string;
-  isDark: boolean;
-}) => (
-  <Box sx={{
-    display: 'flex', alignItems: 'center', gap: 1.25,
-    px: 1.5, py: 1.25, mb: 1.75, borderRadius: '14px',
-    background: isDark
-      ? `linear-gradient(135deg, ${accent}18, ${accent}06 75%)`
-      : `linear-gradient(135deg, ${accent}12, ${accent}03 75%)`,
-    border: '1px solid', borderColor: isDark ? `${accent}2A` : `${accent}22`,
-    animation: `${fadeIn} 0.4s ease both`,
-  }}>
-    <Box sx={{
-      width: 36, height: 36, flexShrink: 0,
-      borderRadius: '10px', bgcolor: isDark ? `${accent}28` : `${accent}18`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 19,
-    }}>
-      {icon}
-    </Box>
-    <Typography sx={{
-      flex: 1, fontSize: 13, color: 'text.primary', lineHeight: 1.5,
-      '& b': { color: accent, fontWeight: 800 },
-    }}>
-      {text}
-    </Typography>
-  </Box>
-);
 
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
