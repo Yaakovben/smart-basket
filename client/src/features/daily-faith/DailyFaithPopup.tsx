@@ -1,5 +1,5 @@
 import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
-import IosShareIcon from '@mui/icons-material/IosShare';
+import ShareIcon from '@mui/icons-material/Share';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { useBodyScrollLock } from '../../global/hooks/useBodyScrollLock';
@@ -189,29 +189,27 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 '&:active': { transform: 'scale(0.94)' },
               }}
             >
-              <IosShareIcon sx={{ fontSize: 20 }} />
+              <ShareIcon sx={{ fontSize: 20 }} />
             </IconButton>
 
-            {/* קראתי והתחזקתי - בהיר יותר (gradient מוזהב חם) */}
+            {/* קראתי והתחזקתי - הצבע המקורי מ-main: gradient זהב אלכסוני */}
             <Button
               onClick={handleClose}
               sx={{
                 flex: 1,
                 height: 56,
-                borderRadius: '16px',
-                background: 'linear-gradient(90deg, #D4AF37 0%, #B8872B 30%, #B8872B 70%, #D4AF37 100%)',
-                color: '#FFFBEA',
-                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
+                color: 'white',
                 fontWeight: 700,
-                fontSize: 18,
-                letterSpacing: 0.8,
-                textShadow: '0 -1px 0 rgba(89,55,0,0.4), 0 1px 0 rgba(255,248,210,0.2)',
-                boxShadow: '0 8px 22px rgba(184, 134, 11, 0.4), inset 0 1px 0 rgba(255, 248, 210, 0.45), inset 0 -2px 4px rgba(89, 55, 0, 0.2)',
-                border: '1px solid #8B6914',
+                fontSize: 15,
+                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
                 textTransform: 'none',
-                transition: 'filter 0.15s ease',
-                '&:hover': { filter: 'brightness(1.08)' },
-                '&:active': { filter: 'brightness(0.93)' },
+                transition: 'background 0.2s ease',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
+                },
+                '&:active': { transform: 'scale(0.97)' },
               }}
             >
               {t('dailyFaithReadButton')}

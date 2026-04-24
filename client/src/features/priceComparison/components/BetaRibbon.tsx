@@ -23,13 +23,14 @@ export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0, size = 'lg
   const isLeft = corner === 'top-left';
   // מימדי הריבון לפי גודל נבחר - גובה הסרט (padY) הונמך כדי שיהיה דק יותר
   // ולא תופס גובה רב בפינה, תוך שמירה על הרוחב האלכסוני.
-  const boxSize = size === 'xl' ? 150 : size === 'lg' ? 125 : 110;
-  const innerWidth = size === 'xl' ? 230 : size === 'lg' ? 200 : 160;
-  const innerTop = size === 'xl' ? 16 : size === 'lg' ? 14 : 14;
-  const innerOffset = size === 'xl' ? -42 : size === 'lg' ? -38 : -32;
-  const fontSize = size === 'xl' ? 13 : size === 'lg' ? 11.5 : 10.5;
-  const letterSpacing = size === 'xl' ? 3.5 : size === 'lg' ? 3 : 2.5;
-  const padY = size === 'xl' ? 0.55 : size === 'lg' ? 0.45 : 0.4;
+  // Size xl: רחב וארוך יותר - הריבון יורד נמוך יותר באלכסון ובולט בצורה טובה יותר
+  const boxSize = size === 'xl' ? 190 : size === 'lg' ? 125 : 110;
+  const innerWidth = size === 'xl' ? 300 : size === 'lg' ? 200 : 160;
+  const innerTop = size === 'xl' ? 38 : size === 'lg' ? 14 : 14;
+  const innerOffset = size === 'xl' ? -60 : size === 'lg' ? -38 : -32;
+  const fontSize = size === 'xl' ? 14 : size === 'lg' ? 11.5 : 10.5;
+  const letterSpacing = size === 'xl' ? 4 : size === 'lg' ? 3 : 2.5;
+  const padY = size === 'xl' ? 0.7 : size === 'lg' ? 0.45 : 0.4;
   const shadowStrength = size === 'xl'
     ? '0 5px 22px rgba(20,184,166,0.6)'
     : size === 'lg'

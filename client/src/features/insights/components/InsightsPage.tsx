@@ -106,7 +106,9 @@ export const InsightsPage = memo(() => {
         .then(res => {
           setPriceData(res);
           writeCache(PRICE_CACHE_KEY, res);
-          if (res?.lists && res.lists.length > 0) {
+          // מעדכנים את allUserLists רק כשאין listId ספציפי - ככה כל רשימות המשתמש
+          // נשמרות כששמים סינון ולא מוחלפות בתוצאה המצומצמת של רשימה אחת.
+          if (selectedListId === null && res?.lists && res.lists.length > 0) {
             setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
           }
         })
