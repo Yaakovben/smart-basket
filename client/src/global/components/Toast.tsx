@@ -19,11 +19,13 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
   const startRef = useRef(Date.now());
 
   // מצב גרירה - פוזיציה Y ומהירות (WhatsApp-style swipe down)
-  const [dragY, setDragY] = useState(0);          // מרחק גרירה נוכחי (תמיד >= 0 כי רק מטה)
-  const [isDragging, setIsDragging] = useState(false); // true תוך כדי גרירה - מכבה transition
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const touchRef = useRef<{ startY: number; lastY: number; lastT: number; velocity: number }>({
     startY: 0, lastY: 0, lastT: 0, velocity: 0,
   });
+  // דגל: האם הנגיעה התחילה על כפתור ה"ביטול" - כדי לא לחטוף לחיצה ל"גרירה"
+  const startedOnUndoRef = useRef(false);
 
   // סרגל התקדמות שנספר לאחור
   useEffect(() => {
@@ -37,13 +39,17 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // swipe down to dismiss - WhatsApp style: גרירה חלקה, snap-back עם transition, ביטול-סף 60px או flick
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // אם הנגיעה מתחילה על כפתור הביטול - לא מפעילים גרירה בכלל
+    const target = e.target as HTMLElement | null;
+    startedOnUndoRef.current = !!target?.closest('[data-undo-button="true"]');
+    if (startedOnUndoRef.current) return;
     const y = e.touches[0].clientY;
     touchRef.current = { startY: y, lastY: y, lastT: Date.now(), velocity: 0 };
     setIsDragging(true);
   }, []);
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (startedOnUndoRef.current) return;
     const y = e.touches[0].clientY;
     const now = Date.now();
     const r = touchRef.current;
@@ -55,12 +61,16 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
     setDragY(Math.max(0, diff));
   }, []);
   const handleTouchEnd = useCallback(() => {
+    if (startedOnUndoRef.current) {
+      startedOnUndoRef.current = false;
+      return;
+    }
     const r = touchRef.current;
     const finalY = r.lastY - r.startY;
-    // כל גרירה ממשית (מעל 5px בכל כיוון) תסגור את הטוסט
-    const shouldDismiss = Math.abs(finalY) > 5;
+    // סף גרירה של 30px או flick מהיר למטה - גבוה מספיק כדי לא לחטוף tap רגיל
+    const shouldDismiss = finalY > 30 || (finalY > 15 && r.velocity > 400);
     if (shouldDismiss) {
-      setDragY(Math.max(Math.abs(finalY), 120));
+      setDragY(Math.max(finalY, 120));
       setIsDragging(false);
       window.setTimeout(() => onDismiss?.(), 150);
     } else {
@@ -124,6 +134,7 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
             {msg}
           </Typography>
           <Box
+            data-undo-button="true"
             onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
             sx={{
               px: 1.5, py: 0.6,
