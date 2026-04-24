@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -97,19 +97,23 @@ export const InsightsPage = memo(() => {
   // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
   useEffect(() => {
     if (tab !== 'price') return;
-    // מצב טעינה מתחיל אם אין cache, או תמיד שמתחילים בקשה חדשה (כדי להציג אינדיקטור רענון)
-    setPriceLoading(true);
-    setPriceError(false);
-    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
-      .then(res => {
-        setPriceData(res);
-        writeCache(PRICE_CACHE_KEY, res);
-        if (res?.lists && res.lists.length > 0) {
-          setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
-        }
-      })
-      .catch(() => { setPriceError(true); })
-      .finally(() => setPriceLoading(false));
+    // השהיה של 300ms - מעבר מהיר בין רשימות/שינויי מיקום לא יפוצצו את השרת בפניות חופפות.
+    // הניקוי בתחילת הטיימר מבטל בקשה קודמת אם הערך השתנה.
+    const timer = window.setTimeout(() => {
+      setPriceLoading(true);
+      setPriceError(false);
+      priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
+        .then(res => {
+          setPriceData(res);
+          writeCache(PRICE_CACHE_KEY, res);
+          if (res?.lists && res.lists.length > 0) {
+            setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
+          }
+        })
+        .catch(() => { setPriceError(true); })
+        .finally(() => setPriceLoading(false));
+    }, 300);
+    return () => window.clearTimeout(timer);
   }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
@@ -262,7 +266,13 @@ export const InsightsPage = memo(() => {
                 </Button>
               </Box>
             ) : priceLoading ? (
-              <InsightsLoader text="מביא נתוני מחירים..." size="md" />
+              // שלד בצורת כרטיסי השוואת מחירים - תחושה שהמסך כבר שם
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                <Skeleton variant="rounded" height={48} sx={{ borderRadius: '12px' }} />
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: '14px' }} />
+                ))}
+              </Box>
             ) : (
               <InsightsLoader text="אין נתוני מחירים כרגע" size="md" />
             )

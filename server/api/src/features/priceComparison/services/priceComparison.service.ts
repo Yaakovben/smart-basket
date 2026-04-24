@@ -109,9 +109,23 @@ const CATEGORY_MODIFIERS = new Set([
 // זה מאפשר לקשט את אותה "התאמת שם" להרבה מוצרים ללא שאילתות חוזרות.
 type NameMatch = Omit<PriceMatch, 'productId' | 'userProductName' | 'userQuantity'>;
 
+// פונקציה עזר: מחזירה את הטוקנים המשמעותיים של שם לשימוש בחיפוש המוני.
+// חשוף כדי שה-caller יוכל להזמין batch של candidates פעם אחת.
+function getSearchTokensForName(userName: string): string[] {
+  const normalized = normalizeProductName(userName);
+  const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
+  const meaningful = meaningfulTokens(rawTokens);
+  return meaningful.slice(0, 3);
+}
+
 // ניסיון התאמה של שם מנורמל בודד למאגר (ללא productId/quantity).
-// chainId אופציונלי: אם מועבר — מתאים רק לרשת ההיא; אם undefined — חוצה רשתות.
-async function matchNormalizedName(userName: string, chainId: ChainId = BETA_CHAIN_ID, chainName: string = BETA_CHAIN_NAME): Promise<NameMatch> {
+// preFetchedCandidates אופציונלי: אם מועבר, חוסך את הפנייה ל-DB (מאפשר batching בקריאות רבות).
+async function matchNormalizedName(
+  userName: string,
+  chainId: ChainId = BETA_CHAIN_ID,
+  chainName: string = BETA_CHAIN_NAME,
+  preFetchedCandidates?: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>,
+): Promise<NameMatch> {
   const normalized = normalizeProductName(userName);
   const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
   const meaningful = meaningfulTokens(rawTokens);
@@ -132,26 +146,25 @@ async function matchNormalizedName(userName: string, chainId: ChainId = BETA_CHA
 
   if (meaningful.length === 0) return unmatched;
 
-  // "טוקן עוגן" = המילה הארוכה ביותר של המשתמש. מילים ארוכות הן יותר ספציפיות
-  // בעברית (קנולה > שמן, עגבנייה > ירק), ולכן חייבות להופיע במוצר של הרשת.
   const longestUserToken = meaningful.reduce((a, b) => (a.length >= b.length ? a : b));
   const longestUserStem = stemHebrew(longestUserToken);
 
-  // מפה מ-stem → מילה מקורית של המשתמש. מאפשרת התאמה של וריאנטים:
-  // "גבינה" של המשתמש נתפסת כ-"גבינת" ברשת כי שניהם נגזרים ל-"גבינ".
   const userStemMap = new Map<string, string>();
   for (const t of meaningful) userStemMap.set(stemHebrew(t), t);
 
-  // סף קשיח: לפחות 2 טוקנים תואמים (או כולם אם יש פחות מ-2 במשתמש).
   const minRequiredMatches = Math.min(meaningful.length, 2);
 
-  // שאילתה אחת עם $or על עד 3 טוקנים (במקום 3 שאילתות מקבילות)
-  const searchTokens = meaningful.slice(0, 3);
-  let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>> = [];
-  try {
-    candidates = await PriceDAL.findByAnyToken(searchTokens, chainId, 60);
-  } catch {
-    return unmatched;
+  let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>;
+  if (preFetchedCandidates) {
+    // הצרכן סיפק candidates - סינון לפי רשת יחידה אם צוינה
+    candidates = preFetchedCandidates.filter(c => c.chainId === chainId);
+  } else {
+    const searchTokens = meaningful.slice(0, 3);
+    try {
+      candidates = await PriceDAL.findByAnyToken(searchTokens, chainId, 60);
+    } catch {
+      return unmatched;
+    }
   }
   if (candidates.length === 0) return unmatched;
 
@@ -442,6 +455,26 @@ export async function getComparisonForUser(
       hasData: (activeCountsMap.get(r.chainId as ChainId) ?? 0) > 0,
     }));
 
+    // אופטימיזציה: פעם אחת לכל שם ייחודי - שאילתה אחת שמחזירה candidates מכל הרשתות יחד.
+    // חוסך N×M שאילתות (ראשית קודם הלך ל-BETA_CHAIN_ID בשאילתה נפרדת; עכשיו שאילתה אחת
+    // לכל שם מכסה את כולן). limit גבוה כי candidates מ-10 רשתות צריכים מקום.
+    const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
+    await Promise.all(
+      uniqueNames.map(async name => {
+        const tokens = getSearchTokensForName(name);
+        if (tokens.length === 0) {
+          candidatesByName.set(name, []);
+          return;
+        }
+        try {
+          const items = await PriceDAL.findByAnyToken(tokens, undefined, 60 * Math.max(1, activeChains.length));
+          candidatesByName.set(name, items);
+        } catch {
+          candidatesByName.set(name, []);
+        }
+      })
+    );
+
     const chainTotals: PriceChainTotal[] = await Promise.all(
       activeChains.map(async ({ chainId, chainName, hasData }) => {
         // הסניף הקרוב לרשת זו (אם המשתמש שיתף מיקום ויש לרשת סניפים ב-seed).
@@ -480,7 +513,8 @@ export async function getComparisonForUser(
               await Promise.all(
                 uniqueNames.map(async name => {
                   try {
-                    cache.set(name, await matchNormalizedName(name, chainId, chainName));
+                    // משתמשים ב-candidates שכבר הובאו - אין פנייה ל-DB
+                    cache.set(name, await matchNormalizedName(name, chainId, chainName, candidatesByName.get(name) || []));
                   } catch {
                     cache.set(name, {
                       normalizedName: '',
