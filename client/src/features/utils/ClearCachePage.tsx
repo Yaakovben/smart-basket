@@ -60,9 +60,11 @@ export const ClearCachePage = () => {
       // ניקוי localStorage (שימור טוקנים + גרסה כדי למנוע רענון נוסף ע"י App.tsx)
       updateStep('storage', 'running');
       try {
+        // שמירת טוקנים, משתמש במטמון (למניעת התנתקות אחרי הרענון) וגרסה (למניעת רענון נוסף ב-App.tsx)
         const preserve: Record<string, string | null> = {
           accessToken: localStorage.getItem('accessToken'),
           refreshToken: localStorage.getItem('refreshToken'),
+          cached_user: localStorage.getItem('cached_user'),
           app_build_version: localStorage.getItem('app_build_version'),
         };
         localStorage.clear();
@@ -103,6 +105,9 @@ export const ClearCachePage = () => {
   useEffect(() => {
     if (!done) return;
     const timer = window.setTimeout(() => {
+      // מונע רענון כפול: כשה-SW החדש יפעיל SW_ACTIVATED אחרי ה-redirect,
+      // הראוטר בודק את הדגל הזה ולא מרענן שוב.
+      try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch {}
       window.location.replace('/?t=' + Date.now());
     }, 500);
     return () => window.clearTimeout(timer);
