@@ -3,7 +3,6 @@ import {
   ramiLevyAdapter,
   yenotBitanAdapter,
   tivTaamAdapter,
-  haziHinamAdapter,
   shufersalAdapter,
   keshetAdapter,
   stopMarketAdapter,
@@ -20,13 +19,12 @@ import { logger } from '../../../config/logger';
 
 // כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
 // אם adapter נכשל, השאר ממשיכים.
-// Victory, Super-Pharm ו-Hazi-Hinam הישנים השתמשו בפורטלים שונים; הוסרו עד שיתווסף adapter מתאים.
+// הוסרו: חצי חינם (מפרסמת בפורטל Cerberus אחר, לא publishedprices).
 const adapters: ChainAdapter[] = [
   osherAdAdapter,
   ramiLevyAdapter,
   yenotBitanAdapter,
   tivTaamAdapter,
-  haziHinamAdapter,
   keshetAdapter,
   stopMarketAdapter,
   politzerAdapter,

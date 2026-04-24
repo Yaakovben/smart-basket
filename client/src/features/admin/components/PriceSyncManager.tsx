@@ -36,6 +36,17 @@ const formatAge = (hours: number | null): string => {
   return `לפני ${Math.floor(hours / 24)} ימים`;
 };
 
+// תרגום קודי שגיאה טכניים לעברית קריאה. שגיאות נפוצות מהפורטל
+// בד"כ אומרות שהרשת לא פרסמה קובץ היום - לא תקלה אצלנו.
+const humanizeError = (raw: string): { msg: string; severity: 'soft' | 'hard' } => {
+  if (/no_price_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה מחירים היום', severity: 'soft' };
+  if (/no_stores_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה קובץ סניפים', severity: 'soft' };
+  if (/401|unauthorized|login|invalid.*user/i.test(raw)) return { msg: 'משתמש/סיסמה לא תקפים בפורטל', severity: 'hard' };
+  if (/timeout|ETIMEDOUT|ECONNRESET/i.test(raw)) return { msg: 'הפורטל לא מגיב - ננסה שוב בסנכרון הבא', severity: 'soft' };
+  if (/rate.?limit|too.?many/i.test(raw)) return { msg: 'חריגת קצב מהפורטל', severity: 'soft' };
+  return { msg: raw, severity: 'hard' };
+};
+
 export const PriceSyncManager = ({ onClose }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -274,9 +285,17 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   </Typography>
                 </Box>
                 {chains.map((c) => {
-                  const hasError = !!c.lastSyncError;
+                  const rawError = c.lastSyncError;
+                  const humanError = rawError ? humanizeError(rawError) : null;
+                  // שגיאה "רכה" (הרשת לא פרסמה) נראית כאזהרה אמיתית-צבעונית עדינה;
+                  // שגיאה "קשה" (משתמש לא תקף וכו') באדום.
+                  const isSoftError = humanError?.severity === 'soft';
+                  const isHardError = humanError?.severity === 'hard';
                   const isEmpty = c.count === 0;
-                  const statusColor = hasError ? '#EF4444' : isEmpty ? '#F59E0B' : '#14B8A6';
+                  const statusColor = isHardError ? '#EF4444'
+                    : isSoftError ? '#94A3B8'
+                    : isEmpty ? '#F59E0B'
+                    : '#14B8A6';
                   return (
                     <Box
                       key={c.chainId}
@@ -295,12 +314,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
                             {c.chainName}
                           </Typography>
-                          {hasError && (
-                            <Typography sx={{ fontSize: 10.5, color: '#B91C1C', mt: 0.25, wordBreak: 'break-word' }}>
-                              שגיאת סנכרון: {c.lastSyncError}
+                          {humanError && (
+                            <Typography sx={{
+                              fontSize: 10.5,
+                              color: isHardError ? '#B91C1C' : 'text.secondary',
+                              mt: 0.25, wordBreak: 'break-word',
+                            }}>
+                              {humanError.msg}
                             </Typography>
                           )}
-                          {!hasError && isEmpty && (
+                          {!humanError && isEmpty && (
                             <Typography sx={{ fontSize: 10.5, color: '#D97706', mt: 0.25 }}>
                               טרם סונכרן בהצלחה
                             </Typography>
