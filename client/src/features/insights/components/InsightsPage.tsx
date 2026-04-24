@@ -11,7 +11,7 @@ import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
-import { haptic } from '../../../global/helpers';
+import { haptic, safeStorage } from '../../../global/helpers';
 import {
   float, fadeIn, tabEnter, dayLabels, scoreEmoji,
   AnimatedNumber, StatCard, SectionCard, HeroInsight,
@@ -19,13 +19,31 @@ import {
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
 
+// Cache מקומי - מאפשר הצגה מיידית של תובנות בזמן שהשרת מחשב.
+// תוקף: 24 שעות (הנתונים לא משתנים הרבה בין פתיחות).
+const INSIGHTS_CACHE_KEY = 'sb_insights_cache_v1';
+const PRICE_CACHE_KEY = 'sb_price_cache_v1';
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+interface CachedEnvelope<T> { data: T; at: number }
+const readCache = <T,>(key: string): T | null => {
+  const c = safeStorage.getJSON<CachedEnvelope<T> | null>(key, null);
+  if (!c || typeof c !== 'object' || !c.at) return null;
+  if (Date.now() - c.at > CACHE_TTL_MS) return null;
+  return c.data;
+};
+const writeCache = <T,>(key: string, data: T): void => {
+  safeStorage.setJSON(key, { data, at: Date.now() });
+};
+
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const [data, setData] = useState<InsightsData | null>(null);
-  const [priceData, setPriceData] = useState<PriceComparisonData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // מאתחלים מה-cache המקומי - הדף נראה מלא מיד, והרענון רץ ברקע.
+  const [data, setData] = useState<InsightsData | null>(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY));
+  const [priceData, setPriceData] = useState<PriceComparisonData | null>(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY));
+  // loading ראשוני רק אם אין cache - כך אין מסך ריק בפתיחות חוזרות.
+  const [loading, setLoading] = useState(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY) === null);
   const [error, setError] = useState(false);
   // הטאב נשמר ב-URL (?tab=lists) כדי ש"חזור" מדף הרשימה יחזיר אותנו לטאב הנכון.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,8 +64,8 @@ export const InsightsPage = memo(() => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   // שבוע נבחר בגרף המגמה (לחיצה מציגה פרטים)
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
-  // טעינה של נתוני מחירים - בנפרד מ-loading הראשי (שהוא עבור insightsApi)
-  const [priceLoading, setPriceLoading] = useState(true);
+  // loading של מחירים - לא מראה לודר כשיש cache, רק בדיקה רקעית.
+  const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
   // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר בנפרד כדי שבורר הרשימות
   // יישאר זמין גם כשהתוצאה מצומצמת לרשימה אחת.
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -63,38 +81,31 @@ export const InsightsPage = memo(() => {
   // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
   const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
 
+  // רענון insights ברקע - תמיד רץ, מעדכן cache מקומי לפעם הבאה.
   useEffect(() => {
-    insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
+    insightsApi.getInsights()
+      .then(res => { setData(res); writeCache(INSIGHTS_CACHE_KEY, res); })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
   }, []);
 
-  // טעינה עצלה של השוואת מחירים: רק כשהמשתמש לוחץ על טאב 'price'.
-  // חוסך בקשה כבדה למי שלא מעוניין בהשוואה.
+  // טעינה/רענון של השוואת מחירים - רץ כשהטאב 'price', selectedListId או userLocation משתנים.
+  // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
   useEffect(() => {
     if (tab !== 'price') return;
-    if (priceData !== null || !priceLoading) return; // כבר נטען או מטען
-    priceComparisonApi.getComparison(undefined, userLocation ?? undefined)
+    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
       .then(res => {
         setPriceData(res);
+        writeCache(PRICE_CACHE_KEY, res);
         if (res?.lists && res.lists.length > 0) {
           setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
         }
       })
       .catch(() => {})
       .finally(() => setPriceLoading(false));
-  }, [tab, priceData, priceLoading, userLocation]);
-
-  // כשהמשתמש משנה בחירת רשימה או מוסיף מיקום - מרעננים את נתוני המחירים
-  useEffect(() => {
-    if (allUserLists.length === 0) return; // דילוג ב-load ראשוני
-    setPriceLoading(true);
-    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
-      .then(setPriceData)
-      .catch(() => {})
-      .finally(() => setPriceLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedListId, userLocation]);
+  }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
     <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
@@ -223,9 +234,9 @@ export const InsightsPage = memo(() => {
 
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
-          (priceLoading || !priceData) ? (
-            // לודר מוצג הן בזמן טעינה פעילה, והן כש-API החזיר null (כשלון שקט)
-            // — כדי שלא יישאר מסך ריק בלי הסבר.
+          !priceData ? (
+            // לודר רק כשאין שום נתון (cache ריק + שרת עוד לא חזר).
+            // אם יש נתון - מציגים אותו גם בזמן רענון, בלי להבהב.
             <InsightsLoader text={priceLoading ? 'מביא נתוני מחירים...' : 'אין נתוני מחירים כרגע'} size="md" />
           ) : (
             <>
