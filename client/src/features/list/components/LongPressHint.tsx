@@ -24,7 +24,6 @@ export const LongPressHint = memo(() => {
     // נעלם אוטומטית אחרי 12 שניות — המשתמש לא חייב ללחוץ X
     const timer = window.setTimeout(() => dismiss(), 12_000);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show]);
 
   const dismiss = () => {

@@ -16,7 +16,7 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   const [progress, setProgress] = useState(100);
-  const startRef = useRef(Date.now());
+  const startRef = useRef(0);
 
   // מצב גרירה - פוזיציה Y ומהירות (WhatsApp-style swipe down)
   const [dragY, setDragY] = useState(0);
@@ -29,6 +29,7 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
 
   // סרגל התקדמות שנספר לאחור
   useEffect(() => {
+    startRef.current = Date.now();
     const tick = () => {
       const elapsed = Date.now() - startRef.current;
       const remaining = Math.max(0, 100 - (elapsed / UNDO_DURATION) * 100);

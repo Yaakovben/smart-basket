@@ -3,7 +3,7 @@
  * ה-storage חסום (מצב גלישה-פרטית מסוים, quota חרג, או הרשאה נדחתה).
  *
  * מחליף את הדפוס החוזר ברחבי הקוד:
- *   try { localStorage.setItem(k, v) } catch { /* ignore *​/ }
+ *   try { localStorage.setItem(k, v) } catch { }
  * ב-API נקי יותר שגם מאפשר לטפל ב-JSON ללא הזנחת שגיאות.
  */
 

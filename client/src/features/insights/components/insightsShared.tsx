@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, keyframes } from '@mui/material';
 
