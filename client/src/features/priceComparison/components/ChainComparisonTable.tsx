@@ -120,6 +120,20 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
     ? Math.max(...completeChains.map(c => c.savings))
     : 0;
 
+  // מחשבים לכל מוצר באיזו רשת הוא הזול ביותר מכל הרשתות (לא רק בתוך רשת אחת).
+  // זה מאפשר לסמן "זול" רק על רשת עם המחיר הזול ביותר לאותו מוצר.
+  // אם 2 רשתות אותו מחיר - שתיהן מסומנות.
+  const cheapestPriceByProduct = new Map<string, number>();
+  for (const chain of chainsWithData) {
+    for (const m of chain.matches) {
+      if (!m.matched) continue;
+      const current = cheapestPriceByProduct.get(m.productId);
+      if (current === undefined || m.price < current) {
+        cheapestPriceByProduct.set(m.productId, m.price);
+      }
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -304,12 +318,22 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                   {(() => {
                     const matched = [...chain.matches].filter(m => m.matched).sort((a, b) => a.price - b.price);
                     const unmatched = chain.matches.filter(m => !m.matched);
-                    const cheapestIds = new Set(matched.slice(0, 3).map(m => m.productId));
+                    // "זול" מסמן כל מוצר שהמחיר ברשת הזו = המחיר הכי זול בכל הרשתות
+                    // (לא רק הזול בתוך הרשת הזו). כך אם מוצר זול יותר במקום אחר,
+                    // הוא לא יסומן כאן.
+                    const cheapestAcrossIds = new Set(
+                      matched
+                        .filter(m => cheapestPriceByProduct.get(m.productId) === m.price)
+                        .map(m => m.productId)
+                    );
+                    const hasAnyCheapest = cheapestAcrossIds.size > 0;
                     return (
                       <>
                         {matched.length > 0 && (
                           <Typography sx={{ fontSize: 10, fontWeight: 800, color: '#0D9488', px: 0.5, mb: 0.25, letterSpacing: 0.5 }}>
-                            הזולים ביותר ברשת
+                            {hasAnyCheapest
+                              ? `${cheapestAcrossIds.size} מוצרים במחיר הטוב ביותר כאן`
+                              : 'מחירים ברשת זו'}
                           </Typography>
                         )}
                         {matched.map(m => (
@@ -317,7 +341,7 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                             key={m.productId}
                             m={m}
                             isDark={isDark}
-                            isCheapestInChain={cheapestIds.has(m.productId)}
+                            isCheapestInChain={cheapestAcrossIds.has(m.productId)}
                           />
                         ))}
                         {unmatched.length > 0 && (
