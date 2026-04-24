@@ -45,9 +45,9 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
         const video = videoRef.current;
         if (!video) throw new Error('video element missing');
 
-        // רזולוציה גבוהה יותר עוזרת לזיהוי QR מרחוק או קטן.
+        // constraints מינימליים - פשוט לבחור מצלמה אחורית. רזולוציה קשיחה עלולה להיכשל ב-fallback.
         const controls = await reader.decodeFromConstraints(
-          { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+          { video: { facingMode: { ideal: 'environment' } }, audio: false },
           video,
           (result, _err, c) => {
             if (cancelled) return;
@@ -58,6 +58,8 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
             }
           },
         );
+        // מוודאים שהוידאו מתחיל לנגן - iOS לפעמים דורש play() מפורש אחרי קבלת הסטרים
+        try { await video.play(); } catch { /* אם כבר מנגן */ }
         if (cancelled) {
           controls.stop();
           return;
@@ -131,8 +133,41 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
             ref={videoRef}
             playsInline
             muted
+            autoPlay
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
+
+          {/* מסגרת עזר מרובעת במרכז - עוזרת למשתמש ליישר את ה-QR. ZXing מחפש בכל הפריים
+              אבל QR שלא במרכז עם הטיה קלה לרוב לא מזוהה. */}
+          {!error && !starting && (
+            <Box aria-hidden="true" sx={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none',
+            }}>
+              <Box sx={{
+                width: 240, height: 240, maxWidth: '70vw', maxHeight: '70vw',
+                border: '3px solid rgba(255,255,255,0.9)',
+                borderRadius: '16px',
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.35)',
+                position: 'relative',
+              }}>
+                {/* פינות מודגשות */}
+                {[
+                  { top: -3, left: -3, borderRight: 0, borderBottom: 0 },
+                  { top: -3, right: -3, borderLeft: 0, borderBottom: 0 },
+                  { bottom: -3, left: -3, borderRight: 0, borderTop: 0 },
+                  { bottom: -3, right: -3, borderLeft: 0, borderTop: 0 },
+                ].map((pos, i) => (
+                  <Box key={i} sx={{
+                    position: 'absolute', width: 24, height: 24,
+                    border: '4px solid #14B8A6', borderRadius: '4px',
+                    ...pos,
+                  }} />
+                ))}
+              </Box>
+            </Box>
+          )}
 
           {!error && (
             <Box sx={{
