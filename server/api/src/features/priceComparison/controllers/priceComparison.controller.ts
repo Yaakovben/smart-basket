@@ -3,6 +3,7 @@ import { getComparisonForUser, invalidateUser } from '../services/priceCompariso
 import { syncAllChains, getRegisteredChains, getLastSyncResults } from '../services/priceSync.service';
 import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
+import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
@@ -66,6 +67,8 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
 export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const active = await PriceDAL.getActiveChainsWithCounts();
   const activeMap = new Map(active.map(c => [c.chainId, c]));
+  const branchCounts = await BranchDAL.countsByChain();
+  const branchMap = new Map(branchCounts.map(b => [b.chainId, b]));
   const lastSyncMap = new Map(getLastSyncResults().map(r => [r.chainId, r]));
 
   // ממזגים את כל הרשתות הרשומות (מה-adapters) עם כמויות מה-DB + תוצאות סנכרון אחרונות.
@@ -74,6 +77,7 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   const chains = registered.map(r => {
     const found = activeMap.get(r.chainId as import('../models/Price.model').ChainId);
     const sync = lastSyncMap.get(r.chainId);
+    const branches = branchMap.get(r.chainId as import('../models/Price.model').ChainId);
     return {
       chainId: r.chainId,
       chainName: r.chainName,
@@ -81,6 +85,8 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
       lastSyncError: sync?.error ?? null,
       lastSyncAt: sync?.completedAt ?? null,
       lastSyncFetched: sync?.fetched ?? null,
+      branchCount: branches?.count ?? 0,
+      branchesWithCoords: branches?.withCoords ?? 0,
     };
   }).sort((a, b) => b.count - a.count);
 

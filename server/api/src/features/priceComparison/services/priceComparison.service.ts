@@ -440,7 +440,7 @@ export async function getComparisonForUser(
       activeChains.map(async ({ chainId, chainName, hasData }) => {
         // הסניף הקרוב לרשת זו (אם המשתמש שיתף מיקום ויש לרשת סניפים ב-seed).
         // מוצמד גם לרשתות ללא נתונים היום - המשתמש עדיין יכול לראות "הסניף הקרוב ביקרתי".
-        const nearestBranch = userLocation ? findNearestBranch(chainId, userLocation) ?? undefined : undefined;
+        const nearestBranch = userLocation ? (await findNearestBranch(chainId, userLocation)) ?? undefined : undefined;
 
         // אם אין לרשת נתונים היום - מחזירים מיד כרטיס ריק (חוסך חישובים)
         if (!hasData) {

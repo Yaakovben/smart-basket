@@ -21,7 +21,10 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
-import type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';
+import type {
+  ChainAdapter, ChainFetchResult, ChainPriceItem,
+  ChainStoreItem, ChainStoresFetchResult,
+} from './types';
 import type { ChainId } from '../models/Price.model';
 
 const PORTAL_BASE = 'https://url.publishedprices.co.il';
@@ -136,6 +139,40 @@ async function listDir(client: AxiosInstance, csrftoken: string, cd: string, sea
   return res.data?.aaData || [];
 }
 
+// מאתר את הקובץ החדש ביותר שמתאים ל-pattern מסוים (PriceFull / StoresFull).
+// מנסה גם בשורש וגם בתת-תיקיות תאריכים (חלק מהרשתות).
+async function listLatestMatchingFile(
+  client: AxiosInstance,
+  csrftoken: string,
+  searchTerm: string,
+  pattern: RegExp
+): Promise<string | null> {
+  const rootFiles = await listDir(client, csrftoken, '/', searchTerm);
+  const rootMatches = rootFiles
+    .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
+    .filter(f => pattern.test(f.name))
+    .sort((a, b) => b.name.localeCompare(a.name));
+
+  if (rootMatches.length > 0) return rootMatches[0].name;
+
+  const allFiles = await listDir(client, csrftoken, '/', '');
+  const subDirs = allFiles
+    .map(f => ({ name: f.fname || f.name || f.DT_RowId || '', type: f.type }))
+    .filter(f => f.type === 'd' && /^\d{4}-\d{2}-\d{2}|^\d{8}/.test(f.name))
+    .sort((a, b) => b.name.localeCompare(a.name));
+
+  for (const dir of subDirs.slice(0, 3)) {
+    const subFiles = await listDir(client, csrftoken, `/${dir.name}`, searchTerm);
+    const matches = subFiles
+      .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
+      .filter(f => pattern.test(f.name))
+      .sort((a, b) => b.name.localeCompare(a.name));
+    if (matches.length > 0) return `${dir.name}/${matches[0].name}`;
+  }
+
+  return null;
+}
+
 async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string): Promise<string | null> {
   // 1) נסיון ראשון: PriceFull ברוט
   const rootFiles = await listDir(client, csrftoken, '/', 'PriceFull');
@@ -208,6 +245,106 @@ function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
   return results;
 }
 
+// פרסור של קובץ Stores*.xml בפורמטים השונים שהרשתות מפרסמות.
+// שדות נפוצים: STORE/Store, CHAINID, STOREID, STORENAME, ADDRESS, CITY, ZIPCODE.
+// lat/lng לעתים מופיעים בשדות Latitude/Longitude (בחלק קטן מהרשתות).
+function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
+  let xml: string;
+  if (filename.endsWith('.gz')) {
+    xml = gunzipSync(buf).toString('utf-8');
+  } else {
+    xml = buf.toString('utf-8');
+  }
+
+  const parser = new XMLParser({
+    ignoreAttributes: true,
+    parseTagValue: false,
+    trimValues: true,
+  });
+  const parsed = parser.parse(xml) as Record<string, unknown>;
+
+  // ה-root יכול להיות Root / root / asx:abap / ASX:ABAP. נחפש בכולם.
+  const pickAny = (obj: unknown, keys: string[]): unknown => {
+    if (!obj || typeof obj !== 'object') return undefined;
+    const rec = obj as Record<string, unknown>;
+    for (const k of keys) {
+      if (rec[k] !== undefined) return rec[k];
+      const lower = Object.keys(rec).find(x => x.toLowerCase() === k.toLowerCase());
+      if (lower) return rec[lower];
+    }
+    return undefined;
+  };
+
+  const root = pickAny(parsed, ['Root', 'root', 'asx:abap', 'OrderXml', 'XmlDoc']);
+  const storesContainer = pickAny(root, ['SubChains', 'Stores', 'STORES']);
+  // חלק מהרשתות ממש משתמשות ב-SubChains → SubChain → Stores → Store
+  const stores = pickAny(storesContainer, ['SubChain', 'Stores', 'Store', 'STORE'])
+    ?? pickAny(root, ['Stores', 'STORES', 'Store', 'STORE']);
+
+  // נרד עד שמגיעים לרמת ה-Store. אם מצאנו רשימה נפוצה של Store
+  const collectStores = (node: unknown): unknown[] => {
+    if (!node) return [];
+    if (Array.isArray(node)) return node.flatMap(collectStores);
+    if (typeof node !== 'object') return [];
+    const rec = node as Record<string, unknown>;
+    // נחפש Store / STORE בתת-צמתים
+    const keys = Object.keys(rec);
+    const storeKey = keys.find(k => k.toLowerCase() === 'store');
+    if (storeKey) {
+      const v = rec[storeKey];
+      return Array.isArray(v) ? v : [v];
+    }
+    // אם יש Stores/STORES - נרד לתוכו
+    const storesKey = keys.find(k => k.toLowerCase() === 'stores');
+    if (storesKey) return collectStores(rec[storesKey]);
+    // אם מבנה יחיד (רשומה של סניף בודד עם שדות StoreId)
+    if ('StoreId' in rec || 'STOREID' in rec || 'storeId' in rec) return [rec];
+    return [];
+  };
+
+  const storeNodes = collectStores(stores);
+
+  const pick = (obj: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const k of keys) {
+      const lower = Object.keys(obj).find(x => x.toLowerCase() === k.toLowerCase());
+      if (lower && obj[lower] !== undefined && obj[lower] !== null && obj[lower] !== '') {
+        return String(obj[lower]).trim();
+      }
+    }
+    return undefined;
+  };
+  const toNum = (v: string | undefined): number | undefined => {
+    if (!v) return undefined;
+    const n = parseFloat(v);
+    if (!Number.isFinite(n) || n === 0) return undefined;
+    return n;
+  };
+
+  const results: ChainStoreItem[] = [];
+  for (const node of storeNodes) {
+    if (!node || typeof node !== 'object') continue;
+    const rec = node as Record<string, unknown>;
+    const storeId = pick(rec, ['StoreId', 'STOREID', 'storeId']);
+    const storeName = pick(rec, ['StoreName', 'STORENAME', 'storeName', 'SubChainName']);
+    if (!storeId || !storeName) continue;
+    const lat = toNum(pick(rec, ['Latitude', 'LATITUDE', 'lat']));
+    const lng = toNum(pick(rec, ['Longitude', 'LONGITUDE', 'lng', 'lon']));
+    // סינון ערכים לא הגיוניים (חלק מהפורטלים ממלאים 0/0)
+    const validCoords = lat !== undefined && lng !== undefined
+      && lat >= 29 && lat <= 34 && lng >= 33 && lng <= 36;
+    results.push({
+      storeId,
+      storeName,
+      address: pick(rec, ['Address', 'ADDRESS']),
+      city: pick(rec, ['City', 'CITY']),
+      zipCode: pick(rec, ['ZipCode', 'ZIPCODE', 'zip']),
+      lat: validCoords ? lat : undefined,
+      lng: validCoords ? lng : undefined,
+    });
+  }
+  return results;
+}
+
 export function createPublishedPricesAdapter(options: PublishedPricesOptions): ChainAdapter {
   const { chainId, chainName, username, password = '' } = options;
 
@@ -227,6 +364,28 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
         return { chainId, chainName, items: [], fetchedFiles: 0, error: msg };
+      }
+    },
+    async fetchLatestStores(): Promise<ChainStoresFetchResult> {
+      try {
+        const { client, csrftoken } = await createAuthenticatedClient(username, password);
+        // מפרסים קובצי Stores* / StoresFull* (הראשון מכיל את כל הסניפים).
+        // שתי התבניות נפוצות בפורטל.
+        const filename = await listLatestMatchingFile(
+          client,
+          csrftoken,
+          'Stores',
+          /Stores(Full)?.*\.(gz|xml)/i
+        );
+        if (!filename) {
+          return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
+        }
+        const buf = await downloadFile(client, filename);
+        const stores = parseStoresXml(buf, filename);
+        return { chainId, chainName, stores, fetchedFiles: 1 };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown_error';
+        return { chainId, chainName, stores: [], fetchedFiles: 0, error: msg };
       }
     },
   };

@@ -14,6 +14,8 @@ import {
   type ChainAdapter,
 } from '../chains';
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
+import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
+import { geocodeAddress, cityFallbackCoords } from './geocoder.service';
 import { logger } from '../../../config/logger';
 
 // כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
@@ -40,6 +42,9 @@ export interface SyncResult {
   upserted: number;
   elapsedMs: number;
   error?: string;
+  // מידע נלווה של סניפים שנסנכרנו עם המחירים (אופציונלי - רק אם ה-adapter תומך)
+  storesFetched?: number;
+  storesUpserted?: number;
 }
 
 // דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
@@ -112,10 +117,78 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       totalUpserted += affected;
     }
 
+    // לאחר סנכרון המחירים - אם ה-adapter תומך, מושכים גם את רשימת הסניפים
+    // הרשמית (Stores*.xml) ומעדכנים את טבלת Branch. זה מה שמזין את המרחק/ניווט
+    // ב-UI. סניפים ללא lat/lng בקובץ עוברים geocoding דרך Nominatim.
+    let storesFetched: number | undefined;
+    let storesUpserted: number | undefined;
+    if (adapter.fetchLatestStores) {
+      try {
+        const storesResult = await adapter.fetchLatestStores();
+        if (storesResult.error || storesResult.stores.length === 0) {
+          logger.warn(`[price-sync] ${adapter.chainId}: stores fetch ${storesResult.error || 'empty'}`);
+        } else {
+          const branchInputs: UpsertBranchInput[] = [];
+          for (const s of storesResult.stores) {
+            // קואורדינטות: 1) מהקובץ, 2) fallback של עיר, 3) geocoding חי
+            let lat = s.lat;
+            let lng = s.lng;
+            let coordSource: 'portal' | 'geocoded' | 'unknown' = 'unknown';
+            if (lat !== undefined && lng !== undefined) {
+              coordSource = 'portal';
+            } else {
+              const cityFallback = cityFallbackCoords(s.city);
+              if (cityFallback) {
+                lat = cityFallback.lat;
+                lng = cityFallback.lng;
+                coordSource = 'geocoded'; // מקורב - רמת עיר
+              }
+            }
+            branchInputs.push({
+              chainId: adapter.chainId,
+              chainName: adapter.chainName,
+              storeId: s.storeId,
+              storeName: s.storeName,
+              address: s.address,
+              city: s.city,
+              zipCode: s.zipCode,
+              lat, lng, coordSource,
+            });
+          }
+          storesUpserted = await BranchDAL.bulkUpsert(branchInputs);
+          storesFetched = storesResult.stores.length;
+          logger.info(`[price-sync] ${adapter.chainId}: stores fetched=${storesFetched}, upserted=${storesUpserted}`);
+
+          // בצע geocoding מדויק בלב הסנכרון רק לכמות מוגבלת כדי לא לתקוע אותו.
+          // Nominatim מגביל ל-1 בקשה/שנייה - 20 סניפים = ~22 שניות. השאר יקבלו
+          // geocoding בריצה הבאה של הסנכרון.
+          const needGeo = branchInputs
+            .filter(b => b.coordSource !== 'portal' && (b.address || b.city))
+            .slice(0, 20);
+          for (const b of needGeo) {
+            const coords = await geocodeAddress(b.address, b.city);
+            if (coords) {
+              await BranchDAL.updateCoords(
+                // chainId+storeId ייחודי, נחפש לפיו
+                (await BranchDAL.findOne({ chainId: b.chainId, storeId: b.storeId }))?._id.toString() || '',
+                coords.lat, coords.lng, 'geocoded'
+              );
+            }
+          }
+        }
+      } catch (err) {
+        logger.error(`[price-sync] ${adapter.chainId}: stores sync failed: ${err instanceof Error ? err.message : 'unknown'}`);
+      }
+    }
+
     const elapsedMs = Date.now() - t0;
     logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
 
-    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: result.items.length, upserted: totalUpserted, elapsedMs };
+    const r: SyncResult = {
+      chainId: adapter.chainId, chainName: adapter.chainName,
+      fetched: result.items.length, upserted: totalUpserted, elapsedMs,
+      storesFetched, storesUpserted,
+    };
     results.push(r);
     lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
   }
