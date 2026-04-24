@@ -162,7 +162,13 @@ export const COMMON_STYLES = {
     '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
     width: 44,
     height: 44,
-    color: 'white'
+    color: 'white',
+    // Qin F21 Pro ומכשירים זעירים (≤360px) - שמירה על שמישות בגודל מסך 320px
+    '@media (max-width: 360px)': {
+      width: 34,
+      height: 34,
+      '& .MuiSvgIcon-root': { fontSize: 18 },
+    },
   }
 } as const;
 
