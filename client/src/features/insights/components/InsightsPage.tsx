@@ -40,16 +40,45 @@ export const InsightsPage = memo(() => {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
   // טעינה של נתוני מחירים - בנפרד מ-loading הראשי (שהוא עבור insightsApi)
   const [priceLoading, setPriceLoading] = useState(true);
+  // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר בנפרד כדי שבורר הרשימות
+  // יישאר זמין גם כשהתוצאה מצומצמת לרשימה אחת.
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  // רשימה מלאה של כל הרשימות של המשתמש - נשמר מהטעינה הראשונית.
+  const [allUserLists, setAllUserLists] = useState<{ id: string; name: string; icon: string }[]>([]);
   // קטגוריה מודגשת בטאב הרגלים - מוגדרת בלחיצה על מוצר מוביל, מסמנת
   // חיבור ויזואלי בין סקציית המוצרים לסקציית הקטגוריות.
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  // "עכשיו" מחושב פעם אחת בטעינה - טקסט "לפני Xי'" לא חייב להתעדכן בזמן
+  // אמת, והשארת Date.now ברנדר מפרה טהרת רנדר (React Compiler).
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
-    priceComparisonApi.getComparison().then(setPriceData).catch(() => {}).finally(() => setPriceLoading(false));
+    // טעינה ראשונית - כל הרשימות (בלי פילטר).
+    priceComparisonApi.getComparison()
+      .then(res => {
+        setPriceData(res);
+        // שומרים את רשימת הרשימות מהתוצאה הראשונה (ללא פילטר = כולן)
+        if (res?.lists && res.lists.length > 0) {
+          setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setPriceLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
   }, []);
+
+  // כשהמשתמש משנה בחירת רשימה - מרעננים את נתוני המחירים (ולא את allUserLists)
+  useEffect(() => {
+    if (allUserLists.length === 0) return; // דילוג ב-load ראשוני
+    setPriceLoading(true);
+    priceComparisonApi.getComparison(selectedListId ?? undefined)
+      .then(setPriceData)
+      .catch(() => {})
+      .finally(() => setPriceLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedListId]);
 
   if (loading) return (
     <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
@@ -93,7 +122,7 @@ export const InsightsPage = memo(() => {
   // פורמט תאריך יחסי קצר
   const formatRelativeDate = (iso: string | null): string => {
     if (!iso) return '—';
-    const diff = Date.now() - new Date(iso).getTime();
+    const diff = now - new Date(iso).getTime();
     const days = Math.floor(Math.abs(diff) / 86_400_000);
     if (diff < 0) return days === 0 ? 'היום' : days === 1 ? 'מחר' : `בעוד ${days}י׳`;
     return days === 0 ? 'היום' : days === 1 ? 'אתמול' : `לפני ${days}י׳`;
@@ -183,7 +212,79 @@ export const InsightsPage = memo(() => {
             // — כדי שלא יישאר מסך ריק בלי הסבר.
             <InsightsLoader text={priceLoading ? 'מביא נתוני מחירים...' : 'אין נתוני מחירים כרגע'} size="md" />
           ) : (
-            <PriceComparisonCard data={priceData} isDark={isDark} />
+            <>
+              {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
+              {allUserLists.length > 1 && (
+                <Box sx={{ mb: 1.25 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
+                    איזו רשימה להשוות?
+                  </Typography>
+                  <Box sx={{
+                    display: 'flex', flexWrap: 'nowrap', gap: 0.75,
+                    overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+                    pb: 0.5,
+                    '&::-webkit-scrollbar': { display: 'none' },
+                  }}>
+                    {/* כרטיס "כל הרשימות" */}
+                    <Box
+                      onClick={() => { haptic('light'); setSelectedListId(null); }}
+                      sx={{
+                        flexShrink: 0,
+                        px: 1.5, py: 0.75,
+                        borderRadius: '999px',
+                        border: '1.5px solid',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 0.5,
+                        bgcolor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
+                        color: selectedListId === null ? 'white' : 'text.primary',
+                        borderColor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
+                        fontSize: 12, fontWeight: 700,
+                        transition: 'all 0.15s',
+                        '&:active': { transform: 'scale(0.96)' },
+                      }}
+                    >
+                      🛒 כל הרשימות
+                    </Box>
+                    {allUserLists.map(l => (
+                      <Box
+                        key={l.id}
+                        onClick={() => { haptic('light'); setSelectedListId(l.id); }}
+                        sx={{
+                          flexShrink: 0,
+                          px: 1.5, py: 0.75,
+                          borderRadius: '999px',
+                          border: '1.5px solid',
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 0.5,
+                          bgcolor: selectedListId === l.id
+                            ? '#14B8A6'
+                            : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
+                          color: selectedListId === l.id ? 'white' : 'text.primary',
+                          borderColor: selectedListId === l.id
+                            ? '#14B8A6'
+                            : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
+                          fontSize: 12, fontWeight: 700,
+                          transition: 'all 0.15s',
+                          maxWidth: 180,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          '&:active': { transform: 'scale(0.96)' },
+                        }}
+                      >
+                        <span>{l.icon}</span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              <PriceComparisonCard data={priceData} isDark={isDark} />
+            </>
           )
         )}
 
@@ -764,7 +865,7 @@ export const InsightsPage = memo(() => {
             heroIcon = '🔥';
             heroText = <>אתה <b>{streaks.currentWeeks} שבועות</b> ברצף — המשך כך!</>;
           } else if (hasPrediction) {
-            const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - Date.now()) / 86_400_000));
+            const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - now) / 86_400_000));
             heroIcon = '🛒';
             heroText = days === 0
               ? <>הקנייה הבאה צפויה <b>היום</b></>
