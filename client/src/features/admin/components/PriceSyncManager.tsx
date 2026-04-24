@@ -71,10 +71,10 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   useEffect(() => { load(); }, [load]);
 
-  // רענון אוטומטי כל 10 שניות אם סנכרון פעיל
+  // רענון אוטומטי כל 3 שניות בזמן סנכרון פעיל - נותן תחושת פרוגרס רציף
   useEffect(() => {
     if (!status?.syncInProgress) return;
-    const interval = setInterval(load, 10_000);
+    const interval = setInterval(load, 3_000);
     return () => clearInterval(interval);
   }, [status?.syncInProgress, load]);
 
@@ -141,37 +141,54 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             </Box>
 
-            {/* באנר התקדמות - מופיע במהלך סנכרון פעיל */}
-            {syncActive && (
-              <Box sx={{
-                p: 1.5, borderRadius: '12px',
-                bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
-                border: '1px solid',
-                borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.2)',
-              }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <SyncIcon sx={{ fontSize: 18, color: '#7C3AED', animation: `${spin} 1.8s linear infinite` }} />
-                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#7C3AED', flex: 1 }}>
-                    סנכרון פעיל
-                  </Typography>
-                  <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 600 }}>
-                    רענון כל 10ש'
-                  </Typography>
+            {/* באנר התקדמות - עם אחוז אמיתי ושם הרשת הנוכחית */}
+            {syncActive && (() => {
+              const prog = status?.syncProgress;
+              const total = prog?.totalChains ?? 0;
+              const done = prog?.completedChains ?? 0;
+              const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+              return (
+                <Box sx={{
+                  p: 1.5, borderRadius: '12px',
+                  bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
+                  border: '1px solid',
+                  borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.2)',
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.85 }}>
+                    <SyncIcon sx={{ fontSize: 18, color: '#7C3AED', animation: `${spin} 1.8s linear infinite` }} />
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#7C3AED', flex: 1 }}>
+                      סנכרון פעיל
+                    </Typography>
+                    {total > 0 && (
+                      <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED', fontVariantNumeric: 'tabular-nums' }}>
+                        {pct}%
+                      </Typography>
+                    )}
+                  </Box>
+                  <LinearProgress
+                    variant={total > 0 ? 'determinate' : 'indeterminate'}
+                    value={pct}
+                    sx={{
+                      height: 6, borderRadius: 3,
+                      bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                      '& .MuiLinearProgress-bar': {
+                        background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                      },
+                    }}
+                  />
+                  {total > 0 ? (
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, lineHeight: 1.5 }}>
+                      רשת <b>{done} מתוך {total}</b>
+                      {prog?.currentChainName && done < total && ` · מעבד כעת: ${prog.currentChainName}`}
+                    </Typography>
+                  ) : (
+                    <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.75, lineHeight: 1.5 }}>
+                      מתחיל סנכרון... יכול לקחת 3-5 דקות.
+                    </Typography>
+                  )}
                 </Box>
-                <LinearProgress
-                  sx={{
-                    height: 5, borderRadius: 3,
-                    bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                    '& .MuiLinearProgress-bar': {
-                      background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
-                    },
-                  }}
-                />
-                <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.75, lineHeight: 1.5 }}>
-                  מושך מחירים וסניפים מהפורטל הממשלתי. יכול לקחת 3-5 דקות.
-                </Typography>
-              </Box>
-            )}
+              );
+            })()}
 
             {/* סיכום סניפים - מוצג רק אם יש נתונים */}
             {totalBranches > 0 && (

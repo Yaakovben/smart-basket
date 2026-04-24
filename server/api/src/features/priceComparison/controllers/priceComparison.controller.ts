@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
-import { syncAllChains, getRegisteredChains, getLastSyncResults } from '../services/priceSync.service';
+import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress } from '../services/priceSync.service';
 import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
@@ -100,6 +100,7 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     success: true,
     data: {
       syncInProgress: adminSyncInProgress,
+      syncProgress: getSyncProgress(),
       lastUpdatedISO,
       ageHours,
       chains,

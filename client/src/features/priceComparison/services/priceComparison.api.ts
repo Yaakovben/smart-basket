@@ -13,8 +13,18 @@ export interface PriceChainStatus {
   branchesWithCoords?: number;
 }
 
+export interface PriceSyncProgress {
+  active: boolean;
+  currentIndex: number;
+  currentChainName: string;
+  totalChains: number;
+  completedChains: number;
+  startedAt: string | null;
+}
+
 export interface PriceSyncStatus {
   syncInProgress: boolean;
+  syncProgress?: PriceSyncProgress;
   lastUpdatedISO: string | null;
   ageHours: number | null;
   chains: PriceChainStatus[];

@@ -66,6 +66,26 @@ export function getLastSyncResults(): Array<SyncResult & { completedAt: string }
   return Array.from(lastSyncResults.values());
 }
 
+// מצב פרוגרס של סנכרון פעיל - מתעדכן במהלך syncAllChains ונקרא ע"י controller
+// כדי להציג באדמין "רשת X מתוך N" + שם הרשת הנוכחית.
+export interface SyncProgress {
+  active: boolean;
+  currentIndex: number;      // 0-based, מיקום הרשת הנוכחית ברצף
+  currentChainName: string;  // שם הרשת בעיבוד
+  totalChains: number;
+  completedChains: number;
+  startedAt: string | null;
+}
+
+let syncProgress: SyncProgress = {
+  active: false, currentIndex: 0, currentChainName: '',
+  totalChains: 0, completedChains: 0, startedAt: null,
+};
+
+export function getSyncProgress(): SyncProgress {
+  return { ...syncProgress };
+}
+
 // סנכרון סניפים של רשת אחת. קואורדינטות: portal > fallback-של-עיר > Nominatim (חי, מוגבל).
 async function syncStoresForChain(
   adapter: ChainAdapter
@@ -118,8 +138,17 @@ async function syncStoresForChain(
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
+  syncProgress = {
+    active: true, currentIndex: 0, currentChainName: '',
+    totalChains: adapters.length, completedChains: 0,
+    startedAt: new Date().toISOString(),
+  };
+
   for (let i = 0; i < adapters.length; i++) {
     const adapter = adapters[i];
+    syncProgress.currentIndex = i;
+    syncProgress.currentChainName = adapter.chainName;
+
     // דיליי לפני כל adapter חוץ מהראשון - מונע rate limit מהפורטל
     if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
 
@@ -132,6 +161,7 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: result.error };
       results.push(r);
       lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+      syncProgress.completedChains = i + 1;
       continue;
     }
 
@@ -140,6 +170,7 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: 'no_items_found' };
       results.push(r);
       lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+      syncProgress.completedChains = i + 1;
       continue;
     }
 
@@ -181,11 +212,17 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     };
     results.push(r);
     lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+    syncProgress.completedChains = i + 1;
   }
 
   // חשוב: מנקים את ה-cache של branches כדי שהסניפים החדשים יופיעו מיד
   // במונע השוואת המחירים (אחרת ה-cache של 2 דק' יגיש רשימה ישנה/ריקה).
   invalidateBranchCache();
+
+  syncProgress = {
+    active: false, currentIndex: 0, currentChainName: '',
+    totalChains: 0, completedChains: 0, startedAt: null,
+  };
 
   return results;
 }
