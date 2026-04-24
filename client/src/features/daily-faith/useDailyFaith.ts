@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
-import { markPopupShown } from '../../global/helpers';
+import { markPopupShown, safeStorage } from '../../global/helpers';
 
 const STORAGE_KEY = 'sb_daily_faith_last_shown';
 const SESSION_COUNT_KEY = 'sb_session_count';      // מונה מצטבר של סשנים (בדפדפן)
@@ -13,25 +13,15 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;            // שבוע במ"ש
 type RecentSeen = { id: string; at: number };
 
 const getRecentSeen = (): RecentSeen[] => {
-  try {
-    const raw = localStorage.getItem(RECENT_SEEN_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as RecentSeen[];
-    const cutoff = Date.now() - WEEK_MS;
-    return Array.isArray(parsed) ? parsed.filter(r => r?.id && r.at > cutoff) : [];
-  } catch {
-    return [];
-  }
+  const parsed = safeStorage.getJSON<RecentSeen[]>(RECENT_SEEN_KEY, []);
+  const cutoff = Date.now() - WEEK_MS;
+  return Array.isArray(parsed) ? parsed.filter(r => r?.id && r.at > cutoff) : [];
 };
 
 const markFaithSeen = (id: string): void => {
-  try {
-    const current = getRecentSeen().filter(r => r.id !== id);
-    current.push({ id, at: Date.now() });
-    localStorage.setItem(RECENT_SEEN_KEY, JSON.stringify(current));
-  } catch {
-    /* localStorage חסום - התעלמות שקטה */
-  }
+  const current = getRecentSeen().filter(r => r.id !== id);
+  current.push({ id, at: Date.now() });
+  safeStorage.setJSON(RECENT_SEEN_KEY, current);
 };
 
 const todayStr = () => {
@@ -79,7 +69,7 @@ export function useDailyFaith(enabled: boolean) {
 
   useEffect(() => {
     if (!enabled) return;
-    if (!ALWAYS_SHOW && localStorage.getItem(STORAGE_KEY) === todayStr()) return;
+    if (!ALWAYS_SHOW && safeStorage.get(STORAGE_KEY) === todayStr()) return;
     // לקוח חדש - מדלגים על הסשן הראשון כדי לא להציף אותו בכניסה הראשונה לאפליקציה
     if (!ALWAYS_SHOW && getSessionNumber() < MIN_SESSION_FOR_FAITH) return;
 
@@ -110,7 +100,7 @@ export function useDailyFaith(enabled: boolean) {
 
   const dismiss = () => {
     if (!ALWAYS_SHOW) {
-      localStorage.setItem(STORAGE_KEY, todayStr());
+      safeStorage.set(STORAGE_KEY, todayStr());
     }
     setQuote(null);
   };

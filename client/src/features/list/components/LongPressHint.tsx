@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { Box, Typography, IconButton, keyframes } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { safeStorage } from '../../../global/helpers';
 
 const HINT_KEY = 'sb_longpress_hint_seen';
 
@@ -16,9 +17,7 @@ const pulseFinger = keyframes`
  * אחרי שהמשתמש לוחץ X או אחרי 12 שניות של היחשפות (כדי לא להישאר לעולם).
  */
 export const LongPressHint = memo(() => {
-  const [show, setShow] = useState(() => {
-    try { return localStorage.getItem(HINT_KEY) !== 'true'; } catch { return false; }
-  });
+  const [show, setShow] = useState(() => safeStorage.get(HINT_KEY) !== 'true');
 
   useEffect(() => {
     if (!show) return;
@@ -30,7 +29,7 @@ export const LongPressHint = memo(() => {
 
   const dismiss = () => {
     setShow(false);
-    try { localStorage.setItem(HINT_KEY, 'true'); } catch { /* בטוח */ }
+    safeStorage.set(HINT_KEY, 'true');
   };
 
   if (!show) return null;
