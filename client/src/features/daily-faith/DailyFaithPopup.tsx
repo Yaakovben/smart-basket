@@ -237,15 +237,17 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 height: 'auto',
                 minHeight: 46,
                 borderRadius: '14px',
-                color: 'white',
-                // אייקון שיתוף גנרי בצבע הזהב של הפופאפ - תואם לברנדינג
-                background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
-                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
+                // סגנון outline - רקע שקוף עם גבול זהב ואייקון זהב. יוצר היררכיה ברורה
+                // מול הכפתור הראשי "קראתי והתחזקתי" שנשאר מלא.
+                color: '#B8860B',
+                background: 'rgba(255, 244, 201, 0.4)',
+                border: '1.5px solid rgba(184, 134, 11, 0.55)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
                 flexShrink: 0,
-                transition: 'transform 0.12s, box-shadow 0.2s',
+                transition: 'transform 0.12s, background 0.2s, border-color 0.2s',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #B8860B 0%, #9C7209 100%)',
-                  boxShadow: '0 6px 18px rgba(184, 134, 11, 0.5)',
+                  background: 'rgba(255, 231, 160, 0.6)',
+                  borderColor: 'rgba(184, 134, 11, 0.8)',
                 },
                 '&:active': { transform: 'scale(0.94)' },
               }}
