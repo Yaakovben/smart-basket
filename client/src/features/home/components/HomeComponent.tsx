@@ -19,12 +19,13 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES, COMMON_STYLES, canShowSecondaryPopup, markPopupShown } from '../../../global/helpers';
-import { Modal, ConfirmModal, ListMenu } from '../../../global/components';
+import { Modal, ConfirmModal, ListMenu, QRScanner } from '../../../global/components';
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
@@ -390,6 +391,8 @@ export const HomeComponent = memo(({
 
   // מצב הצעת התראות push
   const [showPushPrompt, setShowPushPrompt] = useState(false);
+  // סורק QR להצטרפות — נפתח מתוך JoinModal
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [pushPromptError, setPushPromptError] = useState(false);
   const [pushPromptDismissed, setPushPromptDismissed] = useState(() => {
     return localStorage.getItem('pushPromptDismissed') === 'true';
@@ -987,7 +990,7 @@ export const HomeComponent = memo(({
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => !joiningGroup && closeJoinModal()}>
-          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
             <Box sx={{
               width: 56,
               height: 56,
@@ -1006,6 +1009,35 @@ export const HomeComponent = memo(({
             <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', lineHeight: 1.5 }}>
               {t('enterCodeAndPasswordHint')}
             </Typography>
+          </Box>
+
+          {/* סריקת QR - חלופה מהירה להזנה ידנית */}
+          <Button
+            fullWidth
+            onClick={() => { haptic('light'); setShowQRScanner(true); }}
+            startIcon={<QrCodeScannerIcon />}
+            sx={{
+              mb: 2,
+              py: 1.25,
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: 14,
+              color: '#0D9488',
+              bgcolor: 'rgba(20, 184, 166, 0.1)',
+              border: '1.5px dashed rgba(20, 184, 166, 0.4)',
+              '&:hover': { bgcolor: 'rgba(20, 184, 166, 0.18)', borderColor: '#14B8A6' },
+              '& .MuiButton-startIcon': { marginInlineEnd: '10px' },
+            }}
+          >
+            סרוק QR להצטרפות מיידית
+          </Button>
+
+          {/* מפריד "או" */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, color: 'text.disabled' }}>
+            <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
+            <Typography sx={{ fontSize: 11, fontWeight: 600 }}>או</Typography>
+            <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
           </Box>
 
           <Box sx={{ mb: 2 }}>
@@ -1323,6 +1355,33 @@ export const HomeComponent = memo(({
       )}
 
       <PwaInstallPrompt t={t} />
+
+      {/* סורק QR - קופץ מעל JoinModal, ממלא את הקוד והסיסמה אוטומטית */}
+      <QRScanner
+        open={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={(text) => {
+          setShowQRScanner(false);
+          // הפורמט שאנחנו מייצרים: {origin}/join?code=XXX&password=YYYY
+          let code = '';
+          let password = '';
+          try {
+            const url = new URL(text);
+            code = (url.searchParams.get('code') || '').toUpperCase();
+            password = url.searchParams.get('password') || '';
+          } catch {
+            // לא URL - ננסה לזהות קוד:סיסמה או סתם קוד
+            const match = text.trim().match(/^([A-Z0-9]{6})[:\s]*(\d{4})?$/i);
+            if (match) {
+              code = match[1].toUpperCase();
+              password = match[2] || '';
+            }
+          }
+          if (code.length === 6) setJoinCode(code);
+          if (/^\d{4}$/.test(password)) setJoinPass(password);
+          setJoinError('');
+        }}
+      />
 
       {/* Bottom Navigation */}
       <Box
