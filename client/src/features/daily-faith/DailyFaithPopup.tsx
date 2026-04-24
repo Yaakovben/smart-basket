@@ -196,20 +196,20 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
                 px: 2,
                 py: 1.5,
                 borderRadius: '14px',
-                // זהב עמוק יותר עם קצה בהיר למעלה - ניגודיות גבוהה מול הקלף הקרם
-                background: 'linear-gradient(180deg, #A06C07 0%, #8B5A04 100%)',
+                // זהב בהיר יותר עם גוון חם - נראה מזמין ופחות "כבד" מול הקלף הקרם
+                background: 'linear-gradient(180deg, #E5B84E 0%, #C99836 100%)',
                 color: 'white',
                 fontWeight: 800,
                 fontSize: 17,
                 letterSpacing: 0.3,
-                textShadow: '0 1px 2px rgba(0,0,0,0.25)',
-                boxShadow: '0 6px 18px rgba(139, 90, 4, 0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
-                border: '1px solid rgba(139, 90, 4, 0.9)',
+                textShadow: '0 1px 2px rgba(139, 90, 4, 0.35)',
+                boxShadow: '0 6px 18px rgba(201, 152, 54, 0.4), inset 0 1px 0 rgba(255,255,255,0.4)',
+                border: '1px solid rgba(184, 134, 11, 0.6)',
                 textTransform: 'none',
                 transition: 'transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease',
                 '&:hover': {
-                  background: 'linear-gradient(180deg, #8B5A04 0%, #704704 100%)',
-                  boxShadow: '0 8px 22px rgba(139, 90, 4, 0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  background: 'linear-gradient(180deg, #D9A93E 0%, #B8872B 100%)',
+                  boxShadow: '0 8px 22px rgba(201, 152, 54, 0.5), inset 0 1px 0 rgba(255,255,255,0.35)',
                 },
                 '&:active': { transform: 'scale(0.97)' },
               }}
