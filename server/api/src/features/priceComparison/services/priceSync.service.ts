@@ -9,6 +9,7 @@ import {
   stopMarketAdapter,
   politzerAdapter,
   doralonAdapter,
+  maayan2000Adapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -29,6 +30,7 @@ const adapters: ChainAdapter[] = [
   politzerAdapter,
   doralonAdapter,
   shufersalAdapter,
+  maayan2000Adapter,
 ];
 
 export interface SyncResult {

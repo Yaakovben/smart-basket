@@ -220,6 +220,19 @@ export const BRANCHES: BranchSeed[] = [
   { chainId: 'politzer', branchName: 'פוליצר חיפה נווה שאנן', city: 'חיפה', address: 'הפועל', lat: 32.7840, lng: 35.0200 },
   { chainId: 'politzer', branchName: 'פוליצר קרית חיים', city: 'חיפה', address: 'אח"י אילת', lat: 32.8315, lng: 35.0665 },
 
+  // ========== מעיין 2000 (יש"ע וסביבתה) ==========
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 שער בנימין', city: 'שער בנימין', address: 'אזור התעשייה שער בנימין', lat: 31.8773, lng: 35.2623 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 אלון שבות', city: 'אלון שבות', address: 'גוש עציון', lat: 31.6548, lng: 35.1326 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 קדומים', city: 'קדומים', address: 'קדומים', lat: 32.1787, lng: 35.1046 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 אריאל', city: 'אריאל', address: 'האצ"ל', lat: 32.1044, lng: 35.1721 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 עלי', city: 'עלי', address: 'עלי', lat: 32.0653, lng: 35.2980 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 קרני שומרון', city: 'קרני שומרון', address: 'רחוב הגפן', lat: 32.1796, lng: 35.0935 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 מעלה אדומים', city: 'מעלה אדומים', address: 'שד\' הדרור', lat: 31.7750, lng: 35.2970 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 אפרת', city: 'אפרת', address: 'הזית', lat: 31.6540, lng: 35.1589 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 עופרה', city: 'עופרה', address: 'עופרה', lat: 31.9553, lng: 35.2930 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 בית אל', city: 'בית אל', address: 'בית אל', lat: 31.9327, lng: 35.2343 },
+  { chainId: 'maayan_2000', branchName: 'מעיין 2000 גוש שילה', city: 'שילה', address: 'שילה', lat: 32.0560, lng: 35.2920 },
+
   // ========== דור אלון (~10 סניפים, דרום בעיקר) ==========
   { chainId: 'doralon', branchName: 'דור אלון אופקים', city: 'אופקים', address: 'דרך הגיבורים 1', lat: 31.3126, lng: 34.6199 },
   { chainId: 'doralon', branchName: 'דור אלון נתיבות', city: 'נתיבות', address: 'ירושלים 20', lat: 31.4210, lng: 34.5892 },
