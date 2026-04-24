@@ -12,14 +12,16 @@
  */
 
 import { memo, useState } from 'react';
-import { Box, Typography, Collapse, keyframes } from '@mui/material';
+import { Box, Typography, Collapse, IconButton, keyframes } from '@mui/material';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import type { PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import NavigationIcon from '@mui/icons-material/Navigation';
+import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface Props {
@@ -99,6 +101,63 @@ const ChainProductRow = memo(({ m, isDark, isCheapestInChain }: { m: PriceMatch;
   );
 });
 ChainProductRow.displayName = 'ChainProductRow';
+
+// פותח ניווט לכתובת: ב-iOS ילך ל-Apple Maps, ב-Android ל-Waze/Google Maps,
+// בדסקטופ ל-Google Maps. המשתמש בוחר באפליקציית הניווט בעצמו (ה-OS יציע).
+const openNavigation = (branch: NearestBranch) => {
+  const { lat, lng, branchName } = branch;
+  const label = encodeURIComponent(branchName);
+  // geo:lat,lng?q=... עובד יפה ב-Android; ה-OS יציע Waze/Maps.
+  // ב-iOS/desktop זה ייכשל ואנחנו נופלים ל-Google Maps.
+  const geoUrl = `geo:${lat},${lng}?q=${lat},${lng}(${label})`;
+  const fallbackUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+  // ננסה geo: - אם העמוד לא משתנה תוך 800 מס' נפתח את Google Maps.
+  // זה דפוס שעובד ברוב הדפדפנים הניידים.
+  const now = Date.now();
+  window.location.href = geoUrl;
+  window.setTimeout(() => {
+    // אם הדפדפן לא הצליח לפתוח את ה-geo: (עדיין בפוקוס ועברו <1500מ') - Google Maps
+    if (Date.now() - now < 1500 && document.visibilityState === 'visible') {
+      window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, 800);
+};
+
+// תג מרחק + כפתור ניווט - מוצג לכל רשת כשהמשתמש שיתף מיקום.
+const BranchInfo = memo(({ branch, isDark }: { branch: NearestBranch; isDark?: boolean }) => (
+  <Box
+    onClick={(e) => { e.stopPropagation(); }}
+    sx={{
+      display: 'flex', alignItems: 'center', gap: 0.5,
+      mt: 0.35,
+    }}
+  >
+    <LocationOnIcon sx={{ fontSize: 12, color: '#7C3AED', flexShrink: 0 }} />
+    <Typography sx={{
+      fontSize: 10.5, color: 'text.secondary', fontWeight: 600,
+      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      minWidth: 0, flex: 1,
+    }}>
+      <b style={{ color: isDark ? '#A78BFA' : '#7C3AED' }}>{branch.distanceKm} ק״מ</b>
+      {' · '}{branch.branchName}
+    </Typography>
+    <IconButton
+      size="small"
+      onClick={(e) => { e.stopPropagation(); openNavigation(branch); }}
+      aria-label={`נווט ל${branch.branchName}`}
+      sx={{
+        width: 24, height: 24, flexShrink: 0,
+        bgcolor: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
+        color: '#7C3AED',
+        '&:hover': { bgcolor: isDark ? 'rgba(124,58,237,0.3)' : 'rgba(124,58,237,0.18)' },
+      }}
+    >
+      <NavigationIcon sx={{ fontSize: 13 }} />
+    </IconButton>
+  </Box>
+));
+BranchInfo.displayName = 'BranchInfo';
 
 export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
   const { settings } = useSettings();
@@ -281,6 +340,9 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         ? `לא נמצאו התאמות במאגר של ${chain.chainName}`
                         : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
+                  {chain.nearestBranch && (
+                    <BranchInfo branch={chain.nearestBranch} isDark={isDark} />
+                  )}
                 </Box>
 
                 <Box sx={{ textAlign: 'end' }}>

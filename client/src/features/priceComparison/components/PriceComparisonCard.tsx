@@ -7,11 +7,15 @@
  */
 
 import { memo } from 'react';
-import { Box, Typography, Paper, Link, keyframes } from '@mui/material';
+import { Box, Typography, Paper, Link, Button, CircularProgress, keyframes } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
 import InventoryIcon from '@mui/icons-material/Inventory2';
 import SavingsIcon from '@mui/icons-material/Savings';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocationOffIcon from '@mui/icons-material/LocationOff';
 import type { PriceComparisonData } from '../types/priceComparison.types';
+import type { LocationStatus } from '../hooks/useUserLocation';
 import { BetaBadge } from './BetaBadge';
 import { ChainComparisonTable } from './ChainComparisonTable';
 
@@ -21,6 +25,9 @@ interface Props {
   data: PriceComparisonData | null;
   loading?: boolean;
   isDark?: boolean;
+  locationStatus?: LocationStatus;
+  onRequestLocation?: () => void;
+  onResetLocationDenied?: () => void;
 }
 
 const formatRelative = (iso: string | null): string => {
@@ -35,7 +42,7 @@ const formatRelative = (iso: string | null): string => {
   return `לפני ${days} ימים`;
 };
 
-export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus, onRequestLocation, onResetLocationDenied }: Props) => {
   if (loading || !data) return null;
 
   const freshness = formatRelative(data.lastUpdatedISO);
@@ -96,6 +103,116 @@ export const PriceComparisonCard = memo(({ data, loading, isDark }: Props) => {
           </Box>
         )}
       </Box>
+
+      {/* ===== באנר מיקום ===== */}
+      {/* מופיע רק בטאב מחירים. מעודד הפעלת מיקום כדי להציג סניף קרוב לכל רשת.
+          אחרי אישור - הופך לתג קטן "📍 מיקום פעיל". אחרי דחייה - לינק קטן
+          "הפעל ידנית" למי שרוצה לשנות החלטה. */}
+      {onRequestLocation && (
+        <>
+          {locationStatus === 'idle' && (
+            <Box sx={{
+              mb: 1.25, p: 1.25, borderRadius: '12px',
+              display: 'flex', alignItems: 'center', gap: 1,
+              bgcolor: isDark ? 'rgba(109,40,217,0.12)' : 'rgba(124,58,237,0.07)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(167,139,250,0.3)' : 'rgba(124,58,237,0.2)',
+            }}>
+              <Box sx={{
+                width: 36, height: 36, borderRadius: '10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: isDark ? 'rgba(167,139,250,0.2)' : 'rgba(124,58,237,0.12)',
+                flexShrink: 0,
+              }}>
+                <MyLocationIcon sx={{ fontSize: 19, color: '#7C3AED' }} />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
+                  מצא סניף קרוב אליך
+                </Typography>
+                <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.35, mt: 0.15 }}>
+                  נציג את הסניף הקרוב ואת המרחק לכל רשת
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={onRequestLocation}
+                sx={{
+                  bgcolor: '#7C3AED',
+                  '&:hover': { bgcolor: '#6D28D9' },
+                  fontSize: 11.5, fontWeight: 800,
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  px: 1.5,
+                  flexShrink: 0,
+                }}
+              >
+                הפעל
+              </Button>
+            </Box>
+          )}
+
+          {locationStatus === 'requesting' && (
+            <Box sx={{
+              mb: 1.25, p: 1.25, borderRadius: '12px',
+              display: 'flex', alignItems: 'center', gap: 1,
+              bgcolor: isDark ? 'rgba(109,40,217,0.12)' : 'rgba(124,58,237,0.07)',
+            }}>
+              <CircularProgress size={18} sx={{ color: '#7C3AED' }} />
+              <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                מבקש גישה למיקום...
+              </Typography>
+            </Box>
+          )}
+
+          {locationStatus === 'granted' && (
+            <Box sx={{
+              mb: 1.25, px: 1, py: 0.65, borderRadius: '8px',
+              display: 'inline-flex', alignItems: 'center', gap: 0.5,
+              bgcolor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.08)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(16,185,129,0.35)' : 'rgba(16,185,129,0.22)',
+            }}>
+              <LocationOnIcon sx={{ fontSize: 14, color: '#059669' }} />
+              <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#059669' }}>
+                מיקום פעיל · הסניפים הקרובים מוצגים
+              </Typography>
+            </Box>
+          )}
+
+          {(locationStatus === 'denied' || locationStatus === 'unavailable' || locationStatus === 'error') && (
+            <Box sx={{
+              mb: 1.25, p: 1, borderRadius: '10px',
+              display: 'flex', alignItems: 'center', gap: 0.75,
+              bgcolor: isDark ? 'rgba(148,163,184,0.08)' : 'rgba(148,163,184,0.06)',
+            }}>
+              <LocationOffIcon sx={{ fontSize: 15, color: 'text.disabled' }} />
+              <Typography sx={{ fontSize: 10.5, color: 'text.secondary', flex: 1, lineHeight: 1.4 }}>
+                {locationStatus === 'denied'
+                  ? 'הגישה למיקום נדחתה. אפשר לשנות בהגדרות הדפדפן.'
+                  : locationStatus === 'unavailable'
+                    ? 'הדפדפן לא תומך בשיתוף מיקום.'
+                    : 'לא הצלחנו לקבל את המיקום.'}
+              </Typography>
+              {locationStatus === 'denied' && onResetLocationDenied && (
+                <Link
+                  component="button"
+                  onClick={onResetLocationDenied}
+                  sx={{
+                    fontSize: 10.5, fontWeight: 700, color: '#7C3AED',
+                    textDecoration: 'none',
+                    '&:hover': { textDecoration: 'underline' },
+                    flexShrink: 0,
+                  }}
+                >
+                  נסה שוב
+                </Link>
+              )}
+            </Box>
+          )}
+        </>
+      )}
 
       {/* מצבים ריקים */}
       {!data.enabled && (

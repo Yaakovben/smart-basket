@@ -1,4 +1,4 @@
-import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
+import { Dialog, Box, Typography, Button, Fade } from '@mui/material';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';

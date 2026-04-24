@@ -18,11 +18,23 @@ export interface PriceSyncStatus {
   totalPrices: number;
 }
 
+export interface UserLocation {
+  lat: number;
+  lng: number;
+}
+
 export const priceComparisonApi = {
   // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש.
   // listId אופציונלי: אם מועבר, ההשוואה מצומצמת לרשימה הזו בלבד.
-  async getComparison(listId?: string): Promise<PriceComparisonData> {
-    const query = listId ? `?listId=${encodeURIComponent(listId)}` : '';
+  // location אופציונלי: אם מועבר, כל רשת תקבל nearestBranch עם מרחק.
+  async getComparison(listId?: string, location?: UserLocation): Promise<PriceComparisonData> {
+    const params = new URLSearchParams();
+    if (listId) params.set('listId', listId);
+    if (location) {
+      params.set('lat', String(location.lat));
+      params.set('lng', String(location.lng));
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
     const response = await apiClient.get<{ data: PriceComparisonData }>(`/price-comparison${query}`);
     return response.data.data;
   },

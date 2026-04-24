@@ -8,7 +8,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
-import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
+import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic } from '../../../global/helpers';
@@ -60,6 +60,9 @@ export const InsightsPage = memo(() => {
   // אמת, והשארת Date.now ברנדר מפרה טהרת רנדר (React Compiler).
   const [now] = useState(() => Date.now());
 
+  // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
+  const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
+
   useEffect(() => {
     insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
@@ -71,7 +74,7 @@ export const InsightsPage = memo(() => {
   useEffect(() => {
     if (tab !== 'price') return;
     if (priceData !== null || !priceLoading) return; // כבר נטען או מטען
-    priceComparisonApi.getComparison()
+    priceComparisonApi.getComparison(undefined, userLocation ?? undefined)
       .then(res => {
         setPriceData(res);
         if (res?.lists && res.lists.length > 0) {
@@ -80,18 +83,18 @@ export const InsightsPage = memo(() => {
       })
       .catch(() => {})
       .finally(() => setPriceLoading(false));
-  }, [tab, priceData, priceLoading]);
+  }, [tab, priceData, priceLoading, userLocation]);
 
-  // כשהמשתמש משנה בחירת רשימה - מרעננים את נתוני המחירים (ולא את allUserLists)
+  // כשהמשתמש משנה בחירת רשימה או מוסיף מיקום - מרעננים את נתוני המחירים
   useEffect(() => {
     if (allUserLists.length === 0) return; // דילוג ב-load ראשוני
     setPriceLoading(true);
-    priceComparisonApi.getComparison(selectedListId ?? undefined)
+    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
       .then(setPriceData)
       .catch(() => {})
       .finally(() => setPriceLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedListId]);
+  }, [selectedListId, userLocation]);
 
   if (loading) return (
     <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
@@ -296,7 +299,13 @@ export const InsightsPage = memo(() => {
                   </Box>
                 </Box>
               )}
-              <PriceComparisonCard data={priceData} isDark={isDark} />
+              <PriceComparisonCard
+                data={priceData}
+                isDark={isDark}
+                locationStatus={locationStatus}
+                onRequestLocation={requestLocation}
+                onResetLocationDenied={resetLocationDenied}
+              />
             </>
           )
         )}
