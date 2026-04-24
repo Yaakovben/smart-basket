@@ -1013,30 +1013,7 @@ export const HomeComponent = memo(({
 
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
-                {/* לינק עדין לסריקה ליד הכותרת של השדה - אייקון קטן, לא חוטף פוקוס מכפתור ההצטרפות */}
-                <Box
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => { haptic('light'); setShowQRScanner(true); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setShowQRScanner(true); } }}
-                  aria-label="סרוק QR להצטרפות"
-                  sx={{
-                    display: 'inline-flex', alignItems: 'center', gap: 0.35,
-                    fontSize: 10.5, fontWeight: 700, color: '#0D9488',
-                    cursor: 'pointer', userSelect: 'none',
-                    px: 0.7, py: 0.2, borderRadius: '6px',
-                    bgcolor: 'rgba(20,184,166,0.08)',
-                    transition: 'background-color 0.15s, opacity 0.15s',
-                    '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' },
-                    '&:active': { opacity: 0.75 },
-                  }}
-                >
-                  <QrCodeScannerIcon sx={{ fontSize: 12 }} />
-                  QR
-                </Box>
-              </Box>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
               <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{t('sixChars')}</Typography>
             </Box>
             <TextField
@@ -1128,6 +1105,29 @@ export const HomeComponent = memo(({
               }}
             />
           </Box>
+
+          {/* כפתור קטן לסריקת QR - תחת שדה הסיסמא, כחלופה מהירה להזנה ידנית */}
+          <Button
+            fullWidth
+            onClick={() => { haptic('light'); setShowQRScanner(true); }}
+            startIcon={<QrCodeScannerIcon />}
+            sx={{
+              mb: 2,
+              py: 1,
+              borderRadius: '10px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: 13,
+              color: '#0D9488',
+              bgcolor: 'rgba(20, 184, 166, 0.08)',
+              border: '1px dashed rgba(20, 184, 166, 0.4)',
+              '&:hover': { bgcolor: 'rgba(20, 184, 166, 0.15)', borderColor: '#14B8A6' },
+              '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+              '& .MuiButton-startIcon .MuiSvgIcon-root': { fontSize: 18 },
+            }}
+          >
+            הצטרף באמצעות QR
+          </Button>
 
           {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
             {joinCooldown > 0 ? `${joinError} (${joinCooldown}s)` : joinError}
