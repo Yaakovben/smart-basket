@@ -194,16 +194,23 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
               sx={{
                 flex: 1,
                 px: 2,
-                py: 1.25,
+                py: 1.5,
                 borderRadius: '14px',
-                background: '#B8860B',
+                // זהב עמוק יותר עם קצה בהיר למעלה - ניגודיות גבוהה מול הקלף הקרם
+                background: 'linear-gradient(180deg, #A06C07 0%, #8B5A04 100%)',
                 color: 'white',
-                fontWeight: 700,
-                fontSize: 15,
-                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.35)',
+                fontWeight: 800,
+                fontSize: 17,
+                letterSpacing: 0.3,
+                textShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                boxShadow: '0 6px 18px rgba(139, 90, 4, 0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+                border: '1px solid rgba(139, 90, 4, 0.9)',
                 textTransform: 'none',
-                transition: 'background 0.2s ease',
-                '&:hover': { background: '#9C7209' },
+                transition: 'transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease',
+                '&:hover': {
+                  background: 'linear-gradient(180deg, #8B5A04 0%, #704704 100%)',
+                  boxShadow: '0 8px 22px rgba(139, 90, 4, 0.55), inset 0 1px 0 rgba(255,255,255,0.2)',
+                },
                 '&:active': { transform: 'scale(0.97)' },
               }}
             >
