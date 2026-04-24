@@ -43,8 +43,14 @@ export interface PriceChainTotal {
   total: number;         // סה"כ משוער (רק מוצרים שזוהו)
   matchedCount: number;  // כמה מוצרים מהרשימות של המשתמש נמצאו ברשת
   unmatchedCount: number;
-  isCheapest: boolean;   // רשת אחת מסומנת כזולה ביותר
-  savings: number;       // כמה חוסכים לעומת הרשת היקרה ביותר (₪)
+  // "הכי זול" ניתן רק לרשת עם מספר ההתאמות הגבוה ביותר (סל שלם).
+  // רשת שמצאה פחות מוצרים לא תקבל את הסימון גם אם הסה"כ שלה נמוך יותר.
+  isCheapest: boolean;
+  // יש לרשת את הסל המלא (כמו הרשת עם הכי הרבה התאמות)? אם לא - השוואה לא הוגנת
+  isComplete: boolean;
+  savings: number;       // כמה חוסכים לעומת הרשת היקרה ביותר (רק ברשתות מלאות)
+  // כל המוצרים של המשתמש עם המחיר ברשת הזו (זוהו ולא זוהו) - למסך הפירוט
+  matches: PriceMatch[];
 }
 
 export interface PriceComparisonData {
@@ -424,15 +430,28 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
         let chainTotal = 0;
         let matched = 0;
         let unmatched = 0;
-        for (const p of pendingProducts) {
-          const m = chainMatchCache.get(p.name)!;
-          if (m.matched) {
-            chainTotal += m.price * (p.quantity || 1);
+        // בונים את הרשימה המפורטת של כל המוצרים של המשתמש עם המחיר ברשת הזו
+        const chainMatches: PriceMatch[] = pendingProducts.map(p => {
+          const nameMatch = chainMatchCache.get(p.name)!;
+          if (nameMatch.matched) {
+            chainTotal += nameMatch.price * (p.quantity || 1);
             matched += 1;
           } else {
             unmatched += 1;
           }
-        }
+          return {
+            ...nameMatch,
+            productId: String(p._id),
+            userProductName: p.name,
+            userQuantity: p.quantity || 1,
+          };
+        });
+        // מיון בתוך הרשת: קודם זוהו (לפי סכום יורד), אחר כך לא זוהו
+        chainMatches.sort((a, b) => {
+          if (a.matched !== b.matched) return a.matched ? -1 : 1;
+          if (a.matched) return (b.price * b.userQuantity) - (a.price * a.userQuantity);
+          return 0;
+        });
 
         return {
           chainId,
@@ -441,27 +460,40 @@ export async function getComparisonForUser(userId: string): Promise<PriceCompari
           matchedCount: matched,
           unmatchedCount: unmatched,
           isCheapest: false,
+          isComplete: false,
           savings: 0,
+          matches: chainMatches,
         };
       })
     );
 
-    // סימון הזולה ביותר + חישוב חיסכון לעומת היקרה (רק רשתות עם לפחות התאמה אחת)
-    const chainsWithMatches = chainTotals.filter(c => c.matchedCount > 0);
-    if (chainsWithMatches.length > 0) {
-      const sorted = [...chainsWithMatches].sort((a, b) => a.total - b.total);
+    // מציאת מספר ההתאמות הגבוה ביותר - זו "הנקודת היחוס" של סל שלם.
+    // "הכי זול" יוענק רק לרשת שיש לה את מספר ההתאמות הזה.
+    // כך נמנעים מהטעייה שבה רשת עם מעט התאמות נראית זולה בגלל החוסר.
+    const maxMatched = chainTotals.reduce((m, c) => Math.max(m, c.matchedCount), 0);
+    if (maxMatched > 0) {
+      // מסמנים "שלם" כל רשת עם מקסימום התאמות
+      for (const ct of chainTotals) {
+        ct.isComplete = ct.matchedCount === maxMatched;
+      }
+      // מוצאים הזול ביותר רק בין הרשתות השלמות
+      const completeChains = chainTotals.filter(c => c.isComplete);
+      const sorted = [...completeChains].sort((a, b) => a.total - b.total);
       const cheapestId = sorted[0].chainId;
       const maxTotal = sorted[sorted.length - 1].total;
       for (const ct of chainTotals) {
         if (ct.chainId === cheapestId) ct.isCheapest = true;
-        if (ct.matchedCount > 0) ct.savings = round2(maxTotal - ct.total);
+        // חיסכון משוער - רק ברשתות שלמות (לא הוגן להשוות לא שלמה)
+        if (ct.isComplete) ct.savings = round2(maxTotal - ct.total);
       }
     }
-    // מיון: זולה ביותר קודם, ואז לפי חיסכון יורד. רשתות ללא התאמה בסוף.
+    // מיון: רשתות שלמות קודם (מהזולה ליקרה), אח"כ חלקיות לפי מספר התאמות
     chainTotals.sort((a, b) => {
+      if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
       if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
       if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
-      return a.total - b.total;
+      if (a.isComplete) return a.total - b.total;
+      return b.matchedCount - a.matchedCount;
     });
 
     return cacheAndReturn({

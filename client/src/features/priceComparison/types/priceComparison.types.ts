@@ -40,7 +40,9 @@ export interface PriceChainTotal {
   matchedCount: number;
   unmatchedCount: number;
   isCheapest: boolean;
+  isComplete: boolean;   // יש לה את מלוא הסל? (מספר התאמות = מקסימום)
   savings: number;
+  matches: PriceMatch[]; // כל המוצרים של המשתמש עם מחיר ברשת הזו
 }
 
 export interface PriceComparisonData {
