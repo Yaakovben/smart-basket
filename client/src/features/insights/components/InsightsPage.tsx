@@ -688,6 +688,21 @@ export const InsightsPage = memo(() => {
           const heroText = hero
             ? <>הכוכב שלך: <b>{hero.name}</b> — קנית <b>×{hero.count}</b></>
             : <>טוב להכיר — עוד מעט תראה את הכוכב שלך</>;
+
+          // אין עדיין נתוני קניות - מסך ריק ברור במקום כרטיסי "0"
+          const hasAnyActivity = stats.totalPurchased > 0 || topProducts.length > 0 || categoryBreakdown.length > 0;
+          if (!hasAnyActivity) {
+            return (
+              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
+                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>🛍️</Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד לא סימנת מוצרים כנקנו</Typography>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
+                  סמן ✅ על מוצרים שקנית, וכאן יופיעו הרגלי הקנייה שלך: מוצרים חוזרים, ימים חזקים, קטגוריות מועדפות
+                </Typography>
+              </Box>
+            );
+          }
+
           return (
           <>
             <HeroInsight icon="🛒" text={heroText} accent="#F59E0B" isDark={isDark} />
@@ -837,7 +852,7 @@ export const InsightsPage = memo(() => {
                           '&:active': { opacity: 0.8 },
                         }}
                       >
-                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
                         <Typography sx={{ fontSize: 13 }}>{icon}</Typography>
                         <Typography sx={{ fontSize: 12.5, fontWeight: isActive ? 800 : 600, flex: 1 }}>
                           {key ? t(key) : cat.category}
@@ -856,6 +871,20 @@ export const InsightsPage = memo(() => {
 
         {/* ===== דופק ===== */}
         {tab === 'pulse' && (() => {
+          // אין עדיין מספיק נתונים - מסך ריק
+          const hasAnyPulseData = shoppingScore > 0 || stats.totalProducts > 0 || (streaks && streaks.currentWeeks > 0);
+          if (!hasAnyPulseData) {
+            return (
+              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
+                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>📊</Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד אין נתוני פעילות</Typography>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
+                  הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה, רצף שבועות, תחזיות וגרף מגמות.
+                </Typography>
+              </Box>
+            );
+          }
+
           // כותרת אישית לטאב דופק — ממקדת על הסטריק או התחזית
           const hasStreak = streaks && streaks.currentWeeks > 0;
           const hasPrediction = shoppingFrequency?.predictedNextDate;
@@ -1128,15 +1157,27 @@ export const InsightsPage = memo(() => {
                     return (
                       <Box
                         key={i}
+                        role={count > 0 ? 'button' : undefined}
+                        tabIndex={count > 0 ? 0 : undefined}
+                        aria-label={count > 0 ? `${dayLabels[i]}: ${count} פעולות${isBest ? ' - יום שיא' : ''}` : undefined}
                         onClick={() => {
                           if (count === 0) return;
                           haptic('light');
                           setSelectedWeekday(prev => prev === i ? null : i);
                         }}
+                        onKeyDown={(e) => {
+                          if (count === 0) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            haptic('light');
+                            setSelectedWeekday(prev => prev === i ? null : i);
+                          }
+                        }}
                         sx={{
                           flex: 1, textAlign: 'center',
                           cursor: count > 0 ? 'pointer' : 'default',
                           transition: 'transform 0.12s ease',
+                          '&:focus-visible': { outline: '2px solid #14B8A6', outlineOffset: 2 },
                           '&:active': count > 0 ? { transform: 'scale(0.93)' } : {},
                         }}
                       >
