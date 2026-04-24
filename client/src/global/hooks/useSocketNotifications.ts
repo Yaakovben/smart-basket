@@ -67,7 +67,9 @@ export function useSocketNotifications(
   const { settings, t } = useSettings();
   const notificationSettings = settings.notifications;
 
-  // refs לערכים שמשתנים לעיתים קרובות - מונע הרשמה מחדש למאזינים
+  // refs לערכים שמשתנים לעיתים קרובות - מונע הרשמה מחדש למאזינים.
+  // העדכון נעשה ב-useEffect (לא ב-render) — כך React יודע שהשינוי אינו חלק מה-render
+  // ולא מפעיל אזהרות על "cannot access refs during render".
   const showToastRef = useRef(showToast);
   const tRef = useRef(t);
   const listNamesRef = useRef(listNames);
@@ -77,14 +79,16 @@ export function useSocketNotifications(
   const notificationSettingsRef = useRef(notificationSettings);
   const isPushSubscribedRef = useRef(isPushSubscribed);
 
-  showToastRef.current = showToast;
-  tRef.current = t;
-  listNamesRef.current = listNames;
-  addNotificationRef.current = addNotification;
-  onMemberRemovedRef.current = onMemberRemoved;
-  onListDeletedRef.current = onListDeleted;
-  notificationSettingsRef.current = notificationSettings;
-  isPushSubscribedRef.current = isPushSubscribed;
+  useEffect(() => {
+    showToastRef.current = showToast;
+    tRef.current = t;
+    listNamesRef.current = listNames;
+    addNotificationRef.current = addNotification;
+    onMemberRemovedRef.current = onMemberRemoved;
+    onListDeletedRef.current = onListDeleted;
+    notificationSettingsRef.current = notificationSettings;
+    isPushSubscribedRef.current = isPushSubscribed;
+  });
 
   const shouldShowNotification = useCallback((
     eventType: 'productAdd' | 'productDelete' | 'productEdit' | 'productPurchase'

@@ -271,9 +271,10 @@ export const InsightsPage = memo(() => {
 
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
-          priceLoading ? (
-            // בזמן שה-API של המחירים נטען — מציגים את הלודר הפנימי במקום תוכן ריק
-            <InsightsLoader text="מביא נתוני מחירים..." size="sm" />
+          (priceLoading || !priceData) ? (
+            // לודר מוצג הן בזמן טעינה פעילה, והן כש-API החזיר null (כשלון שקט)
+            // — כדי שלא יישאר מסך ריק בלי הסבר.
+            <InsightsLoader text={priceLoading ? 'מביא נתוני מחירים...' : 'אין נתוני מחירים כרגע'} size="md" />
           ) : (
             <PriceComparisonCard data={priceData} isDark={isDark} />
           )
