@@ -83,34 +83,6 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: '0 20px 60px rgba(184, 134, 11, 0.5), 0 0 40px rgba(212, 175, 55, 0.3)',
         }}
       >
-        {/* כפתור שיתוף "צף" - מציץ מחוץ לפינה התחתונה-שמאלית של הקלף,
-            כמו חותם/תג שתלוי מהקלף. לא מתחרה על תשומת הלב של הכפתור הראשי. */}
-        <IconButton
-          onClick={handleShare}
-          aria-label={t('dailyFaithShareAria')}
-          disableRipple
-          sx={{
-            position: 'absolute',
-            bottom: -18,
-            left: -10,
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            color: '#FFE9B8',
-            background: 'linear-gradient(180deg, #8B6914 0%, #6B4710 100%)',
-            border: '2px solid #FFF4C9',
-            boxShadow: '0 6px 16px rgba(74, 48, 10, 0.5), inset 0 1px 0 rgba(255, 220, 140, 0.3)',
-            zIndex: 3,
-            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            '&:hover': {
-              transform: 'rotate(-10deg) scale(1.08)',
-              boxShadow: '0 8px 20px rgba(74, 48, 10, 0.6), inset 0 1px 0 rgba(255, 220, 140, 0.3)',
-            },
-            '&:active': { transform: 'scale(0.92)' },
-          }}
-        >
-          <IosShareIcon sx={{ fontSize: 20, filter: 'drop-shadow(0 -1px 0 rgba(0,0,0,0.35))' }} />
-        </IconButton>
 
         {/* פנים הקלף - רקע קרם-זהב חם */}
         <Box
@@ -189,32 +161,63 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             {renderFaithText(text)}
           </Typography>
 
-          {/* לוחית ברונזה - ראשי בלבד, עם הבהרה עדינה בקצוות */}
-          <Button
-            onClick={handleClose}
-            fullWidth
-            sx={{
-              mt: 2,
-              height: 56,
-              borderRadius: '16px',
-              // gradient אופקי: מרכז כהה + קצוות מוארים, נותן תחושת "אור הנוגע בקצוות הלוחית"
-              background: 'linear-gradient(90deg, #8B6914 0%, #6B4710 30%, #6B4710 70%, #8B6914 100%)',
-              color: '#FFE9B8',
-              fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
-              fontWeight: 700,
-              fontSize: 18,
-              letterSpacing: 0.8,
-              textShadow: '0 -1px 0 rgba(0,0,0,0.45), 0 1px 0 rgba(255,220,140,0.12)',
-              boxShadow: '0 8px 22px rgba(74, 48, 10, 0.45), inset 0 1px 0 rgba(255, 220, 140, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.25)',
-              border: '1px solid #3E2F0E',
-              textTransform: 'none',
-              transition: 'filter 0.15s ease',
-              '&:hover': { filter: 'brightness(1.08)' },
-              '&:active': { filter: 'brightness(0.92)' },
-            }}
-          >
-            {t('dailyFaithReadButton')}
-          </Button>
+          {/* לוחית ברונזה + רצועת שיתוף דקה מתחתיה */}
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+            <Button
+              onClick={handleClose}
+              fullWidth
+              sx={{
+                height: 56,
+                borderRadius: '16px',
+                background: 'linear-gradient(90deg, #8B6914 0%, #6B4710 30%, #6B4710 70%, #8B6914 100%)',
+                color: '#FFE9B8',
+                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: 0.8,
+                textShadow: '0 -1px 0 rgba(0,0,0,0.45), 0 1px 0 rgba(255,220,140,0.12)',
+                boxShadow: '0 8px 22px rgba(74, 48, 10, 0.45), inset 0 1px 0 rgba(255, 220, 140, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.25)',
+                border: '1px solid #3E2F0E',
+                textTransform: 'none',
+                transition: 'filter 0.15s ease',
+                '&:hover': { filter: 'brightness(1.08)' },
+                '&:active': { filter: 'brightness(0.92)' },
+              }}
+            >
+              {t('dailyFaithReadButton')}
+            </Button>
+
+            {/* רצועת שיתוף דקה - תואמת סגנון הלוחית, עם כוכבי ✦ משני הצדדים */}
+            <Button
+              onClick={handleShare}
+              aria-label={t('dailyFaithShareAria')}
+              fullWidth
+              sx={{
+                height: 34,
+                borderRadius: '10px',
+                background: 'transparent',
+                color: '#8B6914',
+                border: '1px dashed rgba(139, 105, 20, 0.55)',
+                fontFamily: '"Frank Ruhl Libre", "Times New Roman", serif',
+                fontWeight: 600,
+                fontSize: 13,
+                letterSpacing: 0.5,
+                textTransform: 'none',
+                gap: 0.75,
+                transition: 'background 0.2s, border-color 0.2s',
+                '&:hover': {
+                  background: 'rgba(139, 105, 20, 0.06)',
+                  borderColor: '#8B6914',
+                },
+                '&:active': { opacity: 0.7 },
+              }}
+            >
+              <Box component="span" sx={{ fontSize: 11, opacity: 0.8 }} aria-hidden="true">✦</Box>
+              <IosShareIcon sx={{ fontSize: 15 }} />
+              שתף עם חבר
+              <Box component="span" sx={{ fontSize: 11, opacity: 0.8 }} aria-hidden="true">✦</Box>
+            </Button>
+          </Box>
         </Box>
       </Box>
     </Dialog>
