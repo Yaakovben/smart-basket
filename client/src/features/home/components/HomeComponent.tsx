@@ -1106,28 +1106,27 @@ export const HomeComponent = memo(({
             />
           </Box>
 
-          {/* כפתור קטן לסריקת QR - תחת שדה הסיסמא, כחלופה מהירה להזנה ידנית */}
-          <Button
-            fullWidth
-            onClick={() => { haptic('light'); setShowQRScanner(true); }}
-            startIcon={<QrCodeScannerIcon />}
-            sx={{
-              mb: 2,
-              py: 1,
-              borderRadius: '10px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: 13,
-              color: '#0D9488',
-              bgcolor: 'rgba(20, 184, 166, 0.08)',
-              border: '1px dashed rgba(20, 184, 166, 0.4)',
-              '&:hover': { bgcolor: 'rgba(20, 184, 166, 0.15)', borderColor: '#14B8A6' },
-              '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
-              '& .MuiButton-startIcon .MuiSvgIcon-root': { fontSize: 18 },
-            }}
-          >
-            הצטרף באמצעות QR
-          </Button>
+          {/* קישור עדין לסריקת QR - לא כפתור, מרגיש כמו פעולה משנית */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Box
+              component="button"
+              type="button"
+              onClick={() => { haptic('light'); setShowQRScanner(true); }}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 0.6,
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: 'text.secondary',
+                fontSize: 12, fontWeight: 500,
+                py: 0.5, px: 1, borderRadius: '6px',
+                transition: 'color 0.12s, background 0.12s',
+                '&:hover': { color: '#0D9488', background: 'rgba(20, 184, 166, 0.06)' },
+                '&:active': { opacity: 0.6 },
+              }}
+            >
+              <QrCodeScannerIcon sx={{ fontSize: 14 }} />
+              הצטרף באמצעות QR
+            </Box>
+          </Box>
 
           {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
             {joinCooldown > 0 ? `${joinError} (${joinCooldown}s)` : joinError}

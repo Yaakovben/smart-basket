@@ -187,7 +187,7 @@ export const AdminDashboard = () => {
               {t('adminDashboard')}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
           <Box
             onClick={() => setFaithOpen(true)}
             role="button"

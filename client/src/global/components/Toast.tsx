@@ -139,7 +139,17 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           cursor: 'grab',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1 }}>
+        {/* רמז גרירה - פס אפור דק בראש הטוסט, מרמז שאפשר להחליק כדי לסגור */}
+        <Box
+          aria-hidden="true"
+          sx={{
+            width: 32, height: 3,
+            borderRadius: 2,
+            bgcolor: 'rgba(255,255,255,0.35)',
+            mx: 'auto', mt: 0.75, mb: 0.25,
+          }}
+        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1, pt: 0.5 }}>
           <Box sx={{
             width: 26, height: 26, borderRadius: '50%',
             background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.18))',
