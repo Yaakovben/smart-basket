@@ -48,26 +48,22 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
     const now = Date.now();
     const r = touchRef.current;
     const dt = Math.max(1, now - r.lastT);
-    // מהירות בפיקסלים לשניה - ישמש לזיהוי flick
     r.velocity = ((y - r.lastY) / dt) * 1000;
     r.lastY = y;
     r.lastT = now;
     const diff = y - r.startY;
-    // רק גרירה למטה (חיובי) מניעה את הטוסט. למעלה — נעול.
     setDragY(Math.max(0, diff));
   }, []);
   const handleTouchEnd = useCallback(() => {
     const r = touchRef.current;
     const finalY = r.lastY - r.startY;
-    // סף של 60px או flick מהיר כלפי מטה (>500px/sec) — מבטל את הטוסט
-    const shouldDismiss = finalY > 60 || (finalY > 20 && r.velocity > 500);
+    // כל גרירה ממשית (מעל 5px בכל כיוון) תסגור את הטוסט
+    const shouldDismiss = Math.abs(finalY) > 5;
     if (shouldDismiss) {
-      // אנימציית יציאה — ממשיכים כלפי מטה עד שנעלם
-      setDragY(Math.max(finalY, 120));
+      setDragY(Math.max(Math.abs(finalY), 120));
       setIsDragging(false);
       window.setTimeout(() => onDismiss?.(), 150);
     } else {
-      // Snap back — כיבוי isDragging מאפשר transition להחזיר לאפס
       setIsDragging(false);
       setDragY(0);
     }
