@@ -345,6 +345,34 @@ function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
   return results;
 }
 
+// מזהה שגיאות רשת שניתן לנסות שוב עליהן (DNS, timeout, reset).
+// שגיאות 4xx/5xx או parse errors - לא מנסים שוב.
+function isRetryableError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message || '';
+  const code = (err as { code?: string }).code || '';
+  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|getaddrinfo|socket hang up|network/i.test(msg)
+    || /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED/.test(code);
+}
+
+// עוטף פונקציה ב-retry עם backoff exponential.
+// משמש לקריאות שרת שעשויות ליפול על DNS זמני.
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (!isRetryableError(err) || i === attempts - 1) throw err;
+      // backoff: 1.5s, 3s, 6s...
+      const delay = 1500 * Math.pow(2, i);
+      await new Promise<void>(r => setTimeout(r, delay));
+    }
+  }
+  throw lastErr;
+}
+
 export function createPublishedPricesAdapter(options: PublishedPricesOptions): ChainAdapter {
   const { chainId, chainName, username, password = '' } = options;
 
@@ -353,14 +381,16 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
     chainName,
     async fetchLatestPrices(): Promise<ChainFetchResult> {
       try {
-        const { client, csrftoken } = await createAuthenticatedClient(username, password);
-        const filename = await listLatestPriceFullFile(client, csrftoken);
-        if (!filename) {
-          return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
-        }
-        const buf = await downloadFile(client, filename);
-        const items = parseXmlBuffer(buf, filename);
-        return { chainId, chainName, items, fetchedFiles: 1 };
+        return await withRetry(async () => {
+          const { client, csrftoken } = await createAuthenticatedClient(username, password);
+          const filename = await listLatestPriceFullFile(client, csrftoken);
+          if (!filename) {
+            return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
+          }
+          const buf = await downloadFile(client, filename);
+          const items = parseXmlBuffer(buf, filename);
+          return { chainId, chainName, items, fetchedFiles: 1 };
+        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
         return { chainId, chainName, items: [], fetchedFiles: 0, error: msg };
@@ -368,21 +398,21 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
     },
     async fetchLatestStores(): Promise<ChainStoresFetchResult> {
       try {
-        const { client, csrftoken } = await createAuthenticatedClient(username, password);
-        // מפרסים קובצי Stores* / StoresFull* (הראשון מכיל את כל הסניפים).
-        // שתי התבניות נפוצות בפורטל.
-        const filename = await listLatestMatchingFile(
-          client,
-          csrftoken,
-          'Stores',
-          /Stores(Full)?.*\.(gz|xml)/i
-        );
-        if (!filename) {
-          return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
-        }
-        const buf = await downloadFile(client, filename);
-        const stores = parseStoresXml(buf, filename);
-        return { chainId, chainName, stores, fetchedFiles: 1 };
+        return await withRetry(async () => {
+          const { client, csrftoken } = await createAuthenticatedClient(username, password);
+          const filename = await listLatestMatchingFile(
+            client,
+            csrftoken,
+            'Stores',
+            /Stores(Full)?.*\.(gz|xml)/i
+          );
+          if (!filename) {
+            return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
+          }
+          const buf = await downloadFile(client, filename);
+          const stores = parseStoresXml(buf, filename);
+          return { chainId, chainName, stores, fetchedFiles: 1 };
+        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
         return { chainId, chainName, stores: [], fetchedFiles: 0, error: msg };
