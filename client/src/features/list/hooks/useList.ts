@@ -22,6 +22,26 @@ import type {
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 }; // גבולות גרירה בפיקסלים
 const DEFAULT_FAB_BOTTOM_OFFSET = 90; // מיקום ברירת מחדל מתחתית המסך
 
+// סדר מיון קטגוריות כברירת מחדל - לפי זרימה טבעית של קניות בסופר:
+// ירקות → פירות → מחלבה → בשר → מאפים → שאר. סדר הקטגוריות כאן קובע
+// איך המוצרים מוצגים ברשימה (ראה getCategoryOrder ב-useMemo של items).
+const CATEGORY_SORT_ORDER: Record<string, number> = {
+  'ירקות': 1,
+  'פירות': 2,
+  'מוצרי חלב': 3,
+  'בשר': 4,
+  'קפואים': 5,
+  'מאפים': 6,
+  'שימורים ויבשים': 7,
+  'תבלינים ורטבים': 8,
+  'משקאות': 9,
+  'פיצוחים': 10,
+  'ממתקים': 11,
+  'ניקיון': 12,
+  'אחר': 99,
+};
+const getCategoryOrder = (cat: string): number => CATEGORY_SORT_ORDER[cat] ?? 99;
+
 // מזהה זמני למוצרים שעדיין לא אושרו מהשרת
 const isTempId = (id: string) => id.startsWith('temp-');
 
@@ -124,12 +144,22 @@ export const useList = ({
   // Debounce לחיפוש
   const debouncedSearch = useDebounce(search, 300);
 
-  const items = useMemo(
-    () => (filter === 'pending' ? pending : purchased).filter((p: Product) =>
-      p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-    ),
-    [filter, pending, purchased, debouncedSearch]
-  );
+  // רשימת המוצרים המוצגת ב-UI: מסוננת לפי חיפוש וממוינת לפי קטגוריה
+  // (ירקות → פירות → חלב וכו' לפי זרימה טבעית של קניות).
+  // בתוך אותה קטגוריה - מיון לפי שם לעקביות.
+  const items = useMemo(() => {
+    const source = filter === 'pending' ? pending : purchased;
+    const needle = debouncedSearch.toLowerCase();
+    const filtered = needle
+      ? source.filter((p: Product) => p.name.toLowerCase().includes(needle))
+      : source;
+    // מיון יציב: קודם לפי קטגוריה (סדר קבוע), אח"כ לפי שם בסדר א"ב
+    return [...filtered].sort((a, b) => {
+      const diff = getCategoryOrder(a.category) - getCategoryOrder(b.category);
+      if (diff !== 0) return diff;
+      return a.name.localeCompare(b.name, 'he');
+    });
+  }, [filter, pending, purchased, debouncedSearch]);
 
   const allMembers = useMemo(
     () => [list.owner, ...list.members],
