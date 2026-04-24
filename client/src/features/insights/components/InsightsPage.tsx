@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
@@ -27,7 +27,15 @@ export const InsightsPage = memo(() => {
   const [priceData, setPriceData] = useState<PriceComparisonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [tab, setTab] = useState<InsightTab>('price');
+  // הטאב נשמר ב-URL (?tab=lists) כדי ש"חזור" מדף הרשימה יחזיר אותנו לטאב הנכון.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const validTabs: InsightTab[] = ['price', 'lists', 'habits', 'pulse'];
+  const tab: InsightTab = validTabs.includes(tabFromUrl as InsightTab) ? (tabFromUrl as InsightTab) : 'price';
+  const setTab = (v: InsightTab) => {
+    // replace (ולא push) - מעבר טאבים לא יוצר היסטוריה מצטברת
+    setSearchParams(v === 'price' ? {} : { tab: v }, { replace: true });
+  };
   // שם המשתמש הנוכחי - משמש לסימון "אתה" על שורה של המשתמש ברשימת חברי קבוצה
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
   // רשימות שפתוחות להצגת כל החברים (כשיש מעל 4)
