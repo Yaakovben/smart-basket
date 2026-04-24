@@ -400,12 +400,18 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
       try {
         return await withRetry(async () => {
           const { client, csrftoken } = await createAuthenticatedClient(username, password);
-          const filename = await listLatestMatchingFile(
-            client,
-            csrftoken,
-            'Stores',
-            /Stores(Full)?.*\.(gz|xml)/i
-          );
+          // מנסים כמה תבניות שמות נפוצות לקובץ הסניפים בפורטל.
+          // יש רשתות שמפרסמות 'StoresFull*', יש 'Stores*', ויש 'Store*' (יחיד).
+          const patterns: Array<{ search: string; regex: RegExp }> = [
+            { search: 'Stores', regex: /Stores(Full)?.*\.(gz|xml)/i },
+            { search: 'Store', regex: /Store(Full)?.*\.(gz|xml)/i },
+            { search: 'Branches', regex: /Branches?.*\.(gz|xml)/i },
+          ];
+          let filename: string | null = null;
+          for (const p of patterns) {
+            filename = await listLatestMatchingFile(client, csrftoken, p.search, p.regex);
+            if (filename) break;
+          }
           if (!filename) {
             return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
           }
