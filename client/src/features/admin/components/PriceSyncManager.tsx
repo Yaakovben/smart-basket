@@ -12,6 +12,8 @@ import { Box, Typography, Button, CircularProgress, LinearProgress, keyframes } 
 import RefreshIcon from '@mui/icons-material/Refresh';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import PlaceIcon from '@mui/icons-material/Place';
 import SyncIcon from '@mui/icons-material/Sync';
@@ -42,7 +44,7 @@ const humanizeError = (raw: string): { msg: string; severity: 'soft' | 'hard' } 
   if (/no_price_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה מחירים היום', severity: 'soft' };
   if (/no_stores_file_found/i.test(raw)) return { msg: 'הרשת לא פרסמה קובץ סניפים', severity: 'soft' };
   if (/401|unauthorized|login|invalid.*user/i.test(raw)) return { msg: 'משתמש/סיסמה לא תקפים בפורטל', severity: 'hard' };
-  if (/timeout|ETIMEDOUT|ECONNRESET/i.test(raw)) return { msg: 'הפורטל לא מגיב - ננסה שוב בסנכרון הבא', severity: 'soft' };
+  if (/timeout|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(raw)) return { msg: 'תקלת רשת זמנית - ננסה שוב בסנכרון הבא', severity: 'soft' };
   if (/rate.?limit|too.?many/i.test(raw)) return { msg: 'חריגת קצב מהפורטל', severity: 'soft' };
   return { msg: raw, severity: 'hard' };
 };
@@ -309,7 +311,13 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flex: 1, minWidth: 0 }}>
-                        <CheckCircleIcon sx={{ fontSize: 14, color: statusColor, mt: 0.3 }} />
+                        {isHardError ? (
+                          <ErrorOutlineIcon sx={{ fontSize: 15, color: statusColor, mt: 0.25 }} />
+                        ) : isSoftError ? (
+                          <PauseCircleOutlineIcon sx={{ fontSize: 15, color: statusColor, mt: 0.25 }} />
+                        ) : (
+                          <CheckCircleIcon sx={{ fontSize: 14, color: statusColor, mt: 0.3 }} />
+                        )}
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                           <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
                             {c.chainName}

@@ -8,7 +8,6 @@ import {
   stopMarketAdapter,
   politzerAdapter,
   doralonAdapter,
-  maayan2000Adapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -30,7 +29,8 @@ const adapters: ChainAdapter[] = [
   politzerAdapter,
   doralonAdapter,
   shufersalAdapter,
-  maayan2000Adapter,
+  // מעיין 2000 הוסר זמנית - username 'Maayan2000' מחזיר 401 מהפורטל.
+  // צריך לאתר את ה-username הנכון לפני שנחזיר אותו.
 ];
 
 export interface SyncResult {
