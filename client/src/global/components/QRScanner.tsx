@@ -97,7 +97,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
           },
           () => { /* decode failure - רגיל בין פריימים */ },
         );
-      } catch (e) {
+      } catch {
         if (cancelled) return;
         setError('לא ניתן להפעיל את הסורק. אפשר לבחור תמונה מהגלריה.');
       } finally {

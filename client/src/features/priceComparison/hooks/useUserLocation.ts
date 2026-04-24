@@ -14,7 +14,7 @@
  * לא מבקשים אוטומטית - הרשאת geolocation רגישה ודורשת הסכמה מפורשת.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { safeStorage } from '../../../global/helpers';
 
 export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable' | 'error';
@@ -35,22 +35,23 @@ interface CachedLocation {
   at: number;
 }
 
-export function useUserLocation() {
-  const [location, setLocation] = useState<UserLocation | null>(null);
-  const [status, setStatus] = useState<LocationStatus>('idle');
+// קריאה סינכרונית של המצב הראשוני מ-storage - מאתחלים ישר את ה-state
+// (useState עם פונקציה רץ פעם אחת). זה מנקה את ה-useEffect שהיה עושה setState
+// אסור ב-effect (React Compiler).
+const readInitialState = (): { location: UserLocation | null; status: LocationStatus } => {
+  if (safeStorage.get(DENIED_KEY) === '1') {
+    return { location: null, status: 'denied' };
+  }
+  const cached = safeStorage.getJSON<CachedLocation | null>(CACHE_KEY, null);
+  if (cached && Date.now() - cached.at < LOCATION_TTL_MS) {
+    return { location: { lat: cached.lat, lng: cached.lng }, status: 'granted' };
+  }
+  return { location: null, status: 'idle' };
+};
 
-  // בטעינה ראשונה: אם יש מיקום תקף במטמון, מחזירים מיד (בלי בקשה חדשה)
-  useEffect(() => {
-    if (safeStorage.get(DENIED_KEY) === '1') {
-      setStatus('denied');
-      return;
-    }
-    const cached = safeStorage.getJSON<CachedLocation | null>(CACHE_KEY, null);
-    if (cached && Date.now() - cached.at < LOCATION_TTL_MS) {
-      setLocation({ lat: cached.lat, lng: cached.lng });
-      setStatus('granted');
-    }
-  }, []);
+export function useUserLocation() {
+  const [location, setLocation] = useState<UserLocation | null>(() => readInitialState().location);
+  const [status, setStatus] = useState<LocationStatus>(() => readInitialState().status);
 
   const requestLocation = useCallback(() => {
     if (!('geolocation' in navigator)) {
