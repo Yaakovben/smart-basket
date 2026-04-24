@@ -5,6 +5,9 @@ export interface PriceChainStatus {
   chainId: string;
   chainName: string;
   count: number;
+  lastSyncError?: string | null;
+  lastSyncAt?: string | null;
+  lastSyncFetched?: number | null;
 }
 
 export interface PriceSyncStatus {

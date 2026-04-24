@@ -52,6 +52,14 @@ export function getRegisteredChains(): Array<{ chainId: string; chainName: strin
 }
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
+// תוצאות הסנכרון האחרון לכל רשת, נשמרות בזיכרון לצפייה באדמין.
+// נמחקות על restart של השרת (זה בסדר - נטענות שוב בסנכרון הבא).
+const lastSyncResults = new Map<string, SyncResult & { completedAt: string }>();
+
+export function getLastSyncResults(): Array<SyncResult & { completedAt: string }> {
+  return Array.from(lastSyncResults.values());
+}
+
 // רענון מחירים לכל הרשתות הפעילות — משמש גם בסקריפט הידני וגם בcron
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
@@ -67,26 +75,17 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     const result = await adapter.fetchLatestPrices();
     if (result.error) {
       logger.error(`[price-sync] ${adapter.chainId}: fetch error: ${result.error}`);
-      results.push({
-        chainId: adapter.chainId,
-        chainName: adapter.chainName,
-        fetched: 0,
-        upserted: 0,
-        elapsedMs: Date.now() - t0,
-        error: result.error,
-      });
+      const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: result.error };
+      results.push(r);
+      lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
       continue;
     }
 
     if (result.items.length === 0) {
       logger.warn(`[price-sync] ${adapter.chainId}: no items to upsert`);
-      results.push({
-        chainId: adapter.chainId,
-        chainName: adapter.chainName,
-        fetched: 0,
-        upserted: 0,
-        elapsedMs: Date.now() - t0,
-      });
+      const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: 'no_items_found' };
+      results.push(r);
+      lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
       continue;
     }
 
@@ -114,13 +113,9 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     const elapsedMs = Date.now() - t0;
     logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
 
-    results.push({
-      chainId: adapter.chainId,
-      chainName: adapter.chainName,
-      fetched: result.items.length,
-      upserted: totalUpserted,
-      elapsedMs,
-    });
+    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: result.items.length, upserted: totalUpserted, elapsedMs };
+    results.push(r);
+    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
   }
 
   return results;

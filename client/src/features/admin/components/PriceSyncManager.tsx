@@ -186,28 +186,46 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     {chains.length} רשתות פעילות
                   </Typography>
                 </Box>
-                {chains.map((c) => (
-                  <Box
-                    key={c.chainId}
-                    sx={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      px: 2, py: 1,
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:last-child': { borderBottom: 'none' },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircleIcon sx={{ fontSize: 14, color: '#14B8A6' }} />
-                      <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-                        {c.chainName}
+                {chains.map((c) => {
+                  const hasError = !!c.lastSyncError;
+                  const isEmpty = c.count === 0;
+                  const statusColor = hasError ? '#EF4444' : isEmpty ? '#F59E0B' : '#14B8A6';
+                  return (
+                    <Box
+                      key={c.chainId}
+                      sx={{
+                        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                        gap: 1,
+                        px: 2, py: 1,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        '&:last-child': { borderBottom: 'none' },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flex: 1, minWidth: 0 }}>
+                        <CheckCircleIcon sx={{ fontSize: 14, color: statusColor, mt: 0.3 }} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                            {c.chainName}
+                          </Typography>
+                          {hasError && (
+                            <Typography sx={{ fontSize: 10.5, color: '#B91C1C', mt: 0.25, wordBreak: 'break-word' }}>
+                              שגיאת סנכרון: {c.lastSyncError}
+                            </Typography>
+                          )}
+                          {!hasError && isEmpty && (
+                            <Typography sx={{ fontSize: 10.5, color: '#D97706', mt: 0.25 }}>
+                              טרם סונכרן בהצלחה
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.secondary', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                        {c.count.toLocaleString('he-IL')}
                       </Typography>
                     </Box>
-                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
-                      {c.count.toLocaleString('he-IL')}
-                    </Typography>
-                  </Box>
-                ))}
+                  );
+                })}
               </Box>
             )}
 

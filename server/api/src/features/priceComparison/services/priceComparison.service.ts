@@ -247,7 +247,10 @@ async function matchNormalizedName(userName: string, chainId: ChainId = BETA_CHA
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 // מטמון קצר-טווח לכל משתמש - חוסך חישובים חוזרים בפתיחות מהירות של העמוד
-const CACHE_TTL_MS = 60_000;
+// מטמון לכל משתמש: 3 דקות. הנתונים משתנים רק בסנכרון (כל 6 שעות),
+// אז אין טעם לחשב מחדש מיד כל פעם. חישוב מחדש על פתיחת הרשימות/מחיקת פריט
+// נעשה דרך invalidateUser() מ-lists/products controllers.
+const CACHE_TTL_MS = 3 * 60_000;
 const userCache = new Map<string, { data: PriceComparisonData; expiresAt: number }>();
 
 // מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר

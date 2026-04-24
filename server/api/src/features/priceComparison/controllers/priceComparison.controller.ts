@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateUser } from '../services/priceComparison.service';
-import { syncAllChains, getRegisteredChains } from '../services/priceSync.service';
+import { syncAllChains, getRegisteredChains, getLastSyncResults } from '../services/priceSync.service';
 import { PriceDAL } from '../dal/price.dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
@@ -63,16 +63,21 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
 export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const active = await PriceDAL.getActiveChainsWithCounts();
   const activeMap = new Map(active.map(c => [c.chainId, c]));
+  const lastSyncMap = new Map(getLastSyncResults().map(r => [r.chainId, r]));
 
-  // ממזגים את כל הרשתות הרשומות (מה-adapters) עם כמויות מה-DB.
+  // ממזגים את כל הרשתות הרשומות (מה-adapters) עם כמויות מה-DB + תוצאות סנכרון אחרונות.
   // רשתות שאין להן נתונים עדיין יופיעו עם count=0 — מונע "היעלמות" של רשת שהסנכרון שלה נכשל.
   const registered = getRegisteredChains();
   const chains = registered.map(r => {
     const found = activeMap.get(r.chainId as import('../models/Price.model').ChainId);
+    const sync = lastSyncMap.get(r.chainId);
     return {
       chainId: r.chainId,
       chainName: r.chainName,
       count: found?.count ?? 0,
+      lastSyncError: sync?.error ?? null,
+      lastSyncAt: sync?.completedAt ?? null,
+      lastSyncFetched: sync?.fetched ?? null,
     };
   }).sort((a, b) => b.count - a.count);
 
