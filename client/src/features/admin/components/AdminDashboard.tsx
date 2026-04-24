@@ -187,7 +187,7 @@ export const AdminDashboard = () => {
               {t('adminDashboard')}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
           <Box
             onClick={() => setFaithOpen(true)}
             role="button"
@@ -198,14 +198,14 @@ export const AdminDashboard = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
-            <AutoStoriesIcon sx={{ fontSize: 20 }} />
+            <AutoStoriesIcon sx={{ fontSize: 26 }} />
           </Box>
           <Box
             onClick={() => setPriceSyncOpen(true)}
@@ -217,14 +217,14 @@ export const AdminDashboard = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
-            <StorefrontIcon sx={{ fontSize: 20 }} />
+            <StorefrontIcon sx={{ fontSize: 26 }} />
           </Box>
           <Box
             onClick={handleRefresh}
@@ -235,15 +235,15 @@ export const AdminDashboard = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
             <RefreshIcon sx={{
-              fontSize: 20,
+              fontSize: 26,
               animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
             }} />
           </Box>
