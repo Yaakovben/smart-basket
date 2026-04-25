@@ -114,14 +114,17 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     try {
       const res = await priceComparisonApi.refreshBranches();
       setFeedback({
-        msg: res.totalUpserted
+        msg: res.totalUpserted && res.totalUpserted > 0
           ? `✓ נטענו ${res.totalUpserted} סניפים מ-OpenStreetMap`
-          : (res.message || 'הסנכרון הסתיים'),
-        tone: 'info',
+          : (res.message || 'הסנכרון הסתיים אך לא נמצאו סניפים'),
+        tone: res.totalUpserted ? 'info' : 'error',
       });
       load(); // רענון מיידי של הסטטוס - יציג את הסניפים החדשים פר רשת
-    } catch {
-      setFeedback({ msg: 'שגיאה בסנכרון סניפים מ-OSM', tone: 'error' });
+    } catch (err) {
+      // הצגת שגיאה אמיתית מהשרת/מהרשת - חשוב לאבחון
+      const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = apiErr.response?.data?.message || apiErr.message || 'שגיאה בסנכרון סניפים מ-OSM';
+      setFeedback({ msg, tone: 'error' });
     } finally {
       setRefreshingBranches(false);
     }
@@ -150,9 +153,8 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גלילה מטופלת ע"י ה-DialogContent של Modal - לא מגבילים גובה כאן
-          כדי לא ליצור scroll-בתוך-scroll שגורם לחיתוך תוכן ב-iOS */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* גובה קומפקטי - הפופאפ לא מתפוצץ עם הרבה רשתות. תוכן עודף נגלל פנימה. */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(60vh, 460px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
