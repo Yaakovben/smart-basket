@@ -622,13 +622,13 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         אין התאמות
                       </Box>
                     )}
-                    {!isComplete && !isEmpty && (
+                    {!isComplete && !isEmpty && chain.unmatchedCount > 0 && (
                       <Box sx={{
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: '#F59E0B22', color: '#F59E0B',
                         fontSize: 9.5, fontWeight: 800, letterSpacing: 0.3,
                       }}>
-                        חסר {maxMatched - chain.matchedCount} מוצרים
+                        לא זוהו {chain.unmatchedCount} מוצרים
                       </Box>
                     )}
                   </Box>

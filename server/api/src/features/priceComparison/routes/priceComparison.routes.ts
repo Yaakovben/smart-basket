@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch } from '../controllers/priceComparison.controller';
+import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches } from '../controllers/priceComparison.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();
@@ -16,6 +16,8 @@ router.post('/load-seed', isAdmin, loadKnownBranchesSeed);
 router.get('/test-osm', isAdmin, testOsm);
 router.get('/branches/:chainId', isAdmin, getBranchesByChain);
 router.post('/branches', isAdmin, createOrUpdateBranch);
+router.post('/branches/bulk', isAdmin, bulkAddBranches);
+router.post('/branches/cleanup', isAdmin, cleanupUnverifiedBranches);
 router.delete('/branches/:id', isAdmin, deleteBranch);
 router.get('/status', isAdmin, getStatus);
 

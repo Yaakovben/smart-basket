@@ -245,6 +245,90 @@ export const createOrUpdateBranch = asyncHandler(async (req: AuthRequest, res: R
   }
 });
 
+// POST /api/price-comparison/branches/bulk (admin) - הוספה המונית של סניפים מאומתים
+// מקבל מערך של {chainId, storeName, city, address, lat, lng}.
+// כל סניף עובר ולידציה. מסומנים כ-manual-bulk-* (מאומתים).
+export const bulkAddBranches = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const items = req.body?.branches as Array<{
+    chainId?: string; storeName?: string; address?: string; city?: string;
+    lat?: number; lng?: number;
+  }> | undefined;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    res.status(400).json({ success: false, message: 'חסר מערך branches' });
+    return;
+  }
+
+  let success = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  const now = new Date();
+
+  for (let i = 0; i < items.length; i++) {
+    const b = items[i];
+    if (!b.chainId || !b.storeName || typeof b.lat !== 'number' || typeof b.lng !== 'number') {
+      failed++;
+      errors.push(`#${i + 1}: חסר chainId/storeName/lat/lng`);
+      continue;
+    }
+    if (b.lat < 29 || b.lat > 34 || b.lng < 33 || b.lng > 36) {
+      failed++;
+      errors.push(`#${i + 1}: קואורדינטות מחוץ לישראל`);
+      continue;
+    }
+    try {
+      const storeId = `manual-bulk-${Date.now()}-${i}`;
+      await Branch.updateOne(
+        { chainId: b.chainId, storeId },
+        { $set: {
+          chainId: b.chainId, chainName: CHAIN_NAMES[b.chainId] || b.chainId,
+          storeId, storeName: b.storeName,
+          address: b.address || '', city: b.city || '',
+          lat: b.lat, lng: b.lng,
+          coordSource: 'portal', lastSyncedAt: now,
+        } },
+        { upsert: true }
+      );
+      success++;
+    } catch (e) {
+      failed++;
+      errors.push(`#${i + 1}: ${e instanceof Error ? e.message.substring(0, 50) : 'unknown'}`);
+    }
+  }
+
+  invalidateBranchCache();
+  invalidateAllUsers();
+  res.json({
+    success: success > 0,
+    message: `${success} נוספו, ${failed} נכשלו`,
+    success_count: success,
+    failed_count: failed,
+    errors: errors.slice(0, 5),
+  });
+});
+
+// POST /api/price-comparison/branches/cleanup (admin) - מחיקת seed לא-מאומת
+// מסיר סניפים שאינם מ-OSM (osm-*) או מהוספה ידנית (manual-*).
+// אלה הם הסניפים מה-seed הידני המקורי שאינם מאומתים.
+export const cleanupUnverifiedBranches = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  try {
+    const result = await Branch.deleteMany({
+      storeId: { $not: { $regex: '^(osm-|manual-)' } },
+    });
+    invalidateBranchCache();
+    invalidateAllUsers();
+    logger.info(`[branches-cleanup] removed ${result.deletedCount} unverified branches`);
+    res.json({
+      success: true,
+      message: `נמחקו ${result.deletedCount} סניפים לא-מאומתים`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    res.status(500).json({ success: false, message: msg });
+  }
+});
+
 // DELETE /api/price-comparison/branches/:id (admin) - מחיקת סניף
 export const deleteBranch = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;

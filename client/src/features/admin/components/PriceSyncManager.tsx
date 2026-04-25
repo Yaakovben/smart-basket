@@ -112,6 +112,70 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   }, [lastBranchCompletedAt]);
 
   // פעולה אחת: רענון מחירים + סניפים יחד
+  // ייבוא המוני של סניפים מטקסט CSV
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkChainId, setBulkChainId] = useState('shufersal');
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleBulkImport = async () => {
+    // פורמט: שורה לסניף - storeName,city,address,lat,lng
+    const lines = bulkText.trim().split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+    const parsed: Array<{ chainId: string; storeName: string; city: string; address: string; lat: number; lng: number }> = [];
+    const parseErrors: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const parts = lines[i].split(',').map(p => p.trim());
+      if (parts.length < 5) {
+        parseErrors.push(`שורה ${i + 1}: צריך 5 ערכים מופרדים בפסיק`);
+        continue;
+      }
+      const [storeName, city, address, latStr, lngStr] = parts;
+      const lat = parseFloat(latStr);
+      const lng = parseFloat(lngStr);
+      if (!storeName || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+        parseErrors.push(`שורה ${i + 1}: שם או lat/lng לא תקפים`);
+        continue;
+      }
+      parsed.push({ chainId: bulkChainId, storeName, city, address, lat, lng });
+    }
+
+    if (parsed.length === 0) {
+      setFeedback({ msg: `לא נמצאו שורות תקפות. ${parseErrors.slice(0, 2).join('; ')}`, tone: 'error' });
+      return;
+    }
+
+    setBulkLoading(true);
+    haptic('medium');
+    const res = await priceComparisonApi.bulkAddBranches(parsed);
+    setBulkLoading(false);
+    setFeedback({
+      msg: res.success
+        ? `✓ נוספו ${res.success_count} סניפים` + (res.failed_count ? `, ${res.failed_count} נכשלו` : '')
+        : `שגיאה: ${res.message}`,
+      tone: res.success ? 'info' : 'error',
+    });
+    if (res.success) {
+      setBulkText('');
+      setBulkOpen(false);
+      load();
+      setChainBranches(new Map());
+    }
+  };
+
+  // מחיקה של סניפי seed לא-מאומתים (לא OSM ולא ידני)
+  const handleCleanup = async () => {
+    if (!confirm('למחוק את כל הסניפים מה-seed הישן? יישארו רק סניפים מ-OSM ומהוספה ידנית.')) return;
+    haptic('medium');
+    const res = await priceComparisonApi.cleanupUnverifiedBranches();
+    setFeedback({
+      msg: res.success ? `✓ נמחקו ${res.deletedCount} סניפים לא-מאומתים` : `שגיאה: ${res.message}`,
+      tone: res.success ? 'info' : 'error',
+    });
+    load();
+    setChainBranches(new Map());
+  };
+
   const handleRefresh = async () => {
     haptic('medium');
     setRefreshing(true);
@@ -274,8 +338,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               );
             })()}
 
-            {/* ===== כפתור יחיד מרכזי ===== */}
+            {/* ===== כפתור יחיד מרכזי + ניקוי seed ===== */}
             {!syncActive && (
+              <>
               <Button
                 variant="contained"
                 onClick={handleRefresh}
@@ -291,6 +356,94 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               >
                 רענן עכשיו (מחירים + סניפים)
               </Button>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                <Button
+                  size="small"
+                  onClick={() => setBulkOpen(v => !v)}
+                  sx={{
+                    fontSize: 11, color: '#7C3AED', textTransform: 'none',
+                    minHeight: 0, py: 0.4, px: 1,
+                    '&:hover': { bgcolor: 'rgba(124,58,237,0.05)' },
+                  }}
+                >
+                  📥 ייבוא המוני סניפים
+                </Button>
+                <Button
+                  size="small"
+                  onClick={handleCleanup}
+                  sx={{
+                    fontSize: 11, color: '#DC2626', textTransform: 'none',
+                    minHeight: 0, py: 0.4, px: 1,
+                    '&:hover': { bgcolor: 'rgba(220,38,38,0.05)' },
+                  }}
+                >
+                  🗑️ נקה seed לא-מאומת
+                </Button>
+              </Box>
+
+              {/* טופס ייבוא המוני */}
+              {bulkOpen && (
+                <Box sx={{
+                  p: 1.25, borderRadius: '12px',
+                  bgcolor: isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)',
+                  border: '1px solid', borderColor: 'rgba(124,58,237,0.25)',
+                  display: 'flex', flexDirection: 'column', gap: 0.75,
+                }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED' }}>
+                    ייבוא המוני סניפים
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.5 }}>
+                    כל שורה: <code style={{ background: 'rgba(0,0,0,0.05)', padding: '0 4px' }}>שם, עיר, כתובת, lat, lng</code>
+                  </Typography>
+                  {/* בחירת רשת */}
+                  <select
+                    value={bulkChainId}
+                    onChange={e => setBulkChainId(e.target.value)}
+                    style={{
+                      padding: '6px 8px', fontSize: 12, borderRadius: 8,
+                      border: '1px solid rgba(124,58,237,0.3)',
+                      background: isDark ? '#1e1b3a' : 'white',
+                      color: isDark ? 'white' : 'black',
+                    }}
+                  >
+                    {chains.map(c => (
+                      <option key={c.chainId} value={c.chainId}>{c.chainName}</option>
+                    ))}
+                  </select>
+                  <TextField
+                    multiline minRows={4} maxRows={10}
+                    placeholder={'שופרסל בני ברק, בני ברק, רבי עקיבא 50, 32.0858, 34.8330\nשופרסל אלעד, אלעד, שמעון בן שטח 12, 32.0525, 34.9520'}
+                    value={bulkText}
+                    onChange={e => setBulkText(e.target.value)}
+                    sx={{
+                      '& textarea': { fontSize: 11, fontFamily: 'monospace', lineHeight: 1.5 },
+                      '& .MuiInputBase-root': { p: 0.75 },
+                    }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Button
+                      size="small" variant="contained"
+                      onClick={handleBulkImport}
+                      disabled={bulkLoading || !bulkText.trim()}
+                      startIcon={bulkLoading ? <CircularProgress size={12} sx={{ color: 'white' }} /> : null}
+                      sx={{
+                        flex: 1, fontSize: 12, py: 0.6, textTransform: 'none',
+                        bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' },
+                      }}
+                    >
+                      {bulkLoading ? 'מייבא...' : `ייבא ל-${chains.find(c => c.chainId === bulkChainId)?.chainName}`}
+                    </Button>
+                    <Button size="small" onClick={() => { setBulkOpen(false); setBulkText(''); }}
+                      sx={{ fontSize: 12, color: 'text.secondary', textTransform: 'none' }}>
+                      ביטול
+                    </Button>
+                  </Box>
+                  <Typography sx={{ fontSize: 9.5, color: 'text.disabled', lineHeight: 1.45 }}>
+                    💡 איך לקבל lat,lng: גוגל מפס → לחיצה ימנית על המקום → המספרים מופיעים → העתק
+                  </Typography>
+                </Box>
+              )}
+              </>
             )}
 
             {/* פידבק */}

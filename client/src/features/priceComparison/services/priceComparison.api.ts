@@ -97,6 +97,30 @@ export const priceComparisonApi = {
     return response.data;
   },
 
+  // הוספה המונית של סניפים מאומתים
+  async bulkAddBranches(branches: Array<{ chainId: string; storeName: string; city?: string; address?: string; lat: number; lng: number }>): Promise<{
+    success: boolean; message?: string; success_count?: number; failed_count?: number; errors?: string[];
+  }> {
+    try {
+      const r = await apiClient.post('/price-comparison/branches/bulk', { branches });
+      return r.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message };
+    }
+  },
+
+  // מחיקת סניפים לא-מאומתים (כל מה שאינו OSM או הוספה ידנית)
+  async cleanupUnverifiedBranches(): Promise<{ success: boolean; message?: string; deletedCount?: number }> {
+    try {
+      const r = await apiClient.post('/price-comparison/branches/cleanup');
+      return r.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message };
+    }
+  },
+
   // יצירה/עדכון סניף ידני
   async upsertBranch(data: { chainId: string; storeName: string; address?: string; city?: string; lat: number; lng: number; storeId?: string }): Promise<{ success: boolean; storeId?: string; message?: string }> {
     try {
