@@ -307,21 +307,46 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 '@media (max-width: 360px)': { py: 1 },
               }}
             >
+              {/* מסגרת זוהרת מסביב ל-QR (לא נוגעת ב-QR עצמו → לא פוגעת בסריקה) */}
               <Box sx={{
-                p: 1,
-                borderRadius: '12px',
-                bgcolor: 'white',
-                boxShadow: '0 4px 16px rgba(20,184,166,0.2)',
-                '@media (max-width: 360px)': { p: 0.5, borderRadius: '8px' },
+                position: 'relative',
+                p: 0.5,
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #14B8A6 100%)',
+                boxShadow: '0 6px 20px rgba(20,184,166,0.35)',
+                '@media (max-width: 360px)': { p: 0.35, borderRadius: '10px' },
               }}>
-                <QRCodeSVG
-                  value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
-                  size={window.innerWidth <= 360 ? 95 : 130}
-                  level="H"
-                  fgColor="#000000"
-                  bgColor="#FFFFFF"
-                  style={{ display: 'block' }}
-                />
+                <Box sx={{
+                  p: 1.25,
+                  borderRadius: '11px',
+                  bgcolor: 'white',
+                  position: 'relative',
+                  '@media (max-width: 360px)': { p: 0.5, borderRadius: '7px' },
+                }}>
+                  {/* פינות מסגרת בתוך הריבוע הלבן - לא נוגעות בקוד עצמו, רק קישוט */}
+                  {[
+                    { top: 4, left: 4, borderRight: 0, borderBottom: 0 },
+                    { top: 4, right: 4, borderLeft: 0, borderBottom: 0 },
+                    { bottom: 4, left: 4, borderRight: 0, borderTop: 0 },
+                    { bottom: 4, right: 4, borderLeft: 0, borderTop: 0 },
+                  ].map((pos, i) => (
+                    <Box key={i} aria-hidden="true" sx={{
+                      position: 'absolute',
+                      width: 12, height: 12,
+                      border: '2.5px solid #0D9488',
+                      borderRadius: '3px',
+                      ...pos,
+                    }} />
+                  ))}
+                  <QRCodeSVG
+                    value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
+                    size={window.innerWidth <= 360 ? 95 : 130}
+                    level="H"
+                    fgColor="#000000"
+                    bgColor="#FFFFFF"
+                    style={{ display: 'block' }}
+                  />
+                </Box>
               </Box>
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, fontWeight: 500, '@media (max-width: 360px)': { fontSize: 10, mt: 0.25 } }}>
                 סרוק להצטרפות מיידית
