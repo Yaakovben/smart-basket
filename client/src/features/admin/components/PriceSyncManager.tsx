@@ -152,13 +152,17 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     setFeedback(null);
     try {
       const res = await priceComparisonApi.testOsm();
-      if (res.success) {
+      if (res.results && res.results.length > 0) {
+        // רשימה תמציתית של כל endpoint
+        const lines = res.results.map(r =>
+          r.ok ? `✓ ${r.elapsedMs}ms` : `✗ ${r.code || r.error?.substring(0, 25) || 'fail'}`
+        ).join(' | ');
         setFeedback({
-          msg: `OSM עובד ✓ · ${res.branchCount} סניפי שופרסל ב-${res.elapsedMs}ms`,
-          tone: 'info',
+          msg: `${res.summary || ''} · ${lines}`,
+          tone: res.workingEndpoints && res.workingEndpoints > 0 ? 'info' : 'error',
         });
       } else {
-        setFeedback({ msg: `OSM נכשל: ${res.error || 'unknown'}`, tone: 'error' });
+        setFeedback({ msg: `שגיאה: ${res.summary || 'unknown'}`, tone: 'error' });
       }
     } finally {
       setTestingOsm(false);
@@ -190,18 +194,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה זהה ל-DailyFaithManager עם גלילה אנכית. iOS דורש -webkit-overflow-scrolling */}
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1.5,
-        height: 'min(70vh, 580px)',
-        overflowY: 'auto',
-        overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch',
-        // touchAction: pan-y - מאפשר גלילה אנכית בלבד; מונע התנגשות עם gesture אחר
-        touchAction: 'pan-y',
-      }}>
+      {/* בלי height/overflow פנימי - ה-Modal עצמו מטפל בגלילה (DialogContent עם overflowY auto + maxHeight 90vh).
+          scroll-בתוך-scroll נדפק ב-iOS, וזה גרם לבעיות הקודמות. */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
