@@ -97,6 +97,28 @@ export const priceComparisonApi = {
     return response.data;
   },
 
+  // יצירה/עדכון סניף ידני
+  async upsertBranch(data: { chainId: string; storeName: string; address?: string; city?: string; lat: number; lng: number; storeId?: string }): Promise<{ success: boolean; storeId?: string; message?: string }> {
+    try {
+      const r = await apiClient.post('/price-comparison/branches', data);
+      return r.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message };
+    }
+  },
+
+  // מחיקת סניף
+  async deleteBranch(id: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const r = await apiClient.delete(`/price-comparison/branches/${id}`);
+      return r.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message };
+    }
+  },
+
   // טעינה מיידית של seed הסניפים המוכרים (65 סניפים) - עובד תמיד, לא תלוי בכלום
   async loadSeed(): Promise<{ success: boolean; message: string; upserted?: number; total?: number }> {
     try {

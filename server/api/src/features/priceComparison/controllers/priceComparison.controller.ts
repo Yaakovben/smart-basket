@@ -208,6 +208,61 @@ export const getBranchesByChain = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
+// POST /api/price-comparison/branches (admin) - יצירה/עדכון סניף ידני
+export const createOrUpdateBranch = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { chainId, storeName, address, city, lat, lng, storeId } = req.body as {
+    chainId?: string; storeName?: string; address?: string; city?: string;
+    lat?: number; lng?: number; storeId?: string;
+  };
+  if (!chainId || !storeName || typeof lat !== 'number' || typeof lng !== 'number') {
+    res.status(400).json({ success: false, message: 'חסרים שדות חובה: chainId, storeName, lat, lng' });
+    return;
+  }
+  if (lat < 29 || lat > 34 || lng < 33 || lng > 36) {
+    res.status(400).json({ success: false, message: 'קואורדינטות מחוץ לישראל' });
+    return;
+  }
+  const finalStoreId = storeId || `manual-${Date.now()}`;
+  try {
+    await Branch.updateOne(
+      { chainId, storeId: finalStoreId },
+      { $set: {
+        chainId, chainName: CHAIN_NAMES[chainId] || chainId,
+        storeId: finalStoreId, storeName,
+        address: address || '', city: city || '',
+        lat, lng,
+        coordSource: 'portal',
+        lastSyncedAt: new Date(),
+      } },
+      { upsert: true }
+    );
+    invalidateBranchCache();
+    invalidateAllUsers();
+    res.json({ success: true, storeId: finalStoreId });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    res.status(500).json({ success: false, message: msg });
+  }
+});
+
+// DELETE /api/price-comparison/branches/:id (admin) - מחיקת סניף
+export const deleteBranch = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await Branch.deleteOne({ _id: id });
+    invalidateBranchCache();
+    invalidateAllUsers();
+    if (result.deletedCount === 0) {
+      res.status(404).json({ success: false, message: 'סניף לא נמצא' });
+      return;
+    }
+    res.json({ success: true });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    res.status(500).json({ success: false, message: msg });
+  }
+});
+
 // GET /api/price-comparison/test-osm (admin only) - בדיקה דיאגנוסטית מהירה.
 // בודק כל Overpass endpoint בנפרד עם שאילתה זעירה (5 שניות לכל אחד),
 // ומחזיר תוך 25 שניות מקסימום - מתחת ל-30 של Render. מציג בדיוק איזה

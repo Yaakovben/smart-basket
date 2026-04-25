@@ -18,6 +18,9 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import SyncIcon from '@mui/icons-material/Sync';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { TextField, IconButton } from '@mui/material';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
@@ -136,6 +139,50 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const [expandedChain, setExpandedChain] = useState<string | null>(null);
   const [chainBranches, setChainBranches] = useState<Map<string, Awaited<ReturnType<typeof priceComparisonApi.getBranchesByChain>>['branches']>>(new Map());
   const [loadingChain, setLoadingChain] = useState<string | null>(null);
+  // טופס הוספת סניף ידנית - פעיל לכל רשת בנפרד
+  const [addingBranch, setAddingBranch] = useState<string | null>(null);
+  const [newBranch, setNewBranch] = useState({ storeName: '', city: '', address: '', lat: '', lng: '' });
+  const refreshChainBranches = async (chainId: string) => {
+    try {
+      const res = await priceComparisonApi.getBranchesByChain(chainId);
+      setChainBranches(prev => new Map(prev).set(chainId, res.branches));
+    } catch { /* ignore */ }
+  };
+  const handleAddBranch = async (chainId: string) => {
+    const lat = parseFloat(newBranch.lat);
+    const lng = parseFloat(newBranch.lng);
+    if (!newBranch.storeName.trim() || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      setFeedback({ msg: 'חובה: שם, lat, lng תקפים', tone: 'error' });
+      return;
+    }
+    haptic('medium');
+    const res = await priceComparisonApi.upsertBranch({
+      chainId, storeName: newBranch.storeName.trim(),
+      city: newBranch.city.trim(), address: newBranch.address.trim(),
+      lat, lng,
+    });
+    if (res.success) {
+      setNewBranch({ storeName: '', city: '', address: '', lat: '', lng: '' });
+      setAddingBranch(null);
+      await refreshChainBranches(chainId);
+      load();
+      setFeedback({ msg: '✓ סניף נוסף', tone: 'info' });
+    } else {
+      setFeedback({ msg: `שגיאה: ${res.message}`, tone: 'error' });
+    }
+  };
+  const handleDeleteBranch = async (chainId: string, branchId: string) => {
+    if (!confirm('למחוק את הסניף?')) return;
+    haptic('medium');
+    const res = await priceComparisonApi.deleteBranch(branchId);
+    if (res.success) {
+      await refreshChainBranches(chainId);
+      load();
+    } else {
+      setFeedback({ msg: `שגיאה: ${res.message}`, tone: 'error' });
+    }
+  };
+
   const toggleChain = async (chainId: string) => {
     haptic('light');
     if (expandedChain === chainId) { setExpandedChain(null); return; }
@@ -353,32 +400,108 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             </Typography>
                           ) : (
                             <>
-                              <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.disabled', mb: 0.6, letterSpacing: 0.3 }}>
-                                {branchList.length} סניפים · {branchList.filter(b => b.hasCoords).length} עם מיקום
-                              </Typography>
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, maxHeight: 240, overflowY: 'auto' }}>
-                                {branchList.map(b => (
-                                  <Box key={b.id} sx={{
-                                    display: 'flex', alignItems: 'flex-start', gap: 0.6,
-                                    px: 1, py: 0.5, borderRadius: '6px',
-                                    bgcolor: isDark ? 'rgba(255,255,255,0.025)' : 'white',
-                                    border: '1px solid',
-                                    borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                                  }}>
-                                    <PlaceIcon sx={{ fontSize: 11, color: b.hasCoords ? '#7C3AED' : 'text.disabled', mt: 0.2, flexShrink: 0 }} />
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {b.storeName}
-                                      </Typography>
-                                      {(b.city || b.address) && (
-                                        <Typography sx={{ fontSize: 9.5, color: 'text.secondary', mt: 0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                          {[b.city, b.address].filter(Boolean).join(' · ')}
-                                        </Typography>
-                                      )}
-                                    </Box>
-                                  </Box>
-                                ))}
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
+                                <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.disabled', flex: 1, letterSpacing: 0.3 }}>
+                                  {branchList ? `${branchList.length} סניפים · ${branchList.filter(b => b.hasCoords).length} עם מיקום` : '0 סניפים'}
+                                </Typography>
+                                <Button
+                                  size="small"
+                                  startIcon={<AddCircleIcon sx={{ fontSize: 14 }} />}
+                                  onClick={() => setAddingBranch(addingBranch === c.chainId ? null : c.chainId)}
+                                  sx={{
+                                    fontSize: 10.5, fontWeight: 800, color: '#7C3AED', textTransform: 'none',
+                                    minHeight: 0, py: 0.3, px: 1, borderRadius: '6px',
+                                    '& .MuiButton-startIcon': { marginInlineEnd: 0.4 },
+                                  }}
+                                >
+                                  הוסף סניף
+                                </Button>
                               </Box>
+
+                              {/* טופס הוספת סניף ידני */}
+                              {addingBranch === c.chainId && (
+                                <Box sx={{
+                                  p: 1, mb: 0.6, borderRadius: '8px',
+                                  bgcolor: isDark ? 'rgba(124,58,237,0.08)' : 'rgba(124,58,237,0.04)',
+                                  border: '1px dashed', borderColor: 'rgba(124,58,237,0.3)',
+                                  display: 'flex', flexDirection: 'column', gap: 0.6,
+                                }}>
+                                  <TextField size="small" placeholder="שם הסניף *" value={newBranch.storeName}
+                                    onChange={e => setNewBranch(p => ({ ...p, storeName: e.target.value }))}
+                                    sx={{ '& input': { fontSize: 12, py: 0.6 } }} />
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <TextField size="small" placeholder="עיר" value={newBranch.city}
+                                      onChange={e => setNewBranch(p => ({ ...p, city: e.target.value }))}
+                                      sx={{ flex: 1, '& input': { fontSize: 12, py: 0.6 } }} />
+                                    <TextField size="small" placeholder="כתובת" value={newBranch.address}
+                                      onChange={e => setNewBranch(p => ({ ...p, address: e.target.value }))}
+                                      sx={{ flex: 1, '& input': { fontSize: 12, py: 0.6 } }} />
+                                  </Box>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <TextField size="small" placeholder="lat *" value={newBranch.lat}
+                                      onChange={e => setNewBranch(p => ({ ...p, lat: e.target.value }))}
+                                      sx={{ flex: 1, '& input': { fontSize: 11, py: 0.6, fontFamily: 'monospace' } }} />
+                                    <TextField size="small" placeholder="lng *" value={newBranch.lng}
+                                      onChange={e => setNewBranch(p => ({ ...p, lng: e.target.value }))}
+                                      sx={{ flex: 1, '& input': { fontSize: 11, py: 0.6, fontFamily: 'monospace' } }} />
+                                  </Box>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <Button size="small" variant="contained" onClick={() => handleAddBranch(c.chainId)}
+                                      sx={{ flex: 1, fontSize: 11.5, py: 0.5, textTransform: 'none', bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' } }}>
+                                      שמור
+                                    </Button>
+                                    <Button size="small" onClick={() => setAddingBranch(null)}
+                                      sx={{ fontSize: 11.5, py: 0.5, textTransform: 'none', color: 'text.secondary' }}>
+                                      ביטול
+                                    </Button>
+                                  </Box>
+                                  <Typography sx={{ fontSize: 9, color: 'text.disabled', textAlign: 'center' }}>
+                                    טיפ: גוגל מפס → לחיצה ימנית על הכתובת → "What's here?" → העתק lat,lng
+                                  </Typography>
+                                </Box>
+                              )}
+
+                              {!branchList || branchList.length === 0 ? (
+                                <Typography sx={{ fontSize: 11, color: 'text.secondary', textAlign: 'center', py: 1 }}>
+                                  אין סניפים במאגר עדיין
+                                </Typography>
+                              ) : (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, maxHeight: 240, overflowY: 'auto' }}>
+                                  {branchList.map(b => (
+                                    <Box key={b.id} sx={{
+                                      display: 'flex', alignItems: 'center', gap: 0.6,
+                                      px: 1, py: 0.5, borderRadius: '6px',
+                                      bgcolor: isDark ? 'rgba(255,255,255,0.025)' : 'white',
+                                      border: '1px solid',
+                                      borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                                    }}>
+                                      <PlaceIcon sx={{ fontSize: 11, color: b.hasCoords ? '#7C3AED' : 'text.disabled', flexShrink: 0 }} />
+                                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                          {b.storeName}
+                                        </Typography>
+                                        {(b.city || b.address) && (
+                                          <Typography sx={{ fontSize: 9.5, color: 'text.secondary', mt: 0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {[b.city, b.address].filter(Boolean).join(' · ')}
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleDeleteBranch(c.chainId, b.id)}
+                                        aria-label="מחק"
+                                        sx={{
+                                          width: 24, height: 24, flexShrink: 0,
+                                          color: '#DC2626',
+                                          '&:hover': { bgcolor: 'rgba(220,38,38,0.1)' },
+                                        }}
+                                      >
+                                        <DeleteIcon sx={{ fontSize: 13 }} />
+                                      </IconButton>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              )}
                             </>
                           )}
                         </Box>
