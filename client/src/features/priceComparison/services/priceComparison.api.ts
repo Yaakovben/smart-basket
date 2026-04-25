@@ -76,25 +76,32 @@ export const priceComparisonApi = {
     return response.data;
   },
 
-  // בדיקה דיאגנוסטית של OSM - מחזיר תוצאת שאילתה אחת (שופרסל)
+  // בדיקה דיאגנוסטית של OSM - בודק 4 endpoints במקביל ב-5 שניות כל אחד
   async testOsm(): Promise<{
     success: boolean;
-    chainTested?: string;
-    branchCount?: number;
-    elapsedMs?: number;
-    sample?: Array<{ name: string; city?: string; lat?: number; lng?: number }>;
+    workingEndpoints?: number;
+    totalEndpoints?: number;
+    summary?: string;
+    results?: Array<{
+      endpoint: string;
+      ok: boolean;
+      elapsedMs: number;
+      status?: number;
+      elements?: number;
+      error?: string;
+      code?: string;
+      httpStatus?: number;
+    }>;
     error?: string;
-    stack?: string;
   }> {
     try {
-      const response = await apiClient.get('/price-comparison/test-osm', { timeout: 60_000 });
+      const response = await apiClient.get('/price-comparison/test-osm', { timeout: 28_000 });
       return response.data;
     } catch (err) {
-      const e = err as { response?: { data?: { error?: string; stack?: string } }; message?: string };
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
       return {
         success: false,
-        error: e.response?.data?.error || e.message || 'unknown',
-        stack: e.response?.data?.stack,
+        summary: e.response?.data?.error || e.message || 'unknown',
       };
     }
   },
