@@ -153,8 +153,8 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה קומפקטי - הפופאפ לא מתפוצץ עם הרבה רשתות. תוכן עודף נגלל פנימה. */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(60vh, 460px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+      {/* גובה זהה ל-DailyFaithManager: min(70vh, 580px). תוכן עודף נגלל פנימה. */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />

@@ -11,9 +11,14 @@ import axios from 'axios';
 import { logger } from '../../../config/logger';
 import type { ChainId } from '../models/Price.model';
 
-// נקודת הקצה הציבורית של Overpass. חינמי, יציב, מומלץ.
-// משתמשים ב-overpass.private.coffee או overpass-api.de - שניהם רץ.
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+// נקודות קצה ציבוריות של Overpass. חינמיות, יציבות.
+// אם הראשון נופל (rate limit / down), נופלים לבא בתור.
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.osm.ch/api/interpreter',
+];
 
 // מיפוי בין chainId שלנו לבין שמות מותג ב-OSM (עברית + אנגלית).
 // Overpass תומך ב-regex על ערכי tag, אז אפשר לחפש כמה ואריאנטים בבת אחת.
@@ -109,42 +114,57 @@ function parseElement(el: OverpassElement, chainId: ChainId): OsmBranch | null {
   };
 }
 
+// ניסיון לבצע שאילתה מול endpoint יחיד של Overpass. מחזיר elements או זורק.
+async function tryOverpassEndpoint(
+  endpoint: string,
+  query: string
+): Promise<OverpassElement[]> {
+  const res = await axios.post<OverpassResponse>(
+    endpoint,
+    `data=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'smart-basket-app/1.0 (price comparison feature)',
+      },
+      timeout: 45_000,
+    }
+  );
+  return res.data?.elements || [];
+}
+
 /**
  * מביא את כל הסניפים של רשת ספציפית מ-OSM.
- * מחזיר מערך ריק אם אין נתונים או שהשרת חזר בשגיאה.
+ * מנסה כמה nodes ציבוריים של Overpass ברצף עד שאחד מצליח.
+ * מחזיר מערך ריק אם כולם נכשלו (לוג מפורט בלוגים).
  */
 export async function fetchOsmBranches(chainId: ChainId): Promise<OsmBranch[]> {
   const query = buildOverpassQuery(chainId);
   if (!query) return [];
 
-  try {
-    const res = await axios.post<OverpassResponse>(
-      OVERPASS_URL,
-      `data=${encodeURIComponent(query)}`,
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 60_000,
+  let lastError = 'unknown';
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const elements = await tryOverpassEndpoint(endpoint, query);
+      const branches: OsmBranch[] = [];
+      const seen = new Set<string>();
+      for (const el of elements) {
+        const b = parseElement(el, chainId);
+        if (!b) continue;
+        const key = `${b.lat.toFixed(4)},${b.lng.toFixed(4)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        branches.push(b);
       }
-    );
-    const elements = res.data?.elements || [];
-    const branches: OsmBranch[] = [];
-    const seen = new Set<string>();
-    for (const el of elements) {
-      const b = parseElement(el, chainId);
-      if (!b) continue;
-      // de-duplication: אם אותו מקום מופיע גם כ-node וגם כ-way (אותו lat/lng עד 4 ספרות)
-      const key = `${b.lat.toFixed(4)},${b.lng.toFixed(4)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      branches.push(b);
+      logger.info(`[osm-branches] ${chainId}: fetched ${branches.length} from ${endpoint}`);
+      return branches;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : 'unknown';
+      logger.warn(`[osm-branches] ${chainId}: ${endpoint} failed (${lastError}), trying next`);
     }
-    logger.info(`[osm-branches] ${chainId}: fetched ${branches.length} branches`);
-    return branches;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'unknown';
-    logger.error(`[osm-branches] ${chainId}: failed to fetch from OSM: ${msg}`);
-    return [];
   }
+  logger.error(`[osm-branches] ${chainId}: all overpass endpoints failed. Last error: ${lastError}`);
+  return [];
 }
 
 /**

@@ -89,8 +89,12 @@ export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Respon
       totalUpserted,
     });
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : 'unknown';
     logger.error('[admin-refresh-branches] Unhandled error:', err);
-    res.status(500).json({ success: false, message: 'שגיאה בסנכרון סניפים' });
+    res.status(500).json({
+      success: false,
+      message: `שגיאה בסנכרון סניפים: ${errMsg}`,
+    });
   } finally {
     branchSyncInProgress = false;
   }
