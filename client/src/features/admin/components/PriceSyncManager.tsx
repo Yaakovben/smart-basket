@@ -96,37 +96,50 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
-  // סנכרון סניפים מ-OpenStreetMap - סינכרוני, לוקח 40-60 שניות.
-  // נשמר elapsed כדי להציג שעון תוך כדי - תחושת פרוגרס למשתמש.
-  const [refreshingBranches, setRefreshingBranches] = useState(false);
+  // סנכרון סניפים - אסינכרוני (Render מוגבל ל-30s לבקשת HTTP).
+  // המצב נחשף ב-status.branchSync, אנחנו polling אותו.
+  const refreshingBranches = !!status?.branchSync?.active;
   const [branchSyncElapsed, setBranchSyncElapsed] = useState(0);
   useEffect(() => {
-    if (!refreshingBranches) { setBranchSyncElapsed(0); return; }
-    const t0 = Date.now();
+    if (!refreshingBranches || !status?.branchSync?.startedAt) { setBranchSyncElapsed(0); return; }
+    const t0 = new Date(status.branchSync.startedAt).getTime();
     const interval = setInterval(() => setBranchSyncElapsed(Math.floor((Date.now() - t0) / 1000)), 500);
     return () => clearInterval(interval);
-  }, [refreshingBranches]);
+  }, [refreshingBranches, status?.branchSync?.startedAt]);
+
+  // poll כל 3 שניות בזמן סנכרון סניפים פעיל
+  useEffect(() => {
+    if (!refreshingBranches) return;
+    const interval = setInterval(load, 3_000);
+    return () => clearInterval(interval);
+  }, [refreshingBranches, load]);
+
+  // הצגת תוצאה כשהסנכרון מסתיים
+  const lastBranchCompletedAt = status?.branchSync?.completedAt;
+  useEffect(() => {
+    if (!lastBranchCompletedAt || refreshingBranches) return;
+    const bs = status?.branchSync;
+    if (!bs) return;
+    if (bs.error) {
+      setFeedback({ msg: `שגיאה: ${bs.error}`, tone: 'error' });
+    } else if (bs.totalUpserted > 0) {
+      setFeedback({ msg: `✓ נטענו ${bs.totalUpserted} סניפים מ-OpenStreetMap`, tone: 'info' });
+    } else {
+      setFeedback({ msg: 'הסנכרון הסתיים אך לא נמצאו סניפים', tone: 'error' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastBranchCompletedAt]);
 
   const handleRefreshBranches = async () => {
     haptic('medium');
-    setRefreshingBranches(true);
     setFeedback(null);
     try {
-      const res = await priceComparisonApi.refreshBranches();
-      setFeedback({
-        msg: res.totalUpserted && res.totalUpserted > 0
-          ? `✓ נטענו ${res.totalUpserted} סניפים מ-OpenStreetMap`
-          : (res.message || 'הסנכרון הסתיים אך לא נמצאו סניפים'),
-        tone: res.totalUpserted ? 'info' : 'error',
-      });
-      load(); // רענון מיידי של הסטטוס - יציג את הסניפים החדשים פר רשת
+      await priceComparisonApi.refreshBranches();
+      load(); // טעינה מיידית - תפרסם active=true ב-status
     } catch (err) {
-      // הצגת שגיאה אמיתית מהשרת/מהרשת - חשוב לאבחון
       const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
-      const msg = apiErr.response?.data?.message || apiErr.message || 'שגיאה בסנכרון סניפים מ-OSM';
+      const msg = apiErr.response?.data?.message || apiErr.message || 'שגיאה בהפעלת סנכרון';
       setFeedback({ msg, tone: 'error' });
-    } finally {
-      setRefreshingBranches(false);
     }
   };
 
@@ -153,8 +166,10 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה זהה ל-DailyFaithManager: min(70vh, 580px). תוכן עודף נגלל פנימה. */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+      {/* גובה זהה ל-DailyFaithManager: outer flex column עם גובה קבוע;
+          הגלילה תהיה רק על אזור התוכן הארוך (חלוקה לפי רשת), לא על כל הפופאפ -
+          מונע scroll-בתוך-scroll ב-iOS שדוק את הגלילה. */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', minHeight: 0 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
@@ -414,13 +429,14 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
-            {/* חלוקה לפי רשת */}
+            {/* חלוקה לפי רשת - תופס את שאר הגובה ומגלל פנימה אם צריך */}
             {chains.length > 0 && (
               <Box sx={{
+                flex: 1, minHeight: 0,
+                overflowY: 'auto', overscrollBehavior: 'contain',
                 borderRadius: '12px',
                 border: '1px solid',
                 borderColor: 'divider',
-                overflow: 'hidden',
               }}>
                 <Box sx={{
                   px: 2, py: 1,
