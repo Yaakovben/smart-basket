@@ -1,6 +1,7 @@
 import cron from 'node-cron';
-import { syncAllChains } from '../services/priceSync.service';
+import { syncAllChains, syncBranchesFromOsm } from '../services/priceSync.service';
 import { PriceDAL } from '../dal/price.dal';
+import { BranchDAL } from '../dal/branch.dal';
 import { logger } from '../../../config/logger';
 
 // NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד.
@@ -58,6 +59,19 @@ async function shouldRunStartupSync(): Promise<boolean> {
   }
 }
 
+// סנכרון סניפים מ-OSM - אוטומטי בעת boot אם המאגר ריק, ובכל cron run.
+// רץ בנפרד מסנכרון המחירים כדי לא לעכב, ובלי NODE_TLS_REJECT_UNAUTHORIZED
+// (הפרסום של OSM הוא HTTPS תקני).
+async function runOsmBranchSync(trigger: 'cron' | 'startup'): Promise<void> {
+  try {
+    const results = await syncBranchesFromOsm();
+    const total = results.reduce((s, r) => s + r.upserted, 0);
+    logger.info(`[osm-sync-job] ${trigger}: ${total} branches upserted across ${results.length} chains`);
+  } catch (err) {
+    logger.error(`[osm-sync-job] ${trigger}: failed:`, err);
+  }
+}
+
 export function startPriceSyncJob(): void {
   if (scheduled) {
     logger.warn('[price-sync-job] Already scheduled, skipping');
@@ -69,20 +83,40 @@ export function startPriceSyncJob(): void {
     return;
   }
 
+  // cron של מחירים + סנכרון סניפים מ-OSM (כל 6 שעות, OSM רץ אחרי המחירים)
   cron.schedule(
     CRON_EXPRESSION,
-    () => runSync('cron'),
+    async () => {
+      await runSync('cron');
+      await runOsmBranchSync('cron');
+    },
     { timezone: TIMEZONE }
   );
 
   scheduled = true;
   logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — every 6h`);
 
-  // בדיקת טריות בעת boot — אם הנתונים ישנים, סנכרון מיידי ברקע (לא חוסם את boot)
+  // ===== Startup actions =====
+  // 1. אם המחירים ישנים - סנכרון מחירים מיידי
   void shouldRunStartupSync().then(shouldRun => {
     if (shouldRun) {
-      // דיליי קטן כדי לתת לשרת לסיים boot לפני שמתחיל משימה כבדה
       setTimeout(() => runSync('startup'), 15_000);
     }
   });
+
+  // 2. אם המאגר של הסניפים ריק - סנכרון OSM אוטומטי. זה נותן ערך מיידי
+  // למשתמש בעת deploy ראשון בלי שאדמין יצטרך ללחוץ כלום.
+  void (async () => {
+    try {
+      const branchCount = await BranchDAL.count({});
+      if (branchCount === 0) {
+        logger.info('[osm-sync-job] Startup: no branches in DB, triggering initial OSM fetch in 30s');
+        setTimeout(() => runOsmBranchSync('startup'), 30_000);
+      } else {
+        logger.info(`[osm-sync-job] Startup: ${branchCount} branches already in DB, skipping initial fetch`);
+      }
+    } catch (err) {
+      logger.error('[osm-sync-job] Startup: failed to check branches count:', err);
+    }
+  })();
 }
