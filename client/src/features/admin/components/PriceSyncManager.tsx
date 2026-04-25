@@ -166,10 +166,8 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה זהה ל-DailyFaithManager: outer flex column עם גובה קבוע;
-          הגלילה תהיה רק על אזור התוכן הארוך (חלוקה לפי רשת), לא על כל הפופאפ -
-          מונע scroll-בתוך-scroll ב-iOS שדוק את הגלילה. */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', minHeight: 0 }}>
+      {/* גובה זהה ל-DailyFaithManager עם גלילה רגילה על כל התוכן */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', overflowY: 'auto' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
