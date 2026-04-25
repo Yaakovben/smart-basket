@@ -63,14 +63,19 @@ function buildOverpassQuery(chainId: ChainId): string {
   // הבריחה של רגעלי ב-Overpass: רק כפילות " צריכה escape
   const namePattern = allNames.map(n => n.replace(/"/g, '\\"')).join('|');
 
+  // חיפוש רחב: לא מגבילים ל-shop=supermarket בלבד כי הרבה סניפים
+  // בישראל מתויגים פשוט בשם בלי tag shop, או כ-shop=convenience/grocery.
+  // החיפוש לפי name עובד גם אם אין tag shop בכלל.
   return `
 [out:json][timeout:30];
 area["ISO3166-1"="IL"]->.il;
 (
-  node["shop"~"^(supermarket|convenience)$"]["brand"~"${namePattern}",i](area.il);
-  way["shop"~"^(supermarket|convenience)$"]["brand"~"${namePattern}",i](area.il);
-  node["shop"~"^(supermarket|convenience)$"]["name"~"${namePattern}",i](area.il);
-  way["shop"~"^(supermarket|convenience)$"]["name"~"${namePattern}",i](area.il);
+  node["brand"~"${namePattern}",i](area.il);
+  way["brand"~"${namePattern}",i](area.il);
+  node["name"~"${namePattern}",i](area.il);
+  way["name"~"${namePattern}",i](area.il);
+  node["name:he"~"${namePattern}",i](area.il);
+  way["name:he"~"${namePattern}",i](area.il);
 );
 out center tags;
 `.trim();

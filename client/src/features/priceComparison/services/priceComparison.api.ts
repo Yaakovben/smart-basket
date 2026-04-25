@@ -66,9 +66,17 @@ export const priceComparisonApi = {
     return response.data;
   },
 
-  // סנכרון סניפים מ-OpenStreetMap (מקור עצמאי, לא תלוי בפורטל הממשלתי)
-  async refreshBranches(): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post<{ success: boolean; message: string }>('/price-comparison/refresh-branches');
+  // סנכרון סניפים מ-OpenStreetMap. סינכרוני - הקריאה ממתינה עד הסיום (40-60 שניות).
+  async refreshBranches(): Promise<{
+    success: boolean;
+    message: string;
+    totalFetched?: number;
+    totalUpserted?: number;
+    results?: Array<{ chainId: string; chainName: string; fetched: number; upserted: number }>;
+  }> {
+    const response = await apiClient.post('/price-comparison/refresh-branches', null, {
+      timeout: 120_000, // עד 2 דקות - לתת מרווח
+    });
     return response.data;
   },
 };

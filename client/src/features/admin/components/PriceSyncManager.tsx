@@ -96,19 +96,32 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
-  // סנכרון סניפים מ-OpenStreetMap - רץ בנפרד מסנכרון המחירים
+  // סנכרון סניפים מ-OpenStreetMap - סינכרוני, לוקח 40-60 שניות.
+  // נשמר elapsed כדי להציג שעון תוך כדי - תחושת פרוגרס למשתמש.
   const [refreshingBranches, setRefreshingBranches] = useState(false);
+  const [branchSyncElapsed, setBranchSyncElapsed] = useState(0);
+  useEffect(() => {
+    if (!refreshingBranches) { setBranchSyncElapsed(0); return; }
+    const t0 = Date.now();
+    const interval = setInterval(() => setBranchSyncElapsed(Math.floor((Date.now() - t0) / 1000)), 500);
+    return () => clearInterval(interval);
+  }, [refreshingBranches]);
+
   const handleRefreshBranches = async () => {
     haptic('medium');
     setRefreshingBranches(true);
     setFeedback(null);
     try {
       const res = await priceComparisonApi.refreshBranches();
-      setFeedback({ msg: res.message || 'סנכרון סניפים החל', tone: 'info' });
-      // OSM לוקח כדקה - מרעננים סטטוס אחרי 30 שניות
-      setTimeout(load, 30_000);
+      setFeedback({
+        msg: res.totalUpserted
+          ? `✓ נטענו ${res.totalUpserted} סניפים מ-OpenStreetMap`
+          : (res.message || 'הסנכרון הסתיים'),
+        tone: 'info',
+      });
+      load(); // רענון מיידי של הסטטוס - יציג את הסניפים החדשים פר רשת
     } catch {
-      setFeedback({ msg: 'שגיאה בהפעלת סנכרון סניפים', tone: 'error' });
+      setFeedback({ msg: 'שגיאה בסנכרון סניפים מ-OSM', tone: 'error' });
     } finally {
       setRefreshingBranches(false);
     }
@@ -288,28 +301,63 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                 </Button>
 
                 {/* רענון סניפים נפרד - מקור OpenStreetMap, אמין יותר מהפורטל הממשלתי */}
-                <Button
-                  variant="outlined"
-                  onClick={handleRefreshBranches}
-                  disabled={refreshingBranches}
-                  startIcon={refreshingBranches ? <CircularProgress size={16} sx={{ color: '#7C3AED' }} /> : <PlaceIcon />}
-                  sx={{
-                    py: 1.25,
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: '#7C3AED',
-                    borderColor: 'rgba(124,58,237,0.4)',
-                    '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.05)' },
-                    '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
-                  }}
-                >
-                  {refreshingBranches ? 'מסנכרן סניפים מ-OSM...' : 'רענן סניפים מ-OpenStreetMap'}
-                </Button>
-                <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: -0.25 }}>
-                  מקור עצמאי לסניפים - לא תלוי בפורטל הממשלתי
-                </Typography>
+                {refreshingBranches ? (
+                  // באנר פרוגרס מלא בזמן סנכרון - שעון, פרוגרס בר, הודעה ברורה
+                  <Box sx={{
+                    p: 1.25, borderRadius: '12px',
+                    bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
+                    border: '1px solid', borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.2)',
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.85 }}>
+                      <SyncIcon sx={{ fontSize: 17, color: '#7C3AED', animation: `${spin} 1.8s linear infinite` }} />
+                      <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#7C3AED', flex: 1 }}>
+                        מושך סניפים מ-OpenStreetMap
+                      </Typography>
+                      <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: '#7C3AED', fontVariantNumeric: 'tabular-nums' }}>
+                        {branchSyncElapsed}s
+                      </Typography>
+                    </Box>
+                    {/* פרוגרס מבוסס זמן - לוקח בערך 50 שניות, אז שווה ל-elapsed/50 */}
+                    <LinearProgress
+                      variant="determinate"
+                      value={Math.min(99, (branchSyncElapsed / 50) * 100)}
+                      sx={{
+                        height: 5, borderRadius: 3,
+                        bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                        '& .MuiLinearProgress-bar': {
+                          background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                        },
+                      }}
+                    />
+                    <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.6, lineHeight: 1.45 }}>
+                      Overpass API מחפש סניפים בכל 9 הרשתות. לוקח עד דקה.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <>
+                    <Button
+                      variant="outlined"
+                      onClick={handleRefreshBranches}
+                      startIcon={<PlaceIcon />}
+                      sx={{
+                        py: 1.25,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: '#7C3AED',
+                        borderColor: 'rgba(124,58,237,0.4)',
+                        '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.05)' },
+                        '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+                      }}
+                    >
+                      רענן סניפים מ-OpenStreetMap
+                    </Button>
+                    <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: -0.25 }}>
+                      מקור עצמאי לסניפים - לא תלוי בפורטל הממשלתי
+                    </Typography>
+                  </>
+                )}
               </Box>
             )}
 

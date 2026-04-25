@@ -65,19 +65,34 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 // POST /api/price-comparison/refresh-branches (admin only)
-// סנכרון סניפים מ-OpenStreetMap - מקור אמין יותר מהפורטל הממשלתי
-// שלא תמיד מפרסם Stores files. פועל ברקע, לוקח כדקה.
+// סנכרון סניפים מ-OpenStreetMap - סינכרוני (לוקח 40-60 שניות),
+// מחזיר תוצאות אמיתיות שהלקוח יוכל להציג.
+let branchSyncInProgress = false;
 export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Response) => {
-  res.json({ success: true, message: 'סנכרון סניפים מ-OpenStreetMap החל ברקע' });
-
+  if (branchSyncInProgress) {
+    res.status(409).json({ success: false, message: 'סנכרון סניפים כבר רץ, נסה שוב בעוד דקה' });
+    return;
+  }
+  branchSyncInProgress = true;
+  logger.info(`[admin-refresh-branches] Triggered by user ${req.user!.id}`);
   try {
-    logger.info(`[admin-refresh-branches] Triggered by user ${req.user!.id}`);
     const results = await syncBranchesFromOsm();
-    const summary = results.map(r => `${r.chainId}:${r.upserted}`).join(', ');
-    logger.info(`[admin-refresh-branches] Completed: ${summary}`);
+    const totalFetched = results.reduce((s, r) => s + r.fetched, 0);
+    const totalUpserted = results.reduce((s, r) => s + r.upserted, 0);
     invalidateAllUsers();
+    logger.info(`[admin-refresh-branches] Completed: ${totalFetched} fetched, ${totalUpserted} upserted`);
+    res.json({
+      success: true,
+      message: `נטענו ${totalUpserted} סניפים מ-OpenStreetMap`,
+      results,
+      totalFetched,
+      totalUpserted,
+    });
   } catch (err) {
     logger.error('[admin-refresh-branches] Unhandled error:', err);
+    res.status(500).json({ success: false, message: 'שגיאה בסנכרון סניפים' });
+  } finally {
+    branchSyncInProgress = false;
   }
 });
 
