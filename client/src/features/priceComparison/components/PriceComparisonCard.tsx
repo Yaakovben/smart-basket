@@ -9,7 +9,6 @@
 import { memo } from 'react';
 import { Box, Typography, Paper, Link, Button, CircularProgress, keyframes } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
-import InventoryIcon from '@mui/icons-material/Inventory2';
 import SavingsIcon from '@mui/icons-material/Savings';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -70,35 +69,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
       }}
       elevation={0}
     >
-      {/* כותרת */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.4 }}>
+      {/* כותרת + מטא-מידע בשורה אחת. ההסבר הארוך הוסר - האייקון של הסל
+          המנצח (ירוק במרכז המסך) כבר מספר את הסיפור בלי טקסט מלל. */}
+      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
         <Typography sx={{ fontSize: 15, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
         <BetaBadge size="sm" />
-      </Box>
-      <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1.25, lineHeight: 1.5 }}>
-        הסל שלך נבדק ב-{data.chainTotals?.length ?? 0} רשתות. הרשת הזולה ביותר מסומנת. לחץ על רשת כדי לראות את המחירים בפירוט.
-      </Typography>
-
-      {/* מקור + טריות */}
-      <Box sx={{
-        display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.25,
-        p: 1, borderRadius: '8px',
-        bgcolor: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
-          <InventoryIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.primary' }}>
-            מאגר השקיפות הממשלתי
-          </Typography>
-          {data.totalPrices > 0 && (
-            <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
-              · {data.totalPrices.toLocaleString('he-IL')} מחירים
-            </Typography>
-          )}
-        </Box>
         {data.lastUpdatedISO && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35, ml: 'auto' }}>
-            <UpdateIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+            <UpdateIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
             <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>עודכן {freshness}</Typography>
           </Box>
         )}
