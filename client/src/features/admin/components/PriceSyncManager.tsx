@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Box, Typography, Button, CircularProgress, LinearProgress, keyframes } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, LinearProgress, Collapse, keyframes } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -17,6 +17,7 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import PlaceIcon from '@mui/icons-material/Place';
 import SyncIcon from '@mui/icons-material/Sync';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
@@ -135,11 +136,32 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     setFeedback(null);
     try {
       await priceComparisonApi.refreshBranches();
-      load(); // טעינה מיידית - תפרסם active=true ב-status
+      load();
     } catch (err) {
       const apiErr = err as { response?: { data?: { message?: string } }; message?: string };
       const msg = apiErr.response?.data?.message || apiErr.message || 'שגיאה בהפעלת סנכרון';
       setFeedback({ msg, tone: 'error' });
+    }
+  };
+
+  // בדיקה דיאגנוסטית של OSM - שאילתה אחת לשופרסל, מציג בדיוק מה הוחזר
+  const [testingOsm, setTestingOsm] = useState(false);
+  const handleTestOsm = async () => {
+    haptic('light');
+    setTestingOsm(true);
+    setFeedback(null);
+    try {
+      const res = await priceComparisonApi.testOsm();
+      if (res.success) {
+        setFeedback({
+          msg: `OSM עובד ✓ · ${res.branchCount} סניפי שופרסל ב-${res.elapsedMs}ms`,
+          tone: 'info',
+        });
+      } else {
+        setFeedback({ msg: `OSM נכשל: ${res.error || 'unknown'}`, tone: 'error' });
+      }
+    } finally {
+      setTestingOsm(false);
     }
   };
 
@@ -163,11 +185,23 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const successCount = chains.filter(c => chainOutcome(c) === 'ok').length;
   const failedCount = chains.filter(c => chainOutcome(c) === 'failed').length;
   const skippedCount = chains.filter(c => chainOutcome(c) === 'skipped').length;
+  // ההסבר התחתון מתחיל סגור - לחיצה תפתח. חוסך מקום בפופאפ ועוזר לגלילה.
+  const [showHelp, setShowHelp] = useState(false);
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה זהה ל-DailyFaithManager עם גלילה רגילה על כל התוכן */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: 'min(70vh, 580px)', overflowY: 'auto' }}>
+      {/* גובה זהה ל-DailyFaithManager עם גלילה אנכית. iOS דורש -webkit-overflow-scrolling */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        height: 'min(70vh, 580px)',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        // touchAction: pan-y - מאפשר גלילה אנכית בלבד; מונע התנגשות עם gesture אחר
+        touchAction: 'pan-y',
+      }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
@@ -350,26 +384,46 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   </Box>
                 ) : (
                   <>
-                    <Button
-                      variant="outlined"
-                      onClick={handleRefreshBranches}
-                      startIcon={<PlaceIcon />}
-                      sx={{
-                        py: 1.25,
-                        borderRadius: '12px',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: '#7C3AED',
-                        borderColor: 'rgba(124,58,237,0.4)',
-                        '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.05)' },
-                        '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
-                      }}
-                    >
-                      רענן סניפים מ-OpenStreetMap
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleRefreshBranches}
+                        startIcon={<PlaceIcon />}
+                        sx={{
+                          flex: 1,
+                          py: 1.25,
+                          borderRadius: '12px',
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: '#7C3AED',
+                          borderColor: 'rgba(124,58,237,0.4)',
+                          '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.05)' },
+                          '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+                        }}
+                      >
+                        רענן
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={handleTestOsm}
+                        disabled={testingOsm}
+                        sx={{
+                          minWidth: 90,
+                          py: 1.25,
+                          borderRadius: '12px',
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          fontSize: 12,
+                          color: '#64748B',
+                          borderColor: 'rgba(100,116,139,0.4)',
+                        }}
+                      >
+                        {testingOsm ? '...' : 'בדוק OSM'}
+                      </Button>
+                    </Box>
                     <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: -0.25 }}>
-                      מקור עצמאי לסניפים - לא תלוי בפורטל הממשלתי
+                      רענן = סנכרון מלא · בדוק = בדיקה מהירה לאבחון
                     </Typography>
                   </>
                 )}
@@ -557,17 +611,41 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
-            {/* הסבר */}
+            {/* הסבר - מתקפל. סגור כברירת מחדל כדי לחסוך גובה ולשפר גלילה */}
             <Box sx={{
-              p: 1.25, borderRadius: '10px',
+              borderRadius: '10px',
               bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
               border: '1px dashed',
               borderColor: 'divider',
+              flexShrink: 0,
             }}>
-              <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.6 }}>
-                סנכרון אוטומטי רץ כל 6 שעות. הכפתור מאפשר לרענן מיד בלי לחכות.
-                התהליך יכול לקחת 2-5 דקות. השאר את המודאל פתוח כדי לראות את הסטטוס מתעדכן.
-              </Typography>
+              <Box
+                role="button"
+                tabIndex={0}
+                onClick={() => setShowHelp(s => !s)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowHelp(s => !s); }}
+                sx={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  px: 1.25, py: 0.85,
+                  cursor: 'pointer', userSelect: 'none',
+                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' },
+                }}
+              >
+                <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: 'text.secondary' }}>
+                  איך עובד הסנכרון?
+                </Typography>
+                <ExpandMoreIcon sx={{
+                  fontSize: 18, color: 'text.disabled',
+                  transform: showHelp ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s',
+                }} />
+              </Box>
+              <Collapse in={showHelp}>
+                <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.6, px: 1.25, pb: 1.25 }}>
+                  סנכרון אוטומטי רץ כל 6 שעות. הכפתור מאפשר לרענן מיד בלי לחכות.
+                  התהליך יכול לקחת 2-5 דקות. השאר את המודאל פתוח כדי לראות את הסטטוס מתעדכן.
+                </Typography>
+              </Collapse>
             </Box>
           </>
         )}

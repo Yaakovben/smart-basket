@@ -76,6 +76,29 @@ export const priceComparisonApi = {
     return response.data;
   },
 
+  // בדיקה דיאגנוסטית של OSM - מחזיר תוצאת שאילתה אחת (שופרסל)
+  async testOsm(): Promise<{
+    success: boolean;
+    chainTested?: string;
+    branchCount?: number;
+    elapsedMs?: number;
+    sample?: Array<{ name: string; city?: string; lat?: number; lng?: number }>;
+    error?: string;
+    stack?: string;
+  }> {
+    try {
+      const response = await apiClient.get('/price-comparison/test-osm', { timeout: 60_000 });
+      return response.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { error?: string; stack?: string } }; message?: string };
+      return {
+        success: false,
+        error: e.response?.data?.error || e.message || 'unknown',
+        stack: e.response?.data?.stack,
+      };
+    }
+  },
+
   // סנכרון סניפים מ-OpenStreetMap. סינכרוני - הקריאה ממתינה עד הסיום (40-60 שניות).
   async refreshBranches(): Promise<{
     success: boolean;

@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
+import { fetchOsmBranches } from '../services/osmBranches.service';
 import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
@@ -122,6 +123,35 @@ export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Respon
       };
     }
   })();
+});
+
+// GET /api/price-comparison/test-osm (admin only) - בדיקה אבחונית של OSM.
+// בודק רשת אחת (שופרסל) ומחזיר את התוצאה המלאה - כמות סניפים או שגיאה.
+// משמש כשרענון הסניפים נכשל ואנחנו רוצים לבדוק אם הבעיה ב-OSM או במשהו אחר.
+export const testOsm = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const startedAt = Date.now();
+  try {
+    const branches = await fetchOsmBranches('shufersal');
+    const elapsedMs = Date.now() - startedAt;
+    res.json({
+      success: true,
+      chainTested: 'shufersal',
+      branchCount: branches.length,
+      elapsedMs,
+      sample: branches.slice(0, 3).map(b => ({
+        name: b.storeName, city: b.city, lat: b.lat, lng: b.lng,
+      })),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    const stack = err instanceof Error ? err.stack : undefined;
+    res.status(500).json({
+      success: false,
+      error: msg,
+      stack: stack?.split('\n').slice(0, 5).join('\n'),
+      elapsedMs: Date.now() - startedAt,
+    });
+  }
 });
 
 // GET /api/price-comparison/status (admin only) - מצב המאגר: כמה רשתות, מוצרים, מתי עודכן
