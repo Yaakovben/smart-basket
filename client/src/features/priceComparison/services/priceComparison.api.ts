@@ -76,6 +76,27 @@ export const priceComparisonApi = {
     return response.data;
   },
 
+  // רשימת סניפים מפורטת של רשת - לעמוד האדמין
+  async getBranchesByChain(chainId: string): Promise<{
+    success: boolean;
+    chainId: string;
+    count: number;
+    branches: Array<{
+      id: string;
+      storeId: string;
+      storeName: string;
+      city: string;
+      address: string;
+      lat?: number;
+      lng?: number;
+      hasCoords: boolean;
+      coordSource: 'portal' | 'geocoded' | 'unknown';
+    }>;
+  }> {
+    const response = await apiClient.get(`/price-comparison/branches/${chainId}`);
+    return response.data;
+  },
+
   // טעינה מיידית של seed הסניפים המוכרים (65 סניפים) - עובד תמיד, לא תלוי בכלום
   async loadSeed(): Promise<{ success: boolean; message: string; upserted?: number; total?: number }> {
     try {

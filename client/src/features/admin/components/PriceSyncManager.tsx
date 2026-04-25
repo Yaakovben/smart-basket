@@ -207,6 +207,30 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const successCount = chains.filter(c => chainOutcome(c) === 'ok').length;
   const failedCount = chains.filter(c => chainOutcome(c) === 'failed').length;
   const skippedCount = chains.filter(c => chainOutcome(c) === 'skipped').length;
+
+  // הרחבת רשת - בלחיצה על שורה, טוענים את רשימת הסניפים. cache פנימי.
+  const [expandedChain, setExpandedChain] = useState<string | null>(null);
+  const [chainBranches, setChainBranches] = useState<Map<string, Awaited<ReturnType<typeof priceComparisonApi.getBranchesByChain>>['branches']>>(new Map());
+  const [loadingChain, setLoadingChain] = useState<string | null>(null);
+
+  const toggleChain = async (chainId: string) => {
+    haptic('light');
+    if (expandedChain === chainId) {
+      setExpandedChain(null);
+      return;
+    }
+    setExpandedChain(chainId);
+    if (chainBranches.has(chainId)) return; // כבר ב-cache
+    setLoadingChain(chainId);
+    try {
+      const res = await priceComparisonApi.getBranchesByChain(chainId);
+      setChainBranches(prev => new Map(prev).set(chainId, res.branches));
+    } catch {
+      setChainBranches(prev => new Map(prev).set(chainId, []));
+    } finally {
+      setLoadingChain(null);
+    }
+  };
   // ההסבר התחתון מתחיל סגור - לחיצה תפתח. חוסך מקום בפופאפ ועוזר לגלילה.
   const [showHelp, setShowHelp] = useState(false);
 
@@ -543,16 +567,22 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     : isSoftError ? '#94A3B8'
                     : isEmpty ? '#F59E0B'
                     : '#14B8A6';
+                  const isExpanded = expandedChain === c.chainId;
+                  const isLoadingThis = loadingChain === c.chainId;
+                  const branchList = chainBranches.get(c.chainId);
                   return (
+                    <Box key={c.chainId} sx={{ borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 'none' } }}>
                     <Box
-                      key={c.chainId}
+                      onClick={() => toggleChain(c.chainId)}
                       sx={{
                         display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
                         gap: 1,
                         px: 2, py: 1,
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
-                        '&:last-child': { borderBottom: 'none' },
+                        cursor: 'pointer', userSelect: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                        bgcolor: isExpanded ? (isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)') : 'transparent',
+                        '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' },
+                        transition: 'background-color 0.12s',
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flex: 1, minWidth: 0 }}>
@@ -637,6 +667,70 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           )}
                         </Box>
                       </Box>
+                      {/* חץ Expand/Collapse */}
+                      <ExpandMoreIcon sx={{
+                        fontSize: 18, color: 'text.disabled',
+                        transition: 'transform 0.2s',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        flexShrink: 0, mt: 0.4,
+                      }} />
+                    </Box>
+
+                    {/* פאנל הרחבה - רשימת סניפים של הרשת */}
+                    <Collapse in={isExpanded} timeout={200} unmountOnExit>
+                      <Box sx={{
+                        px: 2, py: 1.25,
+                        bgcolor: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
+                      }}>
+                        {isLoadingThis ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                            <CircularProgress size={18} sx={{ color: '#7C3AED' }} />
+                          </Box>
+                        ) : !branchList || branchList.length === 0 ? (
+                          <Typography sx={{ fontSize: 11, color: 'text.secondary', textAlign: 'center', py: 1.5 }}>
+                            אין סניפים במאגר לרשת זו
+                          </Typography>
+                        ) : (
+                          <>
+                            <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.secondary', mb: 0.75, letterSpacing: 0.3 }}>
+                              {branchList.length} סניפים · {branchList.filter(b => b.hasCoords).length} עם מיקום
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4, maxHeight: 280, overflowY: 'auto' }}>
+                              {branchList.map(b => (
+                                <Box key={b.id} sx={{
+                                  display: 'flex', alignItems: 'flex-start', gap: 0.75,
+                                  px: 1, py: 0.6, borderRadius: '6px',
+                                  bgcolor: isDark ? 'rgba(255,255,255,0.025)' : 'white',
+                                  border: '1px solid',
+                                  borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                                }}>
+                                  {b.hasCoords ? (
+                                    <PlaceIcon sx={{ fontSize: 12, color: '#7C3AED', mt: 0.2, flexShrink: 0 }} />
+                                  ) : (
+                                    <PlaceIcon sx={{ fontSize: 12, color: 'text.disabled', mt: 0.2, flexShrink: 0 }} />
+                                  )}
+                                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      {b.storeName}
+                                    </Typography>
+                                    {(b.city || b.address) && (
+                                      <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {[b.city, b.address].filter(Boolean).join(' · ')}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                  {b.hasCoords && (
+                                    <Typography sx={{ fontSize: 9, color: 'text.disabled', fontFamily: 'monospace', flexShrink: 0, mt: 0.3 }}>
+                                      {b.lat?.toFixed(3)},{b.lng?.toFixed(3)}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              ))}
+                            </Box>
+                          </>
+                        )}
+                      </Box>
+                    </Collapse>
                     </Box>
                   );
                 })}

@@ -36,7 +36,7 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
 
   // כל הסניפים של רשת - לחישוב נציג קרוב ל-user
   async findByChain(chainId: ChainId) {
-    return this.model.find({ chainId }).lean();
+    return this.model.find({ chainId }).sort({ city: 1, storeName: 1 }).lean();
   }
 
   // כל הסניפים - לחישוב כל הרשתות בבת אחת (cached ב-service)

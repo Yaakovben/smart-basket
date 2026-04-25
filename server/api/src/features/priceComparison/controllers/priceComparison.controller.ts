@@ -186,6 +186,28 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
   });
 });
 
+// GET /api/price-comparison/branches/:chainId (admin only) - רשימת סניפים לרשת
+export const getBranchesByChain = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { chainId } = req.params;
+  const branches = await BranchDAL.findByChain(chainId as never);
+  res.json({
+    success: true,
+    chainId,
+    count: branches.length,
+    branches: branches.map(b => ({
+      id: b._id.toString(),
+      storeId: b.storeId,
+      storeName: b.storeName,
+      city: b.city || '',
+      address: b.address || '',
+      lat: b.lat,
+      lng: b.lng,
+      hasCoords: typeof b.lat === 'number' && typeof b.lng === 'number',
+      coordSource: b.coordSource,
+    })),
+  });
+});
+
 // GET /api/price-comparison/test-osm (admin only) - בדיקה דיאגנוסטית מהירה.
 // בודק כל Overpass endpoint בנפרד עם שאילתה זעירה (5 שניות לכל אחד),
 // ומחזיר תוך 25 שניות מקסימום - מתחת ל-30 של Render. מציג בדיוק איזה
