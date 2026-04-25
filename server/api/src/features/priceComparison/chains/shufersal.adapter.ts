@@ -44,24 +44,29 @@ interface RawItem {
 const decodeHtml = (s: string): string => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
 
 function extractLatestFileUrl(html: string, fileNamePrefix: string): string | null {
-  // 1. תבנית ישירה: href="https://pricesprodpublic.blob.core.windows.net/.../PriceFull123.gz?sv=..."
+  const all = extractAllFileUrls(html, fileNamePrefix);
+  return all[0] || null;
+}
+
+// מחלץ את כל קישורי ההורדה לקובץ עם prefix נתון - לרשתות שמפרסמות
+// קובץ נפרד לכל סניף (כמו שופרסל) צריך להוריד את כולם ולמזג.
+function extractAllFileUrls(html: string, fileNamePrefix: string): string[] {
+  const urls: string[] = [];
   const directMatches = [
     ...html.matchAll(new RegExp(`href="([^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
   ];
-  if (directMatches.length > 0) {
-    const url = decodeHtml(directMatches[0][1]);
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/')) return `${SHUFERSAL_PORTAL}${url}`;
-    return `${SHUFERSAL_PORTAL}/${url}`;
+  for (const m of directMatches) {
+    const url = decodeHtml(m[1]);
+    if (url.startsWith('http')) urls.push(url);
+    else if (url.startsWith('/')) urls.push(`${SHUFERSAL_PORTAL}${url}`);
+    else urls.push(`${SHUFERSAL_PORTAL}/${url}`);
   }
-  // 2. תבנית דרך UpdateCategory עם FileNm
+  if (urls.length > 0) return urls;
+  // fallback: UpdateCategory + FileNm
   const relativeMatches = [
     ...html.matchAll(new RegExp(`href="(/FileObject[^"]*FileNm=[^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
   ];
-  if (relativeMatches.length > 0) {
-    return `${SHUFERSAL_PORTAL}${decodeHtml(relativeMatches[0][1])}`;
-  }
-  return null;
+  return relativeMatches.map(m => `${SHUFERSAL_PORTAL}${decodeHtml(m[1])}`);
 }
 
 async function fetchCategoryHtml(catID: number): Promise<string> {
@@ -215,30 +220,56 @@ export const shufersalAdapter: ChainAdapter = {
 
   async fetchLatestPrices(): Promise<ChainFetchResult> {
     try {
-      return await withRetry(async () => {
-        // שופרסל משנה תבניות שמות קבצים. מנסים PriceFull (קובץ ענק עם
-        // כל המחירים) קודם, ואם אין - גם Price (קבצים נפרדים לכל סניף,
-        // לוקחים את הראשון). 0=All היא הקטגוריה שיש בה הכל.
-        const catIdsToTry = [0, 1, 2];
-        const prefixesToTry = ['PriceFull', 'Price'];
-        let url: string | null = null;
-        for (const cat of catIdsToTry) {
-          try {
-            const html = await fetchCategoryHtml(cat);
-            for (const prefix of prefixesToTry) {
-              url = extractLatestFileUrl(html, prefix);
-              if (url) break;
-            }
-            if (url) break;
-          } catch { /* ננסה catID הבא */ }
+      // שופרסל מפרסמת קובץ נפרד לכל סניף (PriceFull7290...-SS-...gz)
+      // לכן מורידים מספר קבצים ומאחדים. מגבלים ל-15 סניפים כדי לא לחרוג
+      // מ-2 דקות (גם 15 סניפים זה ~75k פריטים אחרי dedup, מספיק לרשת).
+      let urls: string[] = [];
+      const catIdsToTry = [0, 1, 2];
+      const prefixesToTry = ['PriceFull', 'Price'];
+      for (const cat of catIdsToTry) {
+        try {
+          const html = await fetchCategoryHtml(cat);
+          for (const prefix of prefixesToTry) {
+            const found = extractAllFileUrls(html, prefix);
+            if (found.length > 0) { urls = found; break; }
+          }
+          if (urls.length > 0) break;
+        } catch { /* ננסה catID הבא */ }
+      }
+      if (urls.length === 0) {
+        return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
+      }
+
+      // לוקחים עד 15 סניפים, ובמקבילות של 5 כדי לא לחרוג מהזמן
+      const MAX_STORES = 15;
+      const BATCH = 5;
+      const subset = urls.slice(0, MAX_STORES);
+      const seenBarcodes = new Set<string>();
+      const allItems: ChainPriceItem[] = [];
+      let fetched = 0;
+
+      for (let i = 0; i < subset.length; i += BATCH) {
+        const batch = subset.slice(i, i + BATCH);
+        const results = await Promise.allSettled(batch.map(async (url) => {
+          const { buf, isGzipped } = await downloadBuffer(url);
+          return parseXmlBuffer(buf, isGzipped);
+        }));
+        for (const r of results) {
+          if (r.status !== 'fulfilled') continue;
+          fetched++;
+          for (const item of r.value) {
+            // dedup לפי ברקוד - מוצר זהה בסניפים שונים = רשומה אחת
+            if (seenBarcodes.has(item.barcode)) continue;
+            seenBarcodes.add(item.barcode);
+            allItems.push(item);
+          }
         }
-        if (!url) {
-          return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
-        }
-        const { buf, isGzipped } = await downloadBuffer(url);
-        const items = parseXmlBuffer(buf, isGzipped);
-        return { chainId: 'shufersal', chainName: 'שופרסל', items, fetchedFiles: 1 };
-      });
+      }
+
+      if (allItems.length === 0) {
+        return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: fetched, error: 'no_items_parsed' };
+      }
+      return { chainId: 'shufersal', chainName: 'שופרסל', items: allItems, fetchedFiles: fetched };
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'unknown_error';
       return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: msg };
