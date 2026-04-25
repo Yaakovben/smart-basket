@@ -167,16 +167,25 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
           )}
 
           {locationStatus === 'granted' && (
-            <Box sx={{
-              mb: 1.25, px: 1, py: 0.65, borderRadius: '8px',
-              display: 'inline-flex', alignItems: 'center', gap: 0.5,
-              bgcolor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.08)',
-              border: '1px solid',
-              borderColor: isDark ? 'rgba(16,185,129,0.35)' : 'rgba(16,185,129,0.22)',
-            }}>
-              <LocationOnIcon sx={{ fontSize: 14, color: '#059669' }} />
-              <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#059669' }}>
-                מיקום פעיל · הסניפים הקרובים מוצגים
+            <Box sx={{ mb: 1.25, display: 'flex', flexDirection: 'column', gap: 0.6 }}>
+              <Box sx={{
+                px: 1, py: 0.65, borderRadius: '8px',
+                display: 'inline-flex', alignItems: 'center', gap: 0.5, alignSelf: 'flex-start',
+                bgcolor: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.08)',
+                border: '1px solid',
+                borderColor: isDark ? 'rgba(16,185,129,0.35)' : 'rgba(16,185,129,0.22)',
+              }}>
+                <LocationOnIcon sx={{ fontSize: 14, color: '#059669' }} />
+                <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#059669' }}>
+                  מיקום פעיל
+                </Typography>
+              </Box>
+              {/* Disclaimer חשוב - מיקומי הסניפים מ-OSM שיכול להיות לא מדויק */}
+              <Typography sx={{
+                fontSize: 9.5, color: 'text.disabled', lineHeight: 1.5,
+                fontStyle: 'italic',
+              }}>
+                ⚠️ מיקומי הסניפים מבוססים על מאגר OpenStreetMap הציבורי. ייתכנו אי-דיוקים. מומלץ לאמת את מיקום הסניף לפני נסיעה.
               </Typography>
             </Box>
           )}

@@ -40,23 +40,26 @@ interface RawItem {
 // מחלצים את קישור ההורדה הראשון מעמוד הקטלוג.
 // שופרסל מפרסם כמה עשרות קישורים ב-URL pattern של pricesprodpublic.blob...
 // ובכמה תבניות href: במפורש, או דרך /FileObject/UpdateCategory?... + FileNm=.
+// HTML decode פשוט - הפורטל מחזיר &amp; ב-href ואקסיוס לא יודע לפענח
+const decodeHtml = (s: string): string => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+
 function extractLatestFileUrl(html: string, fileNamePrefix: string): string | null {
-  // 1. תבנית ישירה: href="https://pricesprodpublic.blob.core.windows.net/.../PriceFull123.gz"
+  // 1. תבנית ישירה: href="https://pricesprodpublic.blob.core.windows.net/.../PriceFull123.gz?sv=..."
   const directMatches = [
     ...html.matchAll(new RegExp(`href="([^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
   ];
   if (directMatches.length > 0) {
-    const url = directMatches[0][1];
+    const url = decodeHtml(directMatches[0][1]);
     if (url.startsWith('http')) return url;
     if (url.startsWith('/')) return `${SHUFERSAL_PORTAL}${url}`;
     return `${SHUFERSAL_PORTAL}/${url}`;
   }
-  // 2. תבנית דרך UpdateCategory עם FileNm - חלק מהקישורים זורמים דרך endpoint פנימי
+  // 2. תבנית דרך UpdateCategory עם FileNm
   const relativeMatches = [
     ...html.matchAll(new RegExp(`href="(/FileObject[^"]*FileNm=[^"]*${fileNamePrefix}[^"]*\\.(gz|xml)[^"]*)"`, 'gi')),
   ];
   if (relativeMatches.length > 0) {
-    return `${SHUFERSAL_PORTAL}${relativeMatches[0][1]}`;
+    return `${SHUFERSAL_PORTAL}${decodeHtml(relativeMatches[0][1])}`;
   }
   return null;
 }
@@ -213,13 +216,19 @@ export const shufersalAdapter: ChainAdapter = {
   async fetchLatestPrices(): Promise<ChainFetchResult> {
     try {
       return await withRetry(async () => {
-        // מנסים כמה קטגוריות - שופרסל משנה מדי פעם: 0 (All), 1 (Prices), 2 (PriceFull)
+        // שופרסל משנה תבניות שמות קבצים. מנסים PriceFull (קובץ ענק עם
+        // כל המחירים) קודם, ואם אין - גם Price (קבצים נפרדים לכל סניף,
+        // לוקחים את הראשון). 0=All היא הקטגוריה שיש בה הכל.
         const catIdsToTry = [0, 1, 2];
+        const prefixesToTry = ['PriceFull', 'Price'];
         let url: string | null = null;
         for (const cat of catIdsToTry) {
           try {
             const html = await fetchCategoryHtml(cat);
-            url = extractLatestFileUrl(html, 'PriceFull');
+            for (const prefix of prefixesToTry) {
+              url = extractLatestFileUrl(html, prefix);
+              if (url) break;
+            }
             if (url) break;
           } catch { /* ננסה catID הבא */ }
         }
