@@ -33,17 +33,32 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
       setError(null);
       setStarting(true);
       try {
-        // Hints: TRY_HARDER עובד עבודה יסודית יותר בכל פריים (איטי יותר אבל מזהה QR מעומעם/זוית קשה).
-        // POSSIBLE_FORMATS=[QR_CODE] מגביל לזיהוי QR בלבד במקום לחפש את כל הפורמטים - מהיר יותר לכל פריים.
+        // צעד 1: בקשת הרשאת מצלמה מפורשת. מציג את ה-prompt של הדפדפן ומחזיר שגיאה ברורה אם נדחה.
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error('camera not supported');
+        }
+        let permissionStream: MediaStream;
+        try {
+          permissionStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' } },
+            audio: false,
+          });
+          // עוצרים את הסטרים הראשוני - ZXing יפתח אחד משלו
+          permissionStream.getTracks().forEach(t => t.stop());
+        } catch (permErr) {
+          const m = permErr instanceof Error ? permErr.message : '';
+          if (/Permission|NotAllowed|denied/i.test(m)) throw new Error('Permission denied');
+          throw permErr;
+        }
+
+        // Hints: TRY_HARDER + פורמט QR בלבד = זיהוי אגרסיבי יותר ולא מבזבז זמן על barcode.
         const hints = new Map();
         hints.set(DecodeHintType.TRY_HARDER, true);
         hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-        // timeBetweenScansMillis: 150ms (ברירת מחדל 500) - סריקה תכופה יותר = זיהוי מהיר יותר.
         const reader = new BrowserQRCodeReader(hints, { delayBetweenScanAttempts: 150, delayBetweenScanSuccess: 150 });
         const video = videoRef.current;
         if (!video) throw new Error('video element missing');
 
-        // constraints מינימליים - פשוט לבחור מצלמה אחורית. רזולוציה קשיחה עלולה להיכשל ב-fallback.
         const controls = await reader.decodeFromConstraints(
           { video: { facingMode: { ideal: 'environment' } }, audio: false },
           video,
@@ -56,8 +71,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
             }
           },
         );
-        // מוודאים שהוידאו מתחיל לנגן - iOS לפעמים דורש play() מפורש אחרי קבלת הסטרים
-        try { await video.play(); } catch { /* אם כבר מנגן */ }
+        try { await video.play(); } catch { /* כבר מנגן */ }
         if (cancelled) {
           controls.stop();
           return;

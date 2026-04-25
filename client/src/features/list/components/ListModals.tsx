@@ -318,7 +318,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
                   size={window.innerWidth <= 360 ? 95 : 130}
                   level="H"
-                  fgColor="#0D9488"
+                  fgColor="#000000"
+                  bgColor="#FFFFFF"
                   style={{ display: 'block' }}
                 />
               </Box>
