@@ -106,38 +106,37 @@ export function startPriceSyncJob(): void {
     }
   });
 
-  // 2. אם המאגר ריק - מעלים מיד את ה-seed של הסניפים המובילים (~50 סניפים
-  // אמיתיים בערים גדולות). זה מבטיח שהמשתמש רואה מרחקים מיד אחרי deploy
-  // בלי תלות בשירות חיצוני (OSM/פורטל ממשלתי). אחרי זה, OSM יוסיף עוד.
+  // 2. תמיד טוען את ה-seed של הסניפים המובילים בעת boot. ה-storeIds
+  // ייחודיים (sf-tlv-dizengoff וכו') ולא מתנגשים עם סניפים מ-OSM
+  // (osm-node-XXX), אז זו פעולת idempotent - מבטיחה שהסניפים המרכזיים
+  // קיימים תמיד גם אם OSM נכשל פעם או שמישהו מחק אותם בטעות.
   void (async () => {
     try {
-      const branchCount = await BranchDAL.count({});
-      if (branchCount === 0) {
-        logger.info('[branches] Startup: no branches in DB, loading known-branches seed');
-        const chainNames: Record<string, string> = {
-          shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-          osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
-          stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-        };
-        const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
-          chainId: b.chainId,
-          chainName: chainNames[b.chainId] || b.chainId,
-          storeId: b.storeId,
-          storeName: b.storeName,
-          address: b.address,
-          city: b.city,
-          lat: b.lat,
-          lng: b.lng,
-          coordSource: 'portal' as const,
-        }));
-        const upserted = await BranchDAL.bulkUpsert(inputs);
-        invalidateBranchCache();
-        logger.info(`[branches] Startup: ${upserted} known branches loaded into DB`);
+      const chainNames: Record<string, string> = {
+        shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+        osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+        stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+      };
+      const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
+        chainId: b.chainId,
+        chainName: chainNames[b.chainId] || b.chainId,
+        storeId: b.storeId,
+        storeName: b.storeName,
+        address: b.address,
+        city: b.city,
+        lat: b.lat,
+        lng: b.lng,
+        coordSource: 'portal' as const,
+      }));
+      const upserted = await BranchDAL.bulkUpsert(inputs);
+      invalidateBranchCache();
+      logger.info(`[branches] Startup: ${upserted} known branches loaded/updated`);
 
-        // אחרי ה-seed - מנסים גם OSM ברקע להעשיר עם עוד סניפים
+      // אחרי ה-seed - OSM רץ ברקע להעשיר (לא חוסם, ולא קריטי אם נכשל)
+      const branchCount = await BranchDAL.count({});
+      if (branchCount < 100) {
+        // אם יש לנו רק את ה-seed (~65) ננסה גם OSM להוסיף עוד
         setTimeout(() => runOsmBranchSync('startup'), 30_000);
-      } else {
-        logger.info(`[branches] Startup: ${branchCount} branches already in DB`);
       }
     } catch (err) {
       logger.error('[branches] Startup: failed to load seed:', err);
