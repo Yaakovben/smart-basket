@@ -25,9 +25,19 @@ export interface PriceSyncProgress {
   startedAt: string | null;
 }
 
+export interface BranchSyncState {
+  active: boolean;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalFetched: number;
+  totalUpserted: number;
+  error: string | null;
+}
+
 export interface PriceSyncStatus {
   syncInProgress: boolean;
   syncProgress?: PriceSyncProgress;
+  branchSync?: BranchSyncState;
   lastUpdatedISO: string | null;
   ageHours: number | null;
   chains: PriceChainStatus[];

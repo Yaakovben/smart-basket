@@ -65,39 +65,63 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 // POST /api/price-comparison/refresh-branches (admin only)
-// סנכרון סניפים מ-OpenStreetMap - סינכרוני (לוקח 40-60 שניות),
-// מחזיר תוצאות אמיתיות שהלקוח יוכל להציג.
-let branchSyncInProgress = false;
+// סנכרון סניפים מ-OpenStreetMap - אסינכרוני כי Render מוגבל ל-30 שניות
+// בקשת HTTP. מחזיר מיד והסנכרון רץ ברקע. סטטוס נחשף ב-/status.
+interface BranchSyncState {
+  active: boolean;
+  startedAt: string | null;
+  completedAt: string | null;
+  totalFetched: number;
+  totalUpserted: number;
+  error: string | null;
+}
+let branchSyncState: BranchSyncState = {
+  active: false, startedAt: null, completedAt: null,
+  totalFetched: 0, totalUpserted: 0, error: null,
+};
+export const getBranchSyncState = (): BranchSyncState => ({ ...branchSyncState });
+
 export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Response) => {
-  if (branchSyncInProgress) {
+  if (branchSyncState.active) {
     res.status(409).json({ success: false, message: 'סנכרון סניפים כבר רץ, נסה שוב בעוד דקה' });
     return;
   }
-  branchSyncInProgress = true;
+  branchSyncState = {
+    active: true,
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    totalFetched: 0, totalUpserted: 0, error: null,
+  };
   logger.info(`[admin-refresh-branches] Triggered by user ${req.user!.id}`);
-  try {
-    const results = await syncBranchesFromOsm();
-    const totalFetched = results.reduce((s, r) => s + r.fetched, 0);
-    const totalUpserted = results.reduce((s, r) => s + r.upserted, 0);
-    invalidateAllUsers();
-    logger.info(`[admin-refresh-branches] Completed: ${totalFetched} fetched, ${totalUpserted} upserted`);
-    res.json({
-      success: true,
-      message: `נטענו ${totalUpserted} סניפים מ-OpenStreetMap`,
-      results,
-      totalFetched,
-      totalUpserted,
-    });
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : 'unknown';
-    logger.error('[admin-refresh-branches] Unhandled error:', err);
-    res.status(500).json({
-      success: false,
-      message: `שגיאה בסנכרון סניפים: ${errMsg}`,
-    });
-  } finally {
-    branchSyncInProgress = false;
-  }
+
+  // החזרה מיידית - לא חוסמים את הבקשה (Render עוצר אחרי 30s)
+  res.json({ success: true, message: 'סנכרון החל ברקע, יופיע כשייגמר' });
+
+  // הסנכרון עצמו ברקע
+  void (async () => {
+    try {
+      const results = await syncBranchesFromOsm();
+      const totalFetched = results.reduce((s, r) => s + r.fetched, 0);
+      const totalUpserted = results.reduce((s, r) => s + r.upserted, 0);
+      invalidateAllUsers();
+      logger.info(`[admin-refresh-branches] Completed: ${totalFetched} fetched, ${totalUpserted} upserted`);
+      branchSyncState = {
+        active: false,
+        startedAt: branchSyncState.startedAt,
+        completedAt: new Date().toISOString(),
+        totalFetched, totalUpserted, error: null,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      logger.error('[admin-refresh-branches] Background error:', err);
+      branchSyncState = {
+        active: false,
+        startedAt: branchSyncState.startedAt,
+        completedAt: new Date().toISOString(),
+        totalFetched: 0, totalUpserted: 0, error: msg,
+      };
+    }
+  })();
 });
 
 // GET /api/price-comparison/status (admin only) - מצב המאגר: כמה רשתות, מוצרים, מתי עודכן
@@ -139,6 +163,7 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     data: {
       syncInProgress: adminSyncInProgress,
       syncProgress: getSyncProgress(),
+      branchSync: getBranchSyncState(),
       lastUpdatedISO,
       ageHours,
       chains,

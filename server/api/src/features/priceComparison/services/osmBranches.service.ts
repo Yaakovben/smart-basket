@@ -127,7 +127,7 @@ async function tryOverpassEndpoint(
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'smart-basket-app/1.0 (price comparison feature)',
       },
-      timeout: 45_000,
+      timeout: 20_000,
     }
   );
   return res.data?.elements || [];
@@ -168,18 +168,27 @@ export async function fetchOsmBranches(chainId: ChainId): Promise<OsmBranch[]> {
 }
 
 /**
- * סנכרון מ-OSM של כל הרשתות הרשומות. רץ ברצף עם דיליי בין רשת לרשת
- * (Overpass מאפשר ~2 שאילתות בדקה ב-IP אחד).
+ * סנכרון מ-OSM של כל הרשתות הרשומות.
+ * רץ במקביל - 4 endpoints שונים מאפשרים פיזור עומס.
+ * Render מגביל לבקשת HTTP ל-30 שניות, לכן רצינו לסיים מהר.
+ *
+ * האסטרטגיה: כל רשת מנסה את ה-endpoints ברצף (fetchOsmBranches עושה את זה),
+ * אבל הרשתות עצמן רצות במקביל. זמן כולל ~5-10 שניות במקום 50.
  */
 export async function fetchAllChainsFromOsm(
   chainIds: ChainId[]
 ): Promise<Map<ChainId, OsmBranch[]>> {
   const result = new Map<ChainId, OsmBranch[]>();
-  for (let i = 0; i < chainIds.length; i++) {
-    const chainId = chainIds[i];
-    if (i > 0) await new Promise(r => setTimeout(r, 4_000)); // שמירה על מגבלת קצב
+  const promises = chainIds.map(async (chainId) => {
     const branches = await fetchOsmBranches(chainId);
-    result.set(chainId, branches);
+    return [chainId, branches] as const;
+  });
+  const settled = await Promise.allSettled(promises);
+  for (const item of settled) {
+    if (item.status === 'fulfilled') {
+      const [chainId, branches] = item.value;
+      result.set(chainId, branches);
+    }
   }
   return result;
 }
