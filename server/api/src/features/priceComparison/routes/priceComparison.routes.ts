@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm } from '../controllers/priceComparison.controller';
+import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed } from '../controllers/priceComparison.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();
@@ -12,6 +12,7 @@ router.get('/', getComparison);
 // ניהול: אדמין בלבד
 router.post('/refresh', isAdmin, refreshPrices);
 router.post('/refresh-branches', isAdmin, refreshBranches);
+router.post('/load-seed', isAdmin, loadKnownBranchesSeed);
 router.get('/test-osm', isAdmin, testOsm);
 router.get('/status', isAdmin, getStatus);
 

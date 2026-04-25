@@ -76,6 +76,17 @@ export const priceComparisonApi = {
     return response.data;
   },
 
+  // טעינה מיידית של seed הסניפים המוכרים (65 סניפים) - עובד תמיד, לא תלוי בכלום
+  async loadSeed(): Promise<{ success: boolean; message: string; upserted?: number; total?: number }> {
+    try {
+      const response = await apiClient.post('/price-comparison/load-seed', null, { timeout: 30_000 });
+      return response.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message || 'שגיאה' };
+    }
+  },
+
   // בדיקה דיאגנוסטית של OSM - בודק 4 endpoints במקביל ב-5 שניות כל אחד
   async testOsm(): Promise<{
     success: boolean;

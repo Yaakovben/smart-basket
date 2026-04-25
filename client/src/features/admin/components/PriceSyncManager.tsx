@@ -144,6 +144,24 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
+  // טעינה ידנית מיידית של 65 סניפים מוכרים - עובד תמיד, פתרון מהיר
+  const [loadingSeed, setLoadingSeed] = useState(false);
+  const handleLoadSeed = async () => {
+    haptic('medium');
+    setLoadingSeed(true);
+    setFeedback(null);
+    try {
+      const res = await priceComparisonApi.loadSeed();
+      setFeedback({
+        msg: res.success ? `✓ ${res.message}` : `שגיאה: ${res.message}`,
+        tone: res.success ? 'info' : 'error',
+      });
+      load();
+    } finally {
+      setLoadingSeed(false);
+    }
+  };
+
   // בדיקה דיאגנוסטית של OSM - שאילתה אחת לשופרסל, מציג בדיוק מה הוחזר
   const [testingOsm, setTestingOsm] = useState(false);
   const handleTestOsm = async () => {
@@ -379,6 +397,25 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   </Box>
                 ) : (
                   <>
+                    {/* כפתור הזהב - טוען seed מיידי, עובד תמיד */}
+                    <Button
+                      variant="contained"
+                      onClick={handleLoadSeed}
+                      disabled={loadingSeed}
+                      startIcon={loadingSeed ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <PlaceIcon />}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 800,
+                        fontSize: 14,
+                        background: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+                        boxShadow: '0 3px 12px rgba(124,58,237,0.3)',
+                        '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+                      }}
+                    >
+                      {loadingSeed ? 'טוען...' : 'טען 65 סניפים אמיתיים מיידית'}
+                    </Button>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Button
                         variant="outlined"
@@ -397,7 +434,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
                         }}
                       >
-                        רענן
+                        +OSM
                       </Button>
                       <Button
                         variant="outlined"

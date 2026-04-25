@@ -1,7 +1,9 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
-import { parseUserLocation } from '../services/branches.service';
+import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
+import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { BranchDAL as BranchDAL2, type UpsertBranchInput as UpsertBranchInput2 } from '../dal/branch.dal';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
@@ -122,6 +124,43 @@ export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Respon
       };
     }
   })();
+});
+
+// POST /api/price-comparison/load-seed (admin only)
+// טעינה ידנית מיידית של 65 הסניפים המוכרים. עוקף את ה-startup hook
+// במקרה שלא רץ. סינכרוני, מהיר (פחות משנייה).
+export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const chainNames: Record<string, string> = {
+    shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+    osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+    stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+  };
+  const inputs: UpsertBranchInput2[] = KNOWN_BRANCHES.map(b => ({
+    chainId: b.chainId,
+    chainName: chainNames[b.chainId] || b.chainId,
+    storeId: b.storeId,
+    storeName: b.storeName,
+    address: b.address,
+    city: b.city,
+    lat: b.lat,
+    lng: b.lng,
+    coordSource: 'portal' as const,
+  }));
+  try {
+    const upserted = await BranchDAL2.bulkUpsert(inputs);
+    invalidateBranchCache();
+    invalidateAllUsers();
+    res.json({
+      success: true,
+      message: `נטענו ${upserted} סניפים`,
+      total: inputs.length,
+      upserted,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    logger.error('[load-seed]', err);
+    res.status(500).json({ success: false, message: `שגיאה: ${msg}` });
+  }
 });
 
 // GET /api/price-comparison/test-osm (admin only) - בדיקה דיאגנוסטית מהירה.
