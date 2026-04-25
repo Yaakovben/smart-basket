@@ -1,7 +1,9 @@
 import cron from 'node-cron';
 import { syncAllChains, syncBranchesFromOsm } from '../services/priceSync.service';
 import { PriceDAL } from '../dal/price.dal';
-import { BranchDAL } from '../dal/branch.dal';
+import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
+import { invalidateBranchCache } from '../services/branches.service';
+import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { logger } from '../../../config/logger';
 
 // NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד.
@@ -104,19 +106,41 @@ export function startPriceSyncJob(): void {
     }
   });
 
-  // 2. אם המאגר של הסניפים ריק - סנכרון OSM אוטומטי. זה נותן ערך מיידי
-  // למשתמש בעת deploy ראשון בלי שאדמין יצטרך ללחוץ כלום.
+  // 2. אם המאגר ריק - מעלים מיד את ה-seed של הסניפים המובילים (~50 סניפים
+  // אמיתיים בערים גדולות). זה מבטיח שהמשתמש רואה מרחקים מיד אחרי deploy
+  // בלי תלות בשירות חיצוני (OSM/פורטל ממשלתי). אחרי זה, OSM יוסיף עוד.
   void (async () => {
     try {
       const branchCount = await BranchDAL.count({});
       if (branchCount === 0) {
-        logger.info('[osm-sync-job] Startup: no branches in DB, triggering initial OSM fetch in 30s');
+        logger.info('[branches] Startup: no branches in DB, loading known-branches seed');
+        const chainNames: Record<string, string> = {
+          shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+          osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+          stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+        };
+        const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
+          chainId: b.chainId,
+          chainName: chainNames[b.chainId] || b.chainId,
+          storeId: b.storeId,
+          storeName: b.storeName,
+          address: b.address,
+          city: b.city,
+          lat: b.lat,
+          lng: b.lng,
+          coordSource: 'portal' as const,
+        }));
+        const upserted = await BranchDAL.bulkUpsert(inputs);
+        invalidateBranchCache();
+        logger.info(`[branches] Startup: ${upserted} known branches loaded into DB`);
+
+        // אחרי ה-seed - מנסים גם OSM ברקע להעשיר עם עוד סניפים
         setTimeout(() => runOsmBranchSync('startup'), 30_000);
       } else {
-        logger.info(`[osm-sync-job] Startup: ${branchCount} branches already in DB, skipping initial fetch`);
+        logger.info(`[branches] Startup: ${branchCount} branches already in DB`);
       }
     } catch (err) {
-      logger.error('[osm-sync-job] Startup: failed to check branches count:', err);
+      logger.error('[branches] Startup: failed to load seed:', err);
     }
   })();
 }
