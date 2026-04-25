@@ -427,14 +427,13 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
-            {/* חלוקה לפי רשת - תופס את שאר הגובה ומגלל פנימה אם צריך */}
+            {/* חלוקה לפי רשת */}
             {chains.length > 0 && (
               <Box sx={{
-                flex: 1, minHeight: 0,
-                overflowY: 'auto', overscrollBehavior: 'contain',
                 borderRadius: '12px',
                 border: '1px solid',
                 borderColor: 'divider',
+                overflow: 'hidden',
               }}>
                 <Box sx={{
                   px: 2, py: 1,
