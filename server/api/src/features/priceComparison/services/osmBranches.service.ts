@@ -20,18 +20,18 @@ const OVERPASS_ENDPOINTS = [
   'https://overpass.osm.ch/api/interpreter',
 ];
 
-// מיפוי בין chainId שלנו לבין שמות מותג ב-OSM (עברית + אנגלית).
-// Overpass תומך ב-regex על ערכי tag, אז אפשר לחפש כמה ואריאנטים בבת אחת.
-const CHAIN_BRANDS: Record<ChainId, { hebrew: string[]; english: string[] }> = {
-  shufersal:    { hebrew: ['שופרסל'], english: ['Shufersal'] },
-  rami_levy:    { hebrew: ['רמי לוי'], english: ['Rami Levy', 'Rami Levi', 'RamiLevy'] },
-  yohananof:    { hebrew: ['יוחננוף'], english: ['Yohananof', 'Yochananof'] },
-  osher_ad:     { hebrew: ['אושר עד'], english: ['Osher Ad', 'OsherAd'] },
-  tiv_taam:     { hebrew: ['טיב טעם'], english: ['Tiv Taam', 'TivTaam'] },
-  keshet:       { hebrew: ['קשת'], english: ['Keshet'] },
-  stop_market:  { hebrew: ['סטופ מרקט', 'סטופ-מרקט'], english: ['Stop Market', 'StopMarket'] },
-  politzer:     { hebrew: ['פוליצר'], english: ['Politzer'] },
-  doralon:      { hebrew: ['דור אלון', 'דור-אלון', 'AM:PM'], english: ['Dor Alon', 'Doralon', 'AMPM'] },
+// מיפוי בין chainId שלנו לבין שמות מותג כפי שהם מופיעים ב-OSM.
+// אומת ע"י קריאות ישירות ל-Overpass: ה-brand ב-OSM הוא בד"כ באנגלית.
+const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
+  shufersal:    { brands: ['Shufersal'], names: ['שופרסל'] },
+  rami_levy:    { brands: ['Rami Levy', 'Rami Levi'], names: ['רמי לוי'] },
+  yohananof:    { brands: ['Yohananof'], names: ['יוחננוף'] },
+  osher_ad:     { brands: ['Osher Ad'], names: ['אושר עד'] },
+  tiv_taam:     { brands: ["Tiv Ta'am", 'Tiv Taam'], names: ['טיב טעם'] },
+  keshet:       { brands: ['Keshet'], names: ['קשת טעמים', 'קשת'] },
+  stop_market:  { brands: ['Stop Market'], names: ['סטופ מרקט'] },
+  politzer:     { brands: ['Politzer'], names: ['פוליצר'] },
+  doralon:      { brands: ['Dor Alon', 'AM:PM', 'AMPM'], names: ['דור אלון', 'AM:PM'] },
 };
 
 export interface OsmBranch {
@@ -57,33 +57,30 @@ interface OverpassResponse {
   elements: OverpassElement[];
 }
 
-// בונה שאילתת Overpass: כל ה-supermarkets/convenience בישראל שה-brand
-// או name שלהם תואם לאחד הוואריאנטים. כולל nodes ו-ways (סניפים גדולים
-// לפעמים מוגדרים כפוליגון של בניין).
-function buildOverpassQuery(chainId: ChainId): string {
-  const brands = CHAIN_BRANDS[chainId];
-  if (!brands) return '';
-  const allNames = [...brands.hebrew, ...brands.english];
-  // regex case-insensitive על שמות מרובים, מחובר ב-|
-  // הבריחה של רגעלי ב-Overpass: רק כפילות " צריכה escape
-  const namePattern = allNames.map(n => n.replace(/"/g, '\\"')).join('|');
+// בונה שאילתת Overpass לישראל. שימוש ב-bbox (29,34,34,36) במקום
+// area["ISO3166-1"="IL"] - האחרון לא עובד אצל הרבה endpoints מסיבה
+// לא ברורה. ה-bbox הוא של ישראל (29-34 lat, 34-36 lng).
+const ISRAEL_BBOX = '(29,34,34,36)';
 
-  // חיפוש רחב: לא מגבילים ל-shop=supermarket בלבד כי הרבה סניפים
-  // בישראל מתויגים פשוט בשם בלי tag shop, או כ-shop=convenience/grocery.
-  // החיפוש לפי name עובד גם אם אין tag shop בכלל.
-  return `
-[out:json][timeout:30];
-area["ISO3166-1"="IL"]->.il;
-(
-  node["brand"~"${namePattern}",i](area.il);
-  way["brand"~"${namePattern}",i](area.il);
-  node["name"~"${namePattern}",i](area.il);
-  way["name"~"${namePattern}",i](area.il);
-  node["name:he"~"${namePattern}",i](area.il);
-  way["name:he"~"${namePattern}",i](area.il);
-);
-out center tags;
-`.trim();
+function buildOverpassQuery(chainId: ChainId): string {
+  const conf = CHAIN_BRANDS[chainId];
+  if (!conf) return '';
+  // brand: התאמה מדויקת (אנגלית, עוזר ל-shufersal, tiv_taam, וכו')
+  // name: regex (עברית, חיפוש רחב לסניפים שאין להם brand tag)
+  const brandClauses = conf.brands.flatMap(b => {
+    const escaped = b.replace(/"/g, '\\"');
+    return [
+      `node["brand"="${escaped}"]${ISRAEL_BBOX};`,
+      `way["brand"="${escaped}"]${ISRAEL_BBOX};`,
+    ];
+  });
+  const namePattern = conf.names.map(n => n.replace(/"/g, '\\"')).join('|');
+  const nameClauses = namePattern ? [
+    `node["name"~"${namePattern}"]${ISRAEL_BBOX};`,
+    `way["name"~"${namePattern}"]${ISRAEL_BBOX};`,
+  ] : [];
+
+  return `[out:json][timeout:25];(${[...brandClauses, ...nameClauses].join('')});out center tags;`;
 }
 
 // פרסור element של OSM ל-OsmBranch. מחזיר null אם אין קואורדינטות.
