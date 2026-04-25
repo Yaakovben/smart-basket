@@ -7,8 +7,10 @@
  */
 
 import { BranchDAL } from '../dal/branch.dal';
-import type { IBranchDoc } from '../models/Branch.model';
+import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
+import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { logger } from '../../../config/logger';
 
 export interface NearestBranch {
   branchName: string;
@@ -45,8 +47,54 @@ export function haversineKm(a: UserLocation, b: UserLocation): number {
 const CACHE_TTL_MS = 2 * 60_000;
 let cache: { branches: IBranchDoc[]; loadedAt: number } | null = null;
 
+// טעינה אוטומטית של seed אם המאגר ריק - lazy בקשה ראשונה.
+// ככה לא תלויים ב-startup hook או בכפתור אדמין: הסניפים מופיעים ברגע
+// שמישהו פותח את עמוד המחירים עם מיקום.
+let seedLoadAttempted = false;
+async function ensureSeedLoaded(): Promise<void> {
+  if (seedLoadAttempted) return;
+  seedLoadAttempted = true;
+  try {
+    const count = await Branch.countDocuments();
+    if (count > 0) {
+      logger.info(`[branches-seed] DB has ${count} branches, no need to seed`);
+      return;
+    }
+    logger.info('[branches-seed] DB empty, loading 65 known branches...');
+    const chainNames: Record<string, string> = {
+      shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+      stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+    };
+    let loaded = 0;
+    for (const b of KNOWN_BRANCHES) {
+      try {
+        await Branch.updateOne(
+          { chainId: b.chainId, storeId: b.storeId },
+          { $set: {
+            chainId: b.chainId, chainName: chainNames[b.chainId] || b.chainId,
+            storeId: b.storeId, storeName: b.storeName,
+            address: b.address, city: b.city,
+            lat: b.lat, lng: b.lng,
+            coordSource: 'portal', lastSyncedAt: new Date(),
+          } },
+          { upsert: true }
+        );
+        loaded++;
+      } catch (e) {
+        if (loaded === 0) logger.error('[branches-seed] first error:', e);
+      }
+    }
+    logger.info(`[branches-seed] loaded ${loaded}/65 branches`);
+  } catch (err) {
+    logger.error('[branches-seed] check failed:', err);
+    seedLoadAttempted = false; // נסה שוב בבקשה הבאה
+  }
+}
+
 async function getBranches(): Promise<IBranchDoc[]> {
   if (cache && Date.now() - cache.loadedAt < CACHE_TTL_MS) return cache.branches;
+  await ensureSeedLoaded();
   const all = await BranchDAL.findAll();
   cache = { branches: all as unknown as IBranchDoc[], loadedAt: Date.now() };
   return cache.branches;
