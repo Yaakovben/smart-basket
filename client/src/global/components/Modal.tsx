@@ -4,7 +4,6 @@ import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface ModalProps {
   title: string;
@@ -20,9 +19,8 @@ const Transition = forwardRef(function Transition(
 });
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {
-  // נעילת גלילת ה-body כל עוד המודאל פתוח - מונע 'scroll chaining' ב-iOS
-  useBodyScrollLock(true);
-
+  // נעילת ה-body מטופלת אוטומטית ע"י MUI Dialog (disableScrollLock=false ברירת מחדל).
+  // אסור להוסיף נעילה משלנו - שתי שכבות נועלות מתנגשות וגורמות לתוכן הפנימי להיחתך.
   const handleClose = useCallback(() => {
     haptic('light');
     onClose();

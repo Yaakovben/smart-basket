@@ -119,8 +119,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר מחירים" onClose={onClose}>
-      {/* גובה קבוע כמו ב-DailyFaithManager - הפופאפ לא מתארך מעבר לזה */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: 'min(70vh, 580px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+      {/* גלילה מטופלת ע"י ה-DialogContent של Modal - לא מגבילים גובה כאן
+          כדי לא ליצור scroll-בתוך-scroll שגורם לחיתוך תוכן ב-iOS */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />

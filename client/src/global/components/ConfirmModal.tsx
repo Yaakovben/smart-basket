@@ -4,7 +4,6 @@ import { forwardRef, useState, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
 import { useSettings } from '../context/SettingsContext';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface ConfirmModalProps {
   title: string;
@@ -25,8 +24,6 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
   const { t } = useSettings();
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  // נעילת גלילת הרקע - מונע מהתוכן מאחור לזוז כשהמשתמש גולל על ה-dialog
-  useBodyScrollLock(true);
 
   const handleConfirm = useCallback(async () => {
     haptic('medium');
