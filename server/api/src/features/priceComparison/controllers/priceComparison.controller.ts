@@ -146,28 +146,40 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
     lng: b.lng,
     coordSource: 'portal' as const,
   }));
-  try {
-    logger.info(`[load-seed] starting bulkUpsert of ${inputs.length} branches`);
-    const upserted = await BranchDAL.bulkUpsert(inputs);
-    logger.info(`[load-seed] success: ${upserted} branches upserted`);
-    invalidateBranchCache();
-    invalidateAllUsers();
-    res.json({
-      success: true,
-      message: `נטענו ${upserted} סניפים`,
-      total: inputs.length,
-      upserted,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'unknown';
-    const stack = err instanceof Error ? err.stack : undefined;
-    logger.error(`[load-seed] FAILED: ${msg}`, err);
-    res.status(500).json({
-      success: false,
-      message: `שגיאה: ${msg}`,
-      stack: stack?.split('\n').slice(0, 5).join(' | '),
-    });
+  // טעינה דב-קלה: כל סניף בנפרד עם try/catch. אם 64 מצליחים ו-1 נכשל
+  // עדיין מקבלים תוצאה. כל שגיאה מתועדת אבל לא חוסמת את השאר.
+  let success = 0;
+  let failed = 0;
+  const errors: string[] = [];
+  for (const input of inputs) {
+    try {
+      const { Branch } = await import('../models/Branch.model');
+      await Branch.findOneAndUpdate(
+        { chainId: input.chainId, storeId: input.storeId },
+        { $set: { ...input, lastSyncedAt: new Date() } },
+        { upsert: true, new: true }
+      );
+      success++;
+    } catch (e) {
+      failed++;
+      const msg = e instanceof Error ? e.message : 'unknown';
+      errors.push(`${input.storeId}: ${msg}`);
+    }
   }
+  invalidateBranchCache();
+  invalidateAllUsers();
+  logger.info(`[load-seed] ${success} success, ${failed} failed`);
+  res.json({
+    success: success > 0,
+    message: failed === 0
+      ? `✓ נטענו ${success} סניפים`
+      : `${success} הצליחו, ${failed} נכשלו`,
+    success_count: success,
+    failed_count: failed,
+    total: inputs.length,
+    upserted: success,
+    sampleErrors: errors.slice(0, 3),
+  });
 });
 
 // GET /api/price-comparison/test-osm (admin only) - בדיקה דיאגנוסטית מהירה.
