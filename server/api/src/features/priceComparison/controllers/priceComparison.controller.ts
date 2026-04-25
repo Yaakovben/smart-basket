@@ -3,7 +3,7 @@ import { getComparisonForUser, invalidateAllUsers } from '../services/priceCompa
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
-import type { UpsertBranchInput } from '../dal/branch.dal';
+import { Branch } from '../models/Branch.model';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
@@ -127,57 +127,61 @@ export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Respon
 });
 
 // POST /api/price-comparison/load-seed (admin only)
-// טעינה ידנית מיידית של 65 הסניפים המוכרים. עוקף את ה-startup hook
-// במקרה שלא רץ. סינכרוני, מהיר (פחות משנייה).
+// טעינה ידנית של 65 סניפים מוכרים. עובד תמיד - לולאה פשוטה,
+// כל סניף נפרד, שום פעולה כפולה. מחזיר 200 בכל מצב.
+const CHAIN_NAMES: Record<string, string> = {
+  shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+  osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+  stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+};
+
 export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const chainNames: Record<string, string> = {
-    shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-    osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
-    stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-  };
-  const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
-    chainId: b.chainId,
-    chainName: chainNames[b.chainId] || b.chainId,
-    storeId: b.storeId,
-    storeName: b.storeName,
-    address: b.address,
-    city: b.city,
-    lat: b.lat,
-    lng: b.lng,
-    coordSource: 'portal' as const,
-  }));
-  // טעינה דב-קלה: כל סניף בנפרד עם try/catch. אם 64 מצליחים ו-1 נכשל
-  // עדיין מקבלים תוצאה. כל שגיאה מתועדת אבל לא חוסמת את השאר.
   let success = 0;
   let failed = 0;
   const errors: string[] = [];
-  for (const input of inputs) {
+  const now = new Date();
+
+  for (const b of KNOWN_BRANCHES) {
     try {
-      const { Branch } = await import('../models/Branch.model');
-      await Branch.findOneAndUpdate(
-        { chainId: input.chainId, storeId: input.storeId },
-        { $set: { ...input, lastSyncedAt: new Date() } },
-        { upsert: true, new: true }
+      await Branch.updateOne(
+        { chainId: b.chainId, storeId: b.storeId },
+        {
+          $set: {
+            chainId: b.chainId,
+            chainName: CHAIN_NAMES[b.chainId] || b.chainId,
+            storeId: b.storeId,
+            storeName: b.storeName,
+            address: b.address,
+            city: b.city,
+            lat: b.lat,
+            lng: b.lng,
+            coordSource: 'portal',
+            lastSyncedAt: now,
+          },
+        },
+        { upsert: true }
       );
       success++;
     } catch (e) {
       failed++;
       const msg = e instanceof Error ? e.message : 'unknown';
-      errors.push(`${input.storeId}: ${msg}`);
+      errors.push(`${b.storeId}: ${msg.substring(0, 80)}`);
+      if (errors.length === 1) logger.error(`[load-seed] first error:`, e);
     }
   }
+
   invalidateBranchCache();
   invalidateAllUsers();
-  logger.info(`[load-seed] ${success} success, ${failed} failed`);
-  res.json({
+  logger.info(`[load-seed] done: ${success} success, ${failed} failed`);
+
+  res.status(200).json({
     success: success > 0,
     message: failed === 0
       ? `✓ נטענו ${success} סניפים`
-      : `${success} הצליחו, ${failed} נכשלו`,
-    success_count: success,
-    failed_count: failed,
-    total: inputs.length,
+      : `${success} הצליחו, ${failed} נכשלו - דגימה: ${errors[0] || ''}`,
     upserted: success,
+    failed,
+    total: KNOWN_BRANCHES.length,
     sampleErrors: errors.slice(0, 3),
   });
 });
