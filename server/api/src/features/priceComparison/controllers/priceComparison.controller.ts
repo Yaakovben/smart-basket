@@ -3,7 +3,7 @@ import { getComparisonForUser, invalidateAllUsers } from '../services/priceCompa
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
-import { BranchDAL as BranchDAL2, type UpsertBranchInput as UpsertBranchInput2 } from '../dal/branch.dal';
+import type { UpsertBranchInput } from '../dal/branch.dal';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
@@ -135,7 +135,7 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
     osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
     stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
   };
-  const inputs: UpsertBranchInput2[] = KNOWN_BRANCHES.map(b => ({
+  const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
     chainId: b.chainId,
     chainName: chainNames[b.chainId] || b.chainId,
     storeId: b.storeId,
@@ -147,7 +147,9 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
     coordSource: 'portal' as const,
   }));
   try {
-    const upserted = await BranchDAL2.bulkUpsert(inputs);
+    logger.info(`[load-seed] starting bulkUpsert of ${inputs.length} branches`);
+    const upserted = await BranchDAL.bulkUpsert(inputs);
+    logger.info(`[load-seed] success: ${upserted} branches upserted`);
     invalidateBranchCache();
     invalidateAllUsers();
     res.json({
@@ -158,8 +160,13 @@ export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res:
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';
-    logger.error('[load-seed]', err);
-    res.status(500).json({ success: false, message: `שגיאה: ${msg}` });
+    const stack = err instanceof Error ? err.stack : undefined;
+    logger.error(`[load-seed] FAILED: ${msg}`, err);
+    res.status(500).json({
+      success: false,
+      message: `שגיאה: ${msg}`,
+      stack: stack?.split('\n').slice(0, 5).join(' | '),
+    });
   }
 });
 
