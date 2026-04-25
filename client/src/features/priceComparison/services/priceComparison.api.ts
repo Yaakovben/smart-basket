@@ -65,4 +65,10 @@ export const priceComparisonApi = {
     const response = await apiClient.post<{ success: boolean; message: string }>('/price-comparison/refresh');
     return response.data;
   },
+
+  // סנכרון סניפים מ-OpenStreetMap (מקור עצמאי, לא תלוי בפורטל הממשלתי)
+  async refreshBranches(): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<{ success: boolean; message: string }>('/price-comparison/refresh-branches');
+    return response.data;
+  },
 };

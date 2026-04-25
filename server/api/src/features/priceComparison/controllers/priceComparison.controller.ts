@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
-import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress } from '../services/priceSync.service';
+import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
 import { parseUserLocation } from '../services/branches.service';
 import { PriceDAL } from '../dal/price.dal';
 import { BranchDAL } from '../dal/branch.dal';
@@ -61,6 +61,23 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
     if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
     else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
     adminSyncInProgress = false;
+  }
+});
+
+// POST /api/price-comparison/refresh-branches (admin only)
+// סנכרון סניפים מ-OpenStreetMap - מקור אמין יותר מהפורטל הממשלתי
+// שלא תמיד מפרסם Stores files. פועל ברקע, לוקח כדקה.
+export const refreshBranches = asyncHandler(async (req: AuthRequest, res: Response) => {
+  res.json({ success: true, message: 'סנכרון סניפים מ-OpenStreetMap החל ברקע' });
+
+  try {
+    logger.info(`[admin-refresh-branches] Triggered by user ${req.user!.id}`);
+    const results = await syncBranchesFromOsm();
+    const summary = results.map(r => `${r.chainId}:${r.upserted}`).join(', ');
+    logger.info(`[admin-refresh-branches] Completed: ${summary}`);
+    invalidateAllUsers();
+  } catch (err) {
+    logger.error('[admin-refresh-branches] Unhandled error:', err);
   }
 });
 

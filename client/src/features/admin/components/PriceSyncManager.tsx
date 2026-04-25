@@ -96,6 +96,24 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
+  // סנכרון סניפים מ-OpenStreetMap - רץ בנפרד מסנכרון המחירים
+  const [refreshingBranches, setRefreshingBranches] = useState(false);
+  const handleRefreshBranches = async () => {
+    haptic('medium');
+    setRefreshingBranches(true);
+    setFeedback(null);
+    try {
+      const res = await priceComparisonApi.refreshBranches();
+      setFeedback({ msg: res.message || 'סנכרון סניפים החל', tone: 'info' });
+      // OSM לוקח כדקה - מרעננים סטטוס אחרי 30 שניות
+      setTimeout(load, 30_000);
+    } catch {
+      setFeedback({ msg: 'שגיאה בהפעלת סנכרון סניפים', tone: 'error' });
+    } finally {
+      setRefreshingBranches(false);
+    }
+  };
+
   const totalPrices = status?.totalPrices ?? 0;
   const chains = status?.chains ?? [];
   const syncActive = !!status?.syncInProgress || refreshing;
@@ -246,29 +264,53 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
-            {/* כפתור רענון - נסתר בזמן סנכרון פעיל כדי שהבאנר יהיה החיווי היחיד */}
+            {/* כפתורי רענון - נסתרים בזמן סנכרון מחירים פעיל */}
             {!syncActive && (
-              <Button
-                variant="contained"
-                onClick={handleRefresh}
-                startIcon={<RefreshIcon />}
-                sx={{
-                  py: 1.5,
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: 14.5,
-                  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                  boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #0D9488, #0B7C72)',
-                  },
-                  '& .MuiButton-startIcon': { marginInlineEnd: '10px' },
-                  '& .MuiButton-startIcon svg': { fontSize: 20 },
-                }}
-              >
-                רענן מחירים עכשיו
-              </Button>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleRefresh}
+                  startIcon={<RefreshIcon />}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: 14.5,
+                    background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                    boxShadow: '0 3px 12px rgba(20,184,166,0.28)',
+                    '&:hover': { background: 'linear-gradient(135deg, #0D9488, #0B7C72)' },
+                    '& .MuiButton-startIcon': { marginInlineEnd: '10px' },
+                    '& .MuiButton-startIcon svg': { fontSize: 20 },
+                  }}
+                >
+                  רענן מחירים עכשיו
+                </Button>
+
+                {/* רענון סניפים נפרד - מקור OpenStreetMap, אמין יותר מהפורטל הממשלתי */}
+                <Button
+                  variant="outlined"
+                  onClick={handleRefreshBranches}
+                  disabled={refreshingBranches}
+                  startIcon={refreshingBranches ? <CircularProgress size={16} sx={{ color: '#7C3AED' }} /> : <PlaceIcon />}
+                  sx={{
+                    py: 1.25,
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: '#7C3AED',
+                    borderColor: 'rgba(124,58,237,0.4)',
+                    '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.05)' },
+                    '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+                  }}
+                >
+                  {refreshingBranches ? 'מסנכרן סניפים מ-OSM...' : 'רענן סניפים מ-OpenStreetMap'}
+                </Button>
+                <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: -0.25 }}>
+                  מקור עצמאי לסניפים - לא תלוי בפורטל הממשלתי
+                </Typography>
+              </Box>
             )}
 
             {/* פידבק אינליין */}

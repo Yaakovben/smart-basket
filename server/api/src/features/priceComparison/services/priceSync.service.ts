@@ -15,7 +15,9 @@ import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { geocodeAddress, cityFallbackCoords } from './geocoder.service';
 import { invalidateBranchCache } from './branches.service';
+import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
+import type { ChainId } from '../models/Price.model';
 
 // כל ה-adapters הפעילים - רצים ברצף ב-syncAllChains.
 // אם adapter נכשל, השאר ממשיכים.
@@ -50,6 +52,46 @@ export interface SyncResult {
 // דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
 // הוא סוגר את ההתחברויות המאוחרות יותר. 3 שניות זה מספיק להיראות "אנושי".
 const DELAY_BETWEEN_CHAINS_MS = 3000;
+
+/**
+ * סנכרון סניפים מ-OpenStreetMap לכל הרשתות.
+ * מקור נתונים אמין יותר מהפורטל הממשלתי שלא תמיד מפרסם Stores files.
+ * פועל בנפרד מסנכרון המחירים - אפשר להריץ עצמאית.
+ *
+ * מחזיר סיכום: רשת -> כמות סניפים שנמשכו ועודכנו במונגו.
+ */
+export async function syncBranchesFromOsm(): Promise<Array<{ chainId: ChainId; chainName: string; fetched: number; upserted: number }>> {
+  const chainIds = adapters.map(a => a.chainId);
+  const chainNameMap = new Map(adapters.map(a => [a.chainId, a.chainName]));
+  logger.info(`[osm-branches] starting sync for ${chainIds.length} chains`);
+
+  const osmResults = await fetchAllChainsFromOsm(chainIds);
+  const results: Array<{ chainId: ChainId; chainName: string; fetched: number; upserted: number }> = [];
+
+  for (const [chainId, branches] of osmResults) {
+    const chainName = chainNameMap.get(chainId) || chainId;
+    if (branches.length === 0) {
+      results.push({ chainId, chainName, fetched: 0, upserted: 0 });
+      continue;
+    }
+    const inputs: UpsertBranchInput[] = branches.map(b => ({
+      chainId, chainName,
+      storeId: b.storeId,
+      storeName: b.storeName,
+      address: b.address,
+      city: b.city,
+      lat: b.lat,
+      lng: b.lng,
+      coordSource: 'portal' as const, // OSM נחשב מקור אמין כמו portal
+    }));
+    const upserted = await BranchDAL.bulkUpsert(inputs);
+    logger.info(`[osm-branches] ${chainId}: ${branches.length} fetched, ${upserted} upserted`);
+    results.push({ chainId, chainName, fetched: branches.length, upserted });
+  }
+
+  invalidateBranchCache();
+  return results;
+}
 
 // רשימת כל הרשתות הרשומות (ללא תלות אם יש להן נתונים במאגר) -
 // משמש ב-UI להציג את כל הרשתות הזמינות, גם אלה שהפורטל שלהן
