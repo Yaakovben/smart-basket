@@ -211,32 +211,27 @@ export const InsightsPage = memo(() => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 5 }}>
-      {/* ===== הדר גרדיאנט עם ריבון BETA אלכסוני ===== */}
+      {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
         background: isDark ? 'linear-gradient(160deg, #312E81, #5B21B6, #7C3AED)' : 'linear-gradient(160deg, #6D28D9, #7C3AED, #A78BFA)',
-        // Padding-top מוגדל לפנות מקום לריבון BETA בגודל lg מעל שורת הכותרת
-        // בלי שיידרוס כפתור או את ה-pill של הציון.
-        p: { xs: 'max(70px, env(safe-area-inset-top) + 38px) 16px 22px', sm: '74px 20px 26px' },
+        // Padding-top הוקטן (50px במקום 70px) - חוסך 20px לתוכן.
+        p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
         borderRadius: '0 0 24px 24px',
         position: 'relative', overflow: 'hidden',
-        mb: 2,
+        mb: 1.5,
       }}>
-        {/* ריבון BETA גדול בצד שמאל. ה-pill של הציון הוסר — הוא היה מפריע
-            לקריאות הריבון ולא הוסיף ערך (הציון המלא מופיע בטאב "דופק"). */}
-        <BetaRibbon corner="top-left" offsetTop={4} size="xl" />
+        {/* ריבון BETA בגודל lg - קטן יותר מ-xl, פחות דומיננטי בכותרת */}
+        <BetaRibbon corner="top-left" offsetTop={2} size="lg" />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <Box sx={{ flex: 1, textAlign: 'center' }}>
-            <Typography sx={{ fontSize: 22, fontWeight: 900, color: 'white', letterSpacing: -0.5 }}>
+            {/* פונט הוקטן 22 → 18, סבטייטל הוסר - מיותר בכל טעינה */}
+            <Typography sx={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: -0.3 }}>
               💡 {t('insights')}
             </Typography>
-            <Typography sx={{ fontSize: 10.5, color: 'rgba(255,255,255,0.6)', mt: 0.15 }}>
-              הנתונים עשויים להיות חלקיים · עובדים על שיפורים
-            </Typography>
           </Box>
-          {/* רווח ריק מימין כדי לאזן את כפתור החזרה ולשמור על מרכוז הכותרת */}
           <Box sx={{ width: 36, flexShrink: 0 }} />
         </Box>
       </Box>
@@ -397,7 +392,7 @@ export const InsightsPage = memo(() => {
                 }}>
                   <CircularProgress size={12} sx={{ color: '#14B8A6' }} />
                   <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#0D9488' }}>
-                    מרענן מחירים...
+                    מעדכן נתונים...
                   </Typography>
                 </Box>
               )}
