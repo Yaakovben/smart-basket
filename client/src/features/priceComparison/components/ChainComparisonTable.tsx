@@ -145,11 +145,14 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
     onClose();
   };
 
-  const apps: NavApp[] = [
+  // זיהוי iOS - Apple Maps רלוונטי רק שם, ב-Android הוא רק יוצר רעש
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  const allApps: NavApp[] = [
     {
       key: 'waze',
       label: 'Waze',
-      subtitle: 'ניווט בזמן אמת',
+      subtitle: '',
       icon: <NearMeIcon sx={{ fontSize: 22, color: '#fff' }} />,
       color: '#33CCFF',
       url: urls.waze,
@@ -157,74 +160,25 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
     {
       key: 'googleMaps',
       label: 'Google Maps',
-      subtitle: 'מפות Google',
+      subtitle: '',
       icon: <DirectionsIcon sx={{ fontSize: 22, color: '#fff' }} />,
       color: '#1A73E8',
       url: urls.googleMaps,
     },
     {
       key: 'appleMaps',
-      label: 'מפות (iOS)',
-      subtitle: 'Apple Maps',
+      label: 'Apple Maps',
+      subtitle: '',
       icon: <MapIcon sx={{ fontSize: 22, color: '#fff' }} />,
       color: '#64748B',
       url: urls.appleMaps,
     },
   ];
-
-  const NavRow = ({ app }: { app: NavApp }) => (
-    <Box
-      role="button"
-      tabIndex={0}
-      onClick={() => open(app.url)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
-      sx={{
-        display: 'flex', alignItems: 'center', gap: 1.5,
-        px: 1.5, py: 1.25, borderRadius: '14px',
-        cursor: 'pointer',
-        userSelect: 'none',
-        WebkitTapHighlightColor: 'transparent',
-        bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-        transition: 'background-color 0.12s, transform 0.12s, border-color 0.12s',
-        '&:hover': {
-          bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-          borderColor: `${app.color}66`,
-        },
-        '&:active': { transform: 'scale(0.985)' },
-      }}
-    >
-      {/* אייקון במסגרת צבועה בצבע המותג - נראה מקצועי בלי אימוג'י */}
-      <Box sx={{
-        width: 42, height: 42, borderRadius: '12px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `linear-gradient(135deg, ${app.color}, ${app.color}CC)`,
-        boxShadow: `0 3px 10px ${app.color}55`,
-        flexShrink: 0,
-      }}>
-        {app.icon}
-      </Box>
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-          {app.label}
-        </Typography>
-        <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.2, lineHeight: 1.3 }}>
-          {app.subtitle}
-        </Typography>
-      </Box>
-      <Box sx={{
-        width: 28, height: 28, borderRadius: '50%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-        color: 'text.secondary',
-        flexShrink: 0,
-        fontSize: 16, fontWeight: 700,
-      }}>
-        ←
-      </Box>
-    </Box>
-  );
+  // ב-iOS - מציגים את כל ה-3. ב-אנדרואיד/דסקטופ - רק Waze + Google (Apple Maps לא רלוונטי).
+  const apps = isIOS ? allApps : allApps.filter(a => a.key !== 'appleMaps');
+  // הראשי - Waze (הכי פופולרי בישראל). שאר - משניים.
+  const primary = apps[0];
+  const secondary = apps.slice(1);
 
   return (
     <Dialog
@@ -305,12 +259,80 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
         )}
       </Box>
 
-      {/* רשימת האפליקציות */}
-      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.85 }}>
-        <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.disabled', px: 0.5, letterSpacing: 0.4 }}>
-          בחר אפליקציית ניווט
-        </Typography>
-        {apps.map(app => <NavRow key={app.key} app={app} />)}
+      {/* כפתור ראשי - Waze. גדול, בולט, מזמין. */}
+      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => open(primary.url)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(primary.url); }}
+          sx={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
+            py: 1.6, px: 2, borderRadius: '14px',
+            cursor: 'pointer',
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            background: `linear-gradient(135deg, ${primary.color}, ${primary.color}D9)`,
+            boxShadow: `0 6px 18px ${primary.color}55`,
+            transition: 'transform 0.1s, box-shadow 0.15s',
+            '&:hover': { boxShadow: `0 8px 22px ${primary.color}77` },
+            '&:active': { transform: 'scale(0.98)' },
+          }}
+        >
+          {primary.icon}
+          <Typography sx={{ fontSize: 16, fontWeight: 800, color: 'white', letterSpacing: 0.2 }}>
+            פתח ב-{primary.label}
+          </Typography>
+        </Box>
+
+        {/* אפשרויות משניות - מסודרות בשורה אחת או שתיים בהתאם */}
+        {secondary.length > 0 && (
+          <>
+            <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'text.disabled', textAlign: 'center', mt: 0.5, letterSpacing: 0.4 }}>
+              או פתח עם
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {secondary.map(app => (
+                <Box
+                  key={app.key}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => open(app.url)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
+                  sx={{
+                    flex: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75,
+                    py: 1, px: 1.25, borderRadius: '12px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                    border: '1px solid',
+                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                    transition: 'background-color 0.12s, border-color 0.12s, transform 0.1s',
+                    '&:hover': {
+                      bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                      borderColor: `${app.color}55`,
+                    },
+                    '&:active': { transform: 'scale(0.97)' },
+                  }}
+                >
+                  <Box sx={{
+                    width: 26, height: 26, borderRadius: '8px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    bgcolor: app.color,
+                    flexShrink: 0,
+                  }}>
+                    {app.icon}
+                  </Box>
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'text.primary' }}>
+                    {app.label}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </>
+        )}
       </Box>
 
       <Typography sx={{

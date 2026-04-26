@@ -13,6 +13,7 @@
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
+import { Agent as HttpsAgent } from 'https';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoreItem, ChainStoresFetchResult,
@@ -21,6 +22,10 @@ import type {
 const SHUFERSAL_PORTAL = 'https://prices.shufersal.co.il';
 const FETCH_TIMEOUT_MS = 60_000;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
+// סוכן HTTPS שמדלג על אימות תעודה - הפורטל של שופרסל ולעיתים גם
+// pricesprodpublic.blob.core.windows.net מחזירים שרשרת תעודות שלא
+// תמיד תקפה. דורש httpsAgent מותאם כדי לא ליפול ב-UNABLE_TO_VERIFY.
+const insecureHttpsAgent = new HttpsAgent({ rejectUnauthorized: false });
 
 interface PriceFullXml {
   Root?: { Items?: { Item?: RawItem[] | RawItem } };
@@ -72,6 +77,7 @@ function extractAllFileUrls(html: string, fileNamePrefix: string): string[] {
 async function fetchCategoryHtml(catID: number): Promise<string> {
   const res = await axios.get<string>(`${SHUFERSAL_PORTAL}/FileObject/UpdateCategory?catID=${catID}&storeId=0`, {
     timeout: FETCH_TIMEOUT_MS,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
   });
   return res.data;
@@ -81,6 +87,7 @@ async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: bo
   const res = await axios.get<ArrayBuffer>(url, {
     responseType: 'arraybuffer',
     timeout: DOWNLOAD_TIMEOUT_MS,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
   });
   const buf = Buffer.from(res.data);

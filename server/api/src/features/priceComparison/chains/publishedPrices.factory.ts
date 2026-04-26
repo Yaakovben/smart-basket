@@ -21,6 +21,12 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
+import { Agent as HttpsAgent } from 'https';
+
+// סוכן HTTPS עם rejectUnauthorized=false - הפורטל הממשלתי משתמש בשרשרת
+// תעודות שלא תמיד מאומתת ע"י Node (intermediate cert חסר). זה לא תלוי
+// בעיתוי NODE_TLS_REJECT_UNAUTHORIZED ולכן עמיד יותר.
+const insecureHttpsAgent = new HttpsAgent({ rejectUnauthorized: false });
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoreItem, ChainStoresFetchResult,
@@ -80,6 +86,7 @@ async function createAuthenticatedClient(username: string, password: string): Pr
       jar,
       withCredentials: true,
       timeout: 60_000,
+      httpsAgent: insecureHttpsAgent,
       headers: {
         'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)',
       },
