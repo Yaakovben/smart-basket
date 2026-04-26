@@ -79,7 +79,10 @@ function extractCsrf(html: string): string {
 }
 
 async function createAuthenticatedClient(username: string, password: string): Promise<{ client: AxiosInstance; csrftoken: string }> {
-  const jar = new CookieJar();
+  // looseMode מקל על אכיפת RFC 6265 - הפורטל הממשלתי מחזיר Set-Cookie
+  // לא סטנדרטיים (Domain שגוי / Path מוזר). בלי looseMode tough-cookie
+  // זורק שגיאה והבקשה נופלת.
+  const jar = new CookieJar(undefined, { looseMode: true, allowSpecialUseDomain: true });
   const client = wrapper(
     axios.create({
       baseURL: PORTAL_BASE,
@@ -87,9 +90,7 @@ async function createAuthenticatedClient(username: string, password: string): Pr
       withCredentials: true,
       timeout: 60_000,
       httpsAgent: insecureHttpsAgent,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)',
-      },
+      headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
     })
   );
 
