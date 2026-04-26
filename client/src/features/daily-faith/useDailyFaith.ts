@@ -6,15 +6,15 @@ const STORAGE_KEY = 'sb_daily_faith_last_shown';
 const SESSION_COUNT_KEY = 'sb_session_count';      // מונה מצטבר של סשנים (בדפדפן)
 const SESSION_MARKER_KEY = 'sb_session_marker';    // דגל לסשן נוכחי (נמחק בסגירת דפדפן)
 const MIN_SESSION_FOR_FAITH = 2;                    // לקוח חדש יראה רק מסשן 2
-const RECENT_SEEN_KEY = 'sb_faith_recent_seen';     // מעקב אחרי משפטים שכבר הוצגו בשבוע האחרון
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;            // שבוע במ"ש
+const RECENT_SEEN_KEY = 'sb_faith_recent_seen';     // מעקב אחרי משפטים שכבר הוצגו בשבועיים האחרונים
+const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;      // שבועיים במ"ש - אין חזרה על משפט בתקופה הזו
 
-// מזהים של משפטים שהוצגו לאחרונה, עם timestamp. נשמרים רק אלה מהשבוע האחרון.
+// מזהים של משפטים שהוצגו לאחרונה, עם timestamp. נשמרים רק אלה מהשבועיים האחרונים.
 type RecentSeen = { id: string; at: number };
 
 const getRecentSeen = (): RecentSeen[] => {
   const parsed = safeStorage.getJSON<RecentSeen[]>(RECENT_SEEN_KEY, []);
-  const cutoff = Date.now() - WEEK_MS;
+  const cutoff = Date.now() - TWO_WEEKS_MS;
   return Array.isArray(parsed) ? parsed.filter(r => r?.id && r.at > cutoff) : [];
 };
 
@@ -76,7 +76,7 @@ export function useDailyFaith(enabled: boolean) {
     let cancelled = false;
     // השהייה קצרה כדי לא להתנגש עם טעינת המסך הראשי
     const timer = setTimeout(() => {
-      // שולחים לשרת את המזהים שכבר ראינו השבוע, כדי שיחזיר משפט שלא נראה.
+      // שולחים לשרת את המזהים שכבר ראינו בשבועיים האחרונים, כדי שיחזיר משפט שלא נראה.
       // getAll איננו זמין ל-non-admin, ולכן כל הסינון נעשה בשרת.
       const seenIds = getRecentSeen().map(r => r.id);
       dailyFaithApi

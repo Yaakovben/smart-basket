@@ -51,6 +51,7 @@ export const InsightsPage = memo(() => {
   const validTabs: InsightTab[] = ['price', 'lists', 'habits', 'pulse'];
   const tab: InsightTab = validTabs.includes(tabFromUrl as InsightTab) ? (tabFromUrl as InsightTab) : 'price';
   const setTab = (v: InsightTab) => {
+    if (v !== tab) haptic('light'); // פידבק מישוש בכל שינוי טאב - תחושה מעודנת
     // replace (ולא push) - מעבר טאבים לא יוצר היסטוריה מצטברת
     setSearchParams(v === 'price' ? {} : { tab: v }, { replace: true });
   };
@@ -242,6 +243,7 @@ export const InsightsPage = memo(() => {
           borderRadius: '999px', p: 0.4,
           border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
           bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+          backdropFilter: 'blur(8px)',
         }}>
           <Tabs
             value={tab}
@@ -253,11 +255,18 @@ export const InsightsPage = memo(() => {
               '& .MuiTab-root': {
                 minHeight: 34, fontSize: 12.5, fontWeight: 700, textTransform: 'none',
                 color: 'text.secondary', borderRadius: '999px', minWidth: 0, px: 0.5,
-                transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
+                transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                // אפקט עידוד עדין כשמרחפים מעל טאב לא פעיל
+                '&:hover:not(.Mui-selected)': {
+                  color: 'text.primary',
+                  bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                },
+                '&:active:not(.Mui-selected)': { transform: 'scale(0.96)' },
                 '&.Mui-selected': {
                   color: 'white',
                   background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                  boxShadow: '0 2px 8px rgba(20,184,166,0.3)',
+                  boxShadow: '0 3px 10px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  transform: 'translateY(-0.5px)',
                 },
               },
               '& .MuiTabs-indicator': { display: 'none' },
@@ -317,28 +326,38 @@ export const InsightsPage = memo(() => {
         }
         if (!insight) return null;
         return (
-          <Box sx={{ px: 2, mb: 1.5 }}>
+          <Box sx={{ px: 2, mb: 1.5 }} key={`insight-${tab}`}>
             <Box sx={{
               p: 1.5, borderRadius: '14px',
               background: insight.gradient,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
               color: 'white',
               display: 'flex', alignItems: 'center', gap: 1.25,
+              animation: `${fadeIn} 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both`,
+              position: 'relative', overflow: 'hidden',
+              // קישוט עדין - גראדיאנט נוסף ברקע נותן עומק
+              '&::before': {
+                content: '""', position: 'absolute', inset: 0,
+                background: 'radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 60%)',
+                pointerEvents: 'none',
+              },
             }}>
               <Box sx={{
-                width: 40, height: 40, borderRadius: '12px',
-                bgcolor: 'rgba(255,255,255,0.2)',
+                width: 42, height: 42, borderRadius: '12px',
+                bgcolor: 'rgba(255,255,255,0.22)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 22, flexShrink: 0,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
+                position: 'relative', zIndex: 1,
               }}>
                 {insight.emoji}
               </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 800, lineHeight: 1.3 }}>
+              <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 800, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
                   {insight.title}
                 </Typography>
                 {insight.subtitle && (
-                  <Typography sx={{ fontSize: 11, opacity: 0.9, mt: 0.15 }}>
+                  <Typography sx={{ fontSize: 11, opacity: 0.92, mt: 0.2 }}>
                     {insight.subtitle}
                   </Typography>
                 )}
