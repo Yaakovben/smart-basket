@@ -82,7 +82,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         )}
       </Box>
 
-      {/* באנר ידידותי - גרסה ראשונית, מזמין דיווח על אי-דיוקים. צבעים נעימים (טורקיז) במקום אזהרה אגרסיבית. */}
+      {/* באנר ידידותי - גרסה ראשונית, עם קישור ישיר לדיווח. צבעים נעימים (טורקיז) במקום אזהרה אגרסיבית. */}
       <Box sx={{
         mb: 1.5, px: 1.25, py: 0.85, borderRadius: '10px',
         bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.07)',
@@ -91,12 +91,19 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         display: 'flex', alignItems: 'flex-start', gap: 0.85,
       }}>
         <Typography sx={{ fontSize: 15, lineHeight: 1, mt: 0.1, flexShrink: 0 }}>💬</Typography>
-        <Box sx={{ flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#5EEAD4' : '#0F766E', lineHeight: 1.3 }}>
-            גרסה ראשונית · עוזרים לנו להשתפר
+            מידע ראשוני · עוזרים לנו להשתפר
           </Typography>
           <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.45, mt: 0.25 }}>
-            המחירים והסניפים מתעדכנים אוטומטית מהפורטל הממשלתי. אם נתקלתם במידע לא תואם — <b>שתפו אותנו</b> בהגדרות → "צור קשר".
+            הנתונים מתעדכנים אוטומטית מהפורטל הממשלתי ועדיין נמצאים בשיפור. אם נתקלתם במידע לא תואם —{' '}
+            <Link
+              href="mailto:smartbasket129@gmail.com?subject=Smart Basket — דיווח על מידע לא תואם בהשוואת מחירים&body=שלום,%0D%0A%0D%0Aנתקלתי בפרט הבא שלא תואם את המציאות:%0D%0A(תארו את הבעיה — שם מוצר, רשת, סניף, מחיר וכו')%0D%0A%0D%0Aתודה!"
+              sx={{ color: '#0D9488', fontWeight: 800, textDecoration: 'underline' }}
+            >
+              דווחו לנו במייל
+            </Link>
+            .
           </Typography>
         </Box>
       </Box>
