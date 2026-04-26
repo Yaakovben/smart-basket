@@ -16,12 +16,21 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   const [progress, setProgress] = useState(100);
-  const startRef = useRef(Date.now());
-  const boxRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
+  const startRef = useRef(0);
+
+  // מצב גרירה - X (הצדדים) + Y (למטה). כיוון נקבע לפי הציר הדומיננטי בתחילת התנועה.
+  const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchRef = useRef<{ startX: number; startY: number; lastX: number; lastY: number; lastT: number; velocityX: number; velocityY: number; axis: 'x' | 'y' | null }>({
+    startX: 0, startY: 0, lastX: 0, lastY: 0, lastT: 0, velocityX: 0, velocityY: 0, axis: null,
+  });
+  // דגל: האם הנגיעה התחילה על כפתור ה"ביטול" - כדי לא לחטוף לחיצה ל"גרירה"
+  const startedOnUndoRef = useRef(false);
 
   // סרגל התקדמות שנספר לאחור
   useEffect(() => {
+    startRef.current = Date.now();
     const tick = () => {
       const elapsed = Date.now() - startRef.current;
       const remaining = Math.max(0, 100 - (elapsed / UNDO_DURATION) * 100);
@@ -32,24 +41,62 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // swipe down to dismiss
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
+    const target = e.target as HTMLElement | null;
+    startedOnUndoRef.current = !!target?.closest('[data-undo-button="true"]');
+    if (startedOnUndoRef.current) return;
+    const { clientX: x, clientY: y } = e.touches[0];
+    touchRef.current = { startX: x, startY: y, lastX: x, lastY: y, lastT: Date.now(), velocityX: 0, velocityY: 0, axis: null };
+    setIsDragging(true);
   }, []);
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const diff = e.touches[0].clientY - startY.current;
-    if (diff > 0 && boxRef.current) {
-      boxRef.current.style.transform = `translateY(${diff}px)`;
-      boxRef.current.style.opacity = `${Math.max(0, 1 - diff / 120)}`;
+    if (startedOnUndoRef.current) return;
+    const { clientX: x, clientY: y } = e.touches[0];
+    const now = Date.now();
+    const r = touchRef.current;
+    const dt = Math.max(1, now - r.lastT);
+    r.velocityX = ((x - r.lastX) / dt) * 1000;
+    r.velocityY = ((y - r.lastY) / dt) * 1000;
+    r.lastX = x;
+    r.lastY = y;
+    r.lastT = now;
+    const diffX = x - r.startX;
+    const diffY = y - r.startY;
+    // קובעים את הציר הדומיננטי פעם אחת, ברגע שעברו סף מינימלי
+    if (!r.axis && (Math.abs(diffX) > 8 || Math.abs(diffY) > 8)) {
+      r.axis = Math.abs(diffX) > Math.abs(diffY) ? 'x' : 'y';
+    }
+    if (r.axis === 'x') {
+      setDragX(diffX);
+      setDragY(0);
+    } else if (r.axis === 'y') {
+      setDragY(Math.max(0, diffY));
+      setDragX(0);
     }
   }, []);
   const handleTouchEnd = useCallback(() => {
-    const diff = (boxRef.current?.getBoundingClientRect().top || 0) - startY.current;
-    if (diff > 50 || (boxRef.current?.style.opacity && parseFloat(boxRef.current.style.opacity) < 0.5)) {
-      onDismiss?.();
-    } else if (boxRef.current) {
-      boxRef.current.style.transform = '';
-      boxRef.current.style.opacity = '';
+    if (startedOnUndoRef.current) {
+      startedOnUndoRef.current = false;
+      return;
+    }
+    const r = touchRef.current;
+    const finalX = r.lastX - r.startX;
+    const finalY = r.lastY - r.startY;
+    const shouldDismissY = r.axis === 'y' && (finalY > 30 || (finalY > 15 && r.velocityY > 400));
+    const shouldDismissX = r.axis === 'x' && (Math.abs(finalX) > 60 || (Math.abs(finalX) > 30 && Math.abs(r.velocityX) > 400));
+    if (shouldDismissY) {
+      setDragY(Math.max(finalY, 120));
+      setIsDragging(false);
+      window.setTimeout(() => onDismiss?.(), 150);
+    } else if (shouldDismissX) {
+      const direction = finalX > 0 ? 1 : -1;
+      setDragX(direction * Math.max(Math.abs(finalX), 260));
+      setIsDragging(false);
+      window.setTimeout(() => onDismiss?.(), 150);
+    } else {
+      setIsDragging(false);
+      setDragX(0);
+      setDragY(0);
     }
   }, [onDismiss]);
 
@@ -65,7 +112,6 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
       }}
     >
       <Box
-        ref={boxRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -77,16 +123,33 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
           boxShadow: '0 8px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05)',
           backdropFilter: 'blur(16px)',
           overflow: 'hidden',
-          animation: 'undoIn 0.3s ease-out',
+          animation: dragX === 0 && dragY === 0 && !isDragging ? 'undoIn 0.3s ease-out' : 'none',
           '@keyframes undoIn': {
             from: { transform: 'translateY(20px)', opacity: 0 },
             to: { transform: 'translateY(0)', opacity: 1 },
           },
           minWidth: 220, maxWidth: 300,
-          transition: 'transform 0.15s, opacity 0.15s',
+          transform: `translate(${dragX}px, ${dragY}px)`,
+          opacity: Math.max(0, 1 - Math.max(dragY / 140, Math.abs(dragX) / 200)),
+          transition: isDragging ? 'none' : 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s',
+          // touchAction: none - מונע מהדפדפן לגלול את הדף כשהמשתמש גורר את הטוסט
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          cursor: 'grab',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1 }}>
+        {/* רמז גרירה - פס אפור דק בראש הטוסט, מרמז שאפשר להחליק כדי לסגור */}
+        <Box
+          aria-hidden="true"
+          sx={{
+            width: 32, height: 3,
+            borderRadius: 2,
+            bgcolor: 'rgba(255,255,255,0.35)',
+            mx: 'auto', mt: 0.75, mb: 0.25,
+          }}
+        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1.75, py: 1, pt: 0.5 }}>
           <Box sx={{
             width: 26, height: 26, borderRadius: '50%',
             background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.18))',
@@ -100,6 +163,7 @@ const UndoBar = ({ msg, onUndo, onDismiss }: { msg: string; onUndo: () => void; 
             {msg}
           </Typography>
           <Box
+            data-undo-button="true"
             onClick={(e) => { e.stopPropagation(); onUndo(); onDismiss?.(); }}
             sx={{
               px: 1.5, py: 0.6,

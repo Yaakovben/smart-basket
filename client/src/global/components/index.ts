@@ -8,3 +8,4 @@ export { OfflineBanner } from './OfflineBanner';
 export { ReconnectingBanner } from './ReconnectingBanner';
 export { PageSkeleton } from './PageSkeleton';
 export { Toast } from './Toast';
+export { QRScanner } from './QRScanner';

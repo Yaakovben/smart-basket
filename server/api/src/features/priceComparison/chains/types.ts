@@ -18,8 +18,30 @@ export interface ChainFetchResult {
   error?: string;
 }
 
+// פריט מקובץ Stores*.xml של רשת - המקור הרשמי לסניפים של הרשת
+export interface ChainStoreItem {
+  storeId: string;
+  storeName: string;
+  address?: string;
+  city?: string;
+  zipCode?: string;
+  lat?: number;
+  lng?: number;
+}
+
+export interface ChainStoresFetchResult {
+  chainId: ChainId;
+  chainName: string;
+  stores: ChainStoreItem[];
+  fetchedFiles: number;
+  error?: string;
+}
+
 export interface ChainAdapter {
   readonly chainId: ChainId;
   readonly chainName: string;
   fetchLatestPrices(): Promise<ChainFetchResult>;
+  // אופציונלי: מביא את רשימת הסניפים הרשמית של הרשת מהפורטל.
+  // רשתות שלא מפרסמות Stores*.xml - לא יממשו או יחזירו ריק.
+  fetchLatestStores?(): Promise<ChainStoresFetchResult>;
 }

@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-do
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
-import { Toast, PageSkeleton } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
 import { DailyFaithGate } from "../features/daily-faith";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -325,6 +325,7 @@ export const AppRouter = () => {
           path="/list/:listId"
           element={
             <ProtectedRoute user={user}>
+              <ErrorBoundary>
               <ListPageWrapper
                 lists={lists}
                 user={user!}
@@ -336,6 +337,7 @@ export const AppRouter = () => {
                 showToast={showToast}
                 onlineUsers={onlineUsers}
               />
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         />
@@ -366,7 +368,7 @@ export const AppRouter = () => {
           path="/admin"
           element={
             <AdminRoute user={user}>
-              <AdminPage />
+              <ErrorBoundary><AdminPage /></ErrorBoundary>
             </AdminRoute>
           }
         />
@@ -374,7 +376,7 @@ export const AppRouter = () => {
           path="/insights"
           element={
             <ProtectedRoute user={user}>
-              <InsightsPage />
+              <ErrorBoundary><InsightsPage /></ErrorBoundary>
             </ProtectedRoute>
           }
         />

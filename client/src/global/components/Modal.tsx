@@ -19,6 +19,8 @@ const Transition = forwardRef(function Transition(
 });
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {
+  // נעילת ה-body מטופלת אוטומטית ע"י MUI Dialog (disableScrollLock=false ברירת מחדל).
+  // אסור להוסיף נעילה משלנו - שתי שכבות נועלות מתנגשות וגורמות לתוכן הפנימי להיחתך.
   const handleClose = useCallback(() => {
     haptic('light');
     onClose();

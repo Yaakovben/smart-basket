@@ -271,10 +271,13 @@ export const ListHeader = memo(({
       p: { xs: 'max(44px, env(safe-area-inset-top) + 10px) 14px 14px', sm: '48px 20px 20px' },
       borderRadius: { xs: '0 0 20px 20px', sm: '0 0 24px 24px' },
       flexShrink: 0,
-      boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(79, 70, 229, 0.15)'
+      boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(79, 70, 229, 0.15)',
+      '@media (max-width: 360px)': {
+        p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
+      },
     }}>
       {/* Title Row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
         <IconButton
           onClick={onBack}
           sx={glassButtonSx}
@@ -283,7 +286,7 @@ export const ListHeader = memo(({
           <ArrowForwardIcon sx={{ color: 'white', fontSize: 22 }} />
         </IconButton>
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-          <Typography sx={{ color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center' }}>
+          <Typography sx={{ color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center', '@media (max-width: 360px)': { fontSize: 15 } }}>
             {list.name}
           </Typography>
           {refreshing && <CircularProgress size={18} sx={{ color: 'white' }} />}
@@ -329,7 +332,7 @@ export const ListHeader = memo(({
 
       {/* Members Row (Group Only) */}
       {list.isGroup && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 1, sm: 1.5 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 } }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton
             onClick={onShowInvite}
@@ -359,7 +362,7 @@ export const ListHeader = memo(({
 
       {/* Search Button Row (Private Lists Only) */}
       {!list.isGroup && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 1.5 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
           <IconButton
             onClick={handleToggleSearch}
             sx={{
@@ -427,7 +430,7 @@ export const ListHeader = memo(({
       </Collapse>
 
       {/* Quick Add - Mobile First Design */}
-      <Box sx={{ mb: { xs: 1, sm: 1.5 }, position: 'relative' }}>
+      <Box sx={{ mb: { xs: 1, sm: 1.5 }, position: 'relative', '@media (max-width: 360px)': { mb: 0.5 } }}>
         <TextField
           inputRef={inputRef}
           fullWidth
@@ -458,7 +461,11 @@ export const ListHeader = memo(({
               fontSize: 16, // Prevents iOS zoom on focus
               py: 1.5,
               color: 'text.primary'
-            }
+            },
+            '@media (max-width: 360px)': {
+              '& .MuiOutlinedInput-root': { height: 38 },
+              '& .MuiOutlinedInput-input': { py: 0.75 },
+            },
           }}
           InputProps={{
             startAdornment: (
@@ -475,6 +482,7 @@ export const ListHeader = memo(({
                       onClick={toggleSpeech}
                       sx={{
                         width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
+                        '@media (max-width: 360px)': { width: 28, height: 28 },
                         borderRadius: '10px',
                         color: isListening ? 'white' : micDenied ? 'text.disabled' : 'text.secondary',
                         background: isListening ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'action.hover',
@@ -500,6 +508,7 @@ export const ListHeader = memo(({
                         : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                       color: 'white',
                       width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
+                      '@media (max-width: 360px)': { width: 28, height: 28 },
                       borderRadius: '10px',
                       boxShadow: ready ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
                       transition: 'all 0.2s ease',
@@ -571,7 +580,16 @@ export const ListHeader = memo(({
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',
             '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' }
-          }
+          },
+          '@media (max-width: 360px)': {
+            p: 0.4,
+            '& .MuiTab-root': {
+              py: 0.5,
+              px: 0.75,
+              minHeight: 32,
+              fontSize: 11,
+            },
+          },
         }}
       >
         <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />

@@ -1,6 +1,6 @@
-import { useState, useEffect, memo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, keyframes } from '@mui/material';
+import { useState, useEffect, memo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -8,118 +8,52 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
-import { PriceComparisonCard, BetaRibbon, priceComparisonApi, type PriceComparisonData } from '../../priceComparison';
+import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
+import { InsightsLoader } from './InsightsLoader';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
-import { haptic } from '../../../global/helpers';
-
-const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
-const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
-// מעבר טאבים: שילוב של fade + slide קטן — תחושת מעבר חלק בלי להסיח את העין
-const tabEnter = keyframes`from{opacity:0;transform:translateY(12px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}`;
+import { haptic, safeStorage } from '../../../global/helpers';
+import {
+  float, fadeIn, tabEnter, dayLabels, scoreEmoji,
+  AnimatedNumber, StatCard, SectionCard, HeroInsight,
+} from './insightsShared';
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
 
-const dayLabels = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-
-// ספירה אנימטיבית
-const AnimatedNumber = ({ value }: { value: number }) => {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef<number>(0);
-  useEffect(() => {
-    const start = Date.now();
-    const dur = 700;
-    const tick = () => {
-      const p = Math.min(1, (Date.now() - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(eased * value));
-      if (p < 1) ref.current = requestAnimationFrame(tick);
-    };
-    ref.current = requestAnimationFrame(tick);
-    return () => { if (ref.current) cancelAnimationFrame(ref.current); };
-  }, [value]);
-  return <>{display}</>;
+// Cache מקומי - מאפשר הצגה מיידית של תובנות בזמן שהשרת מחשב.
+// תוקף: 24 שעות (הנתונים לא משתנים הרבה בין פתיחות).
+const INSIGHTS_CACHE_KEY = 'sb_insights_cache_v1';
+const PRICE_CACHE_KEY = 'sb_price_cache_v1';
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+interface CachedEnvelope<T> { data: T; at: number }
+const readCache = <T,>(key: string): T | null => {
+  const c = safeStorage.getJSON<CachedEnvelope<T> | null>(key, null);
+  if (!c || typeof c !== 'object' || !c.at) return null;
+  if (Date.now() - c.at > CACHE_TTL_MS) return null;
+  return c.data;
 };
-
-const scoreEmoji = (s: number) => s >= 90 ? '🏆' : s >= 80 ? '🔥' : s >= 60 ? '💪' : s >= 40 ? '📈' : '🌱';
-
-// ===== כרטיס סטטיסטיקה קטן - לשימוש חוזר ברחבי העמוד =====
-// משתמש ב-gradient עדין במקום צבע אחיד + tabular-nums כדי שמספרים שמתאנמים יתייצבו ברוחב
-const StatCard = ({ value, label, color, bg, border }: {
-  value: React.ReactNode; label: string; color: string; bg: string; border: string;
-}) => (
-  <Paper elevation={0} sx={{
-    p: 1.25, borderRadius: '12px', textAlign: 'center',
-    // גרדיאנט 45° עדין מ-bg לשקוף ב-5% - משווה עומק עדין לכרטיסים שטוחים
-    background: `linear-gradient(135deg, ${bg}, ${bg} 55%, transparent 130%)`,
-    border: `1px solid ${border}`,
-    transition: 'transform 0.15s ease, box-shadow 0.2s ease',
-  }}>
-    <Typography sx={{
-      fontSize: 20, fontWeight: 900, color, lineHeight: 1,
-      fontVariantNumeric: 'tabular-nums',
-    }}>{value}</Typography>
-    <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.4 }}>{label}</Typography>
-  </Paper>
-);
-
-// ===== כרטיס קטע (ספציפי לעמוד) =====
-const SectionCard = ({ title, children, isDark }: {
-  title: string; children: React.ReactNode; isDark: boolean;
-}) => (
-  <Paper elevation={0} sx={{
-    p: 2, mb: 2, borderRadius: '16px',
-    border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-    animation: `${fadeIn} 0.35s ease both`,
-  }}>
-    <Typography sx={{ fontSize: 14, fontWeight: 800, mb: 1.5 }}>{title}</Typography>
-    {children}
-  </Paper>
-);
-
-// ===== שורת כותרת אישית בראש כל טאב — מסגור חם אחד, לא עמוס =====
-// מקבלת טקסט עשיר (עם <b> לדגשים) ואייקון. תפקידה להרגיש כמו "שלום אישי",
-// לא כמו דף סטטיסטי. מופיעה לפני תוכן הטאב ומוסיפה אופי לכל טאב.
-const HeroInsight = ({ icon, text, accent, isDark }: {
-  icon: string;
-  text: React.ReactNode;
-  accent: string;
-  isDark: boolean;
-}) => (
-  <Box sx={{
-    display: 'flex', alignItems: 'center', gap: 1.25,
-    px: 1.5, py: 1.25, mb: 1.75, borderRadius: '14px',
-    background: isDark
-      ? `linear-gradient(135deg, ${accent}18, ${accent}06 75%)`
-      : `linear-gradient(135deg, ${accent}12, ${accent}03 75%)`,
-    border: '1px solid', borderColor: isDark ? `${accent}2A` : `${accent}22`,
-    animation: `${fadeIn} 0.4s ease both`,
-  }}>
-    <Box sx={{
-      width: 36, height: 36, flexShrink: 0,
-      borderRadius: '10px', bgcolor: isDark ? `${accent}28` : `${accent}18`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 19,
-    }}>
-      {icon}
-    </Box>
-    <Typography sx={{
-      flex: 1, fontSize: 13, color: 'text.primary', lineHeight: 1.5,
-      '& b': { color: accent, fontWeight: 800 },
-    }}>
-      {text}
-    </Typography>
-  </Box>
-);
+const writeCache = <T,>(key: string, data: T): void => {
+  safeStorage.setJSON(key, { data, at: Date.now() });
+};
 
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const [data, setData] = useState<InsightsData | null>(null);
-  const [priceData, setPriceData] = useState<PriceComparisonData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // מאתחלים מה-cache המקומי - הדף נראה מלא מיד, והרענון רץ ברקע.
+  const [data, setData] = useState<InsightsData | null>(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY));
+  const [priceData, setPriceData] = useState<PriceComparisonData | null>(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY));
+  // loading ראשוני רק אם אין cache - כך אין מסך ריק בפתיחות חוזרות.
+  const [loading, setLoading] = useState(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY) === null);
   const [error, setError] = useState(false);
-  const [tab, setTab] = useState<InsightTab>('price');
+  // הטאב נשמר ב-URL (?tab=lists) כדי ש"חזור" מדף הרשימה יחזיר אותנו לטאב הנכון.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const validTabs: InsightTab[] = ['price', 'lists', 'habits', 'pulse'];
+  const tab: InsightTab = validTabs.includes(tabFromUrl as InsightTab) ? (tabFromUrl as InsightTab) : 'price';
+  const setTab = (v: InsightTab) => {
+    // replace (ולא push) - מעבר טאבים לא יוצר היסטוריה מצטברת
+    setSearchParams(v === 'price' ? {} : { tab: v }, { replace: true });
+  };
   // שם המשתמש הנוכחי - משמש לסימון "אתה" על שורה של המשתמש ברשימת חברי קבוצה
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
   // רשימות שפתוחות להצגת כל החברים (כשיש מעל 4)
@@ -130,23 +64,99 @@ export const InsightsPage = memo(() => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   // שבוע נבחר בגרף המגמה (לחיצה מציגה פרטים)
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
+  // loading של מחירים - לא מראה לודר כשיש cache, רק בדיקה רקעית.
+  const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
+  // שגיאת טעינה של השוואת מחירים - מוצגת במקום "אין נתונים" שמטעה
+  const [priceError, setPriceError] = useState(false);
+  // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר בנפרד כדי שבורר הרשימות
+  // יישאר זמין גם כשהתוצאה מצומצמת לרשימה אחת.
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  // רשימה מלאה של כל הרשימות של המשתמש - נשמר מהטעינה הראשונית.
+  const [allUserLists, setAllUserLists] = useState<{ id: string; name: string; icon: string }[]>([]);
+  // קטגוריה מודגשת בטאב הרגלים - מוגדרת בלחיצה על מוצר מוביל, מסמנת
+  // חיבור ויזואלי בין סקציית המוצרים לסקציית הקטגוריות.
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  // "עכשיו" מחושב פעם אחת בטעינה - טקסט "לפני Xי'" לא חייב להתעדכן בזמן
+  // אמת, והשארת Date.now ברנדר מפרה טהרת רנדר (React Compiler).
+  const [now] = useState(() => Date.now());
 
+  // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
+  const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
+
+  // Safety-net: אם בפתיחת העמוד ה-body במצב scroll-lock (נשאר מפופאפ קודם שלא ניקה), משחררים.
+  // זה מונע מצב שהמשתמש נכנס לטאב המחירים ולא יכול לגלול בכלל.
   useEffect(() => {
-    insightsApi.getInsights().then(setData).catch(() => setError(true)).finally(() => setLoading(false));
-    priceComparisonApi.getComparison().then(setPriceData).catch(() => {});
+    if (document.body.style.position === 'fixed') {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+    }
+  }, []);
+
+  // רענון insights ברקע - תמיד רץ, מעדכן cache מקומי לפעם הבאה.
+  useEffect(() => {
+    insightsApi.getInsights()
+      .then(res => { setData(res); writeCache(INSIGHTS_CACHE_KEY, res); })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
   }, []);
 
+  // טעינה/רענון של השוואת מחירים - רץ כשהטאב 'price', selectedListId או userLocation משתנים.
+  // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
+  useEffect(() => {
+    if (tab !== 'price') return;
+    // השהיה של 300ms - מעבר מהיר בין רשימות/שינויי מיקום לא יפוצצו את השרת בפניות חופפות.
+    // הניקוי בתחילת הטיימר מבטל בקשה קודמת אם הערך השתנה.
+    const timer = window.setTimeout(() => {
+      setPriceLoading(true);
+      setPriceError(false);
+      priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
+        .then(res => {
+          setPriceData(res);
+          writeCache(PRICE_CACHE_KEY, res);
+          // מעדכנים את allUserLists רק כשאין listId ספציפי - ככה כל רשימות המשתמש
+          // נשמרות כששמים סינון ולא מוחלפות בתוצאה המצומצמת של רשימה אחת.
+          if (selectedListId === null && res?.lists && res.lists.length > 0) {
+            setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
+          }
+        })
+        .catch(() => { setPriceError(true); })
+        .finally(() => setPriceLoading(false));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [tab, selectedListId, userLocation]);
+
   if (loading) return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', gap: 2 }}>
-      <Box sx={{ position: 'relative' }}>
-        <CircularProgress size={56} sx={{ color: 'rgba(20,184,166,0.25)' }} />
-        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: `${float} 1.5s ease infinite` }}>
-          <Typography sx={{ fontSize: 22 }}>💡</Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
+      {/* הדר: באנר עליון עם כותרת וטאבים - שלד שזהה למבנה האמיתי */}
+      <Box sx={{
+        background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+        p: '48px 16px 16px',
+        borderRadius: '0 0 24px 24px',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+          <Skeleton variant="rounded" width={140} height={26} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }} />
+          <Box sx={{ width: 40 }} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 0.75, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '12px', p: 0.5 }}>
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} variant="rounded" width="25%" height={34} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '8px' }} />
+          ))}
         </Box>
       </Box>
-      <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>מנתח את הנתונים שלך...</Typography>
+      {/* תוכן: כרטיסי השוואת מחירים - שלד */}
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+        <Skeleton variant="rounded" height={48} sx={{ borderRadius: '12px' }} />
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: '14px' }} />
+        ))}
+      </Box>
     </Box>
   );
 
@@ -186,7 +196,7 @@ export const InsightsPage = memo(() => {
   // פורמט תאריך יחסי קצר
   const formatRelativeDate = (iso: string | null): string => {
     if (!iso) return '—';
-    const diff = Date.now() - new Date(iso).getTime();
+    const diff = now - new Date(iso).getTime();
     const days = Math.floor(Math.abs(diff) / 86_400_000);
     if (diff < 0) return days === 0 ? 'היום' : days === 1 ? 'מחר' : `בעוד ${days}י׳`;
     return days === 0 ? 'היום' : days === 1 ? 'אתמול' : `לפני ${days}י׳`;
@@ -211,9 +221,9 @@ export const InsightsPage = memo(() => {
         position: 'relative', overflow: 'hidden',
         mb: 2,
       }}>
-        {/* ריבון BETA גדול (lg) בצד שמאל פיזית. רכיב BetaRibbon משתמש ב-style prop
-            כדי לעקוף את ה-RTL-flip של MUI, אז "top-left" אכן מופיע בצד השמאלי הוויזואלי. */}
-        <BetaRibbon corner="top-left" offsetTop={4} size="lg" />
+        {/* ריבון BETA גדול בצד שמאל. ה-pill של הציון הוסר — הוא היה מפריע
+            לקריאות הריבון ולא הוסיף ערך (הציון המלא מופיע בטאב "דופק"). */}
+        <BetaRibbon corner="top-left" offsetTop={4} size="xl" />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
@@ -226,17 +236,8 @@ export const InsightsPage = memo(() => {
               הנתונים עשויים להיות חלקיים · עובדים על שיפורים
             </Typography>
           </Box>
-          <Box sx={{
-            display: 'flex', alignItems: 'center', gap: 0.5,
-            bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '14px',
-            px: 1.25, py: 0.75,
-            border: '1px solid rgba(255,255,255,0.15)',
-          }}>
-            <Typography sx={{ fontSize: 14 }}>{scoreEmoji(shoppingScore)}</Typography>
-            <Typography sx={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              <AnimatedNumber value={shoppingScore} />
-            </Typography>
-          </Box>
+          {/* רווח ריק מימין כדי לאזן את כפתור החזרה ולשמור על מרכוז הכותרת */}
+          <Box sx={{ width: 36, flexShrink: 0 }} />
         </Box>
       </Box>
 
@@ -280,7 +281,148 @@ export const InsightsPage = memo(() => {
 
         {/* ===== מחירים ===== */}
         {tab === 'price' && (
-          <PriceComparisonCard data={priceData} isDark={isDark} />
+          !priceData ? (
+            // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
+            priceError ? (
+              <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
+                <Box sx={{ fontSize: 48, mb: 1.5 }}>⚠️</Box>
+                <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 0.5 }}>שגיאה בטעינת נתוני מחירים</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2 }}>בדוק חיבור לאינטרנט ונסה שוב</Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setPriceError(false);
+                    setPriceLoading(true);
+                    priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
+                      .then(res => { setPriceData(res); writeCache(PRICE_CACHE_KEY, res); })
+                      .catch(() => setPriceError(true))
+                      .finally(() => setPriceLoading(false));
+                  }}
+                  sx={{ borderRadius: '12px', px: 3, py: 1, textTransform: 'none', fontWeight: 700 }}
+                >
+                  נסה שוב
+                </Button>
+              </Box>
+            ) : priceLoading ? (
+              // שלד בצורת כרטיסי השוואת מחירים - תחושה שהמסך כבר שם
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                <Skeleton variant="rounded" height={48} sx={{ borderRadius: '12px' }} />
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: '14px' }} />
+                ))}
+              </Box>
+            ) : (
+              <InsightsLoader text="אין נתוני מחירים כרגע" size="md" />
+            )
+          ) : (
+            <>
+              {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
+              {allUserLists.length > 1 && (
+                <Box sx={{ mb: 1.25 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
+                    איזו רשימה להשוות?
+                  </Typography>
+                  <Box sx={{
+                    display: 'flex', flexWrap: 'nowrap', gap: 0.75,
+                    overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+                    pb: 0.5,
+                    '&::-webkit-scrollbar': { display: 'none' },
+                  }}>
+                    {/* כרטיס "כל הרשימות" */}
+                    <Box
+                      onClick={() => { haptic('light'); setSelectedListId(null); }}
+                      sx={{
+                        flexShrink: 0,
+                        px: 1.5, py: 0.75,
+                        borderRadius: '999px',
+                        border: '1.5px solid',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 0.5,
+                        bgcolor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
+                        color: selectedListId === null ? 'white' : 'text.primary',
+                        borderColor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
+                        fontSize: 12, fontWeight: 700,
+                        transition: 'all 0.15s',
+                        '&:active': { transform: 'scale(0.96)' },
+                      }}
+                    >
+                      🛒 כל הרשימות
+                    </Box>
+                    {allUserLists.map(l => (
+                      <Box
+                        key={l.id}
+                        onClick={() => { haptic('light'); setSelectedListId(l.id); }}
+                        sx={{
+                          flexShrink: 0,
+                          px: 1.5, py: 0.75,
+                          borderRadius: '999px',
+                          border: '1.5px solid',
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 0.5,
+                          bgcolor: selectedListId === l.id
+                            ? '#14B8A6'
+                            : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
+                          color: selectedListId === l.id ? 'white' : 'text.primary',
+                          borderColor: selectedListId === l.id
+                            ? '#14B8A6'
+                            : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
+                          fontSize: 12, fontWeight: 700,
+                          transition: 'all 0.15s',
+                          maxWidth: 180,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          '&:active': { transform: 'scale(0.96)' },
+                        }}
+                      >
+                        <span>{l.icon}</span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              {/* אינדיקטור רענון דיסקרטי - מוצג רק כשיש נתונים וגם רענון רקע בפעולה */}
+              {priceLoading && (
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  py: 0.75, mb: 1, borderRadius: '10px',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.08)',
+                  border: '1px solid',
+                  borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)',
+                }}>
+                  <CircularProgress size={12} sx={{ color: '#14B8A6' }} />
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#0D9488' }}>
+                    מרענן מחירים...
+                  </Typography>
+                </Box>
+              )}
+              {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם */}
+              {priceError && !priceLoading && (
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', gap: 1,
+                  px: 1.5, py: 0.85, mb: 1, borderRadius: '10px',
+                  bgcolor: '#F59E0B15', border: '1px solid #F59E0B40',
+                }}>
+                  <Box sx={{ fontSize: 14 }}>⚠️</Box>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#B45309', flex: 1 }}>
+                    לא התקבלו נתונים חדשים - מוצגים נתונים מה-cache
+                  </Typography>
+                </Box>
+              )}
+              <PriceComparisonCard
+                data={priceData}
+                isDark={isDark}
+                locationStatus={locationStatus}
+                onRequestLocation={requestLocation}
+                onResetLocationDenied={resetLocationDenied}
+              />
+            </>
+          )
         )}
 
         {/* ===== רשימות ===== */}
@@ -683,6 +825,21 @@ export const InsightsPage = memo(() => {
           const heroText = hero
             ? <>הכוכב שלך: <b>{hero.name}</b> — קנית <b>×{hero.count}</b></>
             : <>טוב להכיר — עוד מעט תראה את הכוכב שלך</>;
+
+          // אין עדיין נתוני קניות - מסך ריק ברור במקום כרטיסי "0"
+          const hasAnyActivity = stats.totalPurchased > 0 || topProducts.length > 0 || categoryBreakdown.length > 0;
+          if (!hasAnyActivity) {
+            return (
+              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
+                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>🛍️</Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד לא סימנת מוצרים כנקנו</Typography>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
+                  סמן ✅ על מוצרים שקנית, וכאן יופיעו הרגלי הקנייה שלך: מוצרים חוזרים, ימים חזקים, קטגוריות מועדפות
+                </Typography>
+              </Box>
+            );
+          }
+
           return (
           <>
             <HeroInsight icon="🛒" text={heroText} accent="#F59E0B" isDark={isDark} />
@@ -728,19 +885,31 @@ export const InsightsPage = memo(() => {
                     // פודיום: ראשון גבוה יותר
                     const elevation = mapIdx === 0 ? 0 : mapIdx === 1 ? 8 : 14;
                     const accent = mapIdx === 0 ? '#FBBF24' : mapIdx === 1 ? '#A1A1AA' : '#D97706';
+                    const isHighlighted = highlightedCategory === p.category;
                     return (
                       <Box
                         key={mapIdx}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          haptic('light');
+                          setHighlightedCategory(prev => prev === p.category ? null : p.category);
+                        }}
                         sx={{
                           flex: 1, textAlign: 'center', mt: `${elevation}px`,
                           p: 1.25, borderRadius: '12px',
                           bgcolor: isDark ? `${accent}10` : `${accent}08`,
-                          border: '1px solid', borderColor: `${accent}30`,
+                          border: '1px solid', borderColor: isHighlighted ? categoryColor : `${accent}30`,
                           borderBottom: `3px solid ${categoryColor}`,
-                          cursor: 'default',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          userSelect: 'none',
+                          boxShadow: isHighlighted ? `0 3px 14px ${categoryColor}55` : 'none',
                           animation: `${fadeIn} 0.4s ease ${0.1 + mapIdx * 0.08}s both`,
-                          transition: 'transform 0.15s ease',
+                          transition: 'transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease',
                           '&:active': { transform: 'translateY(1px)' },
+                          '&:focus-visible': { boxShadow: `0 0 0 2px ${categoryColor}` },
                         }}
                       >
                         <Typography sx={{ fontSize: 18, mb: 0.25 }}>{medal}</Typography>
@@ -795,17 +964,34 @@ export const InsightsPage = memo(() => {
                     return <Box key={cat.category} sx={{ width: `${cat.percentage}%`, bgcolor: color, transition: 'width 0.8s ease' }} />;
                   })}
                 </Box>
-                {/* רשימה קומפקטית עם נקודה צבעונית + שם + % */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
+                {/* רשימה קומפקטית - לחיצה על שורה מדגישה, וקליק על מוצר למעלה מדגיש את הקטגוריה המתאימה */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
                   {categoryBreakdown.slice(0, 8).map(cat => {
                     const icon = CATEGORY_ICONS[cat.category as keyof typeof CATEGORY_ICONS] || '📦';
                     const color = CATEGORY_COLORS[cat.category as keyof typeof CATEGORY_COLORS] || '#6B7280';
                     const key = CATEGORY_TRANSLATION_KEYS[cat.category as keyof typeof CATEGORY_TRANSLATION_KEYS];
+                    const isActive = highlightedCategory === cat.category;
                     return (
-                      <Box key={cat.category} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                      <Box
+                        key={cat.category}
+                        onClick={() => {
+                          haptic('light');
+                          setHighlightedCategory(prev => prev === cat.category ? null : cat.category);
+                        }}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: 0.75,
+                          px: 0.75, py: 0.55, borderRadius: '8px',
+                          cursor: 'pointer',
+                          bgcolor: isActive ? `${color}14` : 'transparent',
+                          border: '1px solid',
+                          borderColor: isActive ? `${color}40` : 'transparent',
+                          transition: 'background 0.2s, border-color 0.2s',
+                          '&:active': { opacity: 0.8 },
+                        }}
+                      >
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
                         <Typography sx={{ fontSize: 13 }}>{icon}</Typography>
-                        <Typography sx={{ fontSize: 12.5, fontWeight: 600, flex: 1 }}>
+                        <Typography sx={{ fontSize: 12.5, fontWeight: isActive ? 800 : 600, flex: 1 }}>
                           {key ? t(key) : cat.category}
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{cat.count}</Typography>
@@ -822,6 +1008,20 @@ export const InsightsPage = memo(() => {
 
         {/* ===== דופק ===== */}
         {tab === 'pulse' && (() => {
+          // אין עדיין מספיק נתונים - מסך ריק
+          const hasAnyPulseData = shoppingScore > 0 || stats.totalProducts > 0 || (streaks && streaks.currentWeeks > 0);
+          if (!hasAnyPulseData) {
+            return (
+              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
+                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>📊</Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד אין נתוני פעילות</Typography>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
+                  הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה, רצף שבועות, תחזיות וגרף מגמות.
+                </Typography>
+              </Box>
+            );
+          }
+
           // כותרת אישית לטאב דופק — ממקדת על הסטריק או התחזית
           const hasStreak = streaks && streaks.currentWeeks > 0;
           const hasPrediction = shoppingFrequency?.predictedNextDate;
@@ -831,7 +1031,7 @@ export const InsightsPage = memo(() => {
             heroIcon = '🔥';
             heroText = <>אתה <b>{streaks.currentWeeks} שבועות</b> ברצף — המשך כך!</>;
           } else if (hasPrediction) {
-            const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - Date.now()) / 86_400_000));
+            const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - now) / 86_400_000));
             heroIcon = '🛒';
             heroText = days === 0
               ? <>הקנייה הבאה צפויה <b>היום</b></>
@@ -1094,15 +1294,27 @@ export const InsightsPage = memo(() => {
                     return (
                       <Box
                         key={i}
+                        role={count > 0 ? 'button' : undefined}
+                        tabIndex={count > 0 ? 0 : undefined}
+                        aria-label={count > 0 ? `${dayLabels[i]}: ${count} פעולות${isBest ? ' - יום שיא' : ''}` : undefined}
                         onClick={() => {
                           if (count === 0) return;
                           haptic('light');
                           setSelectedWeekday(prev => prev === i ? null : i);
                         }}
+                        onKeyDown={(e) => {
+                          if (count === 0) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            haptic('light');
+                            setSelectedWeekday(prev => prev === i ? null : i);
+                          }
+                        }}
                         sx={{
                           flex: 1, textAlign: 'center',
                           cursor: count > 0 ? 'pointer' : 'default',
                           transition: 'transform 0.12s ease',
+                          '&:focus-visible': { outline: '2px solid #14B8A6', outlineOffset: 2 },
                           '&:active': count > 0 ? { transform: 'scale(0.93)' } : {},
                         }}
                       >

@@ -53,3 +53,6 @@ export {
   canShowSecondaryPopup,
   markPopupShown,
 } from './popupCoordinator';
+
+// localStorage בטוח — try/catch פנימי, API קריא יותר (גם עם JSON)
+export { safeStorage } from './safeStorage';
