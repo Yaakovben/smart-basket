@@ -136,11 +136,25 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
               mb: 1.25, p: 1.25, borderRadius: '12px',
               display: 'flex', alignItems: 'center', gap: 1,
               bgcolor: isDark ? 'rgba(109,40,217,0.12)' : 'rgba(124,58,237,0.07)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(167,139,250,0.3)' : 'rgba(124,58,237,0.2)',
             }}>
-              <CircularProgress size={18} sx={{ color: '#7C3AED' }} />
-              <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-                מבקש גישה למיקום...
-              </Typography>
+              <Box sx={{
+                width: 36, height: 36, borderRadius: '10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: isDark ? 'rgba(167,139,250,0.2)' : 'rgba(124,58,237,0.12)',
+                flexShrink: 0,
+              }}>
+                <CircularProgress size={18} sx={{ color: '#7C3AED' }} />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
+                  מאתר את המיקום שלך
+                </Typography>
+                <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.15 }}>
+                  אם הדפדפן שואל הרשאה — אשר
+                </Typography>
+              </Box>
             </Box>
           )}
 
