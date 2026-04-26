@@ -24,9 +24,23 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
+  // הסכמה מקדימה: המצלמה תיפתח רק אחרי שהמשתמש אישר ספציפית. שקיפות לפני
+  // בקשת ההרשאה של הדפדפן - מסביר מה אנחנו עושים עם הגישה.
+  const [cameraConsent, setCameraConsent] = useState(false);
+  const [galleryConsent, setGalleryConsent] = useState(false);
+
+  // איפוס הסכמות כשנסגר הסורק - הסשן הבא יבקש שוב במפורש
+  useEffect(() => {
+    if (!open) {
+      setCameraConsent(false);
+      setGalleryConsent(false);
+      setError(null);
+      setFileScanError(null);
+    }
+  }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !cameraConsent) return;
     let cancelled = false;
 
     const start = async () => {
@@ -94,7 +108,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
       try { controlsRef.current?.stop(); } catch { /* ignore */ }
       controlsRef.current = null;
     };
-  }, [open, onScan]);
+  }, [open, cameraConsent, onScan]);
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,6 +155,81 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
         </Box>
 
         <Box sx={{ flex: 1, position: 'relative', bgcolor: '#000' }}>
+          {/* מסך הסכמה ראשוני - לפני שאנחנו פותחים מצלמה או גלריה.
+              השקיפות הזו הכרחית ל-PWA: מסביר למה צריך הרשאה לפני שהדפדפן שואל,
+              נותן למשתמש שליטה. בלעדיו - ייתכן שהמשתמש ידחה אוטומטית "כי לא ברור". */}
+          {!cameraConsent && (
+            <Box sx={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 2, px: 3, textAlign: 'center', color: 'white',
+              bgcolor: 'rgba(0,0,0,0.92)',
+              zIndex: 5,
+            }}>
+              <QrCodeScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />
+              <Typography sx={{ fontSize: 18, fontWeight: 800 }}>
+                סריקת QR להצטרפות
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', maxWidth: 320, lineHeight: 1.55 }}>
+                לסריקת קוד QR נשתמש במצלמה של המכשיר שלך, או בתמונה שתבחרו מהגלריה.
+                <br />
+                <b>אין שמירה של תמונות או וידאו</b> — הסריקה מתבצעת מקומית במכשיר בלבד.
+              </Typography>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() => { haptic('medium'); setCameraConsent(true); }}
+                sx={{
+                  maxWidth: 320,
+                  py: 1.4,
+                  borderRadius: '14px',
+                  fontWeight: 800, fontSize: 14.5,
+                  textTransform: 'none',
+                  bgcolor: '#14B8A6',
+                  '&:hover': { bgcolor: '#0D9488' },
+                }}
+              >
+                פתח את המצלמה
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => {
+                  haptic('light');
+                  setGalleryConsent(true);
+                  fileInputRef.current?.click();
+                }}
+                startIcon={<PhotoLibraryIcon />}
+                sx={{
+                  maxWidth: 320,
+                  py: 1.2,
+                  borderRadius: '14px',
+                  fontWeight: 700, fontSize: 13.5,
+                  textTransform: 'none',
+                  color: 'white',
+                  bgcolor: 'rgba(255,255,255,0.12)',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                  '& .MuiButton-startIcon': { marginInlineEnd: '8px' },
+                }}
+              >
+                בחר תמונה מהגלריה במקום
+              </Button>
+              {fileScanError && (
+                <Typography sx={{
+                  fontSize: 12, color: '#FCA5A5', textAlign: 'center',
+                  bgcolor: 'rgba(0,0,0,0.6)', px: 1.5, py: 0.75, borderRadius: '10px',
+                  mt: 1, maxWidth: 320,
+                }}>
+                  {fileScanError}
+                </Typography>
+              )}
+              {galleryConsent && !fileScanError && (
+                <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>
+                  בחירה מהגלריה — לחץ "בחר תמונה" שוב אם צריך
+                </Typography>
+              )}
+            </Box>
+          )}
+
           <video
             ref={videoRef}
             playsInline

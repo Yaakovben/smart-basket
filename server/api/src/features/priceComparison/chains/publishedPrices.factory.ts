@@ -17,16 +17,14 @@
 
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
+import { HttpsCookieAgent } from 'http-cookie-agent/http';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
-import { Agent as HttpsAgent } from 'https';
 
-// סוכן HTTPS עם rejectUnauthorized=false - הפורטל הממשלתי משתמש בשרשרת
-// תעודות שלא תמיד מאומתת ע"י Node (intermediate cert חסר). זה לא תלוי
-// בעיתוי NODE_TLS_REJECT_UNAUTHORIZED ולכן עמיד יותר.
-const insecureHttpsAgent = new HttpsAgent({ rejectUnauthorized: false });
+// HttpsCookieAgent (מ-http-cookie-agent) משלב cookie jar + TLS options ביחד.
+// זה הסוכן שמשתמש axios-cookiejar-support בפנים, אבל קוראים אותו ישירות
+// כדי להעביר rejectUnauthorized=false (הפורטל מחזיר שרשרת תעודות חלקית).
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoreItem, ChainStoresFetchResult,
@@ -79,20 +77,20 @@ function extractCsrf(html: string): string {
 }
 
 async function createAuthenticatedClient(username: string, password: string): Promise<{ client: AxiosInstance; csrftoken: string }> {
-  // looseMode מקל על אכיפת RFC 6265 - הפורטל הממשלתי מחזיר Set-Cookie
-  // לא סטנדרטיים (Domain שגוי / Path מוזר). בלי looseMode tough-cookie
-  // זורק שגיאה והבקשה נופלת.
+  // jar עם looseMode סובלני ל-Set-Cookie לא-סטנדרטיים שמחזיר הפורטל
   const jar = new CookieJar(undefined, { looseMode: true, allowSpecialUseDomain: true });
-  const client = wrapper(
-    axios.create({
-      baseURL: PORTAL_BASE,
-      jar,
-      withCredentials: true,
-      timeout: 60_000,
-      httpsAgent: insecureHttpsAgent,
-      headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
-    })
-  );
+  // סוכן יחיד שמשלב cookie management + TLS bypass. אסור להעביר httpsAgent
+  // ל-axios יחד עם wrapper (זורק שגיאה) - הסוכן הזה תופס את שניהם.
+  const httpsAgent = new HttpsCookieAgent({
+    cookies: { jar },
+    rejectUnauthorized: false,
+  });
+  const client = axios.create({
+    baseURL: PORTAL_BASE,
+    timeout: 60_000,
+    httpsAgent,
+    headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
+  });
 
   // צעד 1: GET /login — session cookie + csrftoken
   const loginPage = await client.get<string>('/login');
