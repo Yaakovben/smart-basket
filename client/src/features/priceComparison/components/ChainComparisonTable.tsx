@@ -18,7 +18,6 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import CloseIcon from '@mui/icons-material/Close';
@@ -595,19 +594,15 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
       {/* בר מיון - רק כשיש לפחות מיקום אחד. מאפשר זול/קרוב/משולב */}
       {hasAnyLocation && <SortBar sortMode={sortMode} setSortMode={setSortMode} isDark={isDark} />}
 
-      {/* הסבר — מופיע רק אם יש רשתות חלקיות */}
+      {/* הסבר קומפקטי - שורה דקה אחת ללא צבעי אזהרה */}
       {chainsWithData.some(c => !c.isComplete) && (
         <Box sx={{
-          display: 'flex', alignItems: 'flex-start', gap: 0.75,
-          px: 2, py: 1,
-          bgcolor: isDark ? 'rgba(245,158,11,0.06)' : 'rgba(245,158,11,0.05)',
+          px: 2, py: 0.6,
           borderBottom: '1px solid',
-          borderColor: isDark ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.15)',
+          borderColor: 'divider',
         }}>
-          <WarningAmberIcon sx={{ fontSize: 15, color: '#F59E0B', flexShrink: 0, mt: 0.2 }} />
-          <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.5 }}>
-            רק רשתות שמצאו את כל <b>{maxMatched}</b> המוצרים מדורגות להשוואה הוגנת.
-            רשתות עם פחות התאמות מוצגות בסוף.
+          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', lineHeight: 1.4 }}>
+            מדורג לפי רשתות עם כל {maxMatched} המוצרים. חלקיות בסוף.
           </Typography>
         </Box>
       )}
