@@ -19,6 +19,7 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import SyncIcon from '@mui/icons-material/Sync';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { TextField, IconButton } from '@mui/material';
 import { Modal } from '../../../global/components';
@@ -160,6 +161,25 @@ export const PriceSyncManager = ({ onClose }: Props) => {
       setBulkOpen(false);
       load();
       setChainBranches(new Map());
+    }
+  };
+
+  // השלמת כתובות חסרות (reverse geocoding לסניפים בלי city/address)
+  const [fillingAddrs, setFillingAddrs] = useState(false);
+  const handleFillAddresses = async () => {
+    haptic('medium');
+    setFillingAddrs(true);
+    setFeedback(null);
+    try {
+      const res = await priceComparisonApi.fillMissingAddresses();
+      setFeedback({
+        msg: res.success ? `✓ ${res.message}` : `שגיאה: ${res.message}`,
+        tone: res.success ? 'info' : 'error',
+      });
+      load();
+      setChainBranches(new Map());
+    } finally {
+      setFillingAddrs(false);
     }
   };
 
@@ -356,7 +376,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               >
                 רענן עכשיו (מחירים + סניפים)
               </Button>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 <Button
                   size="small"
                   onClick={() => setBulkOpen(v => !v)}
@@ -366,7 +386,21 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     '&:hover': { bgcolor: 'rgba(124,58,237,0.05)' },
                   }}
                 >
-                  📥 ייבוא המוני סניפים
+                  📥 ייבוא המוני
+                </Button>
+                <Button
+                  size="small"
+                  onClick={handleFillAddresses}
+                  disabled={fillingAddrs}
+                  startIcon={fillingAddrs ? <CircularProgress size={11} sx={{ color: '#0EA5E9' }} /> : null}
+                  sx={{
+                    fontSize: 11, color: '#0EA5E9', textTransform: 'none',
+                    minHeight: 0, py: 0.4, px: 1,
+                    '&:hover': { bgcolor: 'rgba(14,165,233,0.05)' },
+                    '& .MuiButton-startIcon': { marginInlineEnd: 0.4 },
+                  }}
+                >
+                  🌐 השלם כתובות חסרות
                 </Button>
                 <Button
                   size="small"
@@ -377,7 +411,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     '&:hover': { bgcolor: 'rgba(220,38,38,0.05)' },
                   }}
                 >
-                  🗑️ נקה seed לא-מאומת
+                  🗑️ נקה seed
                 </Button>
               </Box>
 
@@ -669,6 +703,30 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                             </Typography>
                                           )}
                                         </Box>
+                                        {/* כפתור 'פתח במפה' - חשוב מאוד! גם אם הכתובת חסרה,
+                                            אפשר לראות מיד איפה הסניף ב-Google Maps. */}
+                                        {b.hasCoords && (
+                                          <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                              haptic('light');
+                                              window.open(
+                                                `https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lng}`,
+                                                '_blank',
+                                                'noopener,noreferrer'
+                                              );
+                                            }}
+                                            aria-label="פתח במפה"
+                                            title="פתח ב-Google Maps לזיהוי הסניף"
+                                            sx={{
+                                              width: 26, height: 26, flexShrink: 0,
+                                              color: '#1A73E8',
+                                              '&:hover': { bgcolor: 'rgba(26,115,232,0.1)' },
+                                            }}
+                                          >
+                                            <OpenInNewIcon sx={{ fontSize: 13 }} />
+                                          </IconButton>
+                                        )}
                                         <IconButton
                                           size="small"
                                           onClick={() => handleDeleteBranch(c.chainId, b.id)}

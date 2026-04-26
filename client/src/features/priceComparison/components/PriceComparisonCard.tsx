@@ -82,26 +82,6 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         )}
       </Box>
 
-      {/* באנר ברור - גרסה ראשונית. ללקוח שלא יסמוך עיוורת על הנתונים */}
-      <Box sx={{
-        mb: 1.5, px: 1.25, py: 0.85, borderRadius: '10px',
-        bgcolor: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.07)',
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.25)',
-        display: 'flex', alignItems: 'flex-start', gap: 0.75,
-      }}>
-        <Typography sx={{ fontSize: 14, lineHeight: 1, mt: 0.1, flexShrink: 0 }}>⚠️</Typography>
-        <Box sx={{ flex: 1 }}>
-          <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 1.3 }}>
-            גרסה ראשונית · בדוק לפני קנייה
-          </Typography>
-          <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.45, mt: 0.2 }}>
-            ההתאמה בין שמות המוצרים שלך למוצרי הרשת מבוססת על מילים — עשויה להיות לא מדויקת.
-            מומלץ לאמת את המחיר בסניף לפני קנייה.
-          </Typography>
-        </Box>
-      </Box>
-
       {/* ===== באנר מיקום ===== */}
       {/* מופיע רק בטאב מחירים. מעודד הפעלת מיקום כדי להציג סניף קרוב לכל רשת.
           אחרי אישור - הופך לתג קטן "📍 מיקום פעיל". אחרי דחייה - לינק קטן
@@ -192,13 +172,6 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
                   מיקום פעיל
                 </Typography>
               </Box>
-              {/* Disclaimer חשוב - מיקומי הסניפים מ-OSM שיכול להיות לא מדויק */}
-              <Typography sx={{
-                fontSize: 9.5, color: 'text.disabled', lineHeight: 1.5,
-                fontStyle: 'italic',
-              }}>
-                ⚠️ מיקומי הסניפים מבוססים על מאגר OpenStreetMap הציבורי. ייתכנו אי-דיוקים. מומלץ לאמת את מיקום הסניף לפני נסיעה.
-              </Typography>
             </Box>
           )}
 
@@ -322,7 +295,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
       }}>
         <Typography sx={{ fontSize: 9.5, color: 'text.disabled', lineHeight: 1.5 }}>
-          ההתאמה בין שמות המוצרים לרשתות מבוססת על חיפוש מילים - עשויה להיות לא מדויקת. מחירים מתעדכנים כל 6 שעות.
+          מחירים מתעדכנים אוטומטית. מומלץ לאמת בסניף לפני קנייה.
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
           <Typography sx={{ fontSize: 9.5, color: 'text.disabled' }}>

@@ -110,6 +110,17 @@ export const priceComparisonApi = {
     }
   },
 
+  // השלמת כתובות חסרות (reverse geocoding דרך Nominatim, עד 50 לריצה)
+  async fillMissingAddresses(): Promise<{ success: boolean; message?: string; updated?: number; checked?: number }> {
+    try {
+      const r = await apiClient.post('/price-comparison/branches/fill-addresses', null, { timeout: 90_000 });
+      return r.data;
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return { success: false, message: e.response?.data?.message || e.message };
+    }
+  },
+
   // מחיקת סניפים לא-מאומתים (כל מה שאינו OSM או הוספה ידנית)
   async cleanupUnverifiedBranches(): Promise<{ success: boolean; message?: string; deletedCount?: number }> {
     try {
