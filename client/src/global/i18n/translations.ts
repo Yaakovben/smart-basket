@@ -189,7 +189,6 @@ type TranslationKey =
   | 'catMeat'
   | 'catBeverages'
   | 'catSweets'
-  | 'catNuts'
   | 'catFrozen'
   | 'catCanned'
   | 'catSpices'
@@ -354,6 +353,8 @@ type TranslationKey =
   | 'quickAddPlaceholder'
   | 'searchProducts'
   // What's New
+  | 'whatsNewTitle'
+  | 'letsStart'
   // Time formatting
   | 'timeNow'
   | 'timeMinutesAgo'
@@ -435,9 +436,6 @@ type TranslationKey =
   // Daily Faith
   | 'dailyFaithTitle'
   | 'dailyFaithReadButton'
-  | 'dailyFaithShareAria'
-  | 'dailyFaithShareLine'
-  | 'dailyFaithShareFooter'
   | 'dailyFaithManagerTitle'
   | 'dailyFaithManagerSubtitle'
   | 'dailyFaithManagerHint'
@@ -640,7 +638,6 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'בשר',
     catBeverages: 'משקאות',
     catSweets: 'ממתקים',
-    catNuts: 'פיצוחים',
     catFrozen: 'קפואים',
     catCanned: 'שימורים ויבשים',
     catSpices: 'תבלינים ורטבים',
@@ -804,6 +801,8 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'הוספת מוצר מהירה...',
     searchProducts: 'חיפוש מוצרים...',
     // What's New
+    whatsNewTitle: 'מה חדש?',
+    letsStart: 'מעולה, בואו נתחיל!',
     // Time formatting
     timeNow: 'עכשיו',
     timeMinutesAgo: 'לפני {count} דק׳',
@@ -881,9 +880,6 @@ export const translations: Record<Language, Translations> = {
     owner: 'בעלים',
     dailyFaithTitle: 'החיזוק היומי',
     dailyFaithReadButton: 'קראתי והתחזקתי',
-    dailyFaithShareAria: 'שתף',
-    dailyFaithShareLine: '✨ החיזוק היומי שלי:',
-    dailyFaithShareFooter: 'מתוך SmartBasket 🧺',
     dailyFaithManagerTitle: 'ניהול משפטי חיזוק',
     dailyFaithManagerSubtitle: 'משפטי חיזוק יומיים',
     dailyFaithManagerHint: 'משפט אקראי יוצג למשתמשים פעם ביום',
@@ -1083,7 +1079,6 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'Meat',
     catBeverages: 'Beverages',
     catSweets: 'Sweets',
-    catNuts: 'Nuts & Seeds',
     catFrozen: 'Frozen',
     catCanned: 'Canned & Dry',
     catSpices: 'Spices & Sauces',
@@ -1246,6 +1241,8 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Quick add product...',
     searchProducts: 'Search products...',
     // What's New
+    whatsNewTitle: "What's New?",
+    letsStart: "Great, let's start!",
     // Time formatting
     timeNow: 'Now',
     timeMinutesAgo: '{count}m ago',
@@ -1322,9 +1319,6 @@ export const translations: Record<Language, Translations> = {
     owner: 'Owner',
     dailyFaithTitle: 'Daily Inspiration',
     dailyFaithReadButton: 'I Read & Was Strengthened',
-    dailyFaithShareAria: 'Share',
-    dailyFaithShareLine: '✨ My daily inspiration:',
-    dailyFaithShareFooter: 'From SmartBasket 🧺',
     dailyFaithManagerTitle: 'Manage Inspirational Quotes',
     dailyFaithManagerSubtitle: 'Daily Inspirational Quotes',
     dailyFaithManagerHint: 'A random quote appears to users once a day',
@@ -1524,7 +1518,6 @@ export const translations: Record<Language, Translations> = {
     catMeat: 'Мясо',
     catBeverages: 'Напитки',
     catSweets: 'Сладости',
-    catNuts: 'Орехи и семечки',
     catFrozen: 'Замороженные',
     catCanned: 'Консервы и крупы',
     catSpices: 'Специи и соусы',
@@ -1687,6 +1680,8 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Быстро добавить товар...',
     searchProducts: 'Поиск товаров...',
     // What's New
+    whatsNewTitle: 'Что нового?',
+    letsStart: 'Отлично, начнём!',
     // Time formatting
     timeNow: 'Сейчас',
     timeMinutesAgo: '{count} мин. назад',
@@ -1763,9 +1758,6 @@ export const translations: Record<Language, Translations> = {
     owner: 'Владелец',
     dailyFaithTitle: 'Вдохновение дня',
     dailyFaithReadButton: 'Прочитал и укрепился',
-    dailyFaithShareAria: 'Поделиться',
-    dailyFaithShareLine: '✨ Моё вдохновение дня:',
-    dailyFaithShareFooter: 'Из SmartBasket 🧺',
     dailyFaithManagerTitle: 'Управление цитатами',
     dailyFaithManagerSubtitle: 'Ежедневные вдохновляющие цитаты',
     dailyFaithManagerHint: 'Случайная цитата показывается пользователям раз в день',

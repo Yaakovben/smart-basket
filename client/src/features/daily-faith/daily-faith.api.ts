@@ -7,10 +7,8 @@ export interface DailyFaith {
 }
 
 export const dailyFaithApi = {
-  // excludeIds: מזהי ציטוטים שהלקוח כבר ראה - השרת ישתדל לא להחזיר אותם
-  async getRandom(excludeIds: string[] = []): Promise<DailyFaith | null> {
-    const query = excludeIds.length > 0 ? `?exclude=${excludeIds.join(',')}` : '';
-    const response = await apiClient.get<{ data: DailyFaith | null }>(`/daily-faith/random${query}`);
+  async getRandom(): Promise<DailyFaith | null> {
+    const response = await apiClient.get<{ data: DailyFaith | null }>('/daily-faith/random');
     return response.data.data;
   },
   async getAll(): Promise<DailyFaith[]> {

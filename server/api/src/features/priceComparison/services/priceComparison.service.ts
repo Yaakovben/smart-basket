@@ -3,8 +3,6 @@ import { ListDAL } from '../../../dal';
 import { Price } from '../models/Price.model';
 import { PriceDAL } from '../dal/price.dal';
 import { normalizeProductName, stemHebrew } from '../chains';
-import { getRegisteredChains } from './priceSync.service';
-import { findNearestBranch, type NearestBranch, type UserLocation } from './branches.service';
 
 export interface PriceMatch {
   productId: string;
@@ -38,36 +36,15 @@ export interface PriceListGroup {
   matches: PriceMatch[];        // הפירוט (כל הפריטים, זוהו + לא זוהו)
 }
 
-// סיכום עלות סל לרשת אחת - משמש לתצוגה השוואתית בין רשתות
-export interface PriceChainTotal {
-  chainId: string;
-  chainName: string;
-  total: number;
-  matchedCount: number;
-  unmatchedCount: number;
-  isCheapest: boolean;
-  isComplete: boolean;
-  savings: number;
-  matches: PriceMatch[];
-  // true אם יש לרשת נתונים במאגר. false = הפורטל של הרשת לא פרסם היום.
-  // מאפשר ל-UI להבדיל בין "אין התאמות" (הרשת קיימת אבל מוצרי המשתמש לא נמצאו)
-  // לבין "אין נתונים היום" (הרשת לא פרסמה קובץ היום)
-  hasData: boolean;
-  // הסניף הקרוב ביותר למיקום המשתמש (כשהמשתמש שיתף מיקום).
-  // undefined כשהמשתמש לא שיתף מיקום או כשאין לרשת סניפים ב-seed.
-  nearestBranch?: NearestBranch;
-}
-
 export interface PriceComparisonData {
   enabled: boolean;
-  chainName: string;            // הרשת ה"ראשית" (הזולה ביותר) - לתאימות אחורה
-  totalPrices: number;          // כמה מוצרים יש במאגר של הרשת הראשית
-  lists: PriceListGroup[];      // חלוקה לפי רשימה (ע"פ הרשת הראשית)
-  grandTotal: number | null;    // סה"כ כל הרשימות (בערך של הרשת הראשית)
-  totalMatched: number;
-  totalUnmatched: number;
-  totalPending: number;
-  chainTotals: PriceChainTotal[]; // השוואה בין כל הרשתות הפעילות (ממוין מהזולה ליקרה)
+  chainName: string;
+  totalPrices: number;          // כמה מוצרים יש במאגר הרשת
+  lists: PriceListGroup[];      // חלוקה לפי רשימה
+  grandTotal: number | null;    // סה"כ כל הרשימות
+  totalMatched: number;         // סה"כ פריטים שזוהו בכל הרשימות
+  totalUnmatched: number;       // סה"כ פריטים שלא זוהו
+  totalPending: number;         // סה"כ פריטים שטרם נקנו
   disclaimer: string;
   lastUpdatedISO: string | null;
   sourceName: string;
@@ -76,16 +53,14 @@ export interface PriceComparisonData {
 
 const BETA_CHAIN_ID = 'osher_ad';
 const BETA_CHAIN_NAME = 'אושר עד';
-import type { ChainId } from '../models/Price.model';
 const SOURCE_NAME = 'פורטל שקיפות המחירים הממשלתי';
 const SOURCE_URL = 'https://url.publishedprices.co.il';
 
 const BASE_DISCLAIMER = 'הנתונים מגיעים ממאגר השקיפות הציבורי של אושר עד. הפיצ\'ר בפיתוח - ההתאמה בין שמות המוצרים שלך למוצרי הרשת מבוססת על התאמת מילים ועשויה להיות לא מדויקת. מחירים מתעדכנים מדי יום.';
 
-// מקבל את התאריך של הרשומה האחרונה שעודכנה במאגר — אינדיקטור לטריות הנתונים.
-// בודק על פני כל הרשתות, לא רק הראשית.
+// מקבל את התאריך של הרשומה האחרונה שעודכנה במאגר — אינדיקטור לטריות הנתונים
 async function getLastUpdatedISO(): Promise<string | null> {
-  const latest = await Price.findOne({}).sort({ updatedAt: -1 }).select('updatedAt').lean();
+  const latest = await Price.findOne({ chainId: BETA_CHAIN_ID }).sort({ updatedAt: -1 }).select('updatedAt').lean();
   return latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
 }
 
@@ -109,23 +84,8 @@ const CATEGORY_MODIFIERS = new Set([
 // זה מאפשר לקשט את אותה "התאמת שם" להרבה מוצרים ללא שאילתות חוזרות.
 type NameMatch = Omit<PriceMatch, 'productId' | 'userProductName' | 'userQuantity'>;
 
-// פונקציה עזר: מחזירה את הטוקנים המשמעותיים של שם לשימוש בחיפוש המוני.
-// חשוף כדי שה-caller יוכל להזמין batch של candidates פעם אחת.
-function getSearchTokensForName(userName: string): string[] {
-  const normalized = normalizeProductName(userName);
-  const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
-  const meaningful = meaningfulTokens(rawTokens);
-  return meaningful.slice(0, 3);
-}
-
-// ניסיון התאמה של שם מנורמל בודד למאגר (ללא productId/quantity).
-// preFetchedCandidates אופציונלי: אם מועבר, חוסך את הפנייה ל-DB (מאפשר batching בקריאות רבות).
-async function matchNormalizedName(
-  userName: string,
-  chainId: ChainId = BETA_CHAIN_ID,
-  chainName: string = BETA_CHAIN_NAME,
-  preFetchedCandidates?: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>,
-): Promise<NameMatch> {
+// ניסיון התאמה של שם מנורמל בודד למאגר (ללא productId/quantity)
+async function matchNormalizedName(userName: string): Promise<NameMatch> {
   const normalized = normalizeProductName(userName);
   const rawTokens = normalized ? normalized.split(' ').filter(Boolean) : [];
   const meaningful = meaningfulTokens(rawTokens);
@@ -134,8 +94,8 @@ async function matchNormalizedName(
   const unmatched: NameMatch = {
     normalizedName: normalized,
     matched: false,
-    chainId,
-    chainName,
+    chainId: BETA_CHAIN_ID,
+    chainName: BETA_CHAIN_NAME,
     itemName: '',
     price: 0,
     barcode: '',
@@ -146,25 +106,26 @@ async function matchNormalizedName(
 
   if (meaningful.length === 0) return unmatched;
 
+  // "טוקן עוגן" = המילה הארוכה ביותר של המשתמש. מילים ארוכות הן יותר ספציפיות
+  // בעברית (קנולה > שמן, עגבנייה > ירק), ולכן חייבות להופיע במוצר של הרשת.
   const longestUserToken = meaningful.reduce((a, b) => (a.length >= b.length ? a : b));
   const longestUserStem = stemHebrew(longestUserToken);
 
+  // מפה מ-stem → מילה מקורית של המשתמש. מאפשרת התאמה של וריאנטים:
+  // "גבינה" של המשתמש נתפסת כ-"גבינת" ברשת כי שניהם נגזרים ל-"גבינ".
   const userStemMap = new Map<string, string>();
   for (const t of meaningful) userStemMap.set(stemHebrew(t), t);
 
+  // סף קשיח: לפחות 2 טוקנים תואמים (או כולם אם יש פחות מ-2 במשתמש).
   const minRequiredMatches = Math.min(meaningful.length, 2);
 
-  let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>;
-  if (preFetchedCandidates) {
-    // הצרכן סיפק candidates - סינון לפי רשת יחידה אם צוינה
-    candidates = preFetchedCandidates.filter(c => c.chainId === chainId);
-  } else {
-    const searchTokens = meaningful.slice(0, 3);
-    try {
-      candidates = await PriceDAL.findByAnyToken(searchTokens, chainId, 60);
-    } catch {
-      return unmatched;
-    }
+  // שאילתה אחת עם $or על עד 3 טוקנים (במקום 3 שאילתות מקבילות)
+  const searchTokens = meaningful.slice(0, 3);
+  let candidates: Awaited<ReturnType<typeof PriceDAL.findByAnyToken>> = [];
+  try {
+    candidates = await PriceDAL.findByAnyToken(searchTokens, BETA_CHAIN_ID, 60);
+  } catch {
+    return unmatched;
   }
   if (candidates.length === 0) return unmatched;
 
@@ -264,10 +225,7 @@ async function matchNormalizedName(
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 // מטמון קצר-טווח לכל משתמש - חוסך חישובים חוזרים בפתיחות מהירות של העמוד
-// מטמון לכל משתמש: 3 דקות. הנתונים משתנים רק בסנכרון (כל 6 שעות),
-// אז אין טעם לחשב מחדש מיד כל פעם. חישוב מחדש על פתיחת הרשימות/מחיקת פריט
-// נעשה דרך invalidateUser() מ-lists/products controllers.
-const CACHE_TTL_MS = 3 * 60_000;
+const CACHE_TTL_MS = 60_000;
 const userCache = new Map<string, { data: PriceComparisonData; expiresAt: number }>();
 
 // מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר
@@ -275,33 +233,13 @@ export function invalidateUser(userId: string): void {
   userCache.delete(userId);
 }
 
-// מנקה את כל מטמון המשתמשים - נקרא אחרי סנכרון גלובלי כדי שכל המשתמשים
-// יראו מיד את הנתונים החדשים (מחירים וסניפים) בלי להמתין 3 דק'.
-export function invalidateAllUsers(): void {
-  userCache.clear();
-}
-
-// תובנות השוואת מחירים עבור משתמש.
-// filterListId אופציונלי - אם מועבר, מחשב רק את המוצרים של הרשימה הזו.
-// userLocation אופציונלי - אם מועבר, מצרף לכל רשת את הסניף הקרוב ביותר ואת המרחק.
-export async function getComparisonForUser(
-  userId: string,
-  filterListId?: string,
-  userLocation?: UserLocation
-): Promise<PriceComparisonData> {
-    // מפתח מטמון שונה לכל שילוב user+list+location(מעוגל ל-500מ') כדי למנוע ערבוב.
-    // עיגול המיקום ל-3 ספרות אחרי הנקודה (~110 מ') מונע פסילת מטמון על כל תזוזה קטנה.
-    const locKey = userLocation
-      ? `:${userLocation.lat.toFixed(3)},${userLocation.lng.toFixed(3)}`
-      : '';
-    const cacheKey = filterListId ? `${userId}:${filterListId}${locKey}` : `${userId}${locKey}`;
-    const cached = userCache.get(cacheKey);
+// תובנות השוואת מחירים עבור משתמש — חלוקה לפי רשימה
+export async function getComparisonForUser(userId: string): Promise<PriceComparisonData> {
+    // מטמון: אם הבקשה הקודמת הייתה לאחרונה, מחזירים מייד
+    const cached = userCache.get(userId);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
 
-    // סופרים את כל המאגר — לא רק רשת אחת. אם לפחות רשת אחת יש בה נתונים,
-    // הפיצ'ר נחשב "זמין" ומציגים את ההשוואה.
-    const allChainsCounts = await PriceDAL.getActiveChainsWithCounts();
-    const totalPrices = allChainsCounts.reduce((sum, c) => sum + c.count, 0);
+    const totalPrices = await PriceDAL.countByChain(BETA_CHAIN_ID);
     const lastUpdatedISO = totalPrices > 0 ? await getLastUpdatedISO() : null;
 
     const baseResponse = {
@@ -315,11 +253,10 @@ export async function getComparisonForUser(
       totalMatched: 0,
       totalUnmatched: 0,
       totalPending: 0,
-      chainTotals: [] as PriceChainTotal[],
     };
 
     const cacheAndReturn = (data: PriceComparisonData): PriceComparisonData => {
-      userCache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+      userCache.set(userId, { data, expiresAt: Date.now() + CACHE_TTL_MS });
       return data;
     };
 
@@ -333,22 +270,12 @@ export async function getComparisonForUser(
       });
     }
 
-    const allLists = await ListDAL.findUserLists(userId);
-    if (allLists.length === 0) {
-      return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
-    }
-
-    // אם ביקשו רשימה ספציפית - מסננים. אחרת - כל הרשימות של המשתמש.
-    const lists = filterListId
-      ? allLists.filter(l => String(l._id) === filterListId)
-      : allLists;
-
+    const lists = await ListDAL.findUserLists(userId);
     if (lists.length === 0) {
-      // רשימה שהתבקשה לא שייכת למשתמש או לא קיימת
       return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
     }
 
-    // שליפת כל המוצרים שטרם נקנו (רק ברשימות שנבחרו)
+    // שליפת כל המוצרים שטרם נקנו בכל הרשימות, ב-query אחד (יעיל)
     const listIds = lists.map(l => l._id);
     const pendingProducts = await Product.find({
       listId: { $in: listIds },
@@ -438,173 +365,6 @@ export async function getComparisonForUser(
     const totalPending = listGroups.reduce((s, g) => s + g.pendingCount, 0);
     const grandTotal = listGroups.reduce((s, g) => s + g.estimatedTotal, 0);
 
-    // ======================================================================
-    // השוואה רב-רשתית: לכל רשת פעילה, מחשבים את סך הסל במקביל.
-    // משתמשים ב-uniqueNames (שכבר יש לנו) כדי לרוץ match לכל צירוף שם×רשת.
-    // ======================================================================
-    // לוקחים את כל הרשתות הרשומות (מה-adapters), לא רק אלה עם נתונים.
-    // כך אושר עד וחצי-חינם יופיעו ב-UI גם ביום שהפורטל שלהן לא פרסם,
-    // עם אינדיקציה ברורה "אין נתונים היום".
-    const registered = getRegisteredChains();
-    const activeCountsMap = new Map(
-      (await PriceDAL.getActiveChainsWithCounts()).map(c => [c.chainId, c.count])
-    );
-    const activeChains = registered.map(r => ({
-      chainId: r.chainId as ChainId,
-      chainName: r.chainName,
-      hasData: (activeCountsMap.get(r.chainId as ChainId) ?? 0) > 0,
-    }));
-
-    // אופטימיזציה: פעם אחת לכל שם ייחודי - שאילתה אחת שמחזירה candidates מכל הרשתות יחד.
-    // חוסך N×M שאילתות (ראשית קודם הלך ל-BETA_CHAIN_ID בשאילתה נפרדת; עכשיו שאילתה אחת
-    // לכל שם מכסה את כולן). limit גבוה כי candidates מ-10 רשתות צריכים מקום.
-    const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
-    await Promise.all(
-      uniqueNames.map(async name => {
-        const tokens = getSearchTokensForName(name);
-        if (tokens.length === 0) {
-          candidatesByName.set(name, []);
-          return;
-        }
-        try {
-          const items = await PriceDAL.findByAnyToken(tokens, undefined, 60 * Math.max(1, activeChains.length));
-          candidatesByName.set(name, items);
-        } catch {
-          candidatesByName.set(name, []);
-        }
-      })
-    );
-
-    const chainTotals: PriceChainTotal[] = await Promise.all(
-      activeChains.map(async ({ chainId, chainName, hasData }) => {
-        // הסניף הקרוב לרשת זו (אם המשתמש שיתף מיקום ויש לרשת סניפים ב-seed).
-        // מוצמד גם לרשתות ללא נתונים היום - המשתמש עדיין יכול לראות "הסניף הקרוב ביקרתי".
-        const nearestBranch = userLocation ? (await findNearestBranch(chainId, userLocation)) ?? undefined : undefined;
-
-        // אם אין לרשת נתונים היום - מחזירים מיד כרטיס ריק (חוסך חישובים)
-        if (!hasData) {
-          return {
-            chainId, chainName,
-            total: 0, matchedCount: 0,
-            unmatchedCount: pendingProducts.length,
-            isCheapest: false, isComplete: false, savings: 0,
-            hasData: false,
-            nearestBranch,
-            matches: pendingProducts.map(p => ({
-              productId: String(p._id),
-              userProductName: p.name,
-              userQuantity: p.quantity || 1,
-              normalizedName: '',
-              matched: false,
-              chainId, chainName,
-              itemName: '', price: 0, barcode: '',
-              matchConfidence: 0,
-              matchedTokens: [], userTokens: [],
-            })),
-          };
-        }
-        // לרשת "הראשית" (BETA) - יש לנו כבר matchCache, לא לבצע פעם שנייה
-        const isPrimaryChain = chainId === BETA_CHAIN_ID;
-
-        const chainMatchCache = isPrimaryChain
-          ? nameMatchCache
-          : await (async () => {
-              const cache = new Map<string, NameMatch>();
-              await Promise.all(
-                uniqueNames.map(async name => {
-                  try {
-                    // משתמשים ב-candidates שכבר הובאו - אין פנייה ל-DB
-                    cache.set(name, await matchNormalizedName(name, chainId, chainName, candidatesByName.get(name) || []));
-                  } catch {
-                    cache.set(name, {
-                      normalizedName: '',
-                      matched: false,
-                      chainId,
-                      chainName,
-                      itemName: '',
-                      price: 0,
-                      barcode: '',
-                      matchConfidence: 0,
-                      matchedTokens: [],
-                      userTokens: [],
-                    });
-                  }
-                })
-              );
-              return cache;
-            })();
-
-        let chainTotal = 0;
-        let matched = 0;
-        let unmatched = 0;
-        // בונים את הרשימה המפורטת של כל המוצרים של המשתמש עם המחיר ברשת הזו
-        const chainMatches: PriceMatch[] = pendingProducts.map(p => {
-          const nameMatch = chainMatchCache.get(p.name)!;
-          if (nameMatch.matched) {
-            chainTotal += nameMatch.price * (p.quantity || 1);
-            matched += 1;
-          } else {
-            unmatched += 1;
-          }
-          return {
-            ...nameMatch,
-            productId: String(p._id),
-            userProductName: p.name,
-            userQuantity: p.quantity || 1,
-          };
-        });
-        // מיון בתוך הרשת: קודם זוהו (לפי סכום יורד), אחר כך לא זוהו
-        chainMatches.sort((a, b) => {
-          if (a.matched !== b.matched) return a.matched ? -1 : 1;
-          if (a.matched) return (b.price * b.userQuantity) - (a.price * a.userQuantity);
-          return 0;
-        });
-
-        return {
-          chainId,
-          chainName,
-          total: round2(chainTotal),
-          matchedCount: matched,
-          unmatchedCount: unmatched,
-          isCheapest: false,
-          isComplete: false,
-          savings: 0,
-          hasData: true,
-          nearestBranch,
-          matches: chainMatches,
-        };
-      })
-    );
-
-    // מציאת מספר ההתאמות הגבוה ביותר - זו "הנקודת היחוס" של סל שלם.
-    // "הכי זול" יוענק רק לרשת שיש לה את מספר ההתאמות הזה.
-    // כך נמנעים מהטעייה שבה רשת עם מעט התאמות נראית זולה בגלל החוסר.
-    const maxMatched = chainTotals.reduce((m, c) => Math.max(m, c.matchedCount), 0);
-    if (maxMatched > 0) {
-      // מסמנים "שלם" כל רשת עם מקסימום התאמות
-      for (const ct of chainTotals) {
-        ct.isComplete = ct.matchedCount === maxMatched;
-      }
-      // מוצאים הזול ביותר רק בין הרשתות השלמות
-      const completeChains = chainTotals.filter(c => c.isComplete);
-      const sorted = [...completeChains].sort((a, b) => a.total - b.total);
-      const cheapestId = sorted[0].chainId;
-      const maxTotal = sorted[sorted.length - 1].total;
-      for (const ct of chainTotals) {
-        if (ct.chainId === cheapestId) ct.isCheapest = true;
-        // חיסכון משוער - רק ברשתות שלמות (לא הוגן להשוות לא שלמה)
-        if (ct.isComplete) ct.savings = round2(maxTotal - ct.total);
-      }
-    }
-    // מיון: רשתות שלמות קודם (מהזולה ליקרה), אח"כ חלקיות לפי מספר התאמות
-    chainTotals.sort((a, b) => {
-      if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
-      if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
-      if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
-      if (a.isComplete) return a.total - b.total;
-      return b.matchedCount - a.matchedCount;
-    });
-
     return cacheAndReturn({
       ...baseResponse,
       enabled: true,
@@ -613,7 +373,6 @@ export async function getComparisonForUser(
       grandTotal: totalMatched > 0 ? round2(grandTotal) : null,
       totalMatched,
       totalUnmatched,
-      totalPending,
-      chainTotals,
-    });
+    totalPending,
+  });
 }

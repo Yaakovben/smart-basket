@@ -9,9 +9,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LoginIcon from '@mui/icons-material/Login';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DailyFaithManager } from '../../daily-faith';
-import { PriceSyncManager } from './PriceSyncManager';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
@@ -87,7 +85,6 @@ export const AdminDashboard = () => {
   const [userFilter, setUserFilter] = useState<UserFilter>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [faithOpen, setFaithOpen] = useState(false);
-  const [priceSyncOpen, setPriceSyncOpen] = useState(false);
   const {
     activities,
     usersWithLoginInfo,
@@ -187,7 +184,7 @@ export const AdminDashboard = () => {
               {t('adminDashboard')}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Box
             onClick={() => setFaithOpen(true)}
             role="button"
@@ -198,33 +195,14 @@ export const AdminDashboard = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
-            <AutoStoriesIcon sx={{ fontSize: 26 }} />
-          </Box>
-          <Box
-            onClick={() => setPriceSyncOpen(true)}
-            role="button"
-            tabIndex={0}
-            aria-label="ניהול מאגר מחירים"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              width: 44,
-              height: 44,
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-              '&:active': { transform: 'scale(0.92)' },
-            }}
-          >
-            <StorefrontIcon sx={{ fontSize: 26 }} />
+            <AutoStoriesIcon sx={{ fontSize: 20 }} />
           </Box>
           <Box
             onClick={handleRefresh}
@@ -235,15 +213,15 @@ export const AdminDashboard = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               '&:active': { transform: 'scale(0.92)' },
             }}
           >
             <RefreshIcon sx={{
-              fontSize: 26,
+              fontSize: 20,
               animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
             }} />
           </Box>
@@ -405,7 +383,6 @@ export const AdminDashboard = () => {
       </Box>
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
-      {priceSyncOpen && <PriceSyncManager onClose={() => setPriceSyncOpen(false)} />}
     </Box>
   );
 };

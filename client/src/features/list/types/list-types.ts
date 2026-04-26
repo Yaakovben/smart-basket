@@ -85,9 +85,7 @@ export interface UseListReturn {
   setOpenItemId: (id: string | null) => void;
   setAddError: (error: string) => void;
 
-  // currentCenterX/Y אופציונליים: הקומפוננטה מעבירה את המיקום הנוכחי בפועל
-  // של ה-FAB (אחרי תנועות קודמות) כדי למנוע קפיצה בחציית סף הגרירה.
-  handleDragStart: (clientX: number, clientY: number, currentCenterX?: number, currentCenterY?: number) => void;
+  handleDragStart: (clientX: number, clientY: number) => void;
   handleDragMove: (clientX: number, clientY: number) => void;
   handleDragEnd: () => void;
   dismissHint: () => void;

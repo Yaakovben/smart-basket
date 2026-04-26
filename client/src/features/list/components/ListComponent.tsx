@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useMemo } from 'react';
+import { memo, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Box, Typography, Button, Chip, keyframes } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -83,38 +83,33 @@ const makeConfetti = (id: number, direction: 'up' | 'down'): Particle => {
   };
 };
 
-// בונה רשימת חלקיקים חד-פעמית. מוצא מחוץ לקומפוננטה כדי שלא ייקרא ב-render.
-const buildParticles = (): Particle[] => [
-  // 20 חלקיקים עולים + 20 יורדים
-  ...Array.from({ length: 20 }, (_, i) => makeConfetti(i, 'up')),
-  ...Array.from({ length: 20 }, (_, i) => makeConfetti(20 + i, 'down')),
-  // 8 אמוג'ים
-  ...Array.from({ length: 8 }, (_, i): Particle => ({
-    id: 40 + i, type: 'emoji', direction: i % 2 === 0 ? 'up' : 'down',
-    left: `${5 + Math.random() * 90}%`,
-    delay: `${0.2 + Math.random() * 0.6}s`,
-    duration: `${2.5 + Math.random() * 1}s`,
-    color: '', w: 0, h: 0, round: false,
-    emoji: EMOJIS[i % EMOJIS.length]
-  })),
-  // 12 ניצוצות
-  ...Array.from({ length: 12 }, (_, i): Particle => {
-    const size = 3 + Math.random() * 4;
-    return {
-      id: 48 + i, type: 'sparkle', direction: 'up',
-      left: `${Math.random() * 100}%`,
-      top: `${20 + Math.random() * 60}%`,
-      delay: `${Math.random() * 1.5}s`,
-      duration: `${1 + Math.random() * 1}s`,
-      color: '#FBBF24', w: size, h: size, round: true
-    };
-  })
-];
-
 const CelebrationOverlay = memo(() => {
-  // useState עם initializer מבטיח שהחלקיקים נבנים רק פעם אחת ומחוץ ל-render-עצמו.
-  // זה הפתרון הרשמי של React לערכים שדורשים פונקציה לא-טהורה (Math.random).
-  const [particles] = useState<Particle[]>(buildParticles);
+  const particles = useMemo((): Particle[] => [
+    // 20 חלקיקים עולים + 20 יורדים
+    ...Array.from({ length: 20 }, (_, i) => makeConfetti(i, 'up')),
+    ...Array.from({ length: 20 }, (_, i) => makeConfetti(20 + i, 'down')),
+    // 8 אמוג'ים
+    ...Array.from({ length: 8 }, (_, i): Particle => ({
+      id: 40 + i, type: 'emoji', direction: i % 2 === 0 ? 'up' : 'down',
+      left: `${5 + Math.random() * 90}%`,
+      delay: `${0.2 + Math.random() * 0.6}s`,
+      duration: `${2.5 + Math.random() * 1}s`,
+      color: '', w: 0, h: 0, round: false,
+      emoji: EMOJIS[i % EMOJIS.length]
+    })),
+    // 12 ניצוצות
+    ...Array.from({ length: 12 }, (_, i): Particle => {
+      const size = 3 + Math.random() * 4;
+      return {
+        id: 48 + i, type: 'sparkle', direction: 'up',
+        left: `${Math.random() * 100}%`,
+        top: `${20 + Math.random() * 60}%`,
+        delay: `${Math.random() * 1.5}s`,
+        duration: `${1 + Math.random() * 1}s`,
+        color: '#FBBF24', w: size, h: size, round: true
+      };
+    })
+  ], []);
 
   const getAnim = (p: Particle) =>
     p.type === 'sparkle'
@@ -167,7 +162,6 @@ CelebrationOverlay.displayName = 'CelebrationOverlay';
 import { ListHeader } from './ListHeader';
 import { EmptyState } from './EmptyState';
 import { SwipeHint } from './SwipeHint';
-import { LongPressHint } from './LongPressHint';
 import { SwipeItem } from './SwipeItem';
 import { AddProductFab } from './AddProductFab';
 import { AddProductModal, EditProductModal, ProductDetailsModal } from './ProductModals';
@@ -315,6 +309,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     });
   }, []);
 
+  // איפוס סינון קטגוריה כשמחליפים טאב (useEffect כי filter הוא prop חיצוני)
+  useEffect(() => { setCategoryFilter(null); }, [filter]);
+
   // ספירת מוצרים לפי קטגוריה (חישוב חד-פעמי, לא בכל chip)
   const { activeCategories, categoryCounts } = useMemo(() => {
     const source = filter === 'purchased' ? purchased : filter === 'pending' ? pending : [...pending, ...purchased];
@@ -323,17 +320,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     return { activeCategories: Array.from(counts.keys()), categoryCounts: counts };
   }, [filter, pending, purchased]);
 
-  // Derived state: categoryFilter תקף רק אם הקטגוריה עדיין פעילה תחת ה-filter הנוכחי.
-  // במקום שני useEffect שמאפסים את ה-state (setState-in-effect אסור לפי react-compiler),
-  // משתמשים בערך נגזר לתצוגה. ה-state עצמו יתאפס רק דרך handler מפורש.
-  const effectiveCategoryFilter = categoryFilter && activeCategories.includes(categoryFilter)
-    ? categoryFilter
-    : null;
-
-  // מאזין לשינוי של filter/activeCategories - כשצריך לנקות, משתמשים ב-ref pattern
-  // כדי לא להפר את הכלל של לא-setState-ב-effect. כשהערך האפקטיבי שונה מה-state,
-  // חוזרים לעצמנו דרך setCategoryFilter ב-handler הבא או בתגובה לפעולה.
-  // הפתרון הפשוט: רק handler של לחיצה על chip יוכל להגדיר categoryFilter.
+  // איפוס קטגוריה אם נגמרו מוצרים בה (למשל אחרי סימון כנקנה)
+  useEffect(() => {
+    if (categoryFilter && !activeCategories.includes(categoryFilter)) {
+      setCategoryFilter(null);
+    }
+  }, [categoryFilter, activeCategories]);
 
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
@@ -435,9 +427,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           <SwipeHint onDismiss={dismissHint} />
         )}
 
-        {/* רמז עדין על לחיצה ארוכה - מוצג רק אחרי שהסרת את רמז ההחלקה ויש פריטים */}
-        {!showHint && items.length > 0 && <LongPressHint />}
-
         {/* סינון לפי קטגוריה */}
         {items.length > 0 && activeCategories.length > 1 && (
           <Box sx={{
@@ -456,8 +445,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 bgcolor: 'action.hover',
                 color: 'text.primary',
                 border: '1.5px solid',
-                borderColor: !effectiveCategoryFilter ? 'primary.main' : 'transparent',
-                boxShadow: !effectiveCategoryFilter ? '0 2px 10px rgba(20,184,166,0.35)' : 'none',
+                borderColor: !categoryFilter ? 'primary.main' : 'transparent',
+                boxShadow: !categoryFilter ? '0 2px 10px rgba(20,184,166,0.35)' : 'none',
                 transition: 'box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.1s',
                 '&:active': { opacity: 0.75 },
                 '&:hover': { bgcolor: 'action.hover' },
@@ -468,7 +457,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
               const icon = CATEGORY_ICONS[cat as keyof typeof CATEGORY_ICONS] || '📦';
               const key = CATEGORY_TRANSLATION_KEYS[cat as keyof typeof CATEGORY_TRANSLATION_KEYS];
               const color = CATEGORY_COLORS[cat as keyof typeof CATEGORY_COLORS] || '#6B7280';
-              const isActive = effectiveCategoryFilter === cat;
+              const isActive = categoryFilter === cat;
               return (
                 <Chip
                   key={cat}
@@ -495,9 +484,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         {/* Products List or Empty State */}
         {items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
-        ) : filteredItems.length === 0 && effectiveCategoryFilter ? (
+        ) : filteredItems.length === 0 && categoryFilter ? (
           <Box sx={{ textAlign: 'center', py: 6 }}>
-            <Typography sx={{ fontSize: 40, mb: 1 }}>{CATEGORY_ICONS[effectiveCategoryFilter as keyof typeof CATEGORY_ICONS] || '📦'}</Typography>
+            <Typography sx={{ fontSize: 40, mb: 1 }}>{CATEGORY_ICONS[categoryFilter as keyof typeof CATEGORY_ICONS] || '📦'}</Typography>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2 }}>{t('noProductsInCategory')}</Typography>
             <Button size="small" onClick={() => setCategoryFilter(null)} sx={{ textTransform: 'none', fontSize: 13 }}>{t('showAll')}</Button>
           </Box>

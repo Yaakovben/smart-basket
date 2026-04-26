@@ -18,9 +18,12 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
 
-    // node10 = אותה התנהגות בדיוק כמו "node" הישן, רק עם השם החדש שלא deprecated.
-    // מעבר ל-"node16"/"nodenext" דורש שינוי גדול (סיומות מפורשות ב-imports) - לא עכשיו.
-    "moduleResolution": "node10",
+    // moduleResolution: "node" (="node10") הוא הערך הנכון לפרויקט CommonJS.
+    // TS 6 מסמן אותו כ-deprecated ו-TS 7 יסיר אותו.
+    // מעבר ל-"node16"/"nodenext" דורש גם שינוי של module + סיומות מפורשות ב-imports,
+    // מה שדורש רפקטור גדול. עד אז - ignoreDeprecations משתיק את האזהרה בלי שינוי התנהגותי.
+    "moduleResolution": "node",
+    "ignoreDeprecations": "5.0",
 
     "declaration": true,
     "declarationMap": true,

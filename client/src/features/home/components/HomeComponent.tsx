@@ -19,13 +19,12 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES, COMMON_STYLES, canShowSecondaryPopup, markPopupShown } from '../../../global/helpers';
-import { Modal, ConfirmModal, ListMenu, QRScanner } from '../../../global/components';
+import { Modal, ConfirmModal, ListMenu } from '../../../global/components';
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
@@ -391,8 +390,6 @@ export const HomeComponent = memo(({
 
   // מצב הצעת התראות push
   const [showPushPrompt, setShowPushPrompt] = useState(false);
-  // סורק QR להצטרפות — נפתח מתוך JoinModal
-  const [showQRScanner, setShowQRScanner] = useState(false);
   const [pushPromptError, setPushPromptError] = useState(false);
   const [pushPromptDismissed, setPushPromptDismissed] = useState(() => {
     return localStorage.getItem('pushPromptDismissed') === 'true';
@@ -495,8 +492,7 @@ export const HomeComponent = memo(({
     return cardRefs.current.length - 1;
   }, []);
 
-  // גרירה: התחלת גרירה (clientY מגיע מה-listener אך לא נדרש כאן)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // גרירה: התחלת גרירה
   const handleDragStart = useCallback((index: number, _clientY: number) => {
     dragIndexRef.current = index;
     setDragIndex(index);
@@ -990,7 +986,7 @@ export const HomeComponent = memo(({
       {/* Join Group Modal */}
       {showJoin && (
         <Modal title={t('joinGroup')} onClose={() => !joiningGroup && closeJoinModal()}>
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Box sx={{ textAlign: 'center', mb: 2.5 }}>
             <Box sx={{
               width: 56,
               height: 56,
@@ -1104,30 +1100,6 @@ export const HomeComponent = memo(({
                 ) : null
               }}
             />
-          </Box>
-
-          {/* קישור עדין לסריקת QR - לא כפתור, מרגיש כמו פעולה משנית */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-            <Box
-              component="button"
-              type="button"
-              onClick={() => { haptic('light'); setShowQRScanner(true); }}
-              sx={{
-                display: 'inline-flex', alignItems: 'center', gap: 0.6,
-                background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(16,185,129,0.12))',
-                border: '1px solid rgba(20,184,166,0.35)', cursor: 'pointer',
-                color: '#0D9488',
-                fontSize: 12, fontWeight: 600,
-                py: 0.6, px: 1.4, borderRadius: '999px',
-                boxShadow: '0 1px 3px rgba(20,184,166,0.15)',
-                transition: 'color 0.12s, background 0.12s, transform 0.08s',
-                '&:hover': { background: 'linear-gradient(135deg, rgba(20,184,166,0.2), rgba(16,185,129,0.2))' },
-                '&:active': { opacity: 0.75, transform: 'scale(0.97)' },
-              }}
-            >
-              <QrCodeScannerIcon sx={{ fontSize: 14 }} />
-              הצטרף באמצעות QR
-            </Box>
           </Box>
 
           {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
@@ -1350,33 +1322,6 @@ export const HomeComponent = memo(({
       )}
 
       <PwaInstallPrompt t={t} />
-
-      {/* סורק QR - קופץ מעל JoinModal, ממלא את הקוד והסיסמה אוטומטית */}
-      <QRScanner
-        open={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScan={(text) => {
-          setShowQRScanner(false);
-          // הפורמט שאנחנו מייצרים: {origin}/join?code=XXX&password=YYYY
-          let code = '';
-          let password = '';
-          try {
-            const url = new URL(text);
-            code = (url.searchParams.get('code') || '').toUpperCase();
-            password = url.searchParams.get('password') || '';
-          } catch {
-            // לא URL - ננסה לזהות קוד:סיסמה או סתם קוד
-            const match = text.trim().match(/^([A-Z0-9]{6})[:\s]*(\d{4})?$/i);
-            if (match) {
-              code = match[1].toUpperCase();
-              password = match[2] || '';
-            }
-          }
-          if (code.length === 6) setJoinCode(code);
-          if (/^\d{4}$/.test(password)) setJoinPass(password);
-          setJoinError('');
-        }}
-      />
 
       {/* Bottom Navigation */}
       <Box

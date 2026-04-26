@@ -22,26 +22,6 @@ import type {
 const FAB_BOUNDARY = { minX: 30, minY: 50, bottomOffset: 30 }; // גבולות גרירה בפיקסלים
 const DEFAULT_FAB_BOTTOM_OFFSET = 90; // מיקום ברירת מחדל מתחתית המסך
 
-// סדר מיון קטגוריות כברירת מחדל - לפי זרימה טבעית של קניות בסופר:
-// ירקות → פירות → מחלבה → בשר → מאפים → שאר. סדר הקטגוריות כאן קובע
-// איך המוצרים מוצגים ברשימה (ראה getCategoryOrder ב-useMemo של items).
-const CATEGORY_SORT_ORDER: Record<string, number> = {
-  'ירקות': 1,
-  'פירות': 2,
-  'מוצרי חלב': 3,
-  'בשר': 4,
-  'קפואים': 5,
-  'מאפים': 6,
-  'שימורים ויבשים': 7,
-  'תבלינים ורטבים': 8,
-  'משקאות': 9,
-  'פיצוחים': 10,
-  'ממתקים': 11,
-  'ניקיון': 12,
-  'אחר': 99,
-};
-const getCategoryOrder = (cat: string): number => CATEGORY_SORT_ORDER[cat] ?? 99;
-
 // מזהה זמני למוצרים שעדיין לא אושרו מהשרת
 const isTempId = (id: string) => id.startsWith('temp-');
 
@@ -144,22 +124,12 @@ export const useList = ({
   // Debounce לחיפוש
   const debouncedSearch = useDebounce(search, 300);
 
-  // רשימת המוצרים המוצגת ב-UI: מסוננת לפי חיפוש וממוינת לפי קטגוריה
-  // (ירקות → פירות → חלב וכו' לפי זרימה טבעית של קניות).
-  // בתוך אותה קטגוריה - מיון לפי שם לעקביות.
-  const items = useMemo(() => {
-    const source = filter === 'pending' ? pending : purchased;
-    const needle = debouncedSearch.toLowerCase();
-    const filtered = needle
-      ? source.filter((p: Product) => p.name.toLowerCase().includes(needle))
-      : source;
-    // מיון יציב: קודם לפי קטגוריה (סדר קבוע), אח"כ לפי שם בסדר א"ב
-    return [...filtered].sort((a, b) => {
-      const diff = getCategoryOrder(a.category) - getCategoryOrder(b.category);
-      if (diff !== 0) return diff;
-      return a.name.localeCompare(b.name, 'he');
-    });
-  }, [filter, pending, purchased, debouncedSearch]);
+  const items = useMemo(
+    () => (filter === 'pending' ? pending : purchased).filter((p: Product) =>
+      p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ),
+    [filter, pending, purchased, debouncedSearch]
+  );
 
   const allMembers = useMemo(
     () => [list.owner, ...list.members],
@@ -214,27 +184,17 @@ export const useList = ({
   }, [list.products]);
 
   // ===== מטפלי גרירת FAB =====
-  // סף גרירה - רק תנועה של 10px+ מהנקודה ההתחלתית מפעילה ממש גרירה.
-  // בלי זה, כל נגיעה עם רעד זעיר הייתה מזיזה את הכפתור.
-  const DRAG_THRESHOLD_PX = 10;
-
-  const handleDragStart = useCallback((clientX: number, clientY: number, currentCenterX?: number, currentCenterY?: number) => {
-    // אם הקומפוננטה מדדה את המיקום הנוכחי בפועל - משתמשים בו (מונע קפיצה בחציית הסף).
-    // אחרת נופלים חזרה לברירת מחדל.
-    const currentX = currentCenterX ?? fabPosition?.x ?? window.innerWidth / 2;
-    const currentY = currentCenterY ?? fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    const currentX = fabPosition?.x ?? window.innerWidth / 2;
+    const currentY = fabPosition?.y ?? window.innerHeight - DEFAULT_FAB_BOTTOM_OFFSET;
     dragRef.current = { startX: clientX, startY: clientY, startPosX: currentX, startPosY: currentY };
+    setIsDragging(true);
   }, [fabPosition]);
 
   const handleDragMove = useCallback((clientX: number, clientY: number) => {
-    if (!dragRef.current) return;
+    if (!dragRef.current || !isDragging) return;
     const deltaX = clientX - dragRef.current.startX;
     const deltaY = clientY - dragRef.current.startY;
-    // מפעיל גרירה רק אם המרחק חוצה את הסף - מבטיח שקליקים רגילים לא יזיזו את ה-FAB
-    if (!isDragging) {
-      if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) return;
-      setIsDragging(true);
-    }
     const newX = Math.max(FAB_BOUNDARY.minX, Math.min(window.innerWidth - FAB_BOUNDARY.minX, dragRef.current.startPosX + deltaX));
     const newY = Math.max(FAB_BOUNDARY.minY, Math.min(window.innerHeight - FAB_BOUNDARY.bottomOffset, dragRef.current.startPosY + deltaY));
     setFabPosition({ x: newX, y: newY });
@@ -245,7 +205,7 @@ export const useList = ({
     dragRef.current = null;
     // שמירת מיקום FAB ב-localStorage
     if (fabPosition) {
-      try { localStorage.setItem('fab-position', JSON.stringify(fabPosition)); } catch { /* storage חסום */ }
+      try { localStorage.setItem('fab-position', JSON.stringify(fabPosition)); } catch {}
     }
   }, [fabPosition]);
 

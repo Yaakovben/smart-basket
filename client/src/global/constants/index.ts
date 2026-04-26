@@ -10,7 +10,6 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'בשר': '🥩',
   'משקאות': '☕',
   'ממתקים': '🍬',
-  'פיצוחים': '🥜',
   'קפואים': '🧊',
   'שימורים ויבשים': '🥫',
   'תבלינים ורטבים': '🧂',
@@ -27,7 +26,6 @@ export const CATEGORY_COLORS: Record<ProductCategory, string> = {
   'בשר': '#B91C1C',
   'משקאות': '#8B5CF6',
   'ממתקים': '#EC4899',
-  'פיצוחים': '#A16207',
   'קפואים': '#06B6D4',
   'שימורים ויבשים': '#D97706',
   'תבלינים ורטבים': '#F97316',
@@ -44,7 +42,6 @@ export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys>
   'בשר': 'catMeat',
   'משקאות': 'catBeverages',
   'ממתקים': 'catSweets',
-  'פיצוחים': 'catNuts',
   'קפואים': 'catFrozen',
   'שימורים ויבשים': 'catCanned',
   'תבלינים ורטבים': 'catSpices',
@@ -162,13 +159,7 @@ export const COMMON_STYLES = {
     '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
     width: 44,
     height: 44,
-    color: 'white',
-    // Qin F21 Pro ומכשירים זעירים (≤360px) - שמירה על שמישות בגודל מסך 320px
-    '@media (max-width: 360px)': {
-      width: 34,
-      height: 34,
-      '& .MuiSvgIcon-root': { fontSize: 18 },
-    },
+    color: 'white'
   }
 } as const;
 

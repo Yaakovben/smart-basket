@@ -5,10 +5,8 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Modal } from '../../global/components/Modal';
 import { ConfirmModal } from '../../global/components/ConfirmModal';
-import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
 import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
@@ -42,10 +40,6 @@ export const DailyFaithManager = ({ onClose }: Props) => {
   const [searchOpen, setSearchOpen] = useState(false);
   // ה-quote שממתין לאישור מחיקה ב-popup. null = אין מחיקה פתוחה.
   const [quoteToDelete, setQuoteToDelete] = useState<DailyFaith | null>(null);
-  // מועמד לכפילות - מציג אישור להוסיף משפט למרות שקיים זהה
-  const [duplicateCandidate, setDuplicateCandidate] = useState<{ attempted: string; existing: DailyFaith } | null>(null);
-  // האם מוצג טיפ העיצוב (*bold*) - סגור כברירת מחדל, המנהל פותח רק אם צריך
-  const [showFormatTip, setShowFormatTip] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -67,23 +61,13 @@ export const DailyFaithManager = ({ onClose }: Props) => {
     return quotes.filter(x => x.text.toLowerCase().includes(q));
   }, [quotes, search]);
 
-  // בדיקת כפילות - משווה טקסט בנורמליזציה (בלי סימוני bold, בלי רווחים סופיים, lowercase)
-  const normalizeForCompare = useCallback((t: string) => {
-    return stripFaithMarkers(t).replace(/\s+/g, ' ').trim().toLowerCase();
-  }, []);
-
-  const findDuplicate = useCallback((raw: string): DailyFaith | null => {
-    const needle = normalizeForCompare(raw);
-    if (!needle) return null;
-    return quotes.find(q => normalizeForCompare(q.text) === needle) || null;
-  }, [quotes, normalizeForCompare]);
-
-  // ביצוע ההוספה בפועל - משותף לזרם רגיל ולאישור דריסה
-  const performAdd = async (rawText: string) => {
+  const handleAdd = async () => {
+    const trimmed = text.trim();
+    if (trimmed.length < 2) return;
     try {
       setSaving(true);
       haptic('light');
-      const newQuote = await dailyFaithApi.create(rawText);
+      const newQuote = await dailyFaithApi.create(trimmed);
       setQuotes((prev) => [newQuote, ...prev]);
       setText('');
     } catch {
@@ -91,18 +75,6 @@ export const DailyFaithManager = ({ onClose }: Props) => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleAdd = async () => {
-    const trimmed = text.trim();
-    if (trimmed.length < 2) return;
-    // בדיקת כפילות — אם קיים משפט זהה, מציגים popup אישור במקום להוסיף מייד
-    const dup = findDuplicate(trimmed);
-    if (dup) {
-      setDuplicateCandidate({ attempted: trimmed, existing: dup });
-      return;
-    }
-    await performAdd(trimmed);
   };
 
   const handleDelete = async (id: string) => {
@@ -240,37 +212,14 @@ export const DailyFaithManager = ({ onClose }: Props) => {
             }}
           />
 
-          {/* טיפ העיצוב - מופיע רק כשהמשתמש לוחץ על כפתור העזרה. לא מוצג קבוע. */}
-          <Collapse in={showFormatTip} unmountOnExit>
-            <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 0.75, px: 0.25, lineHeight: 1.45 }}>
-              💡 עטוף מילה ב־<Box component="span" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 0.4, borderRadius: '3px' }}>*כוכביות*</Box> כדי להדגיש אותה (<Box component="span" sx={{ fontWeight: 800 }}>כמו ב-WhatsApp</Box>)
-            </Typography>
-          </Collapse>
-
-          {/* שורה תחתונה: מונה תווים + כפתור עזרה + כפתור הוספה */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
+          {/* שורה תחתונה: מונה תווים + כפתור הוספה */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
             <Typography sx={{
               fontSize: 11, color: charCountColor, fontWeight: 700,
               fontVariantNumeric: 'tabular-nums', flex: 1,
             }}>
               {textCharCount} / {MAX_TEXT_LENGTH} תווים
             </Typography>
-            <IconButton
-              size="small"
-              onClick={() => { haptic('light'); setShowFormatTip(v => !v); }}
-              aria-label="עזרה לעיצוב"
-              sx={{
-                width: 28, height: 28, flexShrink: 0,
-                color: showFormatTip ? '#8B6914' : 'text.disabled',
-                bgcolor: showFormatTip ? 'rgba(212,175,55,0.14)' : 'transparent',
-                border: '1px solid',
-                borderColor: showFormatTip ? 'rgba(184,134,11,0.35)' : 'transparent',
-                transition: 'background 0.15s, border-color 0.15s, color 0.15s',
-                '&:hover': { bgcolor: 'rgba(212,175,55,0.1)' },
-              }}
-            >
-              <HelpOutlineIcon sx={{ fontSize: 16 }} />
-            </IconButton>
             <Button
               variant="contained"
               onClick={handleAdd}
@@ -330,31 +279,11 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           </Box>
         </Collapse>
 
-        {/* רשימת משפטים — ממלאת את שאר החלל.
-            גלילה: momentum חלק ב-iOS, overscrollBehavior:contain מונע bounce של הדף מאחור,
-            scrollbar דק ומודרני בדסקטופ, עם פייד עדין למעלה ולמטה שמעיד שיש עוד תוכן. */}
+        {/* רשימת משפטים — ממלאת את שאר החלל */}
         <Box sx={{
           display: 'flex', flexDirection: 'column', gap: 0.85,
           flex: 1, minHeight: 0,
-          overflowY: 'auto',
-          pr: 0.5, pl: 0.25,
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain',
-          scrollBehavior: 'smooth',
-          // פייד גרדיאנט בקצוות — מראה שיש עוד תוכן מעבר לגבול
-          maskImage: 'linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)',
-          // scrollbar דק ומודרני - בדסקטופ בלבד, בנייד לא מוצג ממילא
-          '&::-webkit-scrollbar': { width: '6px' },
-          '&::-webkit-scrollbar-track': { background: 'transparent' },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(184,134,11,0.25)',
-            borderRadius: '3px',
-            '&:hover': { background: 'rgba(184,134,11,0.45)' },
-          },
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(184,134,11,0.3) transparent',
-          pt: '2px', // הכרחי כדי שהמסכה הצפונית לא תחתוך מיד את הכרטיס הראשון
+          overflowY: 'auto', pr: 0.25,
         }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -402,14 +331,14 @@ export const DailyFaithManager = ({ onClose }: Props) => {
                     {idx + 1}
                   </Box>
 
-                  {/* תוכן - עם רנדור של bold (*word*) */}
+                  {/* תוכן */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography sx={{
                       fontSize: 13.5, lineHeight: 1.6,
                       whiteSpace: 'pre-wrap',
                       color: 'text.primary',
                     }}>
-                      {renderFaithText(q.text)}
+                      {q.text}
                     </Typography>
                     {/* תאריך + אורך */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5, flexWrap: 'wrap' }}>
@@ -450,21 +379,6 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           confirmText="מחק"
           onConfirm={() => handleDelete(quoteToDelete.id)}
           onCancel={() => setQuoteToDelete(null)}
-        />
-      )}
-
-      {/* POPUP אזהרת כפילות - מופיע כשמנסים להוסיף משפט שכבר קיים */}
-      {duplicateCandidate && (
-        <ConfirmModal
-          title="המשפט כבר קיים"
-          message={`משפט זהה נמצא כבר ברשימה:\n\n"${duplicateCandidate.existing.text.slice(0, 150)}${duplicateCandidate.existing.text.length > 150 ? '…' : ''}"\n\nלהוסיף בכל זאת?`}
-          confirmText="הוסף בכל זאת"
-          onConfirm={async () => {
-            const attempted = duplicateCandidate.attempted;
-            setDuplicateCandidate(null);
-            await performAdd(attempted);
-          }}
-          onCancel={() => setDuplicateCandidate(null)}
         />
       )}
     </Modal>

@@ -26,12 +26,12 @@ const startServer = async () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
 
-    // התחלת cron job לרענון מחירים - בכל סביבה שהיא לא development (dev מקומי).
-    // ב-development מומלץ להריץ ידנית `npm run refresh-prices` או דרך פאנל האדמין.
-    if (env.NODE_ENV !== 'development') {
+    // התחלת cron job יומי לרענון מחירים מאושר עד — רק בפרודקשן
+    // בפיתוח ידני, אפשר להריץ `npm run refresh-prices`
+    if (env.NODE_ENV === 'production') {
       startPriceSyncJob();
     } else {
-      logger.info('[price-sync-job] Skipped in local development environment');
+      logger.info('[price-sync-job] Skipped in non-production environment');
     }
   } catch (error) {
     logger.error('Failed to start server:', error);

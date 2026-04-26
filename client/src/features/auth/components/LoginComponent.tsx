@@ -159,7 +159,7 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
         <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
           {/* Session expired alert */}
           {sessionExpired && (
-            <Alert severity="info" sx={{ mb: 2, borderRadius: '12px', fontSize: 13, alignItems: 'center', '& .MuiAlert-action': { alignSelf: 'center', alignItems: 'center', pt: 0, mt: 0, mr: -1 } }}
+            <Alert severity="info" sx={{ mb: 2, borderRadius: '12px', fontSize: 13, alignItems: 'center' }}
               onClose={() => setSessionExpired(false)}>
               {t('sessionExpired')}
             </Alert>

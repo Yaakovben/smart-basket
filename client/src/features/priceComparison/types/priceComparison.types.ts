@@ -32,31 +32,6 @@ export interface PriceListGroup {
   matches: PriceMatch[];
 }
 
-// סניף קרוב ביותר לרשת - מוחזר רק כשהמשתמש שיתף מיקום
-export interface NearestBranch {
-  branchName: string;
-  city: string;
-  address: string;
-  lat: number;
-  lng: number;
-  distanceKm: number;
-}
-
-// סיכום השוואתי לרשת - משמש לתצוגת רנק של כל הרשתות ב-UI
-export interface PriceChainTotal {
-  chainId: string;
-  chainName: string;
-  total: number;
-  matchedCount: number;
-  unmatchedCount: number;
-  isCheapest: boolean;
-  isComplete: boolean;   // יש לה את מלוא הסל? (מספר התאמות = מקסימום)
-  savings: number;
-  matches: PriceMatch[]; // כל המוצרים של המשתמש עם מחיר ברשת הזו
-  hasData: boolean;      // האם הרשת פרסמה מחירים היום (false = הפורטל לא פרסם)
-  nearestBranch?: NearestBranch; // הסניף הקרוב - רק כשהמשתמש שיתף מיקום
-}
-
 export interface PriceComparisonData {
   enabled: boolean;
   chainName: string;
@@ -66,7 +41,6 @@ export interface PriceComparisonData {
   totalMatched: number;
   totalUnmatched: number;
   totalPending: number;
-  chainTotals: PriceChainTotal[];
   disclaimer: string;
   lastUpdatedISO: string | null;
   sourceName: string;

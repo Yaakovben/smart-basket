@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { memo } from 'react';
 import { Box, Fab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { haptic } from '../../../global/helpers';
@@ -14,7 +14,7 @@ interface AddProductFabProps {
   fabPosition: FabPosition | null;
   isDragging: boolean;
   onAddProduct: () => void;
-  onDragStart: (clientX: number, clientY: number, currentCenterX?: number, currentCenterY?: number) => void;
+  onDragStart: (clientX: number, clientY: number) => void;
   onDragMove: (clientX: number, clientY: number) => void;
   onDragEnd: () => void;
 }
@@ -31,15 +31,6 @@ export const AddProductFab = memo(({
 }: AddProductFabProps) => {
   const { t } = useSettings();
   const isDraggable = itemCount > FAB_DRAGGABLE_THRESHOLD;
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // מדידת מרכז הכפתור בפועל לפי DOM - מונע קפיצה כשמתחילים לגרור מ-bottom-center למצב top/left
-  const measureCenter = (): { x: number; y: number } | undefined => {
-    const el = wrapperRef.current;
-    if (!el) return undefined;
-    const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-  };
 
   const handleClick = () => {
     if (!isDragging) {
@@ -52,7 +43,6 @@ export const AddProductFab = memo(({
   if (isDraggable) {
     return (
       <Box
-        ref={wrapperRef}
         sx={{
           position: 'fixed',
           ...(fabPosition ? {
@@ -68,10 +58,10 @@ export const AddProductFab = memo(({
           touchAction: 'none',
           '& > *': { pointerEvents: 'auto' },
         }}
-        onTouchStart={(e) => { const c = measureCenter(); onDragStart(e.touches[0].clientX, e.touches[0].clientY, c?.x, c?.y); }}
+        onTouchStart={(e) => onDragStart(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchMove={(e) => onDragMove(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchEnd={onDragEnd}
-        onMouseDown={(e) => { const c = measureCenter(); onDragStart(e.clientX, e.clientY, c?.x, c?.y); }}
+        onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
         onMouseMove={isDragging ? (e) => onDragMove(e.clientX, e.clientY) : undefined}
         onMouseUp={onDragEnd}
         onMouseLeave={onDragEnd}

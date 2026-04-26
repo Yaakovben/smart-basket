@@ -1,8 +1,6 @@
-import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
-import ShareIcon from '@mui/icons-material/Share';
+import { Dialog, Box, Typography, Button, Fade } from '@mui/material';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
-import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 
 interface DailyFaithPopupProps {
   text: string;
@@ -18,27 +16,8 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
   const { t } = useSettings();
 
   const handleClose = () => {
-    haptic('medium');
-    onClose();
-  };
-
-  // שיתוף המשפט - מנסה share sheet נטיבי (מובייל), נופל ל-wa.me (דסקטופ)
-  const handleShare = async () => {
     haptic('light');
-    // מנקים סימוני עיצוב פנימיים לפני שיתוף כדי שהודעת WhatsApp תצא טבעית
-    const cleanText = stripFaithMarkers(text);
-    const message = `${t('dailyFaithShareLine')}\n\n"${cleanText}"\n\n${t('dailyFaithShareFooter')}\n${window.location.origin}`;
-    type ShareCapable = Navigator & { share?: (data: { text?: string; title?: string; url?: string }) => Promise<void> };
-    const nav = navigator as ShareCapable;
-    if (typeof nav.share === 'function') {
-      try {
-        await nav.share({ text: message, title: t('dailyFaithTitle') });
-        return;
-      } catch {
-        // המשתמש ביטל או שה-share נכשל — נופלים לפתיחת WhatsApp
-      }
-    }
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    onClose();
   };
 
   return (
@@ -50,8 +29,6 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
         handleClose();
       }}
       disableEscapeKeyDown
-      fullWidth
-      maxWidth={false}
       TransitionComponent={Fade}
       transitionDuration={500}
       PaperProps={{
@@ -59,15 +36,9 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           bgcolor: 'transparent',
           boxShadow: 'none',
           overflow: 'visible',
-          // מרווח גדול יותר בצדדים כדי שהמסגרת הזהובה + הצל הזוהר סביבה לא יתגלשו/ייחתכו
-          mx: 0,
-          my: 2,
-          maxWidth: '100%',
+          m: 2,
+          maxWidth: 400,
           width: '100%',
-          // יציבות בגרירה: מונע תזוזה/גרירה של הפופאפ בלחיצה והחזקה על המסך
-          touchAction: 'none',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
         },
       }}
       sx={{
@@ -87,12 +58,11 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
           boxShadow: '0 20px 60px rgba(184, 134, 11, 0.5), 0 0 40px rgba(212, 175, 55, 0.3)',
         }}
       >
-
         {/* פנים הקלף - רקע קרם-זהב חם */}
         <Box
           sx={{
             borderRadius: '18px',
-            background: 'linear-gradient(160deg, #FFFDF2 0%, #FFFAE5 50%, #FEF2CC 100%)',
+            background: 'linear-gradient(160deg, #FFF9E6 0%, #FFF3D4 50%, #FDE8B4 100%)',
             border: '2px solid rgba(184, 134, 11, 0.3)',
             px: 3,
             py: 5,
@@ -162,59 +132,33 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
               hyphens: 'none',
             }}
           >
-            {renderFaithText(text)}
+            {text}
           </Typography>
 
-          {/* שורת פעולה - שיתוף מימין (ראשון ב-DOM כדי להופיע בצד ימין ב-RTL), ראשי משמאל */}
-          <Box sx={{ mt: 2, display: 'flex', gap: 1, width: '100%', alignItems: 'stretch' }}>
-            {/* שיתוף - קצת יותר רחב, צד ימין */}
-            <IconButton
-              onClick={handleShare}
-              aria-label={t('dailyFaithShareAria')}
-              disableRipple
-              sx={{
-                width: 60,
-                height: 56,
-                flexShrink: 0,
-                borderRadius: '18px',
-                color: '#8B6914',
-                background: 'rgba(255, 244, 201, 0.5)',
-                border: '1.5px solid rgba(139, 105, 20, 0.5)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
-                transition: 'background 0.08s, border-color 0.08s, transform 0.06s',
-                '&:hover': {
-                  background: 'rgba(255, 231, 160, 0.7)',
-                  borderColor: '#8B6914',
-                },
-                '&:active': { transform: 'scale(0.94)', background: 'rgba(255, 231, 160, 0.9)' },
-              }}
-            >
-              <ShareIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-
-            {/* קראתי והתחזקתי - הצבע המקורי מ-main: gradient זהב אלכסוני */}
-            <Button
-              onClick={handleClose}
-              sx={{
-                flex: 1,
-                height: 56,
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
-                color: 'white',
-                fontWeight: 700,
-                fontSize: 15,
-                boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
-                textTransform: 'none',
-                transition: 'background 0.08s ease, transform 0.06s ease',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
-                },
-                '&:active': { transform: 'scale(0.96)', background: 'linear-gradient(135deg, #805C07 0%, #9C7209 100%)' },
-              }}
-            >
-              {t('dailyFaithReadButton')}
-            </Button>
-          </Box>
+          {/* כפתור זהב */}
+          <Button
+            onClick={handleClose}
+            sx={{
+              mt: 2,
+              px: 4,
+              py: 1.25,
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #B8860B 0%, #D4AF37 100%)',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: 15,
+              boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)',
+              textTransform: 'none',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #9C7209 0%, #B8860B 100%)',
+              },
+              '&:active': {
+                transform: 'scale(0.97)',
+              },
+            }}
+          >
+            {t('dailyFaithReadButton')}
+          </Button>
         </Box>
       </Box>
     </Dialog>

@@ -33,20 +33,8 @@ const transform = (doc: { toJSON: () => Record<string, unknown> }) => {
  * GET /api/daily-faith/random
  * מחזיר ציטוט אחד אקראי. פתוח לכל משתמש מאומת.
  */
-/**
- * GET /api/daily-faith/random?exclude=id1,id2,id3
- * אופציונלי: exclude = רשימת מזהי ציטוטים להחרגה (כדי למנוע חזרה על משפטים
- * שהלקוח כבר ראה). השרת ינסה לא להחזיר אותם. אם אין ברירה (כולם הוחרגו)
- * יחזור אחד מהם בכל זאת.
- */
-export const getRandom = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const excludeRaw = typeof req.query.exclude === 'string' ? req.query.exclude : '';
-  // עד 100 IDs לסינון (מגבלה פשוטה לא לתת ל-URL להתנפח)
-  const excludeIds = excludeRaw
-    ? excludeRaw.split(',').map(s => s.trim()).filter(Boolean).slice(0, 100)
-    : [];
-
-  const quote = await DailyFaithDAL.findRandom(excludeIds);
+export const getRandom = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const quote = await DailyFaithDAL.findRandom();
   res.json({ success: true, data: quote ? transform(quote) : null });
 });
 
