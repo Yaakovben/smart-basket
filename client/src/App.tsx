@@ -37,7 +37,7 @@ const handleNewVersion = () => {
           const registrations = await navigator.serviceWorker.getRegistrations();
           await Promise.all(registrations.map(r => r.unregister()));
         }
-      } catch {}
+      } catch { /* SW unregister נכשל - מתעלמים ונרעננים בכל מקרה */ }
       window.location.reload();
     };
     cleanup();

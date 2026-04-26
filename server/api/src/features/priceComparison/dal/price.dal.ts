@@ -62,17 +62,30 @@ class PriceDALClass extends BaseDAL<IPriceDoc> {
     return this.model.find(filter).limit(limit).lean();
   }
 
-  // חיפוש fuzzy אחד המאחד מספר טוקנים דרך $or — חוסך round-trips לעומת N שאילתות מקבילות
-  async findByAnyToken(tokens: string[], chainId: ChainId, limit = 60) {
+  // חיפוש fuzzy אחד המאחד מספר טוקנים דרך $or — חוסך round-trips לעומת N שאילתות מקבילות.
+  // chainId אופציונלי: אם מועבר — מסנן לרשת ספציפית; אם undefined — חוצה את כל הרשתות.
+  async findByAnyToken(tokens: string[], chainId?: ChainId, limit = 60) {
     if (tokens.length === 0) return [];
     // מילוט תווים מיוחדים של regex
     const escape = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const or = tokens.map(t => ({ itemNameNormalized: { $regex: escape(t), $options: 'i' } }));
-    return this.model.find({ chainId, $or: or }).limit(limit).lean();
+    const filter: Record<string, unknown> = { $or: or };
+    if (chainId) filter.chainId = chainId;
+    return this.model.find(filter).limit(limit).lean();
   }
 
   async countByChain(chainId: ChainId) {
     return this.model.countDocuments({ chainId });
+  }
+
+  // סטטיסטיקה: רשימת רשתות פעילות (עם מוצרים במאגר) ומספר המוצרים בכל אחת
+  async getActiveChainsWithCounts(): Promise<Array<{ chainId: ChainId; chainName: string; count: number }>> {
+    const result = await this.model.aggregate([
+      { $group: { _id: { chainId: '$chainId', chainName: '$chainName' }, count: { $sum: 1 } } },
+      { $project: { _id: 0, chainId: '$_id.chainId', chainName: '$_id.chainName', count: 1 } },
+      { $sort: { count: -1 } },
+    ]);
+    return result as Array<{ chainId: ChainId; chainName: string; count: number }>;
   }
 }
 

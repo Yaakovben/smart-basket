@@ -308,17 +308,18 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               }}
             >
               <Box sx={{
-                p: 1,
+                p: 1.25,
                 borderRadius: '12px',
                 bgcolor: 'white',
-                boxShadow: '0 4px 16px rgba(20,184,166,0.2)',
+                boxShadow: '0 4px 16px rgba(20,184,166,0.18)',
                 '@media (max-width: 360px)': { p: 0.5, borderRadius: '8px' },
               }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`}
                   size={window.innerWidth <= 360 ? 95 : 130}
                   level="H"
-                  fgColor="#0D9488"
+                  fgColor="#000000"
+                  bgColor="#FFFFFF"
                   style={{ display: 'block' }}
                 />
               </Box>

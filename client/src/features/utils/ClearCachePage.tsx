@@ -26,7 +26,6 @@ export const ClearCachePage = () => {
     { id: 'cookies', labelKey: 'clearCacheStepCookies', status: 'pending' },
   ]);
   const [done, setDone] = useState(false);
-  const [countdown, setCountdown] = useState(3);
 
   const updateStep = (id: string, status: StepStatus, error?: string) => {
     setSteps(prev => prev.map(s => s.id === id ? { ...s, status, error } : s));
@@ -58,14 +57,18 @@ export const ClearCachePage = () => {
         updateStep('caches', 'error', String(e));
       }
 
-      // ניקוי localStorage (שימור טוקנים)
+      // ניקוי localStorage (שימור טוקנים + גרסה כדי למנוע רענון נוסף ע"י App.tsx)
       updateStep('storage', 'running');
       try {
-        const accessToken = localStorage.getItem('accessToken');
-        const refreshToken = localStorage.getItem('refreshToken');
+        // שמירת טוקנים, משתמש במטמון (למניעת התנתקות אחרי הרענון) וגרסה (למניעת רענון נוסף ב-App.tsx)
+        const preserve: Record<string, string | null> = {
+          accessToken: localStorage.getItem('accessToken'),
+          refreshToken: localStorage.getItem('refreshToken'),
+          cached_user: localStorage.getItem('cached_user'),
+          app_build_version: localStorage.getItem('app_build_version'),
+        };
         localStorage.clear();
-        if (accessToken) localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        Object.entries(preserve).forEach(([k, v]) => { if (v) localStorage.setItem(k, v); });
         updateStep('storage', 'success');
       } catch (e) {
         updateStep('storage', 'error', String(e));
@@ -98,23 +101,16 @@ export const ClearCachePage = () => {
     runCleanup();
   }, []);
 
-  // ספירה לאחור והפניה
+  // הפניה מיידית אחרי סיום - רענון יחיד וחזרה לעמוד הבית
   useEffect(() => {
     if (!done) return;
-
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          // ריענון כפוי (עקיפת cache)
-          window.location.href = '/?t=' + Date.now();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
+    const timer = window.setTimeout(() => {
+      // מונע רענון כפול: כשה-SW החדש יפעיל SW_ACTIVATED אחרי ה-redirect,
+      // הראוטר בודק את הדגל הזה ולא מרענן שוב.
+      try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch { /* storage חסום */ }
+      window.location.replace('/?t=' + Date.now());
+    }, 500);
+    return () => window.clearTimeout(timer);
   }, [done]);
 
   const getStepIcon = (status: StepStatus) => {
@@ -198,7 +194,7 @@ export const ClearCachePage = () => {
           ))}
         </List>
 
-        {/* Redirect countdown */}
+        {/* הודעת סיום - הפניה מיידית */}
         {done && (
           <Box sx={{
             mt: 2,
@@ -212,7 +208,7 @@ export const ClearCachePage = () => {
           }}>
             <CircularProgress size={20} sx={{ color: 'success.main' }} />
             <Typography sx={{ fontSize: 14, color: 'success.dark', fontWeight: 500 }}>
-              {t('clearCacheRedirect')} {countdown}...
+              {t('clearCacheRedirect')}
             </Typography>
           </Box>
         )}

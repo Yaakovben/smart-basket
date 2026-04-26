@@ -3,7 +3,8 @@ import type { TranslationKeys } from '../i18n/translations';
 
 type TranslateFn = (key: TranslationKeys) => string;
 
-/** יצירת הודעת WhatsApp מעוצבת להזמנת חברים לרשימה */
+/** יצירת הודעת WhatsApp מעוצבת להזמנת חברים לרשימה (t נשאר בחתימה לתאימות אחורה) */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const generateInviteMessage = (list: List, _t: TranslateFn): string => {
   const joinUrl = `${window.location.origin}/join?code=${list.inviteCode}&password=${list.password || ''}`;
   const lines = [

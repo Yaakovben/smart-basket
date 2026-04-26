@@ -30,6 +30,8 @@ interface SpeechRecognition extends EventTarget {
   stop(): void;
   abort(): void;
 }
+// declare var נדרש עבור global declarations ב-d.ts - ESLint לא ממיר אותו ל-let/const
+// eslint-disable-next-line no-var
 declare var SpeechRecognition: { new(): SpeechRecognition };
 interface Window {
   SpeechRecognition: typeof SpeechRecognition;

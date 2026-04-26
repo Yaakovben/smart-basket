@@ -14,23 +14,28 @@ interface Props {
   // offset אנכי מראש הקונטיינר - מאפשר למקם את הסרט נמוך יותר כדי לא לכסות כותרת
   offsetTop?: number;
   // גודל הריבון (בא ליצור נוכחות גדולה יותר כשצריך)
-  size?: 'md' | 'lg';
+  size?: 'md' | 'lg' | 'xl';
 }
 
 // סרט BETA אלכסוני גדול בפינה של הקונטיינר (חייב position: relative על ההורה).
 // הסגנון: ריבון טורקיז בולט עם גרדיאנט, שימר וצל עמוק.
 export const BetaRibbon = memo(({ corner = 'top-left', offsetTop = 0, size = 'lg' }: Props) => {
   const isLeft = corner === 'top-left';
-  const isLarge = size === 'lg';
-  // מימדי הריבון - מותאם לפון, קצר יחסית אבל עדיין בולט ב-lg
-  const boxSize = isLarge ? 125 : 110;
-  const innerWidth = isLarge ? 200 : 160;
-  const innerTop = isLarge ? 22 : 20;
-  const innerOffset = isLarge ? -38 : -32;
-  const fontSize = isLarge ? 12 : 11;
-  const letterSpacing = isLarge ? 3.5 : 3;
-  const padY = isLarge ? 0.75 : 0.6;
-  const shadowStrength = isLarge ? '0 4px 18px rgba(20,184,166,0.55)' : '0 3px 12px rgba(20,184,166,0.45)';
+  // מימדי הריבון לפי גודל נבחר - גובה הסרט (padY) הונמך כדי שיהיה דק יותר
+  // ולא תופס גובה רב בפינה, תוך שמירה על הרוחב האלכסוני.
+  // Size xl: רחב וארוך יותר - הריבון יורד נמוך יותר באלכסון ובולט בצורה טובה יותר
+  const boxSize = size === 'xl' ? 190 : size === 'lg' ? 125 : 110;
+  const innerWidth = size === 'xl' ? 300 : size === 'lg' ? 200 : 160;
+  const innerTop = size === 'xl' ? 38 : size === 'lg' ? 14 : 14;
+  const innerOffset = size === 'xl' ? -60 : size === 'lg' ? -38 : -32;
+  const fontSize = size === 'xl' ? 14 : size === 'lg' ? 11.5 : 10.5;
+  const letterSpacing = size === 'xl' ? 4 : size === 'lg' ? 3 : 2.5;
+  const padY = size === 'xl' ? 0.7 : size === 'lg' ? 0.45 : 0.4;
+  const shadowStrength = size === 'xl'
+    ? '0 5px 22px rgba(20,184,166,0.6)'
+    : size === 'lg'
+      ? '0 4px 18px rgba(20,184,166,0.55)'
+      : '0 3px 12px rgba(20,184,166,0.45)';
 
   // מיקום פיזי דרך style prop - עוקף את ה-RTL-flip של MUI sx
   // (בלי זה, בעברית הריבון קופץ לצד ההפוך מהמצופה).

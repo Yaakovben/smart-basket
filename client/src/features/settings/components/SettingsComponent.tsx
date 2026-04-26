@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, Paper, Switch, Button, Collapse, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -100,6 +101,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
     setShowLanguage, setShowAbout, setShowHelp, setConfirmDelete, setGroupExpanded, setProductExpanded, setPushExpanded,
     handleLanguageSelect, toggleNotificationsExpanded, toggleGroupExpanded, toggleProductExpanded, togglePushExpanded, handleDeleteData
   } = useSettingsPage({ onDeleteAllData, showToast, t });
+
+  // state לאישור ניקוי מטמון - popup שמסביר השלכות לפני פעולה הרסנית
+  const [confirmClearCache, setConfirmClearCache] = useState(false);
 
   const handleMainNotificationsToggle = async (enabled: boolean) => {
     updateNotifications({ enabled });
@@ -326,6 +330,17 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
           </Box>
         </Paper>
 
+        {/* Admin Dashboard - מוצג לפני עזרה/אודות/תנאים כדי שיהיה נגיש מייד לאחר תובנות */}
+        {isAdmin && (
+          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
+            <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
+              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
+              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
+              <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
+            </Box>
+          </Paper>
+        )}
+
         {/* מקבץ מידע: עזרה ותמיכה + אודות + תנאי שימוש */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
           <Box sx={settingRowSx} onClick={() => setShowHelp(true)}>
@@ -344,17 +359,6 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
           </Box>
         </Paper>
-
-        {/* Admin Dashboard - Below terms for admin users */}
-        {isAdmin && (
-          <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-            <Box sx={{ ...settingRowSx, borderBottom: 'none' }} onClick={() => navigate('/admin')}>
-              <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
-              <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('adminDashboard')}</Typography>
-              <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
-            </Box>
-          </Paper>
-        )}
 
         {/* כפתור ניקוי מטמון, מוצג רק כשיש עדכון זמין */}
         {hasUpdate && (
@@ -398,7 +402,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
 
         {/* מקבץ ניהול נתונים: ניקוי מטמון + מחיקת כל הנתונים */}
         <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-          <Box sx={settingRowSx} onClick={() => navigate('/clear-cache')}>
+          <Box sx={settingRowSx} onClick={() => setConfirmClearCache(true)}>
             <Box component="span" sx={{ fontSize: 22 }}>🧹</Box>
             <Typography sx={{ flex: 1, fontWeight: 500, fontSize: 15 }}>{t('clearCache')}</Typography>
             <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
@@ -470,6 +474,15 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         </Modal>
       )}
 
+      {confirmClearCache && (
+        <ConfirmModal
+          title="ניקוי מטמון"
+          message={'הפעולה תנקה את המטמון של האפליקציה ותרענן את העמוד. ייתכן שתצטרך להתחבר מחדש.'}
+          confirmText="נקה"
+          onConfirm={() => { setConfirmClearCache(false); navigate('/clear-cache'); }}
+          onCancel={() => setConfirmClearCache(false)}
+        />
+      )}
       {confirmDelete && (
         <ConfirmModal title={t('deleteAllData')} message={t('deleteDataWarning')} confirmText={t('delete')} onConfirm={handleDeleteData} onCancel={() => setConfirmDelete(false)} />
       )}

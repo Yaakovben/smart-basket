@@ -4,11 +4,10 @@ import helmet from 'helmet';
 import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
-import swaggerUi from 'swagger-ui-express';
 import mongoose from 'mongoose';
 import routes from './routes';
 import { errorHandler, notFoundHandler, apiLimiter } from './middleware';
-import { env, morganStream, swaggerSpec } from './config';
+import { env, morganStream } from './config';
 import { ForbiddenError } from './errors';
 
 const app = express();
@@ -74,17 +73,6 @@ app.get('/health', (_req, res) => {
   const status = dbConnected ? 'ok' : 'degraded';
   res.status(dbConnected ? 200 : 503).json({ status, db: dbConnected, timestamp: new Date().toISOString() });
 });
-
-// תיעוד API (בסביבת פיתוח בלבד)
-if (env.NODE_ENV !== 'production') {
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'SmartBasket API Docs',
-  }));
-  app.get('/api/docs.json', (_req, res) => {
-    res.json(swaggerSpec);
-  });
-}
 
 app.use('/api', routes);
 app.use(notFoundHandler);
