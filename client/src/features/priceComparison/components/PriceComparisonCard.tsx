@@ -82,6 +82,25 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         )}
       </Box>
 
+      {/* באנר אזהרה ברור ויחיד - גרסה ראשונית. במקום 3 אזהרות שונות, אזהרה אחת בולטת בראש. */}
+      <Box sx={{
+        mb: 1.5, px: 1.25, py: 0.85, borderRadius: '10px',
+        bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(245,158,11,0.35)' : 'rgba(245,158,11,0.3)',
+        display: 'flex', alignItems: 'flex-start', gap: 0.85,
+      }}>
+        <Typography sx={{ fontSize: 15, lineHeight: 1, mt: 0.1, flexShrink: 0 }}>⚠️</Typography>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 1.3 }}>
+            מידע ראשוני · לא בטוח אמין
+          </Typography>
+          <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.45, mt: 0.25 }}>
+            זוהי גרסה ראשונית. ההתאמה בין שמות מוצרים למוצרי הרשתות, מיקומי הסניפים וזמני העדכון עשויים לא להיות מדויקים. <b>אמת בסניף לפני קנייה</b>.
+          </Typography>
+        </Box>
+      </Box>
+
       {/* ===== באנר מיקום ===== */}
       {/* מופיע רק בטאב מחירים. מעודד הפעלת מיקום כדי להציג סניף קרוב לכל רשת.
           אחרי אישור - הופך לתג קטן "📍 מיקום פעיל". אחרי דחייה - לינק קטן
