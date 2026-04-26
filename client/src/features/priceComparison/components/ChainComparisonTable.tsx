@@ -683,9 +683,23 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         ? `לא נמצאו התאמות במאגר של ${chain.chainName}`
                         : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
-                  {chain.nearestBranch && (
+                  {chain.nearestBranch ? (
                     <BranchInfo branch={chain.nearestBranch} isDark={isDark} onOpenPicker={setNavBranch} />
-                  )}
+                  ) : hasAnyLocation && !isEmpty ? (
+                    /* יש מיקום ולרשת אין סניף במאגר - הודעה ברורה ללקוח */
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.5,
+                      mt: 0.5, p: 0.7, borderRadius: '8px',
+                      bgcolor: isDark ? 'rgba(148,163,184,0.08)' : 'rgba(148,163,184,0.06)',
+                      border: '1px dashed',
+                      borderColor: isDark ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.25)',
+                    }}>
+                      <LocationOnIcon sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>
+                        אין סניף של רשת זו במאגר שלנו
+                      </Typography>
+                    </Box>
+                  ) : null}
                 </Box>
 
                 <Box sx={{ textAlign: 'end' }}>
