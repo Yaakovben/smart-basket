@@ -104,22 +104,29 @@ export function invalidateBranchCache(): void {
   cache = null;
 }
 
-// מחזיר את הסניף הקרוב ביותר לרשת נתונה, רק מסניפים עם קואורדינטות תקפות.
-// null אם אין סניפים או שכולם חסרי lat/lng.
+// מחזיר את הסניף הקרוב ביותר לרשת נתונה. אם יש שני סניפים במרחק דומה
+// (פער < 2 ק"מ), מעדיפים את זה עם כתובת מלאה — הלקוח יודע איפה זה.
 export async function findNearestBranch(chainId: ChainId, user: UserLocation): Promise<NearestBranch | null> {
   const all = await getBranches();
-  let best: IBranchDoc | null = null;
-  let bestDist = Infinity;
+  // אוספים את כל הסניפים של הרשת עם מרחק
+  const candidates: Array<{ b: IBranchDoc; dist: number }> = [];
   for (const b of all) {
     if (b.chainId !== chainId) continue;
     if (typeof b.lat !== 'number' || typeof b.lng !== 'number') continue;
-    const d = haversineKm(user, { lat: b.lat, lng: b.lng });
-    if (d < bestDist) {
-      bestDist = d;
-      best = b;
-    }
+    candidates.push({ b, dist: haversineKm(user, { lat: b.lat, lng: b.lng }) });
   }
-  if (!best) return null;
+  if (candidates.length === 0) return null;
+  // מיון: כתובת מלאה קודם, אחר כך הקרוב יותר. בתוך כתובות מלאות - הקרוב יותר.
+  candidates.sort((x, y) => {
+    const xHasInfo = (x.b.address || x.b.city) ? 1 : 0;
+    const yHasInfo = (y.b.address || y.b.city) ? 1 : 0;
+    // אם הפער בין השניים גדול מ-2 ק"מ, הקרוב מנצח גם אם אין לו כתובת
+    if (Math.abs(x.dist - y.dist) > 2) return x.dist - y.dist;
+    // פער קטן - נעדיף את זה עם הכתובת
+    if (xHasInfo !== yHasInfo) return yHasInfo - xHasInfo;
+    return x.dist - y.dist;
+  });
+  const { b: best, dist: bestDist } = candidates[0];
   return {
     branchName: best.storeName,
     city: best.city || '',

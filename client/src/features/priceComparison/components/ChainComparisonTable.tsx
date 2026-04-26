@@ -325,48 +325,83 @@ const NavigationPicker = memo(({ branch, isDark, onClose }: {
 NavigationPicker.displayName = 'NavigationPicker';
 
 // תג מרחק + כפתור ניווט - מוצג לכל רשת כשהמשתמש שיתף מיקום.
-// הלחיצה על הכפתור פותחת picker (לא ישיר לאפליקציה) - המשתמש בוחר.
+// כרטיסון סניף קרוב - מרחק בולט, שם סניף + עיר, כפתור ניווט גדול וברור
 const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
   branch: NearestBranch; isDark?: boolean; onOpenPicker: (b: NearestBranch) => void;
-}) => (
-  <Box
-    onClick={(e) => { e.stopPropagation(); }}
-    sx={{
-      display: 'flex', alignItems: 'center', gap: 0.5,
-      mt: 0.35,
-    }}
-  >
-    <LocationOnIcon sx={{ fontSize: 12, color: '#7C3AED', flexShrink: 0 }} />
-    <Typography sx={{
-      fontSize: 10.5, color: 'text.secondary', fontWeight: 600,
-      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      minWidth: 0, flex: 1,
-    }}>
-      <b style={{ color: isDark ? '#A78BFA' : '#7C3AED' }}>{branch.distanceKm} ק״מ</b>
-      {' · '}{branch.branchName}
-    </Typography>
-    <IconButton
-      size="small"
+}) => {
+  const subtitle = [branch.city, branch.address].filter(Boolean).join(' · ');
+  return (
+    <Box
       onClick={(e) => { e.stopPropagation(); onOpenPicker(branch); }}
-      aria-label={`נווט ל${branch.branchName}`}
       sx={{
-        width: 24, height: 24, flexShrink: 0,
-        bgcolor: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)',
-        color: '#7C3AED',
-        '&:hover': { bgcolor: isDark ? 'rgba(124,58,237,0.3)' : 'rgba(124,58,237,0.18)' },
+        display: 'flex', alignItems: 'center', gap: 0.85,
+        mt: 0.5, p: 0.85, borderRadius: '10px',
+        bgcolor: isDark ? 'rgba(124,58,237,0.1)' : 'rgba(124,58,237,0.06)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(167,139,250,0.25)' : 'rgba(124,58,237,0.18)',
+        cursor: 'pointer', userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        transition: 'background-color 0.12s',
+        '&:hover': { bgcolor: isDark ? 'rgba(124,58,237,0.18)' : 'rgba(124,58,237,0.1)' },
+        '&:active': { opacity: 0.85 },
       }}
     >
-      <NavigationIcon sx={{ fontSize: 13 }} />
-    </IconButton>
-  </Box>
-));
+      {/* תג מרחק בולט - אפשר לראות מרחוק */}
+      <Box sx={{
+        flexShrink: 0,
+        minWidth: 48, px: 0.5, py: 0.5,
+        borderRadius: '8px',
+        background: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
+        color: 'white',
+        textAlign: 'center',
+        boxShadow: '0 2px 6px rgba(124,58,237,0.3)',
+      }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+          {branch.distanceKm}
+        </Typography>
+        <Typography sx={{ fontSize: 8, fontWeight: 700, opacity: 0.95, lineHeight: 1, mt: 0.2 }}>
+          ק"מ
+        </Typography>
+      </Box>
+
+      {/* שם הסניף + עיר/כתובת */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography sx={{
+          fontSize: 11.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.25,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {branch.branchName}
+        </Typography>
+        {subtitle && (
+          <Typography sx={{
+            fontSize: 9.5, color: 'text.secondary', mt: 0.15, lineHeight: 1.3,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            📍 {subtitle}
+          </Typography>
+        )}
+      </Box>
+
+      {/* כפתור ניווט גדול וברור */}
+      <Box sx={{
+        flexShrink: 0,
+        width: 36, height: 36, borderRadius: '10px',
+        bgcolor: '#7C3AED',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 2px 6px rgba(124,58,237,0.3)',
+      }}>
+        <NavigationIcon sx={{ fontSize: 18, color: 'white' }} />
+      </Box>
+    </Box>
+  );
+});
 BranchInfo.displayName = 'BranchInfo';
 
 // בר מיון - מוצג רק כשיש מידע מיקום לפחות ברשת אחת.
 const SortBar = memo(({ sortMode, setSortMode, isDark }: {
   sortMode: SortMode; setSortMode: (m: SortMode) => void; isDark?: boolean;
 }) => {
-  const Chip = ({ mode, emoji, label }: { mode: SortMode; emoji: string; label: string }) => {
+  const Chip = ({ mode, emoji, label, hint }: { mode: SortMode; emoji: string; label: string; hint: string }) => {
     const active = sortMode === mode;
     return (
       <Box
@@ -374,36 +409,45 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
         tabIndex={0}
         onClick={() => setSortMode(mode)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSortMode(mode); }}
+        aria-label={`מיון לפי ${label} - ${hint}`}
         sx={{
           flex: 1, minWidth: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
-          py: 0.75, px: 1, borderRadius: '10px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.15,
+          py: 0.85, px: 1, borderRadius: '12px',
           cursor: 'pointer', userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           bgcolor: active
             ? (isDark ? 'rgba(124,58,237,0.28)' : 'rgba(124,58,237,0.14)')
             : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
           border: '1.5px solid',
-          borderColor: active
-            ? '#7C3AED'
-            : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+          borderColor: active ? '#7C3AED' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
           transition: 'all 0.12s',
-          '&:active': { opacity: 0.8 },
+          '&:active': { opacity: 0.85, transform: 'scale(0.98)' },
         }}
       >
-        <Box sx={{ fontSize: 14, lineHeight: 1 }}>{emoji}</Box>
-        <Typography sx={{ fontSize: 11.5, fontWeight: active ? 800 : 600, color: active ? '#7C3AED' : 'text.primary' }}>
-          {label}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+          <Box sx={{ fontSize: 15, lineHeight: 1 }}>{emoji}</Box>
+          <Typography sx={{ fontSize: 12, fontWeight: active ? 800 : 700, color: active ? '#7C3AED' : 'text.primary' }}>
+            {label}
+          </Typography>
+        </Box>
+        <Typography sx={{ fontSize: 9, color: active ? '#7C3AED' : 'text.disabled', fontWeight: 500, letterSpacing: 0.2 }}>
+          {hint}
         </Typography>
       </Box>
     );
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 0.75, px: 1.5, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-      <Chip mode="price" emoji="💰" label="זול" />
-      <Chip mode="distance" emoji="📍" label="קרוב" />
-      <Chip mode="combined" emoji="⚖️" label="משולב" />
+    <Box sx={{ px: 1.25, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.disabled', mb: 0.6, letterSpacing: 0.4 }}>
+        מיין לפי:
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 0.6 }}>
+        <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
+        <Chip mode="distance" emoji="📍" label="קרוב" hint="מרחק מהבית" />
+        <Chip mode="combined" emoji="⚖️" label="משולב" hint="זול+קרוב" />
+      </Box>
     </Box>
   );
 });
@@ -639,9 +683,23 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         ? `לא נמצאו התאמות במאגר של ${chain.chainName}`
                         : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
                   </Typography>
-                  {chain.nearestBranch && (
+                  {chain.nearestBranch ? (
                     <BranchInfo branch={chain.nearestBranch} isDark={isDark} onOpenPicker={setNavBranch} />
-                  )}
+                  ) : hasAnyLocation && !isEmpty ? (
+                    /* יש מיקום ולרשת אין סניף במאגר - הודעה ברורה ללקוח */
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.5,
+                      mt: 0.5, p: 0.7, borderRadius: '8px',
+                      bgcolor: isDark ? 'rgba(148,163,184,0.08)' : 'rgba(148,163,184,0.06)',
+                      border: '1px dashed',
+                      borderColor: isDark ? 'rgba(148,163,184,0.2)' : 'rgba(148,163,184,0.25)',
+                    }}>
+                      <LocationOnIcon sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>
+                        אין סניף של רשת זו במאגר שלנו
+                      </Typography>
+                    </Box>
+                  ) : null}
                 </Box>
 
                 <Box sx={{ textAlign: 'end' }}>

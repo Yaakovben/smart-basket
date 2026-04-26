@@ -71,7 +71,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
     >
       {/* כותרת + מטא-מידע בשורה אחת. ההסבר הארוך הוסר - האייקון של הסל
           המנצח (ירוק במרכז המסך) כבר מספר את הסיפור בלי טקסט מלל. */}
-      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1 }}>
         <Typography sx={{ fontSize: 15, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
         <BetaBadge size="sm" />
         {data.lastUpdatedISO && (
@@ -80,6 +80,26 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
             <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>עודכן {freshness}</Typography>
           </Box>
         )}
+      </Box>
+
+      {/* באנר ברור - גרסה ראשונית. ללקוח שלא יסמוך עיוורת על הנתונים */}
+      <Box sx={{
+        mb: 1.5, px: 1.25, py: 0.85, borderRadius: '10px',
+        bgcolor: isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.07)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.25)',
+        display: 'flex', alignItems: 'flex-start', gap: 0.75,
+      }}>
+        <Typography sx={{ fontSize: 14, lineHeight: 1, mt: 0.1, flexShrink: 0 }}>⚠️</Typography>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 1.3 }}>
+            גרסה ראשונית · בדוק לפני קנייה
+          </Typography>
+          <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.45, mt: 0.2 }}>
+            ההתאמה בין שמות המוצרים שלך למוצרי הרשת מבוססת על מילים — עשויה להיות לא מדויקת.
+            מומלץ לאמת את המחיר בסניף לפני קנייה.
+          </Typography>
+        </Box>
       </Box>
 
       {/* ===== באנר מיקום ===== */}
