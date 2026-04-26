@@ -82,6 +82,25 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         )}
       </Box>
 
+      {/* באנר ידידותי - גרסה ראשונית, מזמין דיווח על אי-דיוקים. צבעים נעימים (טורקיז) במקום אזהרה אגרסיבית. */}
+      <Box sx={{
+        mb: 1.5, px: 1.25, py: 0.85, borderRadius: '10px',
+        bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.07)',
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(20,184,166,0.3)' : 'rgba(20,184,166,0.22)',
+        display: 'flex', alignItems: 'flex-start', gap: 0.85,
+      }}>
+        <Typography sx={{ fontSize: 15, lineHeight: 1, mt: 0.1, flexShrink: 0 }}>💬</Typography>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 800, color: isDark ? '#5EEAD4' : '#0F766E', lineHeight: 1.3 }}>
+            גרסה ראשונית · עוזרים לנו להשתפר
+          </Typography>
+          <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.45, mt: 0.25 }}>
+            המחירים והסניפים מתעדכנים אוטומטית מהפורטל הממשלתי. אם נתקלתם במידע לא תואם — <b>שתפו אותנו</b> בהגדרות → "צור קשר".
+          </Typography>
+        </Box>
+      </Box>
+
       {/* ===== באנר מיקום ===== */}
       {/* מופיע רק בטאב מחירים. מעודד הפעלת מיקום כדי להציג סניף קרוב לכל רשת.
           אחרי אישור - הופך לתג קטן "📍 מיקום פעיל". אחרי דחייה - לינק קטן
