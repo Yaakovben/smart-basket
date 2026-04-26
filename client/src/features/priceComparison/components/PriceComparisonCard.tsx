@@ -324,12 +324,26 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         <Typography sx={{ fontSize: 9.5, color: 'text.disabled', lineHeight: 1.5 }}>
           ההתאמה בין שמות המוצרים לרשתות מבוססת על חיפוש מילים - עשויה להיות לא מדויקת. מחירים מתעדכנים כל 6 שעות.
         </Typography>
-        <Typography sx={{ fontSize: 9.5, color: 'text.disabled', mt: 0.5 }}>
-          מקור:{' '}
-          <Link href={data.sourceUrl} target="_blank" rel="noopener" sx={{ color: '#0D9488', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-            {data.sourceName} ↗
+        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
+          <Typography sx={{ fontSize: 9.5, color: 'text.disabled' }}>
+            מקור:{' '}
+            <Link href={data.sourceUrl} target="_blank" rel="noopener" sx={{ color: '#0D9488', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+              {data.sourceName} ↗
+            </Link>
+          </Typography>
+          <Typography sx={{ fontSize: 9.5, color: 'text.disabled' }}>·</Typography>
+          {/* קישור דיווח על מידע שגוי - חשוב לבטא ללקוח */}
+          <Link
+            href={`mailto:smartbasket129@gmail.com?subject=${encodeURIComponent('דיווח על מידע שגוי בהשוואת מחירים')}&body=${encodeURIComponent('שלום,\n\nראיתי מידע שנראה לא נכון בהשוואת המחירים:\n\n[פרט: איזו רשת? איזה סניף? איזה מחיר?]\n\nתודה!')}`}
+            sx={{
+              fontSize: 9.5, fontWeight: 700, color: '#DC2626',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            🚩 דווח על מידע שגוי
           </Link>
-        </Typography>
+        </Box>
       </Box>
     </Paper>
   );
