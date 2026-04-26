@@ -271,6 +271,83 @@ export const InsightsPage = memo(() => {
         </Paper>
       </Box>
 
+      {/* ===== כרטיס תובנת היום - אחיד לכל הטאבים ===== */}
+      {/* תובנה אחת ספציפית בראש כל טאב - נותן עוגן ויזואלי קבוע ועונה
+          על השאלה "מה הכי חשוב פה" לפני שהמשתמש קורא את כל הנתונים. */}
+      {(() => {
+        type Insight = { emoji: string; title: string; subtitle?: string; gradient: string };
+        let insight: Insight | null = null;
+        if (tab === 'price' && priceData) {
+          const cheapest = priceData.chainTotals?.find(c => c.isCheapest);
+          const completeChains = priceData.chainTotals?.filter(c => c.isComplete && c.matchedCount > 0) ?? [];
+          const maxTotal = completeChains.length > 1 ? Math.max(...completeChains.map(c => c.total)) : 0;
+          const savings = cheapest && maxTotal > cheapest.total ? maxTotal - cheapest.total : 0;
+          if (cheapest && savings > 0) {
+            insight = {
+              emoji: '💰',
+              title: `חוסך עד ₪${savings.toFixed(0)} ב${cheapest.chainName}`,
+              subtitle: `הסל שלך עולה ₪${cheapest.total.toFixed(0)} שם`,
+              gradient: 'linear-gradient(135deg, #10B981, #059669)',
+            };
+          }
+        } else if (tab === 'lists' && groupStats?.[0]) {
+          const top = groupStats[0];
+          insight = {
+            emoji: '📋',
+            title: `${top.name} — הרשימה הכי פעילה`,
+            subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
+            gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+          };
+        } else if (tab === 'habits' && topProducts?.[0]) {
+          const top = topProducts[0];
+          insight = {
+            emoji: '🏆',
+            title: `${top.name} — המוצר הכי נפוץ`,
+            subtitle: `הוספת ${top.count} פעמים החודש`,
+            gradient: 'linear-gradient(135deg, #F59E0B, #D97706)',
+          };
+        } else if (tab === 'pulse' && shoppingScore !== undefined) {
+          const label = shoppingScore >= 80 ? 'מעולה' : shoppingScore >= 60 ? 'טוב' : shoppingScore >= 40 ? 'סביר' : 'יש מקום לשיפור';
+          insight = {
+            emoji: '📈',
+            title: `ציון הקנייה שלך: ${shoppingScore}/100`,
+            subtitle: label,
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+          };
+        }
+        if (!insight) return null;
+        return (
+          <Box sx={{ px: 2, mb: 1.5 }}>
+            <Box sx={{
+              p: 1.5, borderRadius: '14px',
+              background: insight.gradient,
+              boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+              color: 'white',
+              display: 'flex', alignItems: 'center', gap: 1.25,
+            }}>
+              <Box sx={{
+                width: 40, height: 40, borderRadius: '12px',
+                bgcolor: 'rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, flexShrink: 0,
+              }}>
+                {insight.emoji}
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 800, lineHeight: 1.3 }}>
+                  {insight.title}
+                </Typography>
+                {insight.subtitle && (
+                  <Typography sx={{ fontSize: 11, opacity: 0.9, mt: 0.15 }}>
+                    {insight.subtitle}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        );
+      })()}
+
       {/* ===== תוכן לפי טאב ===== */}
       <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>
 
