@@ -247,13 +247,16 @@ export const shufersalAdapter: ChainAdapter = {
         return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: 0, error: 'no_price_file_found' };
       }
 
-      // לוקחים עד 15 סניפים, ובמקבילות של 5 כדי לא לחרוג מהזמן
-      const MAX_STORES = 15;
-      const BATCH = 5;
+      // 30 סניפים במקבילות של 6 - כיסוי טוב יותר של הקטלוג. 15 הקודמים
+      // נתנו רק 664 מוצרים כי כל סניף מחזיק תת-קטלוג. 30 סניפים מתפזרים
+      // יותר על תתי-מותגים (דיל/שלי/אקספרס) ועל אזורים שונים.
+      const MAX_STORES = 30;
+      const BATCH = 6;
       const subset = urls.slice(0, MAX_STORES);
       const seenBarcodes = new Set<string>();
       const allItems: ChainPriceItem[] = [];
       let fetched = 0;
+      let lastError: string | undefined;
 
       for (let i = 0; i < subset.length; i += BATCH) {
         const batch = subset.slice(i, i + BATCH);
@@ -262,7 +265,10 @@ export const shufersalAdapter: ChainAdapter = {
           return parseXmlBuffer(buf, isGzipped);
         }));
         for (const r of results) {
-          if (r.status !== 'fulfilled') continue;
+          if (r.status === 'rejected') {
+            lastError = r.reason instanceof Error ? r.reason.message : 'unknown';
+            continue;
+          }
           fetched++;
           for (const item of r.value) {
             // dedup לפי ברקוד - מוצר זהה בסניפים שונים = רשומה אחת
@@ -272,6 +278,10 @@ export const shufersalAdapter: ChainAdapter = {
           }
         }
       }
+
+      // לוג: מספר סניפים שהורידו, מספר ייחודיים. עוזר לדבג כשהמספר נמוך.
+      const logFn = (await import('../../../config/logger')).logger;
+      logFn.info(`[shufersal] fetched=${fetched}/${subset.length} stores, items=${allItems.length}${lastError ? `, lastErr=${lastError.substring(0, 60)}` : ''}`);
 
       if (allItems.length === 0) {
         return { chainId: 'shufersal', chainName: 'שופרסל', items: [], fetchedFiles: fetched, error: 'no_items_parsed' };
