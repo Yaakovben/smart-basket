@@ -286,10 +286,18 @@ export const ListHeader = memo(({
         // אינפוטים: גובה 28
         '& .MuiOutlinedInput-root': { minHeight: '28px !important', height: '28px !important' },
         '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
-        // טאבים: גובה 24
-        '& .MuiTab-root': { minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important' },
-        // glassButton זעיר
-        '& [class*="MuiIconButton-root"]': { width: '26px !important', height: '26px !important' },
+        // טאבים: ויזואלית 24 + tap-target מורחב דרך pseudo-element
+        '& .MuiTab-root': {
+          minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
+          position: 'relative',
+          '&::before': { content: '""', position: 'absolute', inset: '-6px 0' },
+        },
+        // glassButton ויזואלית 26 + tap-target 42x42 (a11y)
+        '& [class*="MuiIconButton-root"]': {
+          width: '26px !important', height: '26px !important',
+          position: 'relative',
+          '&::before': { content: '""', position: 'absolute', inset: '-8px' },
+        },
         '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
         // כותרת זעירה
         '& h6, & .MuiTypography-h6': { fontSize: '13px !important' },

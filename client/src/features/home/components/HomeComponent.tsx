@@ -708,10 +708,18 @@ export const HomeComponent = memo(({
           // קלט גובה 28
           '& .MuiOutlinedInput-root': { minHeight: '28px !important' },
           '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
-          // טאבים
-          '& .MuiTab-root': { minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important' },
-          // כפתורי אייקון
-          '& [class*="MuiIconButton-root"]': { width: '26px !important', height: '26px !important' },
+          // טאבים: ויזואלית קטן + tap-target מורחב (a11y)
+          '& .MuiTab-root': {
+            minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
+            position: 'relative',
+            '&::before': { content: '""', position: 'absolute', inset: '-6px 0' },
+          },
+          // כפתורי אייקון: ויזואלית 26, אזור לחיצה 42x42
+          '& [class*="MuiIconButton-root"]': {
+            width: '26px !important', height: '26px !important',
+            position: 'relative',
+            '&::before': { content: '""', position: 'absolute', inset: '-8px' },
+          },
           '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
         },
       }}>
@@ -804,10 +812,47 @@ export const HomeComponent = memo(({
           </Box>
         ) : display.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
-            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: { xs: '24px', sm: '30px' }, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 }, fontSize: { xs: 52, sm: 64 }, boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)' }}>
-              {tab === 'groups' ? '👥' : '📝'}
+            {/* דמות ידידותית - אייקון מרכזי שצף + פריטים מרחפים סביב לתחושת חיים */}
+            <Box sx={{ position: 'relative', width: 180, height: 180, mb: { xs: 2, sm: 2.5 } }}>
+              <Box sx={{
+                position: 'absolute', inset: 0, borderRadius: '50%',
+                background: tab === 'groups'
+                  ? 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.06))'
+                  : 'linear-gradient(135deg, rgba(20,184,166,0.18), rgba(16,185,129,0.06))',
+                animation: 'pulseRing 3s ease-in-out infinite',
+                '@keyframes pulseRing': {
+                  '0%, 100%': { transform: 'scale(1)' },
+                  '50%': { transform: 'scale(1.05)' },
+                },
+              }} />
+              <Box sx={{
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 72,
+                animation: 'floatMain 3s ease-in-out infinite',
+                '@keyframes floatMain': {
+                  '0%, 100%': { transform: 'translateY(0)' },
+                  '50%': { transform: 'translateY(-6px)' },
+                },
+              }}>
+                {tab === 'groups' ? '👥' : '🛒'}
+              </Box>
+              {(tab === 'groups' ? ['💬', '🤝', '🎉', '✨'] : ['🥕', '🍞', '🥛', '🍎']).map((emoji, i) => (
+                <Box key={i} sx={{
+                  position: 'absolute', fontSize: 22,
+                  top: ['10%', '12%', '70%', '68%'][i],
+                  left: ['10%', '78%', '8%', '78%'][i],
+                  animation: `floatItem 2.8s ease-in-out ${i * 0.3}s infinite`,
+                  '@keyframes floatItem': {
+                    '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+                    '50%': { transform: 'translateY(-8px) rotate(5deg)', opacity: 1 },
+                  },
+                }}>
+                  {emoji}
+                </Box>
+              ))}
             </Box>
-            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+            <Typography sx={{ fontSize: { xs: 17, sm: 19 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
               {tab === 'groups' ? t('noGroups') : t('noLists')}
             </Typography>
             <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
@@ -816,7 +861,7 @@ export const HomeComponent = memo(({
             <Button
               variant="contained"
               onClick={() => { haptic('medium'); setShowMenu(true); }}
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 2.5, sm: 3 }, py: { xs: 1.25, sm: 1.5 }, fontSize: { xs: 14, sm: 15 } }}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 3, sm: 3.5 }, py: { xs: 1.4, sm: 1.6 }, fontSize: { xs: 14, sm: 15 }, borderRadius: '14px', boxShadow: '0 6px 20px rgba(20,184,166,0.3)' }}
             >
               <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
