@@ -461,6 +461,28 @@ export const EditProductModal = memo(({
           })}
         </Box>
       </Box>
+      {/* הערה למוצר - שדה אופציונלי קצר שכל חברי הרשימה רואים */}
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography component="label" htmlFor="edit-product-note" sx={labelSx}>
+            💬 הערה
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.disabled', fontVariantNumeric: 'tabular-nums' }}>
+            {(product.note || '').length} / 200
+          </Typography>
+        </Box>
+        <TextField
+          id="edit-product-note"
+          fullWidth
+          multiline
+          minRows={2}
+          maxRows={4}
+          value={product.note || ''}
+          onChange={e => onUpdateField('note', e.target.value.slice(0, 200) as Product['note'])}
+          placeholder="לדוגמה: רק 3% שומן, מותג ספציפי, חלב סויה..."
+          inputProps={{ maxLength: 200 }}
+        />
+      </Box>
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>

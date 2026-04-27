@@ -275,6 +275,19 @@ export const ListHeader = memo(({
       '@media (max-width: 360px)': {
         p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
       },
+      // Landscape במובייל - מצמצם את כל ההדר אגרסיבית כדי שהרשימה תקבל את רוב המסך
+      '@media (orientation: landscape) and (max-height: 500px)': {
+        p: 'max(8px, env(safe-area-inset-top) + 2px) 16px 8px',
+        borderRadius: '0 0 12px 12px',
+        // מקצץ את כל ה-mb בין שורות לחצי
+        '& > * + *': { marginTop: '4px !important' },
+        // אינפוטים נמוכים יותר
+        '& .MuiOutlinedInput-root': { minHeight: '36px !important' },
+        // טאבים נמוכים יותר
+        '& .MuiTab-root': { minHeight: '32px !important', py: '4px !important', fontSize: '13px !important' },
+        // שורות mb-overrides ספציפיות
+        '& > .MuiBox-root': { marginBottom: '6px !important' },
+      },
     }}>
       {/* Title Row */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 }, '@media (max-width: 360px)': { mb: 0.5 } }}>

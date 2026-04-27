@@ -184,6 +184,7 @@ type TranslationKey =
   // Categories
   | 'catDairy'
   | 'catBakery'
+  | 'catBaking'
   | 'catVegetables'
   | 'catFruits'
   | 'catMeat'
@@ -635,6 +636,7 @@ export const translations: Record<Language, Translations> = {
     // Categories
     catDairy: 'מוצרי חלב',
     catBakery: 'מאפים',
+    catBaking: 'אפייה',
     catVegetables: 'ירקות',
     catFruits: 'פירות',
     catMeat: 'בשר',
@@ -1078,6 +1080,7 @@ export const translations: Record<Language, Translations> = {
     // Categories
     catDairy: 'Dairy',
     catBakery: 'Bakery',
+    catBaking: 'Baking',
     catVegetables: 'Vegetables',
     catFruits: 'Fruits',
     catMeat: 'Meat',
@@ -1519,6 +1522,7 @@ export const translations: Record<Language, Translations> = {
     // Categories
     catDairy: 'Молочные',
     catBakery: 'Выпечка',
+    catBaking: 'Для выпечки',
     catVegetables: 'Овощи',
     catFruits: 'Фрукты',
     catMeat: 'Мясо',

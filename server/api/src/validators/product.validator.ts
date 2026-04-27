@@ -19,6 +19,9 @@ export const productValidator = {
     category: Joi.string()
       .valid(...PRODUCT_CATEGORIES)
       .default(DEFAULT_CATEGORY),
+    note: Joi.string().allow('').max(200).messages({
+      'string.max': 'Note cannot exceed 200 characters',
+    }),
   }),
 
   update: Joi.object({
@@ -33,6 +36,9 @@ export const productValidator = {
     unit: Joi.string().valid(...PRODUCT_UNITS),
     category: Joi.string().valid(...PRODUCT_CATEGORIES),
     isPurchased: Joi.boolean(),
+    note: Joi.string().allow('').max(200).messages({
+      'string.max': 'Note cannot exceed 200 characters',
+    }),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
   }),
@@ -66,6 +72,7 @@ export type CreateProductInput = {
   quantity?: number;
   unit?: ProductUnit;
   category?: ProductCategory;
+  note?: string;
 };
 
 export type UpdateProductInput = {
@@ -74,6 +81,7 @@ export type UpdateProductInput = {
   unit?: ProductUnit;
   category?: ProductCategory;
   isPurchased?: boolean;
+  note?: string;
 };
 
 export type ReorderProductsInput = {

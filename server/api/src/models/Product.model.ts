@@ -12,6 +12,7 @@ export interface IProductDoc extends Document {
   isPurchased: boolean;
   addedBy: Types.ObjectId;
   position: number;
+  note?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,12 @@ const productSchema = new Schema<IProductDoc>(
     position: {
       type: Number,
       default: 0,
+    },
+    note: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: '',
     },
   },
   {

@@ -14,6 +14,7 @@ export type ProductUnit = "יח׳" | "ק״ג" | "גרם" | "ליטר";
 export type ProductCategory =
   | "מוצרי חלב"
   | "מאפים"
+  | "אפייה"
   | "ירקות"
   | "פירות"
   | "בשר"
@@ -35,6 +36,7 @@ export interface Product {
   isPurchased: boolean;
   addedBy: string;
   createdAt: string;
+  note?: string;
 }
 
 // ===== רשימה =====

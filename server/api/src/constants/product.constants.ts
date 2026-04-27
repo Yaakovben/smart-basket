@@ -4,6 +4,7 @@ export const PRODUCT_UNITS = ['יח׳', 'ק״ג', 'גרם', 'ליטר'] as const
 export const PRODUCT_CATEGORIES = [
   'מוצרי חלב',
   'מאפים',
+  'אפייה',
   'ירקות',
   'פירות',
   'בשר',

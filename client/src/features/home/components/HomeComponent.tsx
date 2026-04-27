@@ -687,7 +687,31 @@ export const HomeComponent = memo(({
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
-      <Box sx={{ background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)', p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' }, borderRadius: '0 0 24px 24px', flexShrink: 0, boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(20, 184, 166, 0.15)' }}>
+      <Box sx={{
+        background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+        p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
+        borderRadius: '0 0 24px 24px',
+        flexShrink: 0,
+        boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(20, 184, 166, 0.15)',
+        // מסך זעיר (Qin F21 Pro) - padding מצומצם
+        '@media (max-width: 360px)': {
+          p: 'max(36px, env(safe-area-inset-top) + 8px) 12px 14px',
+          borderRadius: '0 0 18px 18px',
+        },
+        // Landscape במובייל - גובה נמוך, מצמצם הכל אגרסיבית
+        '@media (orientation: landscape) and (max-height: 500px)': {
+          p: 'max(8px, env(safe-area-inset-top) + 2px) 16px 8px',
+          borderRadius: '0 0 12px 12px',
+          // אווטאר וכותרת קטנים יותר
+          '& .MuiAvatar-root': { width: '34px !important', height: '34px !important', fontSize: '14px !important' },
+          // מצמצם mb בין שורות
+          '& > .MuiBox-root': { marginBottom: '8px !important' },
+          // קלט חיפוש נמוך יותר
+          '& .MuiOutlinedInput-root': { minHeight: '36px !important' },
+          // טאבים
+          '& .MuiTab-root': { minHeight: '32px !important', py: '4px !important' },
+        },
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar

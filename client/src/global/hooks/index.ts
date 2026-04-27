@@ -263,6 +263,7 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   isPurchased: p.isPurchased,
   addedBy: p.addedBy,
   createdAt: p.createdAt,
+  note: p.note,
 });
 
 // המרת רשימה מפורמט API לפורמט לקוח

@@ -18,10 +18,11 @@ export interface Product {
   name: string;
   quantity: number;
   unit: 'יח׳' | 'ק״ג' | 'גרם' | 'ליטר';
-  category: 'מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'פיצוחים' | 'קפואים' | 'שימורים ויבשים' | 'תבלינים ורטבים' | 'ניקיון' | 'אחר';
+  category: 'מוצרי חלב' | 'מאפים' | 'אפייה' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'פיצוחים' | 'קפואים' | 'שימורים ויבשים' | 'תבלינים ורטבים' | 'ניקיון' | 'אחר';
   isPurchased: boolean;
   addedBy: string;
   createdAt: string;
+  note?: string;
 }
 
 export interface List {
