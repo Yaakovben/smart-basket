@@ -62,6 +62,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
+  // הערה מוצגת רק בלחיצה על אייקון ה-💬, אחרת המוצר נשאר קומפקטי
+  const [noteOpen, setNoteOpen] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Refs למעקב אחר מחוות
@@ -290,7 +292,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         position: 'relative',
         mb: '6px',
         borderRadius: '14px',
-        height: product.note ? '92px' : '72px',
+        // המוצר נשאר בגובה קבוע גם כשיש הערה. הגובה גדל רק כשהמשתמש פותח את ההערה ידנית.
+        height: product.note && noteOpen ? '92px' : '72px',
+        transition: 'height 0.18s ease',
         overflow: 'hidden',
         touchAction: swiping ? 'none' : 'pan-y',
         WebkitUserSelect: 'none',
@@ -380,24 +384,47 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           {icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            sx={{
-              fontSize: '15px',
-              fontWeight: 600,
-              color: isPurchased ? 'text.secondary' : 'text.primary',
-              textDecoration: isPurchased ? 'line-through' : 'none',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography
+              sx={{
+                flex: 1, minWidth: 0,
+                fontSize: '15px',
+                fontWeight: 600,
+                color: isPurchased ? 'text.secondary' : 'text.primary',
+                textDecoration: isPurchased ? 'line-through' : 'none',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
+            </Typography>
+            {/* אייקון הערה - לחיצה פותחת/סוגרת את הצגת ההערה. לא מגדיל את המוצר עד שלוחצים. */}
+            {product.note && (
+              <Box
+                role="button"
+                aria-label={noteOpen ? 'סגור הערה' : 'הצג הערה'}
+                onClick={(e) => { e.stopPropagation(); haptic('light'); setNoteOpen(o => !o); }}
+                sx={{
+                  flexShrink: 0,
+                  width: 22, height: 22, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13,
+                  bgcolor: noteOpen ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.12)',
+                  cursor: 'pointer', userSelect: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  transition: 'background-color 0.15s',
+                }}
+              >
+                💬
+              </Box>
+            )}
+          </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
           </Typography>
-          {/* הערה - מוצגת מתחת לפרטי המוצר אם קיימת. צבע צהבהב עדין כדי לבלוט בלי להפריע. */}
-          {product.note && (
+          {/* הערה - מוצגת רק כשהמשתמש לחץ על האייקון 💬 */}
+          {product.note && noteOpen && (
             <Typography
               sx={{
                 fontSize: '12px',
@@ -410,7 +437,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 fontStyle: 'italic',
               }}
             >
-              💬 {product.note}
+              {product.note}
             </Typography>
           )}
         </Box>
