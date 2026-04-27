@@ -277,6 +277,44 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   const [selectionMode, setSelectionMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
+  // ===== Pull to Refresh =====
+  // משיכה למטה כשהגלילה בראש הדף מפעילה רענון. סף 70px מהנקודה ההתחלתית.
+  const [pullDistance, setPullDistance] = useState(0);
+  const pullStartY = useRef(0);
+  const pullActive = useRef(false);
+  const PULL_THRESHOLD = 70;
+  const PULL_MAX = 100;
+
+  const handlePullStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop > 0) return;
+    pullStartY.current = e.touches[0].clientY;
+    pullActive.current = true;
+  }, []);
+
+  const handlePullMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!pullActive.current) return;
+    const delta = e.touches[0].clientY - pullStartY.current;
+    if (delta < 0) {
+      pullActive.current = false;
+      setPullDistance(0);
+      return;
+    }
+    // התנגדות גומייה - התנועה מתעמעמת ככל שמושכים יותר
+    const eased = Math.min(PULL_MAX, Math.sqrt(delta) * 8);
+    setPullDistance(eased);
+  }, []);
+
+  const handlePullEnd = useCallback(() => {
+    if (!pullActive.current) return;
+    pullActive.current = false;
+    if (pullDistance >= PULL_THRESHOLD) {
+      haptic('medium');
+      refreshList();
+    }
+    setPullDistance(0);
+  }, [pullDistance, refreshList]);
+
   const exitSelectionMode = useCallback(() => {
     setSelectionMode(false);
     setSelectedProducts(new Set());
@@ -415,6 +453,32 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
       />
 
+      {/* אינדיקטור Pull to Refresh - מופיע מעל התוכן בזמן משיכה. */}
+      {(pullDistance > 0 || refreshing) && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          height: refreshing ? 50 : Math.min(pullDistance, PULL_MAX),
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          bgcolor: 'background.default',
+          transition: pullActive.current ? 'none' : 'height 0.2s ease',
+          zIndex: 5,
+          pointerEvents: 'none',
+        }}>
+          <Box sx={{
+            fontSize: 22,
+            opacity: refreshing ? 1 : Math.min(1, pullDistance / PULL_THRESHOLD),
+            transform: refreshing
+              ? 'rotate(0deg)'
+              : `rotate(${Math.min(180, (pullDistance / PULL_THRESHOLD) * 180)}deg)`,
+            transition: refreshing ? 'transform 0.4s linear' : 'none',
+            animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
+            '@keyframes spin': { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+          }}>
+            🔄
+          </Box>
+        </Box>
+      )}
       {/* Content */}
       <Box
         sx={{
@@ -425,7 +489,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch',
           willChange: 'scroll-position',
+          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+          transition: pullActive.current ? 'none' : 'transform 0.2s ease',
         }}
+        onTouchStart={handlePullStart}
+        onTouchMove={handlePullMove}
+        onTouchEnd={handlePullEnd}
         onClick={handleCloseItem}
         role="main"
         aria-label={list.name}
@@ -512,6 +581,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
                 isSelected={selectedProducts.has(p.id)}
                 selectionMode={selectionMode}
                 currentUserName={user.name}
+                searchTerm={search}
                 onOpen={setOpenItemId}
                 onClose={handleCloseItem}
                 onToggle={toggleProduct}
