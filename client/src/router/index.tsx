@@ -6,6 +6,7 @@ import type { User, List, Product, LoginMethod, ToastType } from "../global/type
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
 import { DailyFaithGate } from "../features/daily-faith";
+import { OnboardingGate } from "../features/onboarding";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
@@ -387,6 +388,7 @@ export const AppRouter = () => {
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
       <DailyFaithGate enabled={!!user && !authLoading} />
+      <OnboardingGate enabled={!!user && !authLoading} />
     </>
   );
 }
