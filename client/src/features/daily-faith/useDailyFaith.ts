@@ -3,6 +3,7 @@ import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
 import { markPopupShown, safeStorage } from '../../global/helpers';
 
 const STORAGE_KEY = 'sb_daily_faith_last_shown';
+const PENDING_KEY = 'sb_daily_faith_pending'; // משפט שהוצג ועדיין לא נסגר - יוצג שוב עד שילחץ סגור
 const SESSION_COUNT_KEY = 'sb_session_count';      // מונה מצטבר של סשנים (בדפדפן)
 const SESSION_MARKER_KEY = 'sb_session_marker';    // דגל לסשן נוכחי (נמחק בסגירת דפדפן)
 const MIN_SESSION_FOR_FAITH = 2;                    // לקוח חדש יראה רק מסשן 2
@@ -70,6 +71,18 @@ export function useDailyFaith(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     if (!ALWAYS_SHOW && safeStorage.get(STORAGE_KEY) === todayStr()) return;
+
+    // אם יש משפט ממתין מסשן קודם (המשתמש לא לחץ סגור) - מציגים שוב את אותו אחד,
+    // ולא מביאים משפט חדש. כך הוא לא רואה משפטים מתחלפים אם רענן/סגר את האפליקציה.
+    if (!ALWAYS_SHOW) {
+      const pending = safeStorage.getJSON<DailyFaith | null>(PENDING_KEY, null);
+      if (pending && pending.id && pending.text) {
+        setQuote(pending);
+        markPopupShown('daily-faith');
+        return;
+      }
+    }
+
     // לקוח חדש - מדלגים על הסשן הראשון כדי לא להציף אותו בכניסה הראשונה לאפליקציה
     if (!ALWAYS_SHOW && getSessionNumber() < MIN_SESSION_FOR_FAITH) return;
 
@@ -85,6 +98,11 @@ export function useDailyFaith(enabled: boolean) {
           if (!cancelled && q) {
             setQuote(q);
             markFaithSeen(q.id);
+            // שמירת המשפט הממתין - אם המשתמש יסגור את האפליקציה לפני שלחץ X,
+            // בפתיחה הבאה הוא יראה שוב את אותו משפט ולא משפט חדש
+            if (!ALWAYS_SHOW) {
+              safeStorage.setJSON(PENDING_KEY, q);
+            }
             // סימון בקואורדינטור שפופאפ נמצא על המסך - יחסום popups משניים בסשן זה
             markPopupShown('daily-faith');
           }
@@ -101,6 +119,8 @@ export function useDailyFaith(enabled: boolean) {
   const dismiss = () => {
     if (!ALWAYS_SHOW) {
       safeStorage.set(STORAGE_KEY, todayStr());
+      // הסרת המשפט הממתין - המשתמש סגר במפורש, אין צורך להציג שוב היום
+      safeStorage.remove(PENDING_KEY);
     }
     setQuote(null);
   };
