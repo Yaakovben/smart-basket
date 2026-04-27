@@ -62,8 +62,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
-  // הערה מוצגת רק בלחיצה על אייקון ה-💬, אחרת המוצר נשאר קומפקטי
-  const [noteOpen, setNoteOpen] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Refs למעקב אחר מחוות
@@ -292,9 +290,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         position: 'relative',
         mb: '6px',
         borderRadius: '14px',
-        // המוצר נשאר בגובה קבוע גם כשיש הערה. הגובה גדל רק כשהמשתמש פותח את ההערה ידנית.
-        height: product.note && noteOpen ? '92px' : '72px',
-        transition: 'height 0.18s ease',
+        // המוצר תמיד 72px - גם כשיש הערה. ההערה נצפית בפרטי המוצר בלחיצה.
+        height: '72px',
         overflow: 'hidden',
         touchAction: swiping ? 'none' : 'pan-y',
         WebkitUserSelect: 'none',
@@ -399,21 +396,19 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* אייקון הערה - לחיצה פותחת/סוגרת את הצגת ההערה. לא מגדיל את המוצר עד שלוחצים. */}
+            {/* סימון פסיבי שיש הערה - לחיצה על המוצר עצמו תציג את ההערה ב-popup */}
             {product.note && (
               <Box
-                role="button"
-                aria-label={noteOpen ? 'סגור הערה' : 'הצג הערה'}
-                onClick={(e) => { e.stopPropagation(); haptic('light'); setNoteOpen(o => !o); }}
+                aria-label="למוצר זה יש הערה"
                 sx={{
                   flexShrink: 0,
-                  width: 22, height: 22, borderRadius: '50%',
+                  width: 18, height: 18, borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13,
-                  bgcolor: noteOpen ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.12)',
-                  cursor: 'pointer', userSelect: 'none',
-                  WebkitTapHighlightColor: 'transparent',
-                  transition: 'background-color 0.15s',
+                  fontSize: 10,
+                  bgcolor: 'rgba(20,184,166,0.18)',
+                  color: '#0D9488',
+                  border: '1px solid rgba(20,184,166,0.35)',
+                  fontWeight: 800,
                 }}
               >
                 💬
@@ -423,23 +418,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
           </Typography>
-          {/* הערה - מוצגת רק כשהמשתמש לחץ על האייקון 💬 */}
-          {product.note && noteOpen && (
-            <Typography
-              sx={{
-                fontSize: '12px',
-                color: '#8B6914',
-                fontWeight: 500,
-                mt: 0.25,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                fontStyle: 'italic',
-              }}
-            >
-              {product.note}
-            </Typography>
-          )}
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>

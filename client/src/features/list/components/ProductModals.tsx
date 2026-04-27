@@ -27,11 +27,17 @@ const quantityBtnSx = {
 };
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
-// מעוצב כפתק דביק זהוב. סגור כברירת מחדל אם ריק - לחיצה פותחת את שדה הטקסט.
-// אם יש ערך, פתוח אוטומטית כדי שהמשתמש יראה אותו.
+// בצבעי האפליקציה (טורקיז) במקום זהוב. סגור כברירת מחדל - לחיצה פותחת.
+// אפשרות לסגור גם בתוך הפתיחה (כפתור X) - מסיר את ההערה ומחזיר למצב סגור.
 const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
+
+  const closeAndClear = () => {
+    haptic('light');
+    onChange('');
+    setExpanded(false);
+  };
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -42,16 +48,16 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: 0.75, py: 1.25, px: 2,
             borderRadius: '12px',
-            border: '1.5px dashed rgba(184,134,11,0.4)',
-            bgcolor: 'rgba(212,175,55,0.04)',
+            border: '1.5px dashed rgba(20,184,166,0.4)',
+            bgcolor: 'rgba(20,184,166,0.04)',
             cursor: 'pointer',
             transition: 'all 0.15s',
-            '&:hover': { bgcolor: 'rgba(212,175,55,0.1)', borderColor: 'rgba(184,134,11,0.6)' },
+            '&:hover': { bgcolor: 'rgba(20,184,166,0.1)', borderColor: 'rgba(20,184,166,0.6)' },
             '&:active': { transform: 'scale(0.98)' },
           }}
         >
           <Typography sx={{ fontSize: 16 }}>💬</Typography>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#8B6914' }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0D9488' }}>
             הוסף הערה (אופציונלי)
           </Typography>
         </Box>
@@ -60,21 +66,43 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
           sx={{
             p: 1.25,
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(255,243,199,0.6), rgba(254,235,158,0.4))',
-            border: '1px solid rgba(184,134,11,0.3)',
-            boxShadow: '0 1px 3px rgba(184,134,11,0.1)',
+            background: 'linear-gradient(135deg, rgba(20,184,166,0.1), rgba(20,184,166,0.04))',
+            border: '1px solid rgba(20,184,166,0.3)',
+            boxShadow: '0 1px 3px rgba(20,184,166,0.1)',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
               <Typography sx={{ fontSize: 14 }}>💬</Typography>
-              <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#8B6914', letterSpacing: 0.2 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#0D9488', letterSpacing: 0.2 }}>
                 הערה
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 10.5, color: value.length >= 180 ? '#EF4444' : 'rgba(139,105,20,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-              {value.length} / 200
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.85 }}>
+              <Typography sx={{ fontSize: 10.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                {value.length} / 200
+              </Typography>
+              {/* כפתור סגירה - מנקה את ההערה ומסגיר את השדה */}
+              <Box
+                role="button"
+                aria-label="סגור הערה"
+                onClick={closeAndClear}
+                sx={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: 'rgba(20,184,166,0.15)',
+                  color: '#0D9488',
+                  cursor: 'pointer', userSelect: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  fontSize: 14, fontWeight: 800, lineHeight: 1,
+                  transition: 'background-color 0.15s, transform 0.1s',
+                  '&:hover': { bgcolor: 'rgba(20,184,166,0.28)' },
+                  '&:active': { transform: 'scale(0.92)' },
+                }}
+              >
+                ✕
+              </Box>
+            </Box>
           </Box>
           <TextField
             fullWidth
@@ -92,9 +120,9 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
                 borderRadius: '8px',
                 bgcolor: 'rgba(255,255,255,0.7)',
                 fontSize: 13.5,
-                '& fieldset': { borderColor: 'rgba(184,134,11,0.25)' },
-                '&:hover fieldset': { borderColor: 'rgba(184,134,11,0.45)' },
-                '&.Mui-focused fieldset': { borderColor: '#B8860B', borderWidth: '1.5px' },
+                '& fieldset': { borderColor: 'rgba(20,184,166,0.3)' },
+                '&:hover fieldset': { borderColor: 'rgba(20,184,166,0.5)' },
+                '&.Mui-focused fieldset': { borderColor: '#14B8A6', borderWidth: '1.5px' },
               },
             }}
           />
@@ -626,6 +654,24 @@ export const ProductDetailsModal = memo(({
           </Box>
         ))}
       </Box>
+      {/* הערה - מוצגת רק כשקיימת. בצבעי האפליקציה (טורקיז) במקום צהוב. */}
+      {product.note && (
+        <Box sx={{
+          mt: 1.5, p: 1.5, borderRadius: '12px',
+          bgcolor: 'rgba(20,184,166,0.08)',
+          border: '1px solid rgba(20,184,166,0.25)',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.6 }}>
+            <Typography sx={{ fontSize: 14 }}>💬</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3 }}>
+              הערה
+            </Typography>
+          </Box>
+          <Typography sx={{ fontSize: 13.5, color: 'text.primary', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {product.note}
+          </Typography>
+        </Box>
+      )}
     </Modal>
   );
 });
