@@ -605,11 +605,11 @@ export const InsightsPage = memo(() => {
                   if (L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0) {
                     const topPct = ((sortedMembers[0].added + sortedMembers[0].purchased) / memberTotalActivity) * 100;
                     if (purchasedPct >= 70) {
-                      insight = { label: 'קצב מעולה', color: '#22C55E', emoji: '⚡' };
+                      insight = { label: 'קצב מעולה', color: '#14B8A6', emoji: '⚡' };
                     } else if (topPct >= 55) {
-                      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#F59E0B', emoji: '👑' };
+                      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#0D9488', emoji: '👑' };
                     } else if (topPct <= 45) {
-                      insight = { label: 'קבוצה מאוזנת', color: '#8B5CF6', emoji: '⚖️' };
+                      insight = { label: 'קבוצה מאוזנת', color: '#14B8A6', emoji: '⚖️' };
                     }
                   }
 
@@ -665,11 +665,11 @@ export const InsightsPage = memo(() => {
                               <Box sx={{
                                 display: 'inline-flex', alignItems: 'center', gap: 0.25,
                                 px: 0.7, py: 0.2, borderRadius: '6px',
-                                bgcolor: 'rgba(139,92,246,0.14)',
-                                border: '1px solid rgba(139,92,246,0.3)',
+                                bgcolor: 'rgba(20,184,166,0.14)',
+                                border: '1px solid rgba(20,184,166,0.3)',
                               }}>
-                                <GroupIcon sx={{ fontSize: 12, color: '#8B5CF6' }} />
-                                <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>
+                                <GroupIcon sx={{ fontSize: 12, color: '#14B8A6' }} />
+                                <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#14B8A6' }}>
                                   {g?.membersCount || 0} חברים
                                 </Typography>
                               </Box>
@@ -1318,22 +1318,24 @@ export const InsightsPage = memo(() => {
                           cursor: hasActivity ? 'pointer' : 'default',
                           borderRadius: '4px',
                           p: isSelected ? '3px 2px' : '3px 0',
-                          bgcolor: isSelected ? (isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)') : 'transparent',
+                          bgcolor: isSelected ? (isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.12)') : 'transparent',
                           transition: 'background 0.2s ease',
                           '&:active': hasActivity ? { opacity: 0.8 } : {},
                         }}
                       >
+                        {/* בר נקנו - טורקיז כהה כשנבחר, רגיל כברירת מחדל */}
                         <Box sx={{
                           height: `${(w.purchased / maxWeeklyTrend) * 100}%`,
-                          bgcolor: isSelected ? '#F59E0B' : '#22C55E',
+                          bgcolor: isSelected ? '#0D9488' : '#14B8A6',
                           borderRadius: '3px 3px 0 0', minHeight: w.purchased > 0 ? 3 : 0,
                           transition: 'background 0.2s ease',
                         }} />
+                        {/* בר נשארו - גוון בהיר יותר של אותו צבע */}
                         <Box sx={{
                           height: `${((w.added - w.purchased) / maxWeeklyTrend) * 100}%`,
                           bgcolor: isSelected
-                            ? (isDark ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.4)')
-                            : (isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'),
+                            ? (isDark ? 'rgba(20,184,166,0.55)' : 'rgba(20,184,166,0.45)')
+                            : (isDark ? 'rgba(20,184,166,0.35)' : 'rgba(20,184,166,0.25)'),
                           borderRadius: '3px 3px 0 0', minHeight: w.added - w.purchased > 0 ? 2 : 0,
                           transition: 'background 0.2s ease',
                         }} />
@@ -1346,7 +1348,7 @@ export const InsightsPage = memo(() => {
                   {weeklyTrends.map((w, i) => (
                     <Typography key={i} sx={{
                       flex: 1, fontSize: 8.5, textAlign: 'center',
-                      color: selectedWeekIdx === i ? '#F59E0B' : 'text.disabled',
+                      color: selectedWeekIdx === i ? '#14B8A6' : 'text.disabled',
                       fontWeight: selectedWeekIdx === i ? 800 : 600,
                     }}>
                       {w.week}
@@ -1423,8 +1425,9 @@ export const InsightsPage = memo(() => {
                             : `rgba(20,184,166,${0.18 + intensity * 0.6})`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           mb: 0.5,
-                          border: isSelected ? '2px solid #F59E0B' : isBest ? '1.5px solid #14B8A6' : '1.5px solid transparent',
-                          boxShadow: isSelected ? '0 2px 12px rgba(245,158,11,0.45)' : isBest ? '0 2px 10px rgba(20,184,166,0.4)' : 'none',
+                          // נבחר: גוון כהה של טורקיז; שיא: גוון רגיל של טורקיז
+                          border: isSelected ? '2px solid #0D9488' : isBest ? '1.5px solid #14B8A6' : '1.5px solid transparent',
+                          boxShadow: isSelected ? '0 2px 12px rgba(13,148,136,0.45)' : isBest ? '0 2px 10px rgba(20,184,166,0.4)' : 'none',
                           transition: 'border 0.2s, box-shadow 0.2s',
                         }}>
                           <Typography sx={{ fontSize: 11, fontWeight: 800, color: count > 0 ? 'white' : 'text.disabled' }}>
@@ -1433,7 +1436,7 @@ export const InsightsPage = memo(() => {
                         </Box>
                         <Typography sx={{
                           fontSize: 10, fontWeight: 700,
-                          color: isSelected ? '#F59E0B' : isBest ? '#14B8A6' : 'text.secondary',
+                          color: isSelected ? '#0D9488' : isBest ? '#14B8A6' : 'text.secondary',
                         }}>
                           {dayLabels[i]}
                         </Typography>
