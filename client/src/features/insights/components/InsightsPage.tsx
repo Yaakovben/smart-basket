@@ -285,26 +285,10 @@ export const InsightsPage = memo(() => {
       {(() => {
         type Insight = { emoji: string; title: string; subtitle?: string; gradient: string };
         let insight: Insight | null = null;
-        if (tab === 'price' && priceData) {
-          const cheapest = priceData.chainTotals?.find(c => c.isCheapest);
-          const completeChains = priceData.chainTotals?.filter(c => c.isComplete && c.matchedCount > 0) ?? [];
-          const maxTotal = completeChains.length > 1 ? Math.max(...completeChains.map(c => c.total)) : 0;
-          const savings = cheapest && maxTotal > cheapest.total ? maxTotal - cheapest.total : 0;
-          if (cheapest && savings > 0) {
-            insight = {
-              emoji: '💰',
-              title: `חוסכים ₪${savings.toFixed(0)} ב${cheapest.chainName}`,
-              subtitle: `סל שלם של ₪${cheapest.total.toFixed(0)} · הזולה היום`,
-              gradient: 'linear-gradient(135deg, #10B981, #059669)',
-            };
-          } else if (cheapest) {
-            insight = {
-              emoji: '🛒',
-              title: `הסל הזול ב${cheapest.chainName}`,
-              subtitle: `₪${cheapest.total.toFixed(0)} · ${cheapest.matchedCount} מוצרים`,
-              gradient: 'linear-gradient(135deg, #10B981, #059669)',
-            };
-          }
+        // טאב מחירים: כרטיס Hero של PriceComparisonCard כבר מציג 'הזול ב-X' באופן בולט -
+        // אין צורך בכרטיס "תובנת היום" נוסף שיציג אותו דבר. מדלגים כדי למנוע כפילות.
+        if (tab === 'price') {
+          insight = null;
         } else if (tab === 'lists' && groupStats?.[0]) {
           const top = groupStats[0];
           insight = {
