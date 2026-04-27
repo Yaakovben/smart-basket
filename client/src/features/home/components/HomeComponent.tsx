@@ -153,9 +153,28 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
-          {count > 0 ? `${count} ${t('items')}` : totalProducts > 0 ? `✓ ${t('completed')}` : `0 ${t('items')}`}
+          {count > 0 ? `${totalProducts - count}/${totalProducts} ${t('completed')}` : totalProducts > 0 ? `✓ ${t('completed')}` : `0 ${t('items')}`}
           {l.isGroup && <Typography component="span" sx={{ fontSize: 12, color: 'text.disabled' }}>{' '}· {l.members.length + 1} {t('members')}</Typography>}
         </Typography>
+        {/* Progress bar - מציג את אחוז המוצרים שנקנו. נעלם כשאין מוצרים. */}
+        {totalProducts > 0 && (
+          <Box sx={{
+            mt: 0.6,
+            height: 4,
+            width: '100%',
+            borderRadius: '2px',
+            bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              height: '100%',
+              width: `${Math.round(((totalProducts - count) / totalProducts) * 100)}%`,
+              bgcolor: count === 0 ? '#22C55E' : '#F59E0B',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease, background-color 0.3s ease',
+            }} />
+          </Box>
+        )}
       </Box>
       {/* אייקון מושתק + תפריט שלוש נקודות (מוסתר במצב סידור) */}
       {!reorderMode && <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0 }}>
@@ -698,18 +717,22 @@ export const HomeComponent = memo(({
           p: 'max(36px, env(safe-area-inset-top) + 8px) 12px 14px',
           borderRadius: '0 0 18px 18px',
         },
-        // Landscape במובייל - גובה נמוך, מצמצם הכל אגרסיבית
+        // Landscape - דחיסה מקסימלית
         '@media (orientation: landscape) and (max-height: 500px)': {
-          p: 'max(8px, env(safe-area-inset-top) + 2px) 16px 8px',
-          borderRadius: '0 0 12px 12px',
-          // אווטאר וכותרת קטנים יותר
-          '& .MuiAvatar-root': { width: '34px !important', height: '34px !important', fontSize: '14px !important' },
-          // מצמצם mb בין שורות
-          '& > .MuiBox-root': { marginBottom: '8px !important' },
-          // קלט חיפוש נמוך יותר
-          '& .MuiOutlinedInput-root': { minHeight: '36px !important' },
+          p: 'max(4px, env(safe-area-inset-top) + 2px) 12px 6px',
+          borderRadius: '0 0 10px 10px',
+          // אווטאר 30px במקום 44
+          '& .MuiAvatar-root': { width: '30px !important', height: '30px !important', fontSize: '13px !important' },
+          // mb בין שורות מינימלי
+          '& > .MuiBox-root': { marginBottom: '5px !important' },
+          // קלט נמוך
+          '& .MuiOutlinedInput-root': { minHeight: '32px !important' },
+          '& .MuiOutlinedInput-input': { fontSize: '14px !important', py: '4px !important' },
           // טאבים
-          '& .MuiTab-root': { minHeight: '32px !important', py: '4px !important' },
+          '& .MuiTab-root': { minHeight: '28px !important', py: '2px !important', fontSize: '12px !important' },
+          // כפתורי אייקון
+          '& [class*="MuiIconButton-root"]': { width: '30px !important', height: '30px !important' },
+          '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '17px !important' },
         },
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
