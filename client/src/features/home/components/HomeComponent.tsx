@@ -1360,21 +1360,33 @@ export const HomeComponent = memo(({
           // הפורמט שאנחנו מייצרים: {origin}/join?code=XXX&password=YYYY
           let code = '';
           let password = '';
+          let isOurFormat = false;
           try {
             const url = new URL(text);
             code = (url.searchParams.get('code') || '').toUpperCase();
             password = url.searchParams.get('password') || '';
+            // QR שלנו = יש קוד 6 תווים, סיסמה 4 ספרות, כתובת תואמת
+            if (code.length === 6 && /^\d{4}$/.test(password)) isOurFormat = true;
           } catch {
-            // לא URL - ננסה לזהות קוד:סיסמה או סתם קוד
             const match = text.trim().match(/^([A-Z0-9]{6})[:\s]*(\d{4})?$/i);
             if (match) {
               code = match[1].toUpperCase();
               password = match[2] || '';
+              if (code.length === 6 && /^\d{4}$/.test(password)) isOurFormat = true;
             }
           }
-          if (code.length === 6) setJoinCode(code);
-          if (/^\d{4}$/.test(password)) setJoinPass(password);
-          setJoinError('');
+          if (isOurFormat) {
+            setJoinCode(code);
+            setJoinPass(password);
+            setJoinError('');
+          } else if (code.length === 6) {
+            // קוד נראה תקין אבל סיסמה חסרה/לא תואמת
+            setJoinCode(code);
+            setJoinError('הקוד זוהה אך הסיסמה חסרה או לא תקפה. הזינו סיסמה ידנית.');
+          } else {
+            // לא QR שלנו
+            setJoinError('זה לא QR להצטרפות לקבוצה. סרקו את ה-QR שקיבלתם מהמזמין.');
+          }
         }}
       />
 
