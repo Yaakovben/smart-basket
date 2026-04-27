@@ -275,6 +275,11 @@ export const ListHeader = memo(({
       '@media (max-width: 360px)': {
         p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
       },
+      // Landscape במובייל - חוסכים padding-top, נשאר חלל לתוכן הרשימה
+      '@media (orientation: landscape) and (max-height: 500px)': {
+        p: 'max(10px, env(safe-area-inset-top) + 4px) 16px 10px',
+        borderRadius: '0 0 14px 14px',
+      },
     }}>
       {/* Title Row */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
