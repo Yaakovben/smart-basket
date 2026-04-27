@@ -698,10 +698,18 @@ export const HomeComponent = memo(({
           p: 'max(36px, env(safe-area-inset-top) + 8px) 12px 14px',
           borderRadius: '0 0 18px 18px',
         },
-        // Landscape במובייל - גובה זמין נמוך, חוסכים padding-top גדול
+        // Landscape במובייל - גובה נמוך, מצמצם הכל אגרסיבית
         '@media (orientation: landscape) and (max-height: 500px)': {
-          p: 'max(12px, env(safe-area-inset-top) + 4px) 16px 12px',
-          borderRadius: '0 0 16px 16px',
+          p: 'max(8px, env(safe-area-inset-top) + 2px) 16px 8px',
+          borderRadius: '0 0 12px 12px',
+          // אווטאר וכותרת קטנים יותר
+          '& .MuiAvatar-root': { width: '34px !important', height: '34px !important', fontSize: '14px !important' },
+          // מצמצם mb בין שורות
+          '& > .MuiBox-root': { marginBottom: '8px !important' },
+          // קלט חיפוש נמוך יותר
+          '& .MuiOutlinedInput-root': { minHeight: '36px !important' },
+          // טאבים
+          '& .MuiTab-root': { minHeight: '32px !important', py: '4px !important' },
         },
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
