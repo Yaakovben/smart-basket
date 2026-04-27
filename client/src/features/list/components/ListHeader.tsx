@@ -275,6 +275,15 @@ export const ListHeader = memo(({
       '@media (max-width: 360px)': {
         p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
       },
+      // ≤320px (Qin F21 Pro וקטן יותר) - דחיסה אגרסיבית גם ב-portrait
+      '@media (max-width: 320px)': {
+        p: 'max(24px, env(safe-area-inset-top) + 4px) 8px 8px',
+        borderRadius: '0 0 14px 14px',
+        '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '4px !important' },
+        '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
+        '& > .MuiBox-root': { marginBottom: '4px !important' },
+      },
       // Landscape - דחיסה מקסימלית; שורת הכותרת מוסתרת, יש כפתור back מרחף
       '@media (orientation: landscape) and (max-height: 500px)': {
         position: 'relative',

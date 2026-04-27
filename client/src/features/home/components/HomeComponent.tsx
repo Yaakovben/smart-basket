@@ -698,6 +698,16 @@ export const HomeComponent = memo(({
           p: 'max(36px, env(safe-area-inset-top) + 8px) 12px 14px',
           borderRadius: '0 0 18px 18px',
         },
+        // מסך זעיר במיוחד ≤320px - דחיסה אגרסיבית גם ב-portrait
+        '@media (max-width: 320px)': {
+          p: 'max(28px, env(safe-area-inset-top) + 6px) 10px 10px',
+          borderRadius: '0 0 14px 14px',
+          '& .MuiAvatar-root': { width: '36px !important', height: '36px !important', fontSize: '14px !important' },
+          '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
+          '& .MuiOutlinedInput-input': { fontSize: '13px !important' },
+          '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
+          '& > .MuiBox-root': { marginBottom: '6px !important' },
+        },
         // Landscape - דחיסה מקסימלית
         '@media (orientation: landscape) and (max-height: 500px)': {
           p: 'max(2px, env(safe-area-inset-top) + 2px) 12px 4px',
