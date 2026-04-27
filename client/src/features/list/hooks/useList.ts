@@ -50,6 +50,7 @@ const getDefaultNewProduct = (): NewProductForm => ({
   quantity: 1,
   unit: 'יח׳' as Product['unit'],
   category: 'אחר' as Product['category'],
+  note: '',
 });
 
 // ===== טיפוסים =====
@@ -282,6 +283,7 @@ export const useList = ({
     quantity: number;
     unit: Product['unit'];
     category: Product['category'];
+    note?: string;
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
 
@@ -296,6 +298,7 @@ export const useList = ({
       isPurchased: false,
       addedBy: user.name,
       createdAt: new Date().toISOString(),
+      note: productData.note,
     };
     onUpdateProductsForList(list.id, (current) => [...current, tempProduct]);
 
@@ -366,6 +369,7 @@ export const useList = ({
       category: newProduct.category === 'אחר' as Product['category']
         ? detectCategory(newProduct.name.trim()) as Product['category']
         : newProduct.category,
+      note: newProduct.note.trim() || undefined,
     };
 
     // בדיקת כפילות
