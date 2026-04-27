@@ -337,7 +337,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
 
       {/* הטבלה המרכזית - כל הרשתות, כולל אלה בלי התאמות */}
       {data.enabled && hasAnyPendingItems && data.chainTotals && data.chainTotals.length > 0 && (
-        <ChainComparisonTable chainTotals={data.chainTotals} />
+        <ChainComparisonTable chainTotals={data.chainTotals} lastUpdatedISO={data.lastUpdatedISO} />
       )}
 
       {/* Footer */}
