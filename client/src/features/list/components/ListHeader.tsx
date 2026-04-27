@@ -343,9 +343,14 @@ export const ListHeader = memo(({
         onLeave={onLeave}
       />
 
-      {/* Members Row (Group Only) */}
+      {/* Members Row (Group Only) - מוסתר ב-landscape כדי לצמצם גובה הדר */}
       {list.isGroup && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 } }}>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 1,
+          mb: { xs: 1, sm: 1.5 },
+          '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton
             onClick={onShowInvite}
@@ -373,9 +378,14 @@ export const ListHeader = memo(({
         </Box>
       )}
 
-      {/* Search Button Row (Private Lists Only) */}
+      {/* Search Button Row (Private Lists Only) - מוסתר ב-landscape */}
       {!list.isGroup && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
+        <Box sx={{
+          display: 'flex', justifyContent: 'flex-end',
+          mb: { xs: 1, sm: 1.5 },
+          '@media (max-width: 360px)': { mb: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
           <IconButton
             onClick={handleToggleSearch}
             sx={{
@@ -635,7 +645,11 @@ export const ListHeader = memo(({
           : '#FCA5A5';
 
         return (
-          <Box sx={{ mt: 0.75 }}>
+          <Box sx={{
+            mt: 0.75,
+            // מוסתר ב-landscape כדי לחסוך עוד גובה
+            '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
               {list.updatedAt && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
