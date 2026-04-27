@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { User, List, Member, Product, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, notificationsApi, type ApiList, type ApiMember } from "../../services/api";
 import { socketService } from "../../services/socket";
-import { getAccessToken, clearTokens } from "../../services/api/client";
+import { getAccessToken, clearTokens, rehydrateTokensFromIdb } from "../../services/api/client";
 
 // ייצוא חוזר
 export { useDebounce } from './useDebounce';
@@ -120,7 +120,15 @@ export function useAuth() {
   // בדיקת סשן קיים בטעינה
   useEffect(() => {
     const checkAuth = async () => {
-      const token = getAccessToken();
+      let token = getAccessToken();
+      if (!token) {
+        // ייתכן שlocalStorage נמחק (iOS Safari ITP) - ננסה לשחזר מ-IndexedDB
+        const restored = await rehydrateTokensFromIdb();
+        if (restored) {
+          token = getAccessToken();
+          setLoading(true);
+        }
+      }
       if (!token) {
         // אין טוקן, ניקוי משתמש שמור ועצירת טעינה
         localStorage.removeItem('cached_user');

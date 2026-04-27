@@ -44,8 +44,9 @@ const envSchema = Joi.object({
     'any.required': 'JWT refresh secret is required',
   }),
 
-  // זמני תפוגה
-  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+  // זמני תפוגה - access ארוך כדי להפחית התנתקויות במכשירי מובייל
+  // (iOS Safari ITP יכול למחוק localStorage; refresh token לא תמיד עובר)
+  JWT_ACCESS_EXPIRES_IN: Joi.string().default('24h'),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('90d'),
 
   // אימות Google
