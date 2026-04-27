@@ -5,6 +5,7 @@ import type { TranslationKeys } from '../i18n/translations';
 export const CATEGORY_ICONS: Record<ProductCategory, string> = {
   'מוצרי חלב': '🧀',
   'מאפים': '🍞',
+  'אפייה': '🧁',
   'ירקות': '🥬',
   'פירות': '🍎',
   'בשר': '🥩',
@@ -22,6 +23,7 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
 export const CATEGORY_COLORS: Record<ProductCategory, string> = {
   'מוצרי חלב': '#0EA5E9',
   'מאפים': '#F59E0B',
+  'אפייה': '#FB923C',
   'ירקות': '#22C55E',
   'פירות': '#EF4444',
   'בשר': '#B91C1C',
@@ -39,6 +41,7 @@ export const CATEGORY_COLORS: Record<ProductCategory, string> = {
 export const CATEGORY_TRANSLATION_KEYS: Record<ProductCategory, TranslationKeys> = {
   'מוצרי חלב': 'catDairy',
   'מאפים': 'catBakery',
+  'אפייה': 'catBaking',
   'ירקות': 'catVegetables',
   'פירות': 'catFruits',
   'בשר': 'catMeat',

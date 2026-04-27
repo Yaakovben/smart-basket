@@ -14,6 +14,7 @@ export type ProductUnit = "יח׳" | "ק״ג" | "גרם" | "ליטר";
 export type ProductCategory =
   | "מוצרי חלב"
   | "מאפים"
+  | "אפייה"
   | "ירקות"
   | "פירות"
   | "בשר"
