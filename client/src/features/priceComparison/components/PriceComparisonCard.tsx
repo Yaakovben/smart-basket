@@ -55,7 +55,7 @@ const formatRelative = (iso: string | null): string => {
 const RankBadge = memo(({ rank, isWinner }: { rank: number; isWinner: boolean }) => {
   if (isWinner) {
     return (
-      <Box sx={{
+      <Box className="chain-rank" sx={{
         width: 38, height: 38, borderRadius: '50%',
         background: 'linear-gradient(135deg, #FCD34D, #F59E0B)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -68,7 +68,7 @@ const RankBadge = memo(({ rank, isWinner }: { rank: number; isWinner: boolean })
     );
   }
   return (
-    <Box sx={{
+    <Box className="chain-rank" sx={{
       width: 38, height: 38, borderRadius: '50%',
       bgcolor: 'rgba(20,184,166,0.1)',
       border: '1.5px solid rgba(20,184,166,0.25)',
@@ -172,17 +172,33 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         transition: 'border-color 0.15s, transform 0.1s',
         '&:active': { transform: 'scale(0.99)' },
         ...(isWinner ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
+        // מסכים זעירים - דחיסה לכל הפרטים בכרטיס
+        '@media (max-width: 360px)': {
+          borderRadius: '12px',
+          '& .chain-rank': { width: '32px !important', height: '32px !important', fontSize: '12px !important' },
+          '& .chain-name': { fontSize: '13px !important' },
+          '& .chain-meta': { fontSize: '10px !important' },
+          '& .chain-price': { fontSize: '16px !important' },
+        },
+        '@media (max-width: 320px)': {
+          '& .chain-rank': { width: '28px !important', height: '28px !important', fontSize: '11px !important' },
+          '& .chain-name': { fontSize: '12px !important' },
+          '& .chain-meta': { fontSize: '9.5px !important' },
+          '& .chain-price': { fontSize: '14px !important' },
+        },
       }}
     >
       {/* שורת ה-summary - תמיד נראית */}
       <Box sx={{
         display: 'flex', alignItems: 'center', gap: 1.25,
         p: 1.5,
+        '@media (max-width: 360px)': { p: 1, gap: 0.85 },
+        '@media (max-width: 320px)': { p: 0.75, gap: 0.65 },
       }}>
         <RankBadge rank={rank} isWinner={isWinner} />
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{
+          <Typography className="chain-name" sx={{
             fontSize: 14.5, fontWeight: 800,
             color: 'text.primary',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -191,7 +207,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.2 }}>
             {hasMatches ? (
-              <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+              <Typography className="chain-meta" sx={{ fontSize: 11, color: 'text.secondary' }}>
                 {chain.matchedCount} מוצרים
                 {!chain.isComplete && chain.unmatchedCount > 0 && (
                   <Typography component="span" sx={{ fontSize: 10.5, color: '#D97706', fontWeight: 700, ml: 0.5 }}>
@@ -223,7 +239,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
           <Box sx={{ textAlign: 'left' }}>
             {hasMatches ? (
               <>
-                <Typography sx={{
+                <Typography className="chain-price" sx={{
                   fontSize: 19, fontWeight: 900,
                   color: isWinner ? '#059669' : 'text.primary',
                   fontVariantNumeric: 'tabular-nums',
