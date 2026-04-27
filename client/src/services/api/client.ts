@@ -21,8 +21,8 @@ const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
 // ===== גיבוי טוקנים ב-IndexedDB =====
-// iOS Safari ITP מוחק localStorage אחרי 7 ימי חוסר פעילות, אך IndexedDB שורד
-// כותבים בכפילות לשני המקומות, ומשחזרים מ-IDB אם localStorage נמחק
+// iOS Safari ITP מנקה localStorage אחרי 7 ימי חוסר פעילות, אך IndexedDB שורד
+// כותבים בכפילות, ומשחזרים מ-IDB אם localStorage התרוקן
 const IDB_NAME = 'sb_auth';
 const IDB_STORE = 'tokens';
 
@@ -30,24 +30,17 @@ function idbOpen(): Promise<IDBDatabase | null> {
   return new Promise((resolve) => {
     try {
       const req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = () => {
-        req.result.createObjectStore(IDB_STORE);
-      };
+      req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => resolve(null);
-    } catch {
-      resolve(null);
-    }
+    } catch { resolve(null); }
   });
 }
 
 async function idbSet(key: string, value: string) {
   const db = await idbOpen();
   if (!db) return;
-  try {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(value, key);
-  } catch { /* ignore */ }
+  try { db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(value, key); } catch { /* ignore */ }
 }
 
 async function idbGet(key: string): Promise<string | null> {
@@ -55,34 +48,23 @@ async function idbGet(key: string): Promise<string | null> {
   if (!db) return null;
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const req = tx.objectStore(IDB_STORE).get(key);
+      const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
       req.onsuccess = () => resolve((req.result as string) ?? null);
       req.onerror = () => resolve(null);
-    } catch {
-      resolve(null);
-    }
+    } catch { resolve(null); }
   });
 }
 
 async function idbDelete(key: string) {
   const db = await idbOpen();
   if (!db) return;
-  try {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).delete(key);
-  } catch { /* ignore */ }
+  try { db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).delete(key); } catch { /* ignore */ }
 }
 
-// שחזור מ-IndexedDB אם localStorage התרוקן (למשל iOS Safari ITP)
+// שחזור מ-IDB אם localStorage נמחק (למשל iOS Safari ITP)
 export const rehydrateTokensFromIdb = async (): Promise<boolean> => {
-  if (localStorage.getItem(ACCESS_TOKEN_KEY) && localStorage.getItem(REFRESH_TOKEN_KEY)) {
-    return true;
-  }
-  const [access, refresh] = await Promise.all([
-    idbGet(ACCESS_TOKEN_KEY),
-    idbGet(REFRESH_TOKEN_KEY),
-  ]);
+  if (localStorage.getItem(ACCESS_TOKEN_KEY) && localStorage.getItem(REFRESH_TOKEN_KEY)) return true;
+  const [access, refresh] = await Promise.all([idbGet(ACCESS_TOKEN_KEY), idbGet(REFRESH_TOKEN_KEY)]);
   if (access && refresh) {
     try {
       localStorage.setItem(ACCESS_TOKEN_KEY, access);
@@ -117,7 +99,7 @@ export const setTokens = (accessToken: string, refreshToken: string) => {
     // localStorage מלא או לא זמין, למשל גלישה פרטית
     debugLog('Failed to save tokens to localStorage', undefined, true);
   }
-  // כתיבה מקבילה ל-IndexedDB כגיבוי מפני ITP של iOS Safari
+  // גיבוי מקביל ל-IDB כדי לשרוד מחיקת localStorage על ידי ITP
   void idbSet(ACCESS_TOKEN_KEY, accessToken);
   void idbSet(REFRESH_TOKEN_KEY, refreshToken);
 };

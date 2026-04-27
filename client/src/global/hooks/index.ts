@@ -122,12 +122,9 @@ export function useAuth() {
     const checkAuth = async () => {
       let token = getAccessToken();
       if (!token) {
-        // ייתכן שlocalStorage נמחק (iOS Safari ITP) - ננסה לשחזר מ-IndexedDB
+        // ייתכן ש-localStorage נמחק (iOS Safari ITP); ננסה לשחזר מ-IDB
         const restored = await rehydrateTokensFromIdb();
-        if (restored) {
-          token = getAccessToken();
-          setLoading(true);
-        }
+        if (restored) token = getAccessToken();
       }
       if (!token) {
         // אין טוקן, ניקוי משתמש שמור ועצירת טעינה
