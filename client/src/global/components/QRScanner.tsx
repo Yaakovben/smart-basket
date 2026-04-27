@@ -24,20 +24,30 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
-  // הסכמה מקדימה: המצלמה תיפתח רק אחרי שהמשתמש אישר ספציפית. שקיפות לפני
-  // בקשת ההרשאה של הדפדפן - מסביר מה אנחנו עושים עם הגישה.
-  const [cameraConsent, setCameraConsent] = useState(false);
+  // הסכמה מקדימה: המצלמה תיפתח רק אחרי שהמשתמש אישר ספציפית פעם ראשונה.
+  // אחרי אישור ראשון - שומרים ב-localStorage כדי לא לבקש שוב.
+  // שקיפות לפני בקשת ההרשאה של הדפדפן - מסביר מה אנחנו עושים עם הגישה.
+  const CONSENT_KEY = 'qr_scanner_consent';
+  const [cameraConsent, setCameraConsent] = useState(() => {
+    try { return localStorage.getItem(CONSENT_KEY) === 'granted'; } catch { return false; }
+  });
   const [galleryConsent, setGalleryConsent] = useState(false);
 
-  // איפוס הסכמות כשנסגר הסורק - הסשן הבא יבקש שוב במפורש
+  // איפוס שגיאות בלבד כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
   useEffect(() => {
     if (!open) {
-      setCameraConsent(false);
       setGalleryConsent(false);
       setError(null);
       setFileScanError(null);
     }
   }, [open]);
+
+  // שמירת הסכמה ב-localStorage ברגע שהיוזר נתן אותה - לא לשאול שוב
+  useEffect(() => {
+    if (cameraConsent) {
+      try { localStorage.setItem(CONSENT_KEY, 'granted'); } catch { /* storage חסום */ }
+    }
+  }, [cameraConsent]);
 
   useEffect(() => {
     if (!open || !cameraConsent) return;
