@@ -278,21 +278,21 @@ export const ListHeader = memo(({
       // Landscape - דחיסה מקסימלית; שורת הכותרת מוסתרת, יש כפתור back מרחף
       '@media (orientation: landscape) and (max-height: 500px)': {
         position: 'relative',
-        p: 'max(4px, env(safe-area-inset-top) + 2px) 44px 6px',
-        borderRadius: '0 0 10px 10px',
-        // mb בין שורות מינימלי
-        '& > * + *': { marginTop: '3px !important' },
-        '& > .MuiBox-root': { marginBottom: '4px !important' },
-        // אינפוטים: גובה 32 במקום 44
-        '& .MuiOutlinedInput-root': { minHeight: '32px !important', height: '32px !important' },
-        '& .MuiOutlinedInput-input': { fontSize: '14px !important', py: '4px !important' },
-        // טאבים: גובה 28 במקום 42
-        '& .MuiTab-root': { minHeight: '28px !important', py: '2px !important', fontSize: '12px !important' },
-        // glassButton קטנים יותר
-        '& [class*="MuiIconButton-root"]': { width: '30px !important', height: '30px !important' },
-        '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '17px !important' },
-        // כותרת קטנה
-        '& h6, & .MuiTypography-h6': { fontSize: '14px !important' },
+        p: 'max(2px, env(safe-area-inset-top) + 2px) 40px 4px',
+        borderRadius: '0 0 8px 8px',
+        // mb בין שורות זעיר
+        '& > * + *': { marginTop: '2px !important' },
+        '& > .MuiBox-root': { marginBottom: '2px !important' },
+        // אינפוטים: גובה 28
+        '& .MuiOutlinedInput-root': { minHeight: '28px !important', height: '28px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
+        // טאבים: גובה 24
+        '& .MuiTab-root': { minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important' },
+        // glassButton זעיר
+        '& [class*="MuiIconButton-root"]': { width: '26px !important', height: '26px !important' },
+        '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
+        // כותרת זעירה
+        '& h6, & .MuiTypography-h6': { fontSize: '13px !important' },
       },
     }}>
       {/* כפתור back מרחף - מוצג רק ב-landscape כי שורת הכותרת מוסתרת.

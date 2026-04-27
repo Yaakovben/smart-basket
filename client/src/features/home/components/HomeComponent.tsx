@@ -719,20 +719,19 @@ export const HomeComponent = memo(({
         },
         // Landscape - דחיסה מקסימלית
         '@media (orientation: landscape) and (max-height: 500px)': {
-          p: 'max(4px, env(safe-area-inset-top) + 2px) 12px 6px',
-          borderRadius: '0 0 10px 10px',
-          // אווטאר 30px במקום 44
-          '& .MuiAvatar-root': { width: '30px !important', height: '30px !important', fontSize: '13px !important' },
-          // mb בין שורות מינימלי
-          '& > .MuiBox-root': { marginBottom: '5px !important' },
-          // קלט נמוך
-          '& .MuiOutlinedInput-root': { minHeight: '32px !important' },
-          '& .MuiOutlinedInput-input': { fontSize: '14px !important', py: '4px !important' },
+          p: 'max(2px, env(safe-area-inset-top) + 2px) 12px 4px',
+          borderRadius: '0 0 8px 8px',
+          // אווטאר 26px
+          '& .MuiAvatar-root': { width: '26px !important', height: '26px !important', fontSize: '12px !important' },
+          '& > .MuiBox-root': { marginBottom: '3px !important' },
+          // קלט גובה 28
+          '& .MuiOutlinedInput-root': { minHeight: '28px !important' },
+          '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
           // טאבים
-          '& .MuiTab-root': { minHeight: '28px !important', py: '2px !important', fontSize: '12px !important' },
+          '& .MuiTab-root': { minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important' },
           // כפתורי אייקון
-          '& [class*="MuiIconButton-root"]': { width: '30px !important', height: '30px !important' },
-          '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '17px !important' },
+          '& [class*="MuiIconButton-root"]': { width: '26px !important', height: '26px !important' },
+          '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
         },
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
