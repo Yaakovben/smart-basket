@@ -275,9 +275,10 @@ export const ListHeader = memo(({
       '@media (max-width: 360px)': {
         p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
       },
-      // Landscape במובייל - דחיסה מקסימלית כדי שהרשימה תקבל >70% מהמסך
+      // Landscape - דחיסה מקסימלית; שורת הכותרת מוסתרת, יש כפתור back מרחף
       '@media (orientation: landscape) and (max-height: 500px)': {
-        p: 'max(4px, env(safe-area-inset-top) + 2px) 12px 6px',
+        position: 'relative',
+        p: 'max(4px, env(safe-area-inset-top) + 2px) 44px 6px',
         borderRadius: '0 0 10px 10px',
         // mb בין שורות מינימלי
         '& > * + *': { marginTop: '3px !important' },
@@ -294,8 +295,38 @@ export const ListHeader = memo(({
         '& h6, & .MuiTypography-h6': { fontSize: '14px !important' },
       },
     }}>
-      {/* Title Row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
+      {/* כפתור back מרחף - מוצג רק ב-landscape כי שורת הכותרת מוסתרת.
+          לחיצה חוזרת לעמוד הבית, תפקיד אקוויוולנטי לכפתור החזרה הרגיל. */}
+      <IconButton
+        onClick={onBack}
+        aria-label={t('back')}
+        sx={{
+          display: 'none',
+          '@media (orientation: landscape) and (max-height: 500px)': {
+            display: 'flex',
+            position: 'absolute',
+            top: 4,
+            insetInlineStart: 8,
+            zIndex: 2,
+            width: 28,
+            height: 28,
+            bgcolor: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(8px)',
+            color: 'white',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+          },
+        }}
+      >
+        <ArrowForwardIcon sx={{ fontSize: 16 }} />
+      </IconButton>
+
+      {/* Title Row - מוסתר ב-landscape, נשאר רק Quick Add + טאבים */}
+      <Box sx={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        mb: { xs: 1, sm: 2 },
+        '@media (max-width: 360px)': { mb: 0.5 },
+        '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+      }}>
         <IconButton
           onClick={onBack}
           sx={glassButtonSx}
