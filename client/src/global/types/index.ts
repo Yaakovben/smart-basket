@@ -35,6 +35,7 @@ export interface Product {
   isPurchased: boolean;
   addedBy: string;
   createdAt: string;
+  note?: string;
 }
 
 // ===== רשימה =====

@@ -266,7 +266,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         position: 'relative',
         mb: '6px',
         borderRadius: '14px',
-        height: '72px',
+        height: product.note ? '92px' : '72px',
         overflow: 'hidden',
         touchAction: swiping ? 'none' : 'pan-y',
         WebkitUserSelect: 'none',
@@ -372,6 +372,23 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
           </Typography>
+          {/* הערה - מוצגת מתחת לפרטי המוצר אם קיימת. צבע צהבהב עדין כדי לבלוט בלי להפריע. */}
+          {product.note && (
+            <Typography
+              sx={{
+                fontSize: '12px',
+                color: '#8B6914',
+                fontWeight: 500,
+                mt: 0.25,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontStyle: 'italic',
+              }}
+            >
+              💬 {product.note}
+            </Typography>
+          )}
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>

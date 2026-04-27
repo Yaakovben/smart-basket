@@ -10,6 +10,7 @@ export interface CreateProductInput {
   category: string;
   addedBy: string;
   position?: number;
+  note?: string;
 }
 
 class ProductDALClass extends BaseDAL<IProductDoc> {

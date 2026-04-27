@@ -178,7 +178,8 @@ export const useList = ({
       showEdit.name !== originalEditProduct.name ||
       showEdit.quantity !== originalEditProduct.quantity ||
       showEdit.unit !== originalEditProduct.unit ||
-      showEdit.category !== originalEditProduct.category
+      showEdit.category !== originalEditProduct.category ||
+      (showEdit.note || '') !== (originalEditProduct.note || '')
     );
   }, [showEdit, originalEditProduct]);
 
@@ -619,12 +620,13 @@ export const useList = ({
     if (editData.quantity !== original.quantity) changes.quantity = editData.quantity;
     if (editData.unit !== original.unit) changes.unit = editData.unit;
     if (editData.category !== original.category) changes.category = editData.category;
+    if ((editData.note || '') !== (original.note || '')) changes.note = editData.note || '';
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי
     setShowEdit(null);
     setOriginalEditProduct(null);
     onUpdateProductsForList(list.id, (current) =>
-      current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category } : p)
+      current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note } : p)
     );
 
     try {
@@ -641,7 +643,7 @@ export const useList = ({
       // שחזור במקרה של שגיאה
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category } : p)
+        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note } : p)
       );
       showToast(t('errorOccurred'), 'error');
     }

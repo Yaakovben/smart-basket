@@ -15,6 +15,7 @@ export interface UpdateProductData {
   unit?: Product['unit'];
   category?: Product['category'];
   isPurchased?: boolean;
+  note?: string;
 }
 
 // תגובת מוצר בודד מה-API (addProduct)
@@ -27,6 +28,7 @@ export interface ApiProductResponse {
   isPurchased: boolean;
   addedBy: string;
   createdAt: string;
+  note?: string;
 }
 
 export const productsApi = {

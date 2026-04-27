@@ -29,6 +29,7 @@ export async function addProduct(
     unit: data.unit ?? 'יח׳',
     category: data.category ?? 'אחר',
     addedBy: userId,
+    ...(data.note !== undefined ? { note: sanitizeText(data.note) } : {}),
   });
 
   await ListDAL.touchUpdatedAt(listId);
@@ -56,6 +57,7 @@ export async function updateProduct(
   if (data.unit !== undefined) updates.unit = data.unit;
   if (data.category !== undefined) updates.category = data.category;
   if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
+  if (data.note !== undefined) updates.note = sanitizeText(data.note);
 
   await ProductDAL.updateProduct(productId, updates);
   await ListDAL.touchUpdatedAt(listId);
