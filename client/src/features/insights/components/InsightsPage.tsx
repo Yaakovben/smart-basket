@@ -214,7 +214,8 @@ export const InsightsPage = memo(() => {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 5 }}>
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
-        background: isDark ? 'linear-gradient(160deg, #312E81, #5B21B6, #7C3AED)' : 'linear-gradient(160deg, #6D28D9, #7C3AED, #A78BFA)',
+        // הדר בצבעי האפליקציה - טורקיז במקום סגול, אחיד עם שאר המסכים
+        background: isDark ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)' : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
         // Padding-top הוקטן (50px במקום 70px) - חוסך 20px לתוכן.
         p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
         borderRadius: '0 0 24px 24px',
@@ -310,7 +311,7 @@ export const InsightsPage = memo(() => {
             emoji: '📋',
             title: `${top.name} — הכי פעילה`,
             subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
-            gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
           };
         } else if (tab === 'habits' && topProducts?.[0]) {
           const top = topProducts[0];
@@ -318,7 +319,7 @@ export const InsightsPage = memo(() => {
             emoji: '🏆',
             title: `${top.name} — מוצר השבוע`,
             subtitle: `הוספתם ${top.count} פעמים`,
-            gradient: 'linear-gradient(135deg, #F59E0B, #D97706)',
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
           };
         } else if (tab === 'pulse' && shoppingScore !== undefined) {
           const label = shoppingScore >= 80 ? 'אלוף!' : shoppingScore >= 60 ? 'בדרך הנכונה' : shoppingScore >= 40 ? 'מתפתחים' : 'יש לאן לצמוח';
@@ -531,7 +532,8 @@ export const InsightsPage = memo(() => {
         {/* ===== רשימות ===== */}
         {tab === 'lists' && (() => {
           // פלטת צבעים קבועה לחברי קבוצה
-          const memberPalette = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6', '#22C55E', '#EF4444'];
+          // חברי קבוצה - טורקיז ראשון (תואם לאפליקציה), שאר הצבעים לבידול בלבד
+          const memberPalette = ['#14B8A6', '#0D9488', '#3B82F6', '#22C55E', '#A16207', '#EC4899', '#EF4444'];
           // מקור האמת: priceData.lists (כל הרשימות הפעילות עם מטא-דאטה), עם fallback ל-groupStats.
           const listsToShow = priceData?.lists && priceData.lists.length > 0 ? priceData.lists : null;
           const hasAnything = (listsToShow && listsToShow.length > 0) || groupStats.length > 0;
