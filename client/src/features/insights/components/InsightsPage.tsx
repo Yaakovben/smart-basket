@@ -280,9 +280,7 @@ export const InsightsPage = memo(() => {
         </Paper>
       </Box>
 
-      {/* ===== כרטיס תובנת היום - אחיד לכל הטאבים ===== */}
-      {/* תובנה אחת ספציפית בראש כל טאב - נותן עוגן ויזואלי קבוע ועונה
-          על השאלה "מה הכי חשוב פה" לפני שהמשתמש קורא את כל הנתונים. */}
+      {/* ===== Hero card - תובנת היום, ניסוח חיובי וברור ===== */}
       {(() => {
         type Insight = { emoji: string; title: string; subtitle?: string; gradient: string };
         let insight: Insight | null = null;
@@ -294,8 +292,15 @@ export const InsightsPage = memo(() => {
           if (cheapest && savings > 0) {
             insight = {
               emoji: '💰',
-              title: `חוסך עד ₪${savings.toFixed(0)} ב${cheapest.chainName}`,
-              subtitle: `הסל שלך עולה ₪${cheapest.total.toFixed(0)} שם`,
+              title: `חוסכים ₪${savings.toFixed(0)} ב${cheapest.chainName}`,
+              subtitle: `סל שלם של ₪${cheapest.total.toFixed(0)} · הזולה היום`,
+              gradient: 'linear-gradient(135deg, #10B981, #059669)',
+            };
+          } else if (cheapest) {
+            insight = {
+              emoji: '🛒',
+              title: `הסל הזול ב${cheapest.chainName}`,
+              subtitle: `₪${cheapest.total.toFixed(0)} · ${cheapest.matchedCount} מוצרים`,
               gradient: 'linear-gradient(135deg, #10B981, #059669)',
             };
           }
@@ -303,7 +308,7 @@ export const InsightsPage = memo(() => {
           const top = groupStats[0];
           insight = {
             emoji: '📋',
-            title: `${top.name} — הרשימה הכי פעילה`,
+            title: `${top.name} — הכי פעילה`,
             subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
             gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)',
           };
@@ -311,15 +316,15 @@ export const InsightsPage = memo(() => {
           const top = topProducts[0];
           insight = {
             emoji: '🏆',
-            title: `${top.name} — המוצר הכי נפוץ`,
-            subtitle: `הוספת ${top.count} פעמים החודש`,
+            title: `${top.name} — מוצר השבוע`,
+            subtitle: `הוספתם ${top.count} פעמים`,
             gradient: 'linear-gradient(135deg, #F59E0B, #D97706)',
           };
         } else if (tab === 'pulse' && shoppingScore !== undefined) {
-          const label = shoppingScore >= 80 ? 'מעולה' : shoppingScore >= 60 ? 'טוב' : shoppingScore >= 40 ? 'סביר' : 'יש מקום לשיפור';
+          const label = shoppingScore >= 80 ? 'אלוף!' : shoppingScore >= 60 ? 'בדרך הנכונה' : shoppingScore >= 40 ? 'מתפתחים' : 'יש לאן לצמוח';
           insight = {
-            emoji: '📈',
-            title: `ציון הקנייה שלך: ${shoppingScore}/100`,
+            emoji: shoppingScore >= 80 ? '🎯' : shoppingScore >= 60 ? '📈' : '🌱',
+            title: `${shoppingScore}/100`,
             subtitle: label,
             gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
           };
@@ -328,36 +333,43 @@ export const InsightsPage = memo(() => {
         return (
           <Box sx={{ px: 2, mb: 1.5 }} key={`insight-${tab}`}>
             <Box sx={{
-              p: 1.5, borderRadius: '14px',
+              p: 2.25, borderRadius: '20px',
               background: insight.gradient,
-              boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.22)',
               color: 'white',
-              display: 'flex', alignItems: 'center', gap: 1.25,
+              display: 'flex', alignItems: 'center', gap: 1.75,
               animation: `${fadeIn} 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both`,
               position: 'relative', overflow: 'hidden',
-              // קישוט עדין - גראדיאנט נוסף ברקע נותן עומק
+              minHeight: 84,
+              // עומק רב-שכבתי - 2 גרדיאנטים רדיאליים, נותן תחושת קלף יוקרתי
               '&::before': {
                 content: '""', position: 'absolute', inset: 0,
-                background: 'radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 60%)',
+                background: 'radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 55%), radial-gradient(circle at bottom left, rgba(0,0,0,0.15), transparent 50%)',
+                pointerEvents: 'none',
+              },
+              // ברק עליון עדין
+              '&::after': {
+                content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: '50%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent)',
                 pointerEvents: 'none',
               },
             }}>
               <Box sx={{
-                width: 42, height: 42, borderRadius: '12px',
-                bgcolor: 'rgba(255,255,255,0.22)',
+                width: 56, height: 56, borderRadius: '16px',
+                bgcolor: 'rgba(255,255,255,0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, flexShrink: 0,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
+                fontSize: 30, flexShrink: 0,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.12)',
                 position: 'relative', zIndex: 1,
               }}>
                 {insight.emoji}
               </Box>
               <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 800, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+                <Typography sx={{ fontSize: 19, fontWeight: 900, lineHeight: 1.2, letterSpacing: '-0.02em' }}>
                   {insight.title}
                 </Typography>
                 {insight.subtitle && (
-                  <Typography sx={{ fontSize: 11, opacity: 0.92, mt: 0.2 }}>
+                  <Typography sx={{ fontSize: 12.5, opacity: 0.92, mt: 0.5, fontWeight: 500 }}>
                     {insight.subtitle}
                   </Typography>
                 )}
