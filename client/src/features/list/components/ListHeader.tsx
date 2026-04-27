@@ -275,22 +275,75 @@ export const ListHeader = memo(({
       '@media (max-width: 360px)': {
         p: 'max(32px, env(safe-area-inset-top) + 6px) 10px 10px',
       },
-      // Landscape במובייל - מצמצם את כל ההדר אגרסיבית כדי שהרשימה תקבל את רוב המסך
+      // ≤320px (Qin F21 Pro וקטן יותר) - דחיסה אגרסיבית גם ב-portrait
+      '@media (max-width: 320px)': {
+        p: 'max(24px, env(safe-area-inset-top) + 4px) 8px 8px',
+        borderRadius: '0 0 14px 14px',
+        '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '4px !important' },
+        '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
+        '& > .MuiBox-root': { marginBottom: '4px !important' },
+      },
+      // Landscape - דחיסה מקסימלית; שורת הכותרת מוסתרת, יש כפתור back מרחף
       '@media (orientation: landscape) and (max-height: 500px)': {
-        p: 'max(8px, env(safe-area-inset-top) + 2px) 16px 8px',
-        borderRadius: '0 0 12px 12px',
-        // מקצץ את כל ה-mb בין שורות לחצי
-        '& > * + *': { marginTop: '4px !important' },
-        // אינפוטים נמוכים יותר
-        '& .MuiOutlinedInput-root': { minHeight: '36px !important' },
-        // טאבים נמוכים יותר
-        '& .MuiTab-root': { minHeight: '32px !important', py: '4px !important', fontSize: '13px !important' },
-        // שורות mb-overrides ספציפיות
-        '& > .MuiBox-root': { marginBottom: '6px !important' },
+        position: 'relative',
+        p: 'max(2px, env(safe-area-inset-top) + 2px) 40px 4px',
+        borderRadius: '0 0 8px 8px',
+        // mb בין שורות זעיר
+        '& > * + *': { marginTop: '2px !important' },
+        '& > .MuiBox-root': { marginBottom: '2px !important' },
+        // אינפוטים: גובה 28
+        '& .MuiOutlinedInput-root': { minHeight: '28px !important', height: '28px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
+        // טאבים: ויזואלית 24 + tap-target מורחב דרך pseudo-element
+        '& .MuiTab-root': {
+          minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
+          position: 'relative',
+          '&::before': { content: '""', position: 'absolute', inset: '-6px 0' },
+        },
+        // glassButton ויזואלית 26 + tap-target 42x42 (a11y)
+        '& [class*="MuiIconButton-root"]': {
+          width: '26px !important', height: '26px !important',
+          position: 'relative',
+          '&::before': { content: '""', position: 'absolute', inset: '-8px' },
+        },
+        '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
+        // כותרת זעירה
+        '& h6, & .MuiTypography-h6': { fontSize: '13px !important' },
       },
     }}>
-      {/* Title Row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1, sm: 2 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
+      {/* כפתור back מרחף - מוצג רק ב-landscape כי שורת הכותרת מוסתרת.
+          לחיצה חוזרת לעמוד הבית, תפקיד אקוויוולנטי לכפתור החזרה הרגיל. */}
+      <IconButton
+        onClick={onBack}
+        aria-label={t('back')}
+        sx={{
+          display: 'none',
+          '@media (orientation: landscape) and (max-height: 500px)': {
+            display: 'flex',
+            position: 'absolute',
+            top: 4,
+            insetInlineStart: 8,
+            zIndex: 2,
+            width: 28,
+            height: 28,
+            bgcolor: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(8px)',
+            color: 'white',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+          },
+        }}
+      >
+        <ArrowForwardIcon sx={{ fontSize: 16 }} />
+      </IconButton>
+
+      {/* Title Row - מוסתר ב-landscape, נשאר רק Quick Add + טאבים */}
+      <Box sx={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        mb: { xs: 1, sm: 2 },
+        '@media (max-width: 360px)': { mb: 0.5 },
+        '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+      }}>
         <IconButton
           onClick={onBack}
           sx={glassButtonSx}
@@ -343,9 +396,14 @@ export const ListHeader = memo(({
         onLeave={onLeave}
       />
 
-      {/* Members Row (Group Only) */}
+      {/* Members Row (Group Only) - מוסתר ב-landscape כדי לצמצם גובה הדר */}
       {list.isGroup && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 } }}>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 1,
+          mb: { xs: 1, sm: 1.5 },
+          '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton
             onClick={onShowInvite}
@@ -373,9 +431,14 @@ export const ListHeader = memo(({
         </Box>
       )}
 
-      {/* Search Button Row (Private Lists Only) */}
+      {/* Search Button Row (Private Lists Only) - מוסתר ב-landscape */}
       {!list.isGroup && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: { xs: 1, sm: 1.5 }, '@media (max-width: 360px)': { mb: 0.5 } }}>
+        <Box sx={{
+          display: 'flex', justifyContent: 'flex-end',
+          mb: { xs: 1, sm: 1.5 },
+          '@media (max-width: 360px)': { mb: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
           <IconButton
             onClick={handleToggleSearch}
             sx={{
@@ -635,7 +698,11 @@ export const ListHeader = memo(({
           : '#FCA5A5';
 
         return (
-          <Box sx={{ mt: 0.75 }}>
+          <Box sx={{
+            mt: 0.75,
+            // מוסתר ב-landscape כדי לחסוך עוד גובה
+            '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
               {list.updatedAt && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>

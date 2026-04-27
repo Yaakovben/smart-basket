@@ -172,6 +172,15 @@ export const COMMON_STYLES = {
       height: 34,
       '& .MuiSvgIcon-root': { fontSize: 18 },
     },
+    // ≤320px - אפילו יותר קטן (מסכים תחת 320 כמו פלאפונים כשרים זעירים).
+    // האזור הויזואלי קטן (30) אבל ה-tap-target נשאר גדול דרך pseudo-element.
+    '@media (max-width: 320px)': {
+      width: 30,
+      height: 30,
+      position: 'relative',
+      '& .MuiSvgIcon-root': { fontSize: 16 },
+      '&::before': { content: '""', position: 'absolute', inset: '-7px' },
+    },
   }
 } as const;
 

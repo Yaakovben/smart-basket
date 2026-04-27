@@ -34,7 +34,31 @@ type SortMode = 'price' | 'distance' | 'combined';
 
 interface Props {
   chainTotals: PriceChainTotal[];
+  lastUpdatedISO?: string | null;
 }
+
+// פורמט יחסי לזמן ("לפני X דק'") - משוכפל מ-PriceComparisonCard ובמכוון:
+// הקומפוננטה הזו עומדת בפני עצמה ויכולה להיות מוצגת בלי הכרטיס העליון.
+const formatRelative = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 0) return 'זה עתה';
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `לפני ${mins || 1} דק'`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `לפני ${hours} שעות`;
+  const days = Math.floor(hours / 24);
+  return `לפני ${days} ימים`;
+};
+
+// סיווג טריות הנתונים לרמזור צבעים (תואם לכרטיס העליון)
+const freshnessColor = (iso: string | null | undefined, isDark: boolean) => {
+  if (!iso) return { color: '#6B7280', bg: isDark ? 'rgba(107,114,128,0.15)' : 'rgba(107,114,128,0.08)' };
+  const ageH = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (ageH < 1) return { color: '#059669', bg: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)' };
+  if (ageH < 24) return { color: '#D97706', bg: isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)' };
+  return { color: '#DC2626', bg: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' };
+};
 
 const shimmer = keyframes`
   0%, 100% { background-position: 0% 50%; }
@@ -469,8 +493,9 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
         מיין לפי:
       </Typography>
       <Box sx={{ display: 'flex', gap: 0.6 }}>
-        <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
+        {/* בעברית RTL - הראשון ב-DOM הוא הימני ביותר. 'קרוב' = ברירת המחדל = ימין. */}
         <Chip mode="distance" emoji="📍" label="קרוב" hint="מרחק מהבית" />
+        <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
         <Chip mode="combined" emoji="⚖️" label="משולב" hint="זול+קרוב" />
       </Box>
     </Box>
@@ -478,7 +503,7 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
 });
 SortBar.displayName = 'SortBar';
 
-export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
+export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -490,6 +515,16 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
 
   // האם יש מיקום לפחות לרשת אחת - מפעיל את בר המיון
   const hasAnyLocation = chainTotals.some(c => c.nearestBranch);
+  // הרשת הזולה ביותר - לכפתור "קפוץ לזולה" מתוך פירוט רשת אחרת
+  const cheapestChain = chainTotals.find(c => c.isCheapest);
+  const jumpToCheapest = () => {
+    if (!cheapestChain) return;
+    setExpandedId(cheapestChain.chainId);
+    // גלילה רכה אל הכרטיס שזה עתה נפתח
+    requestAnimationFrame(() => {
+      document.getElementById(`chain-row-${cheapestChain.chainId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
 
   // מיון לפי מצב. 'price' = ההגיון המקורי (שלמות קודם, לפי מחיר).
   // 'distance' = רשתות עם מיקום ממוינות לפי מרחק; אחרות נדחקות לסוף.
@@ -583,6 +618,21 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
         <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: 'text.primary', flex: 1 }}>
           השוואה בין רשתות
         </Typography>
+        {/* תג טריות נתונים - אותו רמזור צבעים כמו בכרטיס העליון, מזכיר ללקוח שהמחירים מתעדכנים */}
+        {lastUpdatedISO && (() => {
+          const { color, bg } = freshnessColor(lastUpdatedISO, isDark);
+          return (
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.3,
+              px: 0.7, py: 0.2, borderRadius: '999px',
+              bgcolor: bg, color,
+              border: '1px solid', borderColor: `${color}33`,
+              fontSize: 10, fontWeight: 800, letterSpacing: 0.2,
+            }}>
+              {formatRelative(lastUpdatedISO)}
+            </Box>
+          );
+        })()}
         {maxSavings > 0 && (
           <Box sx={{
             display: 'inline-flex', alignItems: 'center', gap: 0.4,
@@ -621,7 +671,7 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
           const isExpanded = expandedId === chain.chainId;
 
           return (
-            <Box key={chain.chainId} sx={{ borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 'none' } }}>
+            <Box key={chain.chainId} id={`chain-row-${chain.chainId}`} sx={{ borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 'none' } }}>
               {/* שורת סיכום - לחיצה פותחת פירוט */}
               <Box
                 onClick={() => setExpandedId(prev => prev === chain.chainId ? null : chain.chainId)}
@@ -772,22 +822,41 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                   display: 'flex', flexDirection: 'column', gap: 0.5,
                   bgcolor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.015)',
                 }}>
-                  {/* callout חיסכון - בכל רשת שאינה הזולה ומציעה השוואה הוגנת */}
-                  {chain.savings > 0 && !isCheapest && isComplete && (
-                    <Box sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.85,
-                      px: 1.25, py: 0.85, mb: 0.5, borderRadius: '10px',
-                      bgcolor: isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)',
-                      border: '1px solid',
-                      borderColor: isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.25)',
-                    }}>
+                  {/* callout חיסכון - לחיץ, קופץ לרשת הזולה ביותר ופותח את הפירוט שלה */}
+                  {chain.savings > 0 && !isCheapest && isComplete && cheapestChain && (
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); jumpToCheapest(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          jumpToCheapest();
+                        }
+                      }}
+                      sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.85,
+                        px: 1.25, py: 0.85, mb: 0.5, borderRadius: '10px',
+                        bgcolor: isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)',
+                        border: '1px solid',
+                        borderColor: isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.25)',
+                        cursor: 'pointer', userSelect: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                        transition: 'background-color 0.12s, transform 0.1s',
+                        '&:hover': { bgcolor: isDark ? 'rgba(16,185,129,0.18)' : 'rgba(16,185,129,0.12)' },
+                        '&:active': { transform: 'scale(0.98)' },
+                      }}
+                    >
                       <SavingsIcon sx={{ fontSize: 18, color: '#059669', flexShrink: 0 }} />
-                      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.35 }}>
+                      <Typography sx={{ flex: 1, fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.35 }}>
                         תחסוך{' '}
                         <Box component="span" sx={{ color: '#059669', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>
                           ₪{chain.savings.toFixed(0)}
                         </Box>
-                        {' '}אם תקנה ברשת הזולה ביותר
+                        {' '}ב-{cheapestChain.chainName}
+                      </Typography>
+                      <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#059669', letterSpacing: 0.3, flexShrink: 0 }}>
+                        הצג ←
                       </Typography>
                     </Box>
                   )}

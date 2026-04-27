@@ -62,6 +62,15 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurch
 
   const config = getDisplayConfig();
 
+  // פריטים מרחפים סביב הדמות - שונים לפי סוג ה-empty state
+  const floatingItems = hasSearch
+    ? ['❓', '🔎', '💭', '✨']
+    : isAllDone
+      ? ['🎊', '⭐', '✅', '💚']
+      : isPurchasedEmpty
+        ? ['📦', '🛍️', '✨', '💫']
+        : ['🥕', '🍞', '🥛', '🍎'];
+
   return (
     <Box sx={{
       textAlign: 'center',
@@ -72,22 +81,54 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurch
       justifyContent: 'center',
       minHeight: { xs: 220, sm: 340 }
     }}>
-      <Box
-        sx={{
-          width: { xs: 72, sm: 100 },
-          height: { xs: 72, sm: 100 },
+      {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
+      <Box sx={{
+        position: 'relative',
+        width: { xs: 140, sm: 180 },
+        height: { xs: 140, sm: 180 },
+        mb: { xs: 1.5, sm: 2.5 },
+      }}>
+        <Box sx={{
+          position: 'absolute', inset: 0,
           borderRadius: '50%',
           background: config.gradient,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mb: { xs: 1.5, sm: 2.5 },
-          fontSize: { xs: 38, sm: 56 }
-        }}
-        role="img"
-        aria-label={config.title}
-      >
-        {config.icon}
+          animation: 'esPulse 3s ease-in-out infinite',
+          '@keyframes esPulse': {
+            '0%, 100%': { transform: 'scale(1)' },
+            '50%': { transform: 'scale(1.05)' },
+          },
+        }} />
+        <Box
+          sx={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: { xs: 56, sm: 72 },
+            animation: 'esFloat 3s ease-in-out infinite',
+            '@keyframes esFloat': {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+          }}
+          role="img"
+          aria-label={config.title}
+        >
+          {config.icon}
+        </Box>
+        {floatingItems.map((emoji, i) => (
+          <Box key={i} sx={{
+            position: 'absolute',
+            fontSize: { xs: 18, sm: 22 },
+            top: ['10%', '12%', '70%', '68%'][i],
+            left: ['10%', '78%', '8%', '78%'][i],
+            animation: `esItem 2.8s ease-in-out ${i * 0.3}s infinite`,
+            '@keyframes esItem': {
+              '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+              '50%': { transform: 'translateY(-8px) rotate(5deg)', opacity: 1 },
+            },
+          }}>
+            {emoji}
+          </Box>
+        ))}
       </Box>
       <Typography sx={{ fontSize: { xs: 15, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>
         {config.title}

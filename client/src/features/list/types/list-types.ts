@@ -6,6 +6,7 @@ export interface NewProductForm {
   quantity: number;
   unit: ProductUnit;
   category: ProductCategory;
+  note: string;
 }
 
 export interface EditListForm {

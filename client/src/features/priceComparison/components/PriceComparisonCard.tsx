@@ -41,10 +41,29 @@ const formatRelative = (iso: string | null): string => {
   return `לפני ${days} ימים`;
 };
 
+// סיווג טריות הנתונים לצבע: ירוק עד שעה, כתום עד יממה, אדום מעל יממה
+const freshnessStatus = (iso: string | null): 'fresh' | 'stale' | 'old' | 'unknown' => {
+  if (!iso) return 'unknown';
+  const ageH = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (ageH < 1) return 'fresh';
+  if (ageH < 24) return 'stale';
+  return 'old';
+};
+
 export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus, onRequestLocation, onResetLocationDenied }: Props) => {
   if (loading || !data) return null;
 
   const freshness = formatRelative(data.lastUpdatedISO);
+  const fStatus = freshnessStatus(data.lastUpdatedISO);
+  // צבעים לפי סטטוס - ירוק/כתום/אדום, נראה לעין כמו רמזור
+  const fColor = fStatus === 'fresh' ? '#059669'
+    : fStatus === 'stale' ? '#D97706'
+    : fStatus === 'old' ? '#DC2626'
+    : '#6B7280';
+  const fBg = fStatus === 'fresh' ? (isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)')
+    : fStatus === 'stale' ? (isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)')
+    : fStatus === 'old' ? (isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)')
+    : (isDark ? 'rgba(107,114,128,0.15)' : 'rgba(107,114,128,0.08)');
   const hasChainData = data.chainTotals?.some(c => c.matchedCount > 0) ?? false;
   const hasAnyPendingItems = data.totalPending > 0;
 
@@ -75,9 +94,16 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
         <Typography sx={{ fontSize: 15, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
         <BetaBadge size="sm" />
         {data.lastUpdatedISO && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35, ml: 'auto' }}>
-            <UpdateIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
-            <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>עודכן {freshness}</Typography>
+          <Box sx={{
+            display: 'inline-flex', alignItems: 'center', gap: 0.4,
+            ml: 'auto', px: 0.85, py: 0.3, borderRadius: '999px',
+            bgcolor: fBg, color: fColor,
+            border: '1px solid', borderColor: `${fColor}33`,
+          }}>
+            <UpdateIcon sx={{ fontSize: 12 }} />
+            <Typography sx={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.2 }}>
+              עודכן {freshness}
+            </Typography>
           </Box>
         )}
       </Box>
@@ -311,7 +337,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark, locationStatus
 
       {/* הטבלה המרכזית - כל הרשתות, כולל אלה בלי התאמות */}
       {data.enabled && hasAnyPendingItems && data.chainTotals && data.chainTotals.length > 0 && (
-        <ChainComparisonTable chainTotals={data.chainTotals} />
+        <ChainComparisonTable chainTotals={data.chainTotals} lastUpdatedISO={data.lastUpdatedISO} />
       )}
 
       {/* Footer */}

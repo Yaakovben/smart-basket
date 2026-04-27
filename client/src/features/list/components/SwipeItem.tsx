@@ -11,6 +11,7 @@ interface SwipeItemProps {
   isSelected?: boolean;
   selectionMode?: boolean;
   currentUserName: string;
+  searchTerm?: string;
   onToggle: (productId: string) => void;
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
@@ -33,7 +34,30 @@ const actionBtnStyle = {
   cursor: 'pointer'
 };
 
-export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, onExitSelectionMode, isPurchased, isOpen, isSelected, selectionMode, currentUserName, onOpen, onClose }: SwipeItemProps) => {
+// הדגשת חלקי טקסט שתואמים את החיפוש - מרנדר את שם המוצר עם <mark> צהוב סביב ההתאמה.
+// בלי search term - מחזיר את הטקסט כמו שהוא.
+const renderHighlighted = (text: string, term: string) => {
+  if (!term || term.length < 1) return text;
+  const lowerText = text.toLowerCase();
+  const lowerTerm = term.toLowerCase();
+  const idx = lowerText.indexOf(lowerTerm);
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <Box component="mark" sx={{
+        bgcolor: 'rgba(245,158,11,0.35)',
+        color: 'inherit',
+        borderRadius: '3px',
+        px: '2px',
+        py: 0,
+      }}>{text.slice(idx, idx + term.length)}</Box>
+      {text.slice(idx + term.length)}
+    </>
+  );
+};
+
+export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, onLongPress, onExitSelectionMode, isPurchased, isOpen, isSelected, selectionMode, currentUserName, searchTerm, onOpen, onClose }: SwipeItemProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
@@ -266,7 +290,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         position: 'relative',
         mb: '6px',
         borderRadius: '14px',
-        height: product.note ? '92px' : '72px',
+        // המוצר תמיד 72px - גם כשיש הערה. ההערה נצפית בפרטי המוצר בלחיצה.
+        height: '72px',
         overflow: 'hidden',
         touchAction: swiping ? 'none' : 'pan-y',
         WebkitUserSelect: 'none',
@@ -356,39 +381,43 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           {icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            sx={{
-              fontSize: '15px',
-              fontWeight: 600,
-              color: isPurchased ? 'text.secondary' : 'text.primary',
-              textDecoration: isPurchased ? 'line-through' : 'none',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {product.name}
-          </Typography>
-          <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
-            {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
-          </Typography>
-          {/* הערה - מוצגת מתחת לפרטי המוצר אם קיימת. צבע צהבהב עדין כדי לבלוט בלי להפריע. */}
-          {product.note && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography
               sx={{
-                fontSize: '12px',
-                color: '#8B6914',
-                fontWeight: 500,
-                mt: 0.25,
+                flex: 1, minWidth: 0,
+                fontSize: '15px',
+                fontWeight: 600,
+                color: isPurchased ? 'text.secondary' : 'text.primary',
+                textDecoration: isPurchased ? 'line-through' : 'none',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                fontStyle: 'italic',
               }}
             >
-              💬 {product.note}
+              {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-          )}
+            {/* סימון פסיבי שיש הערה - לחיצה על המוצר עצמו תציג את ההערה ב-popup */}
+            {product.note && (
+              <Box
+                aria-label="למוצר זה יש הערה"
+                sx={{
+                  flexShrink: 0,
+                  width: 18, height: 18, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10,
+                  bgcolor: 'rgba(20,184,166,0.18)',
+                  color: '#0D9488',
+                  border: '1px solid rgba(20,184,166,0.35)',
+                  fontWeight: 800,
+                }}
+              >
+                💬
+              </Box>
+            )}
+          </Box>
+          <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
+            {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
+          </Typography>
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>
