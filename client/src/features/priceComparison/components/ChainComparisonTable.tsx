@@ -21,6 +21,9 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import CloseIcon from '@mui/icons-material/Close';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
+import SavingsIcon from '@mui/icons-material/Savings';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import MapIcon from '@mui/icons-material/Map';
 import DirectionsIcon from '@mui/icons-material/Directions';
@@ -385,7 +388,7 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
         </Typography>
       </Box>
 
-      {/* שם הסניף + עיר/כתובת */}
+      {/* שם הסניף + עיר/כתובת - הכתובת נשברת לשורות כדי שתמיד תהיה קריאה */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography sx={{
           fontSize: 11.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.25,
@@ -395,8 +398,9 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
         </Typography>
         {subtitle && (
           <Typography sx={{
-            fontSize: 9.5, color: 'text.secondary', mt: 0.15, lineHeight: 1.3,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: 10, color: 'text.secondary', mt: 0.2, lineHeight: 1.35,
+            // שבירת שורות במקום חיתוך - הלקוח חייב לראות את הכתובת המלאה
+            wordBreak: 'break-word', whiteSpace: 'normal',
           }}>
             📍 {subtitle}
           </Typography>
@@ -665,32 +669,40 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                         הכי זול
                       </Box>
                     )}
+                    {/* "אין נתונים היום" - הרשת לא פרסמה מחירים. אייקון שעון להבדל מ"אין התאמות" */}
                     {isEmpty && !chain.hasData && (
                       <Box sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: 0.3,
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: '#F59E0B22', color: '#B45309',
                         fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3,
                       }}>
+                        <AccessTimeIcon sx={{ fontSize: 11 }} />
                         אין נתונים היום
                       </Box>
                     )}
+                    {/* "אין התאמות" - הרשת פרסמה אבל אף מוצר לא זוהה במאגר. אייקון חיפוש */}
                     {isEmpty && chain.hasData && (
                       <Box sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: 0.3,
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
                         color: 'text.disabled',
                         fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3,
                       }}>
-                        אין התאמות
+                        <SearchOffIcon sx={{ fontSize: 11 }} />
+                        לא נמצאו במאגר הרשת
                       </Box>
                     )}
                     {!isComplete && !isEmpty && chain.unmatchedCount > 0 && (
                       <Box sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: 0.3,
                         px: 0.75, py: 0.15, borderRadius: '6px',
                         bgcolor: '#F59E0B22', color: '#F59E0B',
                         fontSize: 9.5, fontWeight: 800, letterSpacing: 0.3,
                       }}>
-                        לא זוהו {chain.unmatchedCount} מוצרים
+                        <SearchOffIcon sx={{ fontSize: 11 }} />
+                        {chain.unmatchedCount} לא נמצאו ברשת
                       </Box>
                     )}
                   </Box>
@@ -729,10 +741,18 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                   }}>
                     ₪{chain.total.toFixed(0)}
                   </Typography>
+                  {/* תג חיסכון מפורש - "יקר ב-X" עם אייקון, ברור הרבה יותר מ-"+X" יבש */}
                   {chain.savings > 0 && !isCheapest && isComplete && (
-                    <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mt: 0.15, fontVariantNumeric: 'tabular-nums' }}>
-                      +₪{chain.savings.toFixed(0)}
-                    </Typography>
+                    <Box sx={{
+                      display: 'inline-flex', alignItems: 'center', gap: 0.25,
+                      mt: 0.3, px: 0.5, py: 0.15, borderRadius: '5px',
+                      bgcolor: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
+                      color: '#DC2626',
+                    }}>
+                      <Typography sx={{ fontSize: 10, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                        +₪{chain.savings.toFixed(0)}
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
 
@@ -752,6 +772,25 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
                   display: 'flex', flexDirection: 'column', gap: 0.5,
                   bgcolor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.015)',
                 }}>
+                  {/* callout חיסכון - בכל רשת שאינה הזולה ומציעה השוואה הוגנת */}
+                  {chain.savings > 0 && !isCheapest && isComplete && (
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.85,
+                      px: 1.25, py: 0.85, mb: 0.5, borderRadius: '10px',
+                      bgcolor: isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)',
+                      border: '1px solid',
+                      borderColor: isDark ? 'rgba(16,185,129,0.3)' : 'rgba(16,185,129,0.25)',
+                    }}>
+                      <SavingsIcon sx={{ fontSize: 18, color: '#059669', flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.35 }}>
+                        תחסוך{' '}
+                        <Box component="span" sx={{ color: '#059669', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>
+                          ₪{chain.savings.toFixed(0)}
+                        </Box>
+                        {' '}אם תקנה ברשת הזולה ביותר
+                      </Typography>
+                    </Box>
+                  )}
                   {(() => {
                     const matched = [...chain.matches].filter(m => m.matched).sort((a, b) => a.price - b.price);
                     const unmatched = chain.matches.filter(m => !m.matched);
