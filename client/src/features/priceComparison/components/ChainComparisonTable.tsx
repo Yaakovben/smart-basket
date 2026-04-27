@@ -478,8 +478,9 @@ export const ChainComparisonTable = memo(({ chainTotals }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  // מצב מיון - נפתח רק אם יש נתוני מיקום; אחרת תמיד 'price'
-  const [sortMode, setSortMode] = useState<SortMode>('price');
+  // מצב מיון - ברירת המחדל היא 'distance' (קרוב). אם אין מיקום פעיל,
+  // בפועל המיון יתבצע לפי 'price' כי distance דורש hasAnyLocation.
+  const [sortMode, setSortMode] = useState<SortMode>('distance');
   // ה-branch שנבחר לפתיחת picker ניווט
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
 
