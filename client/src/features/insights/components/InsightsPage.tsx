@@ -923,12 +923,6 @@ export const InsightsPage = memo(() => {
 
         {/* ===== הרגלים ===== */}
         {tab === 'habits' && (() => {
-          // כותרת אישית לטאב הרגלים — ממקד על המוצר הכי נפוץ
-          const hero = topProducts[0];
-          const heroText = hero
-            ? <>הכוכב שלך: <b>{hero.name}</b> — קנית <b>×{hero.count}</b></>
-            : <>טוב להכיר — עוד מעט תראה את הכוכב שלך</>;
-
           // אין עדיין נתוני קניות - מסך ריק ברור במקום כרטיסי "0"
           const hasAnyActivity = stats.totalPurchased > 0 || topProducts.length > 0 || categoryBreakdown.length > 0;
           if (!hasAnyActivity) {
@@ -945,7 +939,7 @@ export const InsightsPage = memo(() => {
 
           return (
           <>
-            <HeroInsight icon="🛒" text={heroText} accent="#F59E0B" isDark={isDark} />
+            {/* HeroInsight 'הכוכב שלך' הוסר - כפילות עם כרטיס 'תובנת היום' הגלובלי שכבר מציג מוצר השבוע */}
             {/* שורת סטטיסטיקת על */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
               <StatCard

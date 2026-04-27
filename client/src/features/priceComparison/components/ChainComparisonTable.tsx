@@ -493,8 +493,9 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
         מיין לפי:
       </Typography>
       <Box sx={{ display: 'flex', gap: 0.6 }}>
-        <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
+        {/* בעברית RTL - הראשון ב-DOM הוא הימני ביותר. 'קרוב' = ברירת המחדל = ימין. */}
         <Chip mode="distance" emoji="📍" label="קרוב" hint="מרחק מהבית" />
+        <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
         <Chip mode="combined" emoji="⚖️" label="משולב" hint="זול+קרוב" />
       </Box>
     </Box>
