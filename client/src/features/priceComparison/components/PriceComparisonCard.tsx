@@ -18,9 +18,10 @@ import LocationOffIcon from '@mui/icons-material/LocationOff';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import type { PriceComparisonData, PriceChainTotal, PriceMatch } from '../types/priceComparison.types';
+import type { PriceComparisonData, PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { BetaBadge } from './BetaBadge';
+import { NavigationPicker } from './ChainComparisonTable';
 import { haptic } from '../../../global/helpers';
 
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
@@ -137,9 +138,10 @@ interface ChainCardProps {
   isDark: boolean;
   expanded: boolean;
   onToggle: () => void;
+  onOpenNav: (b: NearestBranch) => void;
 }
 
-const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle }: ChainCardProps) => {
+const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -154,10 +156,9 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
   const handleNavigate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (!chain.nearestBranch) return;
-    const { lat, lng } = chain.nearestBranch;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, [chain.nearestBranch]);
+    // פותח picker עם Waze/Google Maps/Apple Maps - לא יורד ישר ל-Google
+    onOpenNav(chain.nearestBranch);
+  }, [chain.nearestBranch, onOpenNav]);
 
   return (
     <Box
@@ -342,9 +343,15 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
 });
 ChainCard.displayName = 'ChainCard';
 
+type SortMode = 'distance' | 'price' | 'combined';
+
 export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, onResetLocationDenied }: Props) => {
-  // המנצחת נפתחת אוטומטית
+  // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
+  const [sortMode, setSortMode] = useState<SortMode>('distance');
+  // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
+  const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
 
   if (loading || !data) return null;
 
@@ -358,12 +365,46 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const maxTotal = completeChains.length > 1 ? Math.max(...completeChains.map(c => c.total)) : 0;
   const savings = cheapest && maxTotal > cheapest.total ? maxTotal - cheapest.total : 0;
 
-  // מיון לתצוגה: זול ביותר → יקר → ללא נתונים בסוף
-  const sortedChains = [...(data.chainTotals || [])].sort((a, b) => {
-    if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
-    if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
-    return a.total - b.total;
-  });
+  // האם יש מיקום לפחות לרשת אחת - מאפשר מיון "קרוב" / "משולב"
+  const hasAnyLocation = (data.chainTotals || []).some(c => c.nearestBranch);
+
+  // מיון לפי סורט-מוד. "קרוב" - לפי מרחק; "זול" - לפי מחיר;
+  // "משולב" - ציון מנורמל 50/50. אם אין מיקום, "קרוב"/"משולב" נופלים ל-price.
+  const sortedChains = (() => {
+    const chains = [...(data.chainTotals || [])];
+    const fallbackToPrice = (a: PriceChainTotal, b: PriceChainTotal) => {
+      if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
+      if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
+      return a.total - b.total;
+    };
+    if (sortMode === 'distance' && hasAnyLocation) {
+      return chains.sort((a, b) => {
+        const aEmpty = a.matchedCount === 0;
+        const bEmpty = b.matchedCount === 0;
+        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+        const aDist = a.nearestBranch?.distanceKm ?? Infinity;
+        const bDist = b.nearestBranch?.distanceKm ?? Infinity;
+        return aDist - bDist;
+      });
+    }
+    if (sortMode === 'combined' && hasAnyLocation) {
+      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch);
+      if (withData.length > 0) {
+        const prices = withData.map(c => c.total);
+        const dists = withData.map(c => c.nearestBranch!.distanceKm);
+        const minP = Math.min(...prices), maxP = Math.max(...prices);
+        const minD = Math.min(...dists), maxD = Math.max(...dists);
+        const rangeP = (maxP - minP) || 1;
+        const rangeD = (maxD - minD) || 1;
+        const score = (c: PriceChainTotal) => {
+          if (c.matchedCount === 0 || !c.nearestBranch) return Infinity;
+          return ((c.total - minP) / rangeP) * 0.5 + ((c.nearestBranch.distanceKm - minD) / rangeD) * 0.5;
+        };
+        return chains.sort((a, b) => score(a) - score(b));
+      }
+    }
+    return chains.sort(fallbackToPrice);
+  })();
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -555,6 +596,58 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         </Paper>
       )}
 
+      {/* בר מיון - תמיד גלוי. "קרוב"/"משולב" מעומעמים בלי מיקום */}
+      {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
+        const SortChip = ({ mode, emoji, label, requiresLoc }: { mode: SortMode; emoji: string; label: string; requiresLoc?: boolean }) => {
+          const active = sortMode === mode;
+          const disabled = requiresLoc && !hasAnyLocation;
+          return (
+            <Box
+              role="button"
+              tabIndex={disabled ? -1 : 0}
+              onClick={() => { if (!disabled) { haptic('light'); setSortMode(mode); } }}
+              sx={{
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
+                py: 0.7, px: 1, borderRadius: '10px',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.45 : 1,
+                userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+                bgcolor: active && !disabled
+                  ? (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.13)')
+                  : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                border: '1.5px solid',
+                borderColor: active && !disabled ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+                transition: 'all 0.12s',
+                '&:active': disabled ? {} : { transform: 'scale(0.98)' },
+              }}
+            >
+              <Box sx={{ fontSize: 13 }}>{emoji}</Box>
+              <Typography sx={{
+                fontSize: 12, fontWeight: active && !disabled ? 800 : 700,
+                color: active && !disabled ? '#14B8A6' : 'text.primary',
+              }}>
+                {label}
+              </Typography>
+            </Box>
+          );
+        };
+        return (
+          <Box sx={{ mb: 1.25 }}>
+            <Box sx={{ display: 'flex', gap: 0.5, px: 0.25 }}>
+              <SortChip mode="distance" emoji="📍" label="קרוב" requiresLoc />
+              <SortChip mode="price" emoji="💰" label="זול" />
+              <SortChip mode="combined" emoji="⚖️" label="משולב" requiresLoc />
+            </Box>
+            {!hasAnyLocation && (
+              <Typography sx={{ fontSize: 9.5, color: 'text.disabled', mt: 0.4, textAlign: 'center', fontStyle: 'italic' }}>
+                שתף מיקום כדי למיין לפי קרבה
+              </Typography>
+            )}
+          </Box>
+        );
+      })()}
+
       {/* CARDS STACK - כרטיס לכל רשת */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -568,10 +661,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
               isDark={isDark}
               expanded={expandedId === chain.chainId}
               onToggle={() => toggleExpanded(chain.chainId)}
+              onOpenNav={setNavBranch}
             />
           ))}
         </Box>
       )}
+
+      {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
+      <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
 
       {/* FOOTER - מטא קומפקטית */}
       <Box sx={{

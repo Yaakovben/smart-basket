@@ -159,7 +159,7 @@ type NavApp = {
   url: string;
 };
 
-const NavigationPicker = memo(({ branch, isDark, onClose }: {
+export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   branch: NearestBranch | null;
   isDark?: boolean;
   onClose: () => void;
