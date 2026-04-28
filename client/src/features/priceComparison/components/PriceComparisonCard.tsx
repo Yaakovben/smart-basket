@@ -688,19 +688,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         );
       })()}
 
-      {/* CARDS STACK - כרטיס לכל רשת. תווית פינה לפי מצב המיון:
-          כל התוויות בירוק אחיד של "הכי זול" - הצבע שכבר מוכר ללקוח כסימן מוביל,
-          וההבדל בין סוגי המיון בא רק דרך הטקסט. */}
+      {/* CARDS STACK - כרטיס לכל רשת. ההדגשה ברקע אוטומטית על המוביל לפי המיון. */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
-        const RIBBON_COLOR = '#10B981';
-        const ribbonByMode: Record<SortMode, { label: string; color: string }> = {
-          price: { label: 'הכי זול', color: RIBBON_COLOR },
-          distance: { label: 'הכי קרוב', color: RIBBON_COLOR },
-          combined: { label: 'הכי משתלם', color: RIBBON_COLOR },
-        };
-        // אם המיון דורש מיקום ואין - לא מציגים תווית כי הסדר נופל לפי מחיר
-        const showRibbon = sortMode === 'price' || (hasAnyLocation && (sortMode === 'distance' || sortMode === 'combined'));
-        const ribbon = showRibbon ? ribbonByMode[sortMode] : null;
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {sortedChains.map((chain, idx) => (
@@ -717,7 +706,6 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 expanded={expandedId === chain.chainId}
                 onToggle={() => toggleExpanded(chain.chainId)}
                 onOpenNav={setNavBranch}
-                rankRibbon={ribbon}
                 hasLocation={locationStatus === 'granted'}
               />
             ))}
