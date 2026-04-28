@@ -308,8 +308,8 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
     swipeActive.current = false;
     const dx = e.changedTouches[0].clientX - swipeStartX.current;
     if (Math.abs(dx) < SWIPE_THRESHOLD) return;
-    // RTL: swipe ימינה (dx>0) = הקודם, swipe שמאלה (dx<0) = הבא
-    if (dx < 0) handleNext();
+    // כיוון הפוך: swipe ימינה (dx>0) = הבא, swipe שמאלה (dx<0) = הקודם
+    if (dx > 0) handleNext();
     else handlePrev();
   }, [handleNext, handlePrev]);
 
@@ -440,8 +440,8 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
             }}
             aria-label="דילוג על המדריך"
           >
-            <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3 }}>דלג</Typography>
             <CloseIcon sx={{ fontSize: 13 }} />
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3 }}>דלג</Typography>
           </Box>
         </Box>
 
