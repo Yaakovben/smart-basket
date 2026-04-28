@@ -19,6 +19,7 @@ import { haptic } from '../../../../global/helpers';
 import {
   fadeIn, dayLabels, scoreEmoji,
   AnimatedNumber, SectionCard, HeroInsight, InsightsEmptyState,
+  PersonalityCard, ScoreTrendBadge, useScoreDelta,
 } from '../insightsShared';
 
 interface Props {
@@ -42,12 +43,16 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
   const {
     shoppingScore, streaks, shoppingFrequency, monthComparison,
     weeklyTrends, weekdayActivity, hourlyActivity, upcomingNeeds, anomalies, stats,
+    shoppingPersonality,
   } = data;
 
   // State לוקאלי לטאב הזה
   const [scoreExplained, setScoreExplained] = useState(false);
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
+
+  // הפרש הציון מהביקור הקודם - מוצג כתווית ליד הציון
+  const scoreDelta = useScoreDelta(shoppingScore);
 
   const now = Date.now();
   // הערה: ה-`,1` ב-Math.max מונע חלוקה ב-0 כשאין כלל פעילות. זה גם הסיבה
@@ -112,6 +117,12 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
   return (
     <>
       <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
+
+      {/* כרטיס אישיות הקונה - הזהות הוויזואלית של המשתמש. מוצג רק אם יש פעילות
+          אמיתית כדי לא לתת ל"מתחיל" ברירת מחדל ריקה. */}
+      {shoppingPersonality && stats.totalProducts >= 5 && (
+        <PersonalityCard personality={shoppingPersonality} isDark={isDark} />
+      )}
 
       {/* כרטיס "מומנטום שבועי" */}
       {hasMomentumData && (lastWeek.purchased > 0 || prevWeek.purchased > 0) && (
@@ -260,13 +271,16 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
           '&:focus-visible': { boxShadow: '0 0 0 2px #14B8A6' },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 0.75 }}>
           <Typography sx={{ fontSize: 14, fontWeight: 800 }}>📈 ציון הקנייה שלך</Typography>
-          <Typography sx={{
-            fontSize: 10, fontWeight: 700, color: 'text.disabled',
-            transition: 'transform 0.2s ease',
-            transform: scoreExplained ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}>▼</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+            <ScoreTrendBadge delta={scoreDelta} />
+            <Typography sx={{
+              fontSize: 10, fontWeight: 700, color: 'text.disabled',
+              transition: 'transform 0.2s ease',
+              transform: scoreExplained ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}>▼</Typography>
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ position: 'relative', width: 92, height: 92, flexShrink: 0 }}>

@@ -13,6 +13,9 @@ import { haptic, safeStorage } from '../../../global/helpers';
 import {
   float, fadeIn, tabEnter, dayLabels,
   AnimatedNumber, StatCard, SectionCard, HeroInsight, InsightsEmptyState,
+  AchievementBadges, computeAchievements, ForgottenProductsCard,
+  SpotlightProduct, SmartTipsCarousel, GoldenHourCard, GroupLeadershipHero,
+  CategoryDonut, MonthRecapCard,
 } from './insightsShared';
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
@@ -530,9 +533,27 @@ export const InsightsPage = memo(() => {
             ? allMembers.reduce((best, m) => m.added > best.added ? m : best, allMembers[0])
             : null;
 
+          // ספירת קבוצות שבהן המשתמש הנוכחי מוביל (rank=1).
+          // מוביל = הוסיף הכי הרבה. רק קבוצות עם פעילות אמיתית נספרות.
+          const leadingGroupsCount = currentUserName
+            ? groupStats.filter(g => {
+                const sortedByAdded = [...g.memberBreakdown].sort((a, b) => b.added - a.added);
+                return sortedByAdded[0]?.name === currentUserName && sortedByAdded[0].added > 0;
+              }).length
+            : 0;
+
           return (
             <>
               <HeroInsight icon="👋" text={heroText} accent="#14B8A6" isDark={isDark} />
+
+              {/* Leadership Hero - מציג סטטוס מנהיגות בכל הקבוצות יחד */}
+              {groupStats.length > 0 && (
+                <GroupLeadershipHero
+                  leadingCount={leadingGroupsCount}
+                  totalGroups={groupStats.length}
+                  isDark={isDark}
+                />
+              )}
 
               {/* כרטיס "שיא תרומה" - ייחודי לטאב רשימות, מדגיש את הזווית הקבוצתית/חברתית */}
               {topContributor && topContributor.added > 0 && (
@@ -1018,9 +1039,103 @@ export const InsightsPage = memo(() => {
             );
           }
 
+          // הישגים - מחושבים מנתונים שכבר יש. שורת badges מאמירה ש"השגת
+          // משהו", גורם הזדהות וגאווה. מוצג רק אם יש לפחות הישג אחד.
+          const achievements = computeAchievements({
+            totalPurchased: stats.totalPurchased,
+            totalLists: stats.totalLists,
+            currentWeeks: data.streaks?.currentWeeks ?? 0,
+            longestWeeks: data.streaks?.longestWeeks ?? 0,
+            completionRate: stats.completionRate,
+            categoryCount: categoryBreakdown.length,
+          });
+
+          // המוצר הכי-נקנה לתצוגת Spotlight
+          const heroProduct = topProducts[0];
+          const heroProductIcon = heroProduct
+            ? (CATEGORY_ICONS[heroProduct.category as keyof typeof CATEGORY_ICONS] || '🛒')
+            : null;
+
+          // נתונים לדונאט הקטגוריות (מועשרים בצבע, אייקון ותווית מתורגמת)
+          const donutItems = categoryBreakdown.slice(0, 6).map(c => {
+            const key = CATEGORY_TRANSLATION_KEYS[c.category as keyof typeof CATEGORY_TRANSLATION_KEYS];
+            return {
+              category: c.category,
+              count: c.count,
+              percentage: c.percentage,
+              color: CATEGORY_COLORS[c.category as keyof typeof CATEGORY_COLORS] || '#6B7280',
+              icon: CATEGORY_ICONS[c.category as keyof typeof CATEGORY_ICONS] || '📦',
+              label: key ? t(key) : c.category,
+            };
+          });
+
+          // Recap slides - "החודש שלך" בסגנון Wrapped. נבנה רק עובדות אמיתיות.
+          const recapSlides: { emoji: string; headline: React.ReactNode; sub: string; gradient: string }[] = [];
+          const purchasedThisMonth = stats.totalPurchased; // שימוש כקירוב; נתון מדויק אין
+          if (purchasedThisMonth > 0) recapSlides.push({
+            emoji: '🛒',
+            headline: <><b>{purchasedThisMonth}</b> פריטים נקנו</>,
+            sub: 'סך הכל בחשבון שלך',
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488 60%, #0F766E)',
+          });
+          if (heroProduct && heroProduct.count >= 2) recapSlides.push({
+            emoji: heroProductIcon || '⭐',
+            headline: <>הכוכב: <b>{heroProduct.name}</b></>,
+            sub: `קנית ${heroProduct.count} פעמים — האהוב`,
+            gradient: 'linear-gradient(135deg, #F59E0B, #DC2626 70%)',
+          });
+          if (topCategory) recapSlides.push({
+            emoji: CATEGORY_ICONS[topCategory.category as keyof typeof CATEGORY_ICONS] || '📊',
+            headline: <><b>{topCategory.percentage}%</b> מהקניות</>,
+            sub: `הקטגוריה ${topCategoryLabel} שולטת אצלך`,
+            gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1 60%, #4F46E5)',
+          });
+          if (stats.completionRate >= 50) recapSlides.push({
+            emoji: stats.completionRate >= 80 ? '🏆' : '⚡',
+            headline: <><b>{stats.completionRate}%</b> השלמה</>,
+            sub: stats.completionRate >= 80 ? 'מצוין — יעיל ומדויק' : 'יפה, יש לאן להתקדם',
+            gradient: 'linear-gradient(135deg, #10B981, #059669 70%)',
+          });
+          if ((data.streaks?.currentWeeks ?? 0) >= 2) recapSlides.push({
+            emoji: '🔥',
+            headline: <><b>{data.streaks!.currentWeeks}</b> שבועות רצוף</>,
+            sub: 'בערך כל שבוע יש פעילות — סטריק חי',
+            gradient: 'linear-gradient(135deg, #EF4444, #DC2626 60%, #991B1B)',
+          });
+
           return (
           <>
             {/* HeroInsight 'הכוכב שלך' הוסר - כפילות עם כרטיס 'תובנת היום' הגלובלי שכבר מציג מוצר השבוע */}
+
+            {/* "החודש שלך" Recap - סלייד-שואו מעורר השראה */}
+            {recapSlides.length >= 2 && (
+              <MonthRecapCard slides={recapSlides} isDark={isDark} />
+            )}
+
+            {/* Spotlight: המוצר המוביל - hero ענק וזוהר */}
+            {heroProduct && heroProduct.count >= 3 && heroProductIcon && (
+              <SpotlightProduct
+                name={heroProduct.name}
+                count={heroProduct.count}
+                icon={heroProductIcon}
+                isDark={isDark}
+              />
+            )}
+
+            {/* שורת הישגים - מקור גאווה ויזואלי */}
+            <AchievementBadges items={achievements} isDark={isDark} />
+
+            {/* טיפים חכמים מתחלפים - שימוש ב-smartTips שכבר מחושב בשרת */}
+            {data.smartTips && data.smartTips.length > 0 && (
+              <SmartTipsCarousel tips={data.smartTips} isDark={isDark} />
+            )}
+
+            {/* "השעה הזהובה" - מציג בוקר/צהריים/ערב/לילה לפי השעה השיא */}
+            <GoldenHourCard hourlyActivity={data.hourlyActivity} isDark={isDark} />
+
+            {/* כרטיס "אולי שכחת" - trigger רגשי שגורם להוסיף מוצרים נשכחים */}
+            <ForgottenProductsCard items={data.forgotten || []} isDark={isDark} />
+
             {/* שורת סטטיסטיקת על */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
               <StatCard
@@ -1132,11 +1247,17 @@ export const InsightsPage = memo(() => {
               </SectionCard>
             )}
 
-            {/* פילוח קטגוריות - בר מחולק אחד במקום שתי ויזואליזציות */}
+            {/* פילוח קטגוריות - דונאט אנימטיבי + רשימה לחיצה */}
             {categoryBreakdown.length > 0 && (
               <SectionCard title="📊 פילוח קטגוריות" isDark={isDark}>
-                {/* בר מחולק אופקי - הכל בבת אחת */}
-                <Box sx={{ display: 'flex', height: 10, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
+                {/* דונאט עם תווית מרכזית מתחלפת + legend מינימליסטי */}
+                {donutItems.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <CategoryDonut items={donutItems} isDark={isDark} />
+                  </Box>
+                )}
+                {/* בר מחולק אופקי - השוואה מהירה של כל הקטגוריות בבת אחת */}
+                <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
                   {categoryBreakdown.map(cat => {
                     const color = CATEGORY_COLORS[cat.category as keyof typeof CATEGORY_COLORS] || '#6B7280';
                     return <Box key={cat.category} sx={{ width: `${cat.percentage}%`, bgcolor: color, transition: 'width 0.8s ease' }} />;

@@ -409,23 +409,21 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 sx={{
                   position: 'relative',
                   flexShrink: 0,
-                  width: 16, height: 18,
-                  bgcolor: '#E0F7F4',
-                  transform: 'rotate(-6deg)',
-                  boxShadow: '0 1px 2px rgba(20,184,166,0.3)',
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
+                  width: 14, height: 14, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundImage: 'linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)',
+                  boxShadow: [
+                    'inset 0 1px 0 rgba(255,255,255,0.4)',
+                    'inset 0 -1px 0 rgba(0,0,0,0.08)',
+                    '0 1px 2px rgba(15,118,110,0.35)',
+                    '0 0 0 2px rgba(20,184,166,0.12)',
+                  ].join(', '),
+                  // נקודה לבנה זעירה במרכז כמו "אבן חן"
                   '&::before': {
                     content: '""',
-                    position: 'absolute', top: 0, left: 0,
-                    width: 6, height: 6,
-                    bgcolor: 'rgba(13,148,136,0.4)',
-                    clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-                  },
-                  // קווי כתיבה מיניאטוריים
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute', left: 2, right: 2, top: 7, bottom: 3,
-                    backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 3px, rgba(13,148,136,0.55) 3px, rgba(13,148,136,0.55) 4px)',
+                    width: 4, height: 4, borderRadius: '50%',
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    boxShadow: '0 0 4px rgba(255,255,255,0.7)',
                   },
                 }}
               />

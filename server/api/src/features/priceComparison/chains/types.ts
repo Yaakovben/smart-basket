@@ -8,6 +8,13 @@ export interface ChainPriceItem {
   manufacturerName?: string;
   quantity?: number;
   storeId?: string;
+  // שדות עשירים נוספים מקובץ XML של הפורטל - מאפשרים תצוגה מפורטת ללקוח
+  manufactureCountry?: string;       // ארץ ייצור (למשל "ישראל")
+  manufacturerItemDescription?: string; // תיאור היצרן הנקי - בד"כ ארוך וברור יותר
+  qtyInPackage?: number;             // כמות יחידות בתוך אריזה
+  isWeighted?: boolean;              // מוצר במשקל (kg) - חשוב לחישוב מחיר
+  unitQty?: string;                  // יחידת בסיס: "100 גרם", "100 מ"ל"
+  itemPriceUpdateDate?: string;      // מתי הרשת עדכנה את המחיר (ISO)
 }
 
 export interface ChainFetchResult {
@@ -27,6 +34,9 @@ export interface ChainStoreItem {
   zipCode?: string;
   lat?: number;
   lng?: number;
+  // מטא-דאטה נוספת על הסניף - מאפשרת בידול בתת-מותגים
+  subChainName?: string;             // למשל "AM:PM", "רמי לוי שיווק השקמה"
+  storeType?: string;                // סוג סניף (1=פיזי, 2=אונליין וכו')
 }
 
 export interface ChainStoresFetchResult {

@@ -12,6 +12,13 @@ export interface UpsertPriceInput {
   unitOfMeasure?: string;
   manufacturerName?: string;
   quantity?: number;
+  // שדות עשירים מהפורטל
+  manufactureCountry?: string;
+  manufacturerItemDescription?: string;
+  qtyInPackage?: number;
+  isWeighted?: boolean;
+  unitQty?: string;
+  itemPriceUpdateDate?: Date;
 }
 
 class PriceDALClass extends BaseDAL<IPriceDoc> {

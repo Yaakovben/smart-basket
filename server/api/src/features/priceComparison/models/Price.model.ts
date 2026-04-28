@@ -24,6 +24,13 @@ export interface IPriceDoc extends Document {
   unitOfMeasure?: string;
   manufacturerName?: string;
   quantity?: number;
+  // שדות עשירים נוספים מהפורטל הממשלתי
+  manufactureCountry?: string;          // ארץ ייצור
+  manufacturerItemDescription?: string; // תיאור היצרן הנקי
+  qtyInPackage?: number;                // כמות יחידות באריזה
+  isWeighted?: boolean;                 // מוצר במשקל (kg)
+  unitQty?: string;                     // יחידת בסיס
+  itemPriceUpdateDate?: Date;           // עדכון מחיר אחרון אצל הרשת
   updatedAt: Date;
   createdAt: Date;
 }
@@ -40,6 +47,12 @@ const priceSchema = new Schema<IPriceDoc>(
     unitOfMeasure: { type: String },
     manufacturerName: { type: String },
     quantity: { type: Number },
+    manufactureCountry: { type: String },
+    manufacturerItemDescription: { type: String },
+    qtyInPackage: { type: Number },
+    isWeighted: { type: Boolean },
+    unitQty: { type: String },
+    itemPriceUpdateDate: { type: Date },
   },
   {
     timestamps: true,

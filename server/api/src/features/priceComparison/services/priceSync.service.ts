@@ -161,6 +161,7 @@ async function syncStoresForChain(
         storeId: s.storeId, storeName: s.storeName,
         address: s.address, city: s.city, zipCode: s.zipCode,
         lat, lng, coordSource,
+        subChainName: s.subChainName, storeType: s.storeType,
       };
     });
 
@@ -224,18 +225,28 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       continue;
     }
 
-    const inputs: UpsertPriceInput[] = result.items.map(item => ({
-      barcode: item.barcode,
-      itemName: item.itemName,
-      itemNameNormalized: normalizeProductName(item.itemName),
-      chainId: adapter.chainId,
-      chainName: adapter.chainName,
-      storeId: item.storeId,
-      price: item.price,
-      unitOfMeasure: item.unitOfMeasure,
-      manufacturerName: item.manufacturerName,
-      quantity: item.quantity,
-    }));
+    const inputs: UpsertPriceInput[] = result.items.map(item => {
+      const updateDate = item.itemPriceUpdateDate ? new Date(item.itemPriceUpdateDate) : undefined;
+      return {
+        barcode: item.barcode,
+        itemName: item.itemName,
+        itemNameNormalized: normalizeProductName(item.itemName),
+        chainId: adapter.chainId,
+        chainName: adapter.chainName,
+        storeId: item.storeId,
+        price: item.price,
+        unitOfMeasure: item.unitOfMeasure,
+        manufacturerName: item.manufacturerName,
+        quantity: item.quantity,
+        // שדות עשירים נוספים מהפורטל - מאפשרים תצוגה מפורטת ב-UI
+        manufactureCountry: item.manufactureCountry,
+        manufacturerItemDescription: item.manufacturerItemDescription,
+        qtyInPackage: item.qtyInPackage,
+        isWeighted: item.isWeighted,
+        unitQty: item.unitQty,
+        itemPriceUpdateDate: updateDate && !isNaN(updateDate.getTime()) ? updateDate : undefined,
+      };
+    });
 
     const BATCH_SIZE = 500;
     let totalUpserted = 0;

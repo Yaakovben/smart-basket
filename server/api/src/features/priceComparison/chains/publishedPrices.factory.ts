@@ -21,6 +21,7 @@ import { CookieJar } from 'tough-cookie';
 import { HttpsCookieAgent } from 'http-cookie-agent/http';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
+import { logger } from '../../../config/logger';
 
 // HttpsCookieAgent (מ-http-cookie-agent) משלב cookie jar + TLS options ביחד.
 // זה הסוכן שמשתמש axios-cookiejar-support בפנים, אבל קוראים אותו ישירות
@@ -116,8 +117,14 @@ async function createAuthenticatedClient(username: string, password: string): Pr
 
   // צעד 3: GET /file — csrftoken חדש לבקשות dir/download
   const filePage = await client.get<string>('/file');
+  // זיהוי כשל התחברות: אם /file עדיין מחזיר את טופס ההתחברות (לדוגמה
+  // username/password input), המשמעות שהקרדנשלים נדחו. זורקים שגיאה
+  // מפורשת כדי שה-fallback יוכל לנסות username אחר במקום להמשיך
+  // עם session ריק שיחזיר 0 קבצים.
+  if (/name=['"]username['"]/i.test(filePage.data) && /name=['"]password['"]/i.test(filePage.data)) {
+    throw new Error(`auth_failed_for_user:${username}`);
+  }
   const sessionCsrf = extractCsrf(filePage.data);
-
   return { client, csrftoken: sessionCsrf };
 }
 
@@ -167,7 +174,9 @@ async function listLatestMatchingFile(
     .filter(f => f.type === 'd' && /^\d{4}-\d{2}-\d{2}|^\d{8}/.test(f.name))
     .sort((a, b) => b.name.localeCompare(a.name));
 
-  for (const dir of subDirs.slice(0, 3)) {
+  // הוגדל מ-3 ל-7: רשת שלא פרסמה ב-3 הימים האחרונים אבל יש לה קובץ
+  // לפני 4-6 ימים - עדיף להחזיר נתון ישן מאשר 0.
+  for (const dir of subDirs.slice(0, 7)) {
     const subFiles = await listDir(client, csrftoken, `/${dir.name}`, searchTerm);
     const matches = subFiles
       .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
@@ -179,7 +188,7 @@ async function listLatestMatchingFile(
   return null;
 }
 
-async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string): Promise<string | null> {
+async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string, chainId: string): Promise<string | null> {
   // 1) נסיון ראשון: PriceFull ברוט
   const rootFiles = await listDir(client, csrftoken, '/', 'PriceFull');
   const rootPriceFull = rootFiles
@@ -197,7 +206,7 @@ async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string)
     .filter(f => f.type === 'd' && /^\d{4}-\d{2}-\d{2}|^\d{8}/.test(f.name))
     .sort((a, b) => b.name.localeCompare(a.name));
 
-  for (const dir of subDirs.slice(0, 3)) { // מנסה רק 3 התיקיות האחרונות
+  for (const dir of subDirs.slice(0, 7)) { // הוגדל מ-3 ל-7 - ראה הסבר ב-listLatestMatchingFile
     const subFiles = await listDir(client, csrftoken, `/${dir.name}`, 'PriceFull');
     const matches = subFiles
       .map(f => ({ name: f.fname || f.name || f.DT_RowId || '' }))
@@ -206,6 +215,10 @@ async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: string)
     if (matches.length > 0) return `${dir.name}/${matches[0].name}`;
   }
 
+  // אבחון: אם לא מצאנו, מציגים בלוג מה כן הופיע - חוסך זמן בחקירה.
+  const sampleFiles = allFiles.slice(0, 5).map(f => f.fname || f.name || '?').join(', ');
+  const sampleDirs = subDirs.slice(0, 5).map(d => d.name).join(', ');
+  logger.warn(`[chain:${chainId}] no PriceFull found. root sample=[${sampleFiles}] dirs=[${sampleDirs}]`);
   return null;
 }
 
@@ -238,14 +251,36 @@ function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
     const price = parseFloat(String(it.ItemPrice || '0'));
     const itemName = String(it.ItemName || '').trim();
     if (!barcode || !itemName || isNaN(price) || price <= 0) continue;
+    // מחלץ ערכים בצורה גמישה - שמות שדות יכולים להיות ב-PascalCase או camelCase
+    const itAny = it as Record<string, unknown>;
+    const get = (...keys: string[]): string | undefined => {
+      for (const k of keys) {
+        const v = itAny[k];
+        if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+      }
+      return undefined;
+    };
+    const getNum = (...keys: string[]): number | undefined => {
+      const v = get(...keys);
+      if (v === undefined) return undefined;
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    const isWeightedRaw = get('bIsWeighted', 'BIsWeighted', 'IsWeighted', 'isWeighted');
     results.push({
       barcode,
       itemName,
       price,
-      unitOfMeasure: it.UnitOfMeasure ? String(it.UnitOfMeasure) : undefined,
-      manufacturerName: it.ManufacturerName ? String(it.ManufacturerName) : undefined,
-      quantity: it.Quantity ? parseFloat(String(it.Quantity)) : undefined,
-      storeId: it.StoreId ? String(it.StoreId) : undefined,
+      unitOfMeasure: get('UnitOfMeasure', 'unitOfMeasure'),
+      manufacturerName: get('ManufacturerName', 'manufacturerName'),
+      quantity: getNum('Quantity', 'quantity'),
+      storeId: get('StoreId', 'storeId'),
+      manufactureCountry: get('ManufactureCountry', 'manufactureCountry'),
+      manufacturerItemDescription: get('ManufacturerItemDescription', 'manufacturerItemDescription'),
+      qtyInPackage: getNum('QtyInPackage', 'qtyInPackage'),
+      isWeighted: isWeightedRaw !== undefined ? (isWeightedRaw === '1' || isWeightedRaw.toLowerCase() === 'true') : undefined,
+      unitQty: get('UnitQty', 'unitQty'),
+      itemPriceUpdateDate: get('PriceUpdateDate', 'priceUpdateDate'),
     });
   }
   return results;
@@ -372,6 +407,9 @@ function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
       zipCode: pick(rec, ['ZipCode', 'ZIPCODE', 'zip']),
       lat: validCoords ? lat : undefined,
       lng: validCoords ? lng : undefined,
+      // תת-רשת (AM:PM, פרש מרקט, היפר וכו') וסוג סניף - מטא-דאטה לתצוגה
+      subChainName: pick(rec, ['SubChainName', 'SUBCHAINNAME', 'subChainName']),
+      storeType: pick(rec, ['StoreType', 'STORETYPE', 'storeType']),
     });
   }
   return results;
@@ -405,8 +443,33 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw lastErr;
 }
 
+// יוצר את שני ה-variants של username שכדאי לנסות (case toggle).
+// מקרים אמיתיים בפורטל: 'Victory' לעומת 'victory', 'TivTaam' לעומת 'tivtaam'.
+function usernameVariants(username: string): string[] {
+  const lower = username.toLowerCase();
+  return username === lower ? [username] : [username, lower];
+}
+
 export function createPublishedPricesAdapter(options: PublishedPricesOptions): ChainAdapter {
   const { chainId, chainName, username, password = '' } = options;
+
+  // מנסה התחברות עם variants של ה-username עד שמצליח. זורק את השגיאה
+  // האחרונה אם כולם נכשלו. מטפל ברגישות ל-case שראינו אצל ויקטורי ועוד.
+  async function tryAuthenticate(): Promise<{ client: AxiosInstance; csrftoken: string }> {
+    const variants = usernameVariants(username);
+    let lastErr: unknown;
+    for (const u of variants) {
+      try {
+        return await createAuthenticatedClient(u, password);
+      } catch (err) {
+        lastErr = err;
+        const msg = err instanceof Error ? err.message : 'unknown';
+        if (!msg.startsWith('auth_failed_for_user:')) throw err; // שגיאת רשת/timeout - לא לנסות שוב
+        logger.warn(`[chain:${chainId}] auth failed for username='${u}', trying next variant`);
+      }
+    }
+    throw lastErr;
+  }
 
   return {
     chainId,
@@ -414,24 +477,28 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
     async fetchLatestPrices(): Promise<ChainFetchResult> {
       try {
         return await withRetry(async () => {
-          const { client, csrftoken } = await createAuthenticatedClient(username, password);
-          const filename = await listLatestPriceFullFile(client, csrftoken);
+          const { client, csrftoken } = await tryAuthenticate();
+          const filename = await listLatestPriceFullFile(client, csrftoken, chainId);
           if (!filename) {
             return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
           }
           const buf = await downloadFile(client, filename);
           const items = parseXmlBuffer(buf, filename);
+          if (items.length === 0) {
+            logger.warn(`[chain:${chainId}] file '${filename}' parsed to 0 items - schema mismatch?`);
+          }
           return { chainId, chainName, items, fetchedFiles: 1 };
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
+        logger.warn(`[chain:${chainId}] fetchLatestPrices failed: ${msg}`);
         return { chainId, chainName, items: [], fetchedFiles: 0, error: msg };
       }
     },
     async fetchLatestStores(): Promise<ChainStoresFetchResult> {
       try {
         return await withRetry(async () => {
-          const { client, csrftoken } = await createAuthenticatedClient(username, password);
+          const { client, csrftoken } = await tryAuthenticate();
           // מנסים כמה תבניות שמות נפוצות לקובץ הסניפים בפורטל.
           // יש רשתות שמפרסמות 'StoresFull*', יש 'Stores*', ויש 'Store*' (יחיד).
           const patterns: Array<{ search: string; regex: RegExp }> = [
