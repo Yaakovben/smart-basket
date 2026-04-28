@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, Fragment } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -632,8 +632,22 @@ export const InsightsPage = memo(() => {
                   const hiddenMembersCount = sortedMembers.length - membersToShow.length;
 
                   return (
+                    <Fragment key={L.listId}>
+                      {sectionHeader && (
+                        <Box sx={{
+                          display: 'flex', alignItems: 'center', gap: 0.6,
+                          mt: idx === 0 ? 0 : 0.5, mb: -0.5, px: 0.25,
+                        }}>
+                          <Typography sx={{ fontSize: 13 }}>{sectionHeader.emoji}</Typography>
+                          <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.secondary', letterSpacing: 0.3 }}>
+                            {sectionHeader.label}
+                          </Typography>
+                          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                            · {sectionHeader.count}
+                          </Typography>
+                        </Box>
+                      )}
                     <Box
-                      key={L.listId}
                       role="button"
                       tabIndex={0}
                       // ניווט רק בלחיצה כפולה (מהירה) - מונע ניווט בטעות בזמן
@@ -952,6 +966,7 @@ export const InsightsPage = memo(() => {
                       )}
 
                     </Box>
+                    </Fragment>
                   );
                 }) : (
                   // Fallback: רק groupStats
