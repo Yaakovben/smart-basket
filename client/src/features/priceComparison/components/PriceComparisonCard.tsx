@@ -9,7 +9,7 @@
  * אין טבלאות, אין modals. כל אינטראקציה inline.
  */
 
-import { memo, useState, useCallback, useEffect } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { Box, Typography, Paper, Link, Button, CircularProgress, Collapse, keyframes } from '@mui/material';
 import SavingsIcon from '@mui/icons-material/Savings';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
@@ -369,12 +369,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
     setExpandedId(prev => prev === id ? null : id);
   }, []);
 
-  // פתיחה אוטומטית של הזולה בכניסה ראשונה לדף
-  useEffect(() => {
-    if (cheapest && expandedId === null && hasChainData) {
-      setExpandedId(cheapest.chainId);
-    }
-  }, [cheapest, expandedId, hasChainData]);
+  // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור פירוט. ההצגה
+  // מתחילה במצב "סקירה" של כל הרשתות, וכל אחת נפתחת בלחיצה ידנית.
 
   return (
     <Box sx={{ animation: `${fadeIn} 0.5s ease 0.45s both`, mb: 2 }}>
