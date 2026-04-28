@@ -576,32 +576,70 @@ export async function getComparisonForUser(
       })
     );
 
-    // מציאת מספר ההתאמות הגבוה ביותר - זו "הנקודת היחוס" של סל שלם.
-    // "הכי זול" יוענק רק לרשת שיש לה את מספר ההתאמות הזה.
-    // כך נמנעים מהטעייה שבה רשת עם מעט התאמות נראית זולה בגלל החוסר.
+    // "סל שלם" = רשת שזיהתה את המספר המקסימלי של מוצרים. סימון לתצוגה בלבד.
     const maxMatched = chainTotals.reduce((m, c) => Math.max(m, c.matchedCount), 0);
     if (maxMatched > 0) {
-      // מסמנים "שלם" כל רשת עם מקסימום התאמות
       for (const ct of chainTotals) {
         ct.isComplete = ct.matchedCount === maxMatched;
       }
-      // מוצאים הזול ביותר רק בין הרשתות השלמות
-      const completeChains = chainTotals.filter(c => c.isComplete);
-      const sorted = [...completeChains].sort((a, b) => a.total - b.total);
-      const cheapestId = sorted[0].chainId;
-      const maxTotal = sorted[sorted.length - 1].total;
-      for (const ct of chainTotals) {
-        if (ct.chainId === cheapestId) ct.isCheapest = true;
-        // חיסכון משוער - רק ברשתות שלמות (לא הוגן להשוות לא שלמה)
-        if (ct.isComplete) ct.savings = round2(maxTotal - ct.total);
+    }
+
+    // קביעת "הכי זול" על בסיס תפוחים-לתפוחים: רק המוצרים שכל הרשתות עם נתונים זיהו.
+    // אחרת רשת שזיהתה דווקא את המוצרים היקרים תיראה יקרה גם אם בפועל היא זולה,
+    // ורשת שזיהתה רק את הזולים תיראה זולה בלי להיות באמת.
+    const dataChains = chainTotals.filter(c => c.hasData && c.matchedCount > 0);
+    if (dataChains.length > 0) {
+      const idSets = dataChains.map(c =>
+        new Set(c.matches.filter(m => m.matched).map(m => m.productId))
+      );
+      // חיתוך — מוצרים שמופיעים בכל הרשתות עם הנתונים
+      const commonIds = idSets.reduce<Set<string> | null>((acc, s) => {
+        if (acc === null) return new Set(s);
+        const next = new Set<string>();
+        for (const id of acc) if (s.has(id)) next.add(id);
+        return next;
+      }, null) ?? new Set<string>();
+
+      if (commonIds.size > 0) {
+        // השוואה על תת-הסל המשותף
+        const comparableByChain = new Map<string, number>();
+        for (const ct of dataChains) {
+          const sum = ct.matches
+            .filter(m => m.matched && commonIds.has(m.productId))
+            .reduce((s, m) => s + m.price * m.userQuantity, 0);
+          comparableByChain.set(ct.chainId, sum);
+        }
+        const entries = [...comparableByChain.entries()].sort((a, b) => a[1] - b[1]);
+        const cheapestId = entries[0][0];
+        const maxComp = entries[entries.length - 1][1];
+        for (const ct of chainTotals) {
+          if (ct.chainId === cheapestId) ct.isCheapest = true;
+          const comp = comparableByChain.get(ct.chainId);
+          // החיסכון משקף את הפער על תת-הסל המשותף — מספר הוגן ויציב
+          if (comp !== undefined) ct.savings = round2(maxComp - comp);
+        }
+      } else {
+        // אין מוצר משותף בכלל — נופלים ללוגיקה הישנה: הזול ביותר מבין השלמות
+        const completeChains = chainTotals.filter(c => c.isComplete);
+        if (completeChains.length > 0) {
+          const sorted = [...completeChains].sort((a, b) => a.total - b.total);
+          const cheapestId = sorted[0].chainId;
+          const maxTotal = sorted[sorted.length - 1].total;
+          for (const ct of chainTotals) {
+            if (ct.chainId === cheapestId) ct.isCheapest = true;
+            if (ct.isComplete) ct.savings = round2(maxTotal - ct.total);
+          }
+        }
       }
     }
-    // מיון: רשתות שלמות קודם (מהזולה ליקרה), אח"כ חלקיות לפי מספר התאמות
+    // מיון: יש נתונים → "הכי זול" → סל שלם → לפי סכום
     chainTotals.sort((a, b) => {
+      if (a.hasData !== b.hasData) return a.hasData ? -1 : 1;
+      if (a.isCheapest !== b.isCheapest) return a.isCheapest ? -1 : 1;
       if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
       if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
       if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
-      if (a.isComplete) return a.total - b.total;
+      if (a.isComplete && b.isComplete) return a.total - b.total;
       return b.matchedCount - a.matchedCount;
     });
 
