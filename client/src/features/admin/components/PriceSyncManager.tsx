@@ -575,6 +575,28 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               );
             })()}
 
+            {/* הודעה כשפילטר לא מחזיר תוצאות - מונע "מסך ריק" אילם */}
+            {chains.length > 0 && filteredChains.length === 0 && (
+              <Box sx={{
+                p: 1.5, borderRadius: '12px',
+                bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                border: '1px dashed', borderColor: 'divider',
+                textAlign: 'center',
+              }}>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                  לא נמצאו רשתות תואמות לפילטר.{' '}
+                  <Box
+                    component="span"
+                    role="button"
+                    onClick={() => setStatusFilter('all')}
+                    sx={{ color: '#0D9488', fontWeight: 800, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    הצג הכל
+                  </Box>
+                </Typography>
+              </Box>
+            )}
+
             {/* ===== רשימת רשתות ===== */}
             {filteredChains.length > 0 && (
               <Box sx={{
@@ -834,7 +856,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
             {/* הסבר קומפקטי */}
             <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', lineHeight: 1.5, mt: 0.5 }}>
-              סנכרון אוטומטי כל 6 שעות. כפתור 'רענן עכשיו' מחזיק מחירים + סניפים במקביל.
+              סנכרון אוטומטי פעם ביום ב-04:00. כפתור 'רענן עכשיו' מחזיק מחירים + סניפים במקביל.
             </Typography>
           </>
         )}
