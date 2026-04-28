@@ -538,6 +538,13 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
   const hasAnyLocation = chainTotals.some(c => c.nearestBranch);
   // הרשת הזולה ביותר - לכפתור "קפוץ לזולה" מתוך פירוט רשת אחרת
   const cheapestChain = chainTotals.find(c => c.isCheapest);
+  // טווח מחירים בין רשתות שלמות - לחישוב בר יחסי
+  const completeForRange = chainTotals.filter(c => c.isComplete && c.matchedCount > 0);
+  const minTotalAcross = completeForRange.length > 0 ? Math.min(...completeForRange.map(c => c.total)) : 0;
+  const maxTotalAcross = completeForRange.length > 0 ? Math.max(...completeForRange.map(c => c.total)) : 0;
+  const totalRange = maxTotalAcross - minTotalAcross;
+  // פורמט מחיר עם הפרדת אלפים בעברית - עוזר לקריאה של מספרים גדולים (₪1,234)
+  const formatPrice = (n: number) => `₪${n.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`;
   const jumpToCheapest = () => {
     if (!cheapestChain) return;
     setExpandedId(cheapestChain.chainId);
@@ -663,7 +670,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
             fontSize: 9.5, fontWeight: 700,
           }}>
             <TrendingDownIcon sx={{ fontSize: 11 }} />
-            חיסכון ₪{maxSavings.toFixed(0)}
+            חיסכון {formatPrice(maxSavings)}
           </Box>
         )}
       </Box>
@@ -805,16 +812,16 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   ) : null}
                 </Box>
 
-                <Box sx={{ textAlign: 'end' }}>
+                <Box sx={{ textAlign: 'end', minWidth: 78 }}>
                   <Typography sx={{
                     fontSize: 17, fontWeight: 800,
                     color: isCheapest ? '#059669' : 'text.primary',
                     lineHeight: 1.1,
                     fontVariantNumeric: 'tabular-nums',
                   }}>
-                    ₪{chain.total.toFixed(0)}
+                    {formatPrice(chain.total)}
                   </Typography>
-                  {/* תג חיסכון מפורש - "יקר ב-X" עם אייקון, ברור הרבה יותר מ-"+X" יבש */}
+                  {/* תג חיסכון - "+₪X" באדום עדין, ברור מבט מהיר */}
                   {chain.savings > 0 && !isCheapest && isComplete && (
                     <Box sx={{
                       display: 'inline-flex', alignItems: 'center', gap: 0.25,
@@ -823,10 +830,30 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                       color: '#DC2626',
                     }}>
                       <Typography sx={{ fontSize: 10, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                        +₪{chain.savings.toFixed(0)}
+                        +{formatPrice(chain.savings)}
                       </Typography>
                     </Box>
                   )}
+                  {/* בר יחסי דק - מציג ויזואלית את המיקום של הרשת בטווח המחירים.
+                      הזולה = בר ירוק מלא; היקרה = בר אדום קצר. עוזר לעין לתפוס מבט. */}
+                  {isComplete && totalRange > 0 && (() => {
+                    const ratio = 1 - (chain.total - minTotalAcross) / totalRange;
+                    const barColor = isCheapest ? '#10B981' : ratio > 0.5 ? '#14B8A6' : ratio > 0.2 ? '#F59E0B' : '#EF4444';
+                    return (
+                      <Box sx={{
+                        mt: 0.4, height: 3, width: '100%',
+                        borderRadius: '2px',
+                        bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                        overflow: 'hidden',
+                      }}>
+                        <Box sx={{
+                          height: '100%', width: `${Math.max(8, ratio * 100)}%`,
+                          bgcolor: barColor, borderRadius: '2px',
+                          transition: 'width 0.3s, background-color 0.2s',
+                        }} />
+                      </Box>
+                    );
+                  })()}
                 </Box>
 
                 <ExpandMoreIcon sx={{
@@ -874,7 +901,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                       <Typography sx={{ flex: 1, fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.35 }}>
                         תחסוך{' '}
                         <Box component="span" sx={{ color: '#059669', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>
-                          ₪{chain.savings.toFixed(0)}
+                          {formatPrice(chain.savings)}
                         </Box>
                         {' '}ב-{cheapestChain.chainName}
                       </Typography>
