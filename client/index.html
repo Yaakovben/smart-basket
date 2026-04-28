@@ -45,7 +45,7 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-  <!-- Instant background to prevent white flash -->
+  <!-- רקע טורקיז קבוע - מונע מסך לבן בחזרה מ-WhatsApp/Waze ל-PWA -->
   <style>
     html, body {
       margin: 0;
@@ -53,18 +53,16 @@
       background: #14B8A6;
       min-height: 100%;
     }
-    /* Remove background once app loads (set by React) */
-    body.app-loaded {
-      background: none;
-    }
-    /* מניעת הבזק לבן - רקע ברירת מחדל עד שהתמה נטענת */
+    /* רקע #root נשאר טורקיז גם אחרי טעינה - אם ה-JS מת כשהאפליקציה ב-background
+       וחוזרים, הלקוח יראה את הצבע של האפליקציה ולא מסך לבן ריק. */
     #root {
       min-height: 100vh;
       min-height: 100dvh;
       background: #14B8A6;
     }
+    /* כשהתמה נטענת ולוקחת פיקוד, מסירים את הרקע מתחת התוכן */
     body.app-loaded #root {
-      background: none;
+      background: var(--app-bg, transparent);
     }
   </style>
   <!-- Force unregister old service workers (v2.0 migration) -->

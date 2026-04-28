@@ -32,6 +32,7 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
   stop_market:  { brands: ['Stop Market'], names: ['סטופ מרקט'] },
   politzer:     { brands: ['Politzer'], names: ['פוליצר'] },
   doralon:      { brands: ['Dor Alon', 'AM:PM', 'AMPM'], names: ['דור אלון', 'AM:PM'] },
+  victory:      { brands: ['Victory'], names: ['ויקטורי'] },
 };
 
 export interface OsmBranch {

@@ -23,13 +23,33 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
   async bulkUpsert(items: UpsertBranchInput[]) {
     if (items.length === 0) return 0;
     const now = new Date();
-    const ops = items.map(item => ({
-      updateOne: {
-        filter: { chainId: item.chainId, storeId: item.storeId },
-        update: { $set: { ...item, lastSyncedAt: now } },
-        upsert: true,
-      },
-    }));
+    const ops = items.map(item => {
+      // הפרדה: שדות "קשיחים" (תמיד נכתבים) ושדות אופציונליים שנכתבים רק אם קיים ערך.
+      // המטרה: סנכרון מהפורטל לא ימחק כתובת שהגיעה מ-OSM, ולהיפך.
+      const $set: Record<string, unknown> = {
+        chainId: item.chainId,
+        chainName: item.chainName,
+        storeId: item.storeId,
+        storeName: item.storeName,
+        lastSyncedAt: now,
+      };
+      if (item.address) $set.address = item.address;
+      if (item.city) $set.city = item.city;
+      if (item.zipCode) $set.zipCode = item.zipCode;
+      // קואורדינטות: רק אם 'portal' או יש ערכים. 'unknown' לא דורס מצב קודם טוב.
+      if (item.lat !== undefined && item.lng !== undefined && item.coordSource !== 'unknown') {
+        $set.lat = item.lat;
+        $set.lng = item.lng;
+        $set.coordSource = item.coordSource;
+      }
+      return {
+        updateOne: {
+          filter: { chainId: item.chainId, storeId: item.storeId },
+          update: { $set, $setOnInsert: { coordSource: item.coordSource } },
+          upsert: true,
+        },
+      };
+    });
     const res = await this.model.bulkWrite(ops, { ordered: false });
     return (res.upsertedCount || 0) + (res.modifiedCount || 0);
   }

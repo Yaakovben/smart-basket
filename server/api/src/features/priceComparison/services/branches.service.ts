@@ -65,6 +65,7 @@ async function ensureSeedLoaded(): Promise<void> {
       shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
       osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
       stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+      victory: 'ויקטורי',
     };
     let loaded = 0;
     for (const b of KNOWN_BRANCHES) {
