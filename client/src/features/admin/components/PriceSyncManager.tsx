@@ -591,15 +591,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
                               <CircularProgress size={16} sx={{ color: '#7C3AED' }} />
                             </Box>
-                          ) : !branchList || branchList.length === 0 ? (
-                            <Typography sx={{ fontSize: 11, color: 'text.secondary', textAlign: 'center', py: 1.5 }}>
-                              אין סניפים במאגר
-                            </Typography>
                           ) : (
+                            // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.
+                            // אחרת אדמין שרוצה להוסיף לרשת בלי סניפים תקוע. הודעת הריקנות
+                            // מוצגת בענף הפנימי (~30 שורות מתחת).
                             <>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
                                 <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.disabled', flex: 1, letterSpacing: 0.3 }}>
-                                  {branchList ? `${branchList.length} סניפים · ${branchList.filter(b => b.hasCoords).length} עם מיקום` : '0 סניפים'}
+                                  {branchList && branchList.length > 0
+                                    ? `${branchList.length} סניפים · ${branchList.filter(b => b.hasCoords).length} עם מיקום`
+                                    : 'אין סניפים — לחץ "הוסף סניף" כדי להתחיל'}
                                 </Typography>
                                 <Button
                                   size="small"
