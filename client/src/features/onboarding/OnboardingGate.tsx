@@ -329,6 +329,11 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
         '@keyframes obFadeIn': {
           from: { opacity: 0 }, to: { opacity: 1 },
         },
+        // מסכים זעירים - padding 0.75 כדי לתת מקום מקסימלי לקלף
+        '@media (max-width: 360px)': { p: 1 },
+        '@media (max-width: 320px)': { p: 0.5 },
+        // Landscape - אין מרווח גדול, הקלף לוקח כמעט את כל המסך
+        '@media (orientation: landscape) and (max-height: 500px)': { p: 0.5, alignItems: 'flex-start' },
       }}
     >
       <Box
@@ -337,11 +342,20 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
         sx={{
           position: 'relative',
           width: '100%', maxWidth: 400,
+          maxHeight: '100%',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
           bgcolor: 'background.paper',
           borderRadius: '28px',
-          overflow: 'hidden',
+          overflow: 'auto',
           boxShadow: `0 24px 70px ${slide.glowColor}, 0 8px 24px rgba(0,0,0,0.2)`,
           animation: 'obSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          '@media (max-width: 360px)': { borderRadius: '20px' },
+          '@media (max-width: 320px)': { borderRadius: '16px' },
+          '@media (orientation: landscape) and (max-height: 500px)': {
+            borderRadius: '14px',
+            maxHeight: '95vh',
+          },
           transition: 'box-shadow 0.5s ease',
           '@keyframes obSlideUp': {
             from: { opacity: 0, transform: 'translateY(30px) scale(0.92)' },
@@ -422,6 +436,9 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
           mx: 'auto', mt: 1.5, mb: 0.5,
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           minHeight: 200,
+          '@media (max-width: 360px)': { minHeight: 160, mt: 1, mb: 0.25, transform: 'scale(0.88)' },
+          '@media (max-width: 320px)': { minHeight: 140, mt: 0.5, transform: 'scale(0.78)' },
+          '@media (orientation: landscape) and (max-height: 500px)': { minHeight: 0, transform: 'scale(0.6)', mt: 0, mb: -2 },
         }}>
           {/* halo gradient רקע - מטשטש לאחור */}
           <Box sx={{
@@ -453,6 +470,8 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
           sx={{
             px: 3, mt: 1,
             animation: `${slideAnimation} 0.4s ease-out`,
+            '@media (max-width: 360px)': { px: 2, mt: 0.5 },
+            '@media (max-width: 320px)': { px: 1.5, mt: 0.25 },
           }}
         >
           <Typography sx={{
@@ -462,15 +481,27 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
             mb: 0.5,
+            '@media (max-width: 360px)': { fontSize: 22 },
+            '@media (max-width: 320px)': { fontSize: 19 },
+            '@media (orientation: landscape) and (max-height: 500px)': { fontSize: 18, mb: 0.25 },
           }}>
             {slide.title}
           </Typography>
-          <Typography sx={{ fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 2.25, fontWeight: 600 }}>
+          <Typography sx={{
+            fontSize: 14, color: 'text.secondary', textAlign: 'center', mb: 2.25, fontWeight: 600,
+            '@media (max-width: 360px)': { fontSize: 12.5, mb: 1.5 },
+            '@media (max-width: 320px)': { fontSize: 11.5, mb: 1 },
+            '@media (orientation: landscape) and (max-height: 500px)': { fontSize: 11, mb: 0.75 },
+          }}>
             {slide.subtitle}
           </Typography>
 
           {/* רשימת פיצ'רים עם check */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2.5 }}>
+          <Box sx={{
+            display: 'flex', flexDirection: 'column', gap: 1, mb: 2.5,
+            '@media (max-width: 360px)': { gap: 0.5, mb: 1.5 },
+            '@media (max-width: 320px)': { gap: 0.4, mb: 1.25 },
+          }}>
             {slide.features.map((feature, i) => (
               <Box
                 key={`${currentSlide}-feat-${i}`}
@@ -480,6 +511,8 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
                   borderRadius: '10px',
                   bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
                   animation: `${slideAnimation} 0.4s ease-out ${i * 0.08}s both`,
+                  '@media (max-width: 360px)': { py: 0.5, px: 0.85, gap: 0.85, borderRadius: '8px' },
+                  '@media (max-width: 320px)': { py: 0.35, px: 0.65, gap: 0.65 },
                 }}
               >
                 <Box sx={{
@@ -489,10 +522,16 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
                   flexShrink: 0,
                   boxShadow: `0 2px 6px ${slide.glowColor}`,
                   fontSize: 12, fontWeight: 900, color: 'white',
+                  '@media (max-width: 360px)': { width: 18, height: 18, fontSize: 10 },
+                  '@media (max-width: 320px)': { width: 16, height: 16, fontSize: 9 },
                 }}>
                   ✓
                 </Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.4 }}>
+                <Typography sx={{
+                  fontSize: 13, fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.4,
+                  '@media (max-width: 360px)': { fontSize: 11.5 },
+                  '@media (max-width: 320px)': { fontSize: 10.5 },
+                }}>
                   {feature}
                 </Typography>
               </Box>

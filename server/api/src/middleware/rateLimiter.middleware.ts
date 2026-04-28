@@ -85,3 +85,16 @@ export const joinGroupLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
 });
+
+// הגבלת התראות - מניעת spam של push notifications מצד לקוח זדוני.
+// 60 התראות לדקה זה הרבה יותר ממקסימום שימוש לגיטימי (סוקט מפעיל ~10/דקה בעומס גבוה).
+export const notificationCreateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: {
+    success: false,
+    message: 'Too many notification requests',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

@@ -33,11 +33,21 @@ interface Props {
 
 const spin = keyframes`from{transform:rotate(0)}to{transform:rotate(360deg)}`;
 
-const formatAge = (hours: number | null): string => {
+// פורמט גיל סנכרון - מציג זמן יחסי קצר + שעה אבסולוטית, כדי שאדמין
+// יבין במבט אחד "מתי בדיוק" קרה הסנכרון, לא רק "לפני כמה זמן".
+const formatAge = (hours: number | null, completedAt?: string | null): string => {
   if (hours === null) return 'לא ידוע';
-  if (hours < 1) return `לפני ${Math.round(hours * 60)} דק'`;
-  if (hours < 24) return `לפני ${hours.toFixed(1)} שעות`;
-  return `לפני ${Math.floor(hours / 24)} ימים`;
+  const relative = hours < 1
+    ? `לפני ${Math.round(hours * 60)} דק'`
+    : hours < 24
+      ? `לפני ${hours.toFixed(1)} שעות`
+      : `לפני ${Math.floor(hours / 24)} ימים`;
+  if (!completedAt) return relative;
+  const d = new Date(completedAt);
+  const sameDay = d.toDateString() === new Date().toDateString();
+  const time = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  const date = sameDay ? 'היום' : d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+  return `${relative} · ${date} ${time}`;
 };
 
 // תרגום קודי שגיאה טכניים לעברית
@@ -312,7 +322,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, color: 'text.secondary' }}>
               <ScheduleIcon sx={{ fontSize: 13 }} />
               <Typography sx={{ fontSize: 11.5 }}>
-                עודכן {formatAge(status?.ageHours ?? null)}
+                עודכן {formatAge(status?.ageHours ?? null, status?.lastUpdatedISO)}
               </Typography>
             </Box>
 
@@ -581,15 +591,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
                               <CircularProgress size={16} sx={{ color: '#7C3AED' }} />
                             </Box>
-                          ) : !branchList || branchList.length === 0 ? (
-                            <Typography sx={{ fontSize: 11, color: 'text.secondary', textAlign: 'center', py: 1.5 }}>
-                              אין סניפים במאגר
-                            </Typography>
                           ) : (
+                            // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.
+                            // אחרת אדמין שרוצה להוסיף לרשת בלי סניפים תקוע. הודעת הריקנות
+                            // מוצגת בענף הפנימי (~30 שורות מתחת).
                             <>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
                                 <Typography sx={{ fontSize: 10, fontWeight: 800, color: 'text.disabled', flex: 1, letterSpacing: 0.3 }}>
-                                  {branchList ? `${branchList.length} סניפים · ${branchList.filter(b => b.hasCoords).length} עם מיקום` : '0 סניפים'}
+                                  {branchList && branchList.length > 0
+                                    ? `${branchList.length} סניפים · ${branchList.filter(b => b.hasCoords).length} עם מיקום`
+                                    : 'אין סניפים — לחץ "הוסף סניף" כדי להתחיל'}
                                 </Typography>
                                 <Button
                                   size="small"
