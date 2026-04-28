@@ -280,70 +280,64 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         </Box>
       </Box>
 
-      {/* כפתורי ניווט - שווים בגובה ובהדגשה. הלקוח בוחר חופשי. */}
-      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.85 }}>
-        <Typography sx={{
-          fontSize: 10.5, fontWeight: 700, color: 'text.disabled',
-          letterSpacing: 0.4, textAlign: 'center', mb: 0.25,
+      {/* גריד אפליקציות - אייקון עיגול גדול + שם בלבד. ללא טקסט הסבר.
+          תחושת app-drawer נקייה: כל אפליקציה תופסת מקום שווה, הלקוח בוחר. */}
+      <Box sx={{ p: 2 }}>
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${apps.length}, 1fr)`,
+          gap: 1.25,
         }}>
-          בחר אפליקציית ניווט
-        </Typography>
-        {apps.map(app => (
-          <Box
-            key={app.key}
-            role="button"
-            tabIndex={0}
-            onClick={() => open(app.url)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
-            sx={{
-              display: 'flex', alignItems: 'center', gap: 1.25,
-              py: 1.1, px: 1.25, borderRadius: '12px',
-              cursor: 'pointer', userSelect: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-              border: '1.5px solid',
-              borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-              transition: 'all 0.12s',
-              '&:hover': {
-                bgcolor: isDark ? `${app.color}15` : `${app.color}10`,
-                borderColor: `${app.color}66`,
-                transform: 'translateX(-2px)',
-              },
-              '&:active': { transform: 'scale(0.985)' },
-            }}
-          >
-            {/* אייקון בריבוע צבעוני - גדול וברור */}
-            <Box sx={{
-              width: 38, height: 38, borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: `linear-gradient(135deg, ${app.color}, ${app.color}DD)`,
-              boxShadow: `0 3px 8px ${app.color}40`,
-              flexShrink: 0,
-            }}>
-              {app.icon}
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+          {apps.map(app => (
+            <Box
+              key={app.key}
+              role="button"
+              tabIndex={0}
+              onClick={() => open(app.url)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
+              sx={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75,
+                py: 1.5, px: 0.5, borderRadius: '14px',
+                cursor: 'pointer', userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)',
+                border: '1.5px solid',
+                borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                transition: 'all 0.15s',
+                '&:hover': {
+                  bgcolor: isDark ? `${app.color}15` : `${app.color}0E`,
+                  borderColor: `${app.color}55`,
+                  transform: 'translateY(-2px)',
+                  boxShadow: `0 6px 16px ${app.color}30`,
+                },
+                '&:active': { transform: 'scale(0.96)' },
+              }}
+            >
+              {/* אייקון עיגול גדול עם גרדיאנט וצל - תחושה של אייקון אפליקציה */}
+              <Box sx={{
+                width: 54, height: 54, borderRadius: '16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}CC)`,
+                boxShadow: `0 4px 12px ${app.color}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
+                '& svg': { fontSize: '28px !important' },
+              }}>
+                {app.icon}
+              </Box>
+              {/* שם בלבד, ללא תיאור משני */}
+              <Typography sx={{
+                fontSize: 12, fontWeight: 800, color: 'text.primary',
+                lineHeight: 1.2, textAlign: 'center',
+              }}>
                 {app.label}
               </Typography>
-              <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.25 }}>
-                {app.key === 'waze' ? 'הכי פופולרי בישראל' : app.key === 'googleMaps' ? 'נוח לכל פלטפורמה' : 'מובנה ב-iPhone'}
-              </Typography>
             </Box>
-            {/* חץ פתיחה */}
-            <Box sx={{
-              flexShrink: 0, color: 'text.disabled', fontSize: 16, fontWeight: 700,
-              opacity: 0.6,
-            }}>
-              ←
-            </Box>
-          </Box>
-        ))}
+          ))}
+        </Box>
       </Box>
 
       <Typography sx={{
-        fontSize: 10, color: 'text.disabled', textAlign: 'center',
-        pb: 1.5, px: 2, lineHeight: 1.45,
+        fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
+        pb: 1.5, px: 2, lineHeight: 1.4,
       }}>
         אם האפליקציה לא מותקנת היא תיפתח בדפדפן
       </Typography>
