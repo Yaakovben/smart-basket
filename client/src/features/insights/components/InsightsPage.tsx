@@ -199,8 +199,8 @@ export const InsightsPage = memo(() => {
         position: 'relative', overflow: 'hidden',
         mb: 1.5,
       }}>
-        {/* ריבון BETA בגודל lg - קטן יותר מ-xl, פחות דומיננטי בכותרת */}
-        <BetaRibbon corner="top-left" offsetTop={2} size="lg" />
+        {/* ריבון BETA בצד ימין (RTL: top-right = פיזית בימין) - בולט יותר ללקוח עברי */}
+        <BetaRibbon corner="top-right" offsetTop={2} size="lg" />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
