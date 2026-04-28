@@ -446,32 +446,36 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
 });
 BranchInfo.displayName = 'BranchInfo';
 
-// בר מיון - מוצג רק כשיש מידע מיקום לפחות ברשת אחת.
-const SortBar = memo(({ sortMode, setSortMode, isDark }: {
-  sortMode: SortMode; setSortMode: (m: SortMode) => void; isDark?: boolean;
+// בר מיון - מוצג תמיד. אופציות שדורשות מיקום (קרוב/משולב) מוצגות
+// כמנוטרלות (disabled) כשאין מיקום, ולחיצה לא משנה כלום.
+const SortBar = memo(({ sortMode, setSortMode, isDark, hasLocation }: {
+  sortMode: SortMode; setSortMode: (m: SortMode) => void; isDark?: boolean; hasLocation?: boolean;
 }) => {
-  const Chip = ({ mode, emoji, label, hint }: { mode: SortMode; emoji: string; label: string; hint: string }) => {
+  const Chip = ({ mode, emoji, label, hint, requiresLocation }: { mode: SortMode; emoji: string; label: string; hint: string; requiresLocation?: boolean }) => {
     const active = sortMode === mode;
+    const disabled = requiresLocation && !hasLocation;
     return (
       <Box
         role="button"
-        tabIndex={0}
-        onClick={() => setSortMode(mode)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSortMode(mode); }}
-        aria-label={`מיון לפי ${label} - ${hint}`}
+        tabIndex={disabled ? -1 : 0}
+        onClick={() => { if (!disabled) setSortMode(mode); }}
+        onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) setSortMode(mode); }}
+        aria-label={`מיון לפי ${label} - ${hint}${disabled ? ' (דורש הפעלת מיקום)' : ''}`}
+        aria-disabled={disabled || undefined}
         sx={{
           flex: 1, minWidth: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.15,
           py: 0.85, px: 1, borderRadius: '12px',
-          cursor: 'pointer', userSelect: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer', userSelect: 'none',
+          opacity: disabled ? 0.5 : 1,
           WebkitTapHighlightColor: 'transparent',
-          bgcolor: active
-            ? (isDark ? 'rgba(124,58,237,0.28)' : 'rgba(124,58,237,0.14)')
+          bgcolor: active && !disabled
+            ? (isDark ? 'rgba(20,184,166,0.28)' : 'rgba(20,184,166,0.14)')
             : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
           border: '1.5px solid',
-          borderColor: active ? '#7C3AED' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+          borderColor: active && !disabled ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
           transition: 'all 0.12s',
-          '&:active': { opacity: 0.85, transform: 'scale(0.98)' },
+          '&:active': disabled ? {} : { opacity: 0.85, transform: 'scale(0.98)' },
           '@media (max-width: 360px)': { py: 0.55, px: 0.5, borderRadius: '10px' },
           '@media (max-width: 320px)': { py: 0.4, px: 0.35, borderRadius: '8px' },
         }}
@@ -479,7 +483,8 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
           <Box sx={{ fontSize: 15, lineHeight: 1, '@media (max-width: 360px)': { fontSize: 13 }, '@media (max-width: 320px)': { fontSize: 12 } }}>{emoji}</Box>
           <Typography sx={{
-            fontSize: 12, fontWeight: active ? 800 : 700, color: active ? '#7C3AED' : 'text.primary',
+            fontSize: 12, fontWeight: active && !disabled ? 800 : 700,
+            color: active && !disabled ? '#14B8A6' : 'text.primary',
             '@media (max-width: 360px)': { fontSize: 11 },
             '@media (max-width: 320px)': { fontSize: 10 },
           }}>
@@ -487,7 +492,7 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
           </Typography>
         </Box>
         <Typography sx={{
-          fontSize: 9, color: active ? '#7C3AED' : 'text.disabled', fontWeight: 500, letterSpacing: 0.2,
+          fontSize: 9, color: active && !disabled ? '#14B8A6' : 'text.disabled', fontWeight: 500, letterSpacing: 0.2,
           // hint מוסתר במסך זעיר - חוסך גובה, רק התווית הקצרה נשארת
           '@media (max-width: 360px)': { display: 'none' },
         }}>
@@ -503,11 +508,17 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
         מיין לפי:
       </Typography>
       <Box sx={{ display: 'flex', gap: 0.6 }}>
-        {/* בעברית RTL - הראשון ב-DOM הוא הימני ביותר. 'קרוב' = ברירת המחדל = ימין. */}
-        <Chip mode="distance" emoji="📍" label="קרוב" hint="מרחק מהבית" />
+        {/* בעברית RTL - הראשון ב-DOM הוא הימני ביותר. 'קרוב' = ברירת המחדל = ימין.
+            'קרוב' ו-'משולב' דורשים מיקום ומוצגים מעומעמים בלעדיו. */}
+        <Chip mode="distance" emoji="📍" label="קרוב" hint="מרחק מהבית" requiresLocation />
         <Chip mode="price" emoji="💰" label="זול" hint="מחיר נמוך" />
-        <Chip mode="combined" emoji="⚖️" label="משולב" hint="זול+קרוב" />
+        <Chip mode="combined" emoji="⚖️" label="משולב" hint="זול+קרוב" requiresLocation />
       </Box>
+      {!hasLocation && (
+        <Typography sx={{ fontSize: 9.5, color: 'text.disabled', mt: 0.5, textAlign: 'center', fontStyle: 'italic' }}>
+          שתף מיקום כדי למיין לפי קרבה
+        </Typography>
+      )}
     </Box>
   );
 });
@@ -643,21 +654,23 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
             </Box>
           );
         })()}
+        {/* תג חיסכון מוקטן - גודל פונט 9.5 במקום 11, ריווח קומפקטי יותר */}
         {maxSavings > 0 && (
           <Box sx={{
-            display: 'inline-flex', alignItems: 'center', gap: 0.4,
-            px: 1, py: 0.3, borderRadius: '8px',
+            display: 'inline-flex', alignItems: 'center', gap: 0.25,
+            px: 0.6, py: 0.15, borderRadius: '6px',
             bgcolor: '#10B98122', color: '#059669',
-            fontSize: 11, fontWeight: 700,
+            fontSize: 9.5, fontWeight: 700,
           }}>
-            <TrendingDownIcon sx={{ fontSize: 13 }} />
-            חיסכון עד ₪{maxSavings.toFixed(0)}
+            <TrendingDownIcon sx={{ fontSize: 11 }} />
+            חיסכון ₪{maxSavings.toFixed(0)}
           </Box>
         )}
       </Box>
 
-      {/* בר מיון - רק כשיש לפחות מיקום אחד. מאפשר זול/קרוב/משולב */}
-      {hasAnyLocation && <SortBar sortMode={sortMode} setSortMode={setSortMode} isDark={isDark} />}
+      {/* בר מיון - מוצג תמיד. אופציות 'קרוב' ו-'משולב' מנוטרלות בלי מיקום
+          ומציגות הנחיה להפעיל מיקום. */}
+      <SortBar sortMode={sortMode} setSortMode={setSortMode} isDark={isDark} hasLocation={hasAnyLocation} />
 
       {/* הסבר קומפקטי - שורה דקה אחת ללא צבעי אזהרה */}
       {chainsWithData.some(c => !c.isComplete) && (
