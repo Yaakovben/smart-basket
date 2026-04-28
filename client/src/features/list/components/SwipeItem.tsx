@@ -407,18 +407,28 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               <Box
                 aria-label="למוצר זה יש הערה"
                 sx={{
+                  position: 'relative',
                   flexShrink: 0,
-                  width: 18, height: 18, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10,
-                  bgcolor: 'rgba(20,184,166,0.18)',
-                  color: '#0D9488',
-                  border: '1px solid rgba(20,184,166,0.35)',
-                  fontWeight: 800,
+                  width: 16, height: 18,
+                  bgcolor: '#E0F7F4',
+                  transform: 'rotate(-6deg)',
+                  boxShadow: '0 1px 2px rgba(20,184,166,0.3)',
+                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute', top: 0, left: 0,
+                    width: 6, height: 6,
+                    bgcolor: 'rgba(13,148,136,0.4)',
+                    clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+                  },
+                  // קווי כתיבה מיניאטוריים
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute', left: 2, right: 2, top: 7, bottom: 3,
+                    backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 3px, rgba(13,148,136,0.55) 3px, rgba(13,148,136,0.55) 4px)',
+                  },
                 }}
-              >
-                💬
-              </Box>
+              />
             )}
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>

@@ -348,8 +348,14 @@ export const bulkAddBranches = asyncHandler(async (req: AuthRequest, res: Respon
 // POST /api/price-comparison/branches/fill-addresses (admin)
 // משלים כתובות חסרות לסניפים שיש להם lat/lng אך city/address ריק.
 // משתמש ב-Nominatim (reverse geocoding, 1 req/s, מוגבל ל-50 לריצה).
+// הריצה עצמה אורכת עד דקה ויותר ולכן רצה ברקע - ה-HTTP response חוזר מיד
+// כדי שלא ניתקל ב-timeout של ה-proxy/Render.
+let fillAddressesInProgress = false;
 export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const axios = (await import('axios')).default;
+  if (fillAddressesInProgress) {
+    res.json({ success: true, message: 'כבר רץ ברקע - נסה שוב בעוד דקה', updated: 0 });
+    return;
+  }
   const branches = await Branch.find({
     lat: { $exists: true, $ne: null },
     lng: { $exists: true, $ne: null },
@@ -361,39 +367,51 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
     return;
   }
 
-  let updated = 0;
-  for (let i = 0; i < branches.length; i++) {
-    const b = branches[i];
-    if (i > 0) await new Promise(r => setTimeout(r, 1100));
-    try {
-      const r = await axios.get('https://nominatim.openstreetmap.org/reverse', {
-        params: { lat: b.lat, lon: b.lng, format: 'json', 'accept-language': 'he' },
-        headers: { 'User-Agent': 'smart-basket-app/1.0' },
-        timeout: 10_000,
-      });
-      const addr = (r.data as { address?: Record<string, string> }).address || {};
-      const city = addr.city || addr.town || addr.village || addr.suburb || '';
-      const street = addr.road || addr.pedestrian || '';
-      const num = addr.house_number || '';
-      const fullAddress = [street, num].filter(Boolean).join(' ');
-      if (city || fullAddress) {
-        await Branch.updateOne(
-          { _id: b._id },
-          { $set: { city: city || b.city || '', address: fullAddress || b.address || '' } }
-        );
-        updated++;
-      }
-    } catch (e) {
-      logger.warn(`[fill-addresses] ${b.storeId}: ${e instanceof Error ? e.message : 'unknown'}`);
-    }
-  }
-  invalidateBranchCache();
-  invalidateAllUsers();
+  fillAddressesInProgress = true;
   res.json({
     success: true,
-    message: `עודכנו ${updated} כתובות מתוך ${branches.length} שנבדקו`,
-    updated, checked: branches.length,
+    message: `התחיל ברקע - מעדכן ${branches.length} סניפים, יסתיים בעוד כדקה`,
+    checked: branches.length,
   });
+
+  void (async () => {
+    try {
+      const axios = (await import('axios')).default;
+      let updated = 0;
+      for (let i = 0; i < branches.length; i++) {
+        const b = branches[i];
+        if (i > 0) await new Promise(r => setTimeout(r, 1100));
+        try {
+          const r = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+            params: { lat: b.lat, lon: b.lng, format: 'json', 'accept-language': 'he' },
+            headers: { 'User-Agent': 'smart-basket-app/1.0' },
+            timeout: 10_000,
+          });
+          const addr = (r.data as { address?: Record<string, string> }).address || {};
+          const city = addr.city || addr.town || addr.village || addr.suburb || '';
+          const street = addr.road || addr.pedestrian || '';
+          const num = addr.house_number || '';
+          const fullAddress = [street, num].filter(Boolean).join(' ');
+          if (city || fullAddress) {
+            await Branch.updateOne(
+              { _id: b._id },
+              { $set: { city: city || b.city || '', address: fullAddress || b.address || '' } }
+            );
+            updated++;
+          }
+        } catch (e) {
+          logger.warn(`[fill-addresses] ${b.storeId}: ${e instanceof Error ? e.message : 'unknown'}`);
+        }
+      }
+      invalidateBranchCache();
+      invalidateAllUsers();
+      logger.info(`[fill-addresses] background done, updated=${updated}/${branches.length}`);
+    } catch (err) {
+      logger.error('[fill-addresses] background failed:', err);
+    } finally {
+      fillAddressesInProgress = false;
+    }
+  })();
 });
 
 // POST /api/price-comparison/branches/cleanup (admin) - מחיקת seed לא-מאומת
