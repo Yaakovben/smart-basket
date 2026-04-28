@@ -14,7 +14,7 @@ import {
   createNotification,
   createNotificationsForListMembers,
 } from '../controllers/notification.controller';
-import { authenticate, validate } from '../middleware';
+import { authenticate, validate, notificationCreateLimiter } from '../middleware';
 import { notificationValidator } from '../validators';
 
 const router = Router();
@@ -28,7 +28,8 @@ router.put('/read-all', validate(notificationValidator.markAllRead), markAllAsRe
 router.put('/:id/read', validate({ params: notificationValidator.params }), markAsRead);
 
 // === נתיבים פנימיים (משמשים ע״י שרת Socket) ===
-router.post('/', validate(notificationValidator.create), createNotification);
-router.post('/broadcast', validate(notificationValidator.broadcast), createNotificationsForListMembers);
+// rate limit על יצירה/broadcast - מונע spam מצד לקוח זדוני
+router.post('/', notificationCreateLimiter, validate(notificationValidator.create), createNotification);
+router.post('/broadcast', notificationCreateLimiter, validate(notificationValidator.broadcast), createNotificationsForListMembers);
 
 export default router;

@@ -26,6 +26,7 @@ interface ListMenuProps {
   onClearList?: () => void;
   onResetList?: () => void;
   onShoppingMode?: () => void;
+  onDuplicate?: () => void;
   hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;

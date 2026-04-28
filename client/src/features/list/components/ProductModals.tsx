@@ -168,13 +168,20 @@ export const AddProductModal = memo(({
 
   const isNameValid = newProduct.name.trim().length >= 2;
 
-  // הצעות מוצרים מהיסטוריה
+  // הצעות מוצרים - מסוננות לפי הקלדה
   const filteredSuggestions = useMemo(() => {
     const query = newProduct.name.trim().toLowerCase();
     if (query.length < 2 || !suggestions.length) return [];
     return suggestions
       .filter(s => s.name.toLowerCase().includes(query) && s.name.toLowerCase() !== query)
       .slice(0, 5);
+  }, [newProduct.name, suggestions]);
+
+  // הוספו לאחרונה - 4 מוצרים אחרונים מהיסטוריה לכניסה מהירה.
+  // מוצג רק כשהשדה ריק (אחרת filteredSuggestions תופס את המקום).
+  const recentSuggestions = useMemo(() => {
+    if (newProduct.name.trim().length > 0 || !suggestions.length) return [];
+    return suggestions.slice(0, 4);
   }, [newProduct.name, suggestions]);
 
   const applySuggestion = useCallback((s: ProductSuggestion) => {
@@ -264,6 +271,36 @@ export const AddProductModal = memo(({
             maxLength: 100
           }}
         />
+        {/* הוספו לאחרונה - chips של מוצרים מההיסטוריה לכניסה מהירה.
+            רק כשהשדה ריק - אחרת filteredSuggestions תופס את המקום. */}
+        {recentSuggestions.length > 0 && (
+          <Box sx={{ mt: 0.75 }}>
+            <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 700, letterSpacing: 0.3, mb: 0.5, px: 0.25 }}>
+              ⏱️ הוספו לאחרונה
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {recentSuggestions.map(s => (
+                <Box
+                  key={`recent-${s.name}`}
+                  onClick={() => applySuggestion(s)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 0.5,
+                    px: 1.25, py: 0.6,
+                    borderRadius: '999px',
+                    bgcolor: 'rgba(20,184,166,0.08)',
+                    border: '1px solid rgba(20,184,166,0.2)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.15)' },
+                  }}
+                >
+                  <Typography sx={{ fontSize: 13 }}>{CATEGORY_ICONS[s.category] || '📦'}</Typography>
+                  <Typography sx={{ fontSize: 12, color: 'primary.main', fontWeight: 700 }}>{s.name}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
         {filteredSuggestions.length > 0 && (
           <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             {filteredSuggestions.map(s => (
