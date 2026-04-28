@@ -177,7 +177,7 @@ export const InsightsPage = memo(() => {
   const {
     topProducts, categoryBreakdown, stats, groupStats, shoppingScore, streaks,
     weeklyTrends, weekdayActivity, monthComparison, shoppingFrequency,
-    upcomingNeeds, anomalies,
+    upcomingNeeds, anomalies, categoryCycles,
   } = data;
 
   const maxWeeklyTrend = Math.max(...(weeklyTrends || []).map(w => Math.max(w.added, w.purchased)), 1);
@@ -1080,6 +1080,58 @@ export const InsightsPage = memo(() => {
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{cat.count}</Typography>
                         <Typography sx={{ fontSize: 12, fontWeight: 800, color, minWidth: 36, textAlign: 'left' }}>{cat.percentage}%</Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </SectionCard>
+            )}
+
+            {/* מחזורי קנייה - איזה קטגוריה כל כמה ימים. מוצג רק עם 2+ קטגוריות שיש להן מחזור משמעותי. */}
+            {categoryCycles && categoryCycles.length >= 2 && (
+              <SectionCard title="🔄 מחזורי הקנייה שלך" isDark={isDark}>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1.25, lineHeight: 1.5 }}>
+                  כל כמה ימים אתה קונה כל קטגוריה (מבוסס על ההיסטוריה שלך)
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
+                  {categoryCycles.slice(0, 6).map((c) => {
+                    const transKey = CATEGORY_TRANSLATION_KEYS[c.category as keyof typeof CATEGORY_TRANSLATION_KEYS];
+                    const label = transKey ? t(transKey) : c.category;
+                    const icon = CATEGORY_ICONS[c.category as keyof typeof CATEGORY_ICONS] || '📦';
+                    const catColor = CATEGORY_COLORS[c.category as keyof typeof CATEGORY_COLORS] || '#6B7280';
+                    // bar width: יחס למחזור הארוך ביותר (עד 30 יום מקסימום ל-scaling)
+                    const maxCycle = Math.max(...categoryCycles.map(x => x.avgDays), 30);
+                    const barWidth = Math.min(100, (c.avgDays / maxCycle) * 100);
+                    return (
+                      <Box key={c.category} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
+                        <Box sx={{
+                          width: 28, height: 28, borderRadius: '8px',
+                          bgcolor: `${catColor}1a`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 15, flexShrink: 0,
+                        }}>
+                          {icon}
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.4 }}>
+                            <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.primary' }}>{label}</Typography>
+                            <Typography sx={{ fontSize: 11, fontWeight: 800, color: catColor, fontVariantNumeric: 'tabular-nums' }}>
+                              כל {c.avgDays} {c.avgDays === 1 ? 'יום' : 'ימים'}
+                            </Typography>
+                          </Box>
+                          <Box sx={{
+                            height: 5, borderRadius: '3px',
+                            bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                            overflow: 'hidden',
+                          }}>
+                            <Box sx={{
+                              height: '100%', width: `${barWidth}%`,
+                              background: `linear-gradient(90deg, ${catColor}, ${catColor}aa)`,
+                              borderRadius: '3px',
+                              transition: 'width 0.6s ease',
+                            }} />
+                          </Box>
+                        </Box>
                       </Box>
                     );
                   })}
