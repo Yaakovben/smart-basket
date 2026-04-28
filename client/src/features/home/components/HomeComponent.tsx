@@ -89,6 +89,32 @@ const getTimeGreeting = (): TranslationKeys => {
   return 'goodNight';
 };
 
+// ===== אימוג'י לפי שעה - מוסיף אישיות קטנה לכותרת =====
+const getTimeEmoji = (): string => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 8) return '🌅';   // זריחה
+  if (hour >= 8 && hour < 12) return '☀️';   // בוקר
+  if (hour >= 12 && hour < 17) return '🌤️'; // צהריים
+  if (hour >= 17 && hour < 20) return '🌆'; // ערב
+  if (hour >= 20 && hour < 22) return '🌃'; // לילה מוקדם
+  return '🌙';                              // לילה
+};
+
+// ===== מסר משני קטן ליום בשבוע =====
+const getWeekdayMessage = (t: (k: TranslationKeys) => string): string | null => {
+  const day = new Date().getDay(); // 0=ראשון, 5=שישי, 6=שבת
+  const hour = new Date().getHours();
+  // יום שישי בבוקר/צהריים - "מתכוננים לשבת?"
+  if (day === 5 && hour >= 6 && hour < 16) return 'מתכוננים לשבת? 🕯️';
+  // מוצ"ש - "סוף שבוע 🎉"
+  if (day === 6 && hour >= 19) return 'תשבוע חדש 💪';
+  // ראשון בבוקר - התחלה חדשה
+  if (day === 0 && hour >= 6 && hour < 12) return 'שבוע חדש מתחיל 🚀';
+  return null;
+  // הפניה ל-t להתאמה עתידית לתרגום (כרגע לא בשימוש)
+  void t;
+};
+
 // ===== קומפוננטת כרטיס רשימה =====
 interface ListCardProps {
   list: List;
@@ -742,8 +768,25 @@ export const HomeComponent = memo(({
               {user.avatarEmoji || user.name.charAt(0)}
             </Avatar>
             <Box>
-              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{t(getTimeGreeting())}</Typography>
+              {/* ברכה עם אימוג'י לפי שעה - הופך את הכניסה לאישית יותר */}
+              <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <Box component="span" sx={{ fontSize: 14, lineHeight: 1 }}>{getTimeEmoji()}</Box>
+                {t(getTimeGreeting())}
+              </Typography>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
+              {/* מסר אישי ליום בשבוע - מופיע רק ברגעים מיוחדים (שישי, מוצ"ש, ראשון) */}
+              {(() => {
+                const msg = getWeekdayMessage(t);
+                if (!msg) return null;
+                return (
+                  <Typography sx={{
+                    fontSize: 11, color: 'rgba(255,255,255,0.85)', mt: 0.3,
+                    fontWeight: 600, letterSpacing: 0.2,
+                  }}>
+                    {msg}
+                  </Typography>
+                );
+              })()}
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
