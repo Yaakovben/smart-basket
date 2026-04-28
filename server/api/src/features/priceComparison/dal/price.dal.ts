@@ -19,6 +19,14 @@ export interface UpsertPriceInput {
   isWeighted?: boolean;
   unitQty?: string;
   itemPriceUpdateDate?: Date;
+  // דגלי סטטוס/מטא נוספים
+  itemType?: number;
+  itemId?: string;
+  allowDiscount?: boolean;
+  blockedItem?: boolean;
+  itemStatus?: string;
+  bikoretNo?: string;
+  unitOfMeasurePrice?: number;
 }
 
 class PriceDALClass extends BaseDAL<IPriceDoc> {

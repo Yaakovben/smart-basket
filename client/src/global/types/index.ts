@@ -37,6 +37,8 @@ export interface Product {
   addedBy: string;
   createdAt: string;
   note?: string;
+  // ברקוד אופציונלי - כשממולא, השוואת המחירים מזהה את המוצר ב-100%
+  barcode?: string;
 }
 
 // ===== רשימה =====

@@ -267,6 +267,8 @@ function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
       return Number.isFinite(n) ? n : undefined;
     };
     const isWeightedRaw = get('bIsWeighted', 'BIsWeighted', 'IsWeighted', 'isWeighted');
+    const allowDiscountRaw = get('AllowDiscount', 'allowDiscount');
+    const blockedRaw = get('BlockedItem', 'blockedItem', 'StatusBlock');
     results.push({
       barcode,
       itemName,
@@ -281,6 +283,13 @@ function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
       isWeighted: isWeightedRaw !== undefined ? (isWeightedRaw === '1' || isWeightedRaw.toLowerCase() === 'true') : undefined,
       unitQty: get('UnitQty', 'unitQty'),
       itemPriceUpdateDate: get('PriceUpdateDate', 'priceUpdateDate'),
+      itemType: getNum('ItemType', 'itemType'),
+      itemId: get('ItemId', 'itemId'),
+      allowDiscount: allowDiscountRaw !== undefined ? (allowDiscountRaw === '1' || allowDiscountRaw.toLowerCase() === 'true') : undefined,
+      blockedItem: blockedRaw !== undefined ? (blockedRaw === '1' || blockedRaw.toLowerCase() === 'true') : undefined,
+      itemStatus: get('ItemStatus', 'itemStatus'),
+      bikoretNo: get('BikoretNo', 'bikoretNo'),
+      unitOfMeasurePrice: getNum('UnitOfMeasurePrice', 'unitOfMeasurePrice'),
     });
   }
   return results;
@@ -408,6 +417,7 @@ function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
       lat: validCoords ? lat : undefined,
       lng: validCoords ? lng : undefined,
       // תת-רשת (AM:PM, פרש מרקט, היפר וכו') וסוג סניף - מטא-דאטה לתצוגה
+      subChainId: pick(rec, ['SubChainId', 'SUBCHAINID', 'subChainId', 'SubChainID']),
       subChainName: pick(rec, ['SubChainName', 'SUBCHAINNAME', 'subChainName']),
       storeType: pick(rec, ['StoreType', 'STORETYPE', 'storeType']),
     });

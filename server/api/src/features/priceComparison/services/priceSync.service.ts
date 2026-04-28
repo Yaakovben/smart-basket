@@ -161,7 +161,7 @@ async function syncStoresForChain(
         storeId: s.storeId, storeName: s.storeName,
         address: s.address, city: s.city, zipCode: s.zipCode,
         lat, lng, coordSource,
-        subChainName: s.subChainName, storeType: s.storeType,
+        subChainId: s.subChainId, subChainName: s.subChainName, storeType: s.storeType,
       };
     });
 
@@ -245,6 +245,14 @@ export async function syncAllChains(): Promise<SyncResult[]> {
         isWeighted: item.isWeighted,
         unitQty: item.unitQty,
         itemPriceUpdateDate: updateDate && !isNaN(updateDate.getTime()) ? updateDate : undefined,
+        // דגלי סטטוס/מטא נוספים - לתצוגה ולסינון מוצרים חסומים בעתיד
+        itemType: item.itemType,
+        itemId: item.itemId,
+        allowDiscount: item.allowDiscount,
+        blockedItem: item.blockedItem,
+        itemStatus: item.itemStatus,
+        bikoretNo: item.bikoretNo,
+        unitOfMeasurePrice: item.unitOfMeasurePrice,
       };
     });
 

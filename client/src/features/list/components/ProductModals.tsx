@@ -178,6 +178,106 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
 });
 ProductNoteField.displayName = 'ProductNoteField';
 
+// ===== שדה ברקוד אופציונלי - משותף ל-Add ול-Edit =====
+// מטרה: כשהמשתמש מסמן ברקוד, השוואת המחירים מזהה את המוצר ב-100%
+// (lookup ישיר במקום fuzzy על שם). סגור כברירת מחדל - לחיצה פותחת.
+// קומפקטי, ספרות בלבד 4-32, פוסל קלט לא חוקי בזמן אמת.
+const ProductBarcodeField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const [expanded, setExpanded] = useState(value.length > 0);
+  const isOpen = expanded || value.length > 0;
+  const isValid = value === '' || /^\d{4,32}$/.test(value);
+
+  const closeAndClear = () => {
+    haptic('light');
+    onChange('');
+    setExpanded(false);
+  };
+
+  return (
+    <Box sx={{ mb: 1.25 }}>
+      {!isOpen ? (
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => { haptic('light'); setExpanded(true); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setExpanded(true); } }}
+          sx={{
+            display: 'inline-flex', alignItems: 'center', gap: 0.5,
+            py: 0.55, px: 1.25, borderRadius: '10px',
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            color: '#7C3AED',
+            bgcolor: 'rgba(124,58,237,0.08)',
+            border: '1px dashed rgba(124,58,237,0.35)',
+            transition: 'all 0.15s',
+            '&:hover': { bgcolor: 'rgba(124,58,237,0.14)' },
+          }}
+        >
+          <Typography sx={{ fontSize: 13, lineHeight: 1 }}>📷</Typography>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700 }}>הוסף ברקוד (זיהוי 100%)</Typography>
+        </Box>
+      ) : (
+        <Box sx={{
+          p: 1.1, borderRadius: '12px',
+          bgcolor: 'rgba(124,58,237,0.06)',
+          border: '1px solid rgba(124,58,237,0.25)',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
+            <Typography sx={{ fontSize: 13 }}>📷</Typography>
+            <Box sx={{ flex: 1, lineHeight: 1.1 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#7C3AED', letterSpacing: 0.3 }}>
+                ברקוד
+              </Typography>
+              <Typography sx={{ fontSize: 9, color: 'rgba(124,58,237,0.75)', fontWeight: 600, mt: 0.1 }}>
+                זיהוי מוצר 100% בהשוואת מחירים
+              </Typography>
+            </Box>
+            <Box
+              role="button"
+              aria-label="סגור ברקוד"
+              onClick={closeAndClear}
+              sx={{
+                width: 18, height: 18, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: 'rgba(124,58,237,0.18)',
+                color: '#7C3AED',
+                cursor: 'pointer', userSelect: 'none',
+                fontSize: 11, fontWeight: 800, lineHeight: 1,
+                '&:hover': { bgcolor: 'rgba(124,58,237,0.28)' },
+              }}
+            >
+              ✕
+            </Box>
+          </Box>
+          <TextField
+            fullWidth
+            size="small"
+            autoFocus={expanded && value.length === 0}
+            value={value}
+            onChange={e => {
+              // ספרות בלבד, מקסימום 32
+              const next = e.target.value.replace(/\D/g, '').slice(0, 32);
+              onChange(next);
+            }}
+            placeholder="לדוגמה: 7290000000000"
+            inputMode="numeric"
+            error={!isValid}
+            helperText={!isValid ? '4-32 ספרות' : undefined}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'background.paper',
+                fontSize: 13, fontFamily: 'monospace',
+                py: 0,
+              },
+            }}
+          />
+        </Box>
+      )}
+    </Box>
+  );
+});
+ProductBarcodeField.displayName = 'ProductBarcodeField';
+
 // ===== מודאל הוספת מוצר =====
 interface ProductSuggestion {
   name: string;
@@ -486,6 +586,10 @@ export const AddProductModal = memo(({
         value={newProduct.note}
         onChange={(v) => onUpdateField('note', v)}
       />
+      <ProductBarcodeField
+        value={newProduct.barcode || ''}
+        onChange={(v) => onUpdateField('barcode', v)}
+      />
       <Button
         variant="contained"
         fullWidth
@@ -657,6 +761,10 @@ export const EditProductModal = memo(({
       <ProductNoteField
         value={product.note || ''}
         onChange={(v) => onUpdateField('note', v as Product['note'])}
+      />
+      <ProductBarcodeField
+        value={product.barcode || ''}
+        onChange={(v) => onUpdateField('barcode', v as Product['barcode'])}
       />
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}

@@ -113,14 +113,45 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
     const price = parseFloat(String(it.ItemPrice || '0'));
     const itemName = String(it.ItemName || '').trim();
     if (!barcode || !itemName || isNaN(price) || price <= 0) continue;
+    // הרחבה: שאיבת אותם שדות עשירים כמו factory - מביא את שופרסל לרמה אחידה.
+    const itAny = it as Record<string, unknown>;
+    const get = (...keys: string[]): string | undefined => {
+      for (const k of keys) {
+        const v = itAny[k];
+        if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+      }
+      return undefined;
+    };
+    const getNum = (...keys: string[]): number | undefined => {
+      const v = get(...keys);
+      if (v === undefined) return undefined;
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    const isWeightedRaw = get('bIsWeighted', 'BIsWeighted', 'IsWeighted', 'isWeighted');
+    const allowDiscountRaw = get('AllowDiscount', 'allowDiscount');
+    const blockedRaw = get('BlockedItem', 'blockedItem', 'StatusBlock');
     results.push({
       barcode,
       itemName,
       price,
-      unitOfMeasure: it.UnitOfMeasure ? String(it.UnitOfMeasure) : undefined,
-      manufacturerName: it.ManufacturerName ? String(it.ManufacturerName) : undefined,
-      quantity: it.Quantity ? parseFloat(String(it.Quantity)) : undefined,
-      storeId: it.StoreId ? String(it.StoreId) : undefined,
+      unitOfMeasure: get('UnitOfMeasure'),
+      manufacturerName: get('ManufacturerName'),
+      quantity: getNum('Quantity'),
+      storeId: get('StoreId'),
+      manufactureCountry: get('ManufactureCountry'),
+      manufacturerItemDescription: get('ManufacturerItemDescription'),
+      qtyInPackage: getNum('QtyInPackage'),
+      isWeighted: isWeightedRaw !== undefined ? (isWeightedRaw === '1' || isWeightedRaw.toLowerCase() === 'true') : undefined,
+      unitQty: get('UnitQty'),
+      itemPriceUpdateDate: get('PriceUpdateDate'),
+      itemType: getNum('ItemType'),
+      itemId: get('ItemId'),
+      allowDiscount: allowDiscountRaw !== undefined ? (allowDiscountRaw === '1' || allowDiscountRaw.toLowerCase() === 'true') : undefined,
+      blockedItem: blockedRaw !== undefined ? (blockedRaw === '1' || blockedRaw.toLowerCase() === 'true') : undefined,
+      itemStatus: get('ItemStatus'),
+      bikoretNo: get('BikoretNo'),
+      unitOfMeasurePrice: getNum('UnitOfMeasurePrice'),
     });
   }
   return results;

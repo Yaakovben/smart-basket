@@ -21,6 +21,7 @@ export interface IBranchDoc extends Document {
   // מקור הקואורדינטות: 'portal' (הגיע בקובץ), 'geocoded' (דרך Nominatim), 'unknown'
   coordSource: 'portal' | 'geocoded' | 'unknown';
   // תת-מותג ברשת (AM:PM, פרש מרקט, היפר וכו') וסוג סניף
+  subChainId?: string;
   subChainName?: string;
   storeType?: string;
   // מתי עודכן מה-portal לאחרונה
@@ -41,6 +42,7 @@ const branchSchema = new Schema<IBranchDoc>(
     lat: { type: Number },
     lng: { type: Number },
     coordSource: { type: String, enum: ['portal', 'geocoded', 'unknown'], default: 'unknown' },
+    subChainId: { type: String },
     subChainName: { type: String },
     storeType: { type: String },
     lastSyncedAt: { type: Date, default: () => new Date() },

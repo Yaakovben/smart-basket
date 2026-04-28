@@ -22,6 +22,11 @@ export const productValidator = {
     note: Joi.string().allow('').max(200).messages({
       'string.max': 'Note cannot exceed 200 characters',
     }),
+    // ברקוד אופציונלי - 8-32 תווים, ספרות בלבד. כשמסומן, השוואת המחירים
+    // מזהה את המוצר ב-100% (lookup ישיר במקום fuzzy על שם).
+    barcode: Joi.string().allow('').pattern(/^\d{4,32}$/).messages({
+      'string.pattern.base': 'Barcode must be 4-32 digits',
+    }),
   }),
 
   update: Joi.object({
@@ -38,6 +43,9 @@ export const productValidator = {
     isPurchased: Joi.boolean(),
     note: Joi.string().allow('').max(200).messages({
       'string.max': 'Note cannot exceed 200 characters',
+    }),
+    barcode: Joi.string().allow('').pattern(/^\d{4,32}$/).messages({
+      'string.pattern.base': 'Barcode must be 4-32 digits',
     }),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
@@ -73,6 +81,7 @@ export type CreateProductInput = {
   unit?: ProductUnit;
   category?: ProductCategory;
   note?: string;
+  barcode?: string;
 };
 
 export type UpdateProductInput = {
@@ -82,6 +91,7 @@ export type UpdateProductInput = {
   category?: ProductCategory;
   isPurchased?: boolean;
   note?: string;
+  barcode?: string;
 };
 
 export type ReorderProductsInput = {

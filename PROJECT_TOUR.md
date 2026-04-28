@@ -118,7 +118,7 @@ HTTP request
 - `chains/` — 10 adapters, אחד לכל רשת (osher-ad, rami-levy, shufersal...)
 - `services/priceSync.service.ts` — קורא לכל ה-adapters, שומר ב-DB
 - `services/priceComparison.service.ts` — matching של שמות מוצרים למאגר
-- `jobs/priceSync.job.ts` — cron כל 6 שעות
+- `jobs/priceSync.job.ts` — cron פעמיים ביום (04:00 ו-16:00)
 
 **לקוח**: `client/src/features/priceComparison/`
 - `PriceComparisonCard` — המסך הראשי
@@ -183,7 +183,7 @@ HTTP request
 
 ## 🚦 Cron Jobs שרצים
 
-1. **Price Sync** — כל 6 שעות (`priceSync.job.ts`)
+1. **Price Sync** — פעמיים ביום ב-04:00 וב-16:00 (`priceSync.job.ts`)
 2. **Notification cleanup** — TTL index של Mongo מוחק notifications ישנים מ-30 יום אוטומטית
 
 ---
