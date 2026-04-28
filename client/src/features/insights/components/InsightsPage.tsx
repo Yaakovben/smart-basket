@@ -14,7 +14,7 @@ import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../.
 import { haptic, safeStorage } from '../../../global/helpers';
 import {
   float, fadeIn, tabEnter, dayLabels, scoreEmoji,
-  AnimatedNumber, StatCard, SectionCard, HeroInsight,
+  AnimatedNumber, StatCard, SectionCard, HeroInsight, InsightsEmptyState,
 } from './insightsShared';
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
@@ -527,13 +527,14 @@ export const InsightsPage = memo(() => {
           groupStats.forEach(g => g.memberBreakdown.forEach(m => uniqueMembers.add(m.name)));
 
           if (!hasAnything) return (
-            <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-              <Typography sx={{ fontSize: 40, mb: 1, animation: `${float} 2s ease infinite` }}>📋</Typography>
-              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>אין רשימות פעילות</Typography>
-              <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.5 }}>
-                צור רשימה כדי לראות פה פעילות
-              </Typography>
-            </Box>
+            <InsightsEmptyState
+              isDark={isDark}
+              accent="#14B8A6"
+              mainEmoji="📋"
+              floatingItems={['📝', '✨', '✅', '🎯']}
+              title="אין רשימות פעילות"
+              description="צור רשימה ראשונה ותתחיל להוסיף מוצרים. כאן תראה את הפעילות בכל הרשימות, חלוקת חברים בקבוצות, וסטטיסטיקות מלאות."
+            />
           );
 
           // כותרת אישית — מנוסחת אנושית, לא רשימת מספרים
@@ -766,6 +767,38 @@ export const InsightsPage = memo(() => {
                         </Box>
                       )}
 
+                      {/* השוואה מול ממוצע החברים - מוצג רק כשיש 2+ חברים פעילים אחרים. */}
+                      {L.isGroup && g?.userContribution && sortedMembers.length >= 3 && (
+                        (() => {
+                          const uc = g.userContribution!;
+                          const pct = uc.vsAvgAddedPct;
+                          // צבע ותווית: <80=מתחת, 80-120=בערך ממוצע, >120=מעל
+                          const above = pct > 120;
+                          const below = pct < 80;
+                          const tone = above ? '#10B981' : below ? '#F59E0B' : '#6B7280';
+                          const verdict = above ? `+${pct - 100}% מעל הממוצע` : below ? `${pct - 100}% מתחת לממוצע` : 'בערך כמו הממוצע';
+                          const emoji = above ? '🚀' : below ? '🌱' : '⚖️';
+                          return (
+                            <Box sx={{
+                              mt: 0.75, px: 1, py: 0.55, borderRadius: '8px',
+                              display: 'flex', alignItems: 'center', gap: 0.65,
+                              bgcolor: isDark ? `${tone}18` : `${tone}12`,
+                              border: '1px solid', borderColor: `${tone}40`,
+                            }}>
+                              <Typography sx={{ fontSize: 13, lineHeight: 1 }}>{emoji}</Typography>
+                              <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: tone, lineHeight: 1.3, flex: 1 }}>
+                                {verdict} בהוספות
+                              </Typography>
+                              {pct < 999 && (
+                                <Typography sx={{ fontSize: 10, fontWeight: 800, color: tone, fontVariantNumeric: 'tabular-nums' }}>
+                                  {pct}%
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })()
+                      )}
+
                       {/* חלוקת חברים - רק אם יש קבוצה עם יותר מחבר אחד ויש פעילות */}
                       {L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0 && (
                         <>
@@ -946,13 +979,14 @@ export const InsightsPage = memo(() => {
           const hasAnyActivity = stats.totalPurchased > 0 || topProducts.length > 0 || categoryBreakdown.length > 0;
           if (!hasAnyActivity) {
             return (
-              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
-                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>🛍️</Typography>
-                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד לא סימנת מוצרים כנקנו</Typography>
-                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
-                  סמן ✅ על מוצרים שקנית, וכאן יופיעו הרגלי הקנייה שלך: מוצרים חוזרים, ימים חזקים, קטגוריות מועדפות
-                </Typography>
-              </Box>
+              <InsightsEmptyState
+                isDark={isDark}
+                accent="#14B8A6"
+                mainEmoji="🛍️"
+                floatingItems={['🥕', '🍞', '🥛', '🍎']}
+                title="עוד לא סימנת מוצרים כנקנו"
+                description="סמן ✅ על מוצרים שקנית, וכאן יופיעו הרגלי הקנייה שלך - מוצרים חוזרים, ימי שיא, קטגוריות מועדפות וכל מה שמספר עליך."
+              />
             );
           }
 
@@ -1180,13 +1214,14 @@ export const InsightsPage = memo(() => {
           const hasAnyPulseData = shoppingScore > 0 || stats.totalProducts > 0 || (streaks && streaks.currentWeeks > 0);
           if (!hasAnyPulseData) {
             return (
-              <Box sx={{ textAlign: 'center', py: 6, animation: `${fadeIn} 0.5s ease` }}>
-                <Typography sx={{ fontSize: 56, mb: 1.5, animation: `${float} 2.5s ease infinite` }}>📊</Typography>
-                <Typography sx={{ fontSize: 16, fontWeight: 800, mb: 0.75 }}>עוד אין נתוני פעילות</Typography>
-                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', maxWidth: 280, mx: 'auto', lineHeight: 1.6 }}>
-                  הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה, רצף שבועות, תחזיות וגרף מגמות.
-                </Typography>
-              </Box>
+              <InsightsEmptyState
+                isDark={isDark}
+                accent="#14B8A6"
+                mainEmoji="📊"
+                floatingItems={['🔥', '⭐', '🎯', '📈']}
+                title="עוד אין נתוני פעילות"
+                description="הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה שלך, רצף שבועות פעילים, תחזית הקנייה הבאה, גרפי מגמות ועוד."
+              />
             );
           }
 
