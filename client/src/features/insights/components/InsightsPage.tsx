@@ -619,7 +619,22 @@ export const InsightsPage = memo(() => {
                       key={L.listId}
                       role="button"
                       tabIndex={0}
-                      onClick={() => { haptic('light'); navigate(`/list/${L.listId}`); }}
+                      // ניווט רק בלחיצה כפולה (מהירה) - מונע ניווט בטעות בזמן
+                      // צפייה בנתונים. הלחיצה הראשונה מסומנת ב-haptic קל ופותחת
+                      // חלון של 350ms ללחיצה השנייה. גם פועל ב-touch (double-tap).
+                      onClick={(e) => {
+                        const target = e.currentTarget as HTMLElement & { __lastTap?: number };
+                        const now = Date.now();
+                        const last = target.__lastTap || 0;
+                        if (now - last < 350) {
+                          target.__lastTap = 0;
+                          haptic('medium');
+                          navigate(`/list/${L.listId}`);
+                        } else {
+                          target.__lastTap = now;
+                          haptic('light');
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
