@@ -1207,9 +1207,61 @@ export const InsightsPage = memo(() => {
               ? <>הקנייה הבאה צפויה <b>מחר</b></>
               : <>הקנייה הבאה צפויה <b>בעוד {days} ימים</b></>;
           }
+          // מומנטום שבועי - ייחודי לטאב דופק. מציג שינוי לעומת השבוע הקודם.
+          const wt = weeklyTrends || [];
+          const lastWeek = wt[wt.length - 1];
+          const prevWeek = wt[wt.length - 2];
+          const hasMomentumData = lastWeek && prevWeek;
+          const purchasedDelta = hasMomentumData ? lastWeek.purchased - prevWeek.purchased : 0;
+          const momentumPct = hasMomentumData && prevWeek.purchased > 0
+            ? Math.round((purchasedDelta / prevWeek.purchased) * 100)
+            : null;
+          const momentumUp = purchasedDelta > 0;
+          const momentumDown = purchasedDelta < 0;
+
           return (
           <>
             <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
+
+            {/* כרטיס "מומנטום שבועי" - ייחודי לטאב דופק. השוואה לשבוע שעבר */}
+            {hasMomentumData && (lastWeek.purchased > 0 || prevWeek.purchased > 0) && (
+              <Box sx={{
+                mb: 1.75, p: 1.5, borderRadius: '14px',
+                background: momentumUp
+                  ? 'linear-gradient(135deg, #10B981, #059669)'
+                  : momentumDown
+                  ? 'linear-gradient(135deg, #6366F1, #4F46E5)'
+                  : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                color: 'white',
+                display: 'flex', alignItems: 'center', gap: 1.25,
+                boxShadow: `0 4px 14px ${momentumUp ? 'rgba(16,185,129,0.32)' : 'rgba(79,70,229,0.3)'}`,
+                animation: `${fadeIn} 0.45s ease 0.1s both`,
+              }}>
+                <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>
+                  {momentumUp ? '📈' : momentumDown ? '📉' : '⚖️'}
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
+                    מומנטום השבוע
+                  </Typography>
+                  <Typography sx={{ fontSize: 19, fontWeight: 900, lineHeight: 1.1, mt: 0.15, fontVariantNumeric: 'tabular-nums' }}>
+                    {lastWeek.purchased} פריטים{' '}
+                    {momentumPct !== null && (
+                      <Typography component="span" sx={{ fontSize: 13, fontWeight: 800, opacity: 0.95 }}>
+                        ({momentumUp ? '+' : ''}{momentumPct}%)
+                      </Typography>
+                    )}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
+                    {momentumUp
+                      ? `עלייה של ${purchasedDelta} מהשבוע הקודם`
+                      : momentumDown
+                      ? `ירידה של ${Math.abs(purchasedDelta)} מהשבוע הקודם`
+                      : 'יציבות מול השבוע הקודם'}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             {/* קלף "צפויות עכשיו" - קטגוריות שצפויות לפי מחזור הקנייה. */}
             {upcomingNeeds && upcomingNeeds.length > 0 && (
