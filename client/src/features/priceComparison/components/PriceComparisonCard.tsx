@@ -141,14 +141,12 @@ interface ChainCardProps {
   expanded: boolean;
   onToggle: () => void;
   onOpenNav: (b: NearestBranch) => void;
-  // תווית רצועה אלכסונית לפינה כשרשת זו מקום ראשון לפי המיון הנוכחי
-  rankRibbon?: { label: string; color: string } | null;
   // האם המשתמש שיתף מיקום פעיל. רק אז הגיוני להציג "אין סניף במאגר"
   // - לפני אישור מיקום אין סיבה לטעון שהסניף "חסר", פשוט עוד לא נשאלנו.
   hasLocation: boolean;
 }
 
-const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, rankRibbon, hasLocation }: ChainCardProps) => {
+const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -200,31 +198,8 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         },
       }}
     >
-      {/* רצועה אלכסונית בפינה - "הכי זול" / "הכי קרוב" / "הכי משתלם".
-          מוצגת רק במקום הראשון לפי המיון הנוכחי. סגנון של רצועת עיתונות. */}
-      {rankRibbon && rank === 1 && (
-        <Box sx={{
-          position: 'absolute',
-          top: 12, insetInlineEnd: -34,
-          width: 130,
-          py: 0.4,
-          // שקיפות גבוהה - 0.55 alpha על הצבע - לא מסתיר את התוכן מאחור
-          background: `linear-gradient(135deg, ${rankRibbon.color}66, ${rankRibbon.color}88)`,
-          color: 'white',
-          textAlign: 'center',
-          fontSize: 10.5, fontWeight: 800, letterSpacing: 0.5,
-          // כיוון הפוך - rotate(-45) במקום +45. הרצועה יורדת מ-top-left לכיוון bottom-right
-          transform: 'rotate(-45deg)',
-          transformOrigin: 'center',
-          boxShadow: `0 1px 4px ${rankRibbon.color}33`,
-          pointerEvents: 'none',
-          zIndex: 2,
-          textShadow: '0 1px 2px rgba(0,0,0,0.25)',
-        }}>
-          {rankRibbon.label}
-        </Box>
-      )}
-
+      {/* בלי רצועת עיתונות. במקום זה, הכרטיס הראשון בכל מיון
+          מקבל רקע בולט בצבע מתאים (ירוק לזול, סגול לקרוב, טורקיז למשולב). */}
       {/* שורת ה-summary - תמיד נראית */}
       <Box sx={{
         display: 'flex', alignItems: 'center', gap: 1.25,
@@ -714,12 +689,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       })()}
 
       {/* CARDS STACK - כרטיס לכל רשת. תווית פינה לפי מצב המיון:
-          זול → "הכי זול" ירוק; קרוב → "הכי קרוב" סגול; משולב → "הכי משתלם" טורקיז. */}
+          כל התוויות בירוק אחיד של "הכי זול" - הצבע שכבר מוכר ללקוח כסימן מוביל,
+          וההבדל בין סוגי המיון בא רק דרך הטקסט. */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
+        const RIBBON_COLOR = '#10B981';
         const ribbonByMode: Record<SortMode, { label: string; color: string }> = {
-          price: { label: 'הכי זול', color: '#10B981' },
-          distance: { label: 'הכי קרוב', color: '#7C3AED' },
-          combined: { label: 'הכי משתלם', color: '#0D9488' },
+          price: { label: 'הכי זול', color: RIBBON_COLOR },
+          distance: { label: 'הכי קרוב', color: RIBBON_COLOR },
+          combined: { label: 'הכי משתלם', color: RIBBON_COLOR },
         };
         // אם המיון דורש מיקום ואין - לא מציגים תווית כי הסדר נופל לפי מחיר
         const showRibbon = sortMode === 'price' || (hasAnyLocation && (sortMode === 'distance' || sortMode === 'combined'));
@@ -731,17 +708,10 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 key={chain.chainId}
                 chain={chain}
                 rank={idx + 1}
-                // הדגשת 'מנצח' מותאמת למיון הנוכחי - מוצגת רק כשהמיון לפי מחיר.
-                // בקרוב/משולב המשתמש לא בוחן 'מי הזול' אז הירוק מסיט תשומת לב.
-                isWinner={
-                  // מנצח אמיתי לפי המיון:
-                  // price: רק הזול בפועל (לא 'הכי שלם').
-                  // distance: rank 1 עם סניף קיים.
-                  // combined: rank 1 עם נתונים מלאים.
-                  sortMode === 'price' ? chain.isCheapest
-                  : sortMode === 'distance' ? (idx === 0 && !!chain.nearestBranch)
-                  : (idx === 0 && chain.matchedCount > 0)
-                }
+                // הדגשת 'מנצח' = הכרטיס בראש לפי המיון הנוכחי.
+                // לא רק 'הזול בפועל' (isCheapest=true בא רק עם סל שלם), אלא
+                // הכרטיס שמופיע בפועל בראש - כדי שהמשתמש תמיד יראה את ההדגשה למעלה.
+                isWinner={idx === 0 && chain.matchedCount > 0}
                 cheapestTotal={cheapest?.total || 0}
                 isDark={isDark}
                 expanded={expandedId === chain.chainId}
