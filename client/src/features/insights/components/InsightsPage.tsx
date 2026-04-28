@@ -177,7 +177,7 @@ export const InsightsPage = memo(() => {
   const {
     topProducts, categoryBreakdown, stats, groupStats, shoppingScore, streaks,
     weeklyTrends, weekdayActivity, monthComparison, shoppingFrequency,
-    upcomingNeeds, anomalies, categoryCycles,
+    upcomingNeeds, anomalies, categoryCycles, hourlyActivity,
   } = data;
 
   const maxWeeklyTrend = Math.max(...(weeklyTrends || []).map(w => Math.max(w.added, w.purchased)), 1);
@@ -542,9 +542,41 @@ export const InsightsPage = memo(() => {
             ? <><b>{stats.totalLists}</b> רשימות · <b>{stats.totalProducts}</b> פריטים · פעיל ב-<b>{groupsCount}</b> {groupsCount === 1 ? 'קבוצה' : 'קבוצות'}</>
             : <>יש לך <b>{stats.totalLists}</b> רשימות עם <b>{stats.totalProducts}</b> פריטים</>;
 
+          // מציאת המוסיף החזק ביותר בכל הקבוצות יחד - ייחודי לטאב רשימות
+          const allMembers = groupStats.flatMap(g => g.memberBreakdown.map(m => ({ ...m, group: g.name })));
+          const topContributor = allMembers.length > 0
+            ? allMembers.reduce((best, m) => m.added > best.added ? m : best, allMembers[0])
+            : null;
+
           return (
             <>
               <HeroInsight icon="👋" text={heroText} accent="#14B8A6" isDark={isDark} />
+
+              {/* כרטיס "שיא תרומה" - ייחודי לטאב רשימות, מדגיש את הזווית הקבוצתית/חברתית */}
+              {topContributor && topContributor.added > 0 && (
+                <Box sx={{
+                  mb: 1.75, p: 1.5, borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                  color: 'white',
+                  display: 'flex', alignItems: 'center', gap: 1.25,
+                  boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
+                  animation: `${fadeIn} 0.45s ease 0.1s both`,
+                }}>
+                  <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🏆</Typography>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
+                      שיא תרומה
+                    </Typography>
+                    <Typography sx={{ fontSize: 16, fontWeight: 900, lineHeight: 1.2, mt: 0.15 }}>
+                      {topContributor.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
+                      הוסיף <b>{topContributor.added}</b> פריטים · {topContributor.group}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
               {/* שורת סטטיסטיקה ממוקדת-פעילות - פלטה אחידה בצבע האפליקציה */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
                 <StatCard
@@ -1175,9 +1207,61 @@ export const InsightsPage = memo(() => {
               ? <>הקנייה הבאה צפויה <b>מחר</b></>
               : <>הקנייה הבאה צפויה <b>בעוד {days} ימים</b></>;
           }
+          // מומנטום שבועי - ייחודי לטאב דופק. מציג שינוי לעומת השבוע הקודם.
+          const wt = weeklyTrends || [];
+          const lastWeek = wt[wt.length - 1];
+          const prevWeek = wt[wt.length - 2];
+          const hasMomentumData = lastWeek && prevWeek;
+          const purchasedDelta = hasMomentumData ? lastWeek.purchased - prevWeek.purchased : 0;
+          const momentumPct = hasMomentumData && prevWeek.purchased > 0
+            ? Math.round((purchasedDelta / prevWeek.purchased) * 100)
+            : null;
+          const momentumUp = purchasedDelta > 0;
+          const momentumDown = purchasedDelta < 0;
+
           return (
           <>
             <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
+
+            {/* כרטיס "מומנטום שבועי" - ייחודי לטאב דופק. השוואה לשבוע שעבר */}
+            {hasMomentumData && (lastWeek.purchased > 0 || prevWeek.purchased > 0) && (
+              <Box sx={{
+                mb: 1.75, p: 1.5, borderRadius: '14px',
+                background: momentumUp
+                  ? 'linear-gradient(135deg, #10B981, #059669)'
+                  : momentumDown
+                  ? 'linear-gradient(135deg, #6366F1, #4F46E5)'
+                  : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                color: 'white',
+                display: 'flex', alignItems: 'center', gap: 1.25,
+                boxShadow: `0 4px 14px ${momentumUp ? 'rgba(16,185,129,0.32)' : 'rgba(79,70,229,0.3)'}`,
+                animation: `${fadeIn} 0.45s ease 0.1s both`,
+              }}>
+                <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>
+                  {momentumUp ? '📈' : momentumDown ? '📉' : '⚖️'}
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
+                    מומנטום השבוע
+                  </Typography>
+                  <Typography sx={{ fontSize: 19, fontWeight: 900, lineHeight: 1.1, mt: 0.15, fontVariantNumeric: 'tabular-nums' }}>
+                    {lastWeek.purchased} פריטים{' '}
+                    {momentumPct !== null && (
+                      <Typography component="span" sx={{ fontSize: 13, fontWeight: 800, opacity: 0.95 }}>
+                        ({momentumUp ? '+' : ''}{momentumPct}%)
+                      </Typography>
+                    )}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
+                    {momentumUp
+                      ? `עלייה של ${purchasedDelta} מהשבוע הקודם`
+                      : momentumDown
+                      ? `ירידה של ${Math.abs(purchasedDelta)} מהשבוע הקודם`
+                      : 'יציבות מול השבוע הקודם'}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             {/* קלף "צפויות עכשיו" - קטגוריות שצפויות לפי מחזור הקנייה. */}
             {upcomingNeeds && upcomingNeeds.length > 0 && (
@@ -1582,6 +1666,104 @@ export const InsightsPage = memo(() => {
                 )}
               </SectionCard>
             )}
+
+            {/* Heatmap לפי שעה - 24 משבצות, צבע לפי עוצמת הפעילות.
+                מסדר את השעות ברמה אנושית: בוקר (5-11), צהריים (12-16), ערב (17-22), לילה (23-4). */}
+            {hourlyActivity && hourlyActivity.some(v => v > 0) && (() => {
+              const maxHour = Math.max(...hourlyActivity, 1);
+              const peakHour = hourlyActivity.indexOf(maxHour);
+              // קבוצות שעות לסיכום סקאני
+              const buckets = [
+                { label: 'בוקר', range: 'בוקר 5-11', from: 5, to: 11, emoji: '🌅' },
+                { label: 'צהריים', range: 'צהריים 12-16', from: 12, to: 16, emoji: '☀️' },
+                { label: 'ערב', range: 'ערב 17-22', from: 17, to: 22, emoji: '🌆' },
+                { label: 'לילה', range: 'לילה 23-4', from: 23, to: 4, emoji: '🌙' },
+              ];
+              const bucketTotals = buckets.map(b => {
+                let total = 0;
+                if (b.from <= b.to) {
+                  for (let h = b.from; h <= b.to; h++) total += hourlyActivity[h];
+                } else {
+                  for (let h = b.from; h < 24; h++) total += hourlyActivity[h];
+                  for (let h = 0; h <= b.to; h++) total += hourlyActivity[h];
+                }
+                return total;
+              });
+              const peakBucketIdx = bucketTotals.indexOf(Math.max(...bucketTotals));
+              return (
+                <SectionCard title={`🕐 פעילות לפי שעות · שיא ב-${peakHour}:00`} isDark={isDark}>
+                  {/* גריד 24 משבצות עם עוצמת צבע. מסודר 6 בשורה. */}
+                  <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(12, 1fr)',
+                    gap: '3px',
+                    mb: 1.5,
+                  }}>
+                    {hourlyActivity.map((count, h) => {
+                      const intensity = count / maxHour;
+                      const isPeak = h === peakHour && count > 0;
+                      // עוצמת רקע: ריק אפור עדין, אחרת gradient טורקיז
+                      const bg = count === 0
+                        ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)')
+                        : `rgba(20,184,166,${0.18 + intensity * 0.65})`;
+                      return (
+                        <Box
+                          key={h}
+                          title={`${h}:00 — ${count} פעולות`}
+                          sx={{
+                            aspectRatio: '1',
+                            borderRadius: '5px',
+                            bgcolor: bg,
+                            border: isPeak ? '1.5px solid #14B8A6' : '1px solid transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 9,
+                            fontWeight: count > 0 ? 800 : 600,
+                            color: intensity > 0.5 ? '#fff' : (count === 0 ? 'text.disabled' : '#0F766E'),
+                            fontVariantNumeric: 'tabular-nums',
+                            transition: 'transform 0.1s',
+                            cursor: count > 0 ? 'help' : 'default',
+                            '&:hover': count > 0 ? { transform: 'scale(1.15)' } : {},
+                          }}
+                        >
+                          {h}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                  {/* legend - 4 buckets לסקירה מהירה */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.6 }}>
+                    {buckets.map((b, i) => {
+                      const isWinner = i === peakBucketIdx && bucketTotals[i] > 0;
+                      const pct = bucketTotals.reduce((a, c) => a + c, 0) > 0
+                        ? Math.round((bucketTotals[i] / bucketTotals.reduce((a, c) => a + c, 0)) * 100)
+                        : 0;
+                      return (
+                        <Box key={i} sx={{
+                          textAlign: 'center', py: 0.6, px: 0.5, borderRadius: '8px',
+                          bgcolor: isWinner
+                            ? (isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.1)')
+                            : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)'),
+                          border: '1px solid',
+                          borderColor: isWinner ? 'rgba(20,184,166,0.4)' : 'transparent',
+                        }}>
+                          <Typography sx={{ fontSize: 13, lineHeight: 1 }}>{b.emoji}</Typography>
+                          <Typography sx={{
+                            fontSize: 9.5, fontWeight: 800,
+                            color: isWinner ? '#14B8A6' : 'text.secondary',
+                            mt: 0.3,
+                          }}>{b.label}</Typography>
+                          <Typography sx={{ fontSize: 10, fontWeight: 700, color: isWinner ? '#14B8A6' : 'text.disabled', fontVariantNumeric: 'tabular-nums' }}>
+                            {pct}%
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </SectionCard>
+              );
+            })()}
           </>
           );
         })()}
