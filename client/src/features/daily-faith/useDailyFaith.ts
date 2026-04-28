@@ -71,6 +71,9 @@ export function useDailyFaith(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     if (!ALWAYS_SHOW && safeStorage.get(STORAGE_KEY) === todayStr()) return;
+    // הגנה מהדפלוי: SW activate → reload גורם useEffect לרוץ שוב. אם בסשן הזה כבר
+    // הצגנו את הפופאפ - לא מציגים שוב גם אם ה-pending עדיין שמור.
+    try { if (!ALWAYS_SHOW && sessionStorage.getItem('sb_faith_session_shown') === '1') return; } catch { /* */ }
 
     // אם יש משפט ממתין מסשן קודם (המשתמש לא לחץ סגור) - מציגים שוב את אותו אחד,
     // ולא מביאים משפט חדש. כך הוא לא רואה משפטים מתחלפים אם רענן/סגר את האפליקציה.
@@ -79,6 +82,7 @@ export function useDailyFaith(enabled: boolean) {
       if (pending && pending.id && pending.text) {
         setQuote(pending);
         markPopupShown('daily-faith');
+        try { sessionStorage.setItem('sb_faith_session_shown', '1'); } catch { /* */ }
         return;
       }
     }
@@ -105,6 +109,8 @@ export function useDailyFaith(enabled: boolean) {
             }
             // סימון בקואורדינטור שפופאפ נמצא על המסך - יחסום popups משניים בסשן זה
             markPopupShown('daily-faith');
+            // הגנה מדפלוי: סימון בסשן שהפופאפ הוצג כדי שלא יוצג שוב אחרי reload
+            try { sessionStorage.setItem('sb_faith_session_shown', '1'); } catch { /* */ }
           }
         })
         .catch(() => {/* שקט */});

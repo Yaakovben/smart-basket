@@ -666,7 +666,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
               key={chain.chainId}
               chain={chain}
               rank={idx + 1}
-              isWinner={chain.isCheapest}
+              // הדגשת 'מנצח' מותאמת למיון הנוכחי - מוצגת רק כשהמיון לפי מחיר.
+              // בקרוב/משולב המשתמש לא בוחן 'מי הזול' אז הירוק מסיט תשומת לב.
+              isWinner={sortMode === 'price' && chain.isCheapest}
               cheapestTotal={cheapest?.total || 0}
               isDark={isDark}
               expanded={expandedId === chain.chainId}
