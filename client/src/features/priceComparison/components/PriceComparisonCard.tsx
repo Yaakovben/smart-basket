@@ -205,22 +205,18 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
           top: 12, insetInlineEnd: -34,
           width: 130,
           py: 0.4,
-          background: `linear-gradient(135deg, ${rankRibbon.color}, ${rankRibbon.color}DD)`,
+          // שקיפות גבוהה - 0.55 alpha על הצבע - לא מסתיר את התוכן מאחור
+          background: `linear-gradient(135deg, ${rankRibbon.color}66, ${rankRibbon.color}88)`,
           color: 'white',
           textAlign: 'center',
           fontSize: 10.5, fontWeight: 800, letterSpacing: 0.5,
-          transform: 'rotate(45deg)',
+          // כיוון הפוך - rotate(-45) במקום +45. הרצועה יורדת מ-top-left לכיוון bottom-right
+          transform: 'rotate(-45deg)',
           transformOrigin: 'center',
-          boxShadow: `0 2px 8px ${rankRibbon.color}66`,
+          boxShadow: `0 1px 4px ${rankRibbon.color}33`,
           pointerEvents: 'none',
           zIndex: 2,
-          // שורות צל אלכסוניות לתחושת רצועת בד
-          '&::before, &::after': {
-            content: '""', position: 'absolute', top: 0, bottom: 0, width: 6,
-            background: `linear-gradient(90deg, transparent, ${rankRibbon.color}88)`,
-          },
-          '&::before': { insetInlineStart: 0 },
-          '&::after': { insetInlineEnd: 0, transform: 'scaleX(-1)' },
+          textShadow: '0 1px 2px rgba(0,0,0,0.25)',
         }}>
           {rankRibbon.label}
         </Box>
