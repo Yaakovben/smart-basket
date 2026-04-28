@@ -34,6 +34,14 @@ export interface InsightsData {
     topBuyer: { name: string; count: number } | null;
     memberBreakdown: { name: string; added: number; purchased: number }[];
   }[];
+  // מחזורי קטגוריה - כל כמה ימים המשתמש קונה מקטגוריה מסוימת.
+  // מחושב מהממוצע בין רכישות חוזרות באותה קטגוריה.
+  categoryCycles: { category: string; avgDays: number; lastPurchased: string; samples: number }[];
+  // קטגוריות שצפויות עכשיו - מבוסס על המחזור + הרכישה האחרונה.
+  // daysOverdue<=0 = עוד לא הגיע הזמן, daysOverdue>0 = עבר הזמן הצפוי.
+  upcomingNeeds: { category: string; daysOverdue: number; nextDateISO: string }[];
+  // אנומליות - שינויים פתאומיים בהרגלי הקנייה.
+  anomalies: { type: 'returning' | 'fading' | 'surge'; category: string; description: string }[];
 }
 
 // מצב ריק - משמש כתוצאה ברירת מחדל למשתמשים בלי נתונים
@@ -49,7 +57,97 @@ function emptyInsights(): InsightsData {
     streaks: { currentWeeks: 0, longestWeeks: 0 },
     monthComparison: { productsGrowth: 0, completionGrowth: 0, previousTotal: 0 },
     weeklyTrends: [], groupStats: [],
+    categoryCycles: [], upcomingNeeds: [], anomalies: [],
   };
+}
+
+// חישוב מחזורי קנייה לכל קטגוריה.
+// משתמש בקטגוריות שיש להן לפחות 3 רכישות נפרדות בימים שונים, אחרת המחזור לא משמעותי.
+function computeCategoryCycles(purchasedProducts: { category: string; updatedAt: Date }[]): {
+  cycles: InsightsData['categoryCycles'];
+  upcoming: InsightsData['upcomingNeeds'];
+} {
+  // אוספים תאריכי קנייה ייחודיים לכל קטגוריה
+  const catDates = new Map<string, Set<string>>();
+  for (const p of purchasedProducts) {
+    const key = new Date(p.updatedAt).toDateString();
+    if (!catDates.has(p.category)) catDates.set(p.category, new Set());
+    catDates.get(p.category)!.add(key);
+  }
+
+  const cycles: InsightsData['categoryCycles'] = [];
+  const upcoming: InsightsData['upcomingNeeds'] = [];
+  const now = Date.now();
+
+  for (const [category, datesSet] of catDates.entries()) {
+    if (datesSet.size < 3) continue; // צריך לפחות 3 רכישות לחישוב משמעותי
+    const dates = Array.from(datesSet).map(s => new Date(s).getTime()).sort((a, b) => a - b);
+    const diffs: number[] = [];
+    for (let i = 1; i < dates.length; i++) {
+      const d = (dates[i] - dates[i - 1]) / 86400000;
+      if (d > 0 && d < 60) diffs.push(d); // מסנן outliers (יותר מחודשיים = לא מחזור)
+    }
+    if (diffs.length === 0) continue;
+    const avgDays = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length);
+    const lastTs = dates[dates.length - 1];
+    const lastPurchased = new Date(lastTs).toISOString();
+    cycles.push({ category, avgDays, lastPurchased, samples: diffs.length + 1 });
+
+    // חישוב daysOverdue: כמה ימים עברו מאז שהיה אמור לקנות שוב
+    const expectedNextTs = lastTs + avgDays * 86400000;
+    const daysOverdue = Math.round((now - expectedNextTs) / 86400000);
+    if (daysOverdue >= -3) { // 3 ימים לפני הזמן הצפוי או אחרי
+      upcoming.push({
+        category,
+        daysOverdue,
+        nextDateISO: new Date(expectedNextTs).toISOString(),
+      });
+    }
+  }
+
+  // מיון: קודם מה שפג, לפי גודל החריגה
+  cycles.sort((a, b) => a.avgDays - b.avgDays);
+  upcoming.sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+  return { cycles, upcoming: upcoming.slice(0, 5) };
+}
+
+// זיהוי אנומליות - קטגוריות שחזרו אחרי הפסקה, או שנעלמו, או עלייה פתאומית.
+function detectAnomalies(allProducts: { category: string; createdAt: Date; isPurchased: boolean }[]): InsightsData['anomalies'] {
+  const anomalies: InsightsData['anomalies'] = [];
+  const now = Date.now();
+  const RECENT_MS = 14 * 86400000; // 14 ימים אחרונים
+  const PRIOR_MS = 30 * 86400000;  // 30 ימים שלפני
+  const recentCutoff = now - RECENT_MS;
+  const priorCutoff = now - RECENT_MS - PRIOR_MS;
+
+  // איסוף לפי קטגוריה: ספירות בחלון אחרון ובחלון קודם
+  const catWindow = new Map<string, { recent: number; prior: number; older: number }>();
+  for (const p of allProducts) {
+    const ts = new Date(p.createdAt).getTime();
+    const cur = catWindow.get(p.category) || { recent: 0, prior: 0, older: 0 };
+    if (ts >= recentCutoff) cur.recent++;
+    else if (ts >= priorCutoff) cur.prior++;
+    else cur.older++;
+    catWindow.set(p.category, cur);
+  }
+
+  for (const [category, w] of catWindow.entries()) {
+    // חוזרת אחרי הפסקה: 0 בחודש שעבר, 0 בכל הזמן הרחוק, אבל פתאום יש בחודש האחרון
+    if (w.older >= 3 && w.prior === 0 && w.recent >= 2) {
+      anomalies.push({ type: 'returning', category, description: `חזרת לקנות ${category} אחרי הפסקה` });
+    }
+    // נעלמה: היה בעבר, לא בחודש האחרון ולא לפני
+    else if (w.older >= 5 && w.prior === 0 && w.recent === 0) {
+      anomalies.push({ type: 'fading', category, description: `הפסקת לקנות ${category} בחודש האחרון` });
+    }
+    // עלייה פתאומית: 2x מהממוצע
+    else if (w.prior >= 2 && w.recent >= w.prior * 2 && w.recent >= 4) {
+      anomalies.push({ type: 'surge', category, description: `עלייה משמעותית ברכישות של ${category}` });
+    }
+  }
+
+  return anomalies.slice(0, 3);
 }
 
 // זיהוי אישיות קנייה לפי הפרופיל של המשתמש
@@ -334,6 +432,11 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
       monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length },
       weeklyTrends,
       groupStats: await getGroupStats(lists, userId),
+      ...((() => {
+        const { cycles, upcoming } = computeCategoryCycles(purchasedProducts);
+        return { categoryCycles: cycles, upcomingNeeds: upcoming };
+      })()),
+      anomalies: detectAnomalies(allProducts),
     };
   } catch {
     return emptyInsights();

@@ -33,6 +33,9 @@ export interface InsightsData {
     topBuyer: { name: string; count: number } | null;
     memberBreakdown: { name: string; added: number; purchased: number }[];
   }[];
+  categoryCycles: { category: string; avgDays: number; lastPurchased: string; samples: number }[];
+  upcomingNeeds: { category: string; daysOverdue: number; nextDateISO: string }[];
+  anomalies: { type: 'returning' | 'fading' | 'surge'; category: string; description: string }[];
 }
 
 // השוואת מחירים הועברה למודול נפרד: src/features/priceComparison
