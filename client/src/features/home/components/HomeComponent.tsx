@@ -413,6 +413,16 @@ export const HomeComponent = memo(({
   const contentRef = useRef<HTMLDivElement>(null);
   const { t, settings, isGroupMuted, toggleGroupMute, updateNotifications } = useSettings();
   const isDark = settings.theme === 'dark';
+
+  // ברכות וזמן - מחשבים פעם אחת בעת mount ולא בכל render. הזמן לא משתנה
+  // בתוך אותו טאב פתוח באופן שדורש עדכון, ופונקציות אלו קוראות ל-new Date()
+  // שהוא עלות מיותרת ב-render חוזר.
+  const greeting = useMemo(() => ({
+    label: t(getTimeGreeting()),
+    emoji: getTimeEmoji(),
+    weekdayMsg: getWeekdayMessage(t),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, permission: pushPermission, subscribe: subscribePush, loading: pushLoading } = usePushNotifications();
 
   // מצב הצעת התראות push
@@ -770,23 +780,18 @@ export const HomeComponent = memo(({
             <Box>
               {/* ברכה עם אימוג'י לפי שעה - הופך את הכניסה לאישית יותר */}
               <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: 0.4 }}>
-                <Box component="span" sx={{ fontSize: 14, lineHeight: 1 }}>{getTimeEmoji()}</Box>
-                {t(getTimeGreeting())}
+                <Box component="span" sx={{ fontSize: 14, lineHeight: 1 }}>{greeting.emoji}</Box>
+                {greeting.label}
               </Typography>
               <Typography sx={{ fontSize: 17, fontWeight: 700, color: 'white' }}>{user.name}</Typography>
-              {/* מסר אישי ליום בשבוע - מופיע רק ברגעים מיוחדים (שישי, מוצ"ש, ראשון) */}
-              {(() => {
-                const msg = getWeekdayMessage(t);
-                if (!msg) return null;
-                return (
-                  <Typography sx={{
-                    fontSize: 11, color: 'rgba(255,255,255,0.85)', mt: 0.3,
-                    fontWeight: 600, letterSpacing: 0.2,
-                  }}>
-                    {msg}
-                  </Typography>
-                );
-              })()}
+              {greeting.weekdayMsg && (
+                <Typography sx={{
+                  fontSize: 11, color: 'rgba(255,255,255,0.85)', mt: 0.3,
+                  fontWeight: 600, letterSpacing: 0.2,
+                }}>
+                  {greeting.weekdayMsg}
+                </Typography>
+              )}
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
