@@ -25,11 +25,11 @@ import { NavigationPicker } from './ChainComparisonTable';
 import { haptic } from '../../../global/helpers';
 
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
-// אנימציה עדינה לכרטיס הזול ביותר - הופחתה מ-0.35→0.18 ו-0.55→0.28
-// כדי שהכרטיס יבלוט בעדינות בלי לקפוץ ולהפריע לקריאה.
+// אנימציה עדינה לכרטיס הראשון - בצבע טורקיז ניטרלי שמתאים לכל סוג מיון
+// (זול/קרוב/משולב). נמנע מירוק שיוצר רושם "זול" כששורת הרצועה אומרת משהו אחר.
 const shineGlow = keyframes`
-  0%, 100% { box-shadow: 0 3px 10px rgba(16,185,129,0.18); }
-  50% { box-shadow: 0 4px 14px rgba(16,185,129,0.28); }
+  0%, 100% { box-shadow: 0 3px 10px rgba(20,184,166,0.18); }
+  50% { box-shadow: 0 4px 14px rgba(20,184,166,0.28); }
 `;
 
 interface Props {
@@ -180,7 +180,9 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         position: 'relative',
         transition: 'border-color 0.15s, transform 0.1s',
         '&:active': { transform: 'scale(0.99)' },
-        ...(isWinner ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
+        // אפקט הילה למקום הראשון בכל סינון - לא רק לזול. מבדל את הכרטיס המוביל
+        // ללא קשר ל-isWinner (שמתקיים רק במיון לפי מחיר).
+        ...(rank === 1 ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
         // מסכים זעירים - דחיסה לכל הפרטים בכרטיס
         '@media (max-width: 360px)': {
           borderRadius: '12px',
@@ -330,15 +332,16 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
           borderTop: '1px dashed',
           borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
         }}>
-          {/* סניף קרוב + ניווט */}
+          {/* סניף קרוב + ניווט - רקע ניטרלי במקום סגול */}
           {chain.nearestBranch && (
             <Box sx={{
               mt: 1.25, p: 1, borderRadius: '10px',
-              bgcolor: isDark ? 'rgba(124,58,237,0.1)' : 'rgba(124,58,237,0.06)',
-              border: '1px solid rgba(124,58,237,0.2)',
-              display: 'flex', alignItems: 'center', gap: 1,
+              bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+              display: 'flex', alignItems: 'center', gap: 1.5,
             }}>
-              <StorefrontIcon sx={{ fontSize: 18, color: '#7C3AED' }} />
+              <StorefrontIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {chain.nearestBranch.branchName}
@@ -357,9 +360,11 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                   '&:hover': { bgcolor: '#6D28D9' },
                   fontSize: 11, fontWeight: 800,
                   textTransform: 'none',
-                  borderRadius: '8px', px: 1.25, py: 0.5,
+                  borderRadius: '8px',
+                  px: 1.5, py: 0.6,
                   flexShrink: 0,
                   minWidth: 0,
+                  ml: 1,
                   '& .MuiButton-startIcon': { mr: 0.85, ml: 0 },
                 }}
               >
