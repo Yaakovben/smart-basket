@@ -12,13 +12,13 @@ import { logger } from '../../../config/logger';
 let scheduled = false;
 let syncInProgress = false;
 
-// סנכרון כל 6 שעות (00:00 / 06:00 / 12:00 / 18:00 זמן ישראל). הפורטל מעדכן
-// בעיקר בלילה, אבל תיקונים יכולים להגיע גם במהלך היום. 4 ריצות ביום שומרות
-// על נתונים טריים במשך כל היום עם עומס סביר על השרת.
-const CRON_EXPRESSION = '0 */6 * * *';
+// סנכרון פעם ביום ב-04:00 לפי שעון ישראל. הפורטל מעדכן בעיקר בלילה,
+// 04:00 נותן זמן לכל הרשתות לפרסם ולפני הפעילות הבוקרית של המשתמשים.
+// ריצה אחת ביום: עומס מינימלי על השרת + נתונים טריים לכל היום.
+const CRON_EXPRESSION = '0 4 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
-// אם הנתונים ישנים מ-6 שעות בעת הפעלת השרת, נסנכרן מיד ברקע
-const STARTUP_STALENESS_MS = 6 * 60 * 60 * 1000;
+// אם הנתונים ישנים מ-24 שעות בעת הפעלת השרת, נסנכרן מיד ברקע
+const STARTUP_STALENESS_MS = 24 * 60 * 60 * 1000;
 
 // פונקציית עזר לרענון עם טיפול ב-TLS env var - משותפת ל-cron ול-startup
 async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
@@ -87,7 +87,7 @@ export function startPriceSyncJob(): void {
     return;
   }
 
-  // cron של מחירים + סנכרון סניפים מ-OSM (כל 6 שעות, OSM רץ אחרי המחירים)
+  // cron של מחירים + סנכרון סניפים מ-OSM (פעם ביום ב-04:00, OSM רץ אחרי המחירים)
   cron.schedule(
     CRON_EXPRESSION,
     async () => {
@@ -98,7 +98,7 @@ export function startPriceSyncJob(): void {
   );
 
   scheduled = true;
-  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — every 6 hours`);
+  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — daily at 04:00`);
 
   // ===== Startup actions =====
   // 1. אם המחירים ישנים - סנכרון מחירים מיידי
