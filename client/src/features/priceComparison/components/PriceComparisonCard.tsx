@@ -180,9 +180,10 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         position: 'relative',
         transition: 'border-color 0.15s, transform 0.1s',
         '&:active': { transform: 'scale(0.99)' },
-        // אפקט הילה למקום הראשון בכל סינון - לא רק לזול. מבדל את הכרטיס המוביל
-        // ללא קשר ל-isWinner (שמתקיים רק במיון לפי מחיר).
-        ...(rank === 1 ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
+        // אפקט הילה רק כשהכרטיס באמת המוביל לפי המיון - לא סתם למקום ראשון.
+        // במיון מחיר: רק אם isCheapest (יכול להיות שמקום ראשון הוא 'הכי שלם' אבל לא הכי זול).
+        // במיון מרחק/משולב: rank 1 מספיק כי המיון הוא לפי המדד.
+        ...(isWinner ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
         // מסכים זעירים - דחיסה לכל הפרטים בכרטיס
         '@media (max-width: 360px)': {
           borderRadius: '12px',
@@ -732,7 +733,15 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 rank={idx + 1}
                 // הדגשת 'מנצח' מותאמת למיון הנוכחי - מוצגת רק כשהמיון לפי מחיר.
                 // בקרוב/משולב המשתמש לא בוחן 'מי הזול' אז הירוק מסיט תשומת לב.
-                isWinner={sortMode === 'price' && chain.isCheapest}
+                isWinner={
+                  // מנצח אמיתי לפי המיון:
+                  // price: רק הזול בפועל (לא 'הכי שלם').
+                  // distance: rank 1 עם סניף קיים.
+                  // combined: rank 1 עם נתונים מלאים.
+                  sortMode === 'price' ? chain.isCheapest
+                  : sortMode === 'distance' ? (idx === 0 && !!chain.nearestBranch)
+                  : (idx === 0 && chain.matchedCount > 0)
+                }
                 cheapestTotal={cheapest?.total || 0}
                 isDark={isDark}
                 expanded={expandedId === chain.chainId}
