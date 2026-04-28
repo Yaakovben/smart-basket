@@ -318,7 +318,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                   borderRadius: '8px', px: 1.25, py: 0.5,
                   flexShrink: 0,
                   minWidth: 0,
-                  '& .MuiButton-startIcon': { mr: 0.4 },
+                  '& .MuiButton-startIcon': { mr: 0.85, ml: 0 },
                 }}
               >
                 ניווט
@@ -332,6 +332,13 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
               {chain.matches.map((m) => (
                 <ProductRow key={`${m.productId}-${m.chainId}`} match={m} isDark={isDark} />
               ))}
+              {/* הסבר עדין על שיטת ההתאמה - מודגש למשתמש שזה לא תמיד 1:1 */}
+              <Typography sx={{
+                fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
+                mt: 1, lineHeight: 1.45, fontStyle: 'italic', px: 1,
+              }}>
+                ℹ️ ההתאמה למוצרים ברשת מבוססת על מילים בשם המוצר. הצגנו את ההתאמה הקרובה ביותר; בדקו את שם המוצר המלא בסניף.
+              </Typography>
             </Box>
           ) : (
             <Box sx={{
