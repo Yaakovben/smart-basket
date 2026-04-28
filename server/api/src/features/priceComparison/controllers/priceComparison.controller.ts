@@ -170,6 +170,7 @@ const CHAIN_NAMES: Record<string, string> = {
   shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
   osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
   stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+  victory: 'ויקטורי',
 };
 
 export const loadKnownBranchesSeed = asyncHandler(async (_req: AuthRequest, res: Response) => {

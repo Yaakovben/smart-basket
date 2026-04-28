@@ -8,6 +8,7 @@ import {
   stopMarketAdapter,
   politzerAdapter,
   doralonAdapter,
+  victoryAdapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -32,6 +33,7 @@ const adapters: ChainAdapter[] = [
   politzerAdapter,
   doralonAdapter,
   shufersalAdapter,
+  victoryAdapter,
   // מעיין 2000 הוסר זמנית - username 'Maayan2000' מחזיר 401 מהפורטל.
   // צריך לאתר את ה-username הנכון לפני שנחזיר אותו.
 ];
