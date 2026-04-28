@@ -40,88 +40,82 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
   };
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box sx={{ mb: 1.25 }}>
       {!isOpen ? (
+        // מצב סגור - כפתור כיתוב טקסטואלי קטן בלבד, לא תופס שורה שלמה
         <Box
+          role="button"
+          tabIndex={0}
           onClick={() => { haptic('light'); setExpanded(true); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setExpanded(true); } }}
           sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 0.75, py: 1.25, px: 2,
-            borderRadius: '12px',
-            border: '1.5px dashed rgba(20,184,166,0.4)',
-            bgcolor: 'rgba(20,184,166,0.04)',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-            '&:hover': { bgcolor: 'rgba(20,184,166,0.1)', borderColor: 'rgba(20,184,166,0.6)' },
-            '&:active': { transform: 'scale(0.98)' },
+            display: 'inline-flex', alignItems: 'center', gap: 0.4,
+            py: 0.4, px: 0.85, borderRadius: '8px',
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            color: '#0D9488',
+            bgcolor: 'rgba(20,184,166,0.08)',
+            border: '1px solid rgba(20,184,166,0.25)',
+            transition: 'all 0.12s',
+            '&:hover': { bgcolor: 'rgba(20,184,166,0.15)' },
           }}
         >
-          <Typography sx={{ fontSize: 16 }}>💬</Typography>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0D9488' }}>
-            הוסף הערה (אופציונלי)
+          <Typography sx={{ fontSize: 13, lineHeight: 1 }}>💬</Typography>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700 }}>
+            + הוסף הערה
           </Typography>
         </Box>
       ) : (
-        <Box
-          sx={{
-            p: 1.25,
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(20,184,166,0.1), rgba(20,184,166,0.04))',
-            border: '1px solid rgba(20,184,166,0.3)',
-            boxShadow: '0 1px 3px rgba(20,184,166,0.1)',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-              <Typography sx={{ fontSize: 14 }}>💬</Typography>
-              <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#0D9488', letterSpacing: 0.2 }}>
-                הערה
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.85 }}>
-              <Typography sx={{ fontSize: 10.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-                {value.length} / 200
-              </Typography>
-              {/* כפתור סגירה - מנקה את ההערה ומסגיר את השדה */}
-              <Box
-                role="button"
-                aria-label="סגור הערה"
-                onClick={closeAndClear}
-                sx={{
-                  width: 22, height: 22, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: 'rgba(20,184,166,0.15)',
-                  color: '#0D9488',
-                  cursor: 'pointer', userSelect: 'none',
-                  WebkitTapHighlightColor: 'transparent',
-                  fontSize: 14, fontWeight: 800, lineHeight: 1,
-                  transition: 'background-color 0.15s, transform 0.1s',
-                  '&:hover': { bgcolor: 'rgba(20,184,166,0.28)' },
-                  '&:active': { transform: 'scale(0.92)' },
-                }}
-              >
-                ✕
-              </Box>
+        // מצב פתוח - קומפקטי: שורה אחת של כותרת + ספירה + X, ושדה טקסט נמוך
+        <Box sx={{
+          p: 0.85, borderRadius: '10px',
+          bgcolor: 'rgba(20,184,166,0.06)',
+          border: '1px solid rgba(20,184,166,0.25)',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
+            <Typography sx={{ fontSize: 12 }}>💬</Typography>
+            <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, flex: 1 }}>
+              הערה
+            </Typography>
+            <Typography sx={{ fontSize: 9.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+              {value.length}/200
+            </Typography>
+            <Box
+              role="button"
+              aria-label="סגור הערה"
+              onClick={closeAndClear}
+              sx={{
+                width: 18, height: 18, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: 'rgba(20,184,166,0.18)',
+                color: '#0D9488',
+                cursor: 'pointer', userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                fontSize: 11, fontWeight: 800, lineHeight: 1,
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.3)' },
+              }}
+            >
+              ✕
             </Box>
           </Box>
           <TextField
             fullWidth
             multiline
             minRows={1}
-            maxRows={3}
+            maxRows={2}
             size="small"
             autoFocus={expanded && value.length === 0}
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder="לדוגמה: רק 3% שומן, מותג ספציפי..."
+            placeholder="למשל: 3% שומן, מותג מסוים..."
             inputProps={{ maxLength: 200 }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-                bgcolor: 'rgba(255,255,255,0.7)',
-                fontSize: 13.5,
+                borderRadius: '7px',
+                bgcolor: 'rgba(255,255,255,0.85)',
+                fontSize: 12.5,
+                py: 0.25,
                 '& fieldset': { borderColor: 'rgba(20,184,166,0.3)' },
-                '&:hover fieldset': { borderColor: 'rgba(20,184,166,0.5)' },
                 '&.Mui-focused fieldset': { borderColor: '#14B8A6', borderWidth: '1.5px' },
               },
             }}
