@@ -805,10 +805,9 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   )}
                   {chain.nearestBranch ? (
                     <BranchInfo branch={chain.nearestBranch} isDark={isDark} onOpenPicker={setNavBranch} />
-                  ) : !isEmpty ? (
-                    /* אין סניף במאגר - הודעה תלוית מצב מיקום:
-                        - יש מיקום: "אין סניף של רשת זו במאגר שלנו"
-                        - אין מיקום: "אשר מיקום כדי לראות סניפים קרובים" */
+                  ) : !isEmpty && hasAnyLocation ? (
+                    /* אין סניף במאגר - מוצג רק כשהמיקום פעיל. לפני אישור מיקום
+                        אין סיבה לטעון "לא נמצא" - פשוט עוד לא חיפשנו. */
                     <Box sx={{
                       display: 'flex', alignItems: 'center', gap: 0.5,
                       mt: 0.5, p: 0.7, borderRadius: '8px',
@@ -818,9 +817,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                     }}>
                       <LocationOnIcon sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }} />
                       <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>
-                        {hasAnyLocation
-                          ? 'אין סניף של רשת זו במאגר שלנו'
-                          : 'לא נמצא סניף · אשר מיקום למעלה כדי לראות סניפים קרובים'}
+                        אין סניף של רשת זו במאגר שלנו
                       </Typography>
                     </Box>
                   ) : null}

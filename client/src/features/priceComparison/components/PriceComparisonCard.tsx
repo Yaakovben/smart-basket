@@ -143,9 +143,12 @@ interface ChainCardProps {
   onOpenNav: (b: NearestBranch) => void;
   // תווית רצועה אלכסונית לפינה כשרשת זו מקום ראשון לפי המיון הנוכחי
   rankRibbon?: { label: string; color: string } | null;
+  // האם המשתמש שיתף מיקום פעיל. רק אז הגיוני להציג "אין סניף במאגר"
+  // - לפני אישור מיקום אין סיבה לטעון שהסניף "חסר", פשוט עוד לא נשאלנו.
+  hasLocation: boolean;
 }
 
-const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, rankRibbon }: ChainCardProps) => {
+const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, rankRibbon, hasLocation }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -265,8 +268,9 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                   </Typography>
                 </Box>
               </>
-            ) : hasMatches && (
-              // אין סניף עם קואורדינטות במאגר OSM - נסביר במפורש למה אין מרחק כאן
+            ) : hasMatches && hasLocation && (
+              // אין סניף עם קואורדינטות במאגר OSM - מוצג רק כשהמיקום פעיל,
+              // אחרת אין סיבה לטעון שהסניף "חסר" - פשוט המשתמש לא שיתף מיקום עדיין.
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Typography sx={{ fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>
@@ -483,8 +487,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
           sx={{
             mb: 1.25, p: 1.25, borderRadius: '12px',
             display: 'flex', alignItems: 'center', gap: 1,
-            bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
-            border: '1.5px dashed rgba(124,58,237,0.35)',
+            bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.07)',
+            border: '1.5px dashed rgba(20,184,166,0.35)',
             cursor: 'pointer',
             transition: 'all 0.15s',
             '&:active': { transform: 'scale(0.99)' },
@@ -493,10 +497,10 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
           <Box sx={{
             width: 36, height: 36, borderRadius: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            bgcolor: 'rgba(124,58,237,0.15)',
+            bgcolor: 'rgba(20,184,166,0.15)',
             flexShrink: 0,
           }}>
-            <MyLocationIcon sx={{ fontSize: 19, color: '#7C3AED' }} />
+            <MyLocationIcon sx={{ fontSize: 19, color: '#14B8A6' }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>הפעל מיקום</Typography>
@@ -511,9 +515,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         <Box sx={{
           mb: 1.25, p: 1.25, borderRadius: '12px',
           display: 'flex', alignItems: 'center', gap: 1,
-          bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
+          bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.07)',
         }}>
-          <CircularProgress size={18} sx={{ color: '#7C3AED' }} />
+          <CircularProgress size={18} sx={{ color: '#14B8A6' }} />
           <Typography sx={{ fontSize: 12, fontWeight: 700 }}>מאתר מיקום…</Typography>
         </Box>
       )}
@@ -542,7 +546,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
             {locationStatus === 'denied' ? 'מיקום לא משותף' : 'מיקום לא זמין'}
           </Typography>
           {locationStatus === 'denied' && onResetLocationDenied && (
-            <Link component="button" onClick={onResetLocationDenied} sx={{ fontSize: 10.5, fontWeight: 700, color: '#7C3AED', textDecoration: 'none' }}>
+            <Link component="button" onClick={onResetLocationDenied} sx={{ fontSize: 10.5, fontWeight: 700, color: '#14B8A6', textDecoration: 'none' }}>
               נסה שוב
             </Link>
           )}
@@ -724,6 +728,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 onToggle={() => toggleExpanded(chain.chainId)}
                 onOpenNav={setNavBranch}
                 rankRibbon={ribbon}
+                hasLocation={locationStatus === 'granted'}
               />
             ))}
           </Box>
