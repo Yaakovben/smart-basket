@@ -30,6 +30,35 @@ if (SENTRY_DSN && import.meta.env.PROD) {
 // חייב להיות מוגדר במשתני סביבה
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
+// ===== מסך לבן בחזרה מ-background (PWA / iOS Safari) =====
+// כשהמשתמש עוזב ל-WhatsApp/Waze וחוזר, הדפדפן עלול להרוג את ה-JS
+// (לחץ זיכרון) ואז לטעון את המסמך מ-BFCache בלי React. התוצאה - מסך לבן.
+// פתרונות:
+//  1. event 'pageshow' עם persisted=true ⇒ ה-DOM שוחזר מ-BFCache. נטען מחדש.
+//  2. visibilitychange אחרי שהיינו מוסתרים יותר מ-30 דק' ⇒ נרענן ברקע
+//     (ה-JS עלול להיות שגוי בגלל זמן רב מדי במצב suspended).
+if (typeof window !== 'undefined') {
+  let hiddenAt = 0;
+  window.addEventListener('pageshow', (e) => {
+    if ((e as PageTransitionEvent).persisted) {
+      // BFCache restore - נטען מחדש כדי שכל ה-JS ירוץ מההתחלה
+      window.location.reload();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      hiddenAt = Date.now();
+    } else if (document.visibilityState === 'visible' && hiddenAt > 0) {
+      const awayMs = Date.now() - hiddenAt;
+      hiddenAt = 0;
+      // אחרי 30 דק' מחוץ לאפליקציה - רענון רך כדי למנוע מצב לא תקין
+      if (awayMs > 30 * 60 * 1000) {
+        window.location.reload();
+      }
+    }
+  });
+}
+
 // רינדור האפליקציה
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
