@@ -199,8 +199,8 @@ export const InsightsPage = memo(() => {
         position: 'relative', overflow: 'hidden',
         mb: 1.5,
       }}>
-        {/* ריבון BETA בצד ימין (RTL: top-right = פיזית בימין) - בולט יותר ללקוח עברי */}
-        <BetaRibbon corner="top-right" offsetTop={2} size="lg" />
+        {/* ריבון BETA בצד שמאל - בגודל xl כדי להיות ארוך יותר ולא להיות חבוי */}
+        <BetaRibbon corner="top-left" offsetTop={2} size="xl" />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
@@ -580,7 +580,24 @@ export const InsightsPage = memo(() => {
               </Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-                {listsToShow ? listsToShow.map((L, idx) => {
+                {listsToShow ? (() => {
+                  // מיון לפי פרטיות → קבוצות. רשימות פרטיות בראש, קבוצות אחריהן.
+                  // שמירה על סדר היחסי בכל קבוצה (stable sort של JS).
+                  const sorted = [...listsToShow].sort((a, b) => {
+                    if (a.isGroup === b.isGroup) return 0;
+                    return a.isGroup ? 1 : -1;
+                  });
+                  return sorted;
+                })().map((L, idx, arr) => {
+                  // הוספת כותרת סקציה לפני הפריט הראשון של כל סוג
+                  const prevList = idx > 0 ? arr[idx - 1] : null;
+                  const isFirstPrivate = !L.isGroup && (idx === 0 || prevList?.isGroup);
+                  const isFirstGroup = L.isGroup && (idx === 0 || !prevList?.isGroup);
+                  const sectionHeader = isFirstPrivate
+                    ? { emoji: '🔒', label: 'רשימות פרטיות', count: arr.filter(x => !x.isGroup).length }
+                    : isFirstGroup
+                      ? { emoji: '👥', label: 'קבוצות', count: arr.filter(x => x.isGroup).length }
+                      : null;
                   const g = L.isGroup ? groupStatsByName.get(L.listName) : undefined;
                   const members = g?.memberBreakdown || [];
                   const memberTotalAdded = members.reduce((s, m) => s + m.added, 0);

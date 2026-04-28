@@ -244,16 +244,26 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
             {chain.chainName}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.2 }}>
-            {hasMatches ? (
-              <Typography className="chain-meta" sx={{ fontSize: 11, color: 'text.secondary' }}>
-                {chain.matchedCount} מוצרים
-                {!chain.isComplete && chain.unmatchedCount > 0 && (
-                  <Typography component="span" sx={{ fontSize: 10.5, color: '#D97706', fontWeight: 700, ml: 0.5 }}>
-                    · חסר {chain.unmatchedCount}
+            {hasMatches ? (() => {
+              // נוסח ברור: "זוהו X מתוך Y" במקום "X מוצרים וחסר Z"
+              const total = chain.matchedCount + chain.unmatchedCount;
+              return (
+                <Typography className="chain-meta" sx={{ fontSize: 11, color: 'text.secondary' }}>
+                  זוהו{' '}
+                  <Typography component="span" sx={{
+                    fontSize: 11, fontWeight: 800,
+                    color: chain.isComplete ? '#059669' : '#D97706',
+                  }}>
+                    {chain.matchedCount}
                   </Typography>
-                )}
-              </Typography>
-            ) : (
+                  {' '}מתוך{' '}
+                  <Typography component="span" sx={{ fontSize: 11, fontWeight: 700 }}>
+                    {total}
+                  </Typography>
+                  {' '}מוצרים
+                </Typography>
+              );
+            })() : (
               <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
                 {chain.hasData ? 'אין התאמות' : 'לא פורסם'}
               </Typography>
