@@ -412,16 +412,20 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   // "משולב" - ציון מנורמל 50/50. אם אין מיקום, "קרוב"/"משולב" נופלים ל-price.
   const sortedChains = (() => {
     const chains = [...(data.chainTotals || [])];
+    // עקרון הוגנות: רשת חלקית (זיהתה פחות מוצרים) לעולם לא תוצג לפני
+    // רשת שלמה (זיהתה את המקסימום), כי הסה"כ שלה נמוך באופן מלאכותי.
+    // ריקות (0 התאמות) תמיד אחרונות.
+    const tier = (c: PriceChainTotal) =>
+      c.matchedCount === 0 ? 2 : c.isComplete ? 0 : 1;
     const fallbackToPrice = (a: PriceChainTotal, b: PriceChainTotal) => {
-      if (a.matchedCount === 0 && b.matchedCount > 0) return 1;
-      if (b.matchedCount === 0 && a.matchedCount > 0) return -1;
+      const ta = tier(a), tb = tier(b);
+      if (ta !== tb) return ta - tb;
       return a.total - b.total;
     };
     if (sortMode === 'distance' && hasAnyLocation) {
       return chains.sort((a, b) => {
-        const aEmpty = a.matchedCount === 0;
-        const bEmpty = b.matchedCount === 0;
-        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+        const ta = tier(a), tb = tier(b);
+        if (ta !== tb) return ta - tb;
         const aDist = a.nearestBranch?.distanceKm ?? Infinity;
         const bDist = b.nearestBranch?.distanceKm ?? Infinity;
         return aDist - bDist;
@@ -700,7 +704,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 // הדגשת 'מנצח' = הכרטיס בראש לפי המיון הנוכחי.
                 // לא רק 'הזול בפועל' (isCheapest=true בא רק עם סל שלם), אלא
                 // הכרטיס שמופיע בפועל בראש - כדי שהמשתמש תמיד יראה את ההדגשה למעלה.
-                isWinner={idx === 0 && chain.matchedCount > 0}
+                // 'מנצח' רק במיון לפי מחיר וכשהשרת אישר isCheapest (סל שלם).
+                // במיון לפי קרוב/משולב, אין "מנצח" - הסדר עצמו מספר את הסיפור.
+                isWinner={sortMode === 'price' && chain.isCheapest}
                 cheapestTotal={cheapest?.total || 0}
                 isDark={isDark}
                 expanded={expandedId === chain.chainId}

@@ -207,137 +207,151 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     <Dialog
       open={!!branch}
       onClose={onClose}
+      // bottom-sheet style: דבוק לתחתית במובייל, מרכזי בדסקטופ
       PaperProps={{
         sx: {
-          borderRadius: '20px', p: 0, m: 2, maxWidth: 360, width: '100%',
+          borderRadius: { xs: '24px 24px 0 0', sm: '20px' },
+          p: 0,
+          m: 0,
+          maxWidth: { xs: '100%', sm: 380 },
+          width: '100%',
           bgcolor: isDark ? '#0F1F1E' : '#fff',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.22)',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.3)',
           overflow: 'hidden',
         },
       }}
+      sx={{
+        '& .MuiDialog-container': {
+          alignItems: { xs: 'flex-end', sm: 'center' },
+        },
+      }}
     >
-      {/* כותרת בטורקיז - אחיד עם שאר האפליקציה */}
+      {/* drag handle בראש (מסמן bottom-sheet) */}
       <Box sx={{
-        background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-        color: 'white',
-        px: 2, pt: 1.75, pb: 1.5,
-        position: 'relative',
+        display: { xs: 'flex', sm: 'none' },
+        justifyContent: 'center', pt: 1, pb: 0.5,
       }}>
+        <Box sx={{
+          width: 40, height: 4, borderRadius: '2px',
+          bgcolor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)',
+        }} />
+      </Box>
+
+      {/* פרטי הסניף - בלי גרדיאנט, רקע נייטרלי. הדגשה דרך הטיפוגרפיה. */}
+      <Box sx={{ px: 2.25, pt: 1.5, pb: 1.5, position: 'relative' }}>
         <IconButton
           size="small"
           onClick={onClose}
           aria-label="סגור"
           sx={{
-            position: 'absolute', top: 8, insetInlineEnd: 8,
-            color: 'rgba(255,255,255,0.95)',
-            bgcolor: 'rgba(255,255,255,0.15)',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-            width: 30, height: 30,
+            position: 'absolute', top: 6, insetInlineEnd: 8,
+            color: 'text.secondary',
+            bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)' },
+            width: 28, height: 28,
           }}
         >
-          <CloseIcon sx={{ fontSize: 17 }} />
+          <CloseIcon sx={{ fontSize: 16 }} />
         </IconButton>
 
-        <Typography sx={{
-          fontSize: 10.5, opacity: 0.9, fontWeight: 700, letterSpacing: 0.5, mb: 0.5,
-        }}>
-          ניווט אל הסניף
-        </Typography>
-
-        {/* שם הסניף + מרחק בולט בצד */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, pe: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, pe: 4 }}>
+          {/* פין מיקום בעיגול טורקיז */}
+          <Box sx={{
+            width: 36, height: 36, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            bgcolor: 'rgba(20,184,166,0.14)',
+            color: '#0D9488',
+            flexShrink: 0,
+          }}>
+            <LocationOnIcon sx={{ fontSize: 20 }} />
+          </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{
-              fontSize: 17, fontWeight: 800, lineHeight: 1.25,
-              wordBreak: 'break-word',
+              fontSize: 9.5, fontWeight: 700, color: 'text.disabled',
+              letterSpacing: 0.5, lineHeight: 1, mb: 0.25,
+            }}>
+              ניווט אל
+            </Typography>
+            <Typography sx={{
+              fontSize: 15, fontWeight: 800, color: 'text.primary',
+              lineHeight: 1.25, wordBreak: 'break-word',
             }}>
               {branch.branchName}
             </Typography>
-            {(branch.city || branch.address) && (
-              <Typography sx={{
-                fontSize: 11.5, opacity: 0.92, mt: 0.4, lineHeight: 1.4,
-                wordBreak: 'break-word',
-              }}>
-                📍 {[branch.city, branch.address].filter(Boolean).join(', ')}
-              </Typography>
-            )}
           </Box>
-          {/* תג מרחק - בולט יותר עם רקע חצי-שקוף */}
+          {/* תג מרחק */}
           <Box sx={{
             flexShrink: 0, textAlign: 'center',
-            px: 1.1, py: 0.6, borderRadius: '12px',
-            bgcolor: 'rgba(255,255,255,0.22)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            backdropFilter: 'blur(4px)',
+            px: 0.85, py: 0.45, borderRadius: '10px',
+            bgcolor: 'rgba(20,184,166,0.14)',
+            border: '1px solid rgba(20,184,166,0.3)',
           }}>
-            <Typography sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
               {branch.distanceKm}
             </Typography>
-            <Typography sx={{ fontSize: 9, opacity: 0.95, mt: 0.2, fontWeight: 700 }}>
+            <Typography sx={{ fontSize: 8.5, color: '#0D9488', mt: 0.15, fontWeight: 700, opacity: 0.85 }}>
               ק״מ
             </Typography>
           </Box>
         </Box>
+
+        {(branch.city || branch.address) && (
+          <Typography sx={{
+            fontSize: 11.5, color: 'text.secondary', lineHeight: 1.4,
+            wordBreak: 'break-word', pr: 5.5,
+          }}>
+            📍 {[branch.city, branch.address].filter(Boolean).join(', ')}
+          </Typography>
+        )}
       </Box>
 
-      {/* גריד אפליקציות - אייקון עיגול גדול + שם בלבד. ללא טקסט הסבר.
-          תחושת app-drawer נקייה: כל אפליקציה תופסת מקום שווה, הלקוח בוחר. */}
-      <Box sx={{ p: 2 }}>
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${apps.length}, 1fr)`,
-          gap: 1.25,
-        }}>
-          {apps.map(app => (
-            <Box
-              key={app.key}
-              role="button"
-              tabIndex={0}
-              onClick={() => open(app.url)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
-              sx={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75,
-                py: 1.5, px: 0.5, borderRadius: '14px',
-                cursor: 'pointer', userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)',
-                border: '1.5px solid',
-                borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                transition: 'all 0.15s',
-                '&:hover': {
-                  bgcolor: isDark ? `${app.color}15` : `${app.color}0E`,
-                  borderColor: `${app.color}55`,
-                  transform: 'translateY(-2px)',
-                  boxShadow: `0 6px 16px ${app.color}30`,
-                },
-                '&:active': { transform: 'scale(0.96)' },
-              }}
-            >
-              {/* אייקון עיגול גדול עם גרדיאנט וצל - תחושה של אייקון אפליקציה */}
-              <Box sx={{
-                width: 54, height: 54, borderRadius: '16px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: `linear-gradient(135deg, ${app.color}, ${app.color}CC)`,
-                boxShadow: `0 4px 12px ${app.color}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
-                '& svg': { fontSize: '28px !important' },
-              }}>
-                {app.icon}
-              </Box>
-              {/* שם בלבד, ללא תיאור משני */}
-              <Typography sx={{
-                fontSize: 12, fontWeight: 800, color: 'text.primary',
-                lineHeight: 1.2, textAlign: 'center',
-              }}>
-                {app.label}
-              </Typography>
+      {/* קו מפריד דק */}
+      <Box sx={{ height: 1, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
+
+      {/* כפתורי אפליקציה - שורה מלאה לכל אחד, רקע בצבע המותג עם גרדיאנט.
+          סגנון "branded action sheet". טקסט וויקון בלבן על רקע צבעוני. */}
+      <Box sx={{ px: 1.25, py: 1.25, display: 'flex', flexDirection: 'column', gap: 0.85 }}>
+        {apps.map(app => (
+          <Box
+            key={app.key}
+            role="button"
+            tabIndex={0}
+            onClick={() => open(app.url)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 1.25,
+              py: 1.25, px: 1.5, borderRadius: '14px',
+              cursor: 'pointer', userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}E0 100%)`,
+              boxShadow: `0 3px 10px ${app.color}55, inset 0 1px 0 rgba(255,255,255,0.2)`,
+              transition: 'transform 0.12s, box-shadow 0.15s',
+              '&:hover': { boxShadow: `0 5px 16px ${app.color}77` },
+              '&:active': { transform: 'scale(0.985)' },
+            }}
+          >
+            <Box sx={{
+              width: 36, height: 36, borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: 'rgba(255,255,255,0.22)',
+              flexShrink: 0,
+              '& svg': { fontSize: '22px !important', color: 'white !important' },
+            }}>
+              {app.icon}
             </Box>
-          ))}
-        </Box>
+            <Typography sx={{ flex: 1, fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: 0.2 }}>
+              {app.label}
+            </Typography>
+            <Typography sx={{ flexShrink: 0, color: 'rgba(255,255,255,0.85)', fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
+              ←
+            </Typography>
+          </Box>
+        ))}
       </Box>
 
       <Typography sx={{
         fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
-        pb: 1.5, px: 2, lineHeight: 1.4,
+        pb: 1.75, px: 2, lineHeight: 1.4,
       }}>
         אם האפליקציה לא מותקנת היא תיפתח בדפדפן
       </Typography>
