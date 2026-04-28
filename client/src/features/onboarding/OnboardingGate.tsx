@@ -259,6 +259,9 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
   useEffect(() => {
     if (!enabled) return;
     if (safeStorage.get(STORAGE_KEY) === '1') return;
+    // הגנה מהדפלוי: אם הופעל בסשן הזה (טאב הזה) - לא נראה שוב גם אחרי reload של ה-SW
+    try { if (sessionStorage.getItem('sb_onboarding_session_shown') === '1') return; } catch { /* */ }
+    try { sessionStorage.setItem('sb_onboarding_session_shown', '1'); } catch { /* */ }
     setShow(true);
   }, [enabled]);
 
