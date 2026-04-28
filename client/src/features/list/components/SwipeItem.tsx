@@ -350,7 +350,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           willChange: swiping ? 'transform' : 'auto',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
-          WebkitTapHighlightColor: 'transparent'
+          WebkitTapHighlightColor: 'transparent',
+          '@media (max-width: 360px)': { px: '10px', gap: '8px', borderRadius: '11px' },
+          '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
         }}
       >
         {selectionMode && (
@@ -376,6 +378,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             justifyContent: 'center',
             fontSize: 20,
             flexShrink: 0,
+            '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17, borderRadius: '9px' },
+            '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15, borderRadius: '8px' },
           }}
         >
           {icon}
@@ -392,6 +396,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                '@media (max-width: 360px)': { fontSize: '13.5px' },
+                '@media (max-width: 320px)': { fontSize: '12.5px' },
               }}
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}

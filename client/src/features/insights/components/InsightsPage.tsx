@@ -214,7 +214,8 @@ export const InsightsPage = memo(() => {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 5 }}>
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
-        background: isDark ? 'linear-gradient(160deg, #312E81, #5B21B6, #7C3AED)' : 'linear-gradient(160deg, #6D28D9, #7C3AED, #A78BFA)',
+        // הדר בצבעי האפליקציה - טורקיז במקום סגול, אחיד עם שאר המסכים
+        background: isDark ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)' : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
         // Padding-top הוקטן (50px במקום 70px) - חוסך 20px לתוכן.
         p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
         borderRadius: '0 0 24px 24px',
@@ -284,33 +285,17 @@ export const InsightsPage = memo(() => {
       {(() => {
         type Insight = { emoji: string; title: string; subtitle?: string; gradient: string };
         let insight: Insight | null = null;
-        if (tab === 'price' && priceData) {
-          const cheapest = priceData.chainTotals?.find(c => c.isCheapest);
-          const completeChains = priceData.chainTotals?.filter(c => c.isComplete && c.matchedCount > 0) ?? [];
-          const maxTotal = completeChains.length > 1 ? Math.max(...completeChains.map(c => c.total)) : 0;
-          const savings = cheapest && maxTotal > cheapest.total ? maxTotal - cheapest.total : 0;
-          if (cheapest && savings > 0) {
-            insight = {
-              emoji: '💰',
-              title: `חוסכים ₪${savings.toFixed(0)} ב${cheapest.chainName}`,
-              subtitle: `סל שלם של ₪${cheapest.total.toFixed(0)} · הזולה היום`,
-              gradient: 'linear-gradient(135deg, #10B981, #059669)',
-            };
-          } else if (cheapest) {
-            insight = {
-              emoji: '🛒',
-              title: `הסל הזול ב${cheapest.chainName}`,
-              subtitle: `₪${cheapest.total.toFixed(0)} · ${cheapest.matchedCount} מוצרים`,
-              gradient: 'linear-gradient(135deg, #10B981, #059669)',
-            };
-          }
+        // טאב מחירים: כרטיס Hero של PriceComparisonCard כבר מציג 'הזול ב-X' באופן בולט -
+        // אין צורך בכרטיס "תובנת היום" נוסף שיציג אותו דבר. מדלגים כדי למנוע כפילות.
+        if (tab === 'price') {
+          insight = null;
         } else if (tab === 'lists' && groupStats?.[0]) {
           const top = groupStats[0];
           insight = {
             emoji: '📋',
             title: `${top.name} — הכי פעילה`,
             subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
-            gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
           };
         } else if (tab === 'habits' && topProducts?.[0]) {
           const top = topProducts[0];
@@ -318,7 +303,7 @@ export const InsightsPage = memo(() => {
             emoji: '🏆',
             title: `${top.name} — מוצר השבוע`,
             subtitle: `הוספתם ${top.count} פעמים`,
-            gradient: 'linear-gradient(135deg, #F59E0B, #D97706)',
+            gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
           };
         } else if (tab === 'pulse' && shoppingScore !== undefined) {
           const label = shoppingScore >= 80 ? 'אלוף!' : shoppingScore >= 60 ? 'בדרך הנכונה' : shoppingScore >= 40 ? 'מתפתחים' : 'יש לאן לצמוח';
@@ -531,7 +516,8 @@ export const InsightsPage = memo(() => {
         {/* ===== רשימות ===== */}
         {tab === 'lists' && (() => {
           // פלטת צבעים קבועה לחברי קבוצה
-          const memberPalette = ['#8B5CF6', '#14B8A6', '#F59E0B', '#EC4899', '#3B82F6', '#22C55E', '#EF4444'];
+          // חברי קבוצה - טורקיז ראשון (תואם לאפליקציה), שאר הצבעים לבידול בלבד
+          const memberPalette = ['#14B8A6', '#0D9488', '#3B82F6', '#22C55E', '#A16207', '#EC4899', '#EF4444'];
           // מקור האמת: priceData.lists (כל הרשימות הפעילות עם מטא-דאטה), עם fallback ל-groupStats.
           const listsToShow = priceData?.lists && priceData.lists.length > 0 ? priceData.lists : null;
           const hasAnything = (listsToShow && listsToShow.length > 0) || groupStats.length > 0;
@@ -557,15 +543,15 @@ export const InsightsPage = memo(() => {
 
           return (
             <>
-              <HeroInsight icon="👋" text={heroText} accent="#8B5CF6" isDark={isDark} />
-              {/* שורת סטטיסטיקה ממוקדת-פעילות (לא מחירים) */}
+              <HeroInsight icon="👋" text={heroText} accent="#14B8A6" isDark={isDark} />
+              {/* שורת סטטיסטיקה ממוקדת-פעילות - פלטה אחידה בצבע האפליקציה */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
                 <StatCard
                   value={<AnimatedNumber value={stats.totalLists} />}
                   label="רשימות"
-                  color="#8B5CF6"
-                  bg={isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.05)'}
-                  border="rgba(139,92,246,0.15)"
+                  color="#14B8A6"
+                  bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
+                  border="rgba(20,184,166,0.15)"
                 />
                 <StatCard
                   value={<AnimatedNumber value={stats.totalProducts} />}
@@ -577,9 +563,9 @@ export const InsightsPage = memo(() => {
                 <StatCard
                   value={uniqueMembers.size > 0 ? <AnimatedNumber value={uniqueMembers.size} /> : '—'}
                   label="חברים פעילים"
-                  color="#F59E0B"
-                  bg={isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)'}
-                  border="rgba(245,158,11,0.15)"
+                  color="#14B8A6"
+                  bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
+                  border="rgba(20,184,166,0.15)"
                 />
               </Box>
 
@@ -605,11 +591,11 @@ export const InsightsPage = memo(() => {
                   if (L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0) {
                     const topPct = ((sortedMembers[0].added + sortedMembers[0].purchased) / memberTotalActivity) * 100;
                     if (purchasedPct >= 70) {
-                      insight = { label: 'קצב מעולה', color: '#22C55E', emoji: '⚡' };
+                      insight = { label: 'קצב מעולה', color: '#14B8A6', emoji: '⚡' };
                     } else if (topPct >= 55) {
-                      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#F59E0B', emoji: '👑' };
+                      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#0D9488', emoji: '👑' };
                     } else if (topPct <= 45) {
-                      insight = { label: 'קבוצה מאוזנת', color: '#8B5CF6', emoji: '⚖️' };
+                      insight = { label: 'קבוצה מאוזנת', color: '#14B8A6', emoji: '⚖️' };
                     }
                   }
 
@@ -665,11 +651,11 @@ export const InsightsPage = memo(() => {
                               <Box sx={{
                                 display: 'inline-flex', alignItems: 'center', gap: 0.25,
                                 px: 0.7, py: 0.2, borderRadius: '6px',
-                                bgcolor: 'rgba(139,92,246,0.14)',
-                                border: '1px solid rgba(139,92,246,0.3)',
+                                bgcolor: 'rgba(20,184,166,0.14)',
+                                border: '1px solid rgba(20,184,166,0.3)',
                               }}>
-                                <GroupIcon sx={{ fontSize: 12, color: '#8B5CF6' }} />
-                                <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>
+                                <GroupIcon sx={{ fontSize: 12, color: '#14B8A6' }} />
+                                <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#14B8A6' }}>
                                   {g?.membersCount || 0} חברים
                                 </Typography>
                               </Box>
@@ -945,12 +931,12 @@ export const InsightsPage = memo(() => {
               <StatCard
                 value={<AnimatedNumber value={stats.totalPurchased} />}
                 label={'נקנו בסה"כ'}
-                color="#22C55E"
-                bg={isDark ? 'rgba(34,197,94,0.08)' : 'rgba(34,197,94,0.05)'}
-                border="rgba(34,197,94,0.15)"
+                color="#14B8A6"
+                bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
+                border="rgba(20,184,166,0.15)"
               />
               <StatCard
-                value={topCategoryLabel ? <Typography component="span" sx={{ fontSize: 14, fontWeight: 900, color: 'text.primary' }}>{topCategoryLabel}</Typography> : '—'}
+                value={topCategoryLabel ? <Typography component="span" sx={{ fontSize: 14, fontWeight: 800, color: 'text.primary' }}>{topCategoryLabel}</Typography> : '—'}
                 label={topCategory ? `קטגוריה מובילה · ${topCategory.percentage}%` : 'קטגוריה מובילה'}
                 color="#14B8A6"
                 bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
@@ -959,9 +945,9 @@ export const InsightsPage = memo(() => {
               <StatCard
                 value={bestDayLabel}
                 label={`יום שיא${maxWeekday > 0 ? ` · ${maxWeekday} פעולות` : ''}`}
-                color="#F59E0B"
-                bg={isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)'}
-                border="rgba(245,158,11,0.15)"
+                color="#14B8A6"
+                bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
+                border="rgba(20,184,166,0.15)"
               />
             </Box>
 
@@ -1204,19 +1190,19 @@ export const InsightsPage = memo(() => {
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#22C55E' }} />
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.95 }} />
                       <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
                         <b>יחס השלמה</b> — כמה מהפריטים שנוספו באמת נקנו
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#F59E0B' }} />
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.7 }} />
                       <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
                         <b>רצף שבועות</b> — האם אתה פעיל באופן קבוע
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#8B5CF6' }} />
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.45 }} />
                       <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
                         <b>גיוון קטגוריות</b> — האם אתה קונה מגוון מוצרים
                       </Typography>
@@ -1226,15 +1212,16 @@ export const InsightsPage = memo(() => {
               )}
             </Box>
 
-            {/* מגמה + סטריק + חודש - שורה של 3 */}
+            {/* סטריק + חודש + תדירות - אחיד בטורקיז. הצמיחה החודשית שומרת על
+                סמיוטיקה (ירוק/אדום) כי הצבע שם נושא משמעות, לא קישוט. */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 2 }}>
               {/* סטריק */}
               <Paper elevation={0} sx={{
                 p: 1.25, borderRadius: '12px', textAlign: 'center',
-                bgcolor: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.05)',
-                border: '1px solid rgba(245,158,11,0.15)',
+                bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)',
+                border: '1px solid rgba(20,184,166,0.15)',
               }}>
-                <Typography sx={{ fontSize: 20, fontWeight: 900, color: '#F59E0B', lineHeight: 1 }}>
+                <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', lineHeight: 1 }}>
                   🔥{streaks?.currentWeeks || 0}
                 </Typography>
                 <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
@@ -1242,15 +1229,15 @@ export const InsightsPage = memo(() => {
                 </Typography>
               </Paper>
 
-              {/* חודש */}
+              {/* חודש - שומר ירוק/אדום סמנטי לכיוון השינוי */}
               <Paper elevation={0} sx={{
                 p: 1.25, borderRadius: '12px', textAlign: 'center',
-                bgcolor: isDark ? `${growthColor}18` : `${growthColor}10`,
-                border: `1px solid ${growthColor}30`,
+                bgcolor: isDark ? `${growthColor}14` : `${growthColor}0D`,
+                border: `1px solid ${growthColor}26`,
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
                   <GrowthIcon sx={{ fontSize: 18, color: growthColor }} />
-                  <Typography sx={{ fontSize: 18, fontWeight: 900, color: growthColor, lineHeight: 1 }}>
+                  <Typography sx={{ fontSize: 18, fontWeight: 800, color: growthColor, lineHeight: 1 }}>
                     {growth > 0 ? '+' : ''}{growth}%
                   </Typography>
                 </Box>
@@ -1262,10 +1249,10 @@ export const InsightsPage = memo(() => {
               {/* תדירות קנייה */}
               <Paper elevation={0} sx={{
                 p: 1.25, borderRadius: '12px', textAlign: 'center',
-                bgcolor: isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.05)',
-                border: '1px solid rgba(139,92,246,0.15)',
+                bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)',
+                border: '1px solid rgba(20,184,166,0.15)',
               }}>
-                <Typography sx={{ fontSize: 20, fontWeight: 900, color: '#8B5CF6', lineHeight: 1 }}>
+                <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', lineHeight: 1 }}>
                   {shoppingFrequency?.avgDaysBetween ? `${shoppingFrequency.avgDaysBetween}י׳` : '—'}
                 </Typography>
                 <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
@@ -1317,22 +1304,24 @@ export const InsightsPage = memo(() => {
                           cursor: hasActivity ? 'pointer' : 'default',
                           borderRadius: '4px',
                           p: isSelected ? '3px 2px' : '3px 0',
-                          bgcolor: isSelected ? (isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)') : 'transparent',
+                          bgcolor: isSelected ? (isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.12)') : 'transparent',
                           transition: 'background 0.2s ease',
                           '&:active': hasActivity ? { opacity: 0.8 } : {},
                         }}
                       >
+                        {/* בר נקנו - טורקיז כהה כשנבחר, רגיל כברירת מחדל */}
                         <Box sx={{
                           height: `${(w.purchased / maxWeeklyTrend) * 100}%`,
-                          bgcolor: isSelected ? '#F59E0B' : '#22C55E',
+                          bgcolor: isSelected ? '#0D9488' : '#14B8A6',
                           borderRadius: '3px 3px 0 0', minHeight: w.purchased > 0 ? 3 : 0,
                           transition: 'background 0.2s ease',
                         }} />
+                        {/* בר נשארו - גוון בהיר יותר של אותו צבע */}
                         <Box sx={{
                           height: `${((w.added - w.purchased) / maxWeeklyTrend) * 100}%`,
                           bgcolor: isSelected
-                            ? (isDark ? 'rgba(245,158,11,0.5)' : 'rgba(245,158,11,0.4)')
-                            : (isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'),
+                            ? (isDark ? 'rgba(20,184,166,0.55)' : 'rgba(20,184,166,0.45)')
+                            : (isDark ? 'rgba(20,184,166,0.35)' : 'rgba(20,184,166,0.25)'),
                           borderRadius: '3px 3px 0 0', minHeight: w.added - w.purchased > 0 ? 2 : 0,
                           transition: 'background 0.2s ease',
                         }} />
@@ -1345,7 +1334,7 @@ export const InsightsPage = memo(() => {
                   {weeklyTrends.map((w, i) => (
                     <Typography key={i} sx={{
                       flex: 1, fontSize: 8.5, textAlign: 'center',
-                      color: selectedWeekIdx === i ? '#F59E0B' : 'text.disabled',
+                      color: selectedWeekIdx === i ? '#14B8A6' : 'text.disabled',
                       fontWeight: selectedWeekIdx === i ? 800 : 600,
                     }}>
                       {w.week}
@@ -1422,8 +1411,9 @@ export const InsightsPage = memo(() => {
                             : `rgba(20,184,166,${0.18 + intensity * 0.6})`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           mb: 0.5,
-                          border: isSelected ? '2px solid #F59E0B' : isBest ? '1.5px solid #14B8A6' : '1.5px solid transparent',
-                          boxShadow: isSelected ? '0 2px 12px rgba(245,158,11,0.45)' : isBest ? '0 2px 10px rgba(20,184,166,0.4)' : 'none',
+                          // נבחר: גוון כהה של טורקיז; שיא: גוון רגיל של טורקיז
+                          border: isSelected ? '2px solid #0D9488' : isBest ? '1.5px solid #14B8A6' : '1.5px solid transparent',
+                          boxShadow: isSelected ? '0 2px 12px rgba(13,148,136,0.45)' : isBest ? '0 2px 10px rgba(20,184,166,0.4)' : 'none',
                           transition: 'border 0.2s, box-shadow 0.2s',
                         }}>
                           <Typography sx={{ fontSize: 11, fontWeight: 800, color: count > 0 ? 'white' : 'text.disabled' }}>
@@ -1432,7 +1422,7 @@ export const InsightsPage = memo(() => {
                         </Box>
                         <Typography sx={{
                           fontSize: 10, fontWeight: 700,
-                          color: isSelected ? '#F59E0B' : isBest ? '#14B8A6' : 'text.secondary',
+                          color: isSelected ? '#0D9488' : isBest ? '#14B8A6' : 'text.secondary',
                         }}>
                           {dayLabels[i]}
                         </Typography>

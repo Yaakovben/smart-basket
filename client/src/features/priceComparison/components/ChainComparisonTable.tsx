@@ -472,15 +472,25 @@ const SortBar = memo(({ sortMode, setSortMode, isDark }: {
           borderColor: active ? '#7C3AED' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
           transition: 'all 0.12s',
           '&:active': { opacity: 0.85, transform: 'scale(0.98)' },
+          '@media (max-width: 360px)': { py: 0.55, px: 0.5, borderRadius: '10px' },
+          '@media (max-width: 320px)': { py: 0.4, px: 0.35, borderRadius: '8px' },
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
-          <Box sx={{ fontSize: 15, lineHeight: 1 }}>{emoji}</Box>
-          <Typography sx={{ fontSize: 12, fontWeight: active ? 800 : 700, color: active ? '#7C3AED' : 'text.primary' }}>
+          <Box sx={{ fontSize: 15, lineHeight: 1, '@media (max-width: 360px)': { fontSize: 13 }, '@media (max-width: 320px)': { fontSize: 12 } }}>{emoji}</Box>
+          <Typography sx={{
+            fontSize: 12, fontWeight: active ? 800 : 700, color: active ? '#7C3AED' : 'text.primary',
+            '@media (max-width: 360px)': { fontSize: 11 },
+            '@media (max-width: 320px)': { fontSize: 10 },
+          }}>
             {label}
           </Typography>
         </Box>
-        <Typography sx={{ fontSize: 9, color: active ? '#7C3AED' : 'text.disabled', fontWeight: 500, letterSpacing: 0.2 }}>
+        <Typography sx={{
+          fontSize: 9, color: active ? '#7C3AED' : 'text.disabled', fontWeight: 500, letterSpacing: 0.2,
+          // hint מוסתר במסך זעיר - חוסך גובה, רק התווית הקצרה נשארת
+          '@media (max-width: 360px)': { display: 'none' },
+        }}>
           {hint}
         </Typography>
       </Box>

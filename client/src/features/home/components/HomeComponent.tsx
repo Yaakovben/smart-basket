@@ -1491,7 +1491,9 @@ export const HomeComponent = memo(({
           alignItems: 'center',
           py: { xs: 1, sm: 1.25 },
           px: { xs: 3, sm: 4 },
-          boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)'
+          boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)',
+          '@media (max-width: 360px)': { py: 0.65, px: 2 },
+          '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
         <Box

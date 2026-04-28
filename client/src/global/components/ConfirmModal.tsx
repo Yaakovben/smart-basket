@@ -63,7 +63,9 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
           maxWidth: 320,
           position: 'relative',
           bottom: 'auto',
-          m: 'auto'
+          m: 'auto',
+          '@media (max-width: 360px)': { p: 2, borderRadius: '16px', width: '94%' },
+          '@media (max-width: 320px)': { p: 1.5, borderRadius: '14px', width: '96%' },
         }
       }}
       sx={{
@@ -75,11 +77,23 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
         }
       }}
     >
-      <DialogTitle id="confirm-dialog-title" sx={{ p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: 'text.primary' }}>
+      <DialogTitle id="confirm-dialog-title" sx={{
+        p: 0, mb: 1.5, textAlign: 'center', fontWeight: 700, fontSize: 18, color: 'text.primary',
+        '@media (max-width: 360px)': { fontSize: 16, mb: 1 },
+        '@media (max-width: 320px)': { fontSize: 15, mb: 0.75 },
+      }}>
         {title}
       </DialogTitle>
-      <DialogContent sx={{ p: 0, mb: 3 }}>
-        <Typography id="confirm-dialog-description" sx={{ textAlign: 'center', color: 'text.secondary', fontSize: 15, whiteSpace: 'pre-line' }}>
+      <DialogContent sx={{
+        p: 0, mb: 3,
+        '@media (max-width: 360px)': { mb: 2 },
+        '@media (max-width: 320px)': { mb: 1.5 },
+      }}>
+        <Typography id="confirm-dialog-description" sx={{
+          textAlign: 'center', color: 'text.secondary', fontSize: 15, whiteSpace: 'pre-line',
+          '@media (max-width: 360px)': { fontSize: 13.5 },
+          '@media (max-width: 320px)': { fontSize: 12.5 },
+        }}>
           {message}
         </Typography>
       </DialogContent>

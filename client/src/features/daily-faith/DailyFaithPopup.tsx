@@ -105,6 +105,13 @@ export const DailyFaithPopup = ({ text, onClose }: DailyFaithPopupProps) => {
             justifyContent: 'center',
             gap: 3,
             overflow: 'hidden',
+            // מסכים זעירים - padding/gap מצומצמים, גובה דינמי
+            '@media (max-width: 360px)': { px: 2, py: 3.5, gap: 2, minHeight: 240, borderRadius: '16px' },
+            '@media (max-width: 320px)': { px: 1.5, py: 2.75, gap: 1.5, minHeight: 220, borderRadius: '14px' },
+            // Landscape - pull tight, נשאר בתוך מסך נמוך
+            '@media (orientation: landscape) and (max-height: 500px)': {
+              px: 2, py: 2, gap: 1.25, minHeight: 0,
+            },
           }}
         >
           {/* קישוטים בפינות */}
