@@ -712,12 +712,18 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   position: 'relative',
                   userSelect: 'none',
                   bgcolor: isCheapest
-                    ? (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)')
+                    ? (sortMode === 'price'
+                        ? (isDark ? 'rgba(16,185,129,0.16)' : 'rgba(16,185,129,0.1)')
+                        : (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)'))
                     : isEmpty
                       ? (isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)')
                     : !isComplete
                       ? (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)')
                       : 'transparent',
+                  // במיון לפי מחיר - מסגרת עדינה ירוקה שמדגישה את הזולה
+                  boxShadow: isCheapest && sortMode === 'price'
+                    ? (isDark ? 'inset 0 0 0 1.5px rgba(16,185,129,0.45)' : 'inset 0 0 0 1.5px rgba(16,185,129,0.35)')
+                    : 'none',
                   // רשת ריקה - עוד יותר שקופה; חלקית - בינונית; שלמה - מלאה
                   opacity: isEmpty ? 0.55 : isComplete ? 1 : 0.72,
                   '&:active': { opacity: 0.85 },
@@ -786,17 +792,43 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                       </Box>
                     )}
                   </Box>
-                  <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.15 }}>
-                    {isEmpty && !chain.hasData
-                      ? `${chain.chainName} לא פרסמה מחירים היום - ננסה שוב בקרוב`
-                      : isEmpty
-                        ? `לא נמצאו התאמות במאגר של ${chain.chainName}`
-                        : `${chain.matchedCount} / ${chain.matchedCount + chain.unmatchedCount} מוצרים זוהו`}
-                  </Typography>
+                  {/* "X מתוך Y מוצרים זוהו" - מודגש יותר בעזרת מספרים בגוון
+                      טורקיז כדי שהמשתמש יראה במבט אחד את שיעור ההתאמה. */}
+                  {!isEmpty ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.2, flexWrap: 'wrap' }}>
+                      <Typography component="span" sx={{
+                        fontSize: 12, fontWeight: 800,
+                        color: isComplete ? '#059669' : '#0F766E',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        {chain.matchedCount} / {chain.matchedCount + chain.unmatchedCount}
+                      </Typography>
+                      <Typography component="span" sx={{ fontSize: 11, color: 'text.secondary' }}>
+                        מוצרים זוהו
+                      </Typography>
+                      {isComplete && (
+                        <Box component="span" sx={{
+                          display: 'inline-flex', alignItems: 'center', px: 0.5, py: 0.05,
+                          borderRadius: '4px', bgcolor: 'rgba(16,185,129,0.15)',
+                          color: '#059669', fontSize: 9, fontWeight: 800, letterSpacing: 0.3, ml: 0.3,
+                        }}>
+                          סל שלם
+                        </Box>
+                      )}
+                    </Box>
+                  ) : (
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.15 }}>
+                      {!chain.hasData
+                        ? `${chain.chainName} לא פרסמה מחירים היום - ננסה שוב בקרוב`
+                        : `לא נמצאו התאמות במאגר של ${chain.chainName}`}
+                    </Typography>
+                  )}
                   {chain.nearestBranch ? (
                     <BranchInfo branch={chain.nearestBranch} isDark={isDark} onOpenPicker={setNavBranch} />
-                  ) : hasAnyLocation && !isEmpty ? (
-                    /* יש מיקום ולרשת אין סניף במאגר - הודעה ברורה ללקוח */
+                  ) : !isEmpty ? (
+                    /* אין סניף במאגר - הודעה תלוית מצב מיקום:
+                        - יש מיקום: "אין סניף של רשת זו במאגר שלנו"
+                        - אין מיקום: "אשר מיקום כדי לראות סניפים קרובים" */
                     <Box sx={{
                       display: 'flex', alignItems: 'center', gap: 0.5,
                       mt: 0.5, p: 0.7, borderRadius: '8px',
@@ -806,7 +838,9 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                     }}>
                       <LocationOnIcon sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }} />
                       <Typography sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 600 }}>
-                        אין סניף של רשת זו במאגר שלנו
+                        {hasAnyLocation
+                          ? 'אין סניף של רשת זו במאגר שלנו'
+                          : 'לא נמצא סניף · אשר מיקום למעלה כדי לראות סניפים קרובים'}
                       </Typography>
                     </Box>
                   ) : null}
