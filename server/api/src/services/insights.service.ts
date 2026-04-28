@@ -24,7 +24,9 @@ export interface InsightsData {
   shoppingScore: number;
   shoppingPersonality: { type: string; emoji: string; description: string };
   streaks: { currentWeeks: number; longestWeeks: number };
-  monthComparison: { productsGrowth: number; completionGrowth: number; previousTotal: number };
+  // hasBaseline=false משמעו שאין נתוני חודש קודם כלל - הצרכן יציג "—" במקום "0%",
+  // כדי לא לבלבל בין "אין שינוי" ל"אין בסיס להשוואה".
+  monthComparison: { productsGrowth: number; completionGrowth: number; previousTotal: number; hasBaseline: boolean };
   weeklyTrends: { week: string; added: number; purchased: number }[];
   groupStats: {
     name: string;
@@ -64,7 +66,7 @@ function emptyInsights(): InsightsData {
     shoppingScore: 0,
     shoppingPersonality: { type: 'מתחיל', emoji: '🌱', description: 'התחל להשתמש באפליקציה כדי לגלות את הפרופיל שלך' },
     streaks: { currentWeeks: 0, longestWeeks: 0 },
-    monthComparison: { productsGrowth: 0, completionGrowth: 0, previousTotal: 0 },
+    monthComparison: { productsGrowth: 0, completionGrowth: 0, previousTotal: 0, hasBaseline: false },
     weeklyTrends: [], groupStats: [],
     categoryCycles: [], upcomingNeeds: [], anomalies: [],
   };
@@ -163,8 +165,11 @@ function detectAnomalies(allProducts: { category: string; createdAt: Date; isPur
 function detectPersonality(
   completionRate: number, avgDays: number, catCount: number, forgottenCount: number, hourly: number[]
 ): InsightsData['shoppingPersonality'] {
-  const peakHour = hourly.indexOf(Math.max(...hourly));
-  const isEarlyBird = peakHour < 12;
+  // הגנה מפני מערך פעילות-שעות ריק (כל הערכים 0): peakHour=0 ב-indexOf
+  // יוביל לפרשנות שגויה של "מתעורר מוקדם". מסמנים -1 כדי לדלג על הסיווג הזה.
+  const hasHourly = hourly.some(v => v > 0);
+  const peakHour = hasHourly ? hourly.indexOf(Math.max(...hourly)) : -1;
+  const isEarlyBird = peakHour >= 0 && peakHour < 12;
   const isConsistent = avgDays > 0 && avgDays <= 7;
   const isDiverse = catCount >= 5;
 
@@ -425,15 +430,19 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
     const prevMonthProducts = allProducts.filter(p => new Date(p.createdAt) >= prevMonthStart && new Date(p.createdAt) < thisMonthStart);
     const prevPurchased = prevMonthProducts.filter(p => p.isPurchased);
     const prevCompletionRate = prevMonthProducts.length > 0 ? Math.round((prevPurchased.length / prevMonthProducts.length) * 100) : 0;
-    const productsGrowth = prevMonthProducts.length > 0 ? Math.round(((thisMonthProducts.length - prevMonthProducts.length) / prevMonthProducts.length) * 100) : 0;
+    const hasBaseline = prevMonthProducts.length > 0;
+    const productsGrowth = hasBaseline ? Math.round(((thisMonthProducts.length - prevMonthProducts.length) / prevMonthProducts.length) * 100) : 0;
 
     // ===== מגמות שבועיות (8 שבועות) =====
     const weeklyTrends: InsightsData['weeklyTrends'] = [];
     for (let i = 7; i >= 0; i--) {
       const ws = new Date(now.getTime() - (i * 7 + now.getDay()) * 86400000);
       const we = new Date(ws.getTime() + 7 * 86400000);
+      // תווית: D/M לשנה הנוכחית, D/M/YY כשהשבוע משנה אחרת (מונע בלבול
+      // בין "15/3" של שנה זו לבין שנה קודמת בתצוגות multi-month).
+      const yearSuffix = ws.getFullYear() !== now.getFullYear() ? `/${String(ws.getFullYear()).slice(-2)}` : '';
       weeklyTrends.push({
-        week: `${ws.getDate()}/${ws.getMonth() + 1}`,
+        week: `${ws.getDate()}/${ws.getMonth() + 1}${yearSuffix}`,
         added: allProducts.filter(p => new Date(p.createdAt) >= ws && new Date(p.createdAt) < we).length,
         purchased: purchasedProducts.filter(p => new Date(p.updatedAt) >= ws && new Date(p.updatedAt) < we).length,
       });
@@ -460,7 +469,7 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
       smartTips, hourlyActivity, weekdayActivity, shoppingScore: score,
       shoppingPersonality: personality,
       streaks: { currentWeeks, longestWeeks },
-      monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length },
+      monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length, hasBaseline },
       weeklyTrends,
       groupStats: await getGroupStats(lists, userId),
       ...((() => {

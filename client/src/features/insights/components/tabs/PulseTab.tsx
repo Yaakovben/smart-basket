@@ -50,14 +50,18 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
 
   const now = Date.now();
+  // הערה: ה-`,1` ב-Math.max מונע חלוקה ב-0 כשאין כלל פעילות. זה גם הסיבה
+  // שהגרפים מוצגים רק כשיש לפחות שבוע/יום אחד עם ערך > 0 (ראה תנאי הרינדור),
+  // אחרת בר אחד קטנטן ייראה ויזואלית מקסימלי.
   const maxWeeklyTrend = Math.max(...(weeklyTrends || []).map(w => Math.max(w.added, w.purchased)), 1);
   const maxWeekday = Math.max(...(weekdayActivity || []), 1);
   const bestDayIdx = weekdayActivity ? weekdayActivity.indexOf(maxWeekday) : -1;
 
+  const hasGrowthBaseline = monthComparison?.hasBaseline ?? false;
   const growth = monthComparison?.productsGrowth ?? 0;
-  const growthPositive = growth > 0;
-  const growthNegative = growth < 0;
-  const growthColor = growthPositive ? '#22C55E' : growthNegative ? '#EF4444' : '#94A3B8';
+  const growthPositive = hasGrowthBaseline && growth > 0;
+  const growthNegative = hasGrowthBaseline && growth < 0;
+  const growthColor = !hasGrowthBaseline ? '#94A3B8' : growthPositive ? '#22C55E' : growthNegative ? '#EF4444' : '#94A3B8';
   const GrowthIcon = growthPositive ? TrendingUpIcon : growthNegative ? TrendingDownIcon : TrendingFlatIcon;
 
   // אין עדיין מספיק נתונים - מסך ריק
@@ -341,11 +345,11 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
             <GrowthIcon sx={{ fontSize: 18, color: growthColor }} />
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: growthColor, lineHeight: 1 }}>
-              {growth > 0 ? '+' : ''}{growth}%
+              {!hasGrowthBaseline ? '—' : `${growth > 0 ? '+' : ''}${growth}%`}
             </Typography>
           </Box>
           <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
-            לעומת חודש שעבר
+            {hasGrowthBaseline ? 'לעומת חודש שעבר' : 'אין עדיין חודש להשוואה'}
           </Typography>
         </Paper>
         <Paper elevation={0} sx={{
@@ -354,7 +358,9 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
           border: '1px solid rgba(20,184,166,0.15)',
         }}>
           <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', lineHeight: 1 }}>
-            {shoppingFrequency?.avgDaysBetween ? `${shoppingFrequency.avgDaysBetween}י׳` : '—'}
+            {shoppingFrequency?.avgDaysBetween
+              ? (shoppingFrequency.avgDaysBetween === 1 ? 'יום' : `${shoppingFrequency.avgDaysBetween} ימים`)
+              : '—'}
           </Typography>
           <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
             בין קניות בממוצע
@@ -384,8 +390,9 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
         </Paper>
       )}
 
-      {/* מגמה שבועית */}
-      {weeklyTrends && weeklyTrends.length > 0 && (
+      {/* מגמה שבועית - רק אם יש לפחות שבוע אחד עם פעילות.
+          בלי הבדיקה הזו `Math.max(..., 1)` יגרום לבר זעיר אחד להראות מקסימלי. */}
+      {weeklyTrends && weeklyTrends.length > 0 && weeklyTrends.some(w => w.added + w.purchased > 0) && (
         <SectionCard title="📊 מגמה שבועית" isDark={isDark}>
           <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 70, mb: 0.75 }}>
             {weeklyTrends.map((w, i) => {
@@ -447,7 +454,7 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
               animation: `${fadeIn} 0.2s ease both`,
             }}>
               <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-                שבוע <b>{weeklyTrends[selectedWeekIdx].week}</b>:
+                שבוע שהתחיל ב-<b>{weeklyTrends[selectedWeekIdx].week}</b>:
                 {' '}<b>{weeklyTrends[selectedWeekIdx].added}</b> נוספו ·
                 {' '}<b>{weeklyTrends[selectedWeekIdx].purchased}</b> נקנו
               </Typography>

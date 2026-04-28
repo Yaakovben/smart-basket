@@ -466,15 +466,17 @@ export const InsightsPage = memo(() => {
                   </Typography>
                 </Box>
               )}
-              {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם */}
+              {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם.
+                  קונטרסט הועצם (bg + טקסט כהה יותר) כדי שלא יוסתר בגלילה. */}
               {priceError && !priceLoading && (
                 <Box sx={{
                   display: 'flex', alignItems: 'center', gap: 1,
-                  px: 1.5, py: 0.85, mb: 1, borderRadius: '10px',
-                  bgcolor: '#F59E0B15', border: '1px solid #F59E0B40',
+                  px: 1.5, py: 0.95, mb: 1, borderRadius: '10px',
+                  bgcolor: isDark ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.16)',
+                  border: '1.5px solid', borderColor: isDark ? 'rgba(245,158,11,0.55)' : 'rgba(245,158,11,0.5)',
                 }}>
                   <Box sx={{ fontSize: 14 }}>⚠️</Box>
-                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#B45309', flex: 1 }}>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#FCD34D' : '#92400E', flex: 1 }}>
                     לא התקבלו נתונים חדשים - מוצגים נתונים מה-cache
                   </Typography>
                 </Box>

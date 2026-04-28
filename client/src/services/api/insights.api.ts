@@ -23,7 +23,9 @@ export interface InsightsData {
   shoppingScore: number;
   shoppingPersonality: { type: string; emoji: string; description: string };
   streaks: { currentWeeks: number; longestWeeks: number };
-  monthComparison: { productsGrowth: number; completionGrowth: number; previousTotal: number };
+  // hasBaseline=false משמעו שאין נתוני חודש קודם להשוות אליו - הצרכן יציג "—"
+  // במקום "0%" כדי לא לבלבל בין "אין שינוי" ל"אין בסיס".
+  monthComparison: { productsGrowth: number; completionGrowth: number; previousTotal: number; hasBaseline: boolean };
   weeklyTrends: { week: string; added: number; purchased: number }[];
   groupStats: {
     name: string;
