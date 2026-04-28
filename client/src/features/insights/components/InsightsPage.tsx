@@ -766,6 +766,38 @@ export const InsightsPage = memo(() => {
                         </Box>
                       )}
 
+                      {/* השוואה מול ממוצע החברים - מוצג רק כשיש 2+ חברים פעילים אחרים. */}
+                      {L.isGroup && g?.userContribution && sortedMembers.length >= 3 && (
+                        (() => {
+                          const uc = g.userContribution!;
+                          const pct = uc.vsAvgAddedPct;
+                          // צבע ותווית: <80=מתחת, 80-120=בערך ממוצע, >120=מעל
+                          const above = pct > 120;
+                          const below = pct < 80;
+                          const tone = above ? '#10B981' : below ? '#F59E0B' : '#6B7280';
+                          const verdict = above ? `+${pct - 100}% מעל הממוצע` : below ? `${pct - 100}% מתחת לממוצע` : 'בערך כמו הממוצע';
+                          const emoji = above ? '🚀' : below ? '🌱' : '⚖️';
+                          return (
+                            <Box sx={{
+                              mt: 0.75, px: 1, py: 0.55, borderRadius: '8px',
+                              display: 'flex', alignItems: 'center', gap: 0.65,
+                              bgcolor: isDark ? `${tone}18` : `${tone}12`,
+                              border: '1px solid', borderColor: `${tone}40`,
+                            }}>
+                              <Typography sx={{ fontSize: 13, lineHeight: 1 }}>{emoji}</Typography>
+                              <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: tone, lineHeight: 1.3, flex: 1 }}>
+                                {verdict} בהוספות
+                              </Typography>
+                              {pct < 999 && (
+                                <Typography sx={{ fontSize: 10, fontWeight: 800, color: tone, fontVariantNumeric: 'tabular-nums' }}>
+                                  {pct}%
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })()
+                      )}
+
                       {/* חלוקת חברים - רק אם יש קבוצה עם יותר מחבר אחד ויש פעילות */}
                       {L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0 && (
                         <>

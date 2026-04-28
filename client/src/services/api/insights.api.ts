@@ -32,6 +32,13 @@ export interface InsightsData {
     topContributor: { name: string; count: number } | null;
     topBuyer: { name: string; count: number } | null;
     memberBreakdown: { name: string; added: number; purchased: number }[];
+    userContribution: {
+      added: number;
+      purchased: number;
+      vsAvgAddedPct: number;
+      vsAvgPurchasedPct: number;
+      rankAdded: number;
+    } | null;
   }[];
   categoryCycles: { category: string; avgDays: number; lastPurchased: string; samples: number }[];
   upcomingNeeds: { category: string; daysOverdue: number; nextDateISO: string }[];

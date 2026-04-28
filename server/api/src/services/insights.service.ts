@@ -33,6 +33,15 @@ export interface InsightsData {
     topContributor: { name: string; count: number } | null;
     topBuyer: { name: string; count: number } | null;
     memberBreakdown: { name: string; added: number; purchased: number }[];
+    // התרומה של המשתמש הנוכחי בקבוצה לעומת הממוצע של החברים האחרים.
+    // pct=100 = ממוצע, pct=200 = פי-2 מהממוצע, pct=0 = לא תורם בכלל.
+    userContribution: {
+      added: number;
+      purchased: number;
+      vsAvgAddedPct: number;
+      vsAvgPurchasedPct: number;
+      rankAdded: number; // המקום של המשתמש מבין החברים (1=ראשון)
+    } | null;
   }[];
   // מחזורי קטגוריה - כל כמה ימים המשתמש קונה מקטגוריה מסוימת.
   // מחושב מהממוצע בין רכישות חוזרות באותה קטגוריה.
@@ -181,7 +190,7 @@ function detectPersonality(
 }
 
 // סטטיסטיקות ברמת קבוצה: מי הכי תורם, מי הכי קונה, פירוט חברים
-async function getGroupStats(lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[], _userId: string): Promise<InsightsData['groupStats']> {
+async function getGroupStats(lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[], userId: string): Promise<InsightsData['groupStats']> {
   const groupLists = lists.filter(l => l.isGroup && l.members.length > 0);
   if (groupLists.length === 0) return [];
 
@@ -194,8 +203,8 @@ async function getGroupStats(lists: { _id: any; name: string; icon: string; isGr
 
     if (products.length === 0) continue;
 
-    // ספירה לפי משתמש: מי הוסיף ומי קנה
-    const memberStats = new Map<string, { name: string; added: number; purchased: number }>();
+    // ספירה לפי משתמש: מי הוסיף ומי קנה. שומר גם userId כדי לזהות את המשתמש הנוכחי.
+    const memberStats = new Map<string, { id: string; name: string; added: number; purchased: number }>();
 
     for (const p of products) {
       const addedByName = (p.addedBy && typeof p.addedBy === 'object' && 'name' in p.addedBy)
@@ -204,16 +213,37 @@ async function getGroupStats(lists: { _id: any; name: string; icon: string; isGr
         ? (p.addedBy as { _id: any })._id.toString() : '';
 
       if (!memberStats.has(addedById)) {
-        memberStats.set(addedById, { name: addedByName, added: 0, purchased: 0 });
+        memberStats.set(addedById, { id: addedById, name: addedByName, added: 0, purchased: 0 });
       }
       const stat = memberStats.get(addedById)!;
       stat.added++;
       if (p.isPurchased) stat.purchased++;
     }
 
-    const breakdown = Array.from(memberStats.values()).sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
-    const topContributor = breakdown.length > 0 ? { name: breakdown[0].name, count: breakdown[0].added } : null;
-    const topBuyer = breakdown.reduce((best, cur) => cur.purchased > (best?.count || 0) ? { name: cur.name, count: cur.purchased } : best, null as { name: string; count: number } | null);
+    const breakdownFull = Array.from(memberStats.values()).sort((a, b) => (b.added + b.purchased) - (a.added + a.purchased));
+    const breakdown = breakdownFull.map(({ name, added, purchased }) => ({ name, added, purchased }));
+    const topContributor = breakdownFull.length > 0 ? { name: breakdownFull[0].name, count: breakdownFull[0].added } : null;
+    const topBuyer = breakdownFull.reduce((best, cur) => cur.purchased > (best?.count || 0) ? { name: cur.name, count: cur.purchased } : best, null as { name: string; count: number } | null);
+
+    // חישוב תרומה של המשתמש הנוכחי לעומת ממוצע החברים האחרים
+    const currentUser = breakdownFull.find(m => m.id === userId);
+    const others = breakdownFull.filter(m => m.id !== userId);
+    let userContribution: InsightsData['groupStats'][0]['userContribution'] = null;
+    if (currentUser) {
+      const avgAdded = others.length > 0 ? others.reduce((s, m) => s + m.added, 0) / others.length : 0;
+      const avgPurchased = others.length > 0 ? others.reduce((s, m) => s + m.purchased, 0) / others.length : 0;
+      // pct: 100 = ממוצע, 200 = פי-2 מהממוצע. 0 כשאין אחרים פעילים.
+      const vsAvgAddedPct = avgAdded > 0 ? Math.round((currentUser.added / avgAdded) * 100) : (currentUser.added > 0 ? 999 : 0);
+      const vsAvgPurchasedPct = avgPurchased > 0 ? Math.round((currentUser.purchased / avgPurchased) * 100) : (currentUser.purchased > 0 ? 999 : 0);
+      const rankAdded = breakdownFull.sort((a, b) => b.added - a.added).findIndex(m => m.id === userId) + 1;
+      userContribution = {
+        added: currentUser.added,
+        purchased: currentUser.purchased,
+        vsAvgAddedPct: Math.min(vsAvgAddedPct, 999),
+        vsAvgPurchasedPct: Math.min(vsAvgPurchasedPct, 999),
+        rankAdded,
+      };
+    }
 
     results.push({
       name: list.name,
@@ -222,6 +252,7 @@ async function getGroupStats(lists: { _id: any; name: string; icon: string; isGr
       topContributor,
       topBuyer,
       memberBreakdown: breakdown,
+      userContribution,
     });
   }
 
