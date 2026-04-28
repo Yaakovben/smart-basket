@@ -228,6 +228,20 @@ export const PriceSyncManager = ({ onClose }: Props) => {
   const totalPrices = status?.totalPrices ?? 0;
   const chains = status?.chains ?? [];
   const totalBranches = chains.reduce((s, c) => s + (c.branchCount ?? 0), 0);
+  const totalBranchesWithCoords = chains.reduce((s, c) => s + (c.branchesWithCoords ?? 0), 0);
+
+  // פילטר לפי סטטוס - לזיהוי מהיר של רשתות עם בעיות
+  const [statusFilter, setStatusFilter] = useState<'all' | 'errors' | 'no_branches' | 'no_prices'>('all');
+  const filteredChains = chains.filter(c => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'errors') return !!c.lastSyncError;
+    if (statusFilter === 'no_branches') return !c.branchCount || c.branchCount === 0;
+    if (statusFilter === 'no_prices') return c.count === 0;
+    return true;
+  });
+  const errorCount = chains.filter(c => !!c.lastSyncError).length;
+  const noBranchCount = chains.filter(c => !c.branchCount || c.branchCount === 0).length;
+  const noPriceCount = chains.filter(c => c.count === 0).length;
 
   // הרחבת רשת - בלחיצה טוענים את הסניפים שלה
   const [expandedChain, setExpandedChain] = useState<string | null>(null);
@@ -300,7 +314,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
           </Box>
         ) : (
           <>
-            {/* ===== כרטיסי סיכום: מחירים + סניפים ===== */}
+            {/* ===== כרטיסי סיכום: מחירים + סניפים + סניפים עם מיקום ===== */}
             <Box sx={{ display: 'flex', gap: 1 }}>
               <StatCard
                 icon={<StorefrontIcon sx={{ fontSize: 14, color: '#0D9488' }} />}
@@ -310,10 +324,17 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                 isDark={isDark}
               />
               <StatCard
-                icon={<PlaceIcon sx={{ fontSize: 14, color: '#7C3AED' }} />}
+                icon={<PlaceIcon sx={{ fontSize: 14, color: '#0D9488' }} />}
                 value={totalBranches.toLocaleString('he-IL')}
                 label="סניפים"
-                color="#7C3AED"
+                color="#14B8A6"
+                isDark={isDark}
+              />
+              <StatCard
+                icon={<PlaceIcon sx={{ fontSize: 14, color: '#0D9488' }} />}
+                value={`${totalBranchesWithCoords}/${totalBranches}`}
+                label="עם מיקום"
+                color="#14B8A6"
                 isDark={isDark}
               />
             </Box>
@@ -336,16 +357,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               return (
                 <Box sx={{
                   p: 1.5, borderRadius: '12px',
-                  bgcolor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.07)',
-                  border: '1px solid', borderColor: isDark ? 'rgba(167,139,250,0.35)' : 'rgba(124,58,237,0.2)',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.07)',
+                  border: '1px solid', borderColor: isDark ? 'rgba(94,234,212,0.35)' : 'rgba(20,184,166,0.2)',
                 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.85 }}>
-                    <SyncIcon sx={{ fontSize: 17, color: '#7C3AED', animation: `${spin} 1.8s linear infinite` }} />
-                    <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#7C3AED', flex: 1 }}>
+                    <SyncIcon sx={{ fontSize: 17, color: '#14B8A6', animation: `${spin} 1.8s linear infinite` }} />
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#14B8A6', flex: 1 }}>
                       {prog?.active ? 'סנכרון מחירים' : branchActive ? 'סנכרון סניפים' : 'סנכרון פעיל'}
                     </Typography>
                     {total > 0 && (
-                      <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED', fontVariantNumeric: 'tabular-nums' }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#14B8A6', fontVariantNumeric: 'tabular-nums' }}>
                         {pct}%
                       </Typography>
                     )}
@@ -356,7 +377,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     sx={{
                       height: 6, borderRadius: 3,
                       bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                      '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #7C3AED, #A78BFA)' },
+                      '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #14B8A6, #5EEAD4)' },
                     }}
                   />
                   {total > 0 && prog?.currentChainName && done < total && (
@@ -391,9 +412,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   size="small"
                   onClick={() => setBulkOpen(v => !v)}
                   sx={{
-                    fontSize: 11, color: '#7C3AED', textTransform: 'none',
+                    fontSize: 11, color: '#14B8A6', textTransform: 'none',
                     minHeight: 0, py: 0.4, px: 1,
-                    '&:hover': { bgcolor: 'rgba(124,58,237,0.05)' },
+                    '&:hover': { bgcolor: 'rgba(20,184,166,0.05)' },
                   }}
                 >
                   📥 ייבוא המוני
@@ -429,11 +450,11 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               {bulkOpen && (
                 <Box sx={{
                   p: 1.25, borderRadius: '12px',
-                  bgcolor: isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)',
-                  border: '1px solid', borderColor: 'rgba(124,58,237,0.25)',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.06)' : 'rgba(20,184,166,0.04)',
+                  border: '1px solid', borderColor: 'rgba(20,184,166,0.25)',
                   display: 'flex', flexDirection: 'column', gap: 0.75,
                 }}>
-                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED' }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#14B8A6' }}>
                     ייבוא המוני סניפים
                   </Typography>
                   <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.5 }}>
@@ -445,7 +466,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                     onChange={e => setBulkChainId(e.target.value)}
                     style={{
                       padding: '6px 8px', fontSize: 12, borderRadius: 8,
-                      border: '1px solid rgba(124,58,237,0.3)',
+                      border: '1px solid rgba(20,184,166,0.3)',
                       background: isDark ? '#1e1b3a' : 'white',
                       color: isDark ? 'white' : 'black',
                     }}
@@ -472,7 +493,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                       startIcon={bulkLoading ? <CircularProgress size={12} sx={{ color: 'white' }} /> : null}
                       sx={{
                         flex: 1, fontSize: 12, py: 0.6, textTransform: 'none',
-                        bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' },
+                        bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' },
                       }}
                     >
                       {bulkLoading ? 'מייבא...' : `ייבא ל-${chains.find(c => c.chainId === bulkChainId)?.chainName}`}
@@ -508,8 +529,54 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               </Box>
             )}
 
+            {/* ===== פילטר רשתות לפי סטטוס - לזיהוי מהיר של בעיות ===== */}
+            {chains.length > 0 && (errorCount > 0 || noBranchCount > 0 || noPriceCount > 0) && (() => {
+              const FilterChip = ({ value, label, count, color }: { value: typeof statusFilter; label: string; count?: number; color?: string }) => {
+                const active = statusFilter === value;
+                const bg = active ? (color ? `${color}22` : 'rgba(20,184,166,0.18)') : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)');
+                const border = active ? (color || '#14B8A6') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)');
+                const txt = active ? (color || '#0F766E') : 'text.primary';
+                return (
+                  <Box
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { haptic('light'); setStatusFilter(value); }}
+                    sx={{
+                      display: 'inline-flex', alignItems: 'center', gap: 0.4,
+                      px: 1, py: 0.4, borderRadius: '999px',
+                      cursor: 'pointer', userSelect: 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      bgcolor: bg, border: '1px solid', borderColor: border,
+                      transition: 'all 0.12s',
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 11, fontWeight: active ? 800 : 700, color: txt }}>
+                      {label}
+                    </Typography>
+                    {count !== undefined && count > 0 && (
+                      <Typography sx={{
+                        fontSize: 10, fontWeight: 800,
+                        color: active ? (color || '#0F766E') : 'text.disabled',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        {count}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              };
+              return (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, px: 0.25 }}>
+                  <FilterChip value="all" label="הכל" count={chains.length} />
+                  {errorCount > 0 && <FilterChip value="errors" label="עם שגיאות" count={errorCount} color="#EF4444" />}
+                  {noBranchCount > 0 && <FilterChip value="no_branches" label="ללא סניפים" count={noBranchCount} color="#F59E0B" />}
+                  {noPriceCount > 0 && <FilterChip value="no_prices" label="ללא מחירים" count={noPriceCount} color="#F59E0B" />}
+                </Box>
+              );
+            })()}
+
             {/* ===== רשימת רשתות ===== */}
-            {chains.length > 0 && (
+            {filteredChains.length > 0 && (
               <Box sx={{
                 borderRadius: '12px',
                 border: '1px solid', borderColor: 'divider',
@@ -521,10 +588,10 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   borderBottom: '1px solid', borderColor: 'divider',
                 }}>
                   <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.secondary', letterSpacing: 0.4 }}>
-                    {chains.length} רשתות · לחיצה תציג סניפים
+                    {filteredChains.length} {filteredChains.length === chains.length ? 'רשתות' : `מתוך ${chains.length} רשתות`} · לחיצה תציג סניפים
                   </Typography>
                 </Box>
-                {chains.map((c) => {
+                {filteredChains.map((c) => {
                   const humanError = c.lastSyncError ? humanizeError(c.lastSyncError) : null;
                   const isHardError = humanError?.severity === 'hard';
                   const isSoftError = humanError?.severity === 'soft';
@@ -544,7 +611,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           px: 2, py: 1.1,
                           cursor: 'pointer', userSelect: 'none',
                           WebkitTapHighlightColor: 'transparent',
-                          bgcolor: isExpanded ? (isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)') : 'transparent',
+                          bgcolor: isExpanded ? (isDark ? 'rgba(20,184,166,0.06)' : 'rgba(20,184,166,0.04)') : 'transparent',
                           '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.02)' },
                           transition: 'background-color 0.12s',
                         }}
@@ -563,7 +630,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             <Typography sx={{ fontSize: 10.5, color: c.count > 0 ? '#0F766E' : 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                               💰 {c.count > 0 ? `${c.count.toLocaleString('he-IL')} מחירים` : 'אין מחירים'}
                             </Typography>
-                            <Typography sx={{ fontSize: 10.5, color: c.branchCount && c.branchCount > 0 ? '#7C3AED' : 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                            <Typography sx={{ fontSize: 10.5, color: c.branchCount && c.branchCount > 0 ? '#14B8A6' : 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                               📍 {c.branchCount && c.branchCount > 0 ? `${c.branchCount} סניפים` : 'אין סניפים'}
                             </Typography>
                           </Box>
@@ -589,7 +656,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                         }}>
                           {isLoadingThis ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
-                              <CircularProgress size={16} sx={{ color: '#7C3AED' }} />
+                              <CircularProgress size={16} sx={{ color: '#14B8A6' }} />
                             </Box>
                           ) : (
                             // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.
@@ -607,7 +674,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                   startIcon={<AddCircleIcon sx={{ fontSize: 14 }} />}
                                   onClick={() => setAddingBranch(addingBranch === c.chainId ? null : c.chainId)}
                                   sx={{
-                                    fontSize: 10.5, fontWeight: 800, color: '#7C3AED', textTransform: 'none',
+                                    fontSize: 10.5, fontWeight: 800, color: '#14B8A6', textTransform: 'none',
                                     minHeight: 0, py: 0.3, px: 1, borderRadius: '6px',
                                     '& .MuiButton-startIcon': { marginInlineEnd: 0.4 },
                                   }}
@@ -620,8 +687,8 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                               {addingBranch === c.chainId && (
                                 <Box sx={{
                                   p: 1, mb: 0.6, borderRadius: '8px',
-                                  bgcolor: isDark ? 'rgba(124,58,237,0.08)' : 'rgba(124,58,237,0.04)',
-                                  border: '1px dashed', borderColor: 'rgba(124,58,237,0.3)',
+                                  bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.04)',
+                                  border: '1px dashed', borderColor: 'rgba(20,184,166,0.3)',
                                   display: 'flex', flexDirection: 'column', gap: 0.6,
                                 }}>
                                   <TextField size="small" placeholder="שם הסניף *" value={newBranch.storeName}
@@ -645,7 +712,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                   </Box>
                                   <Box sx={{ display: 'flex', gap: 0.5 }}>
                                     <Button size="small" variant="contained" onClick={() => handleAddBranch(c.chainId)}
-                                      sx={{ flex: 1, fontSize: 11.5, py: 0.5, textTransform: 'none', bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' } }}>
+                                      sx={{ flex: 1, fontSize: 11.5, py: 0.5, textTransform: 'none', bgcolor: '#14B8A6', '&:hover': { bgcolor: '#0D9488' } }}>
                                       שמור
                                     </Button>
                                     <Button size="small" onClick={() => setAddingBranch(null)}
@@ -685,10 +752,10 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                         <Box sx={{
                                           width: 26, height: 26, borderRadius: '8px',
                                           flexShrink: 0,
-                                          bgcolor: b.hasCoords ? 'rgba(124,58,237,0.12)' : 'rgba(148,163,184,0.12)',
+                                          bgcolor: b.hasCoords ? 'rgba(20,184,166,0.12)' : 'rgba(148,163,184,0.12)',
                                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         }}>
-                                          <PlaceIcon sx={{ fontSize: 14, color: b.hasCoords ? '#7C3AED' : 'text.disabled' }} />
+                                          <PlaceIcon sx={{ fontSize: 14, color: b.hasCoords ? '#14B8A6' : 'text.disabled' }} />
                                         </Box>
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
