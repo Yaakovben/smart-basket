@@ -25,9 +25,11 @@ import { NavigationPicker } from './ChainComparisonTable';
 import { haptic } from '../../../global/helpers';
 
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
+// אנימציה עדינה לכרטיס הזול ביותר - הופחתה מ-0.35→0.18 ו-0.55→0.28
+// כדי שהכרטיס יבלוט בעדינות בלי לקפוץ ולהפריע לקריאה.
 const shineGlow = keyframes`
-  0%, 100% { box-shadow: 0 6px 22px rgba(16,185,129,0.35); }
-  50% { box-shadow: 0 8px 28px rgba(16,185,129,0.55); }
+  0%, 100% { box-shadow: 0 3px 10px rgba(16,185,129,0.18); }
+  50% { box-shadow: 0 4px 14px rgba(16,185,129,0.28); }
 `;
 
 interface Props {
@@ -221,7 +223,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                 {chain.hasData ? 'אין התאמות' : 'לא פורסם'}
               </Typography>
             )}
-            {chain.nearestBranch && (
+            {chain.nearestBranch ? (
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
@@ -230,6 +232,14 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                     {chain.nearestBranch.distanceKm.toFixed(1)} ק"מ
                   </Typography>
                 </Box>
+              </>
+            ) : hasMatches && (
+              // אין סניף עם קואורדינטות במאגר OSM - נסביר במפורש למה אין מרחק כאן
+              <>
+                <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
+                <Typography sx={{ fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>
+                  אין סניף במאגר
+                </Typography>
               </>
             )}
           </Box>
