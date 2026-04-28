@@ -126,9 +126,12 @@ export const InsightsPage = memo(() => {
 
   if (loading) return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
-      {/* הדר: באנר עליון עם כותרת וטאבים - שלד שזהה למבנה האמיתי */}
+      {/* הדר: באנר עליון - גרדיאנט תואם בדיוק לעמוד האמיתי כדי שלא יהיה
+          קפיצה ויזואלית כשהטעינה מסתיימת */}
       <Box sx={{
-        background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+        background: isDark
+          ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)'
+          : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
         p: '48px 16px 16px',
         borderRadius: '0 0 24px 24px',
       }}>
