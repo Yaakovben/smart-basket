@@ -10,6 +10,9 @@ const STORAGE_KEY = 'sb_onboarding_done';
 
 type SlideKey = 'lists' | 'group' | 'prices';
 
+// כל פיצ'ר מקבל אימוג'י משלו במקום ✓ גנרי - עוזר לקריאות והתמצאות מהירה
+interface Feature { icon: string; text: string }
+
 interface Slide {
   key: SlideKey;
   bgGradient: string;
@@ -18,9 +21,6 @@ interface Slide {
   subtitle: string;
   features: Feature[];
 }
-
-// כל פיצ'ר מקבל אימוג'י משלו במקום ✓ גנרי - עוזר לקריאות והתמצאות מהירה
-interface Feature { icon: string; text: string }
 
 const slides: Slide[] = [
   {
@@ -422,18 +422,27 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
             {currentSlide + 1} מתוך {slides.length}
           </Typography>
 
-          <IconButton
-            size="small"
+          {/* כפתור דילוג עם טקסט במקום רק X - יותר ברור וזמין למשתמש */}
+          <Box
+            role="button"
+            tabIndex={0}
             onClick={() => { haptic('light'); finish(); }}
-            aria-label="דילוג"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); finish(); } }}
             sx={{
-              color: 'text.disabled',
-              width: 36, height: 36,
-              '&:hover': { bgcolor: 'action.hover' },
+              display: 'inline-flex', alignItems: 'center', gap: 0.4,
+              px: 1.25, py: 0.65, borderRadius: '999px',
+              cursor: 'pointer', userSelect: 'none',
+              color: 'text.secondary',
+              bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+              transition: 'background-color 0.15s, color 0.15s',
+              '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', color: 'text.primary' },
+              '&:active': { opacity: 0.7 },
             }}
+            aria-label="דילוג על המדריך"
           >
-            <CloseIcon sx={{ fontSize: 20 }} />
-          </IconButton>
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3 }}>דלג</Typography>
+            <CloseIcon sx={{ fontSize: 13 }} />
+          </Box>
         </Box>
 
         {/* תצוגה חיה של הפיצ'ר - מוקאפ של מסך אמיתי באפליקציה */}
@@ -521,24 +530,24 @@ export const OnboardingGate = memo(({ enabled }: OnboardingGateProps) => {
                   '@media (max-width: 320px)': { py: 0.35, px: 0.65, gap: 0.65 },
                 }}
               >
+                {/* אייקון ספציפי לפיצ'ר - כל פעולה מקבלת סמל ייעודי במקום ✓ גנרי */}
                 <Box sx={{
-                  width: 22, height: 22, borderRadius: '50%',
-                  background: slide.bgGradient,
+                  width: 28, height: 28, borderRadius: '8px',
+                  background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
-                  boxShadow: `0 2px 6px ${slide.glowColor}`,
-                  fontSize: 12, fontWeight: 900, color: 'white',
-                  '@media (max-width: 360px)': { width: 18, height: 18, fontSize: 10 },
-                  '@media (max-width: 320px)': { width: 16, height: 16, fontSize: 9 },
+                  fontSize: 16,
+                  '@media (max-width: 360px)': { width: 24, height: 24, fontSize: 14, borderRadius: '7px' },
+                  '@media (max-width: 320px)': { width: 22, height: 22, fontSize: 13, borderRadius: '6px' },
                 }}>
-                  ✓
+                  {feature.icon}
                 </Box>
                 <Typography sx={{
                   fontSize: 13, fontWeight: 600, color: 'text.primary', flex: 1, lineHeight: 1.4,
                   '@media (max-width: 360px)': { fontSize: 11.5 },
                   '@media (max-width: 320px)': { fontSize: 10.5 },
                 }}>
-                  {feature}
+                  {feature.text}
                 </Typography>
               </Box>
             ))}
