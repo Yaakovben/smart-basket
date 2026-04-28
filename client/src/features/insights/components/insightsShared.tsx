@@ -63,6 +63,82 @@ export const SectionCard = ({ title, children, isDark }: {
   </Paper>
 );
 
+// ===== מסך ריק עם דמות חמודה - דמות מרכזית, פריטים מרחפים, וטקסט CTA =====
+// שימוש: <InsightsEmptyState mainEmoji="🛍️" title="..." description="..." floatingItems={['🥕','🍞']} accent="#14B8A6" />
+export const InsightsEmptyState = ({
+  mainEmoji,
+  title,
+  description,
+  floatingItems = ['✨', '⭐', '💫', '🌟'],
+  accent = '#14B8A6',
+  isDark,
+}: {
+  mainEmoji: string;
+  title: string;
+  description: string;
+  floatingItems?: string[];
+  accent?: string;
+  isDark: boolean;
+}) => (
+  <Box sx={{
+    textAlign: 'center', py: { xs: 4, sm: 6 },
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    animation: `${fadeIn} 0.5s ease`,
+  }}>
+    {/* דמות חמודה - אייקון מרכזי + halo + 4 פריטים מרחפים */}
+    <Box sx={{ position: 'relative', width: 180, height: 180, mb: 2 }}>
+      {/* halo gradient פולסים */}
+      <Box sx={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        background: isDark
+          ? `radial-gradient(circle at center, ${accent}33, ${accent}08 70%)`
+          : `radial-gradient(circle at center, ${accent}25, ${accent}05 70%)`,
+        animation: `iesPulse 3s ease-in-out infinite`,
+        '@keyframes iesPulse': {
+          '0%, 100%': { transform: 'scale(1)', opacity: 0.7 },
+          '50%': { transform: 'scale(1.08)', opacity: 1 },
+        },
+      }} />
+      {/* אייקון מרכזי - צף */}
+      <Box sx={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 76,
+        animation: `iesFloat 3s ease-in-out infinite`,
+        '@keyframes iesFloat': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      }}>
+        {mainEmoji}
+      </Box>
+      {/* פריטים מרחפים בקצוות */}
+      {floatingItems.slice(0, 4).map((emoji, i) => (
+        <Box key={i} sx={{
+          position: 'absolute',
+          fontSize: 22,
+          top: ['10%', '12%', '70%', '68%'][i],
+          left: ['10%', '78%', '8%', '78%'][i],
+          animation: `iesItem 2.8s ease-in-out ${i * 0.3}s infinite`,
+          '@keyframes iesItem': {
+            '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+            '50%': { transform: 'translateY(-10px) rotate(5deg)', opacity: 1 },
+          },
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+        }}>
+          {emoji}
+        </Box>
+      ))}
+    </Box>
+    <Typography sx={{ fontSize: 17, fontWeight: 800, mb: 0.75, color: 'text.primary' }}>
+      {title}
+    </Typography>
+    <Typography sx={{ fontSize: 13, color: 'text.secondary', maxWidth: 300, mx: 'auto', lineHeight: 1.55, px: 2 }}>
+      {description}
+    </Typography>
+  </Box>
+);
+
 // ===== שורת כותרת אישית בראש כל טאב - מסגור חם אחד, לא עמוס =====
 export const HeroInsight = ({ icon, text, accent, isDark }: {
   icon: string;
