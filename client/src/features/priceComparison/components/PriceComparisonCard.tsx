@@ -141,9 +141,11 @@ interface ChainCardProps {
   expanded: boolean;
   onToggle: () => void;
   onOpenNav: (b: NearestBranch) => void;
+  // תווית רצועה אלכסונית לפינה כשרשת זו מקום ראשון לפי המיון הנוכחי
+  rankRibbon?: { label: string; color: string } | null;
 }
 
-const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav }: ChainCardProps) => {
+const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, rankRibbon }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -172,6 +174,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         borderColor: cardBorder,
         overflow: 'hidden',
         cursor: 'pointer',
+        position: 'relative',
         transition: 'border-color 0.15s, transform 0.1s',
         '&:active': { transform: 'scale(0.99)' },
         ...(isWinner ? { animation: `${shineGlow} 3s ease-in-out infinite` } : {}),
@@ -191,6 +194,35 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
         },
       }}
     >
+      {/* רצועה אלכסונית בפינה - "הכי זול" / "הכי קרוב" / "הכי משתלם".
+          מוצגת רק במקום הראשון לפי המיון הנוכחי. סגנון של רצועת עיתונות. */}
+      {rankRibbon && rank === 1 && (
+        <Box sx={{
+          position: 'absolute',
+          top: 12, insetInlineEnd: -34,
+          width: 130,
+          py: 0.4,
+          background: `linear-gradient(135deg, ${rankRibbon.color}, ${rankRibbon.color}DD)`,
+          color: 'white',
+          textAlign: 'center',
+          fontSize: 10.5, fontWeight: 800, letterSpacing: 0.5,
+          transform: 'rotate(45deg)',
+          transformOrigin: 'center',
+          boxShadow: `0 2px 8px ${rankRibbon.color}66`,
+          pointerEvents: 'none',
+          zIndex: 2,
+          // שורות צל אלכסוניות לתחושת רצועת בד
+          '&::before, &::after': {
+            content: '""', position: 'absolute', top: 0, bottom: 0, width: 6,
+            background: `linear-gradient(90deg, transparent, ${rankRibbon.color}88)`,
+          },
+          '&::before': { insetInlineStart: 0 },
+          '&::after': { insetInlineEnd: 0, transform: 'scaleX(-1)' },
+        }}>
+          {rankRibbon.label}
+        </Box>
+      )}
+
       {/* שורת ה-summary - תמיד נראית */}
       <Box sx={{
         display: 'flex', alignItems: 'center', gap: 1.25,
@@ -665,26 +697,38 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         );
       })()}
 
-      {/* CARDS STACK - כרטיס לכל רשת */}
-      {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {sortedChains.map((chain, idx) => (
-            <ChainCard
-              key={chain.chainId}
-              chain={chain}
-              rank={idx + 1}
-              // הדגשת 'מנצח' מותאמת למיון הנוכחי - מוצגת רק כשהמיון לפי מחיר.
-              // בקרוב/משולב המשתמש לא בוחן 'מי הזול' אז הירוק מסיט תשומת לב.
-              isWinner={sortMode === 'price' && chain.isCheapest}
-              cheapestTotal={cheapest?.total || 0}
-              isDark={isDark}
-              expanded={expandedId === chain.chainId}
-              onToggle={() => toggleExpanded(chain.chainId)}
-              onOpenNav={setNavBranch}
-            />
-          ))}
-        </Box>
-      )}
+      {/* CARDS STACK - כרטיס לכל רשת. תווית פינה לפי מצב המיון:
+          זול → "הכי זול" ירוק; קרוב → "הכי קרוב" סגול; משולב → "הכי משתלם" טורקיז. */}
+      {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
+        const ribbonByMode: Record<SortMode, { label: string; color: string }> = {
+          price: { label: 'הכי זול', color: '#10B981' },
+          distance: { label: 'הכי קרוב', color: '#7C3AED' },
+          combined: { label: 'הכי משתלם', color: '#0D9488' },
+        };
+        // אם המיון דורש מיקום ואין - לא מציגים תווית כי הסדר נופל לפי מחיר
+        const showRibbon = sortMode === 'price' || (hasAnyLocation && (sortMode === 'distance' || sortMode === 'combined'));
+        const ribbon = showRibbon ? ribbonByMode[sortMode] : null;
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {sortedChains.map((chain, idx) => (
+              <ChainCard
+                key={chain.chainId}
+                chain={chain}
+                rank={idx + 1}
+                // הדגשת 'מנצח' מותאמת למיון הנוכחי - מוצגת רק כשהמיון לפי מחיר.
+                // בקרוב/משולב המשתמש לא בוחן 'מי הזול' אז הירוק מסיט תשומת לב.
+                isWinner={sortMode === 'price' && chain.isCheapest}
+                cheapestTotal={cheapest?.total || 0}
+                isDark={isDark}
+                expanded={expandedId === chain.chainId}
+                onToggle={() => toggleExpanded(chain.chainId)}
+                onOpenNav={setNavBranch}
+                rankRibbon={ribbon}
+              />
+            ))}
+          </Box>
+        );
+      })()}
 
       {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
