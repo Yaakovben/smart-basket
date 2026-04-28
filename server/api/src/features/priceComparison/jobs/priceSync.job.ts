@@ -12,9 +12,10 @@ import { logger } from '../../../config/logger';
 let scheduled = false;
 let syncInProgress = false;
 
-// רענון יומי ב-03:00 בלילה (זמן ישראל) - הפורטל מעדכן נתונים בלילה,
-// והעומס על השרת מינימלי. אין סיבה לרוץ יותר מפעם ביום.
-const CRON_EXPRESSION = '0 3 * * *';
+// סנכרון כל 6 שעות (00:00 / 06:00 / 12:00 / 18:00 זמן ישראל). הפורטל מעדכן
+// בעיקר בלילה, אבל תיקונים יכולים להגיע גם במהלך היום. 4 ריצות ביום שומרות
+// על נתונים טריים במשך כל היום עם עומס סביר על השרת.
+const CRON_EXPRESSION = '0 */6 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
 // אם הנתונים ישנים מ-6 שעות בעת הפעלת השרת, נסנכרן מיד ברקע
 const STARTUP_STALENESS_MS = 6 * 60 * 60 * 1000;
@@ -97,7 +98,7 @@ export function startPriceSyncJob(): void {
   );
 
   scheduled = true;
-  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — daily at 03:00`);
+  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — every 6 hours`);
 
   // ===== Startup actions =====
   // 1. אם המחירים ישנים - סנכרון מחירים מיידי
