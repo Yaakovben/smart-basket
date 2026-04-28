@@ -29,6 +29,8 @@ const quantityBtnSx = {
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
 // בצבעי האפליקציה (טורקיז) במקום זהוב. סגור כברירת מחדל - לחיצה פותחת.
 // אפשרות לסגור גם בתוך הפתיחה (כפתור X) - מסיר את ההערה ומחזיר למצב סגור.
+// המראה: כרטיס עם פינה מקופלת ורקע "נייר" עדין - שומר על תחושת "הערה אישית"
+// בלי הקישוטים של "פתק" (סלוטייפ והטיה) שהתחושה שלהם רעשנית מדי לקונטקסט.
 const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
@@ -42,7 +44,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
   return (
     <Box sx={{ mb: 1.25 }}>
       {!isOpen ? (
-        // מצב סגור - פתק מיני מקופל, יצירתי וקטן
+        // מצב סגור - כפתור פתיחה עם פינה מקופלת, ישר ובלי הטיה
         <Box
           role="button"
           tabIndex={0}
@@ -56,10 +58,9 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             WebkitTapHighlightColor: 'transparent',
             color: '#0D9488',
             bgcolor: '#E0F7F4',
-            transform: 'rotate(-1.2deg)',
             boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
             transition: 'all 0.18s',
-            // פינה מקופלת בצד שמאל-עליון
+            // פינה מקופלת בצד שמאל-עליון - הרמז העיצובי היחיד שנשאר ל"נייר"
             clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
             '&::before': {
               content: '""',
@@ -68,26 +69,25 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
               bgcolor: 'rgba(13,148,136,0.25)',
               clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
             },
-            '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
+            '&:hover': { bgcolor: '#CCF1EC', transform: 'translateY(-1px)' },
           }}
         >
           <Typography sx={{ fontSize: 12, lineHeight: 1 }}>📝</Typography>
-          <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
-            הוסף פתק
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700 }}>
+            הוסף הערה
           </Typography>
         </Box>
       ) : (
-        // מצב פתוח - "פתק" עם סלוטייפ, פינה מקופלת ונטייה קלה
+        // מצב פתוח - כרטיס הערה עם פינה מקופלת. בלי סלוטייפ ובלי הטיה.
         <Box sx={{
           position: 'relative',
           mt: 1.5, mb: 0.5,
           px: 1.1, pt: 1.4, pb: 0.9,
           bgcolor: '#E6F9F5',
           backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
-          transform: 'rotate(-0.6deg)',
           boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 6px 14px rgba(0,0,0,0.05)',
           clipPath: 'polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px)',
-          // קווי "מחברת" עדינים ברקע
+          // קווי "מחברת" עדינים ברקע - שומר על תחושת נייר
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
             backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 20px, rgba(20,184,166,0.08) 20px, rgba(20,184,166,0.08) 21px)',
@@ -102,22 +102,16 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             zIndex: 1,
           },
         }}>
-          {/* "סלוטייפ" באמצע למעלה */}
-          <Box sx={{
-            position: 'absolute', top: -8, left: '50%',
-            transform: 'translateX(-50%) rotate(-2deg)',
-            width: 46, height: 14,
-            bgcolor: 'rgba(20,184,166,0.35)',
-            border: '1px dashed rgba(13,148,136,0.4)',
-            borderRadius: '2px',
-            backdropFilter: 'blur(2px)',
-            zIndex: 2,
-          }} />
           <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
             <Typography sx={{ fontSize: 13 }}>📝</Typography>
-            <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3, flex: 1, fontStyle: 'italic' }}>
-              פתק למוצר
-            </Typography>
+            <Box sx={{ flex: 1, lineHeight: 1.1 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3 }}>
+                הערה למוצר
+              </Typography>
+              <Typography sx={{ fontSize: 9, color: 'rgba(13,148,136,0.75)', fontWeight: 600, mt: 0.1 }}>
+                כשרות, אחוז שומן, וכו׳
+              </Typography>
+            </Box>
             <Typography sx={{ fontSize: 9.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
               {value.length}/200
             </Typography>
@@ -148,7 +142,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             autoFocus={expanded && value.length === 0}
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder="רשום לעצמך משהו..."
+            placeholder="פרט על המוצר - כשרות, אחוז שומן וכו׳"
             inputProps={{ maxLength: 200 }}
             sx={{
               position: 'relative', zIndex: 2,
@@ -729,14 +723,13 @@ export const ProductDetailsModal = memo(({
           </Box>
         ))}
       </Box>
-      {/* הערה - מוצגת כפתק מודבק עם סלוטייפ ופינה מקופלת */}
+      {/* הערה - כרטיס עם פינה מקופלת ורקע נייר עדין. בלי סלוטייפ והטיה. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
           mt: 2.5, mb: 0.5,
-          px: 1.5, pt: 1.8, pb: 1.4,
+          px: 1.5, pt: 1.4, pb: 1.4,
           backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
-          transform: 'rotate(-0.8deg)',
           boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 8px 18px rgba(0,0,0,0.06)',
           clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px)',
           '&::after': {
@@ -752,19 +745,10 @@ export const ProductDetailsModal = memo(({
             zIndex: 1,
           },
         }}>
-          <Box sx={{
-            position: 'absolute', top: -8, left: '50%',
-            transform: 'translateX(-50%) rotate(-2deg)',
-            width: 52, height: 15,
-            bgcolor: 'rgba(20,184,166,0.35)',
-            border: '1px dashed rgba(13,148,136,0.4)',
-            borderRadius: '2px',
-            zIndex: 2,
-          }} />
           <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.7 }}>
             <Typography sx={{ fontSize: 14 }}>📝</Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3, fontStyle: 'italic' }}>
-              פתק למוצר
+            <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3 }}>
+              הערה
             </Typography>
           </Box>
           <Typography sx={{
