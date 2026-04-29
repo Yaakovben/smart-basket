@@ -1550,24 +1550,24 @@ export const HomeComponent = memo(({
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
           // ===== חתך עגול במרכז מתחת לכפתור ה-+ =====
-          // pseudo-element בצורת חצי-עיגול בצבע רקע הדף, ממוקם בקצה העליון
-          // של הפס באמצע - יוצר אשליה שהפס "נכרת" סביב הכפתור הצף.
+          // pseudo-element חצי-עיגול בצבע רקע הדף, יוצר נישה שבתוכה יושב
+          // הכפתור. הגודל מותאם בדיוק לכפתור (64px) עם רווח של ~6px מסביב,
+          // כך שנראה כאילו הפס "מקיף" את הכפתור ביד ענוגה.
           '&::before': {
             content: '""',
             position: 'absolute',
             top: -1,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 88,
-            height: 44,
+            width: 76,                          // 64px (כפתור) + 12px רווח
+            height: 38,                         // חצי הרוחב = חצי עיגול
             bgcolor: 'background.default',
             borderBottomLeftRadius: '50%',
             borderBottomRightRadius: '50%',
-            // צל פנימי קל שמדגיש את העומק של החתך
             boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.06)',
             pointerEvents: 'none',
-            '@media (max-width: 360px)': { width: 78, height: 39 },
-            '@media (max-width: 320px)': { width: 70, height: 35 },
+            '@media (max-width: 360px)': { width: 70, height: 35 },
+            '@media (max-width: 320px)': { width: 66, height: 33 },
           },
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
@@ -1600,7 +1600,9 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
 
-        {/* מרכז - כפתור + ענק וצף, בולט מאוד מעל הפס בסגנון "docked FAB" */}
+        {/* מרכז - כפתור + יושב בתוך החתך העגול. ללא מסגרת כדי שהחתך
+            (בצבע background.default) יוצר את הגבול הוויזואלי סביב הכפתור,
+            בדיוק כמו ב-Material BottomAppBar עם FAB. */}
         <Box
           role="button"
           tabIndex={0}
@@ -1609,50 +1611,34 @@ export const HomeComponent = memo(({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
           sx={{
             position: 'relative',
-            mt: -5,                           // מרים את הכפתור 40px מעל פס הניווט
-            width: 72, height: 72, borderRadius: '50%',
+            zIndex: 2,                        // מעל ה-pseudo של החתך
+            mt: -5.25,                        // מרים את הכפתור ~42px מעל הפס
+            width: 64, height: 64, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
             boxShadow: [
-              '0 10px 28px rgba(20,184,166,0.55)',  // צל גדול חיצוני
-              '0 4px 10px rgba(0,0,0,0.18)',        // צל קצר לעומק
-              'inset 0 1px 0 rgba(255,255,255,0.35)', // ברק עליון
-              'inset 0 -2px 0 rgba(0,0,0,0.08)',    // עומק תחתון
+              '0 10px 28px rgba(20,184,166,0.55)',
+              '0 4px 10px rgba(0,0,0,0.18)',
+              'inset 0 1px 0 rgba(255,255,255,0.35)',
+              'inset 0 -2px 0 rgba(0,0,0,0.08)',
             ].join(', '),
-            // הילה שמדגישה שזה "צף מעל"
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              inset: -8,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(20,184,166,0.25) 0%, transparent 70%)',
-              zIndex: -1,
-              pointerEvents: 'none',
-            },
-            // טבעת לבנה רחבה שמפרידה ויזואלית מהפס
-            border: '5px solid',
-            borderColor: 'background.paper',
             transition: 'transform 0.15s, box-shadow 0.15s',
             '&:hover': {
               boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)',
               transform: 'translateY(-1px)',
             },
             '&:active': { transform: 'scale(0.93)' },
-            '@media (max-width: 360px)': {
-              width: 64, height: 64, mt: -4.5,
-              border: '4px solid',
-              borderColor: 'background.paper',
-            },
-            '@media (max-width: 320px)': { width: 58, height: 58, mt: -4 },
+            '@media (max-width: 360px)': { width: 58, height: 58, mt: -5 },
+            '@media (max-width: 320px)': { width: 54, height: 54, mt: -4.5 },
           }}
         >
           <AddIcon sx={{
-            fontSize: 36,
+            fontSize: 34,
             color: 'white',
             filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-            '@media (max-width: 360px)': { fontSize: 32 },
+            '@media (max-width: 360px)': { fontSize: 30 },
             '@media (max-width: 320px)': { fontSize: 28 },
           }} />
         </Box>
