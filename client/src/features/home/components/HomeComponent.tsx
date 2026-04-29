@@ -1549,25 +1549,37 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך עגול במרכז מתחת לכפתור ה-+ =====
-          // pseudo-element חצי-עיגול בצבע רקע הדף, יוצר נישה שבתוכה יושב
-          // הכפתור. הגודל מותאם בדיוק לכפתור (64px) עם רווח של ~6px מסביב,
-          // כך שנראה כאילו הפס "מקיף" את הכפתור ביד ענוגה.
+          // ===== חתך חצי-עיגול אמיתי מתחת ל-+ =====
+          // הפתרון הנכון: border-radius בערכים פיקסליים שווים לרוחב המלא,
+          // כך ששתי קשתות הפינות התחתונות OVERLAP באמצע ויוצרות חצי-עיגול
+          // חלק (במקום U עם פס שטוח באמצע, מה שקרה עם 50%).
+          // הגודל הוגדל גם כן כדי שהחתך יהיה דרמטי כמו בעיצוב המוצג.
           '&::before': {
             content: '""',
             position: 'absolute',
             top: -1,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 76,                          // 64px (כפתור) + 12px רווח
-            height: 38,                         // חצי הרוחב = חצי עיגול
+            width: 96,                                                // רחב יותר מהכפתור 64
+            height: 48,                                               // 50% מהרוחב = חצי עיגול מלא
             bgcolor: 'background.default',
-            borderBottomLeftRadius: '50%',
-            borderBottomRightRadius: '50%',
-            boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.06)',
+            // borderRadius בפיקסלים: H=full-width, V=full-height per corner
+            // שני הקשתות (96×48) חופפות באמצע ויוצרות עקומה חלקה
+            borderBottomLeftRadius: '96px 48px',
+            borderBottomRightRadius: '96px 48px',
+            // צל פנימי קל לתחושת עומק בקצוות החתך
+            boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.08)',
             pointerEvents: 'none',
-            '@media (max-width: 360px)': { width: 70, height: 35 },
-            '@media (max-width: 320px)': { width: 66, height: 33 },
+            '@media (max-width: 360px)': {
+              width: 88, height: 44,
+              borderBottomLeftRadius: '88px 44px',
+              borderBottomRightRadius: '88px 44px',
+            },
+            '@media (max-width: 320px)': {
+              width: 80, height: 40,
+              borderBottomLeftRadius: '80px 40px',
+              borderBottomRightRadius: '80px 40px',
+            },
           },
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
@@ -1612,7 +1624,7 @@ export const HomeComponent = memo(({
           sx={{
             position: 'relative',
             zIndex: 2,                        // מעל ה-pseudo של החתך
-            mt: -5.25,                        // מרים את הכפתור ~42px מעל הפס
+            mt: -4.5,                         // מורד מ-42px ל-36px - חצי הכפתור בנישה
             width: 64, height: 64, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
