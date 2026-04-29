@@ -75,6 +75,13 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             הוסף הערה
           </Typography>
+          {/* חץ קטן שמרמז: לחץ לפתיחה */}
+          <Typography sx={{
+            fontSize: 9, fontWeight: 800, lineHeight: 1, ml: 0.15,
+            color: 'rgba(13,148,136,0.7)', letterSpacing: 0.2,
+          }}>
+            ▾ לחץ
+          </Typography>
         </Box>
       ) : (
         // מצב פתוח - "פתק" עם סלוטייפ באמצע למעלה, פינה מקופלת ונטייה קלה
@@ -421,6 +428,10 @@ export const AddProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
+      <ProductNoteField
+        value={newProduct.note}
+        onChange={(v) => onUpdateField('note', v)}
+      />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
@@ -481,10 +492,6 @@ export const AddProductModal = memo(({
           })}
         </Box>
       </Box>
-      <ProductNoteField
-        value={newProduct.note}
-        onChange={(v) => onUpdateField('note', v)}
-      />
       <Button
         variant="contained"
         fullWidth
@@ -603,6 +610,10 @@ export const EditProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
+      <ProductNoteField
+        value={product.note || ''}
+        onChange={(v) => onUpdateField('note', v as Product['note'])}
+      />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
@@ -653,10 +664,6 @@ export const EditProductModal = memo(({
           })}
         </Box>
       </Box>
-      <ProductNoteField
-        value={product.note || ''}
-        onChange={(v) => onUpdateField('note', v as Product['note'])}
-      />
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>
@@ -735,72 +742,59 @@ export const ProductDetailsModal = memo(({
           </Box>
         ))}
       </Box>
-      {/* הערה - כרטיס ציטוט אלגנטי עם תווית צפה, מרכאה דקורטיבית, וזוהר עדין */}
+      {/* הערה - אותו עיצוב פתק כמו במודאלי הוספה/עריכה: סלוטייפ באמצע
+          למעלה, פינה מקופלת בשמאל-עליון, הטיה, קווי מחברת, וגופן Caveat. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
           mt: 3, mb: 0.5,
-          pl: 2.25, pr: 2.25, pt: 2.2, pb: 1.6,
-          borderRadius: '18px',
-          overflow: 'hidden',
-          backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #FFFFFF 50%, #ECFDF5 100%)',
-          border: '1px solid rgba(20,184,166,0.2)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.9)',
-            '0 1px 3px rgba(15,118,110,0.05)',
-            '0 10px 28px rgba(20,184,166,0.1)',
-            '0 28px 56px rgba(15,118,110,0.06)',
-          ].join(', '),
-          // היילייט עליון עדין
+          px: 1.4, pt: 1.6, pb: 1.1,
+          bgcolor: '#E6F9F5',
+          backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
+          transform: 'rotate(-0.6deg)',
+          boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 6px 14px rgba(0,0,0,0.05)',
+          clipPath: 'polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px)',
+          // קווי מחברת עדינים ברקע
+          '&::after': {
+            content: '""', position: 'absolute', inset: 0,
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 22px, rgba(20,184,166,0.08) 22px, rgba(20,184,166,0.08) 23px)',
+            pointerEvents: 'none',
+          },
+          // משולש פינה מקופלת בשמאל-עליון
           '&::before': {
-            content: '""', position: 'absolute',
-            top: 0, left: '15%', right: '15%', height: 1,
-            backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.4) 50%, transparent 100%)',
+            content: '""', position: 'absolute', top: 0, left: 0,
+            width: 16, height: 16,
+            bgcolor: 'rgba(13,148,136,0.22)',
+            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+            zIndex: 1,
           },
         }}>
-          {/* מרכאת ציטוט גדולה דקורטיבית ברקע */}
+          {/* "סלוטייפ" באמצע למעלה */}
           <Box sx={{
-            position: 'absolute',
-            top: -14, right: 14,
-            fontSize: 96, lineHeight: 1,
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            color: 'rgba(20,184,166,0.10)',
-            fontWeight: 700,
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}>
-            ”
-          </Box>
-          {/* תווית "הערה" צפה - חופפת את הגבול העליון */}
-          <Box sx={{
-            position: 'absolute',
-            top: -10, right: 18,
-            display: 'flex', alignItems: 'center', gap: 0.5,
-            px: 1, py: 0.35, borderRadius: '999px',
-            backgroundImage: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-            boxShadow: [
-              'inset 0 1px 0 rgba(255,255,255,0.3)',
-              '0 2px 6px rgba(15,118,110,0.35)',
-              '0 0 0 3px #FFFFFF',
-            ].join(', '),
-          }}>
-            <Box sx={{
-              width: 5, height: 5, borderRadius: '50%',
-              bgcolor: 'rgba(255,255,255,0.95)',
-              boxShadow: '0 0 4px rgba(255,255,255,0.7)',
-            }} />
+            position: 'absolute', top: -8, left: '50%',
+            transform: 'translateX(-50%) rotate(-2deg)',
+            width: 50, height: 14,
+            bgcolor: 'rgba(20,184,166,0.35)',
+            border: '1px dashed rgba(13,148,136,0.4)',
+            borderRadius: '2px',
+            backdropFilter: 'blur(2px)',
+            zIndex: 2,
+          }} />
+          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.7 }}>
+            <Typography sx={{ fontSize: 14 }}>📝</Typography>
             <Typography sx={{
-              fontSize: 9.5, fontWeight: 800, color: '#fff',
-              letterSpacing: 1.2, textTransform: 'uppercase',
+              fontSize: 11.5, fontWeight: 800, color: '#0D9488',
+              letterSpacing: 0.3, fontStyle: 'italic',
             }}>
-              הערה
+              הערה למוצר
             </Typography>
           </Box>
           <Typography sx={{
-            position: 'relative', zIndex: 1,
-            fontSize: 15, color: '#134E4A',
-            fontWeight: 500,
-            lineHeight: 1.6,
+            position: 'relative', zIndex: 2,
+            fontSize: 16, color: '#134E4A',
+            fontFamily: '"Caveat", "Comic Sans MS", "Segoe Script", cursive',
+            fontStyle: 'italic',
+            lineHeight: '24px',
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           }}>
             {product.note}
