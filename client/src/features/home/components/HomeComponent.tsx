@@ -1531,7 +1531,10 @@ export const HomeComponent = memo(({
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
         sx={{
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 32px)', // 32px מעל ראש הפס
+          // הפס בגובה ~84px (64 min-height + 20px padding). FAB 64px.
+          // bottom: 56 + safe-area => FAB top נמצא ב-(56+64)=120 מהמסך,
+          // ראש הפס ב-84 מהמסך => FAB מציץ 36px מעל הפס (יותר מחצי הכפתור).
+          bottom: 'calc(env(safe-area-inset-bottom) + 56px)',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 11,                         // מעל הפס (10)
@@ -1552,8 +1555,8 @@ export const HomeComponent = memo(({
             transform: 'translateX(-50%) translateY(-1px)',
           },
           '&:active': { transform: 'translateX(-50%) scale(0.93)' },
-          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 28px)' },
-          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
+          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 50px)' },
+          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 46px)' },
         }}
       >
         <AddIcon sx={{
@@ -1641,11 +1644,11 @@ export const HomeComponent = memo(({
             WebkitTapHighlightColor: 'transparent',
             transition: 'background-color 0.18s ease, transform 0.1s ease',
             '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
-            '&:active': { transform: 'scale(0.94)' },
+            '&:active': { opacity: 0.7 },
           }}
         >
-          <HomeIcon sx={{ fontSize: 24, color: '#14B8A6' }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#14B8A6', letterSpacing: 0.2, lineHeight: 1 }}>
+          <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1 }}>
             {t('home')}
           </Typography>
         </Box>
@@ -1671,11 +1674,11 @@ export const HomeComponent = memo(({
             WebkitTapHighlightColor: 'transparent',
             transition: 'background-color 0.18s ease, transform 0.1s ease',
             '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
-            '&:active': { transform: 'scale(0.94)' },
+            '&:active': { opacity: 0.7 },
           }}
         >
-          <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.secondary' }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.secondary', letterSpacing: 0.2, lineHeight: 1 }}>
+          <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.75 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.primary', opacity: 0.75, letterSpacing: 0.2, lineHeight: 1 }}>
             {t('insights')}
           </Typography>
         </Box>
