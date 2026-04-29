@@ -1532,8 +1532,9 @@ export const HomeComponent = memo(({
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           zIndex: 10,
           bgcolor: 'background.paper',
-          borderTop: '1px solid',
-          borderColor: 'divider',
+          // פינות מעוגלות בראש הפס - תחושת אפליקציה מוקפדת
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           pb: 'env(safe-area-inset-bottom)',
           display: 'flex',
           // grid 3 חלקים שווים מבטיח יציבות: צד שמאל ושצד ימין באותו רוחב,
@@ -1543,9 +1544,31 @@ export const HomeComponent = memo(({
           gap: { xs: 1, sm: 1.5 },
           py: { xs: 1, sm: 1.25 },
           px: { xs: 2.5, sm: 3.5 },
-          boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)',
+          boxShadow: isDark
+            ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
+            : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
+          // ===== חתך עגול במרכז מתחת לכפתור ה-+ =====
+          // pseudo-element בצורת חצי-עיגול בצבע רקע הדף, ממוקם בקצה העליון
+          // של הפס באמצע - יוצר אשליה שהפס "נכרת" סביב הכפתור הצף.
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: -1,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 88,
+            height: 44,
+            bgcolor: 'background.default',
+            borderBottomLeftRadius: '50%',
+            borderBottomRightRadius: '50%',
+            // צל פנימי קל שמדגיש את העומק של החתך
+            boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.06)',
+            pointerEvents: 'none',
+            '@media (max-width: 360px)': { width: 78, height: 39 },
+            '@media (max-width: 320px)': { width: 70, height: 35 },
+          },
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
