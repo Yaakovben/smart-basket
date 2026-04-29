@@ -1521,54 +1521,8 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== Bottom Navigation עם FAB צף ===== */}
-      {/* FAB ככפתור עצמאי חופשי מעל הפס - מבטיח שהוא תמיד גלוי, לא נחתך */}
-      <Box
-        role="button"
-        tabIndex={0}
-        aria-label={t('new')}
-        onClick={() => { haptic('medium'); setShowMenu(true); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
-        sx={{
-          position: 'fixed',
-          // הפס בגובה ~84px (64 min-height + 20px padding). FAB 64px.
-          // bottom: 56 + safe-area => FAB top נמצא ב-(56+64)=120 מהמסך,
-          // ראש הפס ב-84 מהמסך => FAB מציץ 36px מעל הפס (יותר מחצי הכפתור).
-          bottom: 'calc(env(safe-area-inset-bottom) + 32px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 11,                         // מעל הפס (10)
-          width: 64, height: 64, borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-          boxShadow: [
-            '0 10px 28px rgba(20,184,166,0.55)',
-            '0 4px 10px rgba(0,0,0,0.18)',
-            'inset 0 1px 0 rgba(255,255,255,0.35)',
-            'inset 0 -2px 0 rgba(0,0,0,0.08)',
-          ].join(', '),
-          transition: 'transform 0.15s, box-shadow 0.15s',
-          '&:hover': {
-            boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)',
-            transform: 'translateX(-50%) translateY(-1px)',
-          },
-          '&:active': { transform: 'translateX(-50%) scale(0.93)' },
-          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 28px)' },
-          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
-        }}
-      >
-        <AddIcon sx={{
-          fontSize: 34,
-          color: 'white',
-          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-          '@media (max-width: 360px)': { fontSize: 30 },
-          '@media (max-width: 320px)': { fontSize: 28 },
-        }} />
-      </Box>
-
-      {/* Bottom Navigation */}
+      {/* ===== Bottom Navigation - wrapper מאחד לפס ול-FAB ===== */}
+      {/* wrapper הוא fixed, בפנים: bar (relative) ו-FAB (absolute, top: -32 = 32px מעל הבר). */}
       <Box
         sx={{
           position: 'fixed',
@@ -1578,6 +1532,56 @@ export const HomeComponent = memo(({
           width: '100%',
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           zIndex: 10,
+          pointerEvents: 'none',                     // wrapper לא מקבל קליקים, רק הילדים
+        }}
+      >
+        {/* FAB - אבסולוטית מעל הפס, top: -32 = 32px מעל ראש הפס. בלי קשר לגובהו האמיתי. */}
+        <Box
+          role="button"
+          tabIndex={0}
+          aria-label={t('new')}
+          onClick={() => { haptic('medium'); setShowMenu(true); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+          sx={{
+            position: 'absolute',
+            top: -32,                                  // 32px (= חצי FAB) מעל ראש הפס
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 2,
+            pointerEvents: 'auto',
+            width: 64, height: 64, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+            boxShadow: [
+              '0 10px 28px rgba(20,184,166,0.55)',
+              '0 4px 10px rgba(0,0,0,0.18)',
+              'inset 0 1px 0 rgba(255,255,255,0.35)',
+              'inset 0 -2px 0 rgba(0,0,0,0.08)',
+            ].join(', '),
+            transition: 'box-shadow 0.15s',
+            '&:hover': { boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)' },
+            '&:active': { opacity: 0.9 },
+            '@media (max-width: 360px)': { width: 58, height: 58, top: -29 },
+            '@media (max-width: 320px)': { width: 52, height: 52, top: -26 },
+          }}
+        >
+          <AddIcon sx={{
+            fontSize: 34,
+            color: 'white',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+            '@media (max-width: 360px)': { fontSize: 30 },
+            '@media (max-width: 320px)': { fontSize: 28 },
+          }} />
+        </Box>
+
+      {/* הפס עצמו - relative בתוך ה-wrapper */}
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          pointerEvents: 'auto',
           bgcolor: 'background.paper',
           // פינות מעוגלות בראש הפס - תחושת אפליקציה מוקפדת
           borderTopLeftRadius: 24,
@@ -1682,6 +1686,7 @@ export const HomeComponent = memo(({
             {t('insights')}
           </Typography>
         </Box>
+      </Box>
       </Box>
     </Box>
   );
