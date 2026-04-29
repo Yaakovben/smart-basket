@@ -351,6 +351,22 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent',
+          // ===== אינדיקטור הערה: פס צד צבעוני זהוב במקום אייקון =====
+          // פס אנכי דק בצד ההתחלה (ימין ב-RTL) של הכרטיס. רעיון מתחום
+          // האימייל/Slack: הודעה לא-נקראת מסומנת ב-stripe צבעוני בצד.
+          // עדין, ברור, לא צועק - וגם כשהמוצר נקנה זה עדיין נראה.
+          ...(product.note ? {
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 8, bottom: 8, insetInlineStart: 0,
+              width: 3,
+              borderRadius: '0 2px 2px 0',
+              backgroundImage: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)',
+              boxShadow: '0 0 6px rgba(245,158,11,0.4)',
+              opacity: isPurchased ? 0.4 : 1,
+            },
+          } : {}),
           '@media (max-width: 360px)': { px: '10px', gap: '8px', borderRadius: '11px' },
           '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
         }}
@@ -402,30 +418,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* אינדיקטור הערה - בועת דיבור קטנה ב-CSS טהור, ללא אמוג'י.
-                לחיצה על המוצר תפתח את ההערה ב-popup. */}
-            {product.note && (
-              <Box
-                aria-label="למוצר זה יש הערה"
-                title="למוצר זה יש הערה"
-                sx={{
-                  position: 'relative',
-                  flexShrink: 0,
-                  width: 18, height: 14,
-                  backgroundImage: 'linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)',
-                  // צורת בועת דיבור: מלבן עם זנב קטן בפינה התחתונה-שמאלית
-                  clipPath: 'polygon(0 0, 100% 0, 100% 70%, 35% 70%, 22% 100%, 22% 70%, 0 70%)',
-                  boxShadow: '0 1px 2px rgba(15,118,110,0.35)',
-                  // 3 קווים לבנים אופקיים שמדמים שורות טקסט
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    inset: '3px 3px auto 3px', height: 5,
-                    backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 1px, rgba(255,255,255,0.85) 1px, rgba(255,255,255,0.85) 2px)',
-                  },
-                }}
-              />
-            )}
+            {/* אינדיקטור ההערה הוא עכשיו פס צד זהוב על הכרטיס (ראה ::before
+                למעלה), לא אייקון ליד שם המוצר. נקי וברור יותר. */}
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
