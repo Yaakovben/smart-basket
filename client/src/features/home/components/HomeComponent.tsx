@@ -1521,6 +1521,50 @@ export const HomeComponent = memo(({
         }}
       />
 
+      {/* ===== Bottom Navigation עם FAB צף ===== */}
+      {/* FAB ככפתור עצמאי חופשי מעל הפס - מבטיח שהוא תמיד גלוי, לא נחתך */}
+      <Box
+        role="button"
+        tabIndex={0}
+        aria-label={t('new')}
+        onClick={() => { haptic('medium'); setShowMenu(true); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+        sx={{
+          position: 'fixed',
+          bottom: 'calc(env(safe-area-inset-bottom) + 32px)', // 32px מעל ראש הפס
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 11,                         // מעל הפס (10)
+          width: 64, height: 64, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+          boxShadow: [
+            '0 10px 28px rgba(20,184,166,0.55)',
+            '0 4px 10px rgba(0,0,0,0.18)',
+            'inset 0 1px 0 rgba(255,255,255,0.35)',
+            'inset 0 -2px 0 rgba(0,0,0,0.08)',
+          ].join(', '),
+          transition: 'transform 0.15s, box-shadow 0.15s',
+          '&:hover': {
+            boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)',
+            transform: 'translateX(-50%) translateY(-1px)',
+          },
+          '&:active': { transform: 'translateX(-50%) scale(0.93)' },
+          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 28px)' },
+          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
+        }}
+      >
+        <AddIcon sx={{
+          fontSize: 34,
+          color: 'white',
+          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+          '@media (max-width: 360px)': { fontSize: 30 },
+          '@media (max-width: 320px)': { fontSize: 28 },
+        }} />
+      </Box>
+
       {/* Bottom Navigation */}
       <Box
         sx={{
@@ -1606,52 +1650,9 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
 
-        {/* מרכז - כפתור + עגון אבסולוטית במרכז. בלי flex/mt כדי למנוע drift.
-            ה-top שלילי מציב אותו 30px מעל הפס, החתך מקיף אותו מדויק. */}
-        <Box
-          role="button"
-          tabIndex={0}
-          aria-label={t('new')}
-          onClick={() => { haptic('medium'); setShowMenu(true); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
-          sx={{
-            position: 'absolute',
-            top: -30,                         // 30px מעל ראש הפס - חצי הכפתור בחתך
-            left: 'calc(50% - 32px)',         // 32 = חצי רוחב הכפתור (64/2)
-            zIndex: 2,                        // מעל ה-pseudo של החתך
-            width: 64, height: 64, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', userSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            boxShadow: [
-              '0 10px 28px rgba(20,184,166,0.55)',
-              '0 4px 10px rgba(0,0,0,0.18)',
-              'inset 0 1px 0 rgba(255,255,255,0.35)',
-              'inset 0 -2px 0 rgba(0,0,0,0.08)',
-            ].join(', '),
-            transition: 'transform 0.15s, box-shadow 0.15s',
-            '&:hover': {
-              boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)',
-              transform: 'translateY(-1px)',
-            },
-            '&:active': { transform: 'scale(0.93)' },
-            '@media (max-width: 360px)': {
-              width: 58, height: 58, top: -27, left: 'calc(50% - 29px)',
-            },
-            '@media (max-width: 320px)': {
-              width: 52, height: 52, top: -24, left: 'calc(50% - 26px)',
-            },
-          }}
-        >
-          <AddIcon sx={{
-            fontSize: 34,
-            color: 'white',
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-            '@media (max-width: 360px)': { fontSize: 30 },
-            '@media (max-width: 320px)': { fontSize: 28 },
-          }} />
-        </Box>
+        {/* ה-FAB מורם החוצה כאחיו של הפס - ראה למעלה. כאן רק spacer לשמור
+            על מקום במרכז כדי שהטאבים יישארו על הצדדים ולא יתקרבו למרכז */}
+        <Box sx={{ width: 64, flexShrink: 0, '@media (max-width: 360px)': { width: 58 }, '@media (max-width: 320px)': { width: 52 } }} />
 
         {/* שמאל (RTL = אחרון ב-DOM) - תובנות. סגנון אחיד מדויק לימין */}
         <Box
