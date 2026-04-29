@@ -1521,21 +1521,18 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== Bottom Navigation - wrapper מאחד לפס ול-FAB ===== */}
-      {/* wrapper הוא fixed, בפנים: bar (relative) ו-FAB (absolute, top: -32 = 32px מעל הבר). */}
+      {/* ===== Bottom Navigation - wrapper מאחד לפס ול-FAB =====
+          wrapper הוא fixed לוויפורט. ה-bar בפנים relative וה-FAB absolute (top:-32). */}
       <Box
         sx={{
           position: 'fixed',
           bottom: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: { xs: '100%', sm: 500, md: 600 },
+          left: 0, right: 0,                          // מתפרס על כל רוחב המסך כדי שה-fixed יעבוד יציב
           zIndex: 10,
-          pointerEvents: 'none',                     // wrapper לא מקבל קליקים, רק הילדים
+          display: 'flex', justifyContent: 'center',  // ממקם את הפס במרכז ללא transform על ההורה
         }}
       >
-        {/* FAB - אבסולוטית מעל הפס, top: -32 = 32px מעל ראש הפס. בלי קשר לגובהו האמיתי. */}
+        {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
         <Box
           role="button"
           tabIndex={0}
@@ -1548,20 +1545,15 @@ export const HomeComponent = memo(({
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 2,
-            pointerEvents: 'auto',
             width: 64, height: 64, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            boxShadow: [
-              '0 10px 28px rgba(20,184,166,0.55)',
-              '0 4px 10px rgba(0,0,0,0.18)',
-              'inset 0 1px 0 rgba(255,255,255,0.35)',
-              'inset 0 -2px 0 rgba(0,0,0,0.08)',
-            ].join(', '),
+            // צל מצומצם - שכבה אחת עדינה במקום 4 שכבות חזקות
+            boxShadow: '0 4px 12px rgba(20,184,166,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
             transition: 'box-shadow 0.15s',
-            '&:hover': { boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)' },
+            '&:hover': { boxShadow: '0 6px 16px rgba(20,184,166,0.4)' },
             '&:active': { opacity: 0.9 },
             '@media (max-width: 360px)': { width: 58, height: 58, top: -29 },
             '@media (max-width: 320px)': { width: 52, height: 52, top: -26 },
@@ -1581,7 +1573,7 @@ export const HomeComponent = memo(({
         sx={{
           position: 'relative',
           width: '100%',
-          pointerEvents: 'auto',
+          maxWidth: { xs: '100%', sm: 500, md: 600 },
           bgcolor: 'background.paper',
           // פינות מעוגלות בראש הפס - תחושת אפליקציה מוקפדת
           borderTopLeftRadius: 24,
