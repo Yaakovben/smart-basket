@@ -402,23 +402,29 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* אינדיקטור הערה - אייקון פתק קומפקטי, צבע טורקיז של האפליקציה,
-                ללא הטיה ובלי טקסט. לחיצה על המוצר פותחת את ההערה ב-popup. */}
+            {/* אינדיקטור הערה - בועת דיבור קטנה ב-CSS טהור, ללא אמוג'י.
+                לחיצה על המוצר תפתח את ההערה ב-popup. */}
             {product.note && (
               <Box
                 aria-label="למוצר זה יש הערה"
                 title="למוצר זה יש הערה"
                 sx={{
+                  position: 'relative',
                   flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 18, height: 18, borderRadius: '50%',
-                  bgcolor: 'rgba(20,184,166,0.14)',
-                  border: '1px solid rgba(20,184,166,0.32)',
-                  fontSize: 10, lineHeight: 1,
+                  width: 18, height: 14,
+                  backgroundImage: 'linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)',
+                  // צורת בועת דיבור: מלבן עם זנב קטן בפינה התחתונה-שמאלית
+                  clipPath: 'polygon(0 0, 100% 0, 100% 70%, 35% 70%, 22% 100%, 22% 70%, 0 70%)',
+                  boxShadow: '0 1px 2px rgba(15,118,110,0.35)',
+                  // 3 קווים לבנים אופקיים שמדמים שורות טקסט
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: '3px 3px auto 3px', height: 5,
+                    backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 1px, rgba(255,255,255,0.85) 1px, rgba(255,255,255,0.85) 2px)',
+                  },
                 }}
-              >
-                📝
-              </Box>
+              />
             )}
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
