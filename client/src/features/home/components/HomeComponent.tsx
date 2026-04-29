@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
@@ -1521,19 +1522,18 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== Bottom Navigation - wrapper מאחד לפס ול-FAB =====
-          wrapper הוא fixed לוויפורט. ה-bar בפנים relative וה-FAB absolute (top:-32). */}
+      {/* ===== Bottom Navigation - דרך React Portal ל-document.body =====
+          סיבה: ההורה של HomeComponent (line 725) משתמש ב-overflow:hidden, מה
+          שמשפיע על דפדפנים מסוימים שמטפלים ב-position:fixed כ-absolute. כדי
+          להבטיח שהפס יישאר תמיד בתחתית הוויפורט, מרנדרים אותו ישירות ל-body. */}
+      {createPortal(
       <Box
         sx={{
           position: 'fixed',
-          bottom: 0, top: 'auto',                       // מבטיח שלא יורש top מאב
+          bottom: 0, top: 'auto',
           left: 0, right: 0,
-          zIndex: 10,
+          zIndex: 1200,
           display: 'flex', justifyContent: 'center',
-          // willChange + translateZ מבטיח קומפוזיט נפרד - מונע מצבים שבהם
-          // הדפדפן מתייחס ל-fixed כ-static בעקבות ancestor עם overflow/transform
-          willChange: 'transform',
-          transform: 'translateZ(0)',
         }}
       >
         {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
@@ -1692,7 +1692,9 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
       </Box>
-      </Box>
+      </Box>,
+      document.body                                  // ה-Portal מרנדר את הפס ל-body
+      )}
     </Box>
   );
 });
