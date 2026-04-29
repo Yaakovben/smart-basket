@@ -1549,24 +1549,34 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך חצי-עיגול אמיתי באמצעות CSS mask =====
-          // mask חותך באמת מהפס - לא overlay! המסכה היא radial-gradient
-          // שמסומן כשקוף בתוך עיגול ברדיוס 40px בנקודה x=50%, y=0%.
-          // התוצאה: הפס נעלם בפועל בעיגול הזה, והרקע של הדף נראה דרכו.
-          // זה הפתרון הנכון לחתך - לא pseudo, לא overlay.
-          WebkitMaskImage: 'radial-gradient(circle 42px at 50% 0%, transparent 41px, black 42px)',
-          maskImage: 'radial-gradient(circle 42px at 50% 0%, transparent 41px, black 42px)',
-          WebkitMaskComposite: 'source-over',
-          '@media (max-width: 360px)': {
-            py: 0.65, px: 2,
-            WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
-            maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          // ===== חתך עגול מתחת ל-+ =====
+          // אבסולוטי, מבוסס פיקסלים, ב-page-background. רוחב והגובה בערך 1:0.5
+          // ו-borderBottomLeftRadius/Right בערכים שווים לרוחב מלא = חצי-עיגול חלק.
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: -1,
+            left: 'calc(50% - 44px)',                  // מרכוז מדויק (חצי הרוחב 88/2)
+            width: 88,
+            height: 44,
+            bgcolor: 'background.default',
+            // ערכים פיקסליים מלאים - מבטיח חצי-עיגול חלק (לא U עם פס שטוח)
+            borderBottomLeftRadius: '88px 44px',
+            borderBottomRightRadius: '88px 44px',
+            pointerEvents: 'none',
+            '@media (max-width: 360px)': {
+              left: 'calc(50% - 40px)', width: 80, height: 40,
+              borderBottomLeftRadius: '80px 40px',
+              borderBottomRightRadius: '80px 40px',
+            },
+            '@media (max-width: 320px)': {
+              left: 'calc(50% - 36px)', width: 72, height: 36,
+              borderBottomLeftRadius: '72px 36px',
+              borderBottomRightRadius: '72px 36px',
+            },
           },
-          '@media (max-width: 320px)': {
-            py: 0.5, px: 1.5,
-            WebkitMaskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
-            maskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
-          },
+          '@media (max-width: 360px)': { py: 0.65, px: 2 },
+          '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
         {/* ימין (RTL = ראשון ב-DOM) - בית. סגנון אחיד עם הצד השני - איקון 24px,
@@ -1596,9 +1606,8 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
 
-        {/* מרכז - כפתור + יושב בתוך החתך העגול. ללא מסגרת כדי שהחתך
-            (בצבע background.default) יוצר את הגבול הוויזואלי סביב הכפתור,
-            בדיוק כמו ב-Material BottomAppBar עם FAB. */}
+        {/* מרכז - כפתור + עגון אבסולוטית במרכז. בלי flex/mt כדי למנוע drift.
+            ה-top שלילי מציב אותו 30px מעל הפס, החתך מקיף אותו מדויק. */}
         <Box
           role="button"
           tabIndex={0}
@@ -1606,9 +1615,10 @@ export const HomeComponent = memo(({
           onClick={() => { haptic('medium'); setShowMenu(true); }}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
           sx={{
-            position: 'relative',
+            position: 'absolute',
+            top: -30,                         // 30px מעל ראש הפס - חצי הכפתור בחתך
+            left: 'calc(50% - 32px)',         // 32 = חצי רוחב הכפתור (64/2)
             zIndex: 2,                        // מעל ה-pseudo של החתך
-            mt: -4.5,                         // מורד מ-42px ל-36px - חצי הכפתור בנישה
             width: 64, height: 64, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
@@ -1626,8 +1636,12 @@ export const HomeComponent = memo(({
               transform: 'translateY(-1px)',
             },
             '&:active': { transform: 'scale(0.93)' },
-            '@media (max-width: 360px)': { width: 58, height: 58, mt: -5 },
-            '@media (max-width: 320px)': { width: 54, height: 54, mt: -4.5 },
+            '@media (max-width: 360px)': {
+              width: 58, height: 58, top: -27, left: 'calc(50% - 29px)',
+            },
+            '@media (max-width: 320px)': {
+              width: 52, height: 52, top: -24, left: 'calc(50% - 26px)',
+            },
           }}
         >
           <AddIcon sx={{
