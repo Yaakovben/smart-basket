@@ -178,6 +178,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
 });
 ProductNoteField.displayName = 'ProductNoteField';
 
+
 // ===== מודאל הוספת מוצר =====
 interface ProductSuggestion {
   name: string;

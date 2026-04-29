@@ -856,7 +856,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
             {/* הסבר קומפקטי */}
             <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', lineHeight: 1.5, mt: 0.5 }}>
-              סנכרון אוטומטי פעם ביום ב-04:00. כפתור 'רענן עכשיו' מחזיק מחירים + סניפים במקביל.
+              סנכרון אוטומטי פעמיים ביום ב-04:00 וב-16:00. כפתור 'רענן עכשיו' מחזיק מחירים + סניפים במקביל.
             </Typography>
           </>
         )}

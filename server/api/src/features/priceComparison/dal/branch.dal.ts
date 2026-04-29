@@ -13,6 +13,7 @@ export interface UpsertBranchInput {
   lat?: number;
   lng?: number;
   coordSource: 'portal' | 'geocoded' | 'unknown';
+  subChainId?: string;
   subChainName?: string;
   storeType?: string;
 }
@@ -38,6 +39,7 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
       if (item.address) $set.address = item.address;
       if (item.city) $set.city = item.city;
       if (item.zipCode) $set.zipCode = item.zipCode;
+      if (item.subChainId) $set.subChainId = item.subChainId;
       if (item.subChainName) $set.subChainName = item.subChainName;
       if (item.storeType) $set.storeType = item.storeType;
       // קואורדינטות: רק אם 'portal' או יש ערכים. 'unknown' לא דורס מצב קודם טוב.

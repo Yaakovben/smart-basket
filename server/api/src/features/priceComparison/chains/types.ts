@@ -15,6 +15,14 @@ export interface ChainPriceItem {
   isWeighted?: boolean;              // מוצר במשקל (kg) - חשוב לחישוב מחיר
   unitQty?: string;                  // יחידת בסיס: "100 גרם", "100 מ"ל"
   itemPriceUpdateDate?: string;      // מתי הרשת עדכנה את המחיר (ISO)
+  // שדות סטטוס/דגלים - מאפשרים סינון מוצרים חסומים, מחירי-יחידה השוואתיים
+  itemType?: number;                 // 1=ברקוד רגיל, 2=שקילה, 3=פנימי
+  itemId?: string;                   // מזהה פנימי של המוצר ברשת (לא ברקוד)
+  allowDiscount?: boolean;           // האם המוצר זכאי להנחה
+  blockedItem?: boolean;             // מוצר חסום/לא במלאי - מסומן לסינון
+  itemStatus?: string;               // סטטוס פתוח של הרשת
+  bikoretNo?: string;                // מספר תעודת כשרות (Bikoret)
+  unitOfMeasurePrice?: number;       // מחיר ליחידה ("X ש"ח ל-100 גרם") - מאפשר השוואה לפי כמות
 }
 
 export interface ChainFetchResult {
@@ -35,6 +43,7 @@ export interface ChainStoreItem {
   lat?: number;
   lng?: number;
   // מטא-דאטה נוספת על הסניף - מאפשרת בידול בתת-מותגים
+  subChainId?: string;               // מזהה תת-מותג (לקישור עתידי לטבלת sub-chains)
   subChainName?: string;             // למשל "AM:PM", "רמי לוי שיווק השקמה"
   storeType?: string;                // סוג סניף (1=פיזי, 2=אונליין וכו')
 }

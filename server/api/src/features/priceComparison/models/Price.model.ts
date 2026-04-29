@@ -31,6 +31,14 @@ export interface IPriceDoc extends Document {
   isWeighted?: boolean;                 // מוצר במשקל (kg)
   unitQty?: string;                     // יחידת בסיס
   itemPriceUpdateDate?: Date;           // עדכון מחיר אחרון אצל הרשת
+  // שדות סטטוס/דגלים נוספים
+  itemType?: number;                    // 1=ברקוד, 2=שקילה, 3=פנימי
+  itemId?: string;                      // מזהה פנימי של הרשת
+  allowDiscount?: boolean;
+  blockedItem?: boolean;                // מוצר חסום - סינון בתצוגה
+  itemStatus?: string;
+  bikoretNo?: string;                   // תעודת כשרות
+  unitOfMeasurePrice?: number;          // מחיר ל-100גרם / 100מ"ל - להשוואה כמותית
   updatedAt: Date;
   createdAt: Date;
 }
@@ -53,6 +61,13 @@ const priceSchema = new Schema<IPriceDoc>(
     isWeighted: { type: Boolean },
     unitQty: { type: String },
     itemPriceUpdateDate: { type: Date },
+    itemType: { type: Number },
+    itemId: { type: String },
+    allowDiscount: { type: Boolean },
+    blockedItem: { type: Boolean },
+    itemStatus: { type: String },
+    bikoretNo: { type: String },
+    unitOfMeasurePrice: { type: Number },
   },
   {
     timestamps: true,

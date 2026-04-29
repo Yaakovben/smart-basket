@@ -51,6 +51,7 @@ const getDefaultNewProduct = (): NewProductForm => ({
   unit: 'יח׳' as Product['unit'],
   category: 'אחר' as Product['category'],
   note: '',
+  barcode: '',
 });
 
 // ===== טיפוסים =====
