@@ -524,8 +524,6 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
 
   // האם יש מיקום לפחות לרשת אחת - מפעיל את בר המיון
   const hasAnyLocation = chainTotals.some(c => c.nearestBranch);
-  // הרשת הזולה ביותר - לכפתור "קפוץ לזולה" מתוך פירוט רשת אחרת
-  const cheapestChain = chainTotals.find(c => c.isCheapest);
   // טווח מחירים בין רשתות שלמות - לחישוב בר יחסי
   const completeForRange = chainTotals.filter(c => c.isComplete && c.matchedCount > 0);
   const minTotalAcross = completeForRange.length > 0 ? Math.min(...completeForRange.map(c => c.total)) : 0;
@@ -533,14 +531,6 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
   const totalRange = maxTotalAcross - minTotalAcross;
   // פורמט מחיר עם הפרדת אלפים בעברית - עוזר לקריאה של מספרים גדולים (₪1,234)
   const formatPrice = (n: number) => `₪${n.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`;
-  const jumpToCheapest = () => {
-    if (!cheapestChain) return;
-    setExpandedId(cheapestChain.chainId);
-    // גלילה רכה אל הכרטיס שזה עתה נפתח
-    requestAnimationFrame(() => {
-      document.getElementById(`chain-row-${cheapestChain.chainId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  };
 
   // מיון לפי מצב. 'price' = ההגיון המקורי (שלמות קודם, לפי מחיר).
   // 'distance' = רשתות עם מיקום ממוינות לפי מרחק; אחרות נדחקות לסוף.
@@ -581,6 +571,50 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
     // ברירת מחדל - סדר המחיר המקורי מהשרת
     return chains;
   }, [chainTotals, sortMode, hasAnyLocation]);
+
+  // המנצח הוויזואלי לפי המיון הנוכחי - הראשון בסדר המתאים.
+  // נחשב מקומית כדי שהסימון יתאים תמיד לסדר המוצג (ולא יסתור את 'isCheapest' מהשרת).
+  const winnerId = useMemo(() => {
+    const candidates = chainTotals.filter(c => c.matchedCount > 0);
+    if (candidates.length === 0) return null;
+    if (sortMode === 'price') {
+      // העדפה לרשתות שלמות; אם אין - אז הזולה ביותר מבין כל בעלות הנתונים
+      const completes = candidates.filter(c => c.isComplete);
+      const pool = completes.length > 0 ? completes : candidates;
+      return pool.reduce((best, c) => c.total < best.total ? c : best, pool[0]).chainId;
+    }
+    if (sortMode === 'distance') {
+      const withLoc = candidates.filter(c => c.nearestBranch);
+      if (withLoc.length === 0) return null;
+      return withLoc.reduce((best, c) =>
+        c.nearestBranch!.distanceKm < best.nearestBranch!.distanceKm ? c : best,
+        withLoc[0]
+      ).chainId;
+    }
+    // combined - הראשון בסדר הממויין
+    return sortedChains.find(c => c.matchedCount > 0)?.chainId ?? null;
+  }, [chainTotals, sortMode, sortedChains]);
+
+  const winnerChain = winnerId ? chainTotals.find(c => c.chainId === winnerId) || null : null;
+
+  // צבעים ותווית לפי מצב המיון - בנושא של האפליקציה
+  const winnerInfo = useMemo(() => {
+    if (sortMode === 'distance') {
+      return { label: 'הכי קרוב', main: '#0EA5E9', dark: '#0284C7', bgLight: 'rgba(14,165,233,0.10)', bgDark: 'rgba(14,165,233,0.16)', borderLight: 'rgba(14,165,233,0.35)', borderDark: 'rgba(14,165,233,0.45)' };
+    }
+    if (sortMode === 'combined') {
+      return { label: 'הכי משתלם', main: '#8B5CF6', dark: '#7C3AED', bgLight: 'rgba(139,92,246,0.10)', bgDark: 'rgba(139,92,246,0.16)', borderLight: 'rgba(139,92,246,0.35)', borderDark: 'rgba(139,92,246,0.45)' };
+    }
+    return { label: 'הכי זול', main: '#10B981', dark: '#059669', bgLight: 'rgba(16,185,129,0.10)', bgDark: 'rgba(16,185,129,0.16)', borderLight: 'rgba(16,185,129,0.35)', borderDark: 'rgba(16,185,129,0.45)' };
+  }, [sortMode]);
+
+  const jumpToWinner = () => {
+    if (!winnerChain) return;
+    setExpandedId(winnerChain.chainId);
+    requestAnimationFrame(() => {
+      document.getElementById(`chain-row-${winnerChain.chainId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
 
   if (chainTotals.length === 0) return null;
 
@@ -683,7 +717,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
       {/* רשימת רשתות - כולל רשתות ללא התאמות (שם מאגר עדיין קיים) */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {allChains.map((chain) => {
-          const isCheapest = chain.isCheapest;
+          const isWinner = chain.chainId === winnerId;
           const isComplete = chain.isComplete;
           const isEmpty = chain.matchedCount === 0;
           const isExpanded = expandedId === chain.chainId;
@@ -699,18 +733,17 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   cursor: 'pointer',
                   position: 'relative',
                   userSelect: 'none',
-                  bgcolor: isCheapest
-                    ? (sortMode === 'price'
-                        ? (isDark ? 'rgba(16,185,129,0.16)' : 'rgba(16,185,129,0.1)')
-                        : (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)'))
+                  // המנצח לפי המיון הנוכחי - תמיד מודגש ברקע יפה בצבע מתאים
+                  bgcolor: isWinner
+                    ? (isDark ? winnerInfo.bgDark : winnerInfo.bgLight)
                     : isEmpty
                       ? (isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)')
                     : !isComplete
                       ? (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.015)')
                       : 'transparent',
-                  // במיון לפי מחיר - מסגרת עדינה ירוקה שמדגישה את הזולה
-                  boxShadow: isCheapest && sortMode === 'price'
-                    ? (isDark ? 'inset 0 0 0 1.5px rgba(16,185,129,0.45)' : 'inset 0 0 0 1.5px rgba(16,185,129,0.35)')
+                  // מסגרת עדינה בצבע המנצח לכל מצב מיון
+                  boxShadow: isWinner
+                    ? `inset 0 0 0 1.5px ${isDark ? winnerInfo.borderDark : winnerInfo.borderLight}`
                     : 'none',
                   // רשת ריקה - עוד יותר שקופה; חלקית - בינונית; שלמה - מלאה
                   opacity: isEmpty ? 0.55 : isComplete ? 1 : 0.72,
@@ -718,12 +751,12 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   transition: 'background-color 0.15s',
                 }}
               >
-                {/* פס ירוק לזולה ביותר */}
-                {isCheapest && (
+                {/* פס צבע למנצח - גוון לפי מצב המיון */}
+                {isWinner && (
                   <Box sx={{
                     position: 'absolute', top: 0, bottom: 0, insetInlineStart: 0,
                     width: 3,
-                    background: 'linear-gradient(180deg, #10B981, #059669)',
+                    background: `linear-gradient(180deg, ${winnerInfo.main}, ${winnerInfo.dark})`,
                     animation: `${shimmer} 3s ease-in-out infinite`,
                     backgroundSize: '100% 200%',
                   }} />
@@ -731,16 +764,16 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: isCheapest ? 800 : 600, color: 'text.primary' }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: isWinner ? 800 : 600, color: 'text.primary' }}>
                       {chain.chainName}
                     </Typography>
-                    {isCheapest && (
+                    {isWinner && (
                       <Box sx={{
                         px: 0.75, py: 0.15, borderRadius: '6px',
-                        bgcolor: '#10B981', color: 'white',
+                        bgcolor: winnerInfo.main, color: 'white',
                         fontSize: 9.5, fontWeight: 800, letterSpacing: 0.3,
                       }}>
-                        הכי זול
+                        {winnerInfo.label}
                       </Box>
                     )}
                     {/* "אין נתונים היום" - הרשת לא פרסמה מחירים. אייקון שעון להבדל מ"אין התאמות" */}
@@ -834,14 +867,14 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                 <Box sx={{ textAlign: 'end', minWidth: 78 }}>
                   <Typography sx={{
                     fontSize: 17, fontWeight: 800,
-                    color: isCheapest ? '#059669' : 'text.primary',
+                    color: isWinner ? winnerInfo.dark : 'text.primary',
                     lineHeight: 1.1,
                     fontVariantNumeric: 'tabular-nums',
                   }}>
                     {formatPrice(chain.total)}
                   </Typography>
-                  {/* תג חיסכון - "+₪X" באדום עדין, ברור מבט מהיר */}
-                  {chain.savings > 0 && !isCheapest && isComplete && (
+                  {/* תג חיסכון - רק במיון לפי מחיר, ורק לרשת שאינה הזולה */}
+                  {sortMode === 'price' && chain.savings > 0 && !isWinner && isComplete && (
                     <Box sx={{
                       display: 'inline-flex', alignItems: 'center', gap: 0.25,
                       mt: 0.3, px: 0.5, py: 0.15, borderRadius: '5px',
@@ -857,7 +890,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                       הזולה = בר ירוק מלא; היקרה = בר אדום קצר. עוזר לעין לתפוס מבט. */}
                   {isComplete && totalRange > 0 && (() => {
                     const ratio = 1 - (chain.total - minTotalAcross) / totalRange;
-                    const barColor = isCheapest ? '#10B981' : ratio > 0.5 ? '#14B8A6' : ratio > 0.2 ? '#F59E0B' : '#EF4444';
+                    const barColor = (isWinner && sortMode === 'price') ? '#10B981' : ratio > 0.5 ? '#14B8A6' : ratio > 0.2 ? '#F59E0B' : '#EF4444';
                     return (
                       <Box sx={{
                         mt: 0.4, height: 3, width: '100%',
@@ -891,16 +924,16 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                   display: 'flex', flexDirection: 'column', gap: 0.5,
                   bgcolor: isDark ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.015)',
                 }}>
-                  {/* callout חיסכון - לחיץ, קופץ לרשת הזולה ביותר ופותח את הפירוט שלה */}
-                  {chain.savings > 0 && !isCheapest && isComplete && cheapestChain && (
+                  {/* callout חיסכון - מוצג רק במיון לפי מחיר וקופץ לרשת הזולה */}
+                  {sortMode === 'price' && chain.savings > 0 && !isWinner && isComplete && winnerChain && (
                     <Box
                       role="button"
                       tabIndex={0}
-                      onClick={(e) => { e.stopPropagation(); jumpToCheapest(); }}
+                      onClick={(e) => { e.stopPropagation(); jumpToWinner(); }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          jumpToCheapest();
+                          jumpToWinner();
                         }
                       }}
                       sx={{
@@ -922,7 +955,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
                         <Box component="span" sx={{ color: '#059669', fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>
                           {formatPrice(chain.savings)}
                         </Box>
-                        {' '}ב-{cheapestChain.chainName}
+                        {' '}ב-{winnerChain.chainName}
                       </Typography>
                       <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#059669', letterSpacing: 0.3, flexShrink: 0 }}>
                         הצג ←
