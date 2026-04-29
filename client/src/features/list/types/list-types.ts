@@ -7,9 +7,6 @@ export interface NewProductForm {
   unit: ProductUnit;
   category: ProductCategory;
   note: string;
-  // ברקוד אופציונלי - כשממולא, השוואת המחירים מזהה את המוצר ב-100%
-  // (lookup ישיר על ברקוד במקום fuzzy על שם).
-  barcode: string;
 }
 
 export interface EditListForm {

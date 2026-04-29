@@ -27,6 +27,11 @@ export interface UpsertPriceInput {
   itemStatus?: string;
   bikoretNo?: string;
   unitOfMeasurePrice?: number;
+  // אגרגציה פר-סניף - מחושב על ידי ה-service לפני ה-upsert
+  storesWithPrice?: number;
+  priceMin?: number;
+  priceMax?: number;
+  cheapestStoreId?: string;
 }
 
 class PriceDALClass extends BaseDAL<IPriceDoc> {

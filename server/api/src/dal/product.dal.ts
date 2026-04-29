@@ -11,7 +11,6 @@ export interface CreateProductInput {
   addedBy: string;
   position?: number;
   note?: string;
-  barcode?: string;
 }
 
 class ProductDALClass extends BaseDAL<IProductDoc> {

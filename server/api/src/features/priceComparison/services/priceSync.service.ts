@@ -225,7 +225,41 @@ export async function syncAllChains(): Promise<SyncResult[]> {
       continue;
     }
 
-    const inputs: UpsertPriceInput[] = result.items.map(item => {
+    // ===== אגרגציה פר-סניף =====
+    // ה-XML מהפורטל מכיל שורת מחיר לכל (סניף, מוצר). שני הצרכים שלנו:
+    //  1. מחיר אחד "מייצג" לכל זוג (chainId, barcode) להשוואה מהירה.
+    //  2. ידיעה כמה סניפים מוכרים את המוצר ובאיזה טווח מחירים.
+    // הפתרון: מקבצים לפי (chainId, barcode), בוחרים את המחיר הזול כמייצג,
+    // ושומרים גם min/max/count + cheapestStoreId לתצוגה ללקוח.
+    type AggKey = string;
+    const agg = new Map<AggKey, {
+      first: typeof result.items[number];      // הפריט הראשון - לשמירת המטא-דאטה
+      minPrice: number; maxPrice: number;
+      cheapestStoreId?: string;
+      count: number;
+    }>();
+    for (const item of result.items) {
+      const key = `${item.barcode}`;
+      const existing = agg.get(key);
+      if (!existing) {
+        agg.set(key, {
+          first: item,
+          minPrice: item.price, maxPrice: item.price,
+          cheapestStoreId: item.storeId,
+          count: 1,
+        });
+      } else {
+        existing.count++;
+        if (item.price < existing.minPrice) {
+          existing.minPrice = item.price;
+          existing.cheapestStoreId = item.storeId;
+          // עדכון ה-"first" למחיר הזול - גם המטא-דאטה תייצג את הסניף הזול
+          existing.first = item;
+        }
+        if (item.price > existing.maxPrice) existing.maxPrice = item.price;
+      }
+    }
+    const inputs: UpsertPriceInput[] = Array.from(agg.values()).map(({ first: item, minPrice, maxPrice, cheapestStoreId, count }) => {
       const updateDate = item.itemPriceUpdateDate ? new Date(item.itemPriceUpdateDate) : undefined;
       return {
         barcode: item.barcode,
@@ -233,8 +267,8 @@ export async function syncAllChains(): Promise<SyncResult[]> {
         itemNameNormalized: normalizeProductName(item.itemName),
         chainId: adapter.chainId,
         chainName: adapter.chainName,
-        storeId: item.storeId,
-        price: item.price,
+        storeId: cheapestStoreId,            // הסניף שבו המחיר הזול
+        price: minPrice,                      // המחיר הזול ברשת = "המייצג"
         unitOfMeasure: item.unitOfMeasure,
         manufacturerName: item.manufacturerName,
         quantity: item.quantity,
@@ -245,6 +279,11 @@ export async function syncAllChains(): Promise<SyncResult[]> {
         isWeighted: item.isWeighted,
         unitQty: item.unitQty,
         itemPriceUpdateDate: updateDate && !isNaN(updateDate.getTime()) ? updateDate : undefined,
+        // אגרגציית סניפים - הלקוח יראה "₪10-12 ב-X סניפים, הזול ב-...":
+        storesWithPrice: count,
+        priceMin: minPrice,
+        priceMax: maxPrice,
+        cheapestStoreId,
         // דגלי סטטוס/מטא נוספים - לתצוגה ולסינון מוצרים חסומים בעתיד
         itemType: item.itemType,
         itemId: item.itemId,

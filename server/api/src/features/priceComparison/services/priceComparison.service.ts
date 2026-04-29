@@ -348,63 +348,16 @@ export async function getComparisonForUser(
       return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
     }
 
-    // שליפת כל המוצרים שטרם נקנו (רק ברשימות שנבחרו).
-    // barcode נשלף כי כשהוא קיים - הוא הופך את ההתאמה ל-100% (lookup ישיר בלי fuzzy).
+    // שליפת כל המוצרים שטרם נקנו (רק ברשימות שנבחרו)
     const listIds = lists.map(l => l._id);
     const pendingProducts = await Product.find({
       listId: { $in: listIds },
       isPurchased: false,
-    }).select('_id name quantity listId barcode').lean();
+    }).select('_id name quantity listId').lean();
 
     if (pendingProducts.length === 0) {
       return cacheAndReturn({ ...baseResponse, enabled: true, totalPrices });
     }
-
-    // Barcode-first matching: כל מוצר שיש לו ברקוד מקבל lookup ישיר בכל הרשתות.
-    // התוצאה: התאמה של 100% למוצר הספציפי בכל רשת, בלי תלות באיכות שם המוצר.
-    // map<barcode -> map<chainId -> priceDoc>>
-    const userBarcodes = Array.from(new Set(
-      pendingProducts.map(p => (p.barcode || '').trim()).filter(Boolean)
-    ));
-    const barcodePriceMap = new Map<string, Map<ChainId, Awaited<ReturnType<typeof PriceDAL.findByBarcodes>>[number]>>();
-    if (userBarcodes.length > 0) {
-      try {
-        const prices = await PriceDAL.findByBarcodes(userBarcodes);
-        for (const p of prices) {
-          let inner = barcodePriceMap.get(p.barcode);
-          if (!inner) {
-            inner = new Map();
-            barcodePriceMap.set(p.barcode, inner);
-          }
-          inner.set(p.chainId, p);
-        }
-      } catch {
-        // נכשל בשקט - נופלים ל-name matching
-      }
-    }
-    const buildBarcodeMatch = (
-      barcode: string,
-      chainId: ChainId,
-      chainName: string,
-    ): NameMatch | null => {
-      const inner = barcodePriceMap.get(barcode);
-      if (!inner) return null;
-      const p = inner.get(chainId);
-      if (!p) return null;
-      return {
-        normalizedName: p.itemNameNormalized || '',
-        matched: true,
-        chainId, chainName,
-        itemName: p.itemName,
-        itemNameNormalized: p.itemNameNormalized,
-        price: p.price,
-        barcode: p.barcode,
-        matchConfidence: 1.0,            // ברקוד = ביטחון מקסימלי
-        matchedTokens: ['__barcode__'],   // סימון מיוחד שזה הגיע מ-barcode
-        userTokens: [],
-        manufacturerName: p.manufacturerName,
-      };
-    };
 
     // דה-דופליקציה לפי שם מנורמל: פריט "חלב 3%" שמופיע ב-5 רשימות — match רץ פעם אחת בלבד
     const nameMatchCache = new Map<string, NameMatch>();
@@ -443,12 +396,7 @@ export async function getComparisonForUser(
       if (listProducts.length === 0) continue;
 
       const matches: PriceMatch[] = listProducts.map(p => {
-        // עדיפות 1: ברקוד - lookup ישיר ברשת הראשית. קונפידנס 1.0.
-        const userBarcode = (p.barcode || '').trim();
-        const barcodeMatch = userBarcode
-          ? buildBarcodeMatch(userBarcode, BETA_CHAIN_ID, BETA_CHAIN_NAME)
-          : null;
-        const nameMatch = barcodeMatch || nameMatchCache.get(p.name)!;
+        const nameMatch = nameMatchCache.get(p.name)!;
         return {
           ...nameMatch,
           productId: String(p._id),
@@ -589,12 +537,9 @@ export async function getComparisonForUser(
         let chainTotal = 0;
         let matched = 0;
         let unmatched = 0;
-        // בונים את הרשימה המפורטת של כל המוצרים של המשתמש עם המחיר ברשת הזו.
-        // עדיפות 1: ברקוד למוצרים שיש להם ברקוד - התאמה ישירה ל-100%.
+        // בונים את הרשימה המפורטת של כל המוצרים של המשתמש עם המחיר ברשת הזו
         const chainMatches: PriceMatch[] = pendingProducts.map(p => {
-          const userBarcode = (p.barcode || '').trim();
-          const barcodeMatch = userBarcode ? buildBarcodeMatch(userBarcode, chainId, chainName) : null;
-          const nameMatch = barcodeMatch || chainMatchCache.get(p.name)!;
+          const nameMatch = chainMatchCache.get(p.name)!;
           if (nameMatch.matched) {
             chainTotal += nameMatch.price * (p.quantity || 1);
             matched += 1;

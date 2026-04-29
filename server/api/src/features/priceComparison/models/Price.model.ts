@@ -39,6 +39,15 @@ export interface IPriceDoc extends Document {
   itemStatus?: string;
   bikoretNo?: string;                   // תעודת כשרות
   unitOfMeasurePrice?: number;          // מחיר ל-100גרם / 100מ"ל - להשוואה כמותית
+  // ===== אגרגציה פר-סניף =====
+  // ה-XML של הפורטל מספק שורת מחיר לכל (סניף, מוצר). אנחנו שומרים שורה
+  // אחת לזוג (chainId, barcode) - הזולה ביותר מבין הסניפים שמוכרים את
+  // המוצר. השדות הבאים מציינים את הטווח, כך שנוכל להציג ללקוח:
+  // "₪10-12 ברמי לוי - הזול הוא בסניף X" וכד'.
+  storesWithPrice?: number;             // כמה סניפים מוכרים את המוצר
+  priceMin?: number;                    // המחיר הזול ביותר ברשת
+  priceMax?: number;                    // המחיר היקר ביותר ברשת
+  cheapestStoreId?: string;             // הסניף עם המחיר הזול ביותר
   updatedAt: Date;
   createdAt: Date;
 }
@@ -68,6 +77,10 @@ const priceSchema = new Schema<IPriceDoc>(
     itemStatus: { type: String },
     bikoretNo: { type: String },
     unitOfMeasurePrice: { type: Number },
+    storesWithPrice: { type: Number },
+    priceMin: { type: Number },
+    priceMax: { type: Number },
+    cheapestStoreId: { type: String },
   },
   {
     timestamps: true,

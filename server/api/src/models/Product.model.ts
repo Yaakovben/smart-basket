@@ -13,9 +13,6 @@ export interface IProductDoc extends Document {
   addedBy: Types.ObjectId;
   position: number;
   note?: string;
-  // ברקוד אופציונלי - כאשר מסומן, השוואת המחירים מזהה את המוצר ב-100%
-  // ע"י lookup ישיר בטבלת prices לפי barcode במקום fuzzy על שם.
-  barcode?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,11 +67,6 @@ const productSchema = new Schema<IProductDoc>(
       maxlength: 200,
       default: '',
     },
-    barcode: {
-      type: String,
-      trim: true,
-      maxlength: 32,
-    },
   },
   {
     timestamps: true,
@@ -91,7 +83,5 @@ const productSchema = new Schema<IProductDoc>(
 productSchema.index({ listId: 1, position: 1 });
 productSchema.index({ listId: 1, isPurchased: 1 });
 productSchema.index({ addedBy: 1 });
-// אינדקס דליל לברקוד - מאפשר חיפוש מהיר של "כל המוצרים עם ברקוד X" (היסטוריה)
-productSchema.index({ barcode: 1 }, { sparse: true });
 
 export const Product = mongoose.model<IProductDoc>('Product', productSchema);
