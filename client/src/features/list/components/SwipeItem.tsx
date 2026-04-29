@@ -409,24 +409,35 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 sx={{
                   position: 'relative',
                   flexShrink: 0,
-                  width: 14, height: 14, borderRadius: '50%',
+                  width: 18, height: 14,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: '2px',
+                  borderRadius: '7px 7px 7px 2px',
                   backgroundImage: 'linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)',
                   boxShadow: [
-                    'inset 0 1px 0 rgba(255,255,255,0.4)',
-                    'inset 0 -1px 0 rgba(0,0,0,0.08)',
+                    'inset 0 1px 0 rgba(255,255,255,0.35)',
                     '0 1px 2px rgba(15,118,110,0.35)',
-                    '0 0 0 2px rgba(20,184,166,0.12)',
+                    '0 0 0 2px rgba(20,184,166,0.10)',
                   ].join(', '),
-                  // נקודה לבנה זעירה במרכז כמו "אבן חן"
-                  '&::before': {
+                  // זנב הבועה בפינה שמאלית-תחתונה
+                  '&::after': {
                     content: '""',
-                    width: 4, height: 4, borderRadius: '50%',
+                    position: 'absolute',
+                    bottom: -3, left: 0,
+                    width: 0, height: 0,
+                    borderLeft: '3px solid transparent',
+                    borderRight: '3px solid transparent',
+                    borderTop: '4px solid #0D9488',
+                  },
+                  // 3 נקודות לבנות = "טקסט בתוך הבועה"
+                  '& > span': {
+                    width: 2.5, height: 2.5, borderRadius: '50%',
                     bgcolor: 'rgba(255,255,255,0.95)',
-                    boxShadow: '0 0 4px rgba(255,255,255,0.7)',
                   },
                 }}
-              />
+              >
+                <span /><span /><span />
+              </Box>
             )}
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>

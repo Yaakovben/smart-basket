@@ -737,40 +737,72 @@ export const ProductDetailsModal = memo(({
           </Box>
         ))}
       </Box>
-      {/* הערה - כרטיס פרימיום: glassmorphism, פס מבטא צד, צל עומק רב-שכבתי */}
+      {/* הערה - כרטיס ציטוט אלגנטי עם תווית צפה, מרכאה דקורטיבית, וזוהר עדין */}
       {product.note && (
         <Box sx={{
           position: 'relative',
-          mt: 2, mb: 0.5,
-          pl: 1.75, pr: 2, pt: 1.4, pb: 1.4,
-          borderRadius: '16px',
-          backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(236,253,250,0.88) 100%)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(20,184,166,0.22)',
+          mt: 3, mb: 0.5,
+          pl: 2.25, pr: 2.25, pt: 2.2, pb: 1.6,
+          borderRadius: '18px',
+          overflow: 'hidden',
+          backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #FFFFFF 50%, #ECFDF5 100%)',
+          border: '1px solid rgba(20,184,166,0.2)',
           boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.7)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 8px 24px rgba(20,184,166,0.12)',
-            '0 22px 48px rgba(15,118,110,0.07)',
+            'inset 0 1px 0 rgba(255,255,255,0.9)',
+            '0 1px 3px rgba(15,118,110,0.05)',
+            '0 10px 28px rgba(20,184,166,0.1)',
+            '0 28px 56px rgba(15,118,110,0.06)',
           ].join(', '),
+          // היילייט עליון עדין
           '&::before': {
             content: '""', position: 'absolute',
-            top: 14, bottom: 14, right: 0,
-            width: 3, borderRadius: '3px 0 0 3px',
-            backgroundImage: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
-            boxShadow: '0 0 10px rgba(20,184,166,0.5)',
+            top: 0, left: '15%', right: '15%', height: 1,
+            backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.4) 50%, transparent 100%)',
           },
         }}>
-          <Typography sx={{
-            fontSize: 10, fontWeight: 800, color: '#0F766E',
-            letterSpacing: 1.4, textTransform: 'uppercase', mb: 0.7,
+          {/* מרכאת ציטוט גדולה דקורטיבית ברקע */}
+          <Box sx={{
+            position: 'absolute',
+            top: -14, right: 14,
+            fontSize: 96, lineHeight: 1,
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            color: 'rgba(20,184,166,0.10)',
+            fontWeight: 700,
+            pointerEvents: 'none',
+            userSelect: 'none',
           }}>
-            הערה
-          </Typography>
+            ”
+          </Box>
+          {/* תווית "הערה" צפה - חופפת את הגבול העליון */}
+          <Box sx={{
+            position: 'absolute',
+            top: -10, right: 18,
+            display: 'flex', alignItems: 'center', gap: 0.5,
+            px: 1, py: 0.35, borderRadius: '999px',
+            backgroundImage: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+            boxShadow: [
+              'inset 0 1px 0 rgba(255,255,255,0.3)',
+              '0 2px 6px rgba(15,118,110,0.35)',
+              '0 0 0 3px #FFFFFF',
+            ].join(', '),
+          }}>
+            <Box sx={{
+              width: 5, height: 5, borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.95)',
+              boxShadow: '0 0 4px rgba(255,255,255,0.7)',
+            }} />
+            <Typography sx={{
+              fontSize: 9.5, fontWeight: 800, color: '#fff',
+              letterSpacing: 1.2, textTransform: 'uppercase',
+            }}>
+              הערה
+            </Typography>
+          </Box>
           <Typography sx={{
-            fontSize: 14, color: '#134E4A',
+            position: 'relative', zIndex: 1,
+            fontSize: 15, color: '#134E4A',
             fontWeight: 500,
-            lineHeight: 1.55,
+            lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           }}>
             {product.note}
