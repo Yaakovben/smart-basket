@@ -157,18 +157,20 @@ interface ChainCardProps {
   // האם המשתמש שיתף מיקום פעיל. רק אז הגיוני להציג "אין סניף במאגר"
   // - לפני אישור מיקום אין סיבה לטעון שהסניף "חסר", פשוט עוד לא נשאלנו.
   hasLocation: boolean;
+  // צבע ההדגשה לפי מצב המיון - ירוק/תכלת/סגול
+  winnerColor: { main: string; bgLight: string; bgDark: string; borderLight: string; borderDark: string };
 }
 
-const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation }: ChainCardProps) => {
+const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation, winnerColor }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
-  // צבעי רקע לפי רנק - מנצח קבל ברק זהוב, אחרים נייטרלי
+  // רקע ומסגרת המנצח בצבע לפי מצב המיון; אחרת נייטרלי
   const cardBg = isWinner
-    ? (isDark ? 'linear-gradient(135deg, rgba(16,185,129,0.18), rgba(20,184,166,0.08))' : 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(20,184,166,0.04))')
+    ? (isDark ? winnerColor.bgDark : winnerColor.bgLight)
     : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.015)');
   const cardBorder = isWinner
-    ? (isDark ? 'rgba(16,185,129,0.45)' : 'rgba(16,185,129,0.4)')
+    ? (isDark ? winnerColor.borderDark : winnerColor.borderLight)
     : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)');
 
   const handleNavigate = useCallback((e: React.MouseEvent) => {
@@ -437,23 +439,11 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   // "משולב" - ציון מנורמל 50/50. אם אין מיקום, "קרוב"/"משולב" נופלים ל-price.
   const sortedChains = (() => {
     const chains = [...(data.chainTotals || [])];
-    // עקרון הוגנות: רשת חלקית (זיהתה פחות מוצרים) לעולם לא תוצג לפני
-    // רשת שלמה (זיהתה את המקסימום), כי הסה"כ שלה נמוך באופן מלאכותי.
-    // ריקות (0 התאמות) תמיד אחרונות.
-    const tier = (c: PriceChainTotal) =>
-      c.matchedCount === 0 ? 2 : c.isComplete ? 0 : 1;
-    const fallbackToPrice = (a: PriceChainTotal, b: PriceChainTotal) => {
-      const ta = tier(a), tb = tier(b);
-      if (ta !== tb) return ta - tb;
-      // בתוך קבוצת החלקיות - יותר התאמות קודם, ואז לפי מחיר.
-      // (בקבוצת השלמות matchedCount זהה לכולן ולכן רק המחיר משחק.)
-      if (a.matchedCount !== b.matchedCount) return b.matchedCount - a.matchedCount;
-      return a.total - b.total;
-    };
+    // ריקות תמיד בסוף בכל מיון
+    const isEmpty = (c: PriceChainTotal) => c.matchedCount === 0;
     if (sortMode === 'distance' && hasAnyLocation) {
       return chains.sort((a, b) => {
-        const ta = tier(a), tb = tier(b);
-        if (ta !== tb) return ta - tb;
+        if (isEmpty(a) !== isEmpty(b)) return isEmpty(a) ? 1 : -1;
         const aDist = a.nearestBranch?.distanceKm ?? Infinity;
         const bDist = b.nearestBranch?.distanceKm ?? Infinity;
         return aDist - bDist;
@@ -475,7 +465,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         return chains.sort((a, b) => score(a) - score(b));
       }
     }
-    return chains.sort(fallbackToPrice);
+    // 'זול' - הוגן: שלמות לפי מחיר, אחר כך חלקיות לפי מספר זיהויים, אחר כך ריקות
+    return chains.sort((a, b) => {
+      if (isEmpty(a) !== isEmpty(b)) return isEmpty(a) ? 1 : -1;
+      if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
+      if (a.isComplete && b.isComplete) return a.total - b.total;
+      if (a.matchedCount !== b.matchedCount) return b.matchedCount - a.matchedCount;
+      return a.total - b.total;
+    });
   })();
 
   const toggleExpanded = useCallback((id: string) => {
@@ -722,6 +719,11 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* CARDS STACK - כרטיס לכל רשת. ההדגשה ברקע אוטומטית על המוביל לפי המיון. */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
+        const winnerColor = sortMode === 'distance'
+          ? { main: '#0EA5E9', bgLight: 'rgba(14,165,233,0.12)', bgDark: 'rgba(14,165,233,0.20)', borderLight: 'rgba(14,165,233,0.45)', borderDark: 'rgba(14,165,233,0.5)' }
+          : sortMode === 'combined'
+          ? { main: '#8B5CF6', bgLight: 'rgba(139,92,246,0.12)', bgDark: 'rgba(139,92,246,0.20)', borderLight: 'rgba(139,92,246,0.45)', borderDark: 'rgba(139,92,246,0.5)' }
+          : { main: '#10B981', bgLight: 'rgba(16,185,129,0.12)', bgDark: 'rgba(16,185,129,0.20)', borderLight: 'rgba(16,185,129,0.45)', borderDark: 'rgba(16,185,129,0.5)' };
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {sortedChains.map((chain, idx) => (
@@ -738,6 +740,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 onToggle={() => toggleExpanded(chain.chainId)}
                 onOpenNav={setNavBranch}
                 hasLocation={locationStatus === 'granted'}
+                winnerColor={winnerColor}
               />
             ))}
           </Box>
