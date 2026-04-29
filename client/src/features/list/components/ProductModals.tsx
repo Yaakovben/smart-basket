@@ -658,53 +658,10 @@ export const EditProductModal = memo(({
       />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
-          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => {
-            const isSelected = product.category === cat;
-            return (
-              <Box
-                key={cat}
-                onClick={() => { haptic('light'); onUpdateField('category', cat as ProductCategory); }}
-                role="radio"
-                aria-checked={isSelected}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5,
-                  py: 1.25,
-                  px: 0.25,
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  border: '2px solid',
-                  borderColor: isSelected ? 'primary.main' : 'rgba(20,184,166,0.15)',
-                  bgcolor: isSelected ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.04)',
-                  boxShadow: isSelected ? '0 2px 8px rgba(20,184,166,0.2)' : 'none',
-                  transition: 'all 0.2s',
-                  '&:active': { transform: 'scale(0.93)' },
-                }}
-              >
-                <Box sx={{
-                  width: 36, height: 36, borderRadius: '10px',
-                  bgcolor: isSelected ? 'rgba(20,184,166,0.15)' : 'background.paper',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, transition: 'all 0.2s',
-                }}>
-                  {icon}
-                </Box>
-                <Typography sx={{
-                  fontSize: 9.5, fontWeight: isSelected ? 700 : 500,
-                  color: isSelected ? 'primary.main' : 'text.secondary',
-                  textAlign: 'center', lineHeight: 1.15,
-                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
+        <CategoryGrid
+          selected={product.category}
+          onSelect={(cat) => { haptic('light'); onUpdateField('category', cat); }}
+        />
       </Box>
       <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
