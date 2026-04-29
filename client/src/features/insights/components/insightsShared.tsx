@@ -516,15 +516,17 @@ export const GoldenHourCard = ({ hourlyActivity }: {
   const total = hourlyActivity.reduce((a, b) => a + b, 0);
   const peakPct = total > 0 ? Math.round((hourlyActivity[peak] / total) * 100) : 0;
 
-  // פרשנות זמן ביום
+  // פרשנות זמן ביום - גבולות זהים ל-buckets ב-PulseTab כדי שלא תהיה
+  // אי-עקביות בין הכרטיס הזה לבין שעון השעות (5-11 בוקר, 12-16 צהריים,
+  // 17-22 ערב, 23-04 לילה).
   let label: string; let emoji: string; let gradient: string;
-  if (peak >= 5 && peak < 11) {
+  if (peak >= 5 && peak <= 11) {
     label = 'איש בוקר'; emoji = '🌅';
     gradient = 'linear-gradient(135deg, #FBBF24, #F59E0B, #F97316)';
-  } else if (peak >= 11 && peak < 16) {
+  } else if (peak >= 12 && peak <= 16) {
     label = 'אנרגיית צהריים'; emoji = '☀️';
     gradient = 'linear-gradient(135deg, #FCD34D, #FBBF24, #F59E0B)';
-  } else if (peak >= 16 && peak < 21) {
+  } else if (peak >= 17 && peak <= 22) {
     label = 'איש ערב'; emoji = '🌆';
     gradient = 'linear-gradient(135deg, #F472B6, #EC4899, #BE185D)';
   } else {
@@ -838,6 +840,343 @@ export const MonthRecapCard = ({ slides, isDark: _isDark }: {
             ))}
           </Box>
         )}
+      </Box>
+    </Box>
+  );
+};
+
+// ===== Activity Dot Calendar - 30 יום אחרונים כרשת נקודות =====
+// מבוסס על weeklyTrends שכבר קיים (8 שבועות, ~56 יום). מציג רק 30 הימים
+// האחרונים. דמיון ל-GitHub contribution graph - קומפקטי ויזואלי.
+// כל "נקודה" = יום, אינטנסיביות הצבע משקפת פעילות יחסית.
+export const ActivityDotCalendar = ({ weeklyTrends, isDark }: {
+  weeklyTrends: { week: string; added: number; purchased: number }[];
+  isDark: boolean;
+}) => {
+  if (!weeklyTrends || weeklyTrends.length === 0) return null;
+  // 30 יום ≈ 4.3 שבועות. נציג 5 שבועות אחרונים = 35 ימים.
+  const recent = weeklyTrends.slice(-5);
+  // אין לנו נתון יומי - מחלקים את שבועי-נתוני (added+purchased) באופן יחסי.
+  // ממוצע יומי לשבוע, אבל מסמנים "פעיל" רק אם יש פעילות אמיתית בשבוע.
+  const totalActivity = recent.reduce((s, w) => s + w.added + w.purchased, 0);
+  if (totalActivity === 0) return null;
+
+  const max = Math.max(...recent.map(w => w.added + w.purchased), 1);
+  const days = recent.flatMap(w => {
+    const intensity = (w.added + w.purchased) / max;
+    return Array.from({ length: 7 }, () => intensity);
+  }).slice(-30); // 30 ימים אחרונים
+
+  return (
+    <Box sx={{
+      mb: 2, p: 1.5, borderRadius: '14px',
+      backgroundImage: isDark
+        ? 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(255,255,255,0.02))'
+        : 'linear-gradient(135deg, rgba(20,184,166,0.05), rgba(255,255,255,0.7))',
+      border: '1px solid',
+      borderColor: isDark ? 'rgba(20,184,166,0.2)' : 'rgba(20,184,166,0.15)',
+      boxShadow: isDark
+        ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px rgba(20,184,166,0.06)',
+      animation: `${fadeIn} 0.4s ease both`,
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: isDark ? '#5EEAD4' : '#0F766E', letterSpacing: 0.4 }}>
+          📆 30 הימים האחרונים
+        </Typography>
+        <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 700 }}>
+          ←  ישן · חדש  →
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(15, 1fr)', gap: 0.4 }}>
+        {days.map((intensity, i) => (
+          <Box
+            key={i}
+            title={intensity > 0 ? `יום פעיל` : 'אין פעילות'}
+            sx={{
+              aspectRatio: '1', borderRadius: '3px',
+              bgcolor: intensity === 0
+                ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)')
+                : `rgba(20,184,166,${0.2 + intensity * 0.7})`,
+              boxShadow: intensity > 0.7 ? '0 0 4px rgba(20,184,166,0.5)' : 'none',
+              transition: 'transform 0.1s ease',
+              '&:hover': intensity > 0 ? { transform: 'scale(1.3)' } : {},
+              animation: `${fadeIn} 0.4s ease ${i * 0.012}s both`,
+            }}
+          />
+        ))}
+      </Box>
+      {/* Legend - אינטנסיביות */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.4, mt: 1 }}>
+        <Typography sx={{ fontSize: 9, color: 'text.disabled', fontWeight: 700 }}>פחות</Typography>
+        {[0, 0.25, 0.5, 0.75, 1].map(i => (
+          <Box key={i} sx={{
+            width: 9, height: 9, borderRadius: '2px',
+            bgcolor: i === 0 ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : `rgba(20,184,166,${0.2 + i * 0.7})`,
+          }} />
+        ))}
+        <Typography sx={{ fontSize: 9, color: 'text.disabled', fontWeight: 700 }}>יותר</Typography>
+      </Box>
+    </Box>
+  );
+};
+
+// ===== MonthVsMonth - השוואה ויזואלית של החודש הזה לקודם =====
+// משתמש ב-monthComparison שכבר מחושב בשרת. מציג שני בארים אופקיים
+// יחסיים זה לזה. הכי חזק ויזואלית כשיש שיפור משמעותי.
+export const MonthVsMonthStrip = ({ thisMonth, lastMonth, hasBaseline, isDark }: {
+  thisMonth: number; lastMonth: number; hasBaseline: boolean; isDark: boolean;
+}) => {
+  if (!hasBaseline) return null;
+  const max = Math.max(thisMonth, lastMonth, 1);
+  const thisPct = (thisMonth / max) * 100;
+  const lastPct = (lastMonth / max) * 100;
+  const isUp = thisMonth > lastMonth;
+  const isFlat = thisMonth === lastMonth;
+  const delta = thisMonth - lastMonth;
+  const deltaPct = lastMonth > 0 ? Math.round((delta / lastMonth) * 100) : 0;
+
+  return (
+    <Box sx={{
+      mb: 2, p: 1.75, borderRadius: '16px',
+      backgroundImage: isDark
+        ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(20,184,166,0.06))'
+        : 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(20,184,166,0.04))',
+      border: '1px solid',
+      borderColor: isDark ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.18)',
+      boxShadow: isDark
+        ? 'inset 0 1px 0 rgba(255,255,255,0.04)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px rgba(99,102,241,0.08)',
+      animation: `${fadeIn} 0.4s ease 0.1s both`,
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.25 }}>
+        <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: isDark ? '#A5B4FC' : '#4338CA', letterSpacing: 0.4 }}>
+          📊 חודש מול חודש
+        </Typography>
+        <Box sx={{
+          display: 'inline-flex', alignItems: 'center', gap: 0.3,
+          px: 0.7, py: 0.2, borderRadius: '999px',
+          bgcolor: isFlat ? 'rgba(148,163,184,0.18)' : isUp ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)',
+          border: '1px solid',
+          borderColor: isFlat ? 'rgba(148,163,184,0.4)' : isUp ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)',
+        }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 800, color: isFlat ? '#64748B' : isUp ? '#10B981' : '#EF4444', lineHeight: 1 }}>
+            {isFlat ? '═' : isUp ? '▲' : '▼'} {isFlat ? '0%' : `${isUp ? '+' : ''}${deltaPct}%`}
+          </Typography>
+        </Box>
+      </Box>
+      {/* This month */}
+      <Box sx={{ mb: 0.85 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.35 }}>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary' }}>החודש</Typography>
+          <Typography sx={{ fontSize: 11, fontWeight: 900, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>
+            {thisMonth} פריטים
+          </Typography>
+        </Box>
+        <Box sx={{ height: 8, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          <Box sx={{
+            height: '100%', width: `${thisPct}%`, borderRadius: '4px',
+            backgroundImage: 'linear-gradient(90deg, #6366F1, #4F46E5)',
+            boxShadow: '0 0 6px rgba(99,102,241,0.5)',
+            transition: 'width 0.8s ease',
+          }} />
+        </Box>
+      </Box>
+      {/* Last month */}
+      <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.35 }}>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.secondary' }}>חודש שעבר</Typography>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+            {lastMonth} פריטים
+          </Typography>
+        </Box>
+        <Box sx={{ height: 6, borderRadius: '3px', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          <Box sx={{
+            height: '100%', width: `${lastPct}%`, borderRadius: '3px',
+            bgcolor: isDark ? 'rgba(165,180,252,0.5)' : 'rgba(99,102,241,0.4)',
+            transition: 'width 0.8s ease',
+          }} />
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+// ===== Milestone Progress - הישג הבא בהישג יד =====
+// מציג את הbadge הבא שהמשתמש יכול להשיג + progress bar. גורם
+// הזדהות והכוונה - "עוד 8 פריטים ל-50!" משכנע יותר מ"קנית 42 פריטים".
+type Milestone = { emoji: string; label: string; current: number; target: number; tone: string };
+
+export const MilestoneProgress = ({ stats, streaks, completionRate, isDark }: {
+  stats: { totalPurchased: number; totalLists: number };
+  streaks: { currentWeeks: number; longestWeeks: number } | undefined;
+  completionRate: number;
+  isDark: boolean;
+}) => {
+  // בוחר את ה-milestone הקרוב ביותר שעוד לא הושג
+  const all: Milestone[] = [
+    { emoji: '✨', label: 'התחלה טובה', current: stats.totalPurchased, target: 10, tone: '#14B8A6' },
+    { emoji: '🎯', label: '50 פריטים', current: stats.totalPurchased, target: 50, tone: '#F59E0B' },
+    { emoji: '💯', label: '100 פריטים', current: stats.totalPurchased, target: 100, tone: '#F59E0B' },
+    { emoji: '🌟', label: '250 פריטים', current: stats.totalPurchased, target: 250, tone: '#F97316' },
+    { emoji: '👑', label: '500 פריטים', current: stats.totalPurchased, target: 500, tone: '#DC2626' },
+    { emoji: '🔥', label: 'סטריק 4 שבועות', current: streaks?.currentWeeks ?? 0, target: 4, tone: '#EF4444' },
+    { emoji: '🔥', label: 'סטריק 8 שבועות', current: streaks?.currentWeeks ?? 0, target: 8, tone: '#EF4444' },
+    { emoji: '⚡', label: 'יעיל (75% השלמה)', current: completionRate, target: 75, tone: '#10B981' },
+    { emoji: '🏆', label: 'מדייק (90% השלמה)', current: completionRate, target: 90, tone: '#10B981' },
+    { emoji: '📚', label: '5 רשימות', current: stats.totalLists, target: 5, tone: '#3B82F6' },
+  ];
+  const next = all.find(m => m.current < m.target);
+  if (!next) return null;
+  const pct = Math.min(100, Math.round((next.current / next.target) * 100));
+  const remaining = next.target - next.current;
+
+  return (
+    <Box sx={{
+      mb: 2, p: 1.6, borderRadius: '14px',
+      backgroundImage: isDark
+        ? `linear-gradient(135deg, ${next.tone}1A, rgba(255,255,255,0.02))`
+        : `linear-gradient(135deg, ${next.tone}10, rgba(255,255,255,0.5))`,
+      border: '1.5px solid',
+      borderColor: isDark ? `${next.tone}40` : `${next.tone}30`,
+      boxShadow: isDark
+        ? `inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 8px ${next.tone}1F`
+        : `inset 0 1px 0 rgba(255,255,255,0.7), 0 2px 8px ${next.tone}14`,
+      animation: `${fadeIn} 0.45s ease 0.15s both`,
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1 }}>
+        <Box sx={{
+          width: 42, height: 42, flexShrink: 0,
+          borderRadius: '12px',
+          backgroundImage: `linear-gradient(135deg, ${next.tone}, ${next.tone}CC)`,
+          color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 8px ${next.tone}50`,
+        }}>
+          {next.emoji}
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.disabled', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            הישג הבא
+          </Typography>
+          <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+            {next.label}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: 'end', flexShrink: 0 }}>
+          <Typography sx={{ fontSize: 16, fontWeight: 900, color: next.tone, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            {pct}%
+          </Typography>
+          <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 700, mt: 0.15 }}>
+            עוד {remaining}
+          </Typography>
+        </Box>
+      </Box>
+      <Box sx={{ height: 7, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+        <Box sx={{
+          height: '100%', width: `${pct}%`, borderRadius: '4px',
+          backgroundImage: `linear-gradient(90deg, ${next.tone}, ${next.tone}DD)`,
+          boxShadow: `0 0 8px ${next.tone}80`,
+          transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }} />
+      </Box>
+    </Box>
+  );
+};
+
+// ===== Radial Hour Clock - מסכי שעות בעיצוב שעון =====
+// 24 שעות מסביב למעגל. כל שעה = "קרן" שאורכה תלוי ב-activity. הרבה
+// יותר מרשים מ-grid 24 משבצות. במרכז: השעה הפעילה ביותר.
+export const RadialHourClock = ({ hourlyActivity, isDark }: {
+  hourlyActivity: number[]; isDark: boolean;
+}) => {
+  if (!hourlyActivity || hourlyActivity.every(v => v === 0)) return null;
+  const max = Math.max(...hourlyActivity, 1);
+  const peak = hourlyActivity.indexOf(max);
+
+  const size = 200;
+  const center = size / 2;
+  const innerR = 36;
+  const outerR = 90;
+  const [hovered, setHovered] = useState<number | null>(null);
+  const displayH = hovered !== null ? hovered : peak;
+  const displayCount = hourlyActivity[displayH];
+  const total = hourlyActivity.reduce((a, b) => a + b, 0);
+  const displayPct = total > 0 ? Math.round((displayCount / total) * 100) : 0;
+
+  return (
+    <Box sx={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      animation: `${fadeIn} 0.5s ease both`,
+    }}>
+      <Box sx={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size}>
+          {/* טבעות רקע */}
+          <circle cx={center} cy={center} r={innerR}
+            fill="none" stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'} strokeWidth={1} />
+          <circle cx={center} cy={center} r={outerR}
+            fill="none" stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'} strokeWidth={1} />
+          {/* 24 קרני שעות */}
+          {hourlyActivity.map((count, h) => {
+            const angle = (h / 24) * 2 * Math.PI - Math.PI / 2;
+            const intensity = count / max;
+            const len = innerR + 4 + intensity * (outerR - innerR - 4);
+            const x1 = center + Math.cos(angle) * (innerR + 2);
+            const y1 = center + Math.sin(angle) * (innerR + 2);
+            const x2 = center + Math.cos(angle) * len;
+            const y2 = center + Math.sin(angle) * len;
+            const isPeak = h === peak;
+            const isHovered = h === hovered;
+            const isActive = isPeak || isHovered;
+            return (
+              <line
+                key={h}
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke={count === 0 ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : isActive ? '#0D9488' : `rgba(20,184,166,${0.4 + intensity * 0.6})`}
+                strokeWidth={isActive ? 7 : 5}
+                strokeLinecap="round"
+                onMouseEnter={() => setHovered(h)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  cursor: 'pointer',
+                  filter: isActive ? 'drop-shadow(0 0 4px rgba(20,184,166,0.6))' : 'none',
+                  transition: 'stroke-width 0.15s, filter 0.15s',
+                }}
+              />
+            );
+          })}
+          {/* תוויות 0/6/12/18 */}
+          {[0, 6, 12, 18].map(h => {
+            const angle = (h / 24) * 2 * Math.PI - Math.PI / 2;
+            const lx = center + Math.cos(angle) * (outerR + 12);
+            const ly = center + Math.sin(angle) * (outerR + 12);
+            return (
+              <text key={h} x={lx} y={ly}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fontSize: 10, fontWeight: 700, fill: isDark ? '#94A3B8' : '#64748B' }}>
+                {h}
+              </text>
+            );
+          })}
+        </svg>
+        {/* תווית מרכזית */}
+        <Box sx={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <Typography sx={{ fontSize: 9, fontWeight: 800, color: 'text.disabled', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            {hovered !== null ? 'שעה' : 'שיא'}
+          </Typography>
+          <Typography sx={{ fontSize: 22, fontWeight: 900, color: '#0D9488', lineHeight: 1, fontVariantNumeric: 'tabular-nums', mt: 0.2 }}>
+            {displayH}:00
+          </Typography>
+          <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', mt: 0.3 }}>
+            {displayCount > 0 ? `${displayPct}%` : 'אין פעילות'}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );

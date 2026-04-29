@@ -20,6 +20,7 @@ import {
   fadeIn, dayLabels, scoreEmoji,
   AnimatedNumber, SectionCard, HeroInsight, InsightsEmptyState,
   PersonalityCard, ScoreTrendBadge, useScoreDelta,
+  ActivityDotCalendar, RadialHourClock,
 } from '../insightsShared';
 
 interface Props {
@@ -123,6 +124,9 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
       {shoppingPersonality && stats.totalProducts >= 5 && (
         <PersonalityCard personality={shoppingPersonality} isDark={isDark} />
       )}
+
+      {/* לוח נקודות 30 יום - ויזואליזציה GitHub-style של פעילות אחרונה */}
+      <ActivityDotCalendar weeklyTrends={weeklyTrends || []} isDark={isDark} />
 
       {/* כרטיס "מומנטום שבועי" */}
       {hasMomentumData && (lastWeek.purchased > 0 || prevWeek.purchased > 0) && (
@@ -585,30 +589,9 @@ export const PulseTab = memo(({ data, isDark, t }: Props) => {
         const peakBucketIdx = bucketTotals.indexOf(Math.max(...bucketTotals));
         return (
           <SectionCard title={`🕐 פעילות לפי שעות · שיא ב-${peakHour}:00`} isDark={isDark}>
-            <Box sx={{
-              display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '3px', mb: 1.5,
-            }}>
-              {hourlyActivity.map((count, h) => {
-                const intensity = count / maxHour;
-                const isPeak = h === peakHour && count > 0;
-                const bg = count === 0
-                  ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)')
-                  : `rgba(20,184,166,${0.18 + intensity * 0.65})`;
-                return (
-                  <Box key={h} title={`${h}:00 — ${count} פעולות`} sx={{
-                    aspectRatio: '1', borderRadius: '5px', bgcolor: bg,
-                    border: isPeak ? '1.5px solid #14B8A6' : '1px solid transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 9, fontWeight: count > 0 ? 800 : 600,
-                    color: intensity > 0.5 ? '#fff' : (count === 0 ? 'text.disabled' : '#0F766E'),
-                    fontVariantNumeric: 'tabular-nums', transition: 'transform 0.1s',
-                    cursor: count > 0 ? 'help' : 'default',
-                    '&:hover': count > 0 ? { transform: 'scale(1.15)' } : {},
-                  }}>
-                    {h}
-                  </Box>
-                );
-              })}
+            {/* שעון רדיאלי - 24 קרניים. ויזואליזציה אסטטית במקום grid שטוח. */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+              <RadialHourClock hourlyActivity={hourlyActivity} isDark={isDark} />
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.6 }}>
               {buckets.map((b, i) => {

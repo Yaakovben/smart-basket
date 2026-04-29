@@ -16,6 +16,7 @@ import {
   AchievementBadges, computeAchievements, ForgottenProductsCard,
   SpotlightProduct, SmartTipsCarousel, GoldenHourCard, GroupLeadershipHero,
   CategoryDonut, MonthRecapCard,
+  MonthVsMonthStrip, MilestoneProgress,
 } from './insightsShared';
 
 type InsightTab = 'price' | 'lists' | 'habits' | 'pulse';
@@ -1130,6 +1131,24 @@ export const InsightsPage = memo(() => {
 
             {/* שורת הישגים - מקור גאווה ויזואלי */}
             <AchievementBadges items={achievements} isDark={isDark} />
+
+            {/* התקדמות להישג הבא - גורם הזדהות והכוונה */}
+            <MilestoneProgress
+              stats={{ totalPurchased: stats.totalPurchased, totalLists: stats.totalLists }}
+              streaks={data.streaks}
+              completionRate={stats.completionRate}
+              isDark={isDark}
+            />
+
+            {/* חודש מול חודש - השוואה ויזואלית של פעילות */}
+            <MonthVsMonthStrip
+              thisMonth={data.monthComparison?.previousTotal !== undefined
+                ? Math.max(0, (data.monthComparison.previousTotal || 0) + Math.round((data.monthComparison.previousTotal || 0) * (data.monthComparison.productsGrowth || 0) / 100))
+                : 0}
+              lastMonth={data.monthComparison?.previousTotal ?? 0}
+              hasBaseline={data.monthComparison?.hasBaseline ?? false}
+              isDark={isDark}
+            />
 
             {/* טיפים חכמים מתחלפים - שימוש ב-smartTips שכבר מחושב בשרת */}
             {data.smartTips && data.smartTips.length > 0 && (
