@@ -71,16 +71,15 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
           }}
         >
-          <Typography sx={{ fontSize: 12, lineHeight: 1 }}>📝</Typography>
+          {/* תג + עגול בתחילת הצ'יפ - מבהיר שזה כפתור הוספה לחיץ */}
+          <Box sx={{
+            width: 14, height: 14, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            bgcolor: '#0D9488', color: '#fff',
+            fontSize: 11, fontWeight: 800, lineHeight: 1,
+          }}>+</Box>
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             הוסף הערה
-          </Typography>
-          {/* חץ קטן שמרמז: לחץ לפתיחה */}
-          <Typography sx={{
-            fontSize: 9, fontWeight: 800, lineHeight: 1, ml: 0.15,
-            color: 'rgba(13,148,136,0.7)', letterSpacing: 0.2,
-          }}>
-            ▾ לחץ
           </Typography>
         </Box>
       ) : (
