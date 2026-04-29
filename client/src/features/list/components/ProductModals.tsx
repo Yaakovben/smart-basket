@@ -71,16 +71,16 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
           }}
         >
-          {/* תג + עגול בתחילת הצ'יפ - מבהיר שזה כפתור הוספה לחיץ */}
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
+            הוסף הערה
+          </Typography>
+          {/* תג + עגול בסוף הצ'יפ (צד שמאל ב-RTL) - מבהיר שזה כפתור הוספה לחיץ */}
           <Box sx={{
             width: 14, height: 14, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             bgcolor: '#0D9488', color: '#fff',
             fontSize: 11, fontWeight: 800, lineHeight: 1,
           }}>+</Box>
-          <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
-            הוסף הערה
-          </Typography>
         </Box>
       ) : (
         // מצב פתוח - "פתק" עם סלוטייפ באמצע למעלה, פינה מקופלת ונטייה קלה
@@ -126,7 +126,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
                 הערה למוצר
               </Typography>
               <Typography sx={{ fontSize: 9, color: 'rgba(13,148,136,0.75)', fontWeight: 600, mt: 0.1 }}>
-                כשרות, אחוז שומן, וכו׳
+                כשרות, סוג, וכו׳
               </Typography>
             </Box>
             <Typography sx={{ fontSize: 9.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
@@ -159,7 +159,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             autoFocus={expanded && value.length === 0}
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder="פרט על המוצר - כשרות, אחוז שומן וכו׳"
+            placeholder="פרט על המוצר - כשרות, סוג וכו׳"
             inputProps={{ maxLength: 200 }}
             sx={{
               position: 'relative', zIndex: 2,
@@ -181,6 +181,93 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
   );
 });
 ProductNoteField.displayName = 'ProductNoteField';
+
+// ===== גריד קטגוריות עם הרחבה =====
+// מציג שתי שורות (8 קטגוריות) כברירת מחדל; פותח אוטומטית אם הקטגוריה
+// הנבחרת נמצאת מעבר ל-8 הראשונות, או בלחיצה על "הצג עוד".
+const COLLAPSED_CATS = 8;
+const ALL_CATS = Object.entries(CATEGORY_ICONS) as [ProductCategory, string][];
+
+const CategoryGrid = memo(({ selected, onSelect }: {
+  selected: string;
+  onSelect: (cat: ProductCategory) => void;
+}) => {
+  const { t } = useSettings();
+  const selectedIdx = ALL_CATS.findIndex(([c]) => c === selected);
+  const [showAll, setShowAll] = useState(selectedIdx >= COLLAPSED_CATS);
+  const visible = showAll ? ALL_CATS : ALL_CATS.slice(0, COLLAPSED_CATS);
+  const hidden = ALL_CATS.length - COLLAPSED_CATS;
+
+  return (
+    <>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup">
+        {visible.map(([cat, icon]) => {
+          const isSelected = selected === cat;
+          return (
+            <Box
+              key={cat}
+              onClick={() => onSelect(cat)}
+              role="radio"
+              aria-checked={isSelected}
+              sx={{
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 0.5, py: 1.25, px: 0.25,
+                borderRadius: '14px', cursor: 'pointer',
+                border: '2px solid',
+                borderColor: isSelected ? 'primary.main' : 'rgba(20,184,166,0.15)',
+                bgcolor: isSelected ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.04)',
+                boxShadow: isSelected ? '0 2px 8px rgba(20,184,166,0.2)' : 'none',
+                transition: 'all 0.2s',
+                '&:active': { transform: 'scale(0.93)' },
+              }}
+            >
+              <Box sx={{
+                width: 36, height: 36, borderRadius: '10px',
+                bgcolor: isSelected ? 'rgba(20,184,166,0.15)' : 'background.paper',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20, transition: 'all 0.2s',
+              }}>
+                {icon}
+              </Box>
+              <Typography sx={{
+                fontSize: 9.5, fontWeight: isSelected ? 700 : 500,
+                color: isSelected ? 'primary.main' : 'text.secondary',
+                textAlign: 'center', lineHeight: 1.15,
+                maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
+      {hidden > 0 && (
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => { haptic('light'); setShowAll(s => !s); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setShowAll(s => !s); } }}
+          sx={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+            mt: 1, py: 0.7,
+            borderRadius: '10px',
+            bgcolor: 'rgba(20,184,166,0.06)',
+            color: 'primary.main',
+            fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background-color 0.15s',
+            '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
+          }}
+        >
+          {showAll ? '▴ הצג פחות' : `▾ הצג עוד (${hidden})`}
+        </Box>
+      )}
+    </>
+  );
+});
+CategoryGrid.displayName = 'CategoryGrid';
 
 
 // ===== מודאל הוספת מוצר =====
@@ -445,63 +532,7 @@ export const AddProductModal = memo(({
       />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }} role="radiogroup" aria-label={t('category')}>
-          {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => {
-            const isSelected = newProduct.category === cat;
-            return (
-              <Box
-                key={cat}
-                onClick={() => handleCategoryClick(cat as ProductCategory)}
-                role="radio"
-                aria-checked={isSelected}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5,
-                  py: 1.25,
-                  px: 0.25,
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  border: '2px solid',
-                  borderColor: isSelected ? 'primary.main' : 'rgba(20,184,166,0.15)',
-                  bgcolor: isSelected ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.04)',
-                  boxShadow: isSelected ? '0 2px 8px rgba(20,184,166,0.2)' : 'none',
-                  transition: 'all 0.2s',
-                  '&:active': { transform: 'scale(0.93)' },
-                }}
-              >
-                <Box sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '10px',
-                  bgcolor: isSelected ? 'rgba(20,184,166,0.15)' : 'background.paper',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 20,
-                  transition: 'all 0.2s',
-                }}>
-                  {icon}
-                </Box>
-                <Typography sx={{
-                  fontSize: 9.5,
-                  fontWeight: isSelected ? 700 : 500,
-                  color: isSelected ? 'primary.main' : 'text.secondary',
-                  textAlign: 'center',
-                  lineHeight: 1.15,
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {t(CATEGORY_TRANSLATION_KEYS[cat as ProductCategory])}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
+        <CategoryGrid selected={newProduct.category} onSelect={handleCategoryClick} />
       </Box>
       <Button
         variant="contained"
