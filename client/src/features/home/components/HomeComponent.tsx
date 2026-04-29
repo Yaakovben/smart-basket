@@ -1536,10 +1536,13 @@ export const HomeComponent = memo(({
           borderColor: 'divider',
           pb: 'env(safe-area-inset-bottom)',
           display: 'flex',
-          justifyContent: 'space-around',
+          // grid 3 חלקים שווים מבטיח יציבות: צד שמאל ושצד ימין באותו רוחב,
+          // הכפתור באמצע מרוכז במדויק. אין יותר drift.
+          justifyContent: 'space-between',
           alignItems: 'center',
+          gap: { xs: 1, sm: 1.5 },
           py: { xs: 1, sm: 1.25 },
-          px: { xs: 3, sm: 4 },
+          px: { xs: 2.5, sm: 3.5 },
           boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
@@ -1547,31 +1550,34 @@ export const HomeComponent = memo(({
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
-        {/* ימין (RTL = ראשון ב-DOM) - בית */}
+        {/* ימין (RTL = ראשון ב-DOM) - בית. סגנון אחיד עם הצד השני - איקון 24px,
+            תווית 10.5px, ריווח/padding זהים. הצבע מסמן "פעיל" (אנחנו בעמוד הבית). */}
         <Box
           role="button"
           tabIndex={0}
           onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label={t('home')}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0.25,
-            py: 0.75,
-            px: 2,
+            flex: 1, maxWidth: 110,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 0.3,
+            minHeight: 48,
+            py: 0.5,
             borderRadius: '10px',
-            bgcolor: 'rgba(20, 184, 166, 0.1)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            '&:active': { bgcolor: 'rgba(20, 184, 166, 0.2)', transform: 'scale(0.96)' },
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background-color 0.18s ease, transform 0.1s ease',
+            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
+            '&:active': { transform: 'scale(0.94)' },
           }}
         >
-          <HomeIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'primary.main' }}>{t('home')}</Typography>
+          <HomeIcon sx={{ fontSize: 24, color: '#14B8A6' }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#14B8A6', letterSpacing: 0.2, lineHeight: 1 }}>
+            {t('home')}
+          </Typography>
         </Box>
 
-        {/* מרכז - כפתור + מורם וצף בסגנון Material "docked FAB". פותח תפריט הוספה */}
+        {/* מרכז - כפתור + ענק וצף, בולט מאוד מעל הפס בסגנון "docked FAB" */}
         <Box
           role="button"
           tabIndex={0}
@@ -1580,46 +1586,78 @@ export const HomeComponent = memo(({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
           sx={{
             position: 'relative',
-            mt: -3.5,                    // מרים את הכפתור מעל פס הניווט
-            width: 60, height: 60, borderRadius: '50%',
+            mt: -5,                           // מרים את הכפתור 40px מעל פס הניווט
+            width: 72, height: 72, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
-            background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-            boxShadow: '0 6px 20px rgba(20,184,166,0.45), 0 2px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25)',
-            border: '4px solid',
+            background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+            boxShadow: [
+              '0 10px 28px rgba(20,184,166,0.55)',  // צל גדול חיצוני
+              '0 4px 10px rgba(0,0,0,0.18)',        // צל קצר לעומק
+              'inset 0 1px 0 rgba(255,255,255,0.35)', // ברק עליון
+              'inset 0 -2px 0 rgba(0,0,0,0.08)',    // עומק תחתון
+            ].join(', '),
+            // הילה שמדגישה שזה "צף מעל"
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: -8,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(20,184,166,0.25) 0%, transparent 70%)',
+              zIndex: -1,
+              pointerEvents: 'none',
+            },
+            // טבעת לבנה רחבה שמפרידה ויזואלית מהפס
+            border: '5px solid',
             borderColor: 'background.paper',
             transition: 'transform 0.15s, box-shadow 0.15s',
-            '&:hover': { boxShadow: '0 8px 26px rgba(20,184,166,0.55), 0 2px 8px rgba(0,0,0,0.15)' },
-            '&:active': { transform: 'scale(0.94)' },
-            '@media (max-width: 360px)': { width: 54, height: 54, mt: -3 },
+            '&:hover': {
+              boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 6px 14px rgba(0,0,0,0.2)',
+              transform: 'translateY(-1px)',
+            },
+            '&:active': { transform: 'scale(0.93)' },
+            '@media (max-width: 360px)': {
+              width: 64, height: 64, mt: -4.5,
+              border: '4px solid',
+              borderColor: 'background.paper',
+            },
+            '@media (max-width: 320px)': { width: 58, height: 58, mt: -4 },
           }}
         >
-          <AddIcon sx={{ fontSize: 30, color: 'white' }} />
+          <AddIcon sx={{
+            fontSize: 36,
+            color: 'white',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+            '@media (max-width: 360px)': { fontSize: 32 },
+            '@media (max-width: 320px)': { fontSize: 28 },
+          }} />
         </Box>
 
-        {/* שמאל (RTL = אחרון ב-DOM) - תובנות */}
+        {/* שמאל (RTL = אחרון ב-DOM) - תובנות. סגנון אחיד מדויק לימין */}
         <Box
           role="button"
           tabIndex={0}
           onClick={() => { haptic('light'); navigate('/insights'); }}
           aria-label={t('insights')}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0.25,
-            py: 0.75,
-            px: 2,
+            flex: 1, maxWidth: 110,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 0.3,
+            minHeight: 48,
+            py: 0.5,
             borderRadius: '10px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
-            '&:active': { bgcolor: 'rgba(20,184,166,0.12)', transform: 'scale(0.96)' },
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background-color 0.18s ease, transform 0.1s ease',
+            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
+            '&:active': { transform: 'scale(0.94)' },
           }}
         >
-          <InsightsOutlinedIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'text.secondary' }}>{t('insights')}</Typography>
+          <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.secondary' }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.secondary', letterSpacing: 0.2, lineHeight: 1 }}>
+            {t('insights')}
+          </Typography>
         </Box>
       </Box>
     </Box>
