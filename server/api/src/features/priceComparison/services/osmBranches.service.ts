@@ -22,17 +22,49 @@ const OVERPASS_ENDPOINTS = [
 
 // מיפוי בין chainId שלנו לבין שמות מותג כפי שהם מופיעים ב-OSM.
 // אומת ע"י קריאות ישירות ל-Overpass: ה-brand ב-OSM הוא בד"כ באנגלית.
+// נוספו וריאציות רבות (כתיב חלופי, כינויי-משנה, שמות עבריים מקוצרים)
+// כדי לתפוס סניפים עם תיוג שונה בקהילת OSM.
 const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
-  shufersal:    { brands: ['Shufersal'], names: ['שופרסל'] },
-  rami_levy:    { brands: ['Rami Levy', 'Rami Levi'], names: ['רמי לוי'] },
-  yohananof:    { brands: ['Yohananof'], names: ['יוחננוף'] },
-  osher_ad:     { brands: ['Osher Ad'], names: ['אושר עד'] },
-  tiv_taam:     { brands: ["Tiv Ta'am", 'Tiv Taam'], names: ['טיב טעם'] },
-  keshet:       { brands: ['Keshet'], names: ['קשת טעמים', 'קשת'] },
-  stop_market:  { brands: ['Stop Market'], names: ['סטופ מרקט'] },
-  politzer:     { brands: ['Politzer'], names: ['פוליצר'] },
-  doralon:      { brands: ['Dor Alon', 'AM:PM', 'AMPM'], names: ['דור אלון', 'AM:PM'] },
-  victory:      { brands: ['Victory'], names: ['ויקטורי'] },
+  shufersal: {
+    brands: ['Shufersal', 'Shufersal Deal', 'Shufersal Express', 'Shufersal Yesh', 'Shufersal Sheli', 'Yesh', 'BE Pharm'],
+    names: ['שופרסל', 'שופרסל דיל', 'שופרסל אקספרס', 'שופרסל יש', 'שופרסל שלי', 'שופרסל בי', 'יש'],
+  },
+  rami_levy: {
+    brands: ['Rami Levy', 'Rami Levi', 'Rami Levy Hashikma', 'Rami Levy Shivuk Hashikma'],
+    names: ['רמי לוי', 'רמי לוי שיווק השקמה', 'רמי לוי-שיווק השקמה'],
+  },
+  yohananof: {
+    brands: ['Yohananof', 'Yochananof', 'Yohanannof', "M. Yohananof", 'M Yohananof'],
+    names: ['יוחננוף', 'יוחננוף ובניו', 'מ. יוחננוף', 'מ יוחננוף'],
+  },
+  osher_ad: {
+    brands: ['Osher Ad', 'Osher-Ad', 'OsherAd'],
+    names: ['אושר עד', 'אושר-עד'],
+  },
+  tiv_taam: {
+    brands: ["Tiv Ta'am", 'Tiv Taam', 'Tivtaam', 'TivTaam'],
+    names: ['טיב טעם', 'טיב-טעם'],
+  },
+  keshet: {
+    brands: ['Keshet', 'Keshet Teamim', 'Keshet Market'],
+    names: ['קשת טעמים', 'קשת', 'קשת מרקט', 'רשת קשת'],
+  },
+  stop_market: {
+    brands: ['Stop Market', 'Stop-Market', 'StopMarket', 'STOP'],
+    names: ['סטופ מרקט', 'סטופ-מרקט', 'STOP MARKET'],
+  },
+  politzer: {
+    brands: ['Politzer', 'Polizer', 'Politser'],
+    names: ['פוליצר', 'פולצר'],
+  },
+  doralon: {
+    brands: ['Dor Alon', 'Dor-Alon', 'AM:PM', 'AMPM', 'AM/PM', 'AM PM'],
+    names: ['דור אלון', 'דור-אלון', 'AM:PM', 'אם פי אם', 'אם:פי:אם'],
+  },
+  victory: {
+    brands: ['Victory', 'Victory Supermarket', 'Victory Hyper'],
+    names: ['ויקטורי', 'ויקטורי היפר', 'ויקטורי סופר'],
+  },
 };
 
 export interface OsmBranch {
