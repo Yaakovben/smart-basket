@@ -1549,37 +1549,21 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך חצי-עיגול אמיתי מתחת ל-+ =====
-          // הפתרון הנכון: border-radius בערכים פיקסליים שווים לרוחב המלא,
-          // כך ששתי קשתות הפינות התחתונות OVERLAP באמצע ויוצרות חצי-עיגול
-          // חלק (במקום U עם פס שטוח באמצע, מה שקרה עם 50%).
-          // הגודל הוגדל גם כן כדי שהחתך יהיה דרמטי כמו בעיצוב המוצג.
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: -1,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 96,                                                // רחב יותר מהכפתור 64
-            height: 48,                                               // 50% מהרוחב = חצי עיגול מלא
-            bgcolor: 'background.default',
-            // borderRadius בפיקסלים: H=full-width, V=full-height per corner
-            // שני הקשתות (96×48) חופפות באמצע ויוצרות עקומה חלקה
-            borderBottomLeftRadius: '96px 48px',
-            borderBottomRightRadius: '96px 48px',
-            // צל פנימי קל לתחושת עומק בקצוות החתך
-            boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.08)',
-            pointerEvents: 'none',
-            '@media (max-width: 360px)': {
-              width: 88, height: 44,
-              borderBottomLeftRadius: '88px 44px',
-              borderBottomRightRadius: '88px 44px',
-            },
-            '@media (max-width: 320px)': {
-              width: 80, height: 40,
-              borderBottomLeftRadius: '80px 40px',
-              borderBottomRightRadius: '80px 40px',
-            },
+          // ===== חתך חצי-עיגול אמיתי באמצעות CSS mask =====
+          // mask חותך באמת מהפס - לא overlay! המסכה היא radial-gradient
+          // שמסומן כשקוף בתוך עיגול ברדיוס 40px בנקודה x=50%, y=0%.
+          // התוצאה: הפס נעלם בפועל בעיגול הזה, והרקע של הדף נראה דרכו.
+          // זה הפתרון הנכון לחתך - לא pseudo, לא overlay.
+          WebkitMaskImage: 'radial-gradient(circle 42px at 50% 0%, transparent 41px, black 42px)',
+          maskImage: 'radial-gradient(circle 42px at 50% 0%, transparent 41px, black 42px)',
+          WebkitMaskComposite: 'source-over',
+          '@media (max-width: 360px)': {
+            WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+            maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          },
+          '@media (max-width: 320px)': {
+            WebkitMaskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
+            maskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
           },
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
