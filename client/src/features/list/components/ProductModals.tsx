@@ -83,68 +83,88 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
           }}>+</Box>
         </Box>
       ) : (
-        // מצב פתוח - "פתק" עם סלוטייפ באמצע למעלה, פינה מקופלת ונטייה קלה
+        // מצב פתוח - גרסה מבוגרת ומלוטשת: סרט washi עדין במקום סלוטייפ מקווקו,
+        // הטיה כמעט-שטוחה (-0.15deg), גופן sans-serif מקצועי, ריווח בין X לטקסט.
         <Box sx={{
           position: 'relative',
-          mt: 1.5, mb: 0.5,
-          px: 1.1, pt: 1.4, pb: 0.9,
-          bgcolor: '#E6F9F5',
-          backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
-          transform: 'rotate(-0.6deg)',
-          boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 6px 14px rgba(0,0,0,0.05)',
-          clipPath: 'polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px)',
-          // קווי "מחברת" עדינים ברקע
+          mt: 2, mb: 0.5,
+          px: 1.5, pt: 1.6, pb: 1.1,
+          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
+          transform: 'rotate(-0.15deg)',
+          border: '1px solid rgba(20,184,166,0.18)',
+          boxShadow: [
+            'inset 0 1px 0 rgba(255,255,255,0.85)',
+            '0 1px 2px rgba(15,118,110,0.06)',
+            '0 6px 16px rgba(20,184,166,0.10)',
+            '0 16px 32px rgba(15,118,110,0.05)',
+          ].join(', '),
+          clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px)',
+          // קווי מחברת מאוד עדינים ברקע
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 20px, rgba(20,184,166,0.08) 20px, rgba(20,184,166,0.08) 21px)',
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 23px, rgba(20,184,166,0.06) 23px, rgba(20,184,166,0.06) 24px)',
             pointerEvents: 'none',
           },
-          // משולש פינה מקופלת
+          // משולש פינה מקופלת בשמאל-עליון
           '&::before': {
             content: '""', position: 'absolute', top: 0, left: 0,
-            width: 16, height: 16,
-            bgcolor: 'rgba(13,148,136,0.22)',
+            width: 18, height: 18,
+            bgcolor: 'rgba(13,148,136,0.18)',
             clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
             zIndex: 1,
           },
         }}>
-          {/* "סלוטייפ" באמצע למעלה */}
+          {/* סרט washi עדין באמצע למעלה - מינימליסטי, בלי קווים מקווקווים */}
           <Box sx={{
-            position: 'absolute', top: -8, left: '50%',
-            transform: 'translateX(-50%) rotate(-2deg)',
-            width: 46, height: 14,
-            bgcolor: 'rgba(20,184,166,0.35)',
-            border: '1px dashed rgba(13,148,136,0.4)',
-            borderRadius: '2px',
-            backdropFilter: 'blur(2px)',
+            position: 'absolute', top: -6, left: '50%',
+            transform: 'translateX(-50%) rotate(-1deg)',
+            width: 56, height: 10,
+            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
+            borderRadius: '1px',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />
-          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
-            <Typography sx={{ fontSize: 13 }}>📝</Typography>
-            <Box sx={{ flex: 1, lineHeight: 1.1 }}>
-              <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3, fontStyle: 'italic' }}>
-                הערה למוצר
+          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.6 }}>
+            <Box sx={{ flex: 1, lineHeight: 1.15 }}>
+              <Typography sx={{
+                fontSize: 10, fontWeight: 800, color: '#0F766E',
+                letterSpacing: 1, textTransform: 'uppercase',
+              }}>
+                הערה
               </Typography>
-              <Typography sx={{ fontSize: 9, color: 'rgba(13,148,136,0.75)', fontWeight: 600, mt: 0.1 }}>
-                כשרות, סוג, וכו׳
+              <Typography sx={{ fontSize: 9.5, color: 'rgba(15,118,110,0.7)', fontWeight: 500, mt: 0.15 }}>
+                כשרות · סוג · מותג
               </Typography>
             </Box>
-            <Typography sx={{ fontSize: 9.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-              {value.length}/200
-            </Typography>
+            <Box sx={{
+              px: 0.7, py: 0.15, borderRadius: '999px',
+              bgcolor: value.length >= 180 ? 'rgba(239,68,68,0.10)' : 'rgba(20,184,166,0.10)',
+              border: '1px solid',
+              borderColor: value.length >= 180 ? 'rgba(239,68,68,0.3)' : 'rgba(20,184,166,0.22)',
+            }}>
+              <Typography sx={{
+                fontSize: 9.5, fontWeight: 700,
+                color: value.length >= 180 ? '#DC2626' : '#0F766E',
+                fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
+              }}>
+                {value.length}/200
+              </Typography>
+            </Box>
+            {/* רווח 1.25 בין הספירה ל-X כדי שלא יהיו דבוקים */}
             <Box
               role="button"
               aria-label="סגור הערה"
               onClick={closeAndClear}
               sx={{
-                width: 18, height: 18, borderRadius: '50%',
+                ml: 1.25,
+                width: 22, height: 22, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: 'rgba(20,184,166,0.22)',
-                color: '#0D9488',
+                color: '#0F766E',
                 cursor: 'pointer', userSelect: 'none',
                 WebkitTapHighlightColor: 'transparent',
-                fontSize: 11, fontWeight: 800, lineHeight: 1,
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.35)' },
+                fontSize: 12, fontWeight: 700, lineHeight: 1,
+                transition: 'all 0.15s',
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)', color: '#0D9488' },
               }}
             >
               ✕
@@ -154,7 +174,7 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             fullWidth
             multiline
             minRows={1}
-            maxRows={2}
+            maxRows={3}
             size="small"
             autoFocus={expanded && value.length === 0}
             value={value}
@@ -165,14 +185,17 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
               position: 'relative', zIndex: 2,
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'transparent',
-                fontSize: 13,
-                fontFamily: '"Caveat", "Comic Sans MS", "Segoe Script", cursive',
-                fontStyle: 'italic',
-                py: 0.25,
+                fontSize: 13.5,
+                fontWeight: 500,
+                color: '#134E4A',
+                py: 0.1,
                 '& fieldset': { border: 'none' },
                 '&.Mui-focused fieldset': { border: 'none' },
               },
-              '& textarea': { lineHeight: '21px' },
+              '& textarea::placeholder': {
+                color: 'rgba(15,118,110,0.5)',
+                opacity: 1,
+              },
             }}
           />
         </Box>
@@ -741,59 +764,61 @@ export const ProductDetailsModal = memo(({
           </Box>
         ))}
       </Box>
-      {/* הערה - אותו עיצוב פתק כמו במודאלי הוספה/עריכה: סלוטייפ באמצע
-          למעלה, פינה מקופלת בשמאל-עליון, הטיה, קווי מחברת, וגופן Caveat. */}
+      {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
+          טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
           mt: 3, mb: 0.5,
-          px: 1.4, pt: 1.6, pb: 1.1,
-          bgcolor: '#E6F9F5',
-          backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
-          transform: 'rotate(-0.6deg)',
-          boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 6px 14px rgba(0,0,0,0.05)',
-          clipPath: 'polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px)',
-          // קווי מחברת עדינים ברקע
+          px: 2, pt: 2, pb: 1.4,
+          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
+          transform: 'rotate(-0.15deg)',
+          border: '1px solid rgba(20,184,166,0.18)',
+          boxShadow: [
+            'inset 0 1px 0 rgba(255,255,255,0.85)',
+            '0 1px 2px rgba(15,118,110,0.06)',
+            '0 8px 20px rgba(20,184,166,0.10)',
+            '0 22px 44px rgba(15,118,110,0.05)',
+          ].join(', '),
+          clipPath: 'polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)',
+          // קווי מחברת מאוד עדינים
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 22px, rgba(20,184,166,0.08) 22px, rgba(20,184,166,0.08) 23px)',
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
             pointerEvents: 'none',
           },
-          // משולש פינה מקופלת בשמאל-עליון
+          // פינה מקופלת בשמאל-עליון
           '&::before': {
             content: '""', position: 'absolute', top: 0, left: 0,
-            width: 16, height: 16,
-            bgcolor: 'rgba(13,148,136,0.22)',
+            width: 20, height: 20,
+            bgcolor: 'rgba(13,148,136,0.18)',
             clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
             zIndex: 1,
           },
         }}>
-          {/* "סלוטייפ" באמצע למעלה */}
+          {/* סרט washi באמצע למעלה */}
           <Box sx={{
-            position: 'absolute', top: -8, left: '50%',
-            transform: 'translateX(-50%) rotate(-2deg)',
-            width: 50, height: 14,
-            bgcolor: 'rgba(20,184,166,0.35)',
-            border: '1px dashed rgba(13,148,136,0.4)',
-            borderRadius: '2px',
-            backdropFilter: 'blur(2px)',
+            position: 'absolute', top: -7, left: '50%',
+            transform: 'translateX(-50%) rotate(-1deg)',
+            width: 64, height: 12,
+            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
+            borderRadius: '1px',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />
-          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.7 }}>
-            <Typography sx={{ fontSize: 14 }}>📝</Typography>
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
             <Typography sx={{
-              fontSize: 11.5, fontWeight: 800, color: '#0D9488',
-              letterSpacing: 0.3, fontStyle: 'italic',
+              fontSize: 10, fontWeight: 800, color: '#0F766E',
+              letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
-              הערה למוצר
+              הערה
             </Typography>
           </Box>
           <Typography sx={{
             position: 'relative', zIndex: 2,
-            fontSize: 16, color: '#134E4A',
-            fontFamily: '"Caveat", "Comic Sans MS", "Segoe Script", cursive',
-            fontStyle: 'italic',
-            lineHeight: '24px',
+            fontSize: 14.5, color: '#134E4A',
+            fontWeight: 500,
+            lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           }}>
             {product.note}
