@@ -1558,15 +1558,15 @@ export const HomeComponent = memo(({
           maskImage: 'radial-gradient(circle 42px at 50% 0%, transparent 41px, black 42px)',
           WebkitMaskComposite: 'source-over',
           '@media (max-width: 360px)': {
+            py: 0.65, px: 2,
             WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
             maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
           },
           '@media (max-width: 320px)': {
+            py: 0.5, px: 1.5,
             WebkitMaskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
             maskImage: 'radial-gradient(circle 35px at 50% 0%, transparent 34px, black 35px)',
           },
-          '@media (max-width: 360px)': { py: 0.65, px: 2 },
-          '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
         {/* ימין (RTL = ראשון ב-DOM) - בית. סגנון אחיד עם הצד השני - איקון 24px,
