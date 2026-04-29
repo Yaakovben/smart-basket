@@ -328,7 +328,17 @@ export const AddProductModal = memo(({
             <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 700, letterSpacing: 0.3, mb: 0.5, px: 0.25 }}>
               ⏱️ הוספו לאחרונה
             </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            {/* גלילה אופקית במקום שורה חדשה - שומר על גובה המודאל קבוע */}
+            <Box sx={{
+              display: 'flex', gap: 0.5,
+              overflowX: 'auto', overflowY: 'hidden',
+              pb: 0.5, mx: -0.25, px: 0.25,
+              scrollSnapType: 'x proximity',
+              scrollbarWidth: 'thin',
+              WebkitOverflowScrolling: 'touch',
+              '&::-webkit-scrollbar': { height: 3 },
+              '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(20,184,166,0.3)', borderRadius: 2 },
+            }}>
               {recentSuggestions.map(s => (
                 <Box
                   key={`recent-${s.name}`}
@@ -340,12 +350,14 @@ export const AddProductModal = memo(({
                     bgcolor: 'rgba(20,184,166,0.08)',
                     border: '1px solid rgba(20,184,166,0.2)',
                     cursor: 'pointer',
+                    flexShrink: 0,
+                    scrollSnapAlign: 'start',
                     transition: 'all 0.15s',
                     '&:active': { transform: 'scale(0.95)', bgcolor: 'rgba(20,184,166,0.15)' },
                   }}
                 >
                   <Typography sx={{ fontSize: 13 }}>{CATEGORY_ICONS[s.category] || '📦'}</Typography>
-                  <Typography sx={{ fontSize: 12, color: 'primary.main', fontWeight: 700 }}>{s.name}</Typography>
+                  <Typography sx={{ fontSize: 12, color: 'primary.main', fontWeight: 700, whiteSpace: 'nowrap' }}>{s.name}</Typography>
                 </Box>
               ))}
             </Box>
