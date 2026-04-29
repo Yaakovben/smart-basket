@@ -27,8 +27,8 @@ const quantityBtnSx = {
 };
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
-// עיצוב פרימיום: glassmorphism עדין, פס מבטא צד, צל רב-שכבתי, טיפוגרפיה מינימלית.
-// מצב סגור: צ'יפ עם תג אייקון מתכתי. מצב פתוח: כרטיס עם פס טורקיז מימין (RTL).
+// עיצוב פתק יצירתי: סלוטייפ באמצע למעלה, פינה מקופלת בשמאל-עליון,
+// הטיה קלה, קווי מחברת עדינים, וגופן Caveat איטלי.
 const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
@@ -42,102 +42,103 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
   return (
     <Box sx={{ mb: 1.25 }}>
       {!isOpen ? (
-        // מצב סגור - צ'יפ פרימיום עם תג + מתכתי
+        // מצב סגור - פתק מיני מקופל, יצירתי וקטן עם הטיה
         <Box
           role="button"
           tabIndex={0}
           onClick={() => { haptic('light'); setExpanded(true); }}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setExpanded(true); } }}
           sx={{
-            display: 'inline-flex', alignItems: 'center', gap: 0.7,
-            pl: 0.4, pr: 1.2, py: 0.4,
-            borderRadius: '999px',
+            position: 'relative',
+            display: 'inline-flex', alignItems: 'center', gap: 0.5,
+            py: 0.55, pl: 1.1, pr: 1.4,
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
-            color: '#0F766E',
-            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(204,241,236,0.55) 100%)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(20,184,166,0.28)',
-            boxShadow: '0 1px 2px rgba(15,118,110,0.06), 0 2px 8px rgba(20,184,166,0.10)',
-            transition: 'all 0.18s ease',
-            '&:hover': {
-              borderColor: 'rgba(20,184,166,0.5)',
-              boxShadow: '0 2px 4px rgba(15,118,110,0.08), 0 4px 14px rgba(20,184,166,0.18)',
-              transform: 'translateY(-0.5px)',
+            color: '#0D9488',
+            bgcolor: '#E0F7F4',
+            transform: 'rotate(-1.2deg)',
+            boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
+            transition: 'all 0.18s',
+            // פינה מקופלת בצד שמאל-עליון
+            clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
+            '&::before': {
+              content: '""',
+              position: 'absolute', top: 0, left: 0,
+              width: 8, height: 8,
+              bgcolor: 'rgba(13,148,136,0.25)',
+              clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
             },
-            '&:active': { transform: 'translateY(0)' },
+            '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
           }}
         >
-          <Box sx={{
-            width: 20, height: 20, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backgroundImage: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 2px rgba(15,118,110,0.3)',
-            color: '#fff', fontSize: 13, fontWeight: 700, lineHeight: 1,
-          }}>+</Box>
-          <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.2 }}>
+          <Typography sx={{ fontSize: 12, lineHeight: 1 }}>📝</Typography>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             הוסף הערה
           </Typography>
         </Box>
       ) : (
-        // מצב פתוח - כרטיס פרימיום: glassmorphism, פס מבטא ימין (RTL), צל עומק רב-שכבתי
+        // מצב פתוח - "פתק" עם סלוטייפ באמצע למעלה, פינה מקופלת ונטייה קלה
         <Box sx={{
           position: 'relative',
           mt: 1.5, mb: 0.5,
-          pl: 1.25, pr: 1.6, pt: 0.85, pb: 0.55,
-          borderRadius: '14px',
-          backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(236,253,250,0.85) 100%)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(20,184,166,0.22)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.7)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 6px 18px rgba(20,184,166,0.10)',
-            '0 16px 36px rgba(15,118,110,0.06)',
-          ].join(', '),
-          // פס מבטא טורקיז מימין (RTL)
+          px: 1.1, pt: 1.4, pb: 0.9,
+          bgcolor: '#E6F9F5',
+          backgroundImage: 'linear-gradient(180deg, #EAFBF7 0%, #DCF4EE 100%)',
+          transform: 'rotate(-0.6deg)',
+          boxShadow: '0 2px 6px rgba(20,184,166,0.18), 0 6px 14px rgba(0,0,0,0.05)',
+          clipPath: 'polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px)',
+          // קווי "מחברת" עדינים ברקע
+          '&::after': {
+            content: '""', position: 'absolute', inset: 0,
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 20px, rgba(20,184,166,0.08) 20px, rgba(20,184,166,0.08) 21px)',
+            pointerEvents: 'none',
+          },
+          // משולש פינה מקופלת
           '&::before': {
-            content: '""', position: 'absolute',
-            top: 10, bottom: 10, right: 0,
-            width: 3, borderRadius: '3px 0 0 3px',
-            backgroundImage: 'linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)',
-            boxShadow: '0 0 8px rgba(20,184,166,0.45)',
+            content: '""', position: 'absolute', top: 0, left: 0,
+            width: 16, height: 16,
+            bgcolor: 'rgba(13,148,136,0.22)',
+            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+            zIndex: 1,
           },
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.25 }}>
-            <Typography sx={{
-              fontSize: 9.5, fontWeight: 800, color: '#0F766E',
-              letterSpacing: 1.2, textTransform: 'uppercase', flex: 1,
-            }}>
-              הערה
-            </Typography>
-            <Box sx={{
-              px: 0.7, py: 0.15, borderRadius: '999px',
-              bgcolor: value.length >= 180 ? 'rgba(239,68,68,0.10)' : 'rgba(20,184,166,0.10)',
-              border: '1px solid',
-              borderColor: value.length >= 180 ? 'rgba(239,68,68,0.3)' : 'rgba(20,184,166,0.22)',
-            }}>
-              <Typography sx={{
-                fontSize: 9, fontWeight: 700,
-                color: value.length >= 180 ? '#DC2626' : '#0F766E',
-                fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
-              }}>
-                {value.length}/200
+          {/* "סלוטייפ" באמצע למעלה */}
+          <Box sx={{
+            position: 'absolute', top: -8, left: '50%',
+            transform: 'translateX(-50%) rotate(-2deg)',
+            width: 46, height: 14,
+            bgcolor: 'rgba(20,184,166,0.35)',
+            border: '1px dashed rgba(13,148,136,0.4)',
+            borderRadius: '2px',
+            backdropFilter: 'blur(2px)',
+            zIndex: 2,
+          }} />
+          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.5 }}>
+            <Typography sx={{ fontSize: 13 }}>📝</Typography>
+            <Box sx={{ flex: 1, lineHeight: 1.1 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3, fontStyle: 'italic' }}>
+                הערה למוצר
+              </Typography>
+              <Typography sx={{ fontSize: 9, color: 'rgba(13,148,136,0.75)', fontWeight: 600, mt: 0.1 }}>
+                כשרות, אחוז שומן, וכו׳
               </Typography>
             </Box>
+            <Typography sx={{ fontSize: 9.5, color: value.length >= 180 ? '#EF4444' : 'rgba(13,148,136,0.7)', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+              {value.length}/200
+            </Typography>
             <Box
               role="button"
               aria-label="סגור הערה"
               onClick={closeAndClear}
               sx={{
-                width: 20, height: 20, borderRadius: '50%',
+                width: 18, height: 18, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#0F766E',
+                bgcolor: 'rgba(20,184,166,0.22)',
+                color: '#0D9488',
                 cursor: 'pointer', userSelect: 'none',
                 WebkitTapHighlightColor: 'transparent',
-                fontSize: 12, fontWeight: 700, lineHeight: 1,
-                transition: 'all 0.15s',
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.12)', color: '#0D9488' },
+                fontSize: 11, fontWeight: 800, lineHeight: 1,
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.35)' },
               }}
             >
               ✕
@@ -147,28 +148,25 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
             fullWidth
             multiline
             minRows={1}
-            maxRows={3}
+            maxRows={2}
             size="small"
             autoFocus={expanded && value.length === 0}
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder="כשרות, אחוז שומן, מותג מועדף…"
+            placeholder="פרט על המוצר - כשרות, אחוז שומן וכו׳"
             inputProps={{ maxLength: 200 }}
             sx={{
+              position: 'relative', zIndex: 2,
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'transparent',
-                fontSize: 13.5,
-                fontWeight: 500,
-                color: '#134E4A',
-                py: 0.1,
+                fontSize: 13,
+                fontFamily: '"Caveat", "Comic Sans MS", "Segoe Script", cursive',
+                fontStyle: 'italic',
+                py: 0.25,
                 '& fieldset': { border: 'none' },
                 '&.Mui-focused fieldset': { border: 'none' },
               },
-              '& textarea::placeholder': {
-                color: 'rgba(15,118,110,0.5)',
-                fontStyle: 'italic',
-                opacity: 1,
-              },
+              '& textarea': { lineHeight: '21px' },
             }}
           />
         </Box>
