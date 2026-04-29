@@ -1534,7 +1534,7 @@ export const HomeComponent = memo(({
           // הפס בגובה ~84px (64 min-height + 20px padding). FAB 64px.
           // bottom: 56 + safe-area => FAB top נמצא ב-(56+64)=120 מהמסך,
           // ראש הפס ב-84 מהמסך => FAB מציץ 36px מעל הפס (יותר מחצי הכפתור).
-          bottom: 'calc(env(safe-area-inset-bottom) + 56px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 32px)',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 11,                         // מעל הפס (10)
@@ -1555,8 +1555,8 @@ export const HomeComponent = memo(({
             transform: 'translateX(-50%) translateY(-1px)',
           },
           '&:active': { transform: 'translateX(-50%) scale(0.93)' },
-          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 50px)' },
-          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 46px)' },
+          '@media (max-width: 360px)': { width: 58, height: 58, bottom: 'calc(env(safe-area-inset-bottom) + 28px)' },
+          '@media (max-width: 320px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
         }}
       >
         <AddIcon sx={{
