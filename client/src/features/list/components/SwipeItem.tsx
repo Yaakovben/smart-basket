@@ -351,22 +351,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent',
-          // ===== אינדיקטור הערה: פס צד צבעוני זהוב במקום אייקון =====
-          // פס אנכי דק בצד ההתחלה (ימין ב-RTL) של הכרטיס. רעיון מתחום
-          // האימייל/Slack: הודעה לא-נקראת מסומנת ב-stripe צבעוני בצד.
-          // עדין, ברור, לא צועק - וגם כשהמוצר נקנה זה עדיין נראה.
-          ...(product.note ? {
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 8, bottom: 8, insetInlineStart: 0,
-              width: 3,
-              borderRadius: '0 2px 2px 0',
-              backgroundImage: 'linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)',
-              boxShadow: '0 0 6px rgba(245,158,11,0.4)',
-              opacity: isPurchased ? 0.4 : 1,
-            },
-          } : {}),
+          // אינדיקטור ההערה הוא צ'יפ אלכסוני "קיימת הערה" בעיצוב הפתק -
+          // ראה למטה ליד שם המוצר. (אין יותר פס צד.)
           '@media (max-width: 360px)': { px: '10px', gap: '8px', borderRadius: '11px' },
           '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
         }}
@@ -418,8 +404,35 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* אינדיקטור ההערה הוא עכשיו פס צד זהוב על הכרטיס (ראה ::before
-                למעלה), לא אייקון ליד שם המוצר. נקי וברור יותר. */}
+            {/* אינדיקטור הערה: צ'יפ אלכסוני בעיצוב פתק (תואם לכרטיס שבתוך
+                ה-popup). ממוקם ליד השם, נטוי קלות, לא דורש מקום קבוע. */}
+            {product.note && (
+              <Box
+                aria-label="למוצר זה יש הערה"
+                sx={{
+                  flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center',
+                  px: 0.65, py: 0.15,
+                  fontSize: 9.5, fontWeight: 800,
+                  fontStyle: 'italic',
+                  letterSpacing: 0.3,
+                  color: '#0F766E',
+                  backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #E6F9F5 100%)',
+                  border: '1px solid rgba(20,184,166,0.35)',
+                  borderRadius: '4px',
+                  // פינה מקופלת קטנה כמו בפתק שבפופ-אפ
+                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
+                  transform: 'rotate(-7deg)',
+                  boxShadow: '0 1px 2px rgba(15,118,110,0.18)',
+                  whiteSpace: 'nowrap',
+                  opacity: isPurchased ? 0.5 : 1,
+                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
+                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
+                }}
+              >
+                ✎ קיימת הערה
+              </Box>
+            )}
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
