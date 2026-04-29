@@ -568,6 +568,17 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
         return chains.sort((a, b) => score(a) - score(b));
       }
     }
+    if (sortMode === 'price') {
+      // מיון מקומי לפי total כדי שהסדר יהיה עקבי עם הסכום המוצג בפועל.
+      // עדיפות: שלמות עם נתונים → חלקיות עם נתונים → ריקות.
+      return chains.sort((a, b) => {
+        const aEmpty = a.matchedCount === 0;
+        const bEmpty = b.matchedCount === 0;
+        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+        if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
+        return a.total - b.total;
+      });
+    }
     // ברירת מחדל - סדר המחיר המקורי מהשרת
     return chains;
   }, [chainTotals, sortMode, hasAnyLocation]);
