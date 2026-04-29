@@ -412,8 +412,20 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const hasChainData = data.chainTotals?.some(c => c.matchedCount > 0) ?? false;
   const hasAnyPendingItems = data.totalPending > 0;
 
-  // הזולה והפער המקסימלי לתצוגת hero
-  const cheapest = data.chainTotals?.find(c => c.isCheapest);
+  // הזולה ההוגנת: שלמות קודם לפי מחיר; אם אין שלמות, מבין הרשתות עם
+  // מספר ההתאמות המקסימלי - הזולה. ככה רשת עם 3 התאמות לא תופיע כ"זולה"
+  // מול רשת עם 8 התאמות בכמה שקלים יותר.
+  const cheapest = (() => {
+    const candidates = (data.chainTotals || []).filter(c => c.matchedCount > 0);
+    if (candidates.length === 0) return undefined;
+    const completes = candidates.filter(c => c.isComplete);
+    if (completes.length > 0) {
+      return completes.reduce((best, c) => c.total < best.total ? c : best, completes[0]);
+    }
+    const maxMatched = Math.max(...candidates.map(c => c.matchedCount));
+    const top = candidates.filter(c => c.matchedCount === maxMatched);
+    return top.reduce((best, c) => c.total < best.total ? c : best, top[0]);
+  })();
   const completeChains = data.chainTotals?.filter(c => c.isComplete && c.matchedCount > 0) ?? [];
   const maxTotal = completeChains.length > 1 ? Math.max(...completeChains.map(c => c.total)) : 0;
   const savings = cheapest && maxTotal > cheapest.total ? maxTotal - cheapest.total : 0;
@@ -433,6 +445,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
     const fallbackToPrice = (a: PriceChainTotal, b: PriceChainTotal) => {
       const ta = tier(a), tb = tier(b);
       if (ta !== tb) return ta - tb;
+      // בתוך קבוצת החלקיות - יותר התאמות קודם, ואז לפי מחיר.
+      // (בקבוצת השלמות matchedCount זהה לכולן ולכן רק המחיר משחק.)
+      if (a.matchedCount !== b.matchedCount) return b.matchedCount - a.matchedCount;
       return a.total - b.total;
     };
     if (sortMode === 'distance' && hasAnyLocation) {
@@ -714,12 +729,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 key={chain.chainId}
                 chain={chain}
                 rank={idx + 1}
-                // הדגשת 'מנצח' = הכרטיס בראש לפי המיון הנוכחי.
-                // לא רק 'הזול בפועל' (isCheapest=true בא רק עם סל שלם), אלא
-                // הכרטיס שמופיע בפועל בראש - כדי שהמשתמש תמיד יראה את ההדגשה למעלה.
-                // 'מנצח' רק במיון לפי מחיר וכשהשרת אישר isCheapest (סל שלם).
-                // במיון לפי קרוב/משולב, אין "מנצח" - הסדר עצמו מספר את הסיפור.
-                isWinner={sortMode === 'price' && chain.isCheapest}
+                // המנצח = השורה הראשונה בסדר הנוכחי (תקף לכל מצב מיון).
+                // ככה תמיד יש הדגשה ויזואלית בראש - זול / קרוב / משולב.
+                isWinner={idx === 0 && chain.matchedCount > 0}
                 cheapestTotal={cheapest?.total || 0}
                 isDark={isDark}
                 expanded={expandedId === chain.chainId}
