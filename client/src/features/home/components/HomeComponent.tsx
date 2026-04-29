@@ -14,6 +14,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import AddIcon from '@mui/icons-material/Add';
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -1540,12 +1541,18 @@ export const HomeComponent = memo(({
           py: { xs: 1, sm: 1.25 },
           px: { xs: 3, sm: 4 },
           boxShadow: isDark ? '0 -2px 10px rgba(0,0,0,0.3)' : '0 -2px 10px rgba(0,0,0,0.05)',
+          // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
+          minHeight: 64,
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
+        {/* ימין (RTL = ראשון ב-DOM) - בית */}
         <Box
+          role="button"
+          tabIndex={0}
           onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label={t('home')}
           sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -1557,14 +1564,46 @@ export const HomeComponent = memo(({
             bgcolor: 'rgba(20, 184, 166, 0.1)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            '&:active': { bgcolor: 'rgba(20, 184, 166, 0.2)' }
+            '&:active': { bgcolor: 'rgba(20, 184, 166, 0.2)', transform: 'scale(0.96)' },
           }}
         >
           <HomeIcon sx={{ fontSize: 22, color: 'primary.main' }} />
           <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'primary.main' }}>{t('home')}</Typography>
         </Box>
+
+        {/* מרכז - כפתור + מורם וצף בסגנון Material "docked FAB". פותח תפריט הוספה */}
         <Box
-          onClick={() => { haptic('light'); setShowMenu(true); }}
+          role="button"
+          tabIndex={0}
+          aria-label={t('new')}
+          onClick={() => { haptic('medium'); setShowMenu(true); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+          sx={{
+            position: 'relative',
+            mt: -3.5,                    // מרים את הכפתור מעל פס הניווט
+            width: 60, height: 60, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+            boxShadow: '0 6px 20px rgba(20,184,166,0.45), 0 2px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25)',
+            border: '4px solid',
+            borderColor: 'background.paper',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+            '&:hover': { boxShadow: '0 8px 26px rgba(20,184,166,0.55), 0 2px 8px rgba(0,0,0,0.15)' },
+            '&:active': { transform: 'scale(0.94)' },
+            '@media (max-width: 360px)': { width: 54, height: 54, mt: -3 },
+          }}
+        >
+          <AddIcon sx={{ fontSize: 30, color: 'white' }} />
+        </Box>
+
+        {/* שמאל (RTL = אחרון ב-DOM) - תובנות */}
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => { haptic('light'); navigate('/insights'); }}
+          aria-label={t('insights')}
           sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -1575,12 +1614,12 @@ export const HomeComponent = memo(({
             borderRadius: '10px',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-            '&:active': { bgcolor: 'rgba(20, 184, 166, 0.1)' }
+            '&:hover': { bgcolor: 'rgba(20,184,166,0.06)' },
+            '&:active': { bgcolor: 'rgba(20,184,166,0.12)', transform: 'scale(0.96)' },
           }}
         >
-          <AddIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
-          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'text.secondary' }}>{t('new')}</Typography>
+          <InsightsOutlinedIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
+          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'text.secondary' }}>{t('insights')}</Typography>
         </Box>
       </Box>
     </Box>
