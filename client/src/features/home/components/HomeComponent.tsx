@@ -1525,8 +1525,11 @@ export const HomeComponent = memo(({
       {/* ===== Bottom Navigation - דרך React Portal ל-document.body =====
           סיבה: ההורה של HomeComponent (line 725) משתמש ב-overflow:hidden, מה
           שמשפיע על דפדפנים מסוימים שמטפלים ב-position:fixed כ-absolute. כדי
-          להבטיח שהפס יישאר תמיד בתחתית הוויפורט, מרנדרים אותו ישירות ל-body. */}
-      {createPortal(
+          להבטיח שהפס יישאר תמיד בתחתית הוויפורט, מרנדרים אותו ישירות ל-body.
+
+          הפס מוסתר כשתפריטים/מודאלים פתוחים (showMenu/showJoin/showCreate)
+          כדי לא להסתיר אופציות בתחתית התפריט. */}
+      {!showMenu && !showJoin && !showCreate && !showCreateGroup && createPortal(
       <Box
         sx={{
           position: 'fixed',
