@@ -569,13 +569,18 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
       }
     }
     if (sortMode === 'price') {
-      // מיון מקומי לפי total כדי שהסדר יהיה עקבי עם הסכום המוצג בפועל.
-      // עדיפות: שלמות עם נתונים → חלקיות עם נתונים → ריקות.
+      // השוואה הוגנת: רשת שזיהתה פחות מוצרים נראית "זולה" באופן מטעה.
+      // לכן מדרגים: ריקות בסוף → שלמות בראש לפי מחיר → חלקיות לפי כמות
+      // המוצרים שזוהו (יותר זוהו = גבוה יותר), ובתוך אותו מספר זוהויים
+      // לפי מחיר עולה.
       return chains.sort((a, b) => {
         const aEmpty = a.matchedCount === 0;
         const bEmpty = b.matchedCount === 0;
         if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
         if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
+        if (a.isComplete && b.isComplete) return a.total - b.total;
+        // שניהם חלקיים - יותר התאמות קודם, אז מחיר
+        if (a.matchedCount !== b.matchedCount) return b.matchedCount - a.matchedCount;
         return a.total - b.total;
       });
     }
@@ -589,9 +594,15 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
     const candidates = chainTotals.filter(c => c.matchedCount > 0);
     if (candidates.length === 0) return null;
     if (sortMode === 'price') {
-      // העדפה לרשתות שלמות; אם אין - אז הזולה ביותר מבין כל בעלות הנתונים
+      // המנצח חייב לבוא מסל הוגן: שלמות קודם. אם אין - הרשתות עם מספר
+      // ההתאמות המקסימלי (הכי קרוב לסל מלא), ובתוכן הזולה.
       const completes = candidates.filter(c => c.isComplete);
-      const pool = completes.length > 0 ? completes : candidates;
+      const pool = completes.length > 0
+        ? completes
+        : (() => {
+            const maxMatched = Math.max(...candidates.map(c => c.matchedCount));
+            return candidates.filter(c => c.matchedCount === maxMatched);
+          })();
       return pool.reduce((best, c) => c.total < best.total ? c : best, pool[0]).chainId;
     }
     if (sortMode === 'distance') {
