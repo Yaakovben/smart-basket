@@ -402,38 +402,22 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* פתק "קיימת הערה" - אותה תחושה ויזואלית כמו ה-popup: הטיה,
-                פינה מקופלת בשמאל-עליון, גופן איטלי. לחיצה על המוצר תפתח את ההערה. */}
+            {/* אינדיקטור הערה - אייקון פתק קומפקטי, צבע טורקיז של האפליקציה,
+                ללא הטיה ובלי טקסט. לחיצה על המוצר פותחת את ההערה ב-popup. */}
             {product.note && (
               <Box
                 aria-label="למוצר זה יש הערה"
+                title="למוצר זה יש הערה"
                 sx={{
-                  position: 'relative',
                   flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                  py: 0.2, pl: 0.55, pr: 0.7,
-                  bgcolor: '#E0F7F4',
-                  color: '#0D9488',
-                  transform: 'rotate(-2deg)',
-                  boxShadow: '0 1px 3px rgba(20,184,166,0.25)',
-                  // פינה מקופלת בשמאל-עליון - הרמז של "פתק"
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute', top: 0, left: 0,
-                    width: 6, height: 6,
-                    bgcolor: 'rgba(13,148,136,0.3)',
-                    clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-                  },
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 18, height: 18, borderRadius: '50%',
+                  bgcolor: 'rgba(20,184,166,0.14)',
+                  border: '1px solid rgba(20,184,166,0.32)',
+                  fontSize: 10, lineHeight: 1,
                 }}
               >
-                <Typography component="span" sx={{ fontSize: 9, lineHeight: 1 }}>📝</Typography>
-                <Typography component="span" sx={{
-                  fontSize: 9, fontWeight: 800, fontStyle: 'italic',
-                  letterSpacing: 0.2, lineHeight: 1, whiteSpace: 'nowrap',
-                }}>
-                  קיימת הערה
-                </Typography>
+                📝
               </Box>
             )}
           </Box>
