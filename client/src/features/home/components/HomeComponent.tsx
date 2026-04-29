@@ -1526,10 +1526,14 @@ export const HomeComponent = memo(({
       <Box
         sx={{
           position: 'fixed',
-          bottom: 0,
-          left: 0, right: 0,                          // מתפרס על כל רוחב המסך כדי שה-fixed יעבוד יציב
+          bottom: 0, top: 'auto',                       // מבטיח שלא יורש top מאב
+          left: 0, right: 0,
           zIndex: 10,
-          display: 'flex', justifyContent: 'center',  // ממקם את הפס במרכז ללא transform על ההורה
+          display: 'flex', justifyContent: 'center',
+          // willChange + translateZ מבטיח קומפוזיט נפרד - מונע מצבים שבהם
+          // הדפדפן מתייחס ל-fixed כ-static בעקבות ancestor עם overflow/transform
+          willChange: 'transform',
+          transform: 'translateZ(0)',
         }}
       >
         {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
@@ -1550,10 +1554,14 @@ export const HomeComponent = memo(({
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            // צל מצומצם - שכבה אחת עדינה במקום 4 שכבות חזקות
-            boxShadow: '0 4px 12px rgba(20,184,166,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
+            // צל מודגש שמדגיש את הצף - הכפתור "מרחף" מעל הפס
+            boxShadow: [
+              '0 8px 22px rgba(20,184,166,0.5)',
+              '0 3px 8px rgba(0,0,0,0.15)',
+              'inset 0 1px 0 rgba(255,255,255,0.3)',
+            ].join(', '),
             transition: 'box-shadow 0.15s',
-            '&:hover': { boxShadow: '0 6px 16px rgba(20,184,166,0.4)' },
+            '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
             '&:active': { opacity: 0.9 },
             '@media (max-width: 360px)': { width: 58, height: 58, top: -29 },
             '@media (max-width: 320px)': { width: 52, height: 52, top: -26 },
@@ -1575,6 +1583,11 @@ export const HomeComponent = memo(({
           width: '100%',
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           bgcolor: 'background.paper',
+          // בורדר דק שמדגיש את הצורה של הפס וגם את החתך העגול במרכז -
+          // הקצוות של החתך נראים יותר כי יש להם ניגוד מול הרקע.
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          borderBottom: 'none',                        // אין צורך בבורדר תחתון - הוא ב-bottom של המסך
           // פינות מעוגלות בראש הפס - תחושת אפליקציה מוקפדת
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
