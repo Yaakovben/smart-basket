@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
@@ -1522,21 +1521,19 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== Bottom Navigation - דרך React Portal ל-document.body =====
-          סיבה: ההורה של HomeComponent (line 725) משתמש ב-overflow:hidden, מה
-          שמשפיע על דפדפנים מסוימים שמטפלים ב-position:fixed כ-absolute. כדי
-          להבטיח שהפס יישאר תמיד בתחתית הוויפורט, מרנדרים אותו ישירות ל-body.
+      {/* ===== Bottom Navigation - sticky-bottom flex item =====
+          לא position:fixed יותר! אלא אלמנט שכן בתחתית של הקונטיינר ההורה
+          (height: 100dvh, flex column). כך הפס לא "יורד" כשהדפדפן מסתיר את
+          האדרס בר - הוויפורט הדינמי (dvh) מטפל בכל בעצמו.
 
-          הפס מוסתר כשתפריטים/מודאלים פתוחים (showMenu/showJoin/showCreate)
-          כדי לא להסתיר אופציות בתחתית התפריט. */}
-      {!showMenu && !showJoin && !showCreate && !showCreateGroup && createPortal(
+          הפס מוסתר כשתפריטים/מודאלים פתוחים. */}
+      {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'fixed',
-          bottom: 0, top: 'auto',
-          left: 0, right: 0,
-          zIndex: 1200,
+          flexShrink: 0,                     // לא מתכווץ כשהתוכן גדל
+          position: 'relative',              // לאפשר את ה-FAB absolute בתוך
           display: 'flex', justifyContent: 'center',
+          zIndex: 5,                         // מעל תוכן הגלילה
         }}
       >
         {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
@@ -1695,8 +1692,7 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
       </Box>
-      </Box>,
-      document.body                                  // ה-Portal מרנדר את הפס ל-body
+      </Box>
       )}
     </Box>
   );
