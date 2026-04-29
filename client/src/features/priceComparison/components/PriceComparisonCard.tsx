@@ -719,11 +719,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* CARDS STACK - כרטיס לכל רשת. ההדגשה ברקע אוטומטית על המוביל לפי המיון. */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
-        const winnerColor = sortMode === 'distance'
-          ? { main: '#0EA5E9', bgLight: 'rgba(14,165,233,0.12)', bgDark: 'rgba(14,165,233,0.20)', borderLight: 'rgba(14,165,233,0.45)', borderDark: 'rgba(14,165,233,0.5)' }
-          : sortMode === 'combined'
-          ? { main: '#8B5CF6', bgLight: 'rgba(139,92,246,0.12)', bgDark: 'rgba(139,92,246,0.20)', borderLight: 'rgba(139,92,246,0.45)', borderDark: 'rgba(139,92,246,0.5)' }
-          : { main: '#10B981', bgLight: 'rgba(16,185,129,0.12)', bgDark: 'rgba(16,185,129,0.20)', borderLight: 'rgba(16,185,129,0.45)', borderDark: 'rgba(16,185,129,0.5)' };
+        // צבע אחיד למנצח בכל מצב מיון - ירוק "זול" של האפליקציה
+        const winnerColor = { main: '#10B981', bgLight: 'rgba(16,185,129,0.12)', bgDark: 'rgba(16,185,129,0.20)', borderLight: 'rgba(16,185,129,0.45)', borderDark: 'rgba(16,185,129,0.5)' };
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {sortedChains.map((chain, idx) => (

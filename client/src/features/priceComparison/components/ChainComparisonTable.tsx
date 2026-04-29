@@ -619,15 +619,16 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
 
   const winnerChain = winnerId ? chainTotals.find(c => c.chainId === winnerId) || null : null;
 
-  // צבעים ותווית לפי מצב המיון - בנושא של האפליקציה
+  // צבע אחיד למנצח בכל מצב מיון - ירוק (אותו "ירוק זול" של האפליקציה).
+  // התווית בלבד מותאמת למצב.
   const winnerInfo = useMemo(() => {
-    if (sortMode === 'distance') {
-      return { label: 'הכי קרוב', main: '#0EA5E9', dark: '#0284C7', bgLight: 'rgba(14,165,233,0.10)', bgDark: 'rgba(14,165,233,0.16)', borderLight: 'rgba(14,165,233,0.35)', borderDark: 'rgba(14,165,233,0.45)' };
-    }
-    if (sortMode === 'combined') {
-      return { label: 'הכי משתלם', main: '#8B5CF6', dark: '#7C3AED', bgLight: 'rgba(139,92,246,0.10)', bgDark: 'rgba(139,92,246,0.16)', borderLight: 'rgba(139,92,246,0.35)', borderDark: 'rgba(139,92,246,0.45)' };
-    }
-    return { label: 'הכי זול', main: '#10B981', dark: '#059669', bgLight: 'rgba(16,185,129,0.10)', bgDark: 'rgba(16,185,129,0.16)', borderLight: 'rgba(16,185,129,0.35)', borderDark: 'rgba(16,185,129,0.45)' };
+    const label = sortMode === 'distance' ? 'הכי קרוב' : sortMode === 'combined' ? 'הכי משתלם' : 'הכי זול';
+    return {
+      label,
+      main: '#10B981', dark: '#059669',
+      bgLight: 'rgba(16,185,129,0.10)', bgDark: 'rgba(16,185,129,0.16)',
+      borderLight: 'rgba(16,185,129,0.35)', borderDark: 'rgba(16,185,129,0.45)',
+    };
   }, [sortMode]);
 
   const jumpToWinner = () => {
