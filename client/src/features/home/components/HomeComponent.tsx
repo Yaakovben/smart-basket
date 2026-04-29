@@ -1606,18 +1606,20 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך עגול מתחת ל-+ =====
-          // אבסולוטי, מבוסס פיקסלים, ב-page-background. רוחב והגובה בערך 1:0.5
-          // ו-borderBottomLeftRadius/Right בערכים שווים לרוחב מלא = חצי-עיגול חלק.
+          // ===== חתך באמת שקוף מתחת ל-+ =====
+          // mask-image עם radial-gradient חותך באמת חור מהבר - רואים את
+          // מה שמתחת (התוכן מאחורי הבר). לא overlay בצבע page-bg!
+          maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          // pseudo נשאר כ-fallback לדפדפנים בלי תמיכה ב-mask
           '&::before': {
             content: '""',
             position: 'absolute',
             top: -1,
-            left: 'calc(50% - 44px)',                  // מרכוז מדויק (חצי הרוחב 88/2)
+            left: 'calc(50% - 44px)',
             width: 88,
             height: 44,
-            bgcolor: 'background.default',
-            // ערכים פיקסליים מלאים - מבטיח חצי-עיגול חלק (לא U עם פס שטוח)
+            bgcolor: 'transparent',                    // היה background.default - עכשיו שקוף
             borderBottomLeftRadius: '88px 44px',
             borderBottomRightRadius: '88px 44px',
             pointerEvents: 'none',
@@ -1636,25 +1638,38 @@ export const HomeComponent = memo(({
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
       >
-        {/* ימין (RTL = ראשון ב-DOM) - בית. סגנון אחיד עם הצד השני - איקון 24px,
-            תווית 10.5px, ריווח/padding זהים. הצבע מסמן "פעיל" (אנחנו בעמוד הבית). */}
+        {/* ימין (RTL = ראשון ב-DOM) - בית. במצב פעיל מקבל רקע כדוריוסי
+            וקו עליון בולט, כמו בעיצוב המוצג. */}
         <Box
           role="button"
           tabIndex={0}
           onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label={t('home')}
           sx={{
+            position: 'relative',
             flex: 1, maxWidth: 110,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 0.3,
             minHeight: 48,
             py: 0.5,
-            borderRadius: '10px',
+            borderRadius: '12px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background-color 0.18s ease, transform 0.1s ease',
-            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
+            // רקע מסמן את הטאב כפעיל - כמו במסך הראשי באפליקציות מובייל
+            bgcolor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.12)',
+            transition: 'background-color 0.18s ease',
+            '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.16)' },
             '&:active': { opacity: 0.7 },
+            // קו עליון דק שמדגיש שזה הטאב הפעיל
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 4, left: '50%',
+              transform: 'translateX(-50%)',
+              width: 26, height: 3,
+              borderRadius: 999,
+              bgcolor: '#0D9488',
+            },
           }}
         >
           <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />
