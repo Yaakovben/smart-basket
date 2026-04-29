@@ -849,7 +849,7 @@ export const HomeComponent = memo(({
       <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
         {/* מצב שגיאת חיבור: השרת למטה ואין רשימות */}
         {listsFetchError && lists.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
             <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: '50%', bgcolor: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 } }}>
               <CloudOffIcon sx={{ fontSize: { xs: 48, sm: 56 }, color: 'error.main', opacity: 0.8 }} />
             </Box>
@@ -870,7 +870,8 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : display.length === 0 ? (
-          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+          // ממלא את כל הגובה כדי שהאייקון יהיה במרכז אנכי במסך, לא מעל באמצע
+          <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
             {/* דמות ידידותית - אייקון מרכזי שצף + פריטים מרחפים סביב לתחושת חיים */}
             <Box sx={{ position: 'relative', width: 180, height: 180, mb: { xs: 2, sm: 2.5 } }}>
               <Box sx={{

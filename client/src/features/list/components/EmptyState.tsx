@@ -79,7 +79,10 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurch
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: { xs: 220, sm: 340 }
+      // ממלא את כל השטח הפנוי באלמנט ההורה - האייקון יושב באמת באמצע אנכי
+      // במקום לתפוס רק minHeight ולהיתקע למעלה.
+      flex: 1,
+      minHeight: { xs: '60vh', sm: '65vh' },
     }}>
       {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
       <Box sx={{
