@@ -1640,8 +1640,8 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // חתך עגול במרכז העליון של הבר - 36px רדיוס. ה-FAB (28px רדיוס)
           // יושב בתוך החתך עם 8px רווח שקוף סביבו (אפקט floating).
-          WebkitMaskImage: 'radial-gradient(circle 33px at 50% 0%, transparent 32px, black 33px)',
-          maskImage: 'radial-gradient(circle 33px at 50% 0%, transparent 32px, black 33px)',
+          WebkitMaskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
+          maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
           // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
