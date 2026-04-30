@@ -1063,6 +1063,47 @@ export const HomeComponent = memo(({
               },
             }}
           >
+            {/* כפתור X צף - חצי-חצי בקצה העליון של התפריט, באותו עיצוב כמו ה-FAB */}
+            <Box
+              role="button"
+              tabIndex={0}
+              aria-label="סגור"
+              onClick={closeMenu}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') closeMenu(); }}
+              sx={{
+                position: 'absolute',
+                top: -28,                                  // חצי הגובה של ה-X (56/2)
+                left: '50%',
+                width: 56, height: 56, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+                boxShadow: [
+                  '0 8px 22px rgba(20,184,166,0.5)',
+                  '0 3px 8px rgba(0,0,0,0.15)',
+                  'inset 0 1px 0 rgba(255,255,255,0.3)',
+                ].join(', '),
+                // מצב התחלה: + ממורכז. אחרי האנימציה: X (rotate 135°). שמירה על המרכוז.
+                transform: 'translateX(-50%) rotate(135deg)',
+                animation: 'fabRotateIn 0.42s cubic-bezier(0.34, 1.32, 0.64, 1)',
+                '@keyframes fabRotateIn': {
+                  from: { transform: 'translateX(-50%) rotate(0deg)' },
+                  to: { transform: 'translateX(-50%) rotate(135deg)' },
+                },
+                '&:active': { opacity: 0.9 },
+                '@media (max-width: 360px)': { width: 52, height: 52, top: -26 },
+                '@media (max-width: 320px)': { width: 48, height: 48, top: -24 },
+              }}
+            >
+              <AddIcon sx={{
+                fontSize: 30,
+                color: 'white',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+                '@media (max-width: 360px)': { fontSize: 28 },
+                '@media (max-width: 320px)': { fontSize: 26 },
+              }} />
+            </Box>
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
             {/* ה-X להסגרה הוא ה-FAB עצמו (מסתובב 135° כשהתפריט פתוח) */}
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 4, mt: 2 }}>
@@ -1576,34 +1617,19 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== FAB - תמיד גלוי, מתמורף בין + ל-X לפי מצב התפריט =====
-          כשהתפריט סגור: יושב בנישה של הבר התחתון.
-          כשהתפריט פתוח: עולה לראש התפריט ומסתובב 45° (+→X).
-          לחיצה תמיד מטריגרת toggle (פתח/סגור) של התפריט. */}
+      {/* ===== FAB התחתון - מוצג כש-menu סגור =====
+          fade-out כשהמשתמש פותח את התפריט (האנימציה של ה-X בתפריט עצמו). */}
       <Box
         role="button"
         tabIndex={0}
-        aria-label={showMenu ? 'סגור' : t('new')}
-        onClick={() => {
-          haptic('medium');
-          if (showMenu) { closeMenu(); }
-          else { setShowMenu(true); }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            haptic('medium');
-            if (showMenu) { closeMenu(); } else { setShowMenu(true); }
-          }
-        }}
+        aria-label={t('new')}
+        onClick={() => { haptic('medium'); setShowMenu(true); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
         sx={{
           position: 'fixed',
-          // כשהתפריט סגור - בתחתית בנישה. כשפתוח - עולה לראש התפריט (top של ~64px)
-          bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 28px)',
-          top: showMenu ? 'calc(100dvh - 360px)' : 'auto',
+          bottom: 'calc(env(safe-area-inset-bottom) + 28px)',
           left: '50%',
-          transform: showMenu
-            ? 'translateX(-50%) rotate(135deg)'    // + → X (45° + 90° לתחושה דרמטית יותר)
-            : 'translateX(-50%) rotate(0deg)',
+          transform: 'translateX(-50%)',
           zIndex: 1000,
           width: 56, height: 56, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1615,12 +1641,14 @@ export const HomeComponent = memo(({
             '0 3px 8px rgba(0,0,0,0.15)',
             'inset 0 1px 0 rgba(255,255,255,0.3)',
           ].join(', '),
-          // אנימציה זורמת בין שני המצבים - bottom/top + rotation
-          transition: 'top 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), bottom 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), transform 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), box-shadow 0.15s',
+          // נסתר כשתפריט פתוח - ה-X בראש התפריט תופס את התפקיד
+          opacity: showMenu ? 0 : 1,
+          pointerEvents: showMenu ? 'none' : 'auto',
+          transition: 'opacity 0.22s ease, box-shadow 0.15s',
           '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
           '&:active': { opacity: 0.9 },
-          '@media (max-width: 360px)': { width: 52, height: 52, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 26px)' },
-          '@media (max-width: 320px)': { width: 48, height: 48, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 24px)' },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 26px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
         }}
       >
         <AddIcon sx={{
