@@ -1657,8 +1657,9 @@ export const HomeComponent = memo(({
           רדיוס 41 קטן מרדיוס החתך 43 → הקשת בתוך אזור החתך השקוף ונראית.
           clipPath חותך את החצי-העליון כדי שלא תקיף את ה-FAB. */}
       <Box sx={{
-        position: 'absolute',
+        position: 'fixed',
         bottom: 'calc(env(safe-area-inset-bottom) + 11px)',
+        transform: 'translate(-50%, 0) translateY(var(--vv-shift, 0px))',
         left: '50%',
         marginLeft: '-41px',
         width: 82, height: 82,
@@ -1673,9 +1674,10 @@ export const HomeComponent = memo(({
       }} />
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
+          transform: 'translateY(var(--vv-shift, 0px))',
           bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
@@ -1746,9 +1748,11 @@ export const HomeComponent = memo(({
             על מקום במרכז כדי שהטאבים יישארו על הצדדים ולא יתקרבו למרכז */}
         <Box sx={{ width: 64, flexShrink: 0, '@media (max-width: 360px)': { width: 58 }, '@media (max-width: 320px)': { width: 52 } }} />
 
-        {/* שמאל (RTL = אחרון ב-DOM) - תובנות. */}
+        {/* שמאל (RTL = אחרון ב-DOM) - תובנות. ניווט מתבצע ב-onPointerDown
+            (מיידי - לא מחכה ל-up) לתגובה מהירה כמו אפליקציות נייטיב. ה-:active
+            צובע ברקע טורקיז עם האייקון והטקסט בולטים - פידבק ויזואלי ברור. */}
         <Box
-          onPointerUp={(e) => {
+          onPointerDown={(e) => {
             (e.currentTarget as HTMLElement).blur();
             haptic('light');
             navigate('/insights');
@@ -1760,17 +1764,23 @@ export const HomeComponent = memo(({
             gap: 0.3,
             minHeight: 40,
             py: 0.35,
-            borderRadius: '10px',
+            borderRadius: '12px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             outline: 'none',
-            transition: 'background-color 0.18s ease, transform 0.1s ease',
-            '&:active': { opacity: 0.7 },
+            transition: 'background-color 0.08s ease',
+            // צבע "לחוץ" - אותו טון של הבית הפעיל, ברגע המגע
+            '&:active': {
+              bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.16)',
+              '& .insights-icon, & .insights-label': {
+                color: '#0D9488', opacity: 1,
+              },
+            },
           }}
         >
-          <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.75 }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.primary', opacity: 0.75, letterSpacing: 0.2, lineHeight: 1 }}>
+          <InsightsOutlinedIcon className="insights-icon" sx={{ fontSize: 24, color: 'text.primary', opacity: 0.75, transition: 'color 0.08s, opacity 0.08s' }} />
+          <Typography className="insights-label" sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.primary', opacity: 0.75, letterSpacing: 0.2, lineHeight: 1, transition: 'color 0.08s, opacity 0.08s' }}>
             {t('insights')}
           </Typography>
         </Box>
@@ -1788,14 +1798,14 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
           pointerEvents: 'none',
           '& > *': { pointerEvents: 'auto' },
-          // נעילה ל-layout viewport יחד עם הבר
+          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
         <Box
