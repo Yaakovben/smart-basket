@@ -7,9 +7,10 @@
 
 html {
   height: 100%;
-  height: 100dvh;
+  height: 100svh; /* svh = small viewport stable - לא משתנה בגרירה/URL bar ב-iOS */
   width: 100%;
   overflow-x: hidden;
+  overflow-anchor: none;
 }
 
 body {
@@ -25,11 +26,12 @@ body {
   right: 0;
   bottom: 0;
   height: 100%;
-  height: 100dvh;
+  height: 100svh; /* תואם ל-html - יציב ולא זז בגרירה */
   /* כל גלילה מתבצעת בתוך הקונטיינרים הפנימיים (contentRef וכד') - לא ב-body */
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
+  overflow-anchor: none;
 }
 
 /* App background - only after initial loader is hidden */
