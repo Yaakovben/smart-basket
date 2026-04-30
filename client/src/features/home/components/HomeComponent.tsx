@@ -1627,19 +1627,15 @@ export const HomeComponent = memo(({
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
         sx={{
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 40px)',  // היה 28 - הרים ל-40 שיהיה חצי מעל הבר
+          bottom: 'calc(env(safe-area-inset-bottom) + 76px)',  // 64 בר + 12 רווח שקוף
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 1000,
+          zIndex: 1100,
           width: 56, height: 56, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-          // טבעת לבנה דקה סביב ה-FAB מדגישה את הצורה ויוצרת ניגוד מול הבר
-          // והחתך - הכפתור נראה באמת "מרחף" ולא חלק מהבר.
-          border: '3px solid',
-          borderColor: 'background.default',
           boxShadow: [
             '0 8px 22px rgba(20,184,166,0.5)',
             '0 3px 8px rgba(0,0,0,0.15)',
@@ -1650,8 +1646,8 @@ export const HomeComponent = memo(({
           transition: 'opacity 0.22s ease, box-shadow 0.15s',
           '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
           '&:active': { opacity: 0.9 },
-          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 38px)' },
-          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 36px)' },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 72px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 68px)' },
         }}
       >
         <AddIcon sx={{
@@ -1671,12 +1667,12 @@ export const HomeComponent = memo(({
           bottom: 0,
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
-          zIndex: 5,
+          zIndex: 1000,
           pointerEvents: 'none',
+          willChange: 'transform',
+          transform: 'translateZ(0)',
         }}
       >
-        {/* spacer במקום ה-FAB הישן - שמירה על הריווח באמצע. גודל תואם ל-FAB (56). */}
-        <Box sx={{ position: 'absolute', top: -28, width: 56, height: 56 }} aria-hidden />
 
       {/* הפס עצמו - relative בתוך ה-wrapper */}
       <Box
@@ -1706,36 +1702,7 @@ export const HomeComponent = memo(({
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
-          // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך אליפטי גדול ובולט - מתאים ל-FAB 56px =====
-          // ellipse 44×36: גדול מספיק לאפשר רווח של ~6-8px סביב הכפתור,
-          // יוצר חצי-עיגול בולט שרואים אותו בקלות.
-          maskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
-          // pseudo נשאר כ-fallback לדפדפנים בלי תמיכה ב-mask
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: -1,
-            left: 'calc(50% - 44px)',
-            width: 88,
-            height: 44,
-            bgcolor: 'transparent',                    // היה background.default - עכשיו שקוף
-            borderBottomLeftRadius: '88px 44px',
-            borderBottomRightRadius: '88px 44px',
-            pointerEvents: 'none',
-            '@media (max-width: 360px)': {
-              left: 'calc(50% - 40px)', width: 80, height: 40,
-              borderBottomLeftRadius: '80px 40px',
-              borderBottomRightRadius: '80px 40px',
-            },
-            '@media (max-width: 320px)': {
-              left: 'calc(50% - 36px)', width: 72, height: 36,
-              borderBottomLeftRadius: '72px 36px',
-              borderBottomRightRadius: '72px 36px',
-            },
-          },
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
