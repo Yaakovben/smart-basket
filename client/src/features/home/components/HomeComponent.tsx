@@ -1005,8 +1005,40 @@ export const HomeComponent = memo(({
       {/* Menu Bottom Sheet */}
       {showMenu && (
         <>
-          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 998, backdropFilter: 'blur(4px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 400 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
+          {/* רקע מאחור - fade-in הדרגתי */}
+          <Box
+            onClick={() => setShowMenu(false)}
+            sx={{
+              position: 'fixed', inset: 0,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              zIndex: 998,
+              backdropFilter: 'blur(4px)',
+              animation: 'menuBackdropIn 0.28s ease-out',
+              '@keyframes menuBackdropIn': {
+                from: { opacity: 0, backdropFilter: 'blur(0px)' },
+                to: { opacity: 1, backdropFilter: 'blur(4px)' },
+              },
+            }}
+          />
+          {/* התפריט - עולה לאט מלמטה עם accent רך, כמו bottom-sheet קלאסי */}
+          <Box
+            sx={{
+              position: 'fixed', bottom: 0, left: 0, right: 0,
+              bgcolor: 'background.paper',
+              borderRadius: '24px 24px 0 0',
+              p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))',
+              zIndex: 999,
+              maxWidth: { xs: '100%', sm: 400 },
+              mx: 'auto',
+              boxShadow: '0 -8px 30px rgba(0,0,0,0.15)',
+              // אנימציה: עולה מלמטה עם easing רך (cubic-bezier "ease-out-back")
+              animation: 'menuSlideUp 0.36s cubic-bezier(0.34, 1.32, 0.64, 1)',
+              '@keyframes menuSlideUp': {
+                from: { transform: 'translateY(100%)', opacity: 0.9 },
+                to: { transform: 'translateY(0)', opacity: 1 },
+              },
+            }}
+          >
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
