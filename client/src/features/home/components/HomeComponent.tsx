@@ -1640,11 +1640,9 @@ export const HomeComponent = memo(({
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
-          // חתך עגול במרכז העליון של הבר - 36px רדיוס. ה-FAB (28px רדיוס)
-          // יושב בתוך החתך עם 8px רווח שקוף סביבו (אפקט floating).
-          WebkitMaskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
-          maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
-          // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
+          // הוסר mask-image - היה גורם לרינדור לא יציב ב-iOS וגם hit-testing
+          // באזור השקוף של החתך עדיין נפל על הבר. ה-FAB מרחף מעל הבר
+          // עם רווח שקוף ביניהם, בלי צורך בחתך פיזי בבר.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
         }}
@@ -1665,12 +1663,14 @@ export const HomeComponent = memo(({
           '@media (max-width: 320px)': { py: 0.3, px: 1.5, minHeight: 44 },
         }}
       >
-        {/* ימין (RTL = ראשון ב-DOM) - בית. במצב פעיל מקבל רקע כדוריוסי
-            וקו עליון בולט, כמו בעיצוב המוצג. */}
+        {/* ימין (RTL = ראשון ב-DOM) - בית. onPointerUp במקום onClick + blur אחרי
+            לחיצה כדי שלא ישאר focus שתוקע את ה-UX עד טאפ נוסף. touch-action
+            manipulation מבטל delay של 300ms וכפתור-כפול ב-iOS. */}
         <Box
-          role="button"
-          tabIndex={0}
-          onClick={() => contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLElement).blur();
+            contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           aria-label={t('home')}
           sx={{
             position: 'relative',
@@ -1682,12 +1682,11 @@ export const HomeComponent = memo(({
             borderRadius: '12px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
-            // רקע מסמן את הטאב כפעיל - כמו במסך הראשי באפליקציות מובייל
+            touchAction: 'manipulation',
+            outline: 'none',
             bgcolor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.12)',
             transition: 'background-color 0.18s ease',
-            '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.16)' },
             '&:active': { opacity: 0.7 },
-            // הרקע הטורקיז העדין מספיק כדי לסמן שזה הטאב הפעיל - בלי קו עליון
           }}
         >
           <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />
@@ -1700,11 +1699,13 @@ export const HomeComponent = memo(({
             על מקום במרכז כדי שהטאבים יישארו על הצדדים ולא יתקרבו למרכז */}
         <Box sx={{ width: 64, flexShrink: 0, '@media (max-width: 360px)': { width: 58 }, '@media (max-width: 320px)': { width: 52 } }} />
 
-        {/* שמאל (RTL = אחרון ב-DOM) - תובנות. סגנון אחיד מדויק לימין */}
+        {/* שמאל (RTL = אחרון ב-DOM) - תובנות. */}
         <Box
-          role="button"
-          tabIndex={0}
-          onClick={() => { haptic('light'); navigate('/insights'); }}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLElement).blur();
+            haptic('light');
+            navigate('/insights');
+          }}
           aria-label={t('insights')}
           sx={{
             flex: 1, maxWidth: 110,
@@ -1715,8 +1716,9 @@ export const HomeComponent = memo(({
             borderRadius: '10px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            outline: 'none',
             transition: 'background-color 0.18s ease, transform 0.1s ease',
-            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.05)' },
             '&:active': { opacity: 0.7 },
           }}
         >
@@ -1737,9 +1739,9 @@ export const HomeComponent = memo(({
       <Box
         sx={{
           position: 'fixed',
-          // bottom: safe-area + (גובה בר 52 - חצי FAB 28) = safe-area + 24
-          // → מרכז ה-FAB יושב בדיוק על הקצה העליון של הבר. חצי מעל, חצי בתוך הבר.
-          bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+          // bottom: safe-area + גובה בר (52) + רווח שקוף (12) = safe-area + 64
+          // → ה-FAB מרחף מעל הבר עם רווח שקוף (אין חפיפה, אין hit-tests משותפים)
+          bottom: 'calc(env(safe-area-inset-bottom) + 64px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
@@ -1748,18 +1750,20 @@ export const HomeComponent = memo(({
         }}
       >
         <Box
-          role="button"
-          tabIndex={0}
           aria-label={t('new')}
-          onClick={() => { haptic('medium'); setShowMenu(true); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLElement).blur();
+            haptic('medium');
+            setShowMenu(true);
+          }}
           sx={{
             width: 56, height: 56, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            outline: 'none',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            // ללא border. רק shadow + inset highlight עליון.
             border: 'none',
             boxShadow: [
               '0 10px 28px rgba(20,184,166,0.5)',
@@ -1767,9 +1771,6 @@ export const HomeComponent = memo(({
               'inset 0 1px 0 rgba(255,255,255,0.3)',
             ].join(', '),
             transition: 'box-shadow 0.18s, transform 0.12s',
-            '&:hover': {
-              boxShadow: '0 14px 34px rgba(20,184,166,0.6), 0 6px 14px rgba(0,0,0,0.2)',
-            },
             '&:active': { transform: 'scale(0.96)' },
             '@media (max-width: 360px)': { width: 52, height: 52 },
             '@media (max-width: 320px)': { width: 48, height: 48 },
