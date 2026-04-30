@@ -1640,9 +1640,10 @@ export const HomeComponent = memo(({
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
-          // הוסר mask-image - היה גורם לרינדור לא יציב ב-iOS וגם hit-testing
-          // באזור השקוף של החתך עדיין נפל על הבר. ה-FAB מרחף מעל הבר
-          // עם רווח שקוף ביניהם, בלי צורך בחתך פיזי בבר.
+          // חתך עגול במרכז העליון של הבר - 43px רדיוס. ה-FAB (28px רדיוס)
+          // יושב חצי בתוך החתך, חצי מעליו, עם 15px רווח שקוף סביבו.
+          WebkitMaskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
+          maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
         }}
@@ -1741,7 +1742,7 @@ export const HomeComponent = memo(({
           position: 'fixed',
           // bottom: safe-area + גובה בר (52) + רווח שקוף (12) = safe-area + 64
           // → ה-FAB מרחף מעל הבר עם רווח שקוף (אין חפיפה, אין hit-tests משותפים)
-          bottom: 'calc(env(safe-area-inset-bottom) + 64px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
