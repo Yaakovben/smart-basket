@@ -1617,91 +1617,43 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== FAB התחתון - מוצג כש-menu סגור =====
-          fade-out כשהמשתמש פותח את התפריט (האנימציה של ה-X בתפריט עצמו). */}
-      <Box
-        role="button"
-        tabIndex={0}
-        aria-label={t('new')}
-        onClick={() => { haptic('medium'); setShowMenu(true); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
-        sx={{
-          position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 76px)',  // 64 בר + 12 רווח שקוף
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1100,
-          width: 56, height: 56, borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-          boxShadow: [
-            '0 8px 22px rgba(20,184,166,0.5)',
-            '0 3px 8px rgba(0,0,0,0.15)',
-            'inset 0 1px 0 rgba(255,255,255,0.3)',
-          ].join(', '),
-          opacity: showMenu ? 0 : 1,
-          pointerEvents: showMenu ? 'none' : 'auto',
-          transition: 'opacity 0.22s ease, box-shadow 0.15s',
-          '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
-          '&:active': { opacity: 0.9 },
-          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 72px)' },
-          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 68px)' },
-        }}
-      >
-        <AddIcon sx={{
-          fontSize: 30,
-          color: 'white',
-          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-          '@media (max-width: 360px)': { fontSize: 28 },
-          '@media (max-width: 320px)': { fontSize: 26 },
-        }} />
-      </Box>
-
-      {/* ===== Bottom Navigation - מוסתר כשתפריט פתוח ===== */}
+      {/* ===== Bottom Navigation =====
+          קבוע בתחתית, נעול לחלוטין. ללא wrapper מקיף שיגרום לבעיות (transform/willChange
+          על אב יוצר containing block חדש שגורם ל-position:fixed להתנהג כ-absolute).
+          padding-bottom: env(safe-area-inset-bottom) דוחף את התוכן מעל ה-home indicator של iPhone. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
           position: 'fixed',
-          bottom: 0,
-          left: 0, right: 0,
-          display: 'flex', justifyContent: 'center',
+          bottom: 0, left: 0, right: 0,
           zIndex: 1000,
-          pointerEvents: 'none',
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-        }}
-      >
-
-      {/* הפס עצמו - relative בתוך ה-wrapper */}
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: { xs: '100%', sm: 500, md: 600 },
-          pointerEvents: 'auto',                       // הבר עצמו לחיץ (wrapper מעל זה none)
+          // אין willChange/transform על המכל - הם הופכים את descendants עם
+          // position:fixed להתנהג כ-absolute וגורמים לקפיצות בגלילה ב-iOS PWA.
           bgcolor: 'background.paper',
-          // בורדר דק שמדגיש את הצורה של הפס וגם את החתך העגול במרכז -
-          // הקצוות של החתך נראים יותר כי יש להם ניגוד מול הרקע.
-          border: '1px solid',
+          borderTop: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-          borderBottom: 'none',                        // אין צורך בבורדר תחתון - הוא ב-bottom של המסך
-          // פינות מעוגלות בראש הפס - תחושת אפליקציה מוקפדת
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
           pb: 'env(safe-area-inset-bottom)',
+          boxShadow: isDark
+            ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
+            : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
+          // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
+          overscrollBehavior: 'contain',
+          touchAction: 'manipulation',
+        }}
+      >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: { xs: '100%', sm: 500, md: 600 },
+          mx: 'auto',
           display: 'flex',
-          // grid 3 חלקים שווים מבטיח יציבות: צד שמאל ושצד ימין באותו רוחב,
-          // הכפתור באמצע מרוכז במדויק. אין יותר drift.
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: { xs: 1, sm: 1.5 },
           py: { xs: 1, sm: 1.25 },
           px: { xs: 2.5, sm: 3.5 },
-          boxShadow: isDark
-            ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
-            : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           minHeight: 64,
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
@@ -1768,6 +1720,60 @@ export const HomeComponent = memo(({
           </Typography>
         </Box>
       </Box>
+      </Box>
+      )}
+
+      {/* ===== FAB (כפתור +) =====
+          ממורכז אופקית באמצעות left/right + margin auto (יותר יציב מ-translateX
+          ב-iOS PWA). bottom = safe-area + גובה הבר + 12px רווח שקוף.
+          ללא border, רק gradient + shadow. */}
+      {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
+      <Box
+        sx={{
+          position: 'fixed',
+          bottom: 'calc(env(safe-area-inset-bottom) + 64px + 12px)',
+          left: 0, right: 0,
+          display: 'flex', justifyContent: 'center',
+          zIndex: 1100,
+          pointerEvents: 'none',                      // wrapper שקוף לאירועים
+          '& > *': { pointerEvents: 'auto' },         // הכפתור עצמו כן לחיץ
+          '@media (max-width: 360px)': { bottom: 'calc(env(safe-area-inset-bottom) + 60px + 12px)' },
+        }}
+      >
+        <Box
+          role="button"
+          tabIndex={0}
+          aria-label={t('new')}
+          onClick={() => { haptic('medium'); setShowMenu(true); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+          sx={{
+            width: 56, height: 56, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+            // ללא border. רק shadow + inset highlight עליון.
+            border: 'none',
+            boxShadow: [
+              '0 10px 28px rgba(20,184,166,0.5)',
+              '0 4px 10px rgba(0,0,0,0.18)',
+              'inset 0 1px 0 rgba(255,255,255,0.3)',
+            ].join(', '),
+            transition: 'box-shadow 0.18s, transform 0.12s',
+            '&:hover': {
+              boxShadow: '0 14px 34px rgba(20,184,166,0.6), 0 6px 14px rgba(0,0,0,0.2)',
+            },
+            '&:active': { transform: 'scale(0.96)' },
+            '@media (max-width: 360px)': { width: 52, height: 52 },
+            '@media (max-width: 320px)': { width: 48, height: 48 },
+          }}
+        >
+          <AddIcon sx={{
+            fontSize: 30, color: 'white',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+            '@media (max-width: 360px)': { fontSize: 28 },
+          }} />
+        </Box>
       </Box>
       )}
     </Box>
