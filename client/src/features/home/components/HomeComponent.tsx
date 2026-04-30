@@ -435,6 +435,10 @@ export const HomeComponent = memo(({
     return localStorage.getItem('pushPromptDismissed') === 'true';
   });
 
+  // אנימציית סגירה לתפריט "מה תרצה ליצור?" - state בלבד, ה-callback מוגדר
+  // אחרי useList כי הוא תלוי ב-setShowMenu שמגיע משם.
+  const [menuClosing, setMenuClosing] = useState(false);
+
   // הצגת הצעת push לאחר השהיה - רק אם אין popup אחר על המסך הסשן הזה
   useEffect(() => {
     if (pushSupported && isPwaInstalled && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
@@ -479,6 +483,15 @@ export const HomeComponent = memo(({
   } = useHome({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, showToast
   });
+
+  // closeMenu - ממקם כאן כי הוא תלוי ב-setShowMenu שמגיע מ-useList
+  const closeMenu = useCallback(() => {
+    setMenuClosing(true);
+    window.setTimeout(() => {
+      setShowMenu(false);
+      setMenuClosing(false);
+    }, 280);
+  }, [setShowMenu]);
 
   // ===== אדפטר עבור EditListModal המשותף =====
   const editListOriginal = useRef<List | null>(null);
@@ -1005,22 +1018,28 @@ export const HomeComponent = memo(({
       {/* Menu Bottom Sheet */}
       {showMenu && (
         <>
-          {/* רקע מאחור - fade-in הדרגתי */}
+          {/* רקע מאחור - fade-in/fade-out הדרגתי */}
           <Box
-            onClick={() => setShowMenu(false)}
+            onClick={closeMenu}
             sx={{
               position: 'fixed', inset: 0,
               bgcolor: 'rgba(0,0,0,0.5)',
               zIndex: 998,
               backdropFilter: 'blur(4px)',
-              animation: 'menuBackdropIn 0.28s ease-out',
+              animation: menuClosing
+                ? 'menuBackdropOut 0.28s ease-in forwards'
+                : 'menuBackdropIn 0.28s ease-out',
               '@keyframes menuBackdropIn': {
                 from: { opacity: 0, backdropFilter: 'blur(0px)' },
                 to: { opacity: 1, backdropFilter: 'blur(4px)' },
               },
+              '@keyframes menuBackdropOut': {
+                from: { opacity: 1, backdropFilter: 'blur(4px)' },
+                to: { opacity: 0, backdropFilter: 'blur(0px)' },
+              },
             }}
           />
-          {/* התפריט - עולה לאט מלמטה עם accent רך, כמו bottom-sheet קלאסי */}
+          {/* התפריט - עולה מלמטה ובסגירה יורד חזרה. אנימציה דו-כיוונית */}
           <Box
             sx={{
               position: 'fixed', bottom: 0, left: 0, right: 0,
@@ -1031,18 +1050,23 @@ export const HomeComponent = memo(({
               maxWidth: { xs: '100%', sm: 400 },
               mx: 'auto',
               boxShadow: '0 -8px 30px rgba(0,0,0,0.15)',
-              // אנימציה: עולה מלמטה עם easing רך (cubic-bezier "ease-out-back")
-              animation: 'menuSlideUp 0.36s cubic-bezier(0.34, 1.32, 0.64, 1)',
+              animation: menuClosing
+                ? 'menuSlideDown 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards'
+                : 'menuSlideUp 0.36s cubic-bezier(0.34, 1.32, 0.64, 1)',
               '@keyframes menuSlideUp': {
                 from: { transform: 'translateY(100%)', opacity: 0.9 },
                 to: { transform: 'translateY(0)', opacity: 1 },
+              },
+              '@keyframes menuSlideDown': {
+                from: { transform: 'translateY(0)', opacity: 1 },
+                to: { transform: 'translateY(100%)', opacity: 0.9 },
               },
             }}
           >
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
-              <IconButton onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 40, height: 40, '&:active': { transform: 'scale(0.95)' } }}>
+              <IconButton onClick={closeMenu} sx={{ bgcolor: 'action.hover', width: 40, height: 40, '&:active': { transform: 'scale(0.95)' } }}>
                 <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
               </IconButton>
             </Box>
@@ -1554,19 +1578,21 @@ export const HomeComponent = memo(({
         }}
       />
 
-      {/* ===== Bottom Navigation - sticky-bottom flex item =====
-          לא position:fixed יותר! אלא אלמנט שכן בתחתית של הקונטיינר ההורה
-          (height: 100dvh, flex column). כך הפס לא "יורד" כשהדפדפן מסתיר את
-          האדרס בר - הוויפורט הדינמי (dvh) מטפל בכל בעצמו.
+      {/* ===== Bottom Navigation - position:fixed לתחושת overlay =====
+          ה-body נעול עם position:fixed/overflow:hidden (ב-index.css), אז אין
+          rubber-band ב-iOS PWA. עכשיו הבר fixed שוב כדי שהתוכן יזרום תחתיו
+          וה-cutout באמצע יראה את התוכן שמתחת באמת.
 
           הפס מוסתר כשתפריטים/מודאלים פתוחים. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          flexShrink: 0,                     // לא מתכווץ כשהתוכן גדל
-          position: 'relative',              // לאפשר את ה-FAB absolute בתוך
+          position: 'fixed',
+          bottom: 0,
+          left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
-          zIndex: 5,                         // מעל תוכן הגלילה
+          zIndex: 5,
+          pointerEvents: 'none',             // wrapper לא בולע קליקים, רק הבר/FAB
         }}
       >
         {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
@@ -1582,6 +1608,7 @@ export const HomeComponent = memo(({
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 2,
+            pointerEvents: 'auto',                     // ה-wrapper מעלינו none - מחזיר auto
             width: 64, height: 64, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', userSelect: 'none',
@@ -1615,6 +1642,7 @@ export const HomeComponent = memo(({
           position: 'relative',
           width: '100%',
           maxWidth: { xs: '100%', sm: 500, md: 600 },
+          pointerEvents: 'auto',                       // הבר עצמו לחיץ (wrapper מעל זה none)
           bgcolor: 'background.paper',
           // בורדר דק שמדגיש את הצורה של הפס וגם את החתך העגול במרכז -
           // הקצוות של החתך נראים יותר כי יש להם ניגוד מול הרקע.
