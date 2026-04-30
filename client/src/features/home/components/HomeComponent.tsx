@@ -1598,14 +1598,14 @@ export const HomeComponent = memo(({
         sx={{
           position: 'fixed',
           // כשהתפריט סגור - בתחתית בנישה. כשפתוח - עולה לראש התפריט (top של ~64px)
-          bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 32px)',
+          bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 28px)',
           top: showMenu ? 'calc(100dvh - 360px)' : 'auto',
           left: '50%',
           transform: showMenu
             ? 'translateX(-50%) rotate(135deg)'    // + → X (45° + 90° לתחושה דרמטית יותר)
             : 'translateX(-50%) rotate(0deg)',
           zIndex: 1000,
-          width: 64, height: 64, borderRadius: '50%',
+          width: 56, height: 56, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
@@ -1619,16 +1619,16 @@ export const HomeComponent = memo(({
           transition: 'top 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), bottom 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), transform 0.36s cubic-bezier(0.34, 1.32, 0.64, 1), box-shadow 0.15s',
           '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
           '&:active': { opacity: 0.9 },
-          '@media (max-width: 360px)': { width: 58, height: 58, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 28px)' },
-          '@media (max-width: 320px)': { width: 52, height: 52, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 25px)' },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 26px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: showMenu ? 'auto' : 'calc(env(safe-area-inset-bottom) + 24px)' },
         }}
       >
         <AddIcon sx={{
-          fontSize: 34,
+          fontSize: 30,
           color: 'white',
           filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-          '@media (max-width: 360px)': { fontSize: 30 },
-          '@media (max-width: 320px)': { fontSize: 28 },
+          '@media (max-width: 360px)': { fontSize: 28 },
+          '@media (max-width: 320px)': { fontSize: 26 },
         }} />
       </Box>
 
@@ -1644,8 +1644,8 @@ export const HomeComponent = memo(({
           pointerEvents: 'none',
         }}
       >
-        {/* spacer במקום ה-FAB הישן - שמירה על הריווח באמצע */}
-        <Box sx={{ position: 'absolute', top: -32, width: 64, height: 64 }} aria-hidden />
+        {/* spacer במקום ה-FAB הישן - שמירה על הריווח באמצע. גודל תואם ל-FAB (56). */}
+        <Box sx={{ position: 'absolute', top: -28, width: 56, height: 56 }} aria-hidden />
 
       {/* הפס עצמו - relative בתוך ה-wrapper */}
       <Box
@@ -1677,12 +1677,11 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך אליפטי עמוק וצף - צורת "כנפיים" =====
-          // ellipse עם רוחב 56 וגובה 44 = חור רחב ועמוק יחסית לכפתור 64,
-          // עם פיזור (gradient stops) שיוצר עקומה רכה במקום קצוות חדים.
-          // התוכן שמתחת מבצבץ דרך החור באמת - לא overlay.
-          maskImage: 'radial-gradient(ellipse 56px 44px at 50% 0%, transparent 95%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 56px 44px at 50% 0%, transparent 95%, black 100%)',
+          // ===== חתך אליפטי - הגודל מתאים ל-FAB 56px =====
+          // ellipse 50×40: רוחב מעט גדול מהכפתור (56) כדי לתת רווח עיגולי,
+          // gradient stops 95%-100% ליצירת עקומה רכה.
+          maskImage: 'radial-gradient(ellipse 50px 40px at 50% 0%, transparent 95%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 50px 40px at 50% 0%, transparent 95%, black 100%)',
           // pseudo נשאר כ-fallback לדפדפנים בלי תמיכה ב-mask
           '&::before': {
             content: '""',
