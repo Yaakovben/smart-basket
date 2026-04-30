@@ -736,7 +736,7 @@ export const HomeComponent = memo(({
 
   return (
     <>
-    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ height: { xs: '100svh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
         background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
@@ -1634,18 +1634,22 @@ export const HomeComponent = memo(({
           bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          pb: 'env(safe-area-inset-bottom)',
+          // ללא פינות עגולות בראש - מראה עוגן יציב, לא "מרחף"
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          // padding-bottom: על iPhone safe-area, על אנדרואיד מינימום 4px
+          pb: 'max(4px, env(safe-area-inset-bottom))',
+          // צל עדין יותר - פחות "מרחף", יותר עוגן
           boxShadow: isDark
-            ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
-            : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
-          // חתך עגול במרכז העליון של הבר - 43px רדיוס. ה-FAB (28px רדיוס)
-          // יושב חצי בתוך החתך, חצי מעליו, עם 15px רווח שקוף סביבו.
-          WebkitMaskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
-          maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
+            ? '0 -2px 8px rgba(0,0,0,0.3)'
+            : '0 -2px 8px rgba(0,0,0,0.06)',
+          // הוסר mask-image - הוא יצר רינדור לא יציב ב-iOS PWA וגרם
+          // ל-hit-tests באזור החתך השקוף לעדיין לפעול. ה-FAB מרחף עכשיו.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
+          // contain: layout - iOS מתייחס לבר כיחידה עצמאית, לא מעדכן
+          // מיקום בגלילה (אופטימיזציית רנדור).
+          contain: 'layout',
         }}
       >
       <Box
@@ -1657,11 +1661,11 @@ export const HomeComponent = memo(({
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: { xs: 1, sm: 1.5 },
-          py: { xs: 0.5, sm: 0.75 },
+          py: { xs: 0.4, sm: 0.6 },
           px: { xs: 2.5, sm: 3.5 },
-          minHeight: 52,
-          '@media (max-width: 360px)': { py: 0.4, px: 2, minHeight: 48 },
-          '@media (max-width: 320px)': { py: 0.3, px: 1.5, minHeight: 44 },
+          minHeight: 48,
+          '@media (max-width: 360px)': { py: 0.3, px: 2, minHeight: 44 },
+          '@media (max-width: 320px)': { py: 0.25, px: 1.5, minHeight: 40 },
         }}
       >
         {/* ימין (RTL = ראשון ב-DOM) - בית. onPointerUp במקום onClick + blur אחרי
@@ -1742,9 +1746,9 @@ export const HomeComponent = memo(({
       <Box
         sx={{
           position: 'fixed',
-          // safe-area + (גובה בר 52 - חצי FAB 28) = safe-area + 24
-          // מרכז ה-FAB יושב בדיוק על שפת הבר העליונה.
-          bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+          // safe-area + (גובה בר 48) + רווח שקוף 12px = safe-area + 60
+          // ה-FAB מרחף מעל הבר עם רווח שקוף ביניהם.
+          bottom: 'calc(env(safe-area-inset-bottom) + 60px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
