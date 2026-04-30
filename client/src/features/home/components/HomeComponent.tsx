@@ -435,6 +435,10 @@ export const HomeComponent = memo(({
     return localStorage.getItem('pushPromptDismissed') === 'true';
   });
 
+  // אנימציית סגירה לתפריט "מה תרצה ליצור?" - state בלבד, ה-callback מוגדר
+  // אחרי useList כי הוא תלוי ב-setShowMenu שמגיע משם.
+  const [menuClosing, setMenuClosing] = useState(false);
+
   // הצגת הצעת push לאחר השהיה - רק אם אין popup אחר על המסך הסשן הזה
   useEffect(() => {
     if (pushSupported && isPwaInstalled && !pushSubscribed && !pushPromptDismissed && !pushLoading && pushPermission !== 'denied') {
@@ -479,6 +483,15 @@ export const HomeComponent = memo(({
   } = useHome({
     lists, user, onCreateList, onDeleteList, onEditList, onJoinGroup, showToast
   });
+
+  // closeMenu - ממקם כאן כי הוא תלוי ב-setShowMenu שמגיע מ-useList
+  const closeMenu = useCallback(() => {
+    setMenuClosing(true);
+    window.setTimeout(() => {
+      setShowMenu(false);
+      setMenuClosing(false);
+    }, 280);
+  }, [setShowMenu]);
 
   // ===== אדפטר עבור EditListModal המשותף =====
   const editListOriginal = useRef<List | null>(null);
@@ -1005,14 +1018,96 @@ export const HomeComponent = memo(({
       {/* Menu Bottom Sheet */}
       {showMenu && (
         <>
-          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 998, backdropFilter: 'blur(4px)' }} onClick={() => setShowMenu(false)} />
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, bgcolor: 'background.paper', borderRadius: '24px 24px 0 0', p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))', zIndex: 999, maxWidth: { xs: '100%', sm: 400 }, mx: 'auto', boxShadow: '0 -8px 30px rgba(0,0,0,0.15)' }}>
+          {/* רקע מאחור - fade-in/fade-out הדרגתי */}
+          <Box
+            onClick={closeMenu}
+            sx={{
+              position: 'fixed', inset: 0,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              zIndex: 998,
+              backdropFilter: 'blur(4px)',
+              animation: menuClosing
+                ? 'menuBackdropOut 0.28s ease-in forwards'
+                : 'menuBackdropIn 0.28s ease-out',
+              '@keyframes menuBackdropIn': {
+                from: { opacity: 0, backdropFilter: 'blur(0px)' },
+                to: { opacity: 1, backdropFilter: 'blur(4px)' },
+              },
+              '@keyframes menuBackdropOut': {
+                from: { opacity: 1, backdropFilter: 'blur(4px)' },
+                to: { opacity: 0, backdropFilter: 'blur(0px)' },
+              },
+            }}
+          />
+          {/* התפריט - עולה מלמטה ובסגירה יורד חזרה. אנימציה דו-כיוונית */}
+          <Box
+            sx={{
+              position: 'fixed', bottom: 0, left: 0, right: 0,
+              bgcolor: 'background.paper',
+              borderRadius: '24px 24px 0 0',
+              p: 2, pb: 'calc(16px + env(safe-area-inset-bottom))',
+              zIndex: 999,
+              maxWidth: { xs: '100%', sm: 400 },
+              mx: 'auto',
+              boxShadow: '0 -8px 30px rgba(0,0,0,0.15)',
+              animation: menuClosing
+                ? 'menuSlideDown 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards'
+                : 'menuSlideUp 0.36s cubic-bezier(0.34, 1.32, 0.64, 1)',
+              '@keyframes menuSlideUp': {
+                from: { transform: 'translateY(100%)', opacity: 0.9 },
+                to: { transform: 'translateY(0)', opacity: 1 },
+              },
+              '@keyframes menuSlideDown': {
+                from: { transform: 'translateY(0)', opacity: 1 },
+                to: { transform: 'translateY(100%)', opacity: 0.9 },
+              },
+            }}
+          >
+            {/* כפתור X צף - חצי-חצי בקצה העליון של התפריט, באותו עיצוב כמו ה-FAB */}
+            <Box
+              role="button"
+              tabIndex={0}
+              aria-label="סגור"
+              onClick={closeMenu}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') closeMenu(); }}
+              sx={{
+                position: 'absolute',
+                top: -28,                                  // חצי הגובה של ה-X (56/2)
+                left: '50%',
+                width: 56, height: 56, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+                boxShadow: [
+                  '0 8px 22px rgba(20,184,166,0.5)',
+                  '0 3px 8px rgba(0,0,0,0.15)',
+                  'inset 0 1px 0 rgba(255,255,255,0.3)',
+                ].join(', '),
+                // מצב התחלה: + ממורכז. אחרי האנימציה: X (rotate 135°). שמירה על המרכוז.
+                transform: 'translateX(-50%) rotate(135deg)',
+                animation: 'fabRotateIn 0.42s cubic-bezier(0.34, 1.32, 0.64, 1)',
+                '@keyframes fabRotateIn': {
+                  from: { transform: 'translateX(-50%) rotate(0deg)' },
+                  to: { transform: 'translateX(-50%) rotate(135deg)' },
+                },
+                '&:active': { opacity: 0.9 },
+                '@media (max-width: 360px)': { width: 52, height: 52, top: -26 },
+                '@media (max-width: 320px)': { width: 48, height: 48, top: -24 },
+              }}
+            >
+              <AddIcon sx={{
+                fontSize: 30,
+                color: 'white',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+                '@media (max-width: 360px)': { fontSize: 28 },
+                '@media (max-width: 320px)': { fontSize: 26 },
+              }} />
+            </Box>
             <Box sx={{ width: 36, height: 4, bgcolor: 'divider', borderRadius: '4px', mx: 'auto', mb: 1.5 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+            {/* ה-X להסגרה הוא ה-FAB עצמו (מסתובב 135° כשהתפריט פתוח) */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 4, mt: 2 }}>
               <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>{t('whatToCreate')}</Typography>
-              <IconButton onClick={() => setShowMenu(false)} sx={{ bgcolor: 'action.hover', width: 40, height: 40, '&:active': { transform: 'scale(0.95)' } }}>
-                <CloseIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
-              </IconButton>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {MENU_OPTIONS.map((option) => (
@@ -1522,14 +1617,6 @@ export const HomeComponent = memo(({
         }}
       />
 
-<<<<<<< Updated upstream
-      {/* ===== Bottom Navigation - sticky-bottom flex item =====
-          לא position:fixed יותר! אלא אלמנט שכן בתחתית של הקונטיינר ההורה
-          (height: 100dvh, flex column). כך הפס לא "יורד" כשהדפדפן מסתיר את
-          האדרס בר - הוויפורט הדינמי (dvh) מטפל בכל בעצמו.
-
-          הפס מוסתר כשתפריטים/מודאלים פתוחים. */}
-=======
       {/* ===== FAB התחתון - מוצג כש-menu סגור =====
           fade-out כשהמשתמש פותח את התפריט (האנימציה של ה-X בתפריט עצמו). */}
       <Box
@@ -1540,31 +1627,31 @@ export const HomeComponent = memo(({
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
         sx={{
           position: 'fixed',
-          // הבר בגובה ~64px (minHeight). ה-FAB מעל הבר עם רווח 12px בין
-          // הכפתור לבר - הרווח שקוף ורואים דרכו את התוכן.
-          // 64 (גובה בר) + 12 (רווח) = 76 מהתחתית.
-          bottom: 'calc(env(safe-area-inset-bottom) + 76px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 40px)',  // היה 28 - הרים ל-40 שיהיה חצי מעל הבר
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 1100,                                // מעל הבר (1000)
+          zIndex: 1000,
           width: 56, height: 56, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-          // ללא border - רק צל. הכפתור נקי, מרחף.
+          // טבעת לבנה דקה סביב ה-FAB מדגישה את הצורה ויוצרת ניגוד מול הבר
+          // והחתך - הכפתור נראה באמת "מרחף" ולא חלק מהבר.
+          border: '3px solid',
+          borderColor: 'background.default',
           boxShadow: [
-            '0 6px 18px rgba(20,184,166,0.45)',
-            '0 2px 6px rgba(0,0,0,0.15)',
-            'inset 0 1px 0 rgba(255,255,255,0.25)',
+            '0 8px 22px rgba(20,184,166,0.5)',
+            '0 3px 8px rgba(0,0,0,0.15)',
+            'inset 0 1px 0 rgba(255,255,255,0.3)',
           ].join(', '),
           opacity: showMenu ? 0 : 1,
           pointerEvents: showMenu ? 'none' : 'auto',
-          transition: 'opacity 0.22s ease, box-shadow 0.15s, transform 0.15s',
-          '&:hover': { boxShadow: '0 10px 26px rgba(20,184,166,0.55), 0 4px 10px rgba(0,0,0,0.18)' },
-          '&:active': { opacity: 0.9, transform: 'translateX(-50%) scale(0.95)' },
-          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 72px)' },
-          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 68px)' },
+          transition: 'opacity 0.22s ease, box-shadow 0.15s',
+          '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
+          '&:active': { opacity: 0.9 },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 38px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 36px)' },
         }}
       >
         <AddIcon sx={{
@@ -1576,66 +1663,20 @@ export const HomeComponent = memo(({
         }} />
       </Box>
 
-      {/* ===== Bottom Navigation - קבוע לוויפורט, לא זז ===== */}
->>>>>>> Stashed changes
+      {/* ===== Bottom Navigation - מוסתר כשתפריט פתוח ===== */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          flexShrink: 0,                     // לא מתכווץ כשהתוכן גדל
-          position: 'relative',              // לאפשר את ה-FAB absolute בתוך
+          position: 'fixed',
+          bottom: 0,
+          left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
-<<<<<<< Updated upstream
-          zIndex: 5,                         // מעל תוכן הגלילה
-        }}
-      >
-        {/* FAB - אבסולוטית מעל הפס. צל הוקטן בכוונה - בקשת הלקוח. */}
-        <Box
-          role="button"
-          tabIndex={0}
-          aria-label={t('new')}
-          onClick={() => { haptic('medium'); setShowMenu(true); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
-          sx={{
-            position: 'absolute',
-            top: -32,                                  // 32px (= חצי FAB) מעל ראש הפס
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 2,
-            width: 64, height: 64, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', userSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            // צל מודגש שמדגיש את הצף - הכפתור "מרחף" מעל הפס
-            boxShadow: [
-              '0 8px 22px rgba(20,184,166,0.5)',
-              '0 3px 8px rgba(0,0,0,0.15)',
-              'inset 0 1px 0 rgba(255,255,255,0.3)',
-            ].join(', '),
-            transition: 'box-shadow 0.15s',
-            '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
-            '&:active': { opacity: 0.9 },
-            '@media (max-width: 360px)': { width: 58, height: 58, top: -29 },
-            '@media (max-width: 320px)': { width: 52, height: 52, top: -26 },
-          }}
-        >
-          <AddIcon sx={{
-            fontSize: 34,
-            color: 'white',
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-            '@media (max-width: 360px)': { fontSize: 30 },
-            '@media (max-width: 320px)': { fontSize: 28 },
-          }} />
-        </Box>
-=======
-          zIndex: 1000,                                // מעל התוכן, מתחת ל-FAB (1100)
+          zIndex: 5,
           pointerEvents: 'none',
-          // GPU compositing - מבטיח fixed יציב גם ב-iOS PWA
-          willChange: 'transform',
-          transform: 'translateZ(0)',
         }}
       >
->>>>>>> Stashed changes
+        {/* spacer במקום ה-FAB הישן - שמירה על הריווח באמצע. גודל תואם ל-FAB (56). */}
+        <Box sx={{ position: 'absolute', top: -28, width: 56, height: 56 }} aria-hidden />
 
       {/* הפס עצמו - relative בתוך ה-wrapper */}
       <Box
@@ -1643,6 +1684,7 @@ export const HomeComponent = memo(({
           position: 'relative',
           width: '100%',
           maxWidth: { xs: '100%', sm: 500, md: 600 },
+          pointerEvents: 'auto',                       // הבר עצמו לחיץ (wrapper מעל זה none)
           bgcolor: 'background.paper',
           // בורדר דק שמדגיש את הצורה של הפס וגם את החתך העגול במרכז -
           // הקצוות של החתך נראים יותר כי יש להם ניגוד מול הרקע.
@@ -1666,12 +1708,11 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-<<<<<<< Updated upstream
-          // ===== חתך באמת שקוף מתחת ל-+ =====
-          // mask-image עם radial-gradient חותך באמת חור מהבר - רואים את
-          // מה שמתחת (התוכן מאחורי הבר). לא overlay בצבע page-bg!
-          maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
-          WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          // ===== חתך אליפטי גדול ובולט - מתאים ל-FAB 56px =====
+          // ellipse 44×36: גדול מספיק לאפשר רווח של ~6-8px סביב הכפתור,
+          // יוצר חצי-עיגול בולט שרואים אותו בקלות.
+          maskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
           // pseudo נשאר כ-fallback לדפדפנים בלי תמיכה ב-mask
           '&::before': {
             content: '""',
@@ -1695,9 +1736,6 @@ export const HomeComponent = memo(({
               borderBottomRightRadius: '72px 36px',
             },
           },
-=======
-          // אין יותר cutout/mask/pseudo - הבר נקי ומלבני
->>>>>>> Stashed changes
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
