@@ -1652,32 +1652,11 @@ export const HomeComponent = memo(({
           padding-bottom: env(safe-area-inset-bottom) מעל ה-home indicator של iPhone.
           mask-image חותך אליפסה במרכז העליון — שם יושב ה-FAB ומסביבו רווח שקוף. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
-      <>
-      {/* קשת border רק בתוך החתך של הבר (חצי-תחתון של עיגול).
-          רדיוס 41 קטן מרדיוס החתך 43 → הקשת בתוך אזור החתך השקוף ונראית.
-          clipPath חותך את החצי-העליון כדי שלא תקיף את ה-FAB. */}
-      <Box sx={{
-        position: 'fixed',
-        bottom: 'calc(env(safe-area-inset-bottom) + 11px)',
-        transform: 'translate(-50%, 0) translateY(var(--vv-shift, 0px))',
-        left: '50%',
-        marginLeft: '-41px',
-        width: 82, height: 82,
-        borderRadius: '50%',
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-        bgcolor: 'transparent',
-        // חיתוך חצי-עליון - נראית רק הקשת התחתונה (בתוך חתך הבר)
-        clipPath: 'inset(50% 0 0 0)',
-        zIndex: 999,
-        pointerEvents: 'none',
-      }} />
       <Box
         sx={{
           position: 'fixed',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
-          transform: 'translateY(var(--vv-shift, 0px))',
           bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
@@ -1786,7 +1765,6 @@ export const HomeComponent = memo(({
         </Box>
       </Box>
       </Box>
-      </>
       )}
 
       {/* ===== FAB (כפתור +) =====
@@ -1805,7 +1783,6 @@ export const HomeComponent = memo(({
           zIndex: 1100,
           pointerEvents: 'none',
           '& > *': { pointerEvents: 'auto' },
-          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
         <Box
