@@ -1654,17 +1654,19 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <>
       {/* קשת border רק בתוך החתך של הבר (חצי-תחתון של עיגול).
-          לא מקיפה את ה-FAB - רק ממשיכה את קו ה-borderTop לאורך עקומת
-          החתך הפנימית. clipPath חותך את החצי-העליון. */}
+          רדיוס 41 קטן מרדיוס החתך 43 → הקשת בתוך אזור החתך השקוף ונראית.
+          clipPath חותך את החצי-העליון כדי שלא תקיף את ה-FAB. */}
       <Box sx={{
         position: 'fixed',
-        bottom: 'calc(env(safe-area-inset-bottom) + 52px - 43px)',
+        // מרכז הקשת בגובה הקצה העליון של הבר (52 מהתחתית).
+        // bottom = 52 - 41 = 11 כדי שהמרכז יישב במקום הנכון.
+        bottom: 'calc(env(safe-area-inset-bottom) + 11px)',
         left: '50%',
-        marginLeft: '-43px',
-        width: 86, height: 86,
+        marginLeft: '-41px',
+        width: 82, height: 82,
         borderRadius: '50%',
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+        borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.14)',
         bgcolor: 'transparent',
         // חיתוך חצי-עליון - נראית רק הקשת התחתונה (בתוך חתך הבר)
         clipPath: 'inset(50% 0 0 0)',
