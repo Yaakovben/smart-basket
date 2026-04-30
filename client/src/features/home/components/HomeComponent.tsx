@@ -1733,15 +1733,17 @@ export const HomeComponent = memo(({
       )}
 
       {/* ===== FAB (כפתור +) =====
-          ממורכז אופקית. נמצא חצי בתוך חתך הבר וחצי מעליו - אפקט "צף בתוך החתך".
-          רדיוס FAB 28px, רדיוס חתך הבר 36px → 8px רווח שקוף שמראה את התוכן.
-          ללא border, רק gradient + shadow רב-שכבתי. */}
+          ממורכז אופקית. מרכזו על הקצה העליון של הבר - חצי מעל הבר וחצי
+          בתוך החתך (radial-gradient mask ברדיוס 43px). ה-FAB ברדיוס 28
+          → 15px רווח שקוף סביבו (טבעת שקופה דרכה רואים את התוכן). יוצר
+          אפקט "floating" קלאסי של אפליקציות מודרניות. ללא border, רק
+          gradient + shadow רב-שכבתי. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
           position: 'fixed',
-          // bottom: safe-area + גובה בר (52) + רווח שקוף (12) = safe-area + 64
-          // → ה-FAB מרחף מעל הבר עם רווח שקוף (אין חפיפה, אין hit-tests משותפים)
+          // safe-area + (גובה בר 52 - חצי FAB 28) = safe-area + 24
+          // מרכז ה-FAB יושב בדיוק על שפת הבר העליונה.
           bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
