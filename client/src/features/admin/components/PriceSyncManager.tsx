@@ -753,7 +753,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                                   אין סניפים במאגר עדיין
                                 </Typography>
                               ) : (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, maxHeight: 240, overflowY: 'auto' }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, maxHeight: 240, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                                   {branchList.map(b => {
                                     // תג מקור הנתונים - osm/geocoded/portal/ידני
                                     const sourceTag =

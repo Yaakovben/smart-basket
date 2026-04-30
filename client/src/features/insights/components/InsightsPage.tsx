@@ -129,7 +129,7 @@ export const InsightsPage = memo(() => {
   }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
+    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 4, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* הדר: באנר עליון - גרדיאנט תואם בדיוק לעמוד האמיתי כדי שלא יהיה
           קפיצה ויזואלית כשהטעינה מסתיימת */}
       <Box sx={{
@@ -161,7 +161,7 @@ export const InsightsPage = memo(() => {
   );
 
   if (error || !data || data.stats.totalProducts === 0) return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', p: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', p: 3, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       <Box sx={{ fontSize: 56, mb: 2, animation: `${float} 2s ease infinite` }}>{error ? '⚠️' : '📊'}</Box>
       <Typography sx={{ fontSize: 18, fontWeight: 800, mb: 1 }}>{error ? t('connectionErrorTitle') : t('noInsightsYet')}</Typography>
       <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', mb: 3, maxWidth: 280 }}>
@@ -195,7 +195,7 @@ export const InsightsPage = memo(() => {
   // formatRelativeDate, growth helpers - הועברו ל-PulseTab.tsx
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 5 }}>
+    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(40px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
         // הדר בצבעי האפליקציה - טורקיז במקום סגול, אחיד עם שאר המסכים

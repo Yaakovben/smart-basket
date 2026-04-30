@@ -148,7 +148,7 @@ export const AdminDashboard = () => {
   }, [usersWithLoginInfo, userSearch, userFilter, onlineUserIds]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: isDark ? '#0F1419' : '#F8FAFB' }}>
+    <Box sx={{ height: '100dvh', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
       {/* Header */}
       <Box
         sx={{
