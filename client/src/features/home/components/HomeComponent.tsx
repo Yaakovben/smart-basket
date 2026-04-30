@@ -1627,7 +1627,7 @@ export const HomeComponent = memo(({
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
         sx={{
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 28px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 40px)',  // היה 28 - הרים ל-40 שיהיה חצי מעל הבר
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1000,
@@ -1636,19 +1636,22 @@ export const HomeComponent = memo(({
           cursor: 'pointer', userSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+          // טבעת לבנה דקה סביב ה-FAB מדגישה את הצורה ויוצרת ניגוד מול הבר
+          // והחתך - הכפתור נראה באמת "מרחף" ולא חלק מהבר.
+          border: '3px solid',
+          borderColor: 'background.default',
           boxShadow: [
             '0 8px 22px rgba(20,184,166,0.5)',
             '0 3px 8px rgba(0,0,0,0.15)',
             'inset 0 1px 0 rgba(255,255,255,0.3)',
           ].join(', '),
-          // נסתר כשתפריט פתוח - ה-X בראש התפריט תופס את התפקיד
           opacity: showMenu ? 0 : 1,
           pointerEvents: showMenu ? 'none' : 'auto',
           transition: 'opacity 0.22s ease, box-shadow 0.15s',
           '&:hover': { boxShadow: '0 12px 30px rgba(20,184,166,0.6), 0 5px 12px rgba(0,0,0,0.18)' },
           '&:active': { opacity: 0.9 },
-          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 26px)' },
-          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 24px)' },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 38px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 36px)' },
         }}
       >
         <AddIcon sx={{
@@ -1705,11 +1708,11 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
-          // ===== חתך אליפטי - הגודל מתאים ל-FAB 56px =====
-          // ellipse 50×40: רוחב מעט גדול מהכפתור (56) כדי לתת רווח עיגולי,
-          // gradient stops 95%-100% ליצירת עקומה רכה.
-          maskImage: 'radial-gradient(ellipse 50px 40px at 50% 0%, transparent 95%, black 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 50px 40px at 50% 0%, transparent 95%, black 100%)',
+          // ===== חתך אליפטי גדול ובולט - מתאים ל-FAB 56px =====
+          // ellipse 44×36: גדול מספיק לאפשר רווח של ~6-8px סביב הכפתור,
+          // יוצר חצי-עיגול בולט שרואים אותו בקלות.
+          maskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 44px 36px at 50% 0%, transparent 99%, black 100%)',
           // pseudo נשאר כ-fallback לדפדפנים בלי תמיכה ב-mask
           '&::before': {
             content: '""',
