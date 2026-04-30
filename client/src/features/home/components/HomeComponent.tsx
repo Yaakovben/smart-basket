@@ -1660,16 +1660,7 @@ export const HomeComponent = memo(({
             transition: 'background-color 0.18s ease',
             '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.16)' },
             '&:active': { opacity: 0.7 },
-            // קו עליון דק שמדגיש שזה הטאב הפעיל
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 4, left: '50%',
-              transform: 'translateX(-50%)',
-              width: 26, height: 3,
-              borderRadius: 999,
-              bgcolor: '#0D9488',
-            },
+            // הרקע הטורקיז העדין מספיק כדי לסמן שזה הטאב הפעיל - בלי קו עליון
           }}
         >
           <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />

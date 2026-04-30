@@ -17,12 +17,19 @@ body {
   /* Background only applies after app loads (set by app-loaded class from JS) */
   direction: rtl;
   width: 100%;
+  /* fixed-position נעולה לוויפורט - תיקון לבעיית iOS PWA שבה body נע
+     בעקבות רובר-באנד וגורם לבר התחתון "ליפול" עם הזמן */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 100%;
   height: 100dvh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* כל גלילה מתבצעת בתוך הקונטיינרים הפנימיים (contentRef וכד') - לא ב-body */
+  overflow: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior: none;
 }
 
 /* App background - only after initial loader is hidden */
