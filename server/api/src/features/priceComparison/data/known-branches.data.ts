@@ -277,4 +277,18 @@ export const KNOWN_BRANCHES: KnownBranch[] = [
   { chainId: 'doralon', chainName: 'AM:PM (דור אלון)', storeId: 'osm-node-12949816844', storeName: 'AM:PM', city: '', address: '', lat: 32.0708661, lng: 34.7820082 },
   { chainId: 'politzer', chainName: 'פוליצר', storeId: 'osm-node-2076067688', storeName: 'פוליצר', city: '', address: '', lat: 32.4813442, lng: 34.9875464 },
   { chainId: 'politzer', chainName: 'פוליצר', storeId: 'osm-node-4783333745', storeName: 'פוליצר', city: '', address: '', lat: 32.4873633, lng: 34.910539 },
+  // ===== מעיין 2000 - סניפים מרכזיים בישראל =====
+  // קואורדינטות מקורבות (מרכז העיר) כדי שיופיעו במפה. ניתן לעדכן בעריכה ידנית
+  // דרך לוח האדמין או הסנכרון מ-OSM ירענן אותם אם יתויגו ב-OpenStreetMap.
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bs-merkaz', storeName: 'מעיין 2000 בית שמש מרכז', city: 'בית שמש', address: 'נחל לכיש 38', lat: 31.7497, lng: 34.9869 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bs-rbsa', storeName: 'מעיין 2000 רמת בית שמש א', city: 'בית שמש', address: 'נהר הירדן 25', lat: 31.7558, lng: 34.9956 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bs-rbsg', storeName: 'מעיין 2000 רמת בית שמש ג', city: 'בית שמש', address: 'הרב מאיר בעל הנס', lat: 31.7626, lng: 35.0085 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bb', storeName: 'מעיין 2000 בני ברק', city: 'בני ברק', address: 'רבי עקיבא 92', lat: 32.0843, lng: 34.8338 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-jm-geula', storeName: 'מעיין 2000 גאולה', city: 'ירושלים', address: 'מאה שערים 24', lat: 31.7884, lng: 35.2218 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-jm-rmt-eshkol', storeName: 'מעיין 2000 רמת אשכול', city: 'ירושלים', address: 'פארן 28', lat: 31.8133, lng: 35.2342 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-jm-romema', storeName: 'מעיין 2000 רוממה', city: 'ירושלים', address: 'מלכי ישראל 50', lat: 31.7917, lng: 35.2048 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-modiin-illit', storeName: 'מעיין 2000 מודיעין עילית', city: 'מודיעין עילית', address: 'נתיבות המשפט', lat: 31.9337, lng: 35.0407 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-elad', storeName: 'מעיין 2000 אלעד', city: 'אלעד', address: 'שמעון בן שטח 19', lat: 32.0517, lng: 34.9533 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-betar', storeName: 'מעיין 2000 ביתר עילית', city: 'ביתר עילית', address: 'הרב טייב 5', lat: 31.6955, lng: 35.1162 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-ashdod', storeName: 'מעיין 2000 אשדוד', city: 'אשדוד', address: 'הרצל 50', lat: 31.8044, lng: 34.6553 },
 ];

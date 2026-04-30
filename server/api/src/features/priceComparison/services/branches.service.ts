@@ -55,18 +55,18 @@ async function ensureSeedLoaded(): Promise<void> {
   if (seedLoadAttempted) return;
   seedLoadAttempted = true;
   try {
-    const count = await Branch.countDocuments();
-    if (count > 0) {
-      logger.info(`[branches-seed] DB has ${count} branches, no need to seed`);
-      return;
-    }
-    logger.info('[branches-seed] DB empty, loading 65 known branches...');
     const chainNames: Record<string, string> = {
       shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
       osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
       stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-      victory: 'ויקטורי',
+      victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
     };
+    // טעינת KNOWN_BRANCHES בכל startup (idempotent דרך upsert על
+    // chainId+storeId). חשוב: גם אם יש סניפים, רשתות חדשות שנוספו
+    // ל-KNOWN_BRANCHES חייבות להיכנס - רק upsert בסניפים שכבר קיימים
+    // לא יחליף נתונים שנערכו ידנית באדמין.
+    const count = await Branch.countDocuments();
+    logger.info(`[branches-seed] DB has ${count} branches, upserting ${KNOWN_BRANCHES.length} seeds...`);
     let loaded = 0;
     for (const b of KNOWN_BRANCHES) {
       try {
@@ -86,7 +86,7 @@ async function ensureSeedLoaded(): Promise<void> {
         if (loaded === 0) logger.error('[branches-seed] first error:', e);
       }
     }
-    logger.info(`[branches-seed] loaded ${loaded}/65 branches`);
+    logger.info(`[branches-seed] upserted ${loaded}/${KNOWN_BRANCHES.length} branches`);
   } catch (err) {
     logger.error('[branches-seed] check failed:', err);
     seedLoadAttempted = false; // נסה שוב בבקשה הבאה
