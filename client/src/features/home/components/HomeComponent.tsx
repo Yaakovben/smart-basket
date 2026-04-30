@@ -1737,9 +1737,9 @@ export const HomeComponent = memo(({
       <Box
         sx={{
           position: 'fixed',
-          // bottom: safe-area + (גובה בר 64 - חצי FAB 28) = safe-area + 36
-          // → מרכז ה-FAB יושב בדיוק על הקצה העליון של הבר. חצי מעל, חצי בתוך החתך.
-          bottom: 'calc(env(safe-area-inset-bottom) + 36px)',
+          // bottom: safe-area + (גובה בר 52 - חצי FAB 28) = safe-area + 24
+          // → מרכז ה-FAB יושב בדיוק על הקצה העליון של הבר. חצי מעל, חצי בתוך הבר.
+          bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
