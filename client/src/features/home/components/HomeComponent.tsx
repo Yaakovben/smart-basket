@@ -735,6 +735,7 @@ export const HomeComponent = memo(({
   }, [joinCode, showJoin]);
 
   return (
+    <>
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
@@ -858,8 +859,8 @@ export const HomeComponent = memo(({
         </Tabs>
       </Box>
 
-      {/* Content */}
-      <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
+      {/* Content - overscrollBehavior:contain מונע מ-pull-to-refresh ב-iOS להזיז את הבר */}
+      <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
         {/* מצב שגיאת חיבור: השרת למטה ואין רשימות */}
         {listsFetchError && lists.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
@@ -1616,6 +1617,7 @@ export const HomeComponent = memo(({
           }
         }}
       />
+    </Box>
 
       {/* ===== Bottom Navigation =====
           קבוע בתחתית, נעול לחלוטין. ללא wrapper מקיף שיגרום לבעיות
@@ -1645,8 +1647,14 @@ export const HomeComponent = memo(({
           // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
-          // נעילה מוחלטת לתחתית הוויפורט - שום גרירה/גלילה לא תזיז.
-          transform: 'translateZ(0)',
+          // נעילה מוחלטת - GPU layer + contain מונעים שום תזוזה בגרירה/סיבוב.
+          transform: 'translate3d(0,0,0)',
+          WebkitTransform: 'translate3d(0,0,0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          contain: 'layout style',
+          willChange: 'transform',
+          overflowAnchor: 'none',
         }}
       >
       <Box
@@ -1783,7 +1791,7 @@ export const HomeComponent = memo(({
         </Box>
       </Box>
       )}
-    </Box>
+    </>
   );
 });
 
