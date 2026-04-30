@@ -1653,13 +1653,11 @@ export const HomeComponent = memo(({
           mask-image חותך אליפסה במרכז העליון — שם יושב ה-FAB ומסביבו רווח שקוף. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <>
-      {/* טבעת דקה מאחורי הבר - נראית רק דרך החתך, יוצרת המשך של ה-borderTop
-          לאורך עקומת החתך מתחת ל-FAB. ממוקמת ב-z-index 999 (מתחת לבר 1000),
-          רוחב/גובה 86 = 2×רדיוס החתך (43). מרכזה על הקצה העליון של הבר. */}
+      {/* קשת border רק בתוך החתך של הבר (חצי-תחתון של עיגול).
+          לא מקיפה את ה-FAB - רק ממשיכה את קו ה-borderTop לאורך עקומת
+          החתך הפנימית. clipPath חותך את החצי-העליון. */}
       <Box sx={{
         position: 'fixed',
-        // bottom של הבר 0, גובה 52, רדיוס 43 → המרכז של הטבעת בגובה 52
-        // (קצה עליון של הבר), אז bottom של הטבעת = 52 - 43 = 9
         bottom: 'calc(env(safe-area-inset-bottom) + 52px - 43px)',
         left: '50%',
         marginLeft: '-43px',
@@ -1668,6 +1666,8 @@ export const HomeComponent = memo(({
         border: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
         bgcolor: 'transparent',
+        // חיתוך חצי-עליון - נראית רק הקשת התחתונה (בתוך חתך הבר)
+        clipPath: 'inset(50% 0 0 0)',
         zIndex: 999,
         pointerEvents: 'none',
       }} />
