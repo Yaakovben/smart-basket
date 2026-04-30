@@ -1618,17 +1618,17 @@ export const HomeComponent = memo(({
       />
 
       {/* ===== Bottom Navigation =====
-          קבוע בתחתית, נעול לחלוטין. ללא wrapper מקיף שיגרום לבעיות (transform/willChange
-          על אב יוצר containing block חדש שגורם ל-position:fixed להתנהג כ-absolute).
-          padding-bottom: env(safe-area-inset-bottom) דוחף את התוכן מעל ה-home indicator של iPhone. */}
+          קבוע בתחתית, נעול לחלוטין. ללא wrapper מקיף שיגרום לבעיות
+          (transform/willChange/filter/backdrop-filter/perspective על אב יוצרים
+          containing block חדש וגורמים ל-position:fixed להתנהג כ-absolute).
+          padding-bottom: env(safe-area-inset-bottom) מעל ה-home indicator של iPhone.
+          mask-image חותך אליפסה במרכז העליון — שם יושב ה-FAB ומסביבו רווח שקוף. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
           position: 'fixed',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
-          // אין willChange/transform על המכל - הם הופכים את descendants עם
-          // position:fixed להתנהג כ-absolute וגורמים לקפיצות בגלילה ב-iOS PWA.
           bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
@@ -1638,9 +1638,15 @@ export const HomeComponent = memo(({
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
+          // חתך עגול במרכז העליון של הבר - 36px רדיוס. ה-FAB (28px רדיוס)
+          // יושב בתוך החתך עם 8px רווח שקוף סביבו (אפקט floating).
+          WebkitMaskImage: 'radial-gradient(circle 33px at 50% 0%, transparent 32px, black 33px)',
+          maskImage: 'radial-gradient(circle 33px at 50% 0%, transparent 32px, black 33px)',
           // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
+          // נעילה מוחלטת לתחתית הוויפורט - שום גרירה/גלילה לא תזיז.
+          transform: 'translateZ(0)',
         }}
       >
       <Box
@@ -1724,20 +1730,21 @@ export const HomeComponent = memo(({
       )}
 
       {/* ===== FAB (כפתור +) =====
-          ממורכז אופקית באמצעות left/right + margin auto (יותר יציב מ-translateX
-          ב-iOS PWA). bottom = safe-area + גובה הבר + 12px רווח שקוף.
-          ללא border, רק gradient + shadow. */}
+          ממורכז אופקית. נמצא חצי בתוך חתך הבר וחצי מעליו - אפקט "צף בתוך החתך".
+          רדיוס FAB 28px, רדיוס חתך הבר 36px → 8px רווח שקוף שמראה את התוכן.
+          ללא border, רק gradient + shadow רב-שכבתי. */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 64px + 12px)',
+          // bottom: safe-area + (גובה בר 64 - חצי FAB 28) = safe-area + 36
+          // → מרכז ה-FAB יושב בדיוק על הקצה העליון של הבר. חצי מעל, חצי בתוך החתך.
+          bottom: 'calc(env(safe-area-inset-bottom) + 36px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
           pointerEvents: 'none',                      // wrapper שקוף לאירועים
           '& > *': { pointerEvents: 'auto' },         // הכפתור עצמו כן לחיץ
-          '@media (max-width: 360px)': { bottom: 'calc(env(safe-area-inset-bottom) + 60px + 12px)' },
         }}
       >
         <Box
