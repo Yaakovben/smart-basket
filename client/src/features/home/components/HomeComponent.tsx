@@ -1522,18 +1522,69 @@ export const HomeComponent = memo(({
         }}
       />
 
+<<<<<<< Updated upstream
       {/* ===== Bottom Navigation - sticky-bottom flex item =====
           לא position:fixed יותר! אלא אלמנט שכן בתחתית של הקונטיינר ההורה
           (height: 100dvh, flex column). כך הפס לא "יורד" כשהדפדפן מסתיר את
           האדרס בר - הוויפורט הדינמי (dvh) מטפל בכל בעצמו.
 
           הפס מוסתר כשתפריטים/מודאלים פתוחים. */}
+=======
+      {/* ===== FAB התחתון - מוצג כש-menu סגור =====
+          fade-out כשהמשתמש פותח את התפריט (האנימציה של ה-X בתפריט עצמו). */}
+      <Box
+        role="button"
+        tabIndex={0}
+        aria-label={t('new')}
+        onClick={() => { haptic('medium'); setShowMenu(true); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('medium'); setShowMenu(true); } }}
+        sx={{
+          position: 'fixed',
+          // הבר בגובה ~64px (minHeight). ה-FAB מעל הבר עם רווח 12px בין
+          // הכפתור לבר - הרווח שקוף ורואים דרכו את התוכן.
+          // 64 (גובה בר) + 12 (רווח) = 76 מהתחתית.
+          bottom: 'calc(env(safe-area-inset-bottom) + 76px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1100,                                // מעל הבר (1000)
+          width: 56, height: 56, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
+          // ללא border - רק צל. הכפתור נקי, מרחף.
+          boxShadow: [
+            '0 6px 18px rgba(20,184,166,0.45)',
+            '0 2px 6px rgba(0,0,0,0.15)',
+            'inset 0 1px 0 rgba(255,255,255,0.25)',
+          ].join(', '),
+          opacity: showMenu ? 0 : 1,
+          pointerEvents: showMenu ? 'none' : 'auto',
+          transition: 'opacity 0.22s ease, box-shadow 0.15s, transform 0.15s',
+          '&:hover': { boxShadow: '0 10px 26px rgba(20,184,166,0.55), 0 4px 10px rgba(0,0,0,0.18)' },
+          '&:active': { opacity: 0.9, transform: 'translateX(-50%) scale(0.95)' },
+          '@media (max-width: 360px)': { width: 52, height: 52, bottom: 'calc(env(safe-area-inset-bottom) + 72px)' },
+          '@media (max-width: 320px)': { width: 48, height: 48, bottom: 'calc(env(safe-area-inset-bottom) + 68px)' },
+        }}
+      >
+        <AddIcon sx={{
+          fontSize: 30,
+          color: 'white',
+          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+          '@media (max-width: 360px)': { fontSize: 28 },
+          '@media (max-width: 320px)': { fontSize: 26 },
+        }} />
+      </Box>
+
+      {/* ===== Bottom Navigation - קבוע לוויפורט, לא זז ===== */}
+>>>>>>> Stashed changes
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
           flexShrink: 0,                     // לא מתכווץ כשהתוכן גדל
           position: 'relative',              // לאפשר את ה-FAB absolute בתוך
           display: 'flex', justifyContent: 'center',
+<<<<<<< Updated upstream
           zIndex: 5,                         // מעל תוכן הגלילה
         }}
       >
@@ -1576,6 +1627,15 @@ export const HomeComponent = memo(({
             '@media (max-width: 320px)': { fontSize: 28 },
           }} />
         </Box>
+=======
+          zIndex: 1000,                                // מעל התוכן, מתחת ל-FAB (1100)
+          pointerEvents: 'none',
+          // GPU compositing - מבטיח fixed יציב גם ב-iOS PWA
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+        }}
+      >
+>>>>>>> Stashed changes
 
       {/* הפס עצמו - relative בתוך ה-wrapper */}
       <Box
@@ -1606,6 +1666,7 @@ export const HomeComponent = memo(({
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
           // המרכז מקבל גובה נוסף כדי שהכפתור הצף לא ייחתך
           minHeight: 64,
+<<<<<<< Updated upstream
           // ===== חתך באמת שקוף מתחת ל-+ =====
           // mask-image עם radial-gradient חותך באמת חור מהבר - רואים את
           // מה שמתחת (התוכן מאחורי הבר). לא overlay בצבע page-bg!
@@ -1634,6 +1695,9 @@ export const HomeComponent = memo(({
               borderBottomRightRadius: '72px 36px',
             },
           },
+=======
+          // אין יותר cutout/mask/pseudo - הבר נקי ומלבני
+>>>>>>> Stashed changes
           '@media (max-width: 360px)': { py: 0.65, px: 2 },
           '@media (max-width: 320px)': { py: 0.5, px: 1.5 },
         }}
