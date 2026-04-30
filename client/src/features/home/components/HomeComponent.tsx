@@ -253,6 +253,32 @@ const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) =
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
 
+  // ===== VisualViewport lock =====
+  // ב-iOS, position:fixed מעוגן ל-Visual Viewport שזז זמנית בגרירה (rubber-band).
+  // מאזין לזיזות וחושב הפרש בין layout viewport ל-visual viewport, מחיל אותו
+  // כ-CSS variable שהבר וה-FAB משתמשים בו ב-translateY כדי להישאר נעולים.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let raf = 0;
+    const update = () => {
+      const shift = window.innerHeight - vv.height - vv.offsetTop;
+      document.documentElement.style.setProperty('--vv-shift', `${shift}px`);
+    };
+    const onChange = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    };
+    update();
+    vv.addEventListener('scroll', onChange);
+    vv.addEventListener('resize', onChange);
+    return () => {
+      cancelAnimationFrame(raf);
+      vv.removeEventListener('scroll', onChange);
+      vv.removeEventListener('resize', onChange);
+    };
+  }, []);
+
   useEffect(() => {
     // תנאי סף בסיסיים: רק בדפדפן ולא נדחה לצמיתות
     if (!isInBrowser()) return;
@@ -1665,6 +1691,8 @@ export const HomeComponent = memo(({
           maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
+          // נעילה ל-layout viewport - מפצה על תזוזת visualViewport ב-iOS rubber-band
+          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
       <Box
@@ -1768,8 +1796,10 @@ export const HomeComponent = memo(({
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
-          pointerEvents: 'none',                      // wrapper שקוף לאירועים
-          '& > *': { pointerEvents: 'auto' },         // הכפתור עצמו כן לחיץ
+          pointerEvents: 'none',
+          '& > *': { pointerEvents: 'auto' },
+          // נעילה ל-layout viewport יחד עם הבר
+          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
         <Box
