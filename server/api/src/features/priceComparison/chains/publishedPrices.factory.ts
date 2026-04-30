@@ -37,8 +37,11 @@ const PORTAL_BASE = 'https://url.publishedprices.co.il';
 export interface PublishedPricesOptions {
   chainId: ChainId;
   chainName: string;
-  /** שם המשתמש בפורטל (למשל "osherad", "RamiLevy", "TivTaam") */
-  username: string;
+  /**
+   * שם המשתמש בפורטל. אפשר לספק מערך מועמדים והפקטורי ינסה אותם בסדר
+   * עד שאחד יצליח (שימושי כשלא ידוע ה-username המדויק של רשת).
+   */
+  username: string | string[];
   /** סיסמה - ברוב הרשתות ריקה */
   password?: string;
 }
@@ -460,22 +463,36 @@ function usernameVariants(username: string): string[] {
   return username === lower ? [username] : [username, lower];
 }
 
+// מרחיב מערך של מועמדי-usernames לכל ה-variants האפשריים (case toggle על כל אחד),
+// בלי כפילויות. שימושי כשלא ידוע ה-username המדויק של רשת בפורטל.
+function expandUsernameCandidates(usernames: string | string[]): string[] {
+  const arr = Array.isArray(usernames) ? usernames : [usernames];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const u of arr) {
+    for (const v of usernameVariants(u)) {
+      if (!seen.has(v)) { seen.add(v); out.push(v); }
+    }
+  }
+  return out;
+}
+
 export function createPublishedPricesAdapter(options: PublishedPricesOptions): ChainAdapter {
   const { chainId, chainName, username, password = '' } = options;
 
-  // מנסה התחברות עם variants של ה-username עד שמצליח. זורק את השגיאה
-  // האחרונה אם כולם נכשלו. מטפל ברגישות ל-case שראינו אצל ויקטורי ועוד.
+  // מנסה התחברות עם כל המועמדים בסדר עד שאחד מצליח. זורק את השגיאה
+  // האחרונה אם כולם נכשלו. תומך גם ברגישות ל-case וגם בכמה usernames שונים.
   async function tryAuthenticate(): Promise<{ client: AxiosInstance; csrftoken: string }> {
-    const variants = usernameVariants(username);
+    const candidates = expandUsernameCandidates(username);
     let lastErr: unknown;
-    for (const u of variants) {
+    for (const u of candidates) {
       try {
         return await createAuthenticatedClient(u, password);
       } catch (err) {
         lastErr = err;
         const msg = err instanceof Error ? err.message : 'unknown';
         if (!msg.startsWith('auth_failed_for_user:')) throw err; // שגיאת רשת/timeout - לא לנסות שוב
-        logger.warn(`[chain:${chainId}] auth failed for username='${u}', trying next variant`);
+        logger.warn(`[chain:${chainId}] auth failed for username='${u}', trying next candidate`);
       }
     }
     throw lastErr;

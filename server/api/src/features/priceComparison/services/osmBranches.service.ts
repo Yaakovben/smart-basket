@@ -65,6 +65,10 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
     brands: ['Victory', 'Victory Supermarket', 'Victory Hyper'],
     names: ['ויקטורי', 'ויקטורי היפר', 'ויקטורי סופר'],
   },
+  maayan_2000: {
+    brands: ['Maayan 2000', 'Maayan2000', 'Mayan 2000'],
+    names: ['מעיין 2000', 'מעיין2000', 'מעיין אלפיים', 'מעין 2000'],
+  },
 };
 
 export interface OsmBranch {

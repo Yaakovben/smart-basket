@@ -8,6 +8,7 @@ export { stopMarketAdapter } from './stop-market.adapter';
 export { politzerAdapter } from './politzer.adapter';
 export { doralonAdapter } from './doralon.adapter';
 export { victoryAdapter } from './victory.adapter';
+export { maayan2000Adapter } from './maayan-2000.adapter';
 export { createPublishedPricesAdapter } from './publishedPrices.factory';
 export { normalizeProductName, isLikelyMatch, stemHebrew } from './normalize';
 export type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';

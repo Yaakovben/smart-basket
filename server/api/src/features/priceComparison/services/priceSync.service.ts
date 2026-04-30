@@ -9,6 +9,7 @@ import {
   politzerAdapter,
   doralonAdapter,
   victoryAdapter,
+  maayan2000Adapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -34,8 +35,9 @@ const adapters: ChainAdapter[] = [
   doralonAdapter,
   shufersalAdapter,
   victoryAdapter,
-  // מעיין 2000 הוסר זמנית - username 'Maayan2000' מחזיר 401 מהפורטל.
-  // צריך לאתר את ה-username הנכון לפני שנחזיר אותו.
+  // מעיין 2000 - מנסה מספר מועמדי usernames בפורטל. אם כולם נכשלים,
+  // הרשת תופיע ב-UI כ"אין נתונים היום" אבל לא תיעלם מהרשימה.
+  maayan2000Adapter,
 ];
 
 export interface SyncResult {

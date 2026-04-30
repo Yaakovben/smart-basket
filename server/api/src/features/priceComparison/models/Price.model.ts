@@ -10,7 +10,8 @@ export type ChainId =
   | 'stop_market'
   | 'politzer'
   | 'doralon'
-  | 'victory';
+  | 'victory'
+  | 'maayan_2000';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;
