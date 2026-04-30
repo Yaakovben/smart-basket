@@ -1657,9 +1657,7 @@ export const HomeComponent = memo(({
           רדיוס 41 קטן מרדיוס החתך 43 → הקשת בתוך אזור החתך השקוף ונראית.
           clipPath חותך את החצי-העליון כדי שלא תקיף את ה-FAB. */}
       <Box sx={{
-        position: 'fixed',
-        // מרכז הקשת בגובה הקצה העליון של הבר (52 מהתחתית).
-        // bottom = 52 - 41 = 11 כדי שהמרכז יישב במקום הנכון.
+        position: 'absolute',
         bottom: 'calc(env(safe-area-inset-bottom) + 11px)',
         left: '50%',
         marginLeft: '-41px',
@@ -1675,7 +1673,7 @@ export const HomeComponent = memo(({
       }} />
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
           bgcolor: 'background.paper',
@@ -1694,7 +1692,6 @@ export const HomeComponent = memo(({
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
           // נעילה ל-layout viewport - מפצה על תזוזת visualViewport ב-iOS rubber-band
-          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
       <Box
@@ -1791,9 +1788,7 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'fixed',
-          // safe-area + (גובה בר 52 - חצי FAB 28) = safe-area + 24
-          // מרכז ה-FAB יושב בדיוק על שפת הבר העליונה.
+          position: 'absolute',
           bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
@@ -1801,7 +1796,6 @@ export const HomeComponent = memo(({
           pointerEvents: 'none',
           '& > *': { pointerEvents: 'auto' },
           // נעילה ל-layout viewport יחד עם הבר
-          transform: 'translateY(var(--vv-shift, 0px))',
         }}
       >
         <Box
