@@ -1647,14 +1647,6 @@ export const HomeComponent = memo(({
           // overscroll-behavior מונע מ-pull-to-refresh ב-iOS להזיז את הבר.
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
-          // נעילה מוחלטת - GPU layer + contain מונעים שום תזוזה בגרירה/סיבוב.
-          transform: 'translate3d(0,0,0)',
-          WebkitTransform: 'translate3d(0,0,0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          contain: 'layout style',
-          willChange: 'transform',
-          overflowAnchor: 'none',
         }}
       >
       <Box
