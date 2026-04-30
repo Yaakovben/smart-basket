@@ -1666,7 +1666,7 @@ export const HomeComponent = memo(({
         width: 82, height: 82,
         borderRadius: '50%',
         border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.14)',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
         bgcolor: 'transparent',
         // חיתוך חצי-עליון - נראית רק הקשת התחתונה (בתוך חתך הבר)
         clipPath: 'inset(50% 0 0 0)',
