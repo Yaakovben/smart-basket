@@ -330,13 +330,19 @@ export const shufersalAdapter: ChainAdapter = {
         // catID=5 בשופרסל = StoresFull (קובץ הסניפים).
         // אם הקטגוריה משתנה - ננסה גם 0 (All).
         const catIdsToTry = [5, 0];
+        // שופרסל עכשיו מפרסם בשם "Stores" (לא StoresFull). מחפשים את שניהם.
+        const patterns = ['StoresFull', 'Stores'];
         let url: string | null = null;
+        outer:
         for (const cat of catIdsToTry) {
+          let html: string;
           try {
-            const html = await fetchCategoryHtml(cat);
-            url = extractLatestFileUrl(html, 'StoresFull');
-            if (url) break;
-          } catch { /* ננסה catID הבא */ }
+            html = await fetchCategoryHtml(cat);
+          } catch { continue; }
+          for (const p of patterns) {
+            url = extractLatestFileUrl(html, p);
+            if (url) break outer;
+          }
         }
         if (!url) {
           return { chainId: 'shufersal', chainName: 'שופרסל', stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };

@@ -254,6 +254,7 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
     ignoreAttributes: true,
     parseTagValue: false,
     trimValues: true,
+    maxNestedTags: 1000,
   });
   const parsed = parser.parse(xml) as PriceFullXml;
   const itemsNode = parsed.Root?.Items?.Item || parsed.root?.Items?.Item;
@@ -322,6 +323,7 @@ export function parseStoresXml(buf: Buffer, _filename: string): ChainStoreItem[]
     ignoreAttributes: true,
     parseTagValue: false,
     trimValues: true,
+    maxNestedTags: 1000,
   });
   const parsed = parser.parse(xml) as Record<string, unknown>;
 
@@ -537,10 +539,14 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
           const { client, csrftoken } = await tryAuthenticate();
           // מנסים כמה תבניות שמות נפוצות לקובץ הסניפים בפורטל.
           // יש רשתות שמפרסמות 'StoresFull*', יש 'Stores*', ויש 'Store*' (יחיד).
+          // patterns מחמירים - חייבים להתחיל ב-Stores/StoreFull/Branches.
+          // ההגבלה הזו חשובה: regex רחב כמו /Store.../ מתפס גם StoreOpeningHours
+          // וקבצים אחרים שגורמים ל-parseStoresXml להיכשל ב-Maximum nested tags.
           const patterns: Array<{ search: string; regex: RegExp }> = [
-            { search: 'Stores', regex: /Stores(Full)?.*\.(gz|xml)/i },
-            { search: 'Store', regex: /Store(Full)?.*\.(gz|xml)/i },
-            { search: 'Branches', regex: /Branches?.*\.(gz|xml)/i },
+            { search: 'StoresFull', regex: /^StoresFull[-_.0-9]/i },
+            { search: 'Stores', regex: /^Stores[-_.0-9]/i },
+            { search: 'StoreFull', regex: /^StoreFull[-_.0-9]/i },
+            { search: 'Branches', regex: /^Branches?[-_.0-9]/i },
           ];
           let filename: string | null = null;
           for (const p of patterns) {
@@ -551,8 +557,16 @@ export function createPublishedPricesAdapter(options: PublishedPricesOptions): C
             return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
           }
           const buf = await downloadFile(client, filename);
-          const stores = parseStoresXml(buf, filename);
-          return { chainId, chainName, stores, fetchedFiles: 1 };
+          // מגנים מפני קבצים פגומים - אם parseStoresXml זורק, מחזירים שגיאה
+          // נקייה במקום לקרוס.
+          try {
+            const stores = parseStoresXml(buf, filename);
+            return { chainId, chainName, stores, fetchedFiles: 1 };
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'parse_failed';
+            logger.warn(`[chain:${chainId}] stores parse failed for '${filename}': ${msg}`);
+            return { chainId, chainName, stores: [], fetchedFiles: 0, error: `stores_parse_failed:${msg}` };
+          }
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'unknown_error';
