@@ -9,23 +9,32 @@ import { OfflineBanner } from "./global/components/OfflineBanner";
 import { ReconnectingBanner } from "./global/components/ReconnectingBanner";
 import { useServiceWorker } from './global/hooks';
 
-// ניקוי cache אוטומטי בפריסות חדשות (לא חוסם את הטעינה)
-// גרסה ייחודית לכל build, מוזרקת ע"י Vite
+// ניקוי cache אוטומטי בפריסות חדשות (לא חוסם את הטעינה).
+// גרסה ייחודית לכל build, מוזרקת ע"י Vite. הגנה: אם ההזרקה נכשלה
+// (typeof === 'undefined') מדלגים על הלוגיקה כולה כדי למנוע סיכון
+// ללולאת רענון אינסופית.
 const handleNewVersion = () => {
+  // הגנה: אם __BUILD_VERSION__ לא הוזרק (build בעייתי או runtime ישן),
+  // לא מבצעים השוואה - הגרסה תיכתב ב-build הבא.
+  if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) {
+    console.warn('[version] __BUILD_VERSION__ not injected - skipping cache cleanup');
+    return;
+  }
+  const buildVersion = __BUILD_VERSION__;
   const storedVersion = localStorage.getItem('app_build_version');
 
-  if (storedVersion === __BUILD_VERSION__) return;
+  if (storedVersion === buildVersion) return;
 
   // מניעת לולאת רענון: אם כבר רעננו את הדף לגרסה הזו
-  if (sessionStorage.getItem('version_reload_done') === __BUILD_VERSION__) {
-    localStorage.setItem('app_build_version', __BUILD_VERSION__);
+  if (sessionStorage.getItem('version_reload_done') === buildVersion) {
+    localStorage.setItem('app_build_version', buildVersion);
     return;
   }
 
   // רענון מיידי לגרסה חדשה אם הייתה גרסה קודמת
   if (storedVersion) {
-    localStorage.setItem('app_build_version', __BUILD_VERSION__);
-    sessionStorage.setItem('version_reload_done', __BUILD_VERSION__);
+    localStorage.setItem('app_build_version', buildVersion);
+    sessionStorage.setItem('version_reload_done', buildVersion);
     // ניקוי cache ברקע לפני רענון
     const cleanup = async () => {
       try {
@@ -37,7 +46,9 @@ const handleNewVersion = () => {
           const registrations = await navigator.serviceWorker.getRegistrations();
           await Promise.all(registrations.map(r => r.unregister()));
         }
-      } catch { /* SW unregister נכשל - מתעלמים ונרעננים בכל מקרה */ }
+      } catch (err) {
+        console.warn('[version] cache/SW cleanup failed (non-fatal):', err);
+      }
       window.location.reload();
     };
     cleanup();
@@ -45,7 +56,7 @@ const handleNewVersion = () => {
   }
 
   // התקנה ראשונה: שמירת גרסה בלי חסימה
-  localStorage.setItem('app_build_version', __BUILD_VERSION__);
+  localStorage.setItem('app_build_version', buildVersion);
 };
 
 handleNewVersion();

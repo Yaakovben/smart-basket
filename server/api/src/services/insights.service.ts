@@ -478,7 +478,12 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
       })()),
       anomalies: detectAnomalies(allProducts),
     };
-  } catch {
-    return emptyInsights();
+  } catch (err) {
+    // לוג מפורט - עוזר לאתר שגיאות DB / queries כשהן קורות. במקום
+    // להחזיר תובנות ריקות בשקט (שמסתיר באג), זורקים שהקונטרולר יחזיר 503.
+    const msg = err instanceof Error ? err.message : 'unknown';
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error(`[insights] failed for user=${userId}: ${msg}`, stack);
+    throw new Error(`insights_failed: ${msg}`);
   }
 }
