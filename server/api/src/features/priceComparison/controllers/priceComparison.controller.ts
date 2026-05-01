@@ -520,8 +520,16 @@ export const testOsm = asyncHandler(async (_req: AuthRequest, res: Response) => 
   });
 });
 
-// GET /api/price-comparison/status (admin only) - מצב המאגר: כמה רשתות, מוצרים, מתי עודכן
+// Cache קצר-טווח לתוצאת getStatus - האגרגציות כבדות, 20s מספיקות לטריות
+let statusCache: { data: Record<string, unknown>; expiresAt: number } | null = null;
+const STATUS_CACHE_TTL_MS = 20_000;
+
+// GET /api/price-comparison/status (admin only) - מצב המאגר
 export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  if (statusCache && statusCache.expiresAt > Date.now()) {
+    res.json({ success: true, data: statusCache.data, fromCache: true });
+    return;
+  }
   const active = await PriceDAL.getActiveChainsWithCounts();
   const activeMap = new Map(active.map(c => [c.chainId, c]));
   const branchCounts = await BranchDAL.countsByChain();
@@ -580,18 +588,20 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   const ageMs = latest?.updatedAt ? Date.now() - new Date(latest.updatedAt).getTime() : null;
   const ageHours = ageMs !== null ? ageMs / (60 * 60 * 1000) : null;
 
+  const responseData = {
+    syncInProgress: adminSyncInProgress,
+    syncProgress: getSyncProgress(),
+    branchSync: getBranchSyncState(),
+    lastUpdatedISO,
+    ageHours,
+    chains,
+    totalPrices: chains.reduce((s, c) => s + c.count, 0),
+    healthSummary,
+  };
+  statusCache = { data: responseData, expiresAt: Date.now() + STATUS_CACHE_TTL_MS };
   res.json({
     success: true,
-    data: {
-      syncInProgress: adminSyncInProgress,
-      syncProgress: getSyncProgress(),
-      branchSync: getBranchSyncState(),
-      lastUpdatedISO,
-      ageHours,
-      chains,
-      totalPrices: chains.reduce((s, c) => s + c.count, 0),
-      healthSummary,
-    },
+    data: responseData,
   });
 });
 
