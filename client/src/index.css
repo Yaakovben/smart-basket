@@ -5,11 +5,20 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* כפתורים/לחיצים: ביטול ה-300ms delay של iOS + תגובה מיידית.
+   touch-action: manipulation אומר לדפדפן לא להמתין לזיהוי double-tap. */
+button, a, [role="button"], input[type="button"], input[type="submit"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
   overflow-anchor: none;
+  /* touch-action: manipulation על כל הדף - תגובה מיידית בלי delay של דפדפן */
+  touch-action: manipulation;
 }
 
 body {

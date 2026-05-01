@@ -90,6 +90,20 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
 
     shape: { borderRadius: 12 },
 
+    // קיצור משכי transition הגלובליים של MUI - האפליקציה מרגישה מהירה יותר.
+    // standard 300→150 (פעולות נפוצות), shortest 150→80 (מעברי hover).
+    transitions: {
+      duration: {
+        shortest: 80,
+        shorter: 130,
+        short: 180,
+        standard: 200,
+        complex: 280,
+        enteringScreen: 180,
+        leavingScreen: 150,
+      },
+    },
+
     components: {
       MuiCssBaseline: {
         styleOverrides: {
@@ -106,8 +120,13 @@ const getBaseTheme = (mode: ThemeMode, language: Language): ThemeOptions => {
             borderRadius: 14,
             minHeight: 48,
             boxShadow: 'none',
-            transition: 'all 0.2s ease',
-            '&:hover': { boxShadow: 'none' }
+            // transition מהיר יותר - 200ms היה מורגש לאט. 120ms = תגובה מיידית.
+            transition: 'background-color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease',
+            // touch-action manipulation מבטל delay של 300ms ב-iOS
+            touchAction: 'manipulation',
+            '&:hover': { boxShadow: 'none' },
+            // משוב מיידי ללחיצה - scale מינימלי
+            '&:active': { transform: 'scale(0.98)' },
           },
           containedPrimary: {
             background: 'linear-gradient(135deg, #14B8A6, #10B981)',
