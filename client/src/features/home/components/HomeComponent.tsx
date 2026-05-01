@@ -1725,23 +1725,19 @@ export const HomeComponent = memo(({
             gap: 0.3,
             minHeight: 40,
             py: 0.35,
-            borderRadius: '12px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             outline: 'none',
-            transition: 'background-color 0.08s ease',
-            // צבע "לחוץ" - אותו טון של הבית הפעיל, ברגע המגע
-            '&:active': {
-              bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.16)',
-              '& .insights-icon, & .insights-label': {
-                color: '#0D9488', opacity: 1,
-              },
-            },
+            // ללא bgcolor - מינימליסטי כמו הטאב הפעיל
+            transition: 'opacity 0.12s ease',
+            '&:active': { opacity: 0.6 },
           }}
         >
-          <InsightsOutlinedIcon className="insights-icon" sx={{ fontSize: 24, color: 'text.primary', opacity: 0.75, transition: 'color 0.08s, opacity 0.08s' }} />
-          <Typography className="insights-label" sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.primary', opacity: 0.75, letterSpacing: 0.2, lineHeight: 1, transition: 'color 0.08s, opacity 0.08s' }}>
+          <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.55 }} />
+          {/* spacer במקום הנקודה - שומר על אותו גובה כמו הטאב הפעיל */}
+          <Box sx={{ width: 4, height: 4, mt: 0.05 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary', opacity: 0.65, letterSpacing: 0.2, lineHeight: 1, mt: 0.1 }}>
             {t('insights')}
           </Typography>
         </Box>
