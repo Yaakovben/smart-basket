@@ -10,6 +10,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LoginIcon from '@mui/icons-material/Login';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import StorageIcon from '@mui/icons-material/Storage';
 import { DailyFaithManager } from '../../daily-faith';
 import { PriceSyncManager } from './PriceSyncManager';
 import { DbHealthCard } from './DbHealthCard';
@@ -89,6 +90,7 @@ export const AdminDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [faithOpen, setFaithOpen] = useState(false);
   const [priceSyncOpen, setPriceSyncOpen] = useState(false);
+  const [dbHealthOpen, setDbHealthOpen] = useState(false);
   const {
     activities,
     usersWithLoginInfo,
@@ -228,6 +230,25 @@ export const AdminDashboard = () => {
             <StorefrontIcon sx={{ fontSize: 26 }} />
           </Box>
           <Box
+            onClick={() => setDbHealthOpen(true)}
+            role="button"
+            tabIndex={0}
+            aria-label="שימוש ב-MongoDB"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              width: 44,
+              height: 44,
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+              '&:active': { transform: 'scale(0.92)' },
+            }}
+          >
+            <StorageIcon sx={{ fontSize: 26 }} />
+          </Box>
+          <Box
             onClick={handleRefresh}
             role="button"
             tabIndex={0}
@@ -330,9 +351,6 @@ export const AdminDashboard = () => {
 
       {/* Content */}
       <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
-        {/* כרטיסיית שימוש ב-MongoDB - מוצגת ראשונה כדי שהאדמין יראה מיד את מצב הנתונים */}
-        {!loading && <DbHealthCard isDark={isDark} />}
-
         {/* שגיאה */}
         {error && !loading && (
           <Paper sx={{
@@ -410,6 +428,7 @@ export const AdminDashboard = () => {
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
       {priceSyncOpen && <PriceSyncManager onClose={() => setPriceSyncOpen(false)} />}
+      {dbHealthOpen && <DbHealthCard onClose={() => setDbHealthOpen(false)} isDark={isDark} />}
     </Box>
   );
 };
