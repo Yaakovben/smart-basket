@@ -174,28 +174,48 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   // זיהוי iOS - Apple Maps רלוונטי רק שם, ב-Android הוא רק יוצר רעש
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+  // לוגואים בסגנון מותגי - SVG אינליין שדומים לאייקוני האפליקציות האמיתיים.
+  // לא הלוגו המקורי בדיוק (זכויות יוצרים) אבל בולט וזיהוי מיידי.
+  const WazeLogo = (
+    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24, color: '#fff' }}>
+      <path fill="currentColor" d="M20.54 6.63c.96 1.7 1.46 3.5 1.46 5.37 0 5.61-4.39 9.5-9.65 9.83-.21.83-.97 1.42-1.85 1.42-1.06 0-1.92-.86-1.92-1.92 0-.04 0-.08.01-.12-1.36-.18-2.66-.61-3.78-1.34-.39.31-.88.49-1.43.49-1.27 0-2.31-1.04-2.31-2.31 0-.69.31-1.31.79-1.74-.34-.84-.53-1.74-.53-2.69 0-2.04.84-3.92 2.27-5.32C2.93 7.8 2.5 6.6 2.5 5.27c0-.16.13-.29.29-.29.96 0 1.86.45 2.46 1.18C6.83 5.07 8.83 4.5 11 4.5c4.04 0 7.65 1.93 9.54 5.13zM12 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm5 0c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-9.04 3.84c-.31.25-.36.7-.11 1.01.62.78 1.59 1.4 2.85 1.81 1.05.34 2.18.51 3.32.51.46 0 .92-.03 1.37-.09 1.78-.24 3.31-.96 4.31-2.04.27-.29.25-.74-.04-1.01-.29-.27-.74-.25-1.01.04-.78.84-2.04 1.42-3.45 1.62-1.39.19-2.85.05-4.05-.34-1.05-.34-1.79-.81-2.18-1.3-.25-.31-.7-.36-1.01-.11z" />
+    </Box>
+  );
+  const GoogleMapsLogo = (
+    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24 }}>
+      <path fill="#34A853" d="M12 2C7.58 2 4 5.58 4 10c0 5.5 8 12 8 12s8-6.5 8-12c0-4.42-3.58-8-8-8z" opacity="0.95" />
+      <circle cx="12" cy="10" r="3" fill="#FFF" />
+      <circle cx="12" cy="10" r="1.5" fill="#EA4335" />
+    </Box>
+  );
+  const AppleMapsLogo = (
+    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24, color: '#fff' }}>
+      <path fill="currentColor" d="M12 2C7.58 2 4 5.58 4 10c0 5.5 8 12 8 12s8-6.5 8-12c0-4.42-3.58-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z" />
+    </Box>
+  );
+
   const allApps: NavApp[] = [
     {
       key: 'waze',
       label: 'Waze',
-      subtitle: '',
-      icon: <NearMeIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      subtitle: 'ניווט קהילתי',
+      icon: WazeLogo,
       color: '#33CCFF',
       url: urls.waze,
     },
     {
       key: 'googleMaps',
       label: 'Google Maps',
-      subtitle: '',
-      icon: <DirectionsIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      subtitle: 'מפות גוגל',
+      icon: GoogleMapsLogo,
       color: '#1A73E8',
       url: urls.googleMaps,
     },
     {
       key: 'appleMaps',
       label: 'Apple Maps',
-      subtitle: '',
-      icon: <MapIcon sx={{ fontSize: 22, color: '#fff' }} />,
+      subtitle: 'מפות אפל',
+      icon: AppleMapsLogo,
       color: '#64748B',
       url: urls.appleMaps,
     },
@@ -347,7 +367,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
                 {app.label}
               </Typography>
               <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.disabled', mt: 0.2 }}>
-                פתח ניווט
+                {app.subtitle || 'פתח ניווט'}
               </Typography>
             </Box>
             <Box sx={{
