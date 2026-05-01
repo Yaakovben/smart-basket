@@ -101,9 +101,5 @@ const priceSchema = new Schema<IPriceDoc>(
 // אינדקס מורכב: ברקוד + רשת = ייחודי (מחיר אחד לכל ברקוד לכל רשת)
 priceSchema.index({ barcode: 1, chainId: 1 }, { unique: true });
 priceSchema.index({ itemNameNormalized: 'text' });
-// TTL: מחירים שלא עודכנו 14 ימים נמחקים אוטומטית. הסנכרון רץ פעמיים ביום
-// ומעדכן את כל המחירים הטריים → רק נתונים נטושים (רשת שהפסיקה לעבוד או
-// מוצר שנעלם) ייפלו אחרי שבועיים. מונע ניפוח ה-DB לאורך זמן ב-Atlas Free.
-priceSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 14 * 24 * 60 * 60 });
 
 export const Price = model<IPriceDoc>('Price', priceSchema);

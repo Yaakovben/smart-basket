@@ -18,7 +18,7 @@ import {
 } from '../chains';
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
-import { geocodeAddress, cityFallbackCoords } from './geocoder.service';
+import { cityFallbackCoords } from './geocoder.service';
 import { invalidateBranchCache } from './branches.service';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
@@ -209,11 +209,11 @@ async function syncSingleChain(adapter: ChainAdapter): Promise<SyncResult> {
   return processChainItems(adapter, result, t0);
 }
 
-// רענון מחירים לכל הרשתות הפעילות במקבילי - משמש גם בסקריפט הידני וגם בקרון.
-// CONCURRENCY=4: ארבע רשתות בו-זמנית. כל רשת מדברת עם פורטל שונה אז
-// אין rate limits בין רשתות. בתוך כל רשת יש כבר מקביליות פנימית (Bina/Carrefour
-// מורידים 6 קבצים בו-זמנית). זמן סנכרון יורד מ-~6 דק' ל-~2 דק'.
-const SYNC_CONCURRENCY = 4;
+// רענון מחירים לכל הרשתות - סדרתי. הסנכרון רץ בקרון ופעמיים ביום ויש זמן.
+// המקבילי גרם לעומס יתר על Render Free → לקוחות לא הצליחו להתחבר במהלך הסנכרון.
+const DELAY_BETWEEN_CHAINS_MS = 3000;
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
@@ -223,35 +223,23 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     startedAt: new Date().toISOString(),
   };
 
-  // pool של עובדים. כל עובד שולף משימה הבאה מהתור עד שאין יותר.
-  const queue = [...adapters];
-  let nextIdx = 0;
-  const worker = async (): Promise<void> => {
-    while (queue.length > 0) {
-      const adapter = queue.shift();
-      if (!adapter) break;
-      const myIdx = nextIdx++;
-      syncProgress.currentIndex = myIdx;
-      syncProgress.currentChainName = adapter.chainName;
-      try {
-        const r = await syncSingleChain(adapter);
-        results.push(r);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'unknown';
-        logger.error(`[price-sync] ${adapter.chainId}: unexpected error: ${msg}`);
-        const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: 0, error: msg };
-        results.push(r);
-        lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-      }
-      syncProgress.completedChains++;
+  for (let i = 0; i < adapters.length; i++) {
+    const adapter = adapters[i];
+    syncProgress.currentIndex = i;
+    syncProgress.currentChainName = adapter.chainName;
+    if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
+    try {
+      const r = await syncSingleChain(adapter);
+      results.push(r);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      logger.error(`[price-sync] ${adapter.chainId}: unexpected error: ${msg}`);
+      const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: 0, error: msg };
+      results.push(r);
+      lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
     }
-  };
-  await Promise.all(Array.from({ length: SYNC_CONCURRENCY }, () => worker()));
-
-  // אחרי שכל הרשתות הסתיימו - שלב גיאוקודינג סדרתי לכתובות חסרות.
-  // רץ ברקע כדי לא להאריך את ה-sync, אבל לפני invalidateCache כי
-  // אנחנו רוצים שהקואורדינטות החדשות ייכנסו לתצוגה מיד.
-  await postSyncGeocode();
+    syncProgress.completedChains++;
+  }
 
   invalidateBranchCache();
 
@@ -261,38 +249,6 @@ export async function syncAllChains(): Promise<SyncResult[]> {
   };
 
   return results;
-}
-
-// ===== Post-sync geocoding =====
-// אחרי כל הרשתות הסתיימו - מאתר סניפים שעדיין אין להם lat/lng אבל יש להם
-// כתובת/עיר, ופונה ל-Nominatim לקבל קואורדינטות. רץ סדרתי עם 1.1ש' בין
-// בקשות כפי שמדיניות השימוש של Nominatim דורשת (1 req/sec).
-// מוגבל ל-100 סניפים לריצה - 2 ריצות ביום = 200/יום, מתאים לרוב המקרים.
-const GEOCODE_LIMIT_PER_RUN = 100;
-const GEOCODE_DELAY_MS = 1100;
-async function postSyncGeocode(): Promise<void> {
-  const needGeo = await BranchDAL.find({
-    coordSource: { $ne: 'portal' },
-    $or: [{ lat: { $exists: false } }, { lat: null }, { coordSource: 'unknown' }],
-    $and: [{ $or: [{ address: { $exists: true, $ne: '' } }, { city: { $exists: true, $ne: '' } }] }],
-  }, { limit: GEOCODE_LIMIT_PER_RUN });
-
-  if (needGeo.length === 0) return;
-  logger.info(`[post-sync-geo] geocoding ${needGeo.length} branches`);
-  let updated = 0;
-  for (const b of needGeo) {
-    try {
-      const coords = await geocodeAddress(b.address, b.city);
-      if (coords) {
-        await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
-        updated++;
-      }
-    } catch {
-      // ממשיכים לסניף הבא - שגיאה אחת לא צריכה לעצור את כל ה-batch
-    }
-    await new Promise(r => setTimeout(r, GEOCODE_DELAY_MS));
-  }
-  logger.info(`[post-sync-geo] updated ${updated}/${needGeo.length} branches`);
 }
 
 // אגרגציה ושמירה של פריטים שהוחזרו מ-adapter בודד.
