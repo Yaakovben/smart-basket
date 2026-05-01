@@ -208,4 +208,60 @@ export const priceComparisonApi = {
     });
     return response.data;
   },
+
+  // דוח אימות נתונים - סניפים, מחירים ו-sync לכל הרשתות.
+  async getDataQuality(): Promise<DataQualityReport> {
+    const response = await apiClient.get('/price-comparison/data-quality');
+    return response.data.data;
+  },
 };
+
+export interface BranchIssue {
+  id: string;
+  chainId: string;
+  storeId: string;
+  storeName: string;
+  city?: string;
+  reasons: string[];
+}
+
+export interface PriceIssue {
+  barcode: string;
+  chainId: string;
+  itemName: string;
+  price: number;
+  reason: string;
+}
+
+export interface ChainSyncStat {
+  chainId: string;
+  chainName: string;
+  totalPrices: number;
+  totalBranches: number;
+  oldestPriceAt: string | null;
+  newestPriceAt: string | null;
+  freshnessHours: number | null;
+  lastSyncResult: {
+    fetched: number;
+    upserted: number;
+    error?: string;
+    storesError?: string;
+    elapsedMs: number;
+    completedAt: string;
+  } | null;
+}
+
+export interface DataQualityReport {
+  generatedAt: string;
+  branches: {
+    total: number;
+    issues: BranchIssue[];
+    stats: { withoutCoords: number; outOfBounds: number; withoutCity: number };
+  };
+  prices: {
+    total: number;
+    issues: PriceIssue[];
+    stats: { zeroOrNegative: number; tooHigh: number; stale: number };
+  };
+  sync: ChainSyncStat[];
+}

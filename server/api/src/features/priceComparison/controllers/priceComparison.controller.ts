@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
+import { buildDataQualityReport } from '../services/dataQuality.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { Branch } from '../models/Branch.model';
@@ -577,4 +578,11 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
       healthSummary,
     },
   });
+});
+
+// GET /api/price-comparison/data-quality
+// דוח אימות נתונים: סניפים חשודים + מחירים אנומליים + סטטיסטיקות sync לרשת
+export const getDataQuality = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const report = await buildDataQualityReport();
+  res.json({ data: report });
 });
