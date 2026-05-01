@@ -77,6 +77,10 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
     brands: ['Super Sapir', 'SuperSapir', 'Sapir'],
     names: ['סופר ספיר', 'ספיר', 'רשת ספיר'],
   },
+  carrefour: {
+    brands: ['Carrefour', 'Yaynot Bitan', 'Yaynot Bitan Carrefour', 'Yenot Bitan', 'Mega', 'Mega Bool', "Mega Ba'Ir"],
+    names: ['קרפור', 'יינות ביתן', 'יינות ביתן Carrefour', 'מגה', 'מגה בעיר', 'מגה בול'],
+  },
 };
 
 export interface OsmBranch {

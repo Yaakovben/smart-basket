@@ -11,6 +11,7 @@ export { victoryAdapter } from './victory.adapter';
 export { maayan2000Adapter } from './maayan-2000.adapter';
 export { shefaBirkatHashemAdapter } from './shefa-birkat-hashem.adapter';
 export { superSapirAdapter } from './super-sapir.adapter';
+export { carrefourAdapter } from './carrefour.adapter';
 export { createPublishedPricesAdapter } from './publishedPrices.factory';
 export { normalizeProductName, isLikelyMatch, stemHebrew } from './normalize';
 export type { ChainAdapter, ChainFetchResult, ChainPriceItem } from './types';
