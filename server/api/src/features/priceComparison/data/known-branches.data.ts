@@ -350,4 +350,30 @@ export const KNOWN_BRANCHES: KnownBranch[] = [
   { chainId: 'super_sapir', chainName: 'סופר ספיר', storeId: 'manual-sapir-betar', storeName: 'סופר ספיר ביתר עילית', city: 'ביתר עילית', address: 'הרב שך 5', lat: 31.6960, lng: 35.1158 },
   { chainId: 'super_sapir', chainName: 'סופר ספיר', storeId: 'manual-sapir-modiin-illit', storeName: 'סופר ספיר מודיעין עילית', city: 'מודיעין עילית', address: 'חזון איש 22', lat: 31.9335, lng: 35.0402 },
   { chainId: 'super_sapir', chainName: 'סופר ספיר', storeId: 'manual-sapir-bs', storeName: 'סופר ספיר בית שמש', city: 'בית שמש', address: 'נחל שורק 12', lat: 31.7588, lng: 35.0011 },
+  // ===== אזור בנימין - יישובי בנימין ושומרון =====
+  // מעיין 2000 (יש כבר שער בנימין; להוסיף עפרה, בית אל, כוכב יעקב, פסגות, אלי)
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-ofra', storeName: 'מעיין 2000 עפרה', city: 'עפרה', address: 'מרכז מסחרי', lat: 31.9525, lng: 35.2717 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-beit-el', storeName: 'מעיין 2000 בית אל', city: 'בית אל', address: 'הרקפת 1', lat: 31.9272, lng: 35.2308 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-eli', storeName: 'מעיין 2000 עלי', city: 'עלי', address: 'מרכז מסחרי', lat: 32.0639, lng: 35.2986 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-shilo', storeName: 'מעיין 2000 שילה', city: 'שילה', address: 'מרכז מסחרי', lat: 32.0556, lng: 35.2933 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-kochav', storeName: 'מעיין 2000 כוכב יעקב', city: 'כוכב יעקב', address: 'מרכז מסחרי', lat: 31.8769, lng: 35.2786 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-psagot', storeName: 'מעיין 2000 פסגות', city: 'פסגות', address: 'מרכז מסחרי', lat: 31.8861, lng: 35.2392 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-talmon', storeName: 'מעיין 2000 טלמון', city: 'טלמון', address: 'מרכז מסחרי', lat: 31.9300, lng: 35.1142 },
+  { chainId: 'maayan_2000', chainName: 'מעיין 2000', storeId: 'manual-bnyamin-givat-zeev', storeName: 'מעיין 2000 גבעת זאב', city: 'גבעת זאב', address: 'הרצל 5', lat: 31.8606, lng: 35.1714 },
+  // ויקטורי - גם בנימין
+  { chainId: 'victory', chainName: 'ויקטורי', storeId: 'manual-vic-shaar-binyamin', storeName: 'ויקטורי שער בנימין', city: 'שער בנימין', address: 'מרכז מסחרי שער בנימין', lat: 31.8869, lng: 35.2614 },
+  { chainId: 'victory', chainName: 'ויקטורי', storeId: 'manual-vic-givat-zeev', storeName: 'ויקטורי גבעת זאב', city: 'גבעת זאב', address: 'מרכז מסחרי', lat: 31.8606, lng: 35.1714 },
+  { chainId: 'victory', chainName: 'ויקטורי', storeId: 'manual-vic-maale-adumim', storeName: 'ויקטורי מעלה אדומים', city: 'מעלה אדומים', address: 'הזית 5', lat: 31.7728, lng: 35.2989 },
+  // אושר עד - שער בנימין (קיים סניף משמעותי שם)
+  { chainId: 'osher_ad', chainName: 'אושר עד', storeId: 'manual-oa-shaar-binyamin', storeName: 'אושר עד שער בנימין', city: 'שער בנימין', address: 'מרכז מסחרי שער בנימין', lat: 31.8869, lng: 35.2614 },
+  { chainId: 'osher_ad', chainName: 'אושר עד', storeId: 'manual-oa-bnei-brak', storeName: 'אושר עד בני ברק', city: 'בני ברק', address: 'רבי עקיבא 60', lat: 32.0840, lng: 34.8334 },
+  { chainId: 'osher_ad', chainName: 'אושר עד', storeId: 'manual-oa-givat-zeev', storeName: 'אושר עד גבעת זאב', city: 'גבעת זאב', address: 'מרכז מסחרי', lat: 31.8606, lng: 35.1714 },
+  // רמי לוי - שער בנימין
+  { chainId: 'rami_levy', chainName: 'רמי לוי', storeId: 'manual-rl-shaar-binyamin', storeName: 'רמי לוי שער בנימין', city: 'שער בנימין', address: 'מרכז מסחרי שער בנימין', lat: 31.8869, lng: 35.2614 },
+  { chainId: 'rami_levy', chainName: 'רמי לוי', storeId: 'manual-rl-maale-adumim', storeName: 'רמי לוי מעלה אדומים', city: 'מעלה אדומים', address: 'מבוא הסילבר', lat: 31.7728, lng: 35.2989 },
+  { chainId: 'rami_levy', chainName: 'רמי לוי', storeId: 'manual-rl-givat-zeev', storeName: 'רמי לוי גבעת זאב', city: 'גבעת זאב', address: 'הרצל 12', lat: 31.8606, lng: 35.1714 },
+  // יהודה ושומרון נוספים
+  { chainId: 'rami_levy', chainName: 'רמי לוי', storeId: 'manual-rl-ariel', storeName: 'רמי לוי אריאל', city: 'אריאל', address: 'הראשונים 6', lat: 32.1058, lng: 35.1719 },
+  { chainId: 'shufersal', chainName: 'שופרסל', storeId: 'manual-sf-maale-adumim', storeName: 'שופרסל מעלה אדומים', city: 'מעלה אדומים', address: 'הזית 1', lat: 31.7728, lng: 35.2989 },
+  { chainId: 'yohananof', chainName: 'יוחננוף', storeId: 'manual-yoh-shaar-binyamin', storeName: 'יוחננוף שער בנימין', city: 'שער בנימין', address: 'מרכז מסחרי שער בנימין', lat: 31.8869, lng: 35.2614 },
 ];

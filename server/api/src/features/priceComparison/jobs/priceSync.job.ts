@@ -63,6 +63,36 @@ async function shouldRunStartupSync(): Promise<boolean> {
   }
 }
 
+// טעינת KNOWN_BRANCHES (seed ידני) - idempotent, רץ ב-startup ובכל cron.
+// ככה רשתות חדשות שנוספו לקוד נכנסות אוטומטית למאגר בלי דריסה ידנית.
+async function reloadSeedBranches(trigger: 'cron' | 'startup'): Promise<void> {
+  try {
+    const chainNames: Record<string, string> = {
+      shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
+      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+      stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
+      victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
+      shefa_birkat_hashem: 'שפע ברכת השם', super_sapir: 'סופר ספיר',
+    };
+    const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
+      chainId: b.chainId,
+      chainName: chainNames[b.chainId] || b.chainId,
+      storeId: b.storeId,
+      storeName: b.storeName,
+      address: b.address,
+      city: b.city,
+      lat: b.lat,
+      lng: b.lng,
+      coordSource: 'portal' as const,
+    }));
+    const upserted = await BranchDAL.bulkUpsert(inputs);
+    invalidateBranchCache();
+    logger.info(`[seed-branches] ${trigger}: ${upserted}/${inputs.length} known branches loaded/updated`);
+  } catch (err) {
+    logger.error(`[seed-branches] ${trigger}: failed:`, err);
+  }
+}
+
 // סנכרון סניפים מ-OSM - אוטומטי בעת boot אם המאגר ריק, ובכל cron run.
 // רץ בנפרד מסנכרון המחירים כדי לא לעכב, ובלי NODE_TLS_REJECT_UNAUTHORIZED
 // (הפרסום של OSM הוא HTTPS תקני).
@@ -87,11 +117,13 @@ export function startPriceSyncJob(): void {
     return;
   }
 
-  // cron של מחירים + סנכרון סניפים מ-OSM (פעמיים ביום ב-04:00 וב-16:00, OSM רץ אחרי המחירים)
+  // cron של מחירים + seeds + סנכרון סניפים מ-OSM (פעמיים ביום ב-04:00 וב-16:00).
+  // הסדר: מחירים → seed branches (תקין-תמיד) → OSM (העשרה).
   cron.schedule(
     CRON_EXPRESSION,
     async () => {
       await runSync('cron');
+      await reloadSeedBranches('cron');
       await runOsmBranchSync('cron');
     },
     { timezone: TIMEZONE }
@@ -108,41 +140,12 @@ export function startPriceSyncJob(): void {
     }
   });
 
-  // 2. תמיד טוען את ה-seed של הסניפים המובילים בעת boot. ה-storeIds
-  // ייחודיים (sf-tlv-dizengoff וכו') ולא מתנגשים עם סניפים מ-OSM
-  // (osm-node-XXX), אז זו פעולת idempotent - מבטיחה שהסניפים המרכזיים
-  // קיימים תמיד גם אם OSM נכשל פעם או שמישהו מחק אותם בטעות.
+  // 2. seed של סניפים בעת boot, ואז OSM להעשרה.
   void (async () => {
-    try {
-      const chainNames: Record<string, string> = {
-        shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-        osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
-        stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-        victory: 'ויקטורי',
-      };
-      const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
-        chainId: b.chainId,
-        chainName: chainNames[b.chainId] || b.chainId,
-        storeId: b.storeId,
-        storeName: b.storeName,
-        address: b.address,
-        city: b.city,
-        lat: b.lat,
-        lng: b.lng,
-        coordSource: 'portal' as const,
-      }));
-      const upserted = await BranchDAL.bulkUpsert(inputs);
-      invalidateBranchCache();
-      logger.info(`[branches] Startup: ${upserted} known branches loaded/updated`);
-
-      // אחרי ה-seed - OSM רץ ברקע להעשיר (לא חוסם, ולא קריטי אם נכשל)
-      const branchCount = await BranchDAL.count({});
-      if (branchCount < 100) {
-        // אם יש לנו רק את ה-seed (~65) ננסה גם OSM להוסיף עוד
-        setTimeout(() => runOsmBranchSync('startup'), 30_000);
-      }
-    } catch (err) {
-      logger.error('[branches] Startup: failed to load seed:', err);
+    await reloadSeedBranches('startup');
+    const branchCount = await BranchDAL.count({});
+    if (branchCount < 100) {
+      setTimeout(() => runOsmBranchSync('startup'), 30_000);
     }
   })();
 }
