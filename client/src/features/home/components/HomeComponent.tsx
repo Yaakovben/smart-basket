@@ -1640,7 +1640,9 @@ export const HomeComponent = memo(({
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          pb: 'env(safe-area-inset-bottom)',
+          // ללא padding-bottom של safe-area - הבר צמוד לחלוטין לתחתית
+          // הפיזית של המסך גם ב-iPhone PWA. ה-home indicator עלול לחפוף.
+          pb: 0,
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
