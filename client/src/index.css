@@ -5,32 +5,21 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
+html, body {
   height: 100%;
-  height: 100svh; /* svh = small viewport stable - לא משתנה בגרירה/URL bar ב-iOS */
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   overflow-anchor: none;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* Background only applies after app loads (set by app-loaded class from JS) */
   direction: rtl;
-  /* position: fixed עם top:0+bottom:0 (ללא height!) - מאלץ את body להיות
-     בדיוק בגובה הויאופורט. height: 100svh היה מבטל את bottom:0 וגורם
-     ל-body להיות קצר מהויאופורט, מה שמיקם את הבר ב-bottom:0 של body
-     גבוה יותר מתחתית המסך. */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* כל גלילה מתבצעת בתוך הקונטיינרים הפנימיים (contentRef וכד') - לא ב-body */
-  overflow: hidden;
+  /* body בלי position:fixed - זה היה יוצר containing block ל-position:fixed
+     צאצאים (כמו הבר ב-Portal) שגרם להם לעקוב אחרי body במקום הויאופורט.
+     overflow:hidden ב-html+body כבר מונע גלילת body וגרירת רובר-באנד. */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
-  overflow-anchor: none;
 }
 
 /* App background - only after initial loader is hidden */
