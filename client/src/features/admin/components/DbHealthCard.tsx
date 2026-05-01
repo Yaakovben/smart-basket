@@ -100,11 +100,11 @@ export const DbHealthCard = ({ isDark }: Props) => {
             </Box>
           </Box>
 
-          {/* טבלת קולקציות - ממוינת לפי גודל */}
+          {/* טבלת קולקציות - כל הקולקציות, ממוינות לפי גודל יורד */}
           <Typography sx={{ fontSize: 11, fontWeight: 800, color: 'text.disabled', mb: 0.5, letterSpacing: 0.3 }}>
-            פירוט (5 הגדולות):
+            פירוט קולקציות ({data.collections.length}):
           </Typography>
-          {data.collections.slice(0, 5).map((c) => {
+          {data.collections.map((c) => {
             const collTotal = c.storageSize + c.indexSize;
             const collPct = (collTotal / data.totalSize) * 100;
             return (

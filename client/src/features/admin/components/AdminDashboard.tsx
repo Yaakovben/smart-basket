@@ -330,6 +330,9 @@ export const AdminDashboard = () => {
 
       {/* Content */}
       <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
+        {/* כרטיסיית שימוש ב-MongoDB - מוצגת ראשונה כדי שהאדמין יראה מיד את מצב הנתונים */}
+        {!loading && <DbHealthCard isDark={isDark} />}
+
         {/* שגיאה */}
         {error && !loading && (
           <Paper sx={{
@@ -395,9 +398,6 @@ export const AdminDashboard = () => {
             isDark={isDark}
           />
         )}
-
-        {/* כרטיסיית שימוש ב-MongoDB - גודל DB ופירוט קולקציות */}
-        {!loading && <DbHealthCard isDark={isDark} />}
 
         {/* פיד פעילות אחרונה */}
         {!loading && activities.length > 0 && (
