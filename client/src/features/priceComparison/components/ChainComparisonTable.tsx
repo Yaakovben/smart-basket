@@ -226,91 +226,88 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         },
       }}
     >
-      {/* drag handle בראש (מסמן bottom-sheet) */}
+      {/* drag handle */}
       <Box sx={{
         display: { xs: 'flex', sm: 'none' },
-        justifyContent: 'center', pt: 1, pb: 0.5,
+        justifyContent: 'center', pt: 1.25, pb: 0.5,
       }}>
         <Box sx={{
-          width: 40, height: 4, borderRadius: '2px',
-          bgcolor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)',
+          width: 44, height: 5, borderRadius: '3px',
+          bgcolor: isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.16)',
         }} />
       </Box>
 
-      {/* פרטי הסניף - בלי גרדיאנט, רקע נייטרלי. הדגשה דרך הטיפוגרפיה. */}
-      <Box sx={{ px: 2.25, pt: 1.5, pb: 1.5, position: 'relative' }}>
+      {/* HERO - גרדיאנט טורקיז עדין עם פין מיקום מרכזי, שם ומרחק מודגש */}
+      <Box sx={{
+        position: 'relative',
+        px: 2.5, pt: 2.25, pb: 2,
+        background: isDark
+          ? 'linear-gradient(165deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.04) 100%)'
+          : 'linear-gradient(165deg, rgba(20,184,166,0.10) 0%, rgba(20,184,166,0.02) 100%)',
+        textAlign: 'center',
+      }}>
         <IconButton
           size="small"
           onClick={onClose}
           aria-label="סגור"
           sx={{
-            position: 'absolute', top: 6, insetInlineEnd: 8,
+            position: 'absolute', top: 10, insetInlineEnd: 12,
             color: 'text.secondary',
-            bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
-            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)' },
-            width: 28, height: 28,
+            bgcolor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.06)',
+            backdropFilter: 'blur(6px)',
+            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)' },
+            width: 30, height: 30,
           }}
         >
-          <CloseIcon sx={{ fontSize: 16 }} />
+          <CloseIcon sx={{ fontSize: 17 }} />
         </IconButton>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, pe: 4 }}>
-          {/* פין מיקום בעיגול טורקיז */}
-          <Box sx={{
-            width: 36, height: 36, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            bgcolor: 'rgba(20,184,166,0.14)',
-            color: '#0D9488',
-            flexShrink: 0,
-          }}>
-            <LocationOnIcon sx={{ fontSize: 20 }} />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{
-              fontSize: 9.5, fontWeight: 700, color: 'text.disabled',
-              letterSpacing: 0.5, lineHeight: 1, mb: 0.25,
-            }}>
-              ניווט אל
-            </Typography>
-            <Typography sx={{
-              fontSize: 15, fontWeight: 800, color: 'text.primary',
-              lineHeight: 1.25, wordBreak: 'break-word',
-            }}>
-              {branch.branchName}
-            </Typography>
-          </Box>
-          {/* תג מרחק */}
-          <Box sx={{
-            flexShrink: 0, textAlign: 'center',
-            px: 0.85, py: 0.45, borderRadius: '10px',
-            bgcolor: 'rgba(20,184,166,0.14)',
-            border: '1px solid rgba(20,184,166,0.3)',
-          }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              {branch.distanceKm}
-            </Typography>
-            <Typography sx={{ fontSize: 8.5, color: '#0D9488', mt: 0.15, fontWeight: 700, opacity: 0.85 }}>
-              ק״מ
-            </Typography>
-          </Box>
+        {/* תג מרחק זוהר במרכז למעלה */}
+        <Box sx={{
+          display: 'inline-flex', alignItems: 'baseline', gap: 0.4,
+          px: 1.4, py: 0.5, borderRadius: '999px',
+          backgroundImage: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+          boxShadow: '0 4px 14px rgba(20,184,166,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+          mb: 1.4,
+        }}>
+          <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            {branch.distanceKm}
+          </Typography>
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', letterSpacing: 0.3 }}>
+            ק״מ
+          </Typography>
         </Box>
 
+        <Typography sx={{
+          fontSize: 9.5, fontWeight: 800, color: '#0D9488',
+          letterSpacing: 1.4, textTransform: 'uppercase', mb: 0.4, opacity: 0.85,
+        }}>
+          ניווט אל
+        </Typography>
+        <Typography sx={{
+          fontSize: 18, fontWeight: 800, color: 'text.primary',
+          lineHeight: 1.25, wordBreak: 'break-word', mb: (branch.city || branch.address) ? 0.5 : 0,
+        }}>
+          {branch.branchName}
+        </Typography>
         {(branch.city || branch.address) && (
-          <Typography sx={{
-            fontSize: 11.5, color: 'text.secondary', lineHeight: 1.4,
-            wordBreak: 'break-word', pr: 5.5,
-          }}>
-            📍 {[branch.city, branch.address].filter(Boolean).join(', ')}
-          </Typography>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4, color: 'text.secondary' }}>
+            <LocationOnIcon sx={{ fontSize: 13, color: '#0D9488' }} />
+            <Typography sx={{ fontSize: 12, fontWeight: 500, lineHeight: 1.4, wordBreak: 'break-word' }}>
+              {[branch.city, branch.address].filter(Boolean).join(', ')}
+            </Typography>
+          </Box>
         )}
       </Box>
 
-      {/* קו מפריד דק */}
-      <Box sx={{ height: 1, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
-
-      {/* כפתורי אפליקציה - שורה מלאה לכל אחד, רקע בצבע המותג עם גרדיאנט.
-          סגנון "branded action sheet". טקסט וויקון בלבן על רקע צבעוני. */}
-      <Box sx={{ px: 1.25, py: 1.25, display: 'flex', flexDirection: 'column', gap: 0.85 }}>
+      {/* כפתורי אפליקציה - כרטיסים נקיים עם תג צבעוני קטן (לא רקע מלא) */}
+      <Box sx={{ px: 1.5, pt: 1.25, pb: 0.5, display: 'flex', flexDirection: 'column', gap: 0.7 }}>
+        <Typography sx={{
+          fontSize: 9.5, fontWeight: 800, color: 'text.disabled',
+          letterSpacing: 1.2, textTransform: 'uppercase', mb: 0.25, mt: 0.25, px: 0.5,
+        }}>
+          בחר אפליקציה
+        </Typography>
         {apps.map(app => (
           <Box
             key={app.key}
@@ -319,39 +316,57 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
             onClick={() => open(app.url)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
             sx={{
-              display: 'flex', alignItems: 'center', gap: 1.25,
-              py: 1.25, px: 1.5, borderRadius: '14px',
+              display: 'flex', alignItems: 'center', gap: 1.5,
+              py: 1.1, px: 1.25, borderRadius: '14px',
               cursor: 'pointer', userSelect: 'none',
               WebkitTapHighlightColor: 'transparent',
-              background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}E0 100%)`,
-              boxShadow: `0 3px 10px ${app.color}55, inset 0 1px 0 rgba(255,255,255,0.2)`,
-              transition: 'transform 0.12s, box-shadow 0.15s',
-              '&:hover': { boxShadow: `0 5px 16px ${app.color}77` },
-              '&:active': { transform: 'scale(0.985)' },
+              bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+              transition: 'all 0.15s',
+              '&:hover': {
+                bgcolor: `${app.color}12`,
+                borderColor: `${app.color}55`,
+                transform: 'translateY(-1px)',
+              },
+              '&:active': { transform: 'translateY(0) scale(0.99)' },
             }}
           >
             <Box sx={{
-              width: 36, height: 36, borderRadius: '10px',
+              width: 42, height: 42, borderRadius: '12px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: 'rgba(255,255,255,0.22)',
+              backgroundImage: `linear-gradient(135deg, ${app.color} 0%, ${app.color}D0 100%)`,
+              boxShadow: `0 3px 8px ${app.color}45, inset 0 1px 0 rgba(255,255,255,0.25)`,
               flexShrink: 0,
               '& svg': { fontSize: '22px !important', color: 'white !important' },
             }}>
               {app.icon}
             </Box>
-            <Typography sx={{ flex: 1, fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: 0.2 }}>
-              {app.label}
-            </Typography>
-            <Typography sx={{ flexShrink: 0, color: 'rgba(255,255,255,0.85)', fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.15 }}>
+                {app.label}
+              </Typography>
+              <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.disabled', mt: 0.2 }}>
+                פתח ניווט
+              </Typography>
+            </Box>
+            <Box sx={{
+              flexShrink: 0,
+              width: 28, height: 28, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: `${app.color}18`,
+              color: app.color,
+              fontSize: 16, fontWeight: 800, lineHeight: 1,
+            }}>
               ←
-            </Typography>
+            </Box>
           </Box>
         ))}
       </Box>
 
       <Typography sx={{
-        fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
-        pb: 1.75, px: 2, lineHeight: 1.4,
+        fontSize: 10, color: 'text.disabled', textAlign: 'center',
+        pt: 1, pb: 1.75, px: 2, lineHeight: 1.4,
       }}>
         אם האפליקציה לא מותקנת היא תיפתח בדפדפן
       </Typography>
