@@ -1756,6 +1756,23 @@ export const HomeComponent = memo(({
       </Box>
       </Box>
 
+      {/* קשת border לחתך ה-FAB - ממשיכה ויזואלית את ה-borderTop של הבר
+          סביב הקשת המקופלת של החתך. אלמנט נפרד (לא בתוך הבר) כדי שלא
+          ייחתך ע"י ה-mask של הבר. גובה ורוחב מתואמים ל-radial-gradient
+          של ה-mask: רדיוס 50px → 100×50px קשת חצי-עיגול תחתון. */}
+      <Box sx={{
+        position: 'fixed',
+        bottom: 2, // (52 - 50) = הקצה התחתון של הקשת
+        left: '50%', transform: 'translateX(-50%)',
+        width: 100, height: 50,
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+        borderTop: 'none',
+        borderRadius: '0 0 50% 50% / 0 0 100% 100%',
+        pointerEvents: 'none',
+        zIndex: 1001,
+      }} />
+
       {/* FAB - באותו portal */}
       <Box
         sx={{
