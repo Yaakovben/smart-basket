@@ -21,7 +21,24 @@ import { CookieJar } from 'tough-cookie';
 import { HttpsCookieAgent } from 'http-cookie-agent/http';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
+import AdmZip from 'adm-zip';
 import { logger } from '../../../config/logger';
+
+// פורטל Bina מתייג קבצים בסיומת .gz אך הם בעצם ZIP (חתימה PK).
+// פורטל publishedprices מספק קבצי gzip אמיתיים. הפונקציה מזהה את הפורמט
+// לפי מאגיק-בייטס ופותחת בהתאם.
+function decompressBuffer(buf: Buffer): string {
+  if (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
+    return gunzipSync(buf).toString('utf-8');
+  }
+  if (buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b) {
+    const zip = new AdmZip(buf);
+    const entries = zip.getEntries();
+    if (entries.length === 0) throw new Error('zip_empty');
+    return entries[0].getData().toString('utf-8');
+  }
+  return buf.toString('utf-8');
+}
 
 // HttpsCookieAgent (מ-http-cookie-agent) משלב cookie jar + TLS options ביחד.
 // זה הסוכן שמשתמש axios-cookiejar-support בפנים, אבל קוראים אותו ישירות
@@ -230,13 +247,8 @@ async function downloadFile(client: AxiosInstance, filename: string): Promise<Bu
   return Buffer.from(res.data);
 }
 
-export function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
-  let xml: string;
-  if (filename.endsWith('.gz')) {
-    xml = gunzipSync(buf).toString('utf-8');
-  } else {
-    xml = buf.toString('utf-8');
-  }
+export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[] {
+  const xml = decompressBuffer(buf);
 
   const parser = new XMLParser({
     ignoreAttributes: true,
@@ -301,13 +313,8 @@ export function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] 
 // פרסור של קובץ Stores*.xml בפורמטים השונים שהרשתות מפרסמות.
 // שדות נפוצים: STORE/Store, CHAINID, STOREID, STORENAME, ADDRESS, CITY, ZIPCODE.
 // lat/lng לעתים מופיעים בשדות Latitude/Longitude (בחלק קטן מהרשתות).
-export function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
-  let xml: string;
-  if (filename.endsWith('.gz')) {
-    xml = gunzipSync(buf).toString('utf-8');
-  } else {
-    xml = buf.toString('utf-8');
-  }
+export function parseStoresXml(buf: Buffer, _filename: string): ChainStoreItem[] {
+  const xml = decompressBuffer(buf);
 
   const parser = new XMLParser({
     ignoreAttributes: true,
