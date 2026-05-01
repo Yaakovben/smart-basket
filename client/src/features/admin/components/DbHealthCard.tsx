@@ -117,15 +117,25 @@ const StackedBar = ({ collections, totalSize }: { collections: DbHealthCollectio
   </Box>
 );
 
+// אומדן ה-Tier של Atlas לפי הסף
+const tierName = (limitMB: number): string => {
+  if (limitMB <= 512) return 'M0 Free';
+  if (limitMB <= 2048) return 'M2 Shared';
+  if (limitMB <= 5120) return 'M5 Shared';
+  return 'Dedicated';
+};
+
 export const DbHealthCard = ({ isDark, onClose }: Props) => {
   const [data, setData] = useState<DbHealth | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastFetchAt, setLastFetchAt] = useState<Date | null>(null);
 
   const load = async () => {
     setLoading(true);
     try {
       const r = await adminApi.getDbHealth();
       setData(r);
+      setLastFetchAt(new Date());
     } catch {
       setData(null);
     } finally {
@@ -138,6 +148,10 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
   const StatusIcon = status?.icon;
   const totalDocs = data ? data.collections.reduce((s, c) => s + c.documents, 0) : 0;
   const freeBytes = data ? Math.max(0, data.limitMB * 1024 * 1024 - data.totalSize) : 0;
+  const topCollection = data && data.collections.length > 0 ? data.collections[0] : null;
+  const lastUpdatedText = lastFetchAt
+    ? lastFetchAt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <Box sx={{
@@ -151,9 +165,32 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
           <StorageIcon sx={{ color: '#0D9488' }} />
-          <Typography sx={{ fontSize: 18, fontWeight: 800 }}>שימוש במאגר</Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1.1 }}>שימוש במאגר</Typography>
+            {data && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mt: 0.25 }}>
+                <Box sx={{
+                  px: 0.7, py: 0.1, borderRadius: 0.75,
+                  bgcolor: isDark ? 'rgba(13,148,136,0.18)' : '#CCFBF1',
+                  border: '1px solid', borderColor: '#0D9488',
+                }}>
+                  <Typography sx={{ fontSize: 9.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.3 }}>
+                    Atlas {tierName(data.limitMB)}
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>
+                  · {data.limitMB} MB
+                </Typography>
+                {lastUpdatedText && (
+                  <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
+                    · עודכן {lastUpdatedText}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           <IconButton onClick={load} disabled={loading} aria-label="רענון">
@@ -196,6 +233,12 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
                   </Typography>
                 </Box>
               </Box>
+              {topCollection && (
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1.5 }}>
+                  התופס הכי הרבה מקום: <b style={{ color: collectionMeta(topCollection.name).color }}>{collectionMeta(topCollection.name).he}</b>
+                  {' '}({(((topCollection.storageSize + topCollection.indexSize) / data.totalSize) * 100).toFixed(0)}% מהמאגר)
+                </Typography>
+              )}
             </Box>
 
             {/* 3 מספרים גדולים לסקירה מהירה */}
