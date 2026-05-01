@@ -59,9 +59,8 @@ export interface SyncResult {
   storesError?: string;
 }
 
-// דיליי בין רשת לרשת - הפורטל מגביל קצב בקשות, ואם שולחים 10 logins ברצף
-// הוא סוגר את ההתחברויות המאוחרות יותר. 3 שניות זה מספיק להיראות "אנושי".
-const DELAY_BETWEEN_CHAINS_MS = 3000;
+// (DELAY_BETWEEN_CHAINS_MS הוסר - הסנכרון רץ עכשיו במקבילי, כל רשת ב-portal
+// שונה. אם נחזור לרצוף - להחזיר את הקבוע הזה.)
 
 /**
  * סנכרון סניפים מ-OpenStreetMap לכל הרשתות.
@@ -109,7 +108,6 @@ export async function syncBranchesFromOsm(): Promise<Array<{ chainId: ChainId; c
 export function getRegisteredChains(): Array<{ chainId: string; chainName: string }> {
   return adapters.map(a => ({ chainId: a.chainId, chainName: a.chainName }));
 }
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 // תוצאות הסנכרון האחרון לכל רשת, נשמרות בזיכרון לצפייה באדמין.
 // נמחקות על restart של השרת (זה בסדר - נטענות שוב בסנכרון הבא).
@@ -193,7 +191,37 @@ async function syncStoresForChain(
   }
 }
 
-// רענון מחירים לכל הרשתות הפעילות — משמש גם בסקריפט הידני וגם בcron
+// סנכרון של רשת בודדת - מבודד כפונקציה לאפשר ריצה מקבילית של מספר רשתות.
+// מחזיר את ה-SyncResult המלא ואת התוצאה הגולמית של ה-stores (לבר-תהליכים).
+async function syncSingleChain(adapter: ChainAdapter): Promise<SyncResult> {
+  const t0 = Date.now();
+  logger.info(`[price-sync] ${adapter.chainId}: fetching latest prices...`);
+
+  const result = await adapter.fetchLatestPrices();
+  if (result.error) {
+    logger.error(`[price-sync] ${adapter.chainId}: fetch error: ${result.error}`);
+    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: result.error };
+    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+    return r;
+  }
+
+  if (result.items.length === 0) {
+    logger.warn(`[price-sync] ${adapter.chainId}: no items to upsert`);
+    const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: 'no_items_found' };
+    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+    return r;
+  }
+
+  // המשך הקוד מתבצע במקום המקורי - אגרגציה ושמירה ב-DB.
+  // משתמש ב-result דרך closure - שאר הלוגיקה הועברה למטה.
+  return processChainItems(adapter, result, t0);
+}
+
+// רענון מחירים לכל הרשתות הפעילות במקבילי - משמש גם בסקריפט הידני וגם בקרון.
+// CONCURRENCY=4: ארבע רשתות בו-זמנית. כל רשת מדברת עם פורטל שונה אז
+// אין rate limits בין רשתות. בתוך כל רשת יש כבר מקביליות פנימית (Bina/Carrefour
+// מורידים 6 קבצים בו-זמנית). זמן סנכרון יורד מ-~6 דק' ל-~2 דק'.
+const SYNC_CONCURRENCY = 4;
 export async function syncAllChains(): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
@@ -203,137 +231,32 @@ export async function syncAllChains(): Promise<SyncResult[]> {
     startedAt: new Date().toISOString(),
   };
 
-  for (let i = 0; i < adapters.length; i++) {
-    const adapter = adapters[i];
-    syncProgress.currentIndex = i;
-    syncProgress.currentChainName = adapter.chainName;
-
-    // דיליי לפני כל adapter חוץ מהראשון - מונע rate limit מהפורטל
-    if (i > 0) await sleep(DELAY_BETWEEN_CHAINS_MS);
-
-    const t0 = Date.now();
-    logger.info(`[price-sync] ${adapter.chainId}: fetching latest prices...`);
-
-    const result = await adapter.fetchLatestPrices();
-    if (result.error) {
-      logger.error(`[price-sync] ${adapter.chainId}: fetch error: ${result.error}`);
-      const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: result.error };
-      results.push(r);
-      lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-      syncProgress.completedChains = i + 1;
-      continue;
-    }
-
-    if (result.items.length === 0) {
-      logger.warn(`[price-sync] ${adapter.chainId}: no items to upsert`);
-      const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: Date.now() - t0, error: 'no_items_found' };
-      results.push(r);
-      lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-      syncProgress.completedChains = i + 1;
-      continue;
-    }
-
-    // ===== אגרגציה פר-סניף =====
-    // ה-XML מהפורטל מכיל שורת מחיר לכל (סניף, מוצר). שני הצרכים שלנו:
-    //  1. מחיר אחד "מייצג" לכל זוג (chainId, barcode) להשוואה מהירה.
-    //  2. ידיעה כמה סניפים מוכרים את המוצר ובאיזה טווח מחירים.
-    // הפתרון: מקבצים לפי (chainId, barcode), בוחרים את המחיר הזול כמייצג,
-    // ושומרים גם min/max/count + cheapestStoreId לתצוגה ללקוח.
-    type AggKey = string;
-    const agg = new Map<AggKey, {
-      first: typeof result.items[number];      // הפריט הראשון - לשמירת המטא-דאטה
-      minPrice: number; maxPrice: number;
-      cheapestStoreId?: string;
-      count: number;
-    }>();
-    for (const item of result.items) {
-      const key = `${item.barcode}`;
-      const existing = agg.get(key);
-      if (!existing) {
-        agg.set(key, {
-          first: item,
-          minPrice: item.price, maxPrice: item.price,
-          cheapestStoreId: item.storeId,
-          count: 1,
-        });
-      } else {
-        existing.count++;
-        if (item.price < existing.minPrice) {
-          existing.minPrice = item.price;
-          existing.cheapestStoreId = item.storeId;
-          // עדכון ה-"first" למחיר הזול - גם המטא-דאטה תייצג את הסניף הזול
-          existing.first = item;
-        }
-        if (item.price > existing.maxPrice) existing.maxPrice = item.price;
+  // pool של עובדים. כל עובד שולף משימה הבאה מהתור עד שאין יותר.
+  const queue = [...adapters];
+  let nextIdx = 0;
+  const worker = async (): Promise<void> => {
+    while (queue.length > 0) {
+      const adapter = queue.shift();
+      if (!adapter) break;
+      const myIdx = nextIdx++;
+      syncProgress.currentIndex = myIdx;
+      syncProgress.currentChainName = adapter.chainName;
+      try {
+        const r = await syncSingleChain(adapter);
+        results.push(r);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown';
+        logger.error(`[price-sync] ${adapter.chainId}: unexpected error: ${msg}`);
+        const r: SyncResult = { chainId: adapter.chainId, chainName: adapter.chainName, fetched: 0, upserted: 0, elapsedMs: 0, error: msg };
+        results.push(r);
+        lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
       }
+      syncProgress.completedChains++;
     }
-    const inputs: UpsertPriceInput[] = Array.from(agg.values()).map(({ first: item, minPrice, maxPrice, cheapestStoreId, count }) => {
-      const updateDate = item.itemPriceUpdateDate ? new Date(item.itemPriceUpdateDate) : undefined;
-      return {
-        barcode: item.barcode,
-        itemName: item.itemName,
-        itemNameNormalized: normalizeProductName(item.itemName),
-        chainId: adapter.chainId,
-        chainName: adapter.chainName,
-        storeId: cheapestStoreId,            // הסניף שבו המחיר הזול
-        price: minPrice,                      // המחיר הזול ברשת = "המייצג"
-        unitOfMeasure: item.unitOfMeasure,
-        manufacturerName: item.manufacturerName,
-        quantity: item.quantity,
-        // שדות עשירים נוספים מהפורטל - מאפשרים תצוגה מפורטת ב-UI
-        manufactureCountry: item.manufactureCountry,
-        manufacturerItemDescription: item.manufacturerItemDescription,
-        qtyInPackage: item.qtyInPackage,
-        isWeighted: item.isWeighted,
-        unitQty: item.unitQty,
-        itemPriceUpdateDate: updateDate && !isNaN(updateDate.getTime()) ? updateDate : undefined,
-        // אגרגציית סניפים - הלקוח יראה "₪10-12 ב-X סניפים, הזול ב-...":
-        storesWithPrice: count,
-        priceMin: minPrice,
-        priceMax: maxPrice,
-        cheapestStoreId,
-        // דגלי סטטוס/מטא נוספים - לתצוגה ולסינון מוצרים חסומים בעתיד
-        itemType: item.itemType,
-        itemId: item.itemId,
-        allowDiscount: item.allowDiscount,
-        blockedItem: item.blockedItem,
-        itemStatus: item.itemStatus,
-        bikoretNo: item.bikoretNo,
-        unitOfMeasurePrice: item.unitOfMeasurePrice,
-      };
-    });
-
-    const BATCH_SIZE = 500;
-    let totalUpserted = 0;
-    for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
-      const batch = inputs.slice(i, i + BATCH_SIZE);
-      const affected = await PriceDAL.bulkUpsert(batch);
-      totalUpserted += affected;
-    }
-
-    // סנכרון סניפים - נפרד, לא חוסם את המחירים אם נכשל
-    const storesSummary = adapter.fetchLatestStores
-      ? await syncStoresForChain(adapter)
-      : { error: 'adapter_has_no_stores_support' };
-    const storesFetched = storesSummary.fetched;
-    const storesUpserted = storesSummary.upserted;
-    const storesError = storesSummary.error;
-
-    const elapsedMs = Date.now() - t0;
-    logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
-
-    const r: SyncResult = {
-      chainId: adapter.chainId, chainName: adapter.chainName,
-      fetched: result.items.length, upserted: totalUpserted, elapsedMs,
-      storesFetched, storesUpserted, storesError,
-    };
-    results.push(r);
-    lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
-    syncProgress.completedChains = i + 1;
-  }
+  };
+  await Promise.all(Array.from({ length: SYNC_CONCURRENCY }, () => worker()));
 
   // חשוב: מנקים את ה-cache של branches כדי שהסניפים החדשים יופיעו מיד
-  // במונע השוואת המחירים (אחרת ה-cache של 2 דק' יגיש רשימה ישנה/ריקה).
   invalidateBranchCache();
 
   syncProgress = {
@@ -342,4 +265,97 @@ export async function syncAllChains(): Promise<SyncResult[]> {
   };
 
   return results;
+}
+
+// אגרגציה ושמירה של פריטים שהוחזרו מ-adapter בודד.
+async function processChainItems(
+  adapter: ChainAdapter,
+  result: { items: import('../chains/types').ChainPriceItem[] },
+  t0: number,
+): Promise<SyncResult> {
+  // ===== אגרגציה פר-סניף =====
+  // ה-XML מהפורטל מכיל שורת מחיר לכל (סניף, מוצר). מקבצים לפי (chainId, barcode),
+  // בוחרים את המחיר הזול כמייצג, ושומרים גם min/max/count + cheapestStoreId.
+  const agg = new Map<string, {
+    first: typeof result.items[number];
+    minPrice: number; maxPrice: number;
+    cheapestStoreId?: string;
+    count: number;
+  }>();
+  for (const item of result.items) {
+    const key = item.barcode;
+    const existing = agg.get(key);
+    if (!existing) {
+      agg.set(key, {
+        first: item,
+        minPrice: item.price, maxPrice: item.price,
+        cheapestStoreId: item.storeId,
+        count: 1,
+      });
+    } else {
+      existing.count++;
+      if (item.price < existing.minPrice) {
+        existing.minPrice = item.price;
+        existing.cheapestStoreId = item.storeId;
+        existing.first = item;
+      }
+      if (item.price > existing.maxPrice) existing.maxPrice = item.price;
+    }
+  }
+  const inputs: UpsertPriceInput[] = Array.from(agg.values()).map(({ first: item, minPrice, maxPrice, cheapestStoreId, count }) => {
+    const updateDate = item.itemPriceUpdateDate ? new Date(item.itemPriceUpdateDate) : undefined;
+    return {
+      barcode: item.barcode,
+      itemName: item.itemName,
+      itemNameNormalized: normalizeProductName(item.itemName),
+      chainId: adapter.chainId,
+      chainName: adapter.chainName,
+      storeId: cheapestStoreId,
+      price: minPrice,
+      unitOfMeasure: item.unitOfMeasure,
+      manufacturerName: item.manufacturerName,
+      quantity: item.quantity,
+      manufactureCountry: item.manufactureCountry,
+      manufacturerItemDescription: item.manufacturerItemDescription,
+      qtyInPackage: item.qtyInPackage,
+      isWeighted: item.isWeighted,
+      unitQty: item.unitQty,
+      itemPriceUpdateDate: updateDate && !isNaN(updateDate.getTime()) ? updateDate : undefined,
+      storesWithPrice: count,
+      priceMin: minPrice,
+      priceMax: maxPrice,
+      cheapestStoreId,
+      itemType: item.itemType,
+      itemId: item.itemId,
+      allowDiscount: item.allowDiscount,
+      blockedItem: item.blockedItem,
+      itemStatus: item.itemStatus,
+      bikoretNo: item.bikoretNo,
+      unitOfMeasurePrice: item.unitOfMeasurePrice,
+    };
+  });
+
+  const BATCH_SIZE = 500;
+  let totalUpserted = 0;
+  for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
+    const batch = inputs.slice(i, i + BATCH_SIZE);
+    const affected = await PriceDAL.bulkUpsert(batch);
+    totalUpserted += affected;
+  }
+
+  // סנכרון סניפים - לא חוסם את המחירים אם נכשל
+  const storesSummary = adapter.fetchLatestStores
+    ? await syncStoresForChain(adapter)
+    : { error: 'adapter_has_no_stores_support' };
+
+  const elapsedMs = Date.now() - t0;
+  logger.info(`[price-sync] ${adapter.chainId}: fetched=${result.items.length}, upserted=${totalUpserted} in ${(elapsedMs / 1000).toFixed(1)}s`);
+
+  const r: SyncResult = {
+    chainId: adapter.chainId, chainName: adapter.chainName,
+    fetched: result.items.length, upserted: totalUpserted, elapsedMs,
+    storesFetched: storesSummary.fetched, storesUpserted: storesSummary.upserted, storesError: storesSummary.error,
+  };
+  lastSyncResults.set(adapter.chainId, { ...r, completedAt: new Date().toISOString() });
+  return r;
 }
