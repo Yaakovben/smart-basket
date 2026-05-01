@@ -171,23 +171,29 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   // זיהוי iOS - Apple Maps רלוונטי רק שם, ב-Android הוא רק יוצר רעש
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // לוגואים בסגנון מותגי - SVG אינליין שדומים לאייקוני האפליקציות האמיתיים.
-  // לא הלוגו המקורי בדיוק (זכויות יוצרים) אבל בולט וזיהוי מיידי.
+  // לוגואים מזוהים מיידית - SVG בועת-Waze, סיכת גוגל, סיכת אפל מינימלית.
   const WazeLogo = (
-    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24, color: '#fff' }}>
-      <path fill="currentColor" d="M20.54 6.63c.96 1.7 1.46 3.5 1.46 5.37 0 5.61-4.39 9.5-9.65 9.83-.21.83-.97 1.42-1.85 1.42-1.06 0-1.92-.86-1.92-1.92 0-.04 0-.08.01-.12-1.36-.18-2.66-.61-3.78-1.34-.39.31-.88.49-1.43.49-1.27 0-2.31-1.04-2.31-2.31 0-.69.31-1.31.79-1.74-.34-.84-.53-1.74-.53-2.69 0-2.04.84-3.92 2.27-5.32C2.93 7.8 2.5 6.6 2.5 5.27c0-.16.13-.29.29-.29.96 0 1.86.45 2.46 1.18C6.83 5.07 8.83 4.5 11 4.5c4.04 0 7.65 1.93 9.54 5.13zM12 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm5 0c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-9.04 3.84c-.31.25-.36.7-.11 1.01.62.78 1.59 1.4 2.85 1.81 1.05.34 2.18.51 3.32.51.46 0 .92-.03 1.37-.09 1.78-.24 3.31-.96 4.31-2.04.27-.29.25-.74-.04-1.01-.29-.27-.74-.25-1.01.04-.78.84-2.04 1.42-3.45 1.62-1.39.19-2.85.05-4.05-.34-1.05-.34-1.79-.81-2.18-1.3-.25-.31-.7-.36-1.01-.11z" />
+    // בועת דיבור עם 2 עיניים - הצורה הקלאסית של לוגו Waze
+    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 30, height: 30 }}>
+      <path fill="#fff"
+        d="M16 4C9.4 4 4 8.9 4 14.9c0 1.5.3 2.9.9 4.2.3.7.4 1.5.2 2.3-.2.8-.6 1.5-1.2 2.1-.4.4-.2 1 .3 1.1.5.1 1.1.2 1.7.2 1.5 0 2.9-.4 4.1-1.1 2 .8 4.2 1.3 6.5 1.3 6.6 0 12-4.9 12-10.9C28 8.9 22.6 4 16 4z" />
+      <circle cx="12.5" cy="14" r="1.7" fill="#1E3A4C" />
+      <circle cx="19.5" cy="14" r="1.7" fill="#1E3A4C" />
+      <path fill="#1E3A4C" d="M11.5 17.5c1 1.4 2.6 2.3 4.5 2.3s3.5-.9 4.5-2.3c.2-.3-.1-.7-.4-.6-1.1.5-2.5.8-4.1.8s-3-.3-4.1-.8c-.3-.1-.6.3-.4.6z" />
     </Box>
   );
   const GoogleMapsLogo = (
-    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24 }}>
-      <path fill="#34A853" d="M12 2C7.58 2 4 5.58 4 10c0 5.5 8 12 8 12s8-6.5 8-12c0-4.42-3.58-8-8-8z" opacity="0.95" />
-      <circle cx="12" cy="10" r="3" fill="#FFF" />
-      <circle cx="12" cy="10" r="1.5" fill="#EA4335" />
+    // סיכת מיקום קלאסית של Google Maps - אדום עם נקודה לבנה
+    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 28, height: 28 }}>
+      <path fill="#EA4335" d="M16 2C9.4 2 4 7.4 4 14c0 8.8 12 16 12 16s12-7.2 12-16c0-6.6-5.4-12-12-12z" />
+      <circle cx="16" cy="14" r="5" fill="#fff" />
+      <circle cx="16" cy="14" r="2.4" fill="#EA4335" />
     </Box>
   );
   const AppleMapsLogo = (
-    <Box component="svg" viewBox="0 0 24 24" sx={{ width: 24, height: 24, color: '#fff' }}>
-      <path fill="currentColor" d="M12 2C7.58 2 4 5.58 4 10c0 5.5 8 12 8 12s8-6.5 8-12c0-4.42-3.58-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z" />
+    // סיכת מפה מינימליסטית של Apple Maps
+    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 28, height: 28 }}>
+      <path fill="#fff" d="M16 2C9.4 2 4 7.4 4 14c0 8.8 12 16 12 16s12-7.2 12-16c0-6.6-5.4-12-12-12zm0 16.5a4.5 4.5 0 110-9 4.5 4.5 0 010 9z" />
     </Box>
   );
 
@@ -317,14 +323,14 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         )}
       </Box>
 
-      {/* כפתורי אפליקציה - כרטיסים נקיים עם תג צבעוני קטן (לא רקע מלא) */}
-      <Box sx={{ px: 1.5, pt: 1.25, pb: 0.5, display: 'flex', flexDirection: 'column', gap: 0.7 }}>
-        <Typography sx={{
-          fontSize: 9.5, fontWeight: 800, color: 'text.disabled',
-          letterSpacing: 1.2, textTransform: 'uppercase', mb: 0.25, mt: 0.25, px: 0.5,
-        }}>
-          בחר אפליקציה
-        </Typography>
+      {/* כפתורי אפליקציה - גריד אופקי. כל אפליקציה תופסת עמודה אחת:
+          לוגו עגול גדול + שם מתחת. clean & symmetric. */}
+      <Box sx={{
+        px: 1.25, pt: 1.5, pb: 0.5,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${apps.length}, 1fr)`,
+        gap: 1,
+      }}>
         {apps.map(app => (
           <Box
             key={app.key}
@@ -333,8 +339,9 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
             onClick={() => open(app.url)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') open(app.url); }}
             sx={{
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              py: 1.1, px: 1.25, borderRadius: '14px',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 0.85,
+              py: 1.4, px: 0.5, borderRadius: '16px',
               cursor: 'pointer', userSelect: 'none',
               WebkitTapHighlightColor: 'transparent',
               bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
@@ -342,36 +349,27 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
               borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
               transition: 'all 0.15s',
               '&:hover': {
-                bgcolor: `${app.color}12`,
+                bgcolor: `${app.color}10`,
                 borderColor: `${app.color}55`,
-                transform: 'translateY(-1px)',
+                transform: 'translateY(-2px)',
               },
-              '&:active': { transform: 'translateY(0) scale(0.99)' },
+              '&:active': { transform: 'translateY(0) scale(0.97)' },
             }}
           >
             <Box sx={{
-              width: 42, height: 42, borderRadius: '12px',
+              width: 56, height: 56, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               backgroundImage: `linear-gradient(135deg, ${app.color} 0%, ${app.color}D0 100%)`,
-              boxShadow: `0 3px 8px ${app.color}45, inset 0 1px 0 rgba(255,255,255,0.25)`,
-              flexShrink: 0,
-              '& svg': { fontSize: '22px !important', color: 'white !important' },
+              boxShadow: `0 4px 12px ${app.color}55, inset 0 1px 0 rgba(255,255,255,0.3)`,
             }}>
               {app.icon}
             </Box>
-            <Typography sx={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+            <Typography sx={{
+              fontSize: 12, fontWeight: 800, color: 'text.primary',
+              textAlign: 'center', lineHeight: 1.2,
+            }}>
               {app.label}
             </Typography>
-            <Box sx={{
-              flexShrink: 0,
-              width: 28, height: 28, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: `${app.color}18`,
-              color: app.color,
-              fontSize: 16, fontWeight: 800, lineHeight: 1,
-            }}>
-              ←
-            </Box>
           </Box>
         ))}
       </Box>
