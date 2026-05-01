@@ -32,29 +32,37 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     if (!force && Date.now() - lastFetchAtRef.current < REFETCH_SKIP_MS) return;
     setLoading(true);
     setError(null);
-    try {
-      // טעינה מהירה: משתמשים וסטטיסטיקות קודם, פעילות בנפרד
-      const [usersData, statsData, activityData] = await Promise.all([
-        adminApi.getUsers(),
-        adminApi.getStats(),
-        adminApi.getLoginActivity(1, 100),
-      ]);
+    // 3 בקשות במקביל - כל אחת מעדכנת state ברגע שהיא חוזרת,
+    // לא מחכים ל-Promise.all. כך הדף נראה מתמלא בהדרגה במקום
+    // להישאר ריק עד שהבקשה האיטית ביותר מסתיימת.
+    let pendingCount = 3;
+    const onSettled = () => {
+      pendingCount -= 1;
+      if (pendingCount === 0) {
+        lastFetchAtRef.current = Date.now();
+        setLoading(false);
+      }
+    };
 
-      setAllUsers(usersData);
-      setActivities(
+    adminApi.getStats()
+      .then(stats => setServerStats(stats))
+      .catch(err => { if (import.meta.env.DEV) console.error('admin stats:', err); setError(t('adminLoadError')); })
+      .finally(onSettled);
+
+    adminApi.getUsers()
+      .then(users => setAllUsers(users))
+      .catch(err => { if (import.meta.env.DEV) console.error('admin users:', err); setError(t('adminLoadError')); })
+      .finally(onSettled);
+
+    adminApi.getLoginActivity(1, 100)
+      .then(activityData => setActivities(
         activityData.activities
           .map(convertApiActivity)
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      );
-      setServerStats(statsData);
-      lastFetchAtRef.current = Date.now();
-    } catch (err) {
-      if (import.meta.env.DEV) console.error('Failed to fetch admin data:', err);
-      setError(t('adminLoadError'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      ))
+      .catch(err => { if (import.meta.env.DEV) console.error('admin activity:', err); /* not fatal */ })
+      .finally(onSettled);
+  }, [t]);
 
   // טעינה בעלייה + רענון אוטומטי כשחוזרים לטאב
   useEffect(() => {

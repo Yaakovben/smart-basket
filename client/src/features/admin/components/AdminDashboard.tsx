@@ -230,25 +230,6 @@ export const AdminDashboard = () => {
             <StorefrontIcon sx={{ fontSize: 26 }} />
           </Box>
           <Box
-            onClick={() => setDbHealthOpen(true)}
-            role="button"
-            tabIndex={0}
-            aria-label="שימוש ב-MongoDB"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              width: 44,
-              height: 44,
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-              '&:active': { transform: 'scale(0.92)' },
-            }}
-          >
-            <StorageIcon sx={{ fontSize: 26 }} />
-          </Box>
-          <Box
             onClick={handleRefresh}
             role="button"
             tabIndex={0}
@@ -268,6 +249,26 @@ export const AdminDashboard = () => {
               fontSize: 26,
               animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
             }} />
+          </Box>
+          {/* MongoDB - אחרון ב-DOM = שמאלי קיצוני ב-RTL */}
+          <Box
+            onClick={() => setDbHealthOpen(true)}
+            role="button"
+            tabIndex={0}
+            aria-label="שימוש ב-MongoDB"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              width: 44,
+              height: 44,
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+              '&:active': { transform: 'scale(0.92)' },
+            }}
+          >
+            <StorageIcon sx={{ fontSize: 26 }} />
           </Box>
           </Box>
         </Box>
