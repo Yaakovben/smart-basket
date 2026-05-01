@@ -10,6 +10,8 @@ import {
   doralonAdapter,
   victoryAdapter,
   maayan2000Adapter,
+  shefaBirkatHashemAdapter,
+  superSapirAdapter,
   normalizeProductName,
   type ChainAdapter,
 } from '../chains';
@@ -38,6 +40,10 @@ const adapters: ChainAdapter[] = [
   // מעיין 2000 - מנסה מספר מועמדי usernames בפורטל. אם כולם נכשלים,
   // הרשת תופיע ב-UI כ"אין נתונים היום" אבל לא תיעלם מהרשימה.
   maayan2000Adapter,
+  // שפע ברכת השם וסופר ספיר - אותו דפוס: usernames לא ידועים בוודאות,
+  // factory מנסה מועמדים. במקרה של כשל - מופיעים כ"אין נתונים היום".
+  shefaBirkatHashemAdapter,
+  superSapirAdapter,
 ];
 
 export interface SyncResult {

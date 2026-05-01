@@ -11,7 +11,9 @@ export type ChainId =
   | 'politzer'
   | 'doralon'
   | 'victory'
-  | 'maayan_2000';
+  | 'maayan_2000'
+  | 'shefa_birkat_hashem'
+  | 'super_sapir';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;

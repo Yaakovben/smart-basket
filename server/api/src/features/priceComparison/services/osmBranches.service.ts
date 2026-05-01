@@ -69,6 +69,14 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
     brands: ['Maayan 2000', 'Maayan2000', 'Mayan 2000'],
     names: ['מעיין 2000', 'מעיין2000', 'מעיין אלפיים', 'מעין 2000'],
   },
+  shefa_birkat_hashem: {
+    brands: ['Shefa Birkat Hashem', 'Shefa Birkat HaShem', 'ShefaBirkatHashem', 'Shefa'],
+    names: ['שפע ברכת השם', 'שפע ברכת ה׳', 'שפע ברכת ה׳ה', 'שפע'],
+  },
+  super_sapir: {
+    brands: ['Super Sapir', 'SuperSapir', 'Sapir'],
+    names: ['סופר ספיר', 'ספיר', 'רשת ספיר'],
+  },
 };
 
 export interface OsmBranch {
