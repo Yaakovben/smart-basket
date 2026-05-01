@@ -538,12 +538,9 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
   const sortedChains = useMemo(() => {
     const chains = [...chainTotals];
     if (sortMode === 'distance' && hasAnyLocation) {
+      // במצב "קרוב" - מרחק קודם כל. אפילו רשת בלי מוצרים תופיע למעלה
+      // אם הסניף שלה הקרוב ביותר. רק רשתות בלי מיקום בכלל יורדות לסוף.
       return chains.sort((a, b) => {
-        // רשתות בלי נתונים/התאמות בסוף
-        const aEmpty = a.matchedCount === 0;
-        const bEmpty = b.matchedCount === 0;
-        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
-        // רשתות עם מיקום לפני רשתות בלי מיקום
         const aDist = a.nearestBranch?.distanceKm ?? Infinity;
         const bDist = b.nearestBranch?.distanceKm ?? Infinity;
         return aDist - bDist;
@@ -591,11 +588,11 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
   // המנצח הוויזואלי לפי המיון הנוכחי - הראשון בסדר המתאים.
   // נחשב מקומית כדי שהסימון יתאים תמיד לסדר המוצג (ולא יסתור את 'isCheapest' מהשרת).
   const winnerId = useMemo(() => {
-    const candidates = chainTotals.filter(c => c.matchedCount > 0);
-    if (candidates.length === 0) return null;
     if (sortMode === 'price') {
       // המנצח חייב לבוא מסל הוגן: שלמות קודם. אם אין - הרשתות עם מספר
       // ההתאמות המקסימלי (הכי קרוב לסל מלא), ובתוכן הזולה.
+      const candidates = chainTotals.filter(c => c.matchedCount > 0);
+      if (candidates.length === 0) return null;
       const completes = candidates.filter(c => c.isComplete);
       const pool = completes.length > 0
         ? completes
@@ -606,7 +603,8 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
       return pool.reduce((best, c) => c.total < best.total ? c : best, pool[0]).chainId;
     }
     if (sortMode === 'distance') {
-      const withLoc = candidates.filter(c => c.nearestBranch);
+      // במצב "קרוב" - המנצח הוא הסניף הקרוב ביותר, גם אם אין לרשת מוצרים.
+      const withLoc = chainTotals.filter(c => c.nearestBranch);
       if (withLoc.length === 0) return null;
       return withLoc.reduce((best, c) =>
         c.nearestBranch!.distanceKm < best.nearestBranch!.distanceKm ? c : best,

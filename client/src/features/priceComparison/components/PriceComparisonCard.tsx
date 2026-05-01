@@ -442,8 +442,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
     // ריקות תמיד בסוף בכל מיון
     const isEmpty = (c: PriceChainTotal) => c.matchedCount === 0;
     if (sortMode === 'distance' && hasAnyLocation) {
+      // "קרוב" - מרחק קודם כל. אפילו רשת בלי מוצרים תופיע למעלה אם
+      // הסניף שלה הקרוב ביותר. רק רשתות בלי מיקום בכלל יורדות לסוף.
       return chains.sort((a, b) => {
-        if (isEmpty(a) !== isEmpty(b)) return isEmpty(a) ? 1 : -1;
         const aDist = a.nearestBranch?.distanceKm ?? Infinity;
         const bDist = b.nearestBranch?.distanceKm ?? Infinity;
         return aDist - bDist;
