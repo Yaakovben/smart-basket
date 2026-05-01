@@ -173,16 +173,8 @@ async function syncStoresForChain(
 
     const upserted = await BranchDAL.bulkUpsert(inputs);
     logger.info(`[price-sync] ${adapter.chainId}: stores fetched=${res.stores.length}, upserted=${upserted}`);
-
-    // Nominatim: 1 req/sec, מוגבל ל-20 סניפים לריצה - השאר יקבלו בסנכרון הבא
-    const needGeo = inputs.filter(b => b.coordSource !== 'portal' && (b.address || b.city)).slice(0, 20);
-    for (const b of needGeo) {
-      const coords = await geocodeAddress(b.address, b.city);
-      if (!coords) continue;
-      const doc = await BranchDAL.findOne({ chainId: b.chainId, storeId: b.storeId });
-      if (doc) await BranchDAL.updateCoords(doc._id.toString(), coords.lat, coords.lng, 'geocoded');
-    }
-
+    // הגיאוקודינג עבר ל-postSyncGeocode שרץ פעם אחת אחרי כל הרשתות, סדרתי
+    // עם 1.1ש' בין בקשות (Nominatim מגביל ל-1 req/sec).
     return { fetched: res.stores.length, upserted };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';
@@ -256,7 +248,11 @@ export async function syncAllChains(): Promise<SyncResult[]> {
   };
   await Promise.all(Array.from({ length: SYNC_CONCURRENCY }, () => worker()));
 
-  // חשוב: מנקים את ה-cache של branches כדי שהסניפים החדשים יופיעו מיד
+  // אחרי שכל הרשתות הסתיימו - שלב גיאוקודינג סדרתי לכתובות חסרות.
+  // רץ ברקע כדי לא להאריך את ה-sync, אבל לפני invalidateCache כי
+  // אנחנו רוצים שהקואורדינטות החדשות ייכנסו לתצוגה מיד.
+  await postSyncGeocode();
+
   invalidateBranchCache();
 
   syncProgress = {
@@ -265,6 +261,38 @@ export async function syncAllChains(): Promise<SyncResult[]> {
   };
 
   return results;
+}
+
+// ===== Post-sync geocoding =====
+// אחרי כל הרשתות הסתיימו - מאתר סניפים שעדיין אין להם lat/lng אבל יש להם
+// כתובת/עיר, ופונה ל-Nominatim לקבל קואורדינטות. רץ סדרתי עם 1.1ש' בין
+// בקשות כפי שמדיניות השימוש של Nominatim דורשת (1 req/sec).
+// מוגבל ל-100 סניפים לריצה - 2 ריצות ביום = 200/יום, מתאים לרוב המקרים.
+const GEOCODE_LIMIT_PER_RUN = 100;
+const GEOCODE_DELAY_MS = 1100;
+async function postSyncGeocode(): Promise<void> {
+  const needGeo = await BranchDAL.find({
+    coordSource: { $ne: 'portal' },
+    $or: [{ lat: { $exists: false } }, { lat: null }, { coordSource: 'unknown' }],
+    $and: [{ $or: [{ address: { $exists: true, $ne: '' } }, { city: { $exists: true, $ne: '' } }] }],
+  }, { limit: GEOCODE_LIMIT_PER_RUN });
+
+  if (needGeo.length === 0) return;
+  logger.info(`[post-sync-geo] geocoding ${needGeo.length} branches`);
+  let updated = 0;
+  for (const b of needGeo) {
+    try {
+      const coords = await geocodeAddress(b.address, b.city);
+      if (coords) {
+        await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
+        updated++;
+      }
+    } catch {
+      // ממשיכים לסניף הבא - שגיאה אחת לא צריכה לעצור את כל ה-batch
+    }
+    await new Promise(r => setTimeout(r, GEOCODE_DELAY_MS));
+  }
+  logger.info(`[post-sync-geo] updated ${updated}/${needGeo.length} branches`);
 }
 
 // אגרגציה ושמירה של פריטים שהוחזרו מ-adapter בודד.
@@ -283,6 +311,10 @@ async function processChainItems(
     count: number;
   }>();
   for (const item of result.items) {
+    // מסנן מוצרים חסומים/לא תקינים: blockedItem=true מצביע על מוצר שאין במלאי,
+    // וכן מחירים אבסורדיים (0 או חריג גבוה) - לא רוצים להציג אותם ללקוח.
+    if (item.blockedItem === true) continue;
+    if (item.price <= 0 || item.price > 10_000) continue;
     const key = item.barcode;
     const existing = agg.get(key);
     if (!existing) {
