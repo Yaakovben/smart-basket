@@ -270,9 +270,17 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const CACHE_TTL_MS = 3 * 60_000;
 const userCache = new Map<string, { data: PriceComparisonData; expiresAt: number }>();
 
-// מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר
+// מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר.
+// מפתחות המטמון משתנים: 'userId', 'userId:lat,lng', 'userId:listId', 'userId:listId:lat,lng'.
+// לכן צריך למחוק כל מפתח שמתחיל ב-userId (אחרת תוספת מוצר חדש ב-3 דקות
+// הראשונות לא תופיע - ה-cache הקודם נשאר על השילובים האחרים של location/list).
 export function invalidateUser(userId: string): void {
-  userCache.delete(userId);
+  const prefix = `${userId}`;
+  for (const key of userCache.keys()) {
+    if (key === prefix || key.startsWith(`${prefix}:`)) {
+      userCache.delete(key);
+    }
+  }
 }
 
 // מנקה את כל מטמון המשתמשים - נקרא אחרי סנכרון גלובלי כדי שכל המשתמשים
