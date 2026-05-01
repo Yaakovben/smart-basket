@@ -108,6 +108,9 @@ export function useUserLocation() {
       setStatus('unavailable');
       return;
     }
+    // ניקוי דגלי דחייה לפני נסיון חדש - מאפשר ניסיון נוסף אחרי שהמשתמש
+    // שינה את ההרשאה בהגדרות הדפדפן.
+    safeStorage.remove(DENIED_KEY);
     setStatus('requesting');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -127,14 +130,51 @@ export function useUserLocation() {
           setStatus('error');
         }
       },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60 * 1000 }
+      // timeout מוגדל ל-15 שניות כדי לתת זמן ל-iOS PWA לסיים גם בקליטה איטית
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 5 * 60 * 1000 }
     );
   }, []);
+
+  // איפוס denied + ניסיון התחברות מיידי. שימושי ב"נסה שוב" כשהמשתמש סירב
+  // ואז שינה את ההרשאה בהגדרות הדפדפן/אפליקציה.
+  const retryRequest = useCallback(() => {
+    safeStorage.remove(DENIED_KEY);
+    setStatus('idle');
+    // setTimeout כדי שה-state יתעדכן לפני ה-getCurrentPosition
+    setTimeout(() => requestLocation(), 50);
+  }, [requestLocation]);
 
   const resetDenied = useCallback(() => {
     safeStorage.remove(DENIED_KEY);
     setStatus('idle');
   }, []);
 
-  return { location, status, requestLocation, resetDenied };
+  // האזנה לחזרה לחלון/לטאב - מנסה לרענן מיקום אם המשתמש שינה הרשאות
+  // בהגדרות הדפדפן/iOS Settings וחזר לאפליקציה. שקט - לא משנה UI אם נכשל.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      // אם המשתמש כעת ב-denied/error/unavailable - ננסה ברקע. אם זה כעת מאושר,
+      // ייצא ל-granted; אם עדיין מסורב, נשארים באותו status.
+      if (status === 'denied' || status === 'error') {
+        if (!('geolocation' in navigator)) return;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setLocation(loc);
+            setStatus('granted');
+            safeStorage.setJSON<CachedLocation>(CACHE_KEY, { ...loc, at: Date.now() });
+            safeStorage.set(GRANTED_KEY, '1');
+            safeStorage.remove(DENIED_KEY);
+          },
+          () => { /* שקט - נשארים באותו status */ },
+          { enableHighAccuracy: false, timeout: 8_000, maximumAge: 60_000 }
+        );
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [status]);
+
+  return { location, status, requestLocation, resetDenied, retryRequest };
 }

@@ -400,7 +400,7 @@ ChainCard.displayName = 'ChainCard';
 
 type SortMode = 'distance' | 'price' | 'combined';
 
-export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, onResetLocationDenied }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation }: Props) => {
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
@@ -554,18 +554,44 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {(locationStatus === 'denied' || locationStatus === 'unavailable' || locationStatus === 'error') && (
         <Box sx={{
-          mb: 1.25, p: 0.75, borderRadius: '8px',
-          display: 'flex', alignItems: 'center', gap: 0.6,
-          bgcolor: isDark ? 'rgba(148,163,184,0.06)' : 'rgba(148,163,184,0.05)',
+          mb: 1.25, p: 1, borderRadius: '10px',
+          display: 'flex', alignItems: 'center', gap: 0.75,
+          bgcolor: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.06)',
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.2)',
         }}>
-          <LocationOffIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
-          <Typography sx={{ fontSize: 10.5, color: 'text.secondary', flex: 1 }}>
-            {locationStatus === 'denied' ? 'מיקום לא משותף' : 'מיקום לא זמין'}
-          </Typography>
-          {locationStatus === 'denied' && onResetLocationDenied && (
-            <Link component="button" onClick={onResetLocationDenied} sx={{ fontSize: 10.5, fontWeight: 700, color: '#14B8A6', textDecoration: 'none' }}>
+          <LocationOffIcon sx={{ fontSize: 16, color: '#D97706', flexShrink: 0 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+              {locationStatus === 'denied' ? 'מיקום לא משותף' : locationStatus === 'unavailable' ? 'הדפדפן לא תומך במיקום' : 'לא הצלחנו לקבל מיקום'}
+            </Typography>
+            <Typography sx={{ fontSize: 9.5, color: 'text.secondary', mt: 0.15, lineHeight: 1.3 }}>
+              {locationStatus === 'denied'
+                ? 'אם רוצים, אפשרו מיקום בהגדרות הדפדפן או לחצו "נסה שוב"'
+                : 'נסה שוב או רענן את הדף'}
+            </Typography>
+          </Box>
+          {locationStatus !== 'unavailable' && onRequestLocation && (
+            <Box
+              role="button"
+              tabIndex={0}
+              onClick={() => { haptic('light'); onRequestLocation(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); onRequestLocation(); } }}
+              sx={{
+                flexShrink: 0,
+                px: 1.1, py: 0.5, borderRadius: '999px',
+                bgcolor: '#14B8A6', color: 'white',
+                fontSize: 11, fontWeight: 800, letterSpacing: 0.3,
+                cursor: 'pointer', userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                boxShadow: '0 2px 6px rgba(20,184,166,0.35)',
+                transition: 'all 0.15s',
+                '&:hover': { boxShadow: '0 3px 9px rgba(20,184,166,0.5)' },
+                '&:active': { transform: 'scale(0.96)' },
+              }}
+            >
               נסה שוב
-            </Link>
+            </Box>
           )}
         </Box>
       )}
