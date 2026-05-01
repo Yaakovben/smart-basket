@@ -1628,7 +1628,9 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'absolute',
+          // fixed - נעול לויאופורט. הבר נמצא מחוץ ל-root Box כך שאין ancestor
+          // עם transform/filter שיהפוך אותו לפעול כ-absolute.
+          position: 'fixed',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
           bgcolor: 'background.paper',
@@ -1750,7 +1752,8 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'absolute',
+          // fixed - נעול לויאופורט, זהה לבר.
+          position: 'fixed',
           bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
@@ -1774,8 +1777,7 @@ export const HomeComponent = memo(({
             touchAction: 'manipulation',
             outline: 'none',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            border: '3px solid',
-            borderColor: 'background.default',
+            border: 'none',
             boxShadow: [
               '0 10px 28px rgba(20,184,166,0.5)',
               '0 4px 10px rgba(0,0,0,0.18)',
