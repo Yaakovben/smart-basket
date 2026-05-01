@@ -1687,18 +1687,20 @@ export const HomeComponent = memo(({
             gap: 0.3,
             minHeight: 40,
             py: 0.35,
-            borderRadius: '12px',
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
             touchAction: 'manipulation',
             outline: 'none',
-            bgcolor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.12)',
-            transition: 'background-color 0.18s ease',
-            '&:active': { opacity: 0.7 },
+            // ללא bgcolor/borderRadius - רק האייקון והטקסט בצבע טורקיז מסמנים
+            // שזה הטאב הפעיל. נקי, מינימליסטי, בלי "כפתור" ויזואלי.
+            transition: 'opacity 0.12s ease',
+            '&:active': { opacity: 0.6 },
           }}
         >
           <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1 }}>
+          {/* נקודה קטנה מתחת לאייקון מסמנת "פעיל" - אלגנטי ומינימלי */}
+          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#0D9488', mt: 0.05 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1, mt: 0.1 }}>
             {t('home')}
           </Typography>
         </Box>
@@ -1751,7 +1753,7 @@ export const HomeComponent = memo(({
         sx={{
           // fixed - נעול לויאופורט, זהה לבר.
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 12px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 4px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
