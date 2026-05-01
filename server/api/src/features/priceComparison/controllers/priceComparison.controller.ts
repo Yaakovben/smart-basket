@@ -1,7 +1,6 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
-import { buildDataQualityReport } from '../services/dataQuality.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { Branch } from '../models/Branch.model';
@@ -357,22 +356,36 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
     res.json({ success: true, message: 'כבר רץ ברקע - נסה שוב בעוד דקה', updated: 0 });
     return;
   }
-  const branches = await Branch.find({
+  // צריך גם סניפים שבכלל אין להם שדה city/address (undefined) - לא רק null/''.
+  // לכן בודקים $exists: false וגם null וגם מחרוזת ריקה.
+  const missingFilter = {
     lat: { $exists: true, $ne: null },
     lng: { $exists: true, $ne: null },
-    $or: [{ city: { $in: [null, ''] } }, { address: { $in: [null, ''] } }],
-  }).limit(50).lean();
+    $or: [
+      { city: { $exists: false } },
+      { city: { $in: [null, ''] } },
+      { address: { $exists: false } },
+      { address: { $in: [null, ''] } },
+    ],
+  };
+  const totalMissing = await Branch.countDocuments(missingFilter);
+  const branches = await Branch.find(missingFilter).limit(50).lean();
 
   if (branches.length === 0) {
-    res.json({ success: true, message: 'אין סניפים שזקוקים להשלמת כתובת', updated: 0 });
+    res.json({ success: true, message: 'אין סניפים שזקוקים להשלמת כתובת', updated: 0, totalMissing: 0, remaining: 0 });
     return;
   }
 
   fillAddressesInProgress = true;
+  const remaining = Math.max(0, totalMissing - branches.length);
   res.json({
     success: true,
-    message: `התחיל ברקע - מעדכן ${branches.length} סניפים, יסתיים בעוד כדקה`,
+    message: remaining > 0
+      ? `מעדכן ${branches.length} סניפים ברקע. נותרו ${remaining} - לחץ שוב לאחר סיום.`
+      : `מעדכן ${branches.length} סניפים ברקע - האחרונים. סיום בעוד כדקה.`,
     checked: branches.length,
+    totalMissing,
+    remaining,
   });
 
   void (async () => {
@@ -580,9 +593,3 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   });
 });
 
-// GET /api/price-comparison/data-quality
-// דוח אימות נתונים: סניפים חשודים + מחירים אנומליים + סטטיסטיקות sync לרשת
-export const getDataQuality = asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const report = await buildDataQualityReport();
-  res.json({ data: report });
-});

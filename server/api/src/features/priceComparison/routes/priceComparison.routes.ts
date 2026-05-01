@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches, fillMissingAddresses, getDataQuality } from '../controllers/priceComparison.controller';
+import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches, fillMissingAddresses } from '../controllers/priceComparison.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();
@@ -21,6 +21,5 @@ router.post('/branches/cleanup', isAdmin, cleanupUnverifiedBranches);
 router.post('/branches/fill-addresses', isAdmin, fillMissingAddresses);
 router.delete('/branches/:id', isAdmin, deleteBranch);
 router.get('/status', isAdmin, getStatus);
-router.get('/data-quality', isAdmin, getDataQuality);
 
 export default router;

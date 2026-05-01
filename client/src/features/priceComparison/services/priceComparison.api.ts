@@ -111,7 +111,7 @@ export const priceComparisonApi = {
   },
 
   // השלמת כתובות חסרות (reverse geocoding דרך Nominatim, עד 50 לריצה)
-  async fillMissingAddresses(): Promise<{ success: boolean; message?: string; updated?: number; checked?: number }> {
+  async fillMissingAddresses(): Promise<{ success: boolean; message?: string; updated?: number; checked?: number; totalMissing?: number; remaining?: number }> {
     try {
       const r = await apiClient.post('/price-comparison/branches/fill-addresses', null, { timeout: 90_000 });
       return r.data;
@@ -209,59 +209,4 @@ export const priceComparisonApi = {
     return response.data;
   },
 
-  // דוח אימות נתונים - סניפים, מחירים ו-sync לכל הרשתות.
-  async getDataQuality(): Promise<DataQualityReport> {
-    const response = await apiClient.get('/price-comparison/data-quality');
-    return response.data.data;
-  },
 };
-
-export interface BranchIssue {
-  id: string;
-  chainId: string;
-  storeId: string;
-  storeName: string;
-  city?: string;
-  reasons: string[];
-}
-
-export interface PriceIssue {
-  barcode: string;
-  chainId: string;
-  itemName: string;
-  price: number;
-  reason: string;
-}
-
-export interface ChainSyncStat {
-  chainId: string;
-  chainName: string;
-  totalPrices: number;
-  totalBranches: number;
-  oldestPriceAt: string | null;
-  newestPriceAt: string | null;
-  freshnessHours: number | null;
-  lastSyncResult: {
-    fetched: number;
-    upserted: number;
-    error?: string;
-    storesError?: string;
-    elapsedMs: number;
-    completedAt: string;
-  } | null;
-}
-
-export interface DataQualityReport {
-  generatedAt: string;
-  branches: {
-    total: number;
-    issues: BranchIssue[];
-    stats: { withoutCoords: number; outOfBounds: number; withoutCity: number };
-  };
-  prices: {
-    total: number;
-    issues: PriceIssue[];
-    stats: { zeroOrNegative: number; tooHigh: number; stale: number };
-  };
-  sync: ChainSyncStat[];
-}

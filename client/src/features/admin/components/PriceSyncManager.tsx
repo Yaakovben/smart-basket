@@ -655,6 +655,16 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                             <Typography sx={{ fontSize: 10.5, color: c.branchCount && c.branchCount > 0 ? '#14B8A6' : 'text.disabled', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                               📍 {c.branchCount && c.branchCount > 0 ? `${c.branchCount} סניפים` : 'אין סניפים'}
                             </Typography>
+                            {c.lastSyncAt && (() => {
+                              const ageH = (Date.now() - new Date(c.lastSyncAt).getTime()) / 3_600_000;
+                              const stale = ageH > 24;
+                              const label = ageH < 1 ? 'פחות משעה' : ageH < 24 ? `${Math.round(ageH)}ש` : `${Math.round(ageH / 24)}י`;
+                              return (
+                                <Typography sx={{ fontSize: 10.5, color: stale ? '#D97706' : 'text.secondary', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                                  🕒 לפני {label}
+                                </Typography>
+                              );
+                            })()}
                           </Box>
                           {humanError && (
                             <Typography sx={{ fontSize: 10, color: isHardError ? '#B91C1C' : 'text.secondary', mt: 0.3 }}>
