@@ -1646,10 +1646,12 @@ export const HomeComponent = memo(({
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
-          // חתך עגול במרכז העליון של הבר - 43px רדיוס. ה-FAB (28px רדיוס)
-          // יושב חצי בתוך החתך, חצי מעליו, עם 15px רווח שקוף סביבו.
-          WebkitMaskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
-          maskImage: 'radial-gradient(circle 43px at 50% 0%, transparent 42px, black 43px)',
+          // חתך עגול רך/חלק במרכז העליון של הבר - גרדיאנט הדרגתי במקום
+          // קצה חד של 1px. רדיוס 50, מעבר רך מ-38 (שקוף) ל-50 (אטום) =
+          // 12px gradient transition. נותן חתך שמתערבב חלק עם הבר במקום
+          // קצה שטוח. ה-FAB (28px רדיוס) יושב חצי בתוך החתך.
+          WebkitMaskImage: 'radial-gradient(circle 50px at 50% 0%, transparent 38px, black 50px)',
+          maskImage: 'radial-gradient(circle 50px at 50% 0%, transparent 38px, black 50px)',
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
           // נעילה ל-layout viewport - מפצה על תזוזת visualViewport ב-iOS rubber-band
