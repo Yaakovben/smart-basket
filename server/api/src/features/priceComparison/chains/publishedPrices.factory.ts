@@ -262,9 +262,11 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
 
   const results: ChainPriceItem[] = [];
   for (const it of arr) {
-    const barcode = String(it.ItemCode || '').trim();
-    const price = parseFloat(String(it.ItemPrice || '0'));
-    const itemName = String(it.ItemName || '').trim();
+    const itAnyEarly = it as Record<string, unknown>;
+    const barcode = String(it.ItemCode || itAnyEarly.itemCode || '').trim();
+    const price = parseFloat(String(it.ItemPrice || itAnyEarly.itemPrice || '0'));
+    // Bina משתמש ב-ItemNm במקום ItemName - תומכים בשני הפורמטים.
+    const itemName = String(it.ItemName || itAnyEarly.ItemNm || itAnyEarly.itemName || itAnyEarly.itemNm || '').trim();
     if (!barcode || !itemName || isNaN(price) || price <= 0) continue;
     // מחלץ ערכים בצורה גמישה - שמות שדות יכולים להיות ב-PascalCase או camelCase
     const itAny = it as Record<string, unknown>;
