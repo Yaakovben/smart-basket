@@ -519,19 +519,45 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     const found = activeMap.get(r.chainId as import('../models/Price.model').ChainId);
     const sync = lastSyncMap.get(r.chainId);
     const branches = branchMap.get(r.chainId as import('../models/Price.model').ChainId);
+    const priceCount = found?.count ?? 0;
+    const branchCount = branches?.count ?? 0;
+    const branchesWithCoords = branches?.withCoords ?? 0;
+    // health: סיווג מהיר לאדמין כדי לראות מה דורש טיפול.
+    // ok = יש מחירים + סניפים עם קואורדינטות
+    // no_prices = יש סניפים אבל לא הצלחנו לסנכרן מחירים (auth/file path issue)
+    // no_branches = יש מחירים אבל אין סניפים (StoresFull נכשל ו-OSM לא מצא)
+    // no_geo = יש סניפים אבל בלי קואורדינטות (לא יוכלו להופיע במפה)
+    // no_data = שום דבר - הסנכרון הראשון עוד לא רץ או username שגוי
+    let health: 'ok' | 'no_prices' | 'no_branches' | 'no_geo' | 'no_data';
+    if (priceCount === 0 && branchCount === 0) health = 'no_data';
+    else if (priceCount === 0) health = 'no_prices';
+    else if (branchCount === 0) health = 'no_branches';
+    else if (branchesWithCoords === 0) health = 'no_geo';
+    else health = 'ok';
     return {
       chainId: r.chainId,
       chainName: r.chainName,
-      count: found?.count ?? 0,
+      count: priceCount,
       lastSyncError: sync?.error ?? null,
       lastSyncAt: sync?.completedAt ?? null,
       lastSyncFetched: sync?.fetched ?? null,
-      branchCount: branches?.count ?? 0,
-      branchesWithCoords: branches?.withCoords ?? 0,
+      branchCount,
+      branchesWithCoords,
       storesError: sync?.storesError ?? null,
       storesFetched: sync?.storesFetched ?? null,
+      health,
     };
   }).sort((a, b) => b.count - a.count);
+
+  // סיכום בריאות מערכתי - אדמין יכול במבט אחד לראות כמה רשתות בעייתיות.
+  const healthSummary = {
+    ok: chains.filter(c => c.health === 'ok').length,
+    no_prices: chains.filter(c => c.health === 'no_prices').length,
+    no_branches: chains.filter(c => c.health === 'no_branches').length,
+    no_geo: chains.filter(c => c.health === 'no_geo').length,
+    no_data: chains.filter(c => c.health === 'no_data').length,
+    needsAttention: chains.filter(c => c.health !== 'ok').map(c => ({ chainId: c.chainId, chainName: c.chainName, health: c.health })),
+  };
 
   const latest = await PriceDAL.findOne({}, { sort: { updatedAt: -1 } });
   const lastUpdatedISO = latest?.updatedAt ? new Date(latest.updatedAt).toISOString() : null;
@@ -548,6 +574,7 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
       ageHours,
       chains,
       totalPrices: chains.reduce((s, c) => s + c.count, 0),
+      healthSummary,
     },
   });
 });
