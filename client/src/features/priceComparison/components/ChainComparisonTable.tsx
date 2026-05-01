@@ -359,14 +359,9 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
             }}>
               {app.icon}
             </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.15 }}>
-                {app.label}
-              </Typography>
-              <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.disabled', mt: 0.2 }}>
-                {app.subtitle || 'פתח ניווט'}
-              </Typography>
-            </Box>
+            <Typography sx={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+              {app.label}
+            </Typography>
             <Box sx={{
               flexShrink: 0,
               width: 28, height: 28, borderRadius: '50%',
