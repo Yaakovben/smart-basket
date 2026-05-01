@@ -1650,8 +1650,9 @@ export const HomeComponent = memo(({
           // קצה חד של 1px. רדיוס 50, מעבר רך מ-38 (שקוף) ל-50 (אטום) =
           // 12px gradient transition. נותן חתך שמתערבב חלק עם הבר במקום
           // קצה שטוח. ה-FAB (28px רדיוס) יושב חצי בתוך החתך.
-          WebkitMaskImage: 'radial-gradient(circle 50px at 50% 0%, transparent 38px, black 50px)',
-          maskImage: 'radial-gradient(circle 50px at 50% 0%, transparent 38px, black 50px)',
+          // חתך חד עם מעבר 1px - מסתנכרן עם ה-border-arc סביב ה-FAB ליצירת קו רציף
+          WebkitMaskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
+          maskImage: 'radial-gradient(circle 38px at 50% 0%, transparent 37px, black 38px)',
           overscrollBehavior: 'contain',
           touchAction: 'manipulation',
           // נעילה ל-layout viewport - מפצה על תזוזת visualViewport ב-iOS rubber-band
@@ -1758,13 +1759,14 @@ export const HomeComponent = memo(({
 
       {/* קשת border לחתך ה-FAB - ממשיכה ויזואלית את ה-borderTop של הבר
           סביב הקשת המקופלת של החתך. אלמנט נפרד (לא בתוך הבר) כדי שלא
-          ייחתך ע"י ה-mask של הבר. גובה ורוחב מתואמים ל-radial-gradient
-          של ה-mask: רדיוס 50px → 100×50px קשת חצי-עיגול תחתון. */}
+          ייחתך ע"י ה-mask. רוחב 76 (=2×38), גובה 38 = רדיוס החתך,
+          bottom 14 (=52-38) → הקשת מתחילה בקצה הבר ועולה למעלה לעטוף
+          את ה-FAB מקרוב (10px רווח שקוף בלבד מסביב). */}
       <Box sx={{
         position: 'fixed',
-        bottom: 2, // (52 - 50) = הקצה התחתון של הקשת
+        bottom: 14, // 52 (גובה הבר) - 38 (רדיוס החתך)
         left: '50%', transform: 'translateX(-50%)',
-        width: 100, height: 50,
+        width: 76, height: 38,
         border: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
         borderTop: 'none',
