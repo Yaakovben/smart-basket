@@ -82,6 +82,31 @@ export const adminApi = {
     const response = await apiClient.get<{ data: AdminUserDetails }>(`/admin/users/${userId}/details`);
     return response.data.data;
   },
+
+  async getDbHealth(): Promise<DbHealth> {
+    const response = await apiClient.get<{ data: DbHealth }>('/admin/db-health');
+    return response.data.data;
+  },
 };
+
+export interface DbHealthCollection {
+  name: string;
+  documents: number;
+  size: number;
+  storageSize: number;
+  indexSize: number;
+}
+
+export interface DbHealth {
+  limitMB: number;
+  dataSize: number;
+  storageSize: number;
+  indexSize: number;
+  totalSize: number;
+  usedPct: number;
+  status: 'ok' | 'warning' | 'critical';
+  collectionCount: number;
+  collections: DbHealthCollection[];
+}
 
 export default adminApi;

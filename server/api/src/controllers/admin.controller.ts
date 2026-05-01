@@ -148,3 +148,61 @@ export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response) =
 
   res.json({ success: true, message: 'User deleted successfully' });
 });
+
+/**
+ * GET /api/admin/db-health
+ * מחזיר נתוני שימוש ב-MongoDB: גודל כולל, פר-קולקציה, אחוז שימוש מול הסף
+ * (ברירת מחדל 512MB של Atlas M0). שימושי לאדמין שצריך לדעת מתי להעביר plan.
+ */
+export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const conn = mongoose.connection;
+  if (!conn.db) {
+    res.status(503).json({ success: false, message: 'DB not connected' });
+    return;
+  }
+
+  // ENV variable מאפשר להגדיר סף שונה (M2=2GB, M5=5GB)
+  const limitMB = Number(process.env.MONGO_LIMIT_MB) || 512;
+  const limitBytes = limitMB * 1024 * 1024;
+
+  const stats = await conn.db.stats();
+  const dataSize = stats.dataSize as number;
+  const storageSize = stats.storageSize as number;
+  const indexSize = stats.indexSize as number;
+  const totalSize = (storageSize + indexSize);
+
+  // פירוט פר-קולקציה
+  const collections = await conn.db.listCollections().toArray();
+  const perCollection: Array<{ name: string; documents: number; size: number; storageSize: number; indexSize: number }> = [];
+  for (const c of collections) {
+    try {
+      const collStats = await conn.db.command({ collStats: c.name });
+      perCollection.push({
+        name: c.name,
+        documents: collStats.count || 0,
+        size: collStats.size || 0,
+        storageSize: collStats.storageSize || 0,
+        indexSize: collStats.totalIndexSize || 0,
+      });
+    } catch {
+      // קולקציה ייתכן ולא קיימת או שלא ניתן להריץ collStats
+    }
+  }
+  perCollection.sort((a, b) => (b.storageSize + b.indexSize) - (a.storageSize + a.indexSize));
+
+  const usedPct = (totalSize / limitBytes) * 100;
+  const status: 'ok' | 'warning' | 'critical' =
+    usedPct < 70 ? 'ok' : usedPct < 90 ? 'warning' : 'critical';
+
+  res.json({
+    success: true,
+    data: {
+      limitMB,
+      dataSize, storageSize, indexSize, totalSize,
+      usedPct: Math.round(usedPct * 10) / 10,
+      status,
+      collectionCount: collections.length,
+      collections: perCollection,
+    },
+  });
+});

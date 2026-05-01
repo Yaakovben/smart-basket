@@ -13,6 +13,7 @@ import {
   getStats,
   getUserDetails,
   deleteUser,
+  getDbHealth,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -28,6 +29,7 @@ const userIdParams = Joi.object({ userId: commonSchemas.objectId.required() });
 router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
 router.get('/stats', getStats);
+router.get('/db-health', getDbHealth);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
 router.delete('/users/:userId', validate({ params: userIdParams }), deleteUser);
 

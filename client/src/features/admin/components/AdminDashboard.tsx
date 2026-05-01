@@ -12,6 +12,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DailyFaithManager } from '../../daily-faith';
 import { PriceSyncManager } from './PriceSyncManager';
+import { DbHealthCard } from './DbHealthCard';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../../../global/hooks';
@@ -394,6 +395,9 @@ export const AdminDashboard = () => {
             isDark={isDark}
           />
         )}
+
+        {/* כרטיסיית שימוש ב-MongoDB - גודל DB ופירוט קולקציות */}
+        {!loading && <DbHealthCard isDark={isDark} />}
 
         {/* פיד פעילות אחרונה */}
         {!loading && activities.length > 0 && (
