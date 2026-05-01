@@ -1700,9 +1700,19 @@ export const HomeComponent = memo(({
           }}
         >
           <HomeIcon sx={{ fontSize: 24, color: '#0D9488' }} />
-          {/* נקודה קטנה מתחת לאייקון מסמנת "פעיל" - אלגנטי ומינימלי */}
-          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: '#0D9488', mt: 0.05 }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1, mt: 0.1 }}>
+          {/* פס מוארך מתחת לאייקון מסמן "פעיל" - אלגנטי ובולט יותר מנקודה */}
+          <Box sx={{
+            width: 18, height: 3, borderRadius: '2px',
+            backgroundImage: 'linear-gradient(90deg, #14B8A6, #0D9488)',
+            boxShadow: '0 1px 3px rgba(20,184,166,0.4)',
+            mt: 0.1,
+            animation: 'tabIndicatorIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            '@keyframes tabIndicatorIn': {
+              from: { width: 0, opacity: 0 },
+              to: { width: 18, opacity: 1 },
+            },
+          }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
             {t('home')}
           </Typography>
         </Box>
@@ -1737,9 +1747,9 @@ export const HomeComponent = memo(({
           }}
         >
           <InsightsOutlinedIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.55 }} />
-          {/* spacer במקום הנקודה - שומר על אותו גובה כמו הטאב הפעיל */}
-          <Box sx={{ width: 4, height: 4, mt: 0.05 }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary', opacity: 0.65, letterSpacing: 0.2, lineHeight: 1, mt: 0.1 }}>
+          {/* spacer בגובה הפס של הטאב הפעיל - שומר על אותה היררכיה */}
+          <Box sx={{ width: 18, height: 3, mt: 0.1 }} />
+          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary', opacity: 0.65, letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
             {t('insights')}
           </Typography>
         </Box>
@@ -1775,6 +1785,12 @@ export const HomeComponent = memo(({
             outline: 'none',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
             border: 'none',
+            // אנימציית pulse עדינה כשבמנוחה - מושכת את העין בלי להציק
+            animation: 'fabIdlePulse 2.6s ease-in-out infinite',
+            '@keyframes fabIdlePulse': {
+              '0%, 100%': { transform: 'scale(1)', boxShadow: '0 10px 28px rgba(20,184,166,0.5), 0 4px 10px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.3)' },
+              '50%': { transform: 'scale(1.04)', boxShadow: '0 14px 36px rgba(20,184,166,0.65), 0 5px 12px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.35)' },
+            },
             boxShadow: [
               '0 10px 28px rgba(20,184,166,0.5)',
               '0 4px 10px rgba(0,0,0,0.18)',
