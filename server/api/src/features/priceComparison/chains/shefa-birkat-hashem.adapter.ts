@@ -1,21 +1,12 @@
-import { createPublishedPricesAdapter } from './publishedPrices.factory';
+import { createBinaAdapter } from './bina.factory';
 
 /**
- * שפע ברכת השם — publishedprices.co.il.
- * שם המשתמש המדויק לא ידוע ולכן מנסים מספר מועמדים נפוצים. אם כולם
- * נכשלים, הרשת תופיע ב-UI כ"אין נתונים היום" ולא תיעלם.
+ * שפע ברכת השם - פורטל binaprojects.com (לא publishedprices.co.il).
+ * Subdomain: shefabirkathashem.binaprojects.com, ChainId רשמי: 7290058134977.
  */
-export const shefaBirkatHashemAdapter = createPublishedPricesAdapter({
+export const shefaBirkatHashemAdapter = createBinaAdapter({
   chainId: 'shefa_birkat_hashem',
   chainName: 'שפע ברכת השם',
-  username: [
-    'ShefaBirkatHashem',
-    'shefa_birkat_hashem',
-    'ShefaBirkatHaShem',
-    'Shefa_Birkat_Hashem',
-    'ShefaBerachatHashem',
-    'shefa',
-    'Shefa',
-    'BirkatHashem',
-  ],
+  urlPrefix: 'shefabirkathashem',
+  binaChainId: '7290058134977',
 });

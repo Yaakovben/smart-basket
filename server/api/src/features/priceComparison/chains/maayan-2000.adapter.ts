@@ -1,22 +1,12 @@
-import { createPublishedPricesAdapter } from './publishedPrices.factory';
+import { createBinaAdapter } from './bina.factory';
 
 /**
- * מעיין 2000 — publishedprices.co.il.
- * שם המשתמש המדויק לא ידוע ולכן מנסים מספר מועמדים נפוצים בסדר עד שאחד
- * מצליח. אם כולם נכשלים, הרשת תופיע ב-UI כ"אין נתונים היום" ולא תיעלם.
- *
- * אם תגלה את ה-username הנכון בעתיד - השאר אותו ראשון ברשימה.
+ * מעיין 2000 - פורטל binaprojects.com (לא publishedprices.co.il).
+ * Subdomain: maayan2000.binaprojects.com, ChainId רשמי: 7290058159628.
  */
-export const maayan2000Adapter = createPublishedPricesAdapter({
+export const maayan2000Adapter = createBinaAdapter({
   chainId: 'maayan_2000',
   chainName: 'מעיין 2000',
-  username: [
-    'Maayan2000',
-    'maayan2000',
-    'Maayan_2000',
-    'MaayanLtd',
-    'Mayan2000',
-    'maayan',
-    'Maayan',
-  ],
+  urlPrefix: 'maayan2000',
+  binaChainId: '7290058159628',
 });

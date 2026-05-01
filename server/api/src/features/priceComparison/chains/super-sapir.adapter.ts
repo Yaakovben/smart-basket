@@ -1,19 +1,12 @@
-import { createPublishedPricesAdapter } from './publishedPrices.factory';
+import { createBinaAdapter } from './bina.factory';
 
 /**
- * סופר ספיר — publishedprices.co.il.
- * שם המשתמש המדויק לא ידוע ולכן מנסים מספר מועמדים נפוצים. אם כולם
- * נכשלים, הרשת תופיע ב-UI כ"אין נתונים היום" ולא תיעלם.
+ * סופר ספיר - פורטל binaprojects.com (לא publishedprices.co.il).
+ * Subdomain: supersapir.binaprojects.com, ChainId רשמי: 7290058156016.
  */
-export const superSapirAdapter = createPublishedPricesAdapter({
+export const superSapirAdapter = createBinaAdapter({
   chainId: 'super_sapir',
   chainName: 'סופר ספיר',
-  username: [
-    'SuperSapir',
-    'super_sapir',
-    'Super_Sapir',
-    'sapir',
-    'Sapir',
-    'supersapir',
-  ],
+  urlPrefix: 'supersapir',
+  binaChainId: '7290058156016',
 });

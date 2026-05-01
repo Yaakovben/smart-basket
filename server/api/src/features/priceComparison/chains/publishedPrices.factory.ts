@@ -230,7 +230,7 @@ async function downloadFile(client: AxiosInstance, filename: string): Promise<Bu
   return Buffer.from(res.data);
 }
 
-function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
+export function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
   let xml: string;
   if (filename.endsWith('.gz')) {
     xml = gunzipSync(buf).toString('utf-8');
@@ -301,7 +301,7 @@ function parseXmlBuffer(buf: Buffer, filename: string): ChainPriceItem[] {
 // פרסור של קובץ Stores*.xml בפורמטים השונים שהרשתות מפרסמות.
 // שדות נפוצים: STORE/Store, CHAINID, STOREID, STORENAME, ADDRESS, CITY, ZIPCODE.
 // lat/lng לעתים מופיעים בשדות Latitude/Longitude (בחלק קטן מהרשתות).
-function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
+export function parseStoresXml(buf: Buffer, filename: string): ChainStoreItem[] {
   let xml: string;
   if (filename.endsWith('.gz')) {
     xml = gunzipSync(buf).toString('utf-8');
