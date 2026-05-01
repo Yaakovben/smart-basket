@@ -288,7 +288,10 @@ export const AppRouter = () => {
     <>
       <Suspense fallback={<PageLoader />}>
       <Box sx={{
-        '@keyframes pageIn': { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+        // אנימציית fade בלבד (ללא transform) - transform על אב היה גורם
+        // ל-position:fixed של הבר/FAB להיתפס לאב הזה במקום לויאופורט,
+        // מה שגרם לבר להופיע גבוה ולחזור באנימציה איטית בכל גלילה.
+        '@keyframes pageIn': { from: { opacity: 0 }, to: { opacity: 1 } },
         animation: 'pageIn 0.25s ease-out',
       }}>
       <Routes>
