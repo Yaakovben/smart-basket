@@ -433,15 +433,17 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
 // אלה הם הסניפים מה-seed הידני המקורי שאינם מאומתים.
 export const cleanupUnverifiedBranches = asyncHandler(async (_req: AuthRequest, res: Response) => {
   try {
+    // מוחק את כל הסניפים מ-seed הידני (manual-*) כי הם היו ניחושים לא מאומתים.
+    // משאיר osm-* (מ-OpenStreetMap) ו-storeId מהפורטלים (Bina/Cerberus) שהם נתונים אמיתיים.
     const result = await Branch.deleteMany({
-      storeId: { $not: { $regex: '^(osm-|manual-)' } },
+      storeId: { $regex: '^manual-' },
     });
     invalidateBranchCache();
     invalidateAllUsers();
-    logger.info(`[branches-cleanup] removed ${result.deletedCount} unverified branches`);
+    logger.info(`[branches-cleanup] removed ${result.deletedCount} manual seed branches`);
     res.json({
       success: true,
-      message: `נמחקו ${result.deletedCount} סניפים לא-מאומתים`,
+      message: `נמחקו ${result.deletedCount} סניפים ידניים לא-מאומתים`,
       deletedCount: result.deletedCount,
     });
   } catch (err) {
