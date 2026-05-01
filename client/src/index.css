@@ -17,16 +17,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   /* Background only applies after app loads (set by app-loaded class from JS) */
   direction: rtl;
-  width: 100%;
-  /* fixed-position נעולה לוויפורט - תיקון לבעיית iOS PWA שבה body נע
-     בעקבות רובר-באנד וגורם לבר התחתון "ליפול" עם הזמן */
+  /* position: fixed עם top:0+bottom:0 (ללא height!) - מאלץ את body להיות
+     בדיוק בגובה הויאופורט. height: 100svh היה מבטל את bottom:0 וגורם
+     ל-body להיות קצר מהויאופורט, מה שמיקם את הבר ב-bottom:0 של body
+     גבוה יותר מתחתית המסך. */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100%;
-  height: 100svh; /* תואם ל-html - יציב ולא זז בגרירה */
   /* כל גלילה מתבצעת בתוך הקונטיינרים הפנימיים (contentRef וכד') - לא ב-body */
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
