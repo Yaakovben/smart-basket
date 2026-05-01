@@ -112,25 +112,39 @@ async function resolveAndDownload(
   return Buffer.from(fileRes.data as ArrayBuffer);
 }
 
-// מחלץ את חתימת התאריך משם-קובץ (yyyymmddhhmm). שימושי לאיתור התאריך
-// המאוחר ביותר ולקיבוץ לפי תאריך מבלי להסתמך על השדה DateFile (פורמט עברי).
+// מחלץ את חתימת התאריך משם-קובץ (yyyymmddhhmm).
 function extractDateStamp(filename: string): string {
   const m = filename.match(/(\d{12})\.(?:gz|xml)$/i);
   return m ? m[1] : '';
 }
 
-// מחזיר את כל הקבצים שתואמים לדפוס + נמצאים בתאריך-חותמת המאוחר ביותר.
-// הפורטל לעתים כולל גם קבצים מימים קודמים בו-זמנית - אנחנו רוצים רק את הריצה
-// הטרייה כדי לא לעבד אותו סניף פעמיים.
-function pickLatestBatch(entries: BinaFileEntry[], pattern: RegExp): string[] {
+// מחלץ את storeId משם-קובץ - תבנית: PriceFull{chainId}-{storeId}-{stamp}.gz
+function extractStoreIdFromName(filename: string): string {
+  const m = filename.match(/-(\d+)-\d{12}\.(?:gz|xml)$/i);
+  return m ? m[1] : '';
+}
+
+// מחזיר את הקובץ הטרי ביותר לכל סניף בנפרד (PriceFull). לקובץ Stores
+// יש בד"כ אחד לכל הרשת - שם נחזיר את הטרי הכולל.
+function pickLatestPerStore(entries: BinaFileEntry[], pattern: RegExp): string[] {
   const matches = entries
     .map(e => e.FileNm || '')
     .filter(name => name && pattern.test(name));
   if (matches.length === 0) return [];
-  const stamps = matches.map(extractDateStamp).filter(Boolean);
-  if (stamps.length === 0) return matches; // אין דרך לסנן לפי תאריך - ניקח הכל
-  const latestStamp = stamps.sort().reverse()[0];
-  return matches.filter(name => extractDateStamp(name) === latestStamp);
+  const latestPerStore = new Map<string, { name: string; stamp: string }>();
+  for (const name of matches) {
+    const storeId = extractStoreIdFromName(name);
+    const stamp = extractDateStamp(name);
+    if (!stamp) continue;
+    // אם אין storeId (קובץ סניף-לא-ספציפי כמו StoresFull) - storeId="" וכל הקבצים
+    // יתחרו על אותו slot - לבחירת הטרי ביותר.
+    const key = storeId || 'global';
+    const existing = latestPerStore.get(key);
+    if (!existing || stamp > existing.stamp) {
+      latestPerStore.set(key, { name, stamp });
+    }
+  }
+  return Array.from(latestPerStore.values()).map(v => v.name);
 }
 
 export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
@@ -144,7 +158,7 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
     async fetchLatestPrices(): Promise<ChainFetchResult> {
       try {
         const list = await listFiles(baseUrl, binaChainId, FILE_TYPE_PRICE_FULL);
-        const fileNames = pickLatestBatch(list, /PriceFull.*\.(gz|xml)$/i);
+        const fileNames = pickLatestPerStore(list, /PriceFull.*\.(gz|xml)$/i);
         if (fileNames.length === 0) {
           return { chainId, chainName, items: [], fetchedFiles: 0, error: 'no_price_file_found' };
         }
@@ -181,7 +195,7 @@ export function createBinaAdapter(opts: BinaOptions): ChainAdapter {
       try {
         const list = await listFiles(baseUrl, binaChainId, FILE_TYPE_STORES);
         // קבצי Stores בדרך כלל יחיד לכל הרשת - אם יש כמה, ניקח את העדכני.
-        const fileNames = pickLatestBatch(list, /Stores(Full)?.*\.(gz|xml)$/i);
+        const fileNames = pickLatestPerStore(list, /Stores(Full)?.*\.(gz|xml)$/i);
         if (fileNames.length === 0) {
           return { chainId, chainName, stores: [], fetchedFiles: 0, error: 'no_stores_file_found' };
         }

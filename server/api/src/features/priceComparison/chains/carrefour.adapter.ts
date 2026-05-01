@@ -61,18 +61,32 @@ function extractStamp(filename: string): string {
   return m ? m[1] : '';
 }
 
-// בוחר את כל קבצי PriceFull מהתאריך-זמן האחרון. הפורטל מפרסם ריבוי
-// קבצים פר-סניף + ריבוי תאריכים - אנחנו רוצים רק הריצה הטרייה כדי לא
-// להוריד את אותו סניף פעמיים.
+// מחלץ את חתימת הסניף משם-קובץ - תבנית: PriceFull{chainId}-{storeId}-{stamp}.gz
+function extractStoreId(filename: string): string {
+  const m = filename.match(/PriceFull\d+-(\d+)-\d{12}\.(?:gz|xml)$/i);
+  return m ? m[1] : '';
+}
+
+// בוחר את הקובץ הטרי ביותר לכל סניף בנפרד. הפורטל מפרסם 1+ קובץ פר-סניף
+// בכל יום (5 בבוקר עד 23:00) - אנחנו רוצים רק את הטרי לכל סניף, אבל את
+// כל הסניפים. אחרת נפספס סניפים שפרסמו בשעה אחרת.
 function pickLatestPriceFullBatch(files: CarrefourFile[]): string[] {
   const matches = files
     .map(f => f.name)
     .filter(name => /^PriceFull\d+/i.test(name) && /\.(gz|xml)$/i.test(name));
   if (matches.length === 0) return [];
-  const stamps = matches.map(extractStamp).filter(Boolean);
-  if (stamps.length === 0) return matches;
-  const latestStamp = stamps.sort().reverse()[0];
-  return matches.filter(n => extractStamp(n) === latestStamp);
+  // קיבוץ לפי storeId, בחירת stamp המאוחר ביותר לכל סניף
+  const latestPerStore = new Map<string, { name: string; stamp: string }>();
+  for (const name of matches) {
+    const storeId = extractStoreId(name);
+    const stamp = extractStamp(name);
+    if (!storeId || !stamp) continue;
+    const existing = latestPerStore.get(storeId);
+    if (!existing || stamp > existing.stamp) {
+      latestPerStore.set(storeId, { name, stamp });
+    }
+  }
+  return Array.from(latestPerStore.values()).map(v => v.name);
 }
 
 function pickLatestStoresFile(files: CarrefourFile[]): string | null {
