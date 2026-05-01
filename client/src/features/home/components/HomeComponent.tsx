@@ -1640,10 +1640,7 @@ export const HomeComponent = memo(({
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          // padding-bottom מינימלי - רק מספיק להגנה על home indicator.
-          // אם יש safe-area >= 20, מכניסים חצי ממנו (כדי שהבר לא יהיה גבוה מדי)
-          // אחרת 4px קבוע. כך הבר מתחיל ממש מהתחתית של המסך.
-          pb: 'max(4px, calc(env(safe-area-inset-bottom) / 2))',
+          pb: 'env(safe-area-inset-bottom)',
           boxShadow: isDark
             ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
             : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
