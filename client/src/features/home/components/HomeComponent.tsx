@@ -1751,7 +1751,7 @@ export const HomeComponent = memo(({
         sx={{
           // fixed - נעול לויאופורט, זהה לבר.
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 12px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
