@@ -24,9 +24,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import SavingsIcon from '@mui/icons-material/Savings';
-import NearMeIcon from '@mui/icons-material/NearMe';
-import MapIcon from '@mui/icons-material/Map';
-import DirectionsIcon from '@mui/icons-material/Directions';
 import type { PriceChainTotal, PriceMatch, NearestBranch } from '../types/priceComparison.types';
 import { useSettings } from '../../../global/context/SettingsContext';
 
