@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Box, Typography, TextField, Button, IconButton, Card, Tabs, Tab,
   Chip, Avatar, Badge, InputAdornment, Alert, CircularProgress
@@ -1619,13 +1620,14 @@ export const HomeComponent = memo(({
       />
     </Box>
 
-      {/* ===== Bottom Navigation =====
-          קבוע בתחתית, נעול לחלוטין. ללא wrapper מקיף שיגרום לבעיות
-          (transform/willChange/filter/backdrop-filter/perspective על אב יוצרים
-          containing block חדש וגורמים ל-position:fixed להתנהג כ-absolute).
-          padding-bottom: env(safe-area-inset-bottom) מעל ה-home indicator של iPhone.
-          mask-image חותך אליפסה במרכז העליון — שם יושב ה-FAB ומסביבו רווח שקוף. */}
-      {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
+      {/* ===== Bottom Navigation + FAB ב-Portal ל-document.body =====
+          רינדור ישירות ל-body עוקף את כל ההיררכיה של ה-React tree -
+          אין יותר ancestor עם transform/filter/will-change/contain שיכול
+          ליצור containing block חדש ל-position:fixed. זו הדרך הבטוחה
+          ביותר להבטיח שהבר באמת fixed-to-viewport ולא זז בכלל. */}
+      {!showMenu && !showJoin && !showCreate && !showCreateGroup && createPortal(
+        <>
+        {/* Bar */}
       <Box
         sx={{
           // fixed - נעול לויאופורט. הבר נמצא מחוץ ל-root Box כך שאין ancestor
@@ -1741,15 +1743,8 @@ export const HomeComponent = memo(({
         </Box>
       </Box>
       </Box>
-      )}
 
-      {/* ===== FAB (כפתור +) =====
-          ממורכז אופקית. מרכזו על הקצה העליון של הבר - חצי מעל הבר וחצי
-          בתוך החתך (radial-gradient mask ברדיוס 43px). ה-FAB ברדיוס 28
-          → 15px רווח שקוף סביבו (טבעת שקופה דרכה רואים את התוכן). יוצר
-          אפקט "floating" קלאסי של אפליקציות מודרניות. ללא border, רק
-          gradient + shadow רב-שכבתי. */}
-      {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
+      {/* FAB - באותו portal */}
       <Box
         sx={{
           // fixed - נעול לויאופורט, זהה לבר.
@@ -1796,6 +1791,8 @@ export const HomeComponent = memo(({
           }} />
         </Box>
       </Box>
+        </>,
+        document.body
       )}
     </>
   );
