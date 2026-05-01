@@ -91,7 +91,8 @@ export function useDailyFaith(enabled: boolean) {
     if (!ALWAYS_SHOW && getSessionNumber() < MIN_SESSION_FOR_FAITH) return;
 
     let cancelled = false;
-    // השהייה קצרה כדי לא להתנגש עם טעינת המסך הראשי
+    // השהייה של 10 שניות לאחר פתיחת האפליקציה - נותן למשתמש זמן לראות
+    // את המסך הראשי ולא להיות מופצץ מיד בפופאפ.
     const timer = setTimeout(() => {
       // שולחים לשרת את המזהים שכבר ראינו בשבועיים האחרונים, כדי שיחזיר משפט שלא נראה.
       // getAll איננו זמין ל-non-admin, ולכן כל הסינון נעשה בשרת.
@@ -114,7 +115,7 @@ export function useDailyFaith(enabled: boolean) {
           }
         })
         .catch(() => {/* שקט */});
-    }, 1500);
+    }, 10_000);
 
     return () => {
       cancelled = true;
