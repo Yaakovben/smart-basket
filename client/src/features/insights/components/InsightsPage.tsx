@@ -109,23 +109,43 @@ export const InsightsPage = memo(() => {
     if (tab !== 'price') return;
     // השהיה של 300ms - מעבר מהיר בין רשימות/שינויי מיקום לא יפוצצו את השרת בפניות חופפות.
     // הניקוי בתחילת הטיימר מבטל בקשה קודמת אם הערך השתנה.
-    const timer = window.setTimeout(() => {
-      setPriceLoading(true);
-      setPriceError(false);
-      priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined)
-        .then(res => {
+    let cancelled = false;
+    // ניסיון יחיד עם retry. השרת ב-Render free נרדם אחרי 15 דק' חוסר פעילות
+    // ולוקח עד דקה להתעורר. במקום לזרוק שגיאה מיד - מחכים 4ש' ומנסים שוב.
+    const fetchWithRetry = async (): Promise<void> => {
+      try {
+        const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined);
+        if (cancelled) return;
+        setPriceData(res);
+        writeCache(PRICE_CACHE_KEY, res);
+        if (selectedListId === null && res?.lists && res.lists.length > 0) {
+          setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
+        }
+      } catch {
+        if (cancelled) return;
+        // ניסיון שני אחרי 4 שניות - השרת היה קר, עכשיו אמור להיות ער
+        await new Promise(r => setTimeout(r, 4000));
+        if (cancelled) return;
+        try {
+          const res = await priceComparisonApi.getComparison(selectedListId ?? undefined, userLocation ?? undefined);
+          if (cancelled) return;
           setPriceData(res);
           writeCache(PRICE_CACHE_KEY, res);
-          // מעדכנים את allUserLists רק כשאין listId ספציפי - ככה כל רשימות המשתמש
-          // נשמרות כששמים סינון ולא מוחלפות בתוצאה המצומצמת של רשימה אחת.
           if (selectedListId === null && res?.lists && res.lists.length > 0) {
             setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
           }
-        })
-        .catch(() => { setPriceError(true); })
-        .finally(() => setPriceLoading(false));
+        } catch {
+          if (!cancelled) setPriceError(true);
+        }
+      }
+    };
+
+    const timer = window.setTimeout(() => {
+      setPriceLoading(true);
+      setPriceError(false);
+      fetchWithRetry().finally(() => { if (!cancelled) setPriceLoading(false); });
     }, 300);
-    return () => window.clearTimeout(timer);
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
