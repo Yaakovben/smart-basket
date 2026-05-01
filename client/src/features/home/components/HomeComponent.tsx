@@ -253,32 +253,6 @@ const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) =
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
 
-  // ===== VisualViewport lock =====
-  // ב-iOS, position:fixed מעוגן ל-Visual Viewport שזז זמנית בגרירה (rubber-band).
-  // מאזין לזיזות וחושב הפרש בין layout viewport ל-visual viewport, מחיל אותו
-  // כ-CSS variable שהבר וה-FAB משתמשים בו ב-translateY כדי להישאר נעולים.
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    let raf = 0;
-    const update = () => {
-      const shift = window.innerHeight - vv.height - vv.offsetTop;
-      document.documentElement.style.setProperty('--vv-shift', `${shift}px`);
-    };
-    const onChange = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
-    };
-    update();
-    vv.addEventListener('scroll', onChange);
-    vv.addEventListener('resize', onChange);
-    return () => {
-      cancelAnimationFrame(raf);
-      vv.removeEventListener('scroll', onChange);
-      vv.removeEventListener('resize', onChange);
-    };
-  }, []);
-
   useEffect(() => {
     // תנאי סף בסיסיים: רק בדפדפן ולא נדחה לצמיתות
     if (!isInBrowser()) return;
@@ -762,7 +736,7 @@ export const HomeComponent = memo(({
 
   return (
     <>
-    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ height: { xs: '100svh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
         background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
@@ -1654,7 +1628,7 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: 0, left: 0, right: 0,
           zIndex: 1000,
           bgcolor: 'background.paper',
@@ -1776,7 +1750,7 @@ export const HomeComponent = memo(({
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: 'calc(env(safe-area-inset-bottom) + 24px)',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
@@ -1800,7 +1774,8 @@ export const HomeComponent = memo(({
             touchAction: 'manipulation',
             outline: 'none',
             background: 'linear-gradient(135deg, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
-            border: 'none',
+            border: '3px solid',
+            borderColor: 'background.default',
             boxShadow: [
               '0 10px 28px rgba(20,184,166,0.5)',
               '0 4px 10px rgba(0,0,0,0.18)',
