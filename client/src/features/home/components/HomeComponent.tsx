@@ -1779,8 +1779,11 @@ export const HomeComponent = memo(({
       <Box
         sx={{
           // fixed - נעול לויאופורט, זהה לבר.
+          // bottom: max של 34px (גובה מינימום) ו-safe-area של iOS.
+          // ב-Android safe-area=0 → בלי max ה-FAB יושב למעלה מידי על בר התחתון
+          // של המערכת. ה-34px מבטיח clearance מינימלי בכל פלטפורמה.
           position: 'fixed',
-          bottom: 'env(safe-area-inset-bottom)',
+          bottom: 'max(34px, env(safe-area-inset-bottom))',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
