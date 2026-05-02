@@ -271,18 +271,19 @@ export const AppRouter = () => {
     }
   };
 
-  // handlers שלא תופסים שגיאות - useHome מטפל ב-UI (ספינר, טוסט, שגיאה)
-  const handleCreateList = async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
+  // handlers שלא תופסים שגיאות - useHome מטפל ב-UI (ספינר, טוסט, שגיאה).
+  // useCallback - פרופים יציבים מונעים re-render של HomePage memo'd ושל סבים.
+  const handleCreateList = useCallback(async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
     await createList(list);
-  };
+  }, [createList]);
 
-  const handleDeleteList = async (id: string) => {
+  const handleDeleteList = useCallback(async (id: string) => {
     await deleteList(id);
-  };
+  }, [deleteList]);
 
-  const handleEditList = async (list: List) => {
+  const handleEditList = useCallback(async (list: List) => {
     await updateList(list);
-  };
+  }, [updateList]);
 
   return (
     <>
