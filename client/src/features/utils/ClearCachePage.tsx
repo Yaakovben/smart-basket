@@ -57,14 +57,14 @@ export const ClearCachePage = () => {
         updateStep('caches', 'error', String(e));
       }
 
-      // ניקוי localStorage (שימור טוקנים + גרסה כדי למנוע רענון נוסף ע"י App.tsx)
+      // ניקוי localStorage (שימור טוקנים בלבד כדי למנוע התנתקות).
+      // cached_user/cached_lists/cached_insights/cached_prices ויתר ה-cache נמחק
+      // לחלוטין - המשתמש יקבל נתונים טריים בכניסה הבאה.
       updateStep('storage', 'running');
       try {
-        // שמירת טוקנים, משתמש במטמון (למניעת התנתקות אחרי הרענון) וגרסה (למניעת רענון נוסף ב-App.tsx)
         const preserve: Record<string, string | null> = {
           accessToken: localStorage.getItem('accessToken'),
           refreshToken: localStorage.getItem('refreshToken'),
-          cached_user: localStorage.getItem('cached_user'),
           app_build_version: localStorage.getItem('app_build_version'),
         };
         localStorage.clear();
@@ -73,6 +73,20 @@ export const ClearCachePage = () => {
       } catch (e) {
         updateStep('storage', 'error', String(e));
       }
+
+      // ניקוי IndexedDB (שם apiClient משכפל את הטוקנים ל-iOS Safari ITP +
+      // מאחסן insights cache ועוד). מוחקים את כל ה-DBs.
+      try {
+        if ('indexedDB' in window && indexedDB.databases) {
+          const dbs = await indexedDB.databases();
+          await Promise.all(dbs.map(db => db.name ? new Promise<void>(resolve => {
+            const req = indexedDB.deleteDatabase(db.name!);
+            req.onsuccess = () => resolve();
+            req.onerror = () => resolve();
+            req.onblocked = () => resolve();
+          }) : Promise.resolve()));
+        }
+      } catch { /* IDB לא זמין - מתעלמים */ }
 
       // ניקוי sessionStorage
       updateStep('session', 'running');
