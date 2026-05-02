@@ -47,7 +47,9 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       .then(stats => setServerStats(stats))
       .catch(err => { if (import.meta.env.DEV) console.error('admin stats:', err); /* not fatal */ });
 
-    adminApi.getLoginActivity(1, 100)
+    // 20 פעילויות מספיקות לתצוגה הראשונית (פיד אחרון). אם המשתמש רוצה
+    // היסטוריה מלאה - יש דף נפרד. הקטנת מ-100 ל-20 = פי 5 מהיר.
+    adminApi.getLoginActivity(1, 20)
       .then(activityData => setActivities(
         activityData.activities
           .map(convertApiActivity)
@@ -56,17 +58,11 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       .catch(err => { if (import.meta.env.DEV) console.error('admin activity:', err); /* not fatal */ });
   }, [t]);
 
-  // טעינה בעלייה + רענון אוטומטי כשחוזרים לטאב
+  // טעינה ראשונית בלבד. הסרנו רענון אוטומטי על visibilitychange כי זה
+  // היה גורם לטעינה מחדש בכל פעם שאדמין חוזר מטאב אחר → עומס מיותר.
+  // אם אדמין רוצה לרענן יש כפתור Refresh במסך.
   useEffect(() => {
     fetchData();
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchData();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [fetchData]);
 
   // משתמשים עם סטטיסטיקות התחברות
