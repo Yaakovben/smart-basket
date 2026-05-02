@@ -313,14 +313,34 @@ export const convertApiList = (apiList: ApiList): List => ({
 });
 
 // ===== useLists Hook =====
+// קאש של רשימות ב-localStorage לרינדור מיידי בכניסה - 7 ימים תוקף.
+// ככה משתמש שחוזר רואה את הרשימות מיד בלי המתנה לרשת או סקלטון.
+const LISTS_CACHE_KEY = 'cached_lists';
+const LISTS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+function readListsCache(): ApiList[] | null {
+  try {
+    const raw = localStorage.getItem(LISTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed._cachedAt || Date.now() - parsed._cachedAt > LISTS_CACHE_TTL) return null;
+    return parsed.lists as ApiList[];
+  } catch { return null; }
+}
+function writeListsCache(lists: ApiList[]): void {
+  try { localStorage.setItem(LISTS_CACHE_KEY, JSON.stringify({ lists, _cachedAt: Date.now() })); }
+  catch { /* quota - בלעדינו */ }
+}
+
 export function useLists(user: User | null, initialLists?: ApiList[] | null, authLoading?: boolean) {
-  // שימוש ברשימות שנטענו מראש לרינדור מיידי
-  const [lists, setLists] = useState<List[]>(() =>
-    initialLists ? initialLists.map(l => convertApiList(l)) : []
-  );
-  // loading=true מראש אם אין רשימות מראש (initialLists לא הגיעו עדיין) -
-  // ככה ה-UI יציג סקלטון/לואדר במקום "אין רשימות" שמטעה לפני שטוענים.
-  const [loading, setLoading] = useState(() => !initialLists);
+  // עדיפות לרינדור מיידי: initialLists (נטען מקבילית) > localStorage cache > [].
+  const [lists, setLists] = useState<List[]>(() => {
+    if (initialLists) return initialLists.map(l => convertApiList(l));
+    const cached = readListsCache();
+    if (cached) return cached.map(l => convertApiList(l));
+    return [];
+  });
+  // loading=true רק אם באמת אין כלום להציג. אם יש cache, מציגים אותו ומרעננים ברקע.
+  const [loading, setLoading] = useState(() => !initialLists && !readListsCache());
   const [fetchError, setFetchError] = useState(false);
   // מעקב איזה משתמש כבר אותחל עם נתונים מראש
   const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);
@@ -331,6 +351,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     try {
       const apiLists = await listsApi.getLists();
       setLists(apiLists.map(l => convertApiList(l)));
+      writeListsCache(apiLists);
     } catch {
       setFetchError(true);
     } finally {
@@ -338,10 +359,11 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     }
   }, []);
 
-  // סנכרון עם נתונים מראש כשהם מגיעים מטעינה מקבילית
+  // סנכרון עם נתונים מראש כשהם מגיעים מטעינה מקבילית - וגם שמירה לקאש
   useEffect(() => {
     if (initialLists && !initializedForRef.current) {
       setLists(initialLists.map(l => convertApiList(l)));
+      writeListsCache(initialLists);
       initializedForRef.current = '__initial__';
     }
   }, [initialLists]);
