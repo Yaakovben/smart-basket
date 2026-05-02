@@ -170,7 +170,16 @@ export function useAuth() {
 
         // שמירת משתמש לטעינה הבאה
         try { localStorage.setItem('cached_user', JSON.stringify({ ...profile, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
-        setUser(profile);
+        // עדכון user רק אם השתנה - מונע re-render מיותר אחרי טעינה מ-cache.
+        // המשתמש כבר מוצג מהקאש, אם השרת מחזיר את אותו פרופיל אין סיבה לרנדר שוב.
+        setUser(prev => {
+          if (prev && prev.id === profile.id && prev.name === profile.name &&
+              prev.email === profile.email && prev.isAdmin === profile.isAdmin &&
+              prev.avatarColor === profile.avatarColor && prev.avatarEmoji === profile.avatarEmoji) {
+            return prev;
+          }
+          return profile;
+        });
 
         // שמירת נתונים שנטענו מראש לשימוש hooks
         setInitialData({
