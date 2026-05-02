@@ -219,6 +219,7 @@ ListCard.displayName = 'ListCard';
 // ===== ממשק Props =====
 interface HomePageProps {
   lists: List[];
+  listsLoading?: boolean;
   listsFetchError?: boolean;
   user: User;
   onSelectList: (list: List) => void;
@@ -408,7 +409,7 @@ const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => string }) =
 PwaInstallPrompt.displayName = 'PwaInstallPrompt';
 
 export const HomeComponent = memo(({
-  lists, listsFetchError = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
+  lists, listsLoading = false, listsFetchError = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
@@ -883,6 +884,30 @@ export const HomeComponent = memo(({
               <RefreshIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               <span>{t('tryAgain')}</span>
             </Button>
+          </Box>
+        ) : listsLoading && display.length === 0 ? (
+          // סקלטון בזמן טעינת רשימות - מונע הבזק של "אין רשימות" לפני שהנתונים מגיעים
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+            {[1, 2, 3].map((i) => (
+              <Box key={i} sx={{
+                p: 2, borderRadius: 3,
+                bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFF',
+                border: '1px solid', borderColor: 'divider',
+                display: 'flex', alignItems: 'center', gap: 2,
+                animation: 'skelPulse 1.4s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+                '@keyframes skelPulse': {
+                  '0%, 100%': { opacity: 0.6 },
+                  '50%': { opacity: 1 },
+                },
+              }}>
+                <Box sx={{ width: 48, height: 48, borderRadius: '50%', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }} />
+                <Box sx={{ flex: 1 }}>
+                  <Box sx={{ width: '60%', height: 16, borderRadius: 1, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', mb: 0.75 }} />
+                  <Box sx={{ width: '40%', height: 12, borderRadius: 1, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }} />
+                </Box>
+              </Box>
+            ))}
           </Box>
         ) : display.length === 0 ? (
           // ממלא את כל הגובה כדי שהאייקון יהיה במרכז אנכי במסך, לא מעל באמצע

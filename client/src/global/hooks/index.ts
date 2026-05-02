@@ -318,7 +318,9 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   const [lists, setLists] = useState<List[]>(() =>
     initialLists ? initialLists.map(l => convertApiList(l)) : []
   );
-  const [loading, setLoading] = useState(false);
+  // loading=true מראש אם אין רשימות מראש (initialLists לא הגיעו עדיין) -
+  // ככה ה-UI יציג סקלטון/לואדר במקום "אין רשימות" שמטעה לפני שטוענים.
+  const [loading, setLoading] = useState(() => !initialLists);
   const [fetchError, setFetchError] = useState(false);
   // מעקב איזה משתמש כבר אותחל עם נתונים מראש
   const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);

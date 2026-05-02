@@ -129,7 +129,7 @@ export const AppRouter = () => {
   // hooks חייבים להיקרא לפני כל return מותנה
   const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
-  const { lists, fetchError: listsFetchError, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
+  const { lists, fetchError: listsFetchError, loading: listsLoading, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
   const { message: toast, toastType, toastKey, onUndo, showToast, hideToast } = useToast();
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
@@ -308,6 +308,7 @@ export const AppRouter = () => {
             <ProtectedRoute user={user}>
               <HomePage
                 lists={lists}
+                listsLoading={listsLoading}
                 listsFetchError={listsFetchError || initialData.connectionError}
                 user={user!}
                 onSelectList={(list: List) => navigate(`/list/${list.id}`)}
