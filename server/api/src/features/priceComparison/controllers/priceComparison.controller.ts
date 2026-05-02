@@ -13,40 +13,9 @@ import type { AuthRequest } from '../../../types';
 // מצב סנכרון - מונע ריצות חופפות
 let adminSyncInProgress = false;
 
-// Lazy auto-sync: כל בקשה מ-user בודק טריות ומפעיל סנכרון ברקע אם ישן.
-// פותר את הבעיה ש-Render free tier ישן והקרון לא רץ - כל בקשת user מעירה אותו.
-const LAZY_SYNC_THRESHOLD_HOURS = 12;
-let lazyAutoSyncInProgress = false;
-async function maybeTriggerLazySync(): Promise<void> {
-  if (lazyAutoSyncInProgress || adminSyncInProgress) return;
-  try {
-    const latest = await PriceDAL.findOne({}, { sort: { updatedAt: -1 } });
-    if (!latest) return; // אין נתונים - הסנכרון startup יטפל
-    const ageH = (Date.now() - new Date(latest.updatedAt).getTime()) / 3_600_000;
-    if (ageH < LAZY_SYNC_THRESHOLD_HOURS) return;
-    lazyAutoSyncInProgress = true;
-    logger.info(`[lazy-sync] Data is ${ageH.toFixed(1)}h old, triggering background sync`);
-    // ברקע - לא חוסם את הבקשה הנוכחית של המשתמש
-    void (async () => {
-      const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      try {
-        const results = await syncAllChains();
-        const summary = results.map(r => `${r.chainId}:${r.upserted}`).join(', ');
-        logger.info(`[lazy-sync] Completed: ${summary}`);
-        invalidateAllUsers();
-      } catch (err) {
-        logger.error('[lazy-sync] Failed:', err);
-      } finally {
-        if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-        else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
-        lazyAutoSyncInProgress = false;
-      }
-    })();
-  } catch {
-    lazyAutoSyncInProgress = false;
-  }
-}
+// Lazy auto-sync הוסר: גרם לסנכרון מלא ברקע בזמן בקשות לקוחות → עומס יתר על
+// Render Free → לקוחות לא יכלו להיכנס. הקרון של 04:00/16:00 + סנכרון ידני
+// מאדמין UI מחליפים אותו לחלוטין.
 
 // GET /api/price-comparison[?listId=X][&lat=&lng=]
 // listId אופציונלי - מסנן את ההשוואה לרשימה יחידה. בלעדיו: איחוד כל הרשימות.
@@ -60,8 +29,9 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
   const userLocation = parseUserLocation(req.query.lat, req.query.lng) ?? undefined;
   const data = await getComparisonForUser(userId, listId, userLocation);
   res.json({ success: true, data });
-  // טריגר רענון אוטומטי ברקע אם הנתונים ישנים יותר מ-12 שעות
-  void maybeTriggerLazySync();
+  // הוסר: lazy auto-sync שגרם לסנכרון מלא ברקע בזמן בקשות של לקוחות.
+  // הקרון של 04:00 ו-16:00 + סנכרון startup מספיקים. אם נדרש סנכרון דחוף -
+  // אדמין יכול ללחוץ 'סנכרון מחדש' באדמין UI.
 });
 
 // POST /api/price-comparison/refresh (admin only)

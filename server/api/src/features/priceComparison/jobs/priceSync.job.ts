@@ -12,13 +12,17 @@ import { logger } from '../../../config/logger';
 let scheduled = false;
 let syncInProgress = false;
 
-// סנכרון פעמיים ביום ב-04:00 וב-16:00 שעון ישראל. הפורטל מעדכן בעיקר בלילה,
-// 04:00 נותן זמן לכל הרשתות לפרסם ולפני הפעילות הבוקרית של המשתמשים.
-// ריצה אחת ביום: עומס מינימלי על השרת + נתונים טריים לכל היום.
-const CRON_EXPRESSION = '0 4,16 * * *';
+// סנכרון פעמיים ביום בשעות שקטות בלבד (לקוחות לא פעילים): 03:00 ו-23:00.
+// 03:00 - אחרי שהפורטלים פרסמו את הקבצים החדשים של היום.
+// 23:00 - לפני שינה, הלקוחות בעיקר ביום. לא פוגע בלקוחות אקטיביים.
+// (היה 04:00 ו-16:00 - 16:00 התנגש עם פעילות לקוחות.)
+const CRON_EXPRESSION = '0 3,23 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
-// אם הנתונים ישנים מ-24 שעות בעת הפעלת השרת, נסנכרן מיד ברקע
-const STARTUP_STALENESS_MS = 24 * 60 * 60 * 1000;
+// אם הנתונים ישנים מ-36 שעות בעת הפעלת השרת, נסנכרן ברקע אחרי 5 דקות.
+// הוגדל מ-24 ל-36 כדי לא לטרגר אחרי כל deploy שגרתי.
+// 5 דקות עיכוב מבטיחים שהשרת קם לחלוטין ולקוחות שנכנסים לא ייפגעו ברגע ה-boot.
+const STARTUP_STALENESS_MS = 36 * 60 * 60 * 1000;
+const STARTUP_DELAY_MS = 5 * 60 * 1000;
 
 // פונקציית עזר לרענון עם טיפול ב-TLS env var - משותפת ל-cron ול-startup
 async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
@@ -133,19 +137,15 @@ export function startPriceSyncJob(): void {
   logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — twice daily at 04:00 and 16:00`);
 
   // ===== Startup actions =====
-  // 1. אם המחירים ישנים - סנכרון מחירים מיידי
+  // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (36 שעות+) ואחרי 5 דקות
+  //    כדי לא להפריע ללקוחות שנכנסים בזמן ה-boot.
   void shouldRunStartupSync().then(shouldRun => {
     if (shouldRun) {
-      setTimeout(() => runSync('startup'), 15_000);
+      logger.info('[price-sync-job] Startup: data stale 36h+, scheduling sync in 5 minutes');
+      setTimeout(() => runSync('startup'), STARTUP_DELAY_MS);
     }
   });
 
-  // 2. seed של סניפים בעת boot, ואז OSM להעשרה.
-  void (async () => {
-    await reloadSeedBranches('startup');
-    const branchCount = await BranchDAL.count({});
-    if (branchCount < 100) {
-      setTimeout(() => runOsmBranchSync('startup'), 30_000);
-    }
-  })();
+  // 2. seed של סניפים מיידית (מהיר, לא מעמיס).
+  void reloadSeedBranches('startup');
 }
