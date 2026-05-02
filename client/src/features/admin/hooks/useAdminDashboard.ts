@@ -32,27 +32,20 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
     if (!force && Date.now() - lastFetchAtRef.current < REFETCH_SKIP_MS) return;
     setLoading(true);
     setError(null);
-    // 3 בקשות במקביל - כל אחת מעדכנת state ברגע שהיא חוזרת,
-    // לא מחכים ל-Promise.all. כך הדף נראה מתמלא בהדרגה במקום
-    // להישאר ריק עד שהבקשה האיטית ביותר מסתיימת.
-    let pendingCount = 3;
-    const onSettled = () => {
-      pendingCount -= 1;
-      if (pendingCount === 0) {
+
+    // משתמשים = הקריטיים. ברגע שהם חוזרים, loading=false והדף מוצג.
+    // סטטיסטיקות ופעילות נטענות במקביל אבל לא מעכבות הצגה ראשונית.
+    adminApi.getUsers()
+      .then(users => {
+        setAllUsers(users);
         lastFetchAtRef.current = Date.now();
-        setLoading(false);
-      }
-    };
+      })
+      .catch(err => { if (import.meta.env.DEV) console.error('admin users:', err); setError(t('adminLoadError')); })
+      .finally(() => setLoading(false));
 
     adminApi.getStats()
       .then(stats => setServerStats(stats))
-      .catch(err => { if (import.meta.env.DEV) console.error('admin stats:', err); setError(t('adminLoadError')); })
-      .finally(onSettled);
-
-    adminApi.getUsers()
-      .then(users => setAllUsers(users))
-      .catch(err => { if (import.meta.env.DEV) console.error('admin users:', err); setError(t('adminLoadError')); })
-      .finally(onSettled);
+      .catch(err => { if (import.meta.env.DEV) console.error('admin stats:', err); /* not fatal */ });
 
     adminApi.getLoginActivity(1, 100)
       .then(activityData => setActivities(
@@ -60,8 +53,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
           .map(convertApiActivity)
           .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       ))
-      .catch(err => { if (import.meta.env.DEV) console.error('admin activity:', err); /* not fatal */ })
-      .finally(onSettled);
+      .catch(err => { if (import.meta.env.DEV) console.error('admin activity:', err); /* not fatal */ });
   }, [t]);
 
   // טעינה בעלייה + רענון אוטומטי כשחוזרים לטאב
