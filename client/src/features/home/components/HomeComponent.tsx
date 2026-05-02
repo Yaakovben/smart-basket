@@ -109,7 +109,7 @@ const getWeekdayMessage = (t: (k: TranslationKeys) => string): string | null => 
   // יום שישי בבוקר/צהריים - "מתכוננים לשבת?"
   if (day === 5 && hour >= 6 && hour < 16) return 'מתכוננים לשבת? 🕯️';
   // מוצ"ש - "סוף שבוע 🎉"
-  if (day === 6 && hour >= 19) return 'תשבוע חדש 💪';
+  if (day === 6 && hour >= 19) return 'שבוע חדש 💪';
   // ראשון בבוקר - התחלה חדשה
   if (day === 0 && hour >= 6 && hour < 12) return 'שבוע חדש מתחיל 🚀';
   return null;
