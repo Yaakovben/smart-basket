@@ -112,9 +112,23 @@ export function useAuth() {
     } catch { /* ignore */ }
     return null;
   });
-  // הצגת טעינה בזמן אימות הטוקן וטעינת נתונים ראשוניים
-  // מסך הטעינה נשאר מוצג עד שהנתונים מוכנים, מונע הבזק ריק
-  const [loading, setLoading] = useState(() => !!getAccessToken());
+  // אם יש משתמש שמור בקאש + טוקן → loading=false מיידית, האפליקציה מוצגת מיד.
+  // אימות הטוקן והטענת הנתונים יקרו ברקע (לא חוסם את ה-UI).
+  // רק אם אין cache (משתמש חדש או localStorage נמחק) → loading=true עד שהפרופיל נטען.
+  const [loading, setLoading] = useState(() => {
+    const hasToken = !!getAccessToken();
+    if (!hasToken) return false;
+    try {
+      const cached = localStorage.getItem('cached_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed._cachedAt && (Date.now() - parsed._cachedAt) <= MAX_CACHE_AGE) {
+          return false; // יש cache טרי - מציג מיד
+        }
+      }
+    } catch { /* ignore */ }
+    return true; // אין cache טרי - חכה לפרופיל
+  });
   // נתונים שנטענו מראש במקביל לפרופיל לטעינה מהירה
   const [initialData, setInitialData] = useState<InitialData>({ lists: null, notifications: null });
   // בדיקת סשן קיים בטעינה
