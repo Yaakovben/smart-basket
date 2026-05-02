@@ -1793,10 +1793,20 @@ export const HomeComponent = memo(({
       >
         <Box
           aria-label={t('new')}
-          onPointerUp={(e) => {
+          role="button"
+          tabIndex={0}
+          // onClick (לא onPointerUp) - מונע ghost-click על Android שגרם
+          // לפלוס לפתוח את התפריט וה-click המעוכב לסגור אותו מיד.
+          onClick={(e) => {
             (e.currentTarget as HTMLElement).blur();
             haptic('medium');
             setShowMenu(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              haptic('medium');
+              setShowMenu(true);
+            }
           }}
           sx={{
             width: 56, height: 56, borderRadius: '50%',
