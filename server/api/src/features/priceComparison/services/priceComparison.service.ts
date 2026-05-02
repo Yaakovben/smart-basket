@@ -263,11 +263,11 @@ async function matchNormalizedName(
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-// מטמון קצר-טווח לכל משתמש - חוסך חישובים חוזרים בפתיחות מהירות של העמוד
-// מטמון לכל משתמש: 3 דקות. הנתונים משתנים רק בסנכרון (פעמיים ביום),
-// אז אין טעם לחשב מחדש מיד כל פעם. חישוב מחדש על פתיחת הרשימות/מחיקת פריט
-// נעשה דרך invalidateUser() מ-lists/products controllers.
-const CACHE_TTL_MS = 3 * 60_000;
+// מטמון לכל משתמש: 15 דקות. הנתונים משתנים רק בסנכרון (פעמיים ביום),
+// אז cache ארוך חוסך עומס משמעותי על Render Free. חישוב מחדש על פתיחת
+// הרשימות/מחיקת פריט נעשה דרך invalidateUser() מ-lists/products controllers,
+// ככה תוצאות תמיד טריות אחרי שינוי בפועל של המשתמש.
+const CACHE_TTL_MS = 15 * 60_000;
 const userCache = new Map<string, { data: PriceComparisonData; expiresAt: number }>();
 
 // מנקה מטמון של משתמש ספציפי - חשוב לקרוא כשנוצר/נמחק/נקנה מוצר.
