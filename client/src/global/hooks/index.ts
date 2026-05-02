@@ -174,7 +174,7 @@ export function useAuth() {
         // המשתמש כבר מוצג מהקאש, אם השרת מחזיר את אותו פרופיל אין סיבה לרנדר שוב.
         setUser(prev => {
           if (prev && prev.id === profile.id && prev.name === profile.name &&
-              prev.email === profile.email && prev.isAdmin === profile.isAdmin &&
+              prev.email === profile.email &&
               prev.avatarColor === profile.avatarColor && prev.avatarEmoji === profile.avatarEmoji) {
             return prev;
           }
