@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { syncAllChains, syncBranchesFromOsm } from '../services/priceSync.service';
 import { PriceDAL } from '../dal/price.dal';
+import { Price } from '../models/Price.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
@@ -98,6 +99,48 @@ async function reloadSeedBranches(trigger: 'cron' | 'startup'): Promise<void> {
   }
 }
 
+// ניקוי מחירים ישנים מהמאגר - מונע ניפוח DB ב-Atlas Free.
+// הסיבה שלא משתמשים ב-TTL index: כשבונים TTL על קולקציה גדולה, MongoDB
+// נועלת אותה ל-mins רבות עד שהאינדקס נבנה - זה הפיל לנו את הפרודקשן.
+// במקום זה: מחיקה ידנית בbatches של 1000, בשעה שקטה (אחרי הסנכרון).
+// אין נעילה, אין גל עומס - בקרה מלאה.
+const CLEANUP_OLDER_THAN_DAYS = 14;
+const CLEANUP_BATCH_SIZE = 1000;
+const CLEANUP_MAX_BATCHES = 100; // עד 100K מסמכים בריצה - די לכל יום
+
+export async function cleanupOldPrices(trigger: 'cron' | 'manual' = 'manual'): Promise<{ deleted: number }> {
+  const result = await cleanupOldPricesImpl(trigger);
+  return result;
+}
+
+async function cleanupOldPricesImpl(trigger: 'cron' | 'manual'): Promise<{ deleted: number }> {
+  try {
+    const cutoff = new Date(Date.now() - CLEANUP_OLDER_THAN_DAYS * 24 * 60 * 60 * 1000);
+    let totalDeleted = 0;
+    for (let batch = 0; batch < CLEANUP_MAX_BATCHES; batch++) {
+      // שליפת ID של batch ישנים (לא מחיקה ב-deleteMany ישיר על כולם בבת אחת)
+      const oldDocs = await Price
+        .find({ updatedAt: { $lt: cutoff } }, { _id: 1 })
+        .limit(CLEANUP_BATCH_SIZE)
+        .lean();
+      if (oldDocs.length === 0) break;
+      const ids = oldDocs.map(d => d._id);
+      const res = await Price.deleteMany({ _id: { $in: ids } });
+      totalDeleted += res.deletedCount || 0;
+      if (oldDocs.length < CLEANUP_BATCH_SIZE) break;
+      // השהיה קצרה בין batches - נותן לDB אוויר לבקשות אחרות
+      await new Promise(r => setTimeout(r, 200));
+    }
+    if (totalDeleted > 0) {
+      logger.info(`[price-cleanup] ${trigger}: deleted ${totalDeleted} prices older than ${CLEANUP_OLDER_THAN_DAYS} days`);
+    }
+    return { deleted: totalDeleted };
+  } catch (err) {
+    logger.error(`[price-cleanup] ${trigger}: failed:`, err);
+    return { deleted: 0 };
+  }
+}
+
 // סנכרון סניפים מ-OSM - אוטומטי בעת boot אם המאגר ריק, ובכל cron run.
 // רץ בנפרד מסנכרון המחירים כדי לא לעכב, ובלי NODE_TLS_REJECT_UNAUTHORIZED
 // (הפרסום של OSM הוא HTTPS תקני).
@@ -130,6 +173,9 @@ export function startPriceSyncJob(): void {
       await runSync('cron');
       await reloadSeedBranches('cron');
       await runOsmBranchSync('cron');
+      // ניקוי מחירים ישנים בסוף - אחרי שהסנכרון עדכן את הטריים, נמחק את
+      // הישנים. מונע ניפוח DB ב-Atlas Free.
+      await cleanupOldPrices('cron');
     },
     { timezone: TIMEZONE }
   );
