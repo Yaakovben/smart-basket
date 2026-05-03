@@ -1665,11 +1665,11 @@ export const HomeComponent = memo(({
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: { xs: 1, sm: 1.5 },
-          py: { xs: 1, sm: 1.25 },
+          py: { xs: 0.6, sm: 0.85 },
           px: { xs: 2.5, sm: 3.5 },
-          minHeight: 60,
-          '@media (max-width: 360px)': { py: 0.85, px: 2, minHeight: 56 },
-          '@media (max-width: 320px)': { py: 0.7, px: 1.5, minHeight: 52 },
+          minHeight: 50,
+          '@media (max-width: 360px)': { py: 0.5, px: 2, minHeight: 46 },
+          '@media (max-width: 320px)': { py: 0.4, px: 1.5, minHeight: 42 },
         }}
       >
         {/* ימין (RTL = ראשון ב-DOM) - בית. onPointerUp במקום onClick + blur אחרי
