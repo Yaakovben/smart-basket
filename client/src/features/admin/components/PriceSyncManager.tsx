@@ -765,13 +765,14 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                               ) : (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.35, maxHeight: 240, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                                   {branchList.map(b => {
-                                    // תג מקור הנתונים - osm/geocoded/portal/ידני
+                                    // תג מקור הנתונים - אינדיקציה ברורה לאיך הסניף הגיע למאגר
                                     const sourceTag =
                                       b.storeId.startsWith('osm-') ? { label: 'OSM', color: '#0EA5E9' }
                                       : b.storeId.startsWith('manual-bulk-') ? { label: 'מאומת', color: '#10B981' }
                                       : b.storeId.startsWith('manual-') ? { label: 'ידני', color: '#10B981' }
+                                      : b.coordSource === 'portal' ? { label: 'פורטל', color: '#10B981' }
                                       : b.coordSource === 'geocoded' ? { label: 'מקורב', color: '#F59E0B' }
-                                      : { label: 'seed', color: '#94A3B8' };
+                                      : { label: 'חסר מיקום', color: '#DC2626' };
                                     const fullAddress = [b.address, b.city].filter(Boolean).join(', ') || 'כתובת חסרה';
                                     return (
                                       <Box key={b.id} sx={{
