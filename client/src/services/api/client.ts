@@ -79,13 +79,13 @@ export const rehydrateTokensFromIdb = async (): Promise<boolean> => {
 let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
-// timeout ארוך לרשתות מובייל איטיות
+// timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000,
 });
 
 export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -260,6 +260,28 @@ apiClient.interceptors.response.use(
       code: error.code,
     }, true);
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // ===== Retry אוטומטי על תקלות רשת / cold-start =====
+    // תקלות רשת (timeout, ECONNABORTED, no response) - מנסים שוב פעם אחת
+    // עם backoff. רלוונטי במיוחד ל-Render Free cold start שלוקח 30-50ש'.
+    // GET-בלבד כדי לא לכפול פעולות שינוי (POST/PUT/DELETE).
+    const reqWithRetry = originalRequest as InternalAxiosRequestConfig & { _retryCount?: number };
+    const isNetworkOrTimeout = !error.response && (
+      error.code === 'ECONNABORTED' ||
+      error.code === 'ETIMEDOUT' ||
+      error.code === 'ERR_NETWORK' ||
+      /timeout|network/i.test(error.message || '')
+    );
+    const isGetMethod = (originalRequest.method || 'get').toLowerCase() === 'get';
+    const retryCount = reqWithRetry._retryCount || 0;
+    if (isNetworkOrTimeout && isGetMethod && retryCount < 2) {
+      reqWithRetry._retryCount = retryCount + 1;
+      // backoff: 1.5s, 3s
+      const delay = 1500 * (retryCount + 1);
+      debugLog(`Retry ${retryCount + 1}/2 in ${delay}ms for ${originalRequest.url}`, {}, false);
+      await new Promise<void>(r => setTimeout(r, delay));
+      return apiClient(originalRequest);
+    }
 
     // 401 שלא טופלה כבר (fallback לרענון הפרואקטיבי)
     if (error.response?.status === 401 && !originalRequest._retry) {
