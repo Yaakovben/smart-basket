@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-do
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, SlowLoadIndicator } from "../global/components";
 import { DailyFaithGate } from "../features/daily-faith";
 import { OnboardingGate } from "../features/onboarding";
 import { useSettings } from "../global/context/SettingsContext";
@@ -287,6 +287,8 @@ export const AppRouter = () => {
 
   return (
     <>
+      {/* חיווי טעינה איטי - מופיע אם הטעינה הראשונית מעל 4 שניות */}
+      <SlowLoadIndicator active={authLoading || (listsLoading && lists.length === 0)} message="טוען את הרשימות שלך..." />
       <Suspense fallback={<PageLoader />}>
       <Box sx={{
         // אנימציית fade בלבד (ללא transform) - transform על אב היה גורם

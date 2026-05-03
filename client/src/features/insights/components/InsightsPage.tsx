@@ -7,6 +7,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
+import { SlowLoadIndicator } from '../../../global/components';
 import { PulseTab } from './tabs/PulseTab';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic, safeStorage } from '../../../global/helpers';
@@ -216,6 +217,8 @@ export const InsightsPage = memo(() => {
 
   return (
     <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(40px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+      {/* חיווי טעינה איטית - מופיע רק אחרי 4ש' של המתנה ובמסך השוואת מחירים */}
+      <SlowLoadIndicator active={tab === 'price' && priceLoading && !priceData} />
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
         // הדר בצבעי האפליקציה - טורקיז במקום סגול, אחיד עם שאר המסכים
