@@ -205,10 +205,9 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
 });
 ProductNoteField.displayName = 'ProductNoteField';
 
-// ===== גריד קטגוריות - סגור בברירת מחדל, מתפתח בלחיצה =====
-// 3 רמות: סגור (רק הקטגוריה הנבחרת בכרטיסיה אחת) → חצי (7 קטגוריות) →
-// כל ה-14. ככה מודאל הוספת מוצר נראה קומפקטי בכניסה ראשונה.
-const HALF_CATS = 7; // חצי מ-14
+// ===== גריד קטגוריות - 2 רמות: סגור / פתוח =====
+// סגור (ברירת מחדל): כרטיסיה אחת עם הקטגוריה הנבחרת.
+// פתוח: כל 14 הקטגוריות.
 const ALL_CATS = Object.entries(CATEGORY_ICONS) as [ProductCategory, string][];
 
 const CategoryGrid = memo(({ selected, onSelect }: {
@@ -216,28 +215,18 @@ const CategoryGrid = memo(({ selected, onSelect }: {
   onSelect: (cat: ProductCategory) => void;
 }) => {
   const { t } = useSettings();
-  // 'closed' (רק הנבחרת) → 'half' (7 קטגוריות) → 'all' (14)
-  const [mode, setMode] = useState<'closed' | 'half' | 'all'>('closed');
+  const [isOpen, setIsOpen] = useState(false);
+  const visible = ALL_CATS;
 
-  // אם הקטגוריה הנבחרת לא בחצי הראשון, פותח אוטומטית ל-all
-  const selectedIdx = ALL_CATS.findIndex(([c]) => c === selected);
-  if (mode === 'closed' && selectedIdx >= HALF_CATS && selectedIdx >= 0) {
-    // לא משנה state בתוך render - רק מסיק
-  }
-  const visible = mode === 'all' ? ALL_CATS
-    : mode === 'half' ? ALL_CATS.slice(0, HALF_CATS)
-    : []; // closed = ריק
-  const hiddenCount = ALL_CATS.length - HALF_CATS;
-
-  // ===== מצב סגור - רק כפתור עם הקטגוריה הנבחרת + "בחר אחרת" =====
-  if (mode === 'closed') {
+  // ===== מצב סגור - רק כרטיסיה עם הקטגוריה הנבחרת + "בחר אחרת" =====
+  if (!isOpen) {
     const selectedCat = ALL_CATS.find(([c]) => c === selected);
     return (
       <Box
         role="button"
         tabIndex={0}
-        onClick={() => { haptic('light'); setMode('half'); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setMode('half'); } }}
+        onClick={() => { haptic('light'); setIsOpen(true); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setIsOpen(true); } }}
         sx={{
           display: 'flex', alignItems: 'center', gap: 1.5,
           py: 1.25, px: 1.5, borderRadius: '14px',
@@ -317,36 +306,27 @@ const CategoryGrid = memo(({ selected, onSelect }: {
           );
         })}
       </Box>
-      {hiddenCount > 0 && (
-        <Box
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            haptic('light');
-            setMode(m => m === 'all' ? 'closed' : 'all');
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              haptic('light');
-              setMode(m => m === 'all' ? 'closed' : 'all');
-            }
-          }}
-          sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
-            mt: 1, py: 0.7,
-            borderRadius: '10px',
-            bgcolor: 'rgba(20,184,166,0.06)',
-            color: 'primary.main',
-            fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
-            cursor: 'pointer', userSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            transition: 'background-color 0.15s',
-            '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
-          }}
-        >
-          {mode === 'all' ? '▴ הצג פחות' : `▾ הצג עוד (${hiddenCount})`}
-        </Box>
-      )}
+      {/* כפתור 'סגור' - חוזר למצב הקומפקטי */}
+      <Box
+        role="button"
+        tabIndex={0}
+        onClick={() => { haptic('light'); setIsOpen(false); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setIsOpen(false); } }}
+        sx={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+          mt: 1, py: 0.7,
+          borderRadius: '10px',
+          bgcolor: 'rgba(20,184,166,0.06)',
+          color: 'primary.main',
+          fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+          cursor: 'pointer', userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          transition: 'background-color 0.15s',
+          '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
+        }}
+      >
+        ▴ סגור
+      </Box>
     </>
   );
 });
