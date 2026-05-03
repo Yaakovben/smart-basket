@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
+import HomeIcon from '@mui/icons-material/Home';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
@@ -216,7 +218,7 @@ export const InsightsPage = memo(() => {
   // formatRelativeDate, growth helpers - הועברו ל-PulseTab.tsx
 
   return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(40px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
@@ -1413,6 +1415,80 @@ export const InsightsPage = memo(() => {
         {/* ===== דופק ===== */}
         {tab === 'pulse' && <PulseTab data={data} isDark={isDark} t={t as (k: string) => string} />}
 
+      </Box>
+
+      {/* ===== Bottom Navigation Bar - 2 טאבים, תובנות מודגש ===== */}
+      <Box sx={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        zIndex: 1000,
+        bgcolor: 'background.paper',
+        borderTop: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        boxShadow: isDark
+          ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
+          : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
+      }}>
+        <Box sx={{
+          maxWidth: { xs: '100%', sm: 500, md: 600 },
+          mx: 'auto',
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          py: 1, px: 2,
+          minHeight: 60,
+          '@media (max-width: 360px)': { minHeight: 56 },
+        }}>
+          {/* בית - לא מודגש */}
+          <Box
+            onPointerDown={(e) => {
+              (e.currentTarget as HTMLElement).blur();
+              haptic('light');
+              navigate('/');
+            }}
+            aria-label={t('home')}
+            sx={{
+              flex: 1, maxWidth: 110,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 0.3, minHeight: 40, py: 0.35,
+              cursor: 'pointer', userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
+              outline: 'none',
+              transition: 'opacity 0.12s ease',
+              '&:active': { opacity: 0.6 },
+            }}
+          >
+            <HomeIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.55 }} />
+            <Box sx={{ width: 18, height: 3, mt: 0.1 }} />
+            <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary', opacity: 0.65, letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
+              {t('home')}
+            </Typography>
+          </Box>
+
+          {/* תובנות - מודגש (אנחנו כאן) */}
+          <Box
+            aria-label={t('insights')}
+            sx={{
+              flex: 1, maxWidth: 110,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 0.3, minHeight: 40, py: 0.35,
+              userSelect: 'none', cursor: 'default',
+              WebkitTapHighlightColor: 'transparent', outline: 'none',
+            }}
+          >
+            <InsightsIcon sx={{ fontSize: 24, color: '#0D9488' }} />
+            <Box sx={{
+              width: 18, height: 3, borderRadius: '2px',
+              backgroundImage: 'linear-gradient(90deg, #14B8A6, #0D9488)',
+              boxShadow: '0 1px 3px rgba(20,184,166,0.4)',
+              mt: 0.1,
+            }} />
+            <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
+              {t('insights')}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
