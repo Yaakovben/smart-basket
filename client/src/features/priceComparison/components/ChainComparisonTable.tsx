@@ -598,10 +598,11 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
       });
     }
     if (sortMode === 'combined' && hasAnyLocation) {
-      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch);
+      // רק רשתות עם distanceKm מוחלט (יש קואורדינטות) משתתפות במיון "משולב"
+      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch && typeof c.nearestBranch.distanceKm === 'number');
       if (withData.length > 0) {
         const prices = withData.map(c => c.total);
-        const dists = withData.map(c => c.nearestBranch!.distanceKm);
+        const dists = withData.map(c => c.nearestBranch!.distanceKm!);
         const minP = Math.min(...prices), maxP = Math.max(...prices);
         const minD = Math.min(...dists), maxD = Math.max(...dists);
         const rangeP = maxP - minP || 1;
@@ -609,6 +610,7 @@ export const ChainComparisonTable = memo(({ chainTotals, lastUpdatedISO }: Props
         const score = (c: PriceChainTotal): number => {
           if (c.matchedCount === 0) return Infinity;
           if (!c.nearestBranch) return Infinity;
+          if (typeof c.nearestBranch.distanceKm !== 'number') return Infinity;
           const p = (c.total - minP) / rangeP;
           const d = (c.nearestBranch.distanceKm - minD) / rangeD;
           return p * 0.5 + d * 0.5;

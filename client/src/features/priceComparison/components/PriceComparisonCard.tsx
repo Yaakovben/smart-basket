@@ -263,7 +263,9 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
                   <NearMeIcon sx={{ fontSize: 11, color: 'text.disabled' }} />
                   <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 600 }}>
-                    {chain.nearestBranch.distanceKm.toFixed(1)} ק"מ
+                    {typeof chain.nearestBranch.distanceKm === 'number'
+                      ? `${chain.nearestBranch.distanceKm.toFixed(1)} ק"מ`
+                      : 'כתובת'}
                   </Typography>
                 </Box>
               </>
@@ -451,16 +453,19 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       });
     }
     if (sortMode === 'combined' && hasAnyLocation) {
-      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch);
+      // רק רשתות עם distanceKm מוחלט (יש קואורדינטות) משתתפות במיון "משולב".
+      // סניפים עם כתובת בלבד יישארו במיקום הברירה.
+      const withData = chains.filter(c => c.matchedCount > 0 && c.nearestBranch && typeof c.nearestBranch.distanceKm === 'number');
       if (withData.length > 0) {
         const prices = withData.map(c => c.total);
-        const dists = withData.map(c => c.nearestBranch!.distanceKm);
+        const dists = withData.map(c => c.nearestBranch!.distanceKm!);
         const minP = Math.min(...prices), maxP = Math.max(...prices);
         const minD = Math.min(...dists), maxD = Math.max(...dists);
         const rangeP = (maxP - minP) || 1;
         const rangeD = (maxD - minD) || 1;
         const score = (c: PriceChainTotal) => {
           if (c.matchedCount === 0 || !c.nearestBranch) return Infinity;
+          if (typeof c.nearestBranch.distanceKm !== 'number') return Infinity;
           return ((c.total - minP) / rangeP) * 0.5 + ((c.nearestBranch.distanceKm - minD) / rangeD) * 0.5;
         };
         return chains.sort((a, b) => score(a) - score(b));
