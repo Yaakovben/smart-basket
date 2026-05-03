@@ -424,6 +424,30 @@ export const InsightsPage = memo(() => {
             )
           ) : (
             <>
+              {/* תווית מידע - מוצגת כשיש רשימה אחת. המשתמש יודע על מה הניתוח נעשה. */}
+              {allUserLists.length === 1 && allUserLists[0] && (
+                <Box sx={{
+                  mb: 1.25, px: 1.25, py: 0.85, borderRadius: '12px',
+                  display: 'flex', alignItems: 'center', gap: 0.75,
+                  bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.06)',
+                  border: '1px solid',
+                  borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.18)',
+                }}>
+                  <Box sx={{ fontSize: 16, lineHeight: 1 }}>{allUserLists[0].icon}</Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, lineHeight: 1, mb: 0.2 }}>
+                      ניתוח מחירים על
+                    </Typography>
+                    <Typography sx={{
+                      fontSize: 12.5, fontWeight: 800, color: '#0D9488', lineHeight: 1.2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {allUserLists[0].name}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
               {/* בורר רשימה - מוצג רק אם יש 2+ רשימות */}
               {allUserLists.length > 1 && (
                 <Box sx={{ mb: 1.25 }}>
