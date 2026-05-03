@@ -205,9 +205,10 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
 });
 ProductNoteField.displayName = 'ProductNoteField';
 
-// ===== גריד קטגוריות - 2 רמות: סגור / פתוח =====
-// סגור (ברירת מחדל): כרטיסיה אחת עם הקטגוריה הנבחרת.
-// פתוח: כל 14 הקטגוריות.
+// ===== גריד קטגוריות - 8 פתוחים בברירת מחדל =====
+// 8 הקטגוריות הראשונות מוצגות תמיד (2 שורות), כפתור 'הצג עוד' חושף את
+// 6 הנותרות. אם הקטגוריה הנבחרת נמצאת מעבר ל-8 - פותח אוטומטית.
+const COLLAPSED_CATS = 8;
 const ALL_CATS = Object.entries(CATEGORY_ICONS) as [ProductCategory, string][];
 
 const CategoryGrid = memo(({ selected, onSelect }: {
@@ -215,52 +216,10 @@ const CategoryGrid = memo(({ selected, onSelect }: {
   onSelect: (cat: ProductCategory) => void;
 }) => {
   const { t } = useSettings();
-  const [isOpen, setIsOpen] = useState(false);
-  const visible = ALL_CATS;
-
-  // ===== מצב סגור - רק כרטיסיה עם הקטגוריה הנבחרת + "בחר אחרת" =====
-  if (!isOpen) {
-    const selectedCat = ALL_CATS.find(([c]) => c === selected);
-    return (
-      <Box
-        role="button"
-        tabIndex={0}
-        onClick={() => { haptic('light'); setIsOpen(true); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setIsOpen(true); } }}
-        sx={{
-          display: 'flex', alignItems: 'center', gap: 1.5,
-          py: 1.25, px: 1.5, borderRadius: '14px',
-          border: '2px solid', borderColor: 'rgba(20,184,166,0.25)',
-          bgcolor: 'rgba(20,184,166,0.06)',
-          cursor: 'pointer', userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          transition: 'all 0.18s',
-          '&:active': { transform: 'scale(0.98)' },
-          '&:hover': { bgcolor: 'rgba(20,184,166,0.1)' },
-        }}
-      >
-        <Box sx={{
-          width: 40, height: 40, borderRadius: '10px',
-          bgcolor: 'background.paper',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, flexShrink: 0,
-        }}>
-          {selectedCat?.[1] || '📦'}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: 'primary.main', lineHeight: 1.2 }}>
-            {selectedCat ? t(CATEGORY_TRANSLATION_KEYS[selectedCat[0]]) : 'בחר קטגוריה'}
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
-            לחץ לבחירת קטגוריה אחרת
-          </Typography>
-        </Box>
-        <Typography sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }}>
-          ▾
-        </Typography>
-      </Box>
-    );
-  }
+  const selectedIdx = ALL_CATS.findIndex(([c]) => c === selected);
+  const [showAll, setShowAll] = useState(selectedIdx >= COLLAPSED_CATS);
+  const visible = showAll ? ALL_CATS : ALL_CATS.slice(0, COLLAPSED_CATS);
+  const hidden = ALL_CATS.length - COLLAPSED_CATS;
 
   return (
     <>
@@ -306,27 +265,28 @@ const CategoryGrid = memo(({ selected, onSelect }: {
           );
         })}
       </Box>
-      {/* כפתור 'סגור' - חוזר למצב הקומפקטי */}
-      <Box
-        role="button"
-        tabIndex={0}
-        onClick={() => { haptic('light'); setIsOpen(false); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setIsOpen(false); } }}
-        sx={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
-          mt: 1, py: 0.7,
-          borderRadius: '10px',
-          bgcolor: 'rgba(20,184,166,0.06)',
-          color: 'primary.main',
-          fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
-          cursor: 'pointer', userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          transition: 'background-color 0.15s',
-          '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
-        }}
-      >
-        ▴ סגור
-      </Box>
+      {hidden > 0 && (
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => { haptic('light'); setShowAll(s => !s); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setShowAll(s => !s); } }}
+          sx={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+            mt: 1, py: 0.7,
+            borderRadius: '10px',
+            bgcolor: 'rgba(20,184,166,0.06)',
+            color: 'primary.main',
+            fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background-color 0.15s',
+            '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
+          }}
+        >
+          {showAll ? '▴ הצג פחות' : `▾ הצג עוד (${hidden})`}
+        </Box>
+      )}
     </>
   );
 });
