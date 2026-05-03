@@ -1665,11 +1665,11 @@ export const HomeComponent = memo(({
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: { xs: 1, sm: 1.5 },
-          py: { xs: 0.5, sm: 0.75 },
+          py: { xs: 1, sm: 1.25 },
           px: { xs: 2.5, sm: 3.5 },
-          minHeight: 52,
-          '@media (max-width: 360px)': { py: 0.4, px: 2, minHeight: 48 },
-          '@media (max-width: 320px)': { py: 0.3, px: 1.5, minHeight: 44 },
+          minHeight: 60,
+          '@media (max-width: 360px)': { py: 0.85, px: 2, minHeight: 56 },
+          '@media (max-width: 320px)': { py: 0.7, px: 1.5, minHeight: 52 },
         }}
       >
         {/* ימין (RTL = ראשון ב-DOM) - בית. onPointerUp במקום onClick + blur אחרי
@@ -1755,23 +1755,7 @@ export const HomeComponent = memo(({
       </Box>
       </Box>
 
-      {/* קשת border לחתך ה-FAB - ממשיכה ויזואלית את ה-borderTop של הבר
-          סביב הקשת המקופלת של החתך. אלמנט נפרד (לא בתוך הבר) כדי שלא
-          ייחתך ע"י ה-mask. רוחב 76 (=2×38), גובה 38 = רדיוס החתך,
-          bottom 14 (=52-38) → הקשת מתחילה בקצה הבר ועולה למעלה לעטוף
-          את ה-FAB מקרוב (10px רווח שקוף בלבד מסביב). */}
-      <Box sx={{
-        position: 'fixed',
-        bottom: 14, // 52 (גובה הבר) - 38 (רדיוס החתך)
-        left: '50%', transform: 'translateX(-50%)',
-        width: 76, height: 38,
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-        borderTop: 'none',
-        borderRadius: '0 0 50% 50% / 0 0 100% 100%',
-        pointerEvents: 'none',
-        zIndex: 1001,
-      }} />
+      {/* קשת ה-border מתחת ל-FAB הוסרה לפי בקשת בעל המוצר - מראה נקי יותר. */}
 
       {/* FAB - באותו portal */}
       <Box
