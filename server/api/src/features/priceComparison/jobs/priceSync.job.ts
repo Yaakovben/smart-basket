@@ -18,11 +18,12 @@ let syncInProgress = false;
 // משתנים תוך כדי יום כך שאין יתרון לסנכרון נוסף).
 const CRON_EXPRESSION = '0 4 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
-// אם הנתונים ישנים מ-36 שעות בעת הפעלת השרת, נסנכרן ברקע אחרי 5 דקות.
-// הוגדל מ-24 ל-36 כדי לא לטרגר אחרי כל deploy שגרתי.
-// 5 דקות עיכוב מבטיחים שהשרת קם לחלוטין ולקוחות שנכנסים לא ייפגעו ברגע ה-boot.
-const STARTUP_STALENESS_MS = 36 * 60 * 60 * 1000;
-const STARTUP_DELAY_MS = 5 * 60 * 1000;
+// אם הנתונים ישנים מ-72 שעות בעת הפעלת השרת, נסנכרן ברקע אחרי 30 דקות.
+// 72 שעות (במקום 36) - מונע סנכרון מיותר אחרי deploys תכופים בסוף שבוע.
+// 30 דקות עיכוב (במקום 5) - מבטיחים שמשתמשים ראשונים שמעירים את השרת
+// יקבלו תגובה מהירה, ושהסנכרון רץ רק כשפעילות שקטה.
+const STARTUP_STALENESS_MS = 72 * 60 * 60 * 1000;
+const STARTUP_DELAY_MS = 30 * 60 * 1000;
 
 // פונקציית עזר לרענון עם טיפול ב-TLS env var - משותפת ל-cron ול-startup
 async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
@@ -137,11 +138,12 @@ export function startPriceSyncJob(): void {
   logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — once daily at 04:00`);
 
   // ===== Startup actions =====
-  // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (36 שעות+) ואחרי 5 דקות
-  //    כדי לא להפריע ללקוחות שנכנסים בזמן ה-boot.
+  // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (72 שעות+) ואחרי 30 דקות
+  //    כדי לא להפריע ללקוחות שנכנסים בזמן ה-boot. אם המשתמש שמעיר את השרת
+  //    כבר סיים, הסנכרון לא משפיע על אף אחד.
   void shouldRunStartupSync().then(shouldRun => {
     if (shouldRun) {
-      logger.info('[price-sync-job] Startup: data stale 36h+, scheduling sync in 5 minutes');
+      logger.info('[price-sync-job] Startup: data stale 72h+, scheduling sync in 30 minutes');
       setTimeout(() => runSync('startup'), STARTUP_DELAY_MS);
     }
   });
