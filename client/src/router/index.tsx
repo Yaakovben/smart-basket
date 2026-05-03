@@ -287,8 +287,12 @@ export const AppRouter = () => {
 
   return (
     <>
-      {/* חיווי טעינה איטי - מופיע אם הטעינה הראשונית מעל 4 שניות */}
-      <SlowLoadIndicator active={authLoading || (listsLoading && lists.length === 0)} message="טוען את הרשימות שלך..." />
+      {/* חיווי טעינה איטי - רק אחרי כניסה למשתמש מאומת. בעמודי login/register
+          אין רשימות לטעון → לא מציגים את החיווי. */}
+      <SlowLoadIndicator
+        active={!!user && listsLoading && lists.length === 0}
+        message="טוען את הרשימות שלך..."
+      />
       <Suspense fallback={<PageLoader />}>
       <Box sx={{
         // אנימציית fade בלבד (ללא transform) - transform על אב היה גורם
