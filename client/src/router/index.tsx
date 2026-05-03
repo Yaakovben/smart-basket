@@ -400,7 +400,7 @@ export const AppRouter = () => {
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
       <DailyFaithGate enabled={!!user && !authLoading} />
-      <OnboardingGate enabled={!!user && !authLoading} />
+      {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>
   );
 }
