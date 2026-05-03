@@ -6,7 +6,7 @@ import type { User, List, Product, LoginMethod, ToastType } from "../global/type
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary, SlowLoadIndicator } from "../global/components";
 import { DailyFaithGate } from "../features/daily-faith";
-import { OnboardingGate } from "../features/onboarding";
+// OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
