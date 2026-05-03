@@ -938,14 +938,7 @@ export const HomeComponent = memo(({
             <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
               {tab === 'groups' ? t('noGroupsDesc') : t('noListsDesc')}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={() => { haptic('medium'); setShowMenu(true); }}
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 3, sm: 3.5 }, py: { xs: 1.4, sm: 1.6 }, fontSize: { xs: 14, sm: 15 }, borderRadius: '14px', boxShadow: '0 6px 20px rgba(20,184,166,0.3)' }}
-            >
-              <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-              <span>{tab === 'groups' ? t('createFirstGroup') : t('createFirstList')}</span>
-            </Button>
+            {/* כפתור CTA הוסר - ה-FAB+ בתחתית מבצע את אותה פעולה. */}
           </Box>
         ) : (<>
           <Box sx={{ mb: 1, px: 0.5 }}>
