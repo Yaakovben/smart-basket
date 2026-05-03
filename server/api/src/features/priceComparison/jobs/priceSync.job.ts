@@ -12,11 +12,11 @@ import { logger } from '../../../config/logger';
 let scheduled = false;
 let syncInProgress = false;
 
-// סנכרון פעמיים ביום ב-04:00 וב-08:00 שעון ישראל לפי בקשת בעל המוצר.
-// 04:00 - אחרי שהפורטלים סיימו לפרסם את הקבצים. שקט לחלוטין.
-// 08:00 - לפני פעילות שיא של היום. הסנכרון רץ ברקע סדרתי כ-5 דק'
-// ולא חוסם לקוחות (כל בקשה נענית מ-cache).
-const CRON_EXPRESSION = '0 4,8 * * *';
+// סנכרון פעם ביום ב-04:00 שעון ישראל - שעה שקטה לחלוטין (בלי לקוחות)
+// אחרי שהפורטלים סיימו לפרסם את הקבצים בלילה. הוסר 08:00 - היה גורם
+// להאטה ללקוחות שנכנסים בבוקר. התעדכנות אחת ביום מספיקה (המחירים לא
+// משתנים תוך כדי יום כך שאין יתרון לסנכרון נוסף).
+const CRON_EXPRESSION = '0 4 * * *';
 const TIMEZONE = 'Asia/Jerusalem';
 // אם הנתונים ישנים מ-36 שעות בעת הפעלת השרת, נסנכרן ברקע אחרי 5 דקות.
 // הוגדל מ-24 ל-36 כדי לא לטרגר אחרי כל deploy שגרתי.
@@ -121,7 +121,7 @@ export function startPriceSyncJob(): void {
     return;
   }
 
-  // cron של מחירים + seeds + סנכרון סניפים מ-OSM (פעמיים ביום ב-04:00 וב-16:00).
+  // cron של מחירים + seeds + סנכרון סניפים מ-OSM (פעם ביום ב-04:00 בלבד).
   // הסדר: מחירים → seed branches (תקין-תמיד) → OSM (העשרה).
   cron.schedule(
     CRON_EXPRESSION,
@@ -134,7 +134,7 @@ export function startPriceSyncJob(): void {
   );
 
   scheduled = true;
-  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — twice daily at 04:00 and 16:00`);
+  logger.info(`[price-sync-job] Scheduled: ${CRON_EXPRESSION} (${TIMEZONE}) — once daily at 04:00`);
 
   // ===== Startup actions =====
   // 1. סנכרון מחירים ב-boot רק אם הנתונים ישנים מאוד (36 שעות+) ואחרי 5 דקות
