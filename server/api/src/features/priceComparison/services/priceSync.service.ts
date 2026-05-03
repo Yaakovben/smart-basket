@@ -18,7 +18,6 @@ import {
 } from '../chains';
 import { PriceDAL, type UpsertPriceInput } from '../dal/price.dal';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
-import { cityFallbackCoords } from './geocoder.service';
 import { invalidateBranchCache } from './branches.service';
 import { fetchAllChainsFromOsm } from './osmBranches.service';
 import { logger } from '../../../config/logger';
@@ -154,19 +153,17 @@ async function syncStoresForChain(
     }
 
     const inputs: UpsertBranchInput[] = res.stores.map(s => {
-      let { lat, lng } = s;
-      let coordSource: 'portal' | 'geocoded' | 'unknown' = 'unknown';
-      if (lat !== undefined && lng !== undefined) {
-        coordSource = 'portal';
-      } else {
-        const fallback = cityFallbackCoords(s.city);
-        if (fallback) { lat = fallback.lat; lng = fallback.lng; coordSource = 'geocoded'; }
-      }
+      // רק קואורדינטות אמיתיות מהפורטל - לא ממציאים "מרכז עיר".
+      // אם הפורטל לא נתן lat/lng - הסניף נשמר עם הכתובת בלבד וייעדכן
+      // אחרי geocoding ידני (כפתור באדמין) או אם הפורטל יספק בעתיד.
+      const hasRealCoords = typeof s.lat === 'number' && typeof s.lng === 'number';
       return {
         chainId: adapter.chainId, chainName: adapter.chainName,
         storeId: s.storeId, storeName: s.storeName,
         address: s.address, city: s.city, zipCode: s.zipCode,
-        lat, lng, coordSource,
+        lat: hasRealCoords ? s.lat : undefined,
+        lng: hasRealCoords ? s.lng : undefined,
+        coordSource: hasRealCoords ? ('portal' as const) : ('unknown' as const),
         subChainId: s.subChainId, subChainName: s.subChainName, storeType: s.storeType,
       };
     });
