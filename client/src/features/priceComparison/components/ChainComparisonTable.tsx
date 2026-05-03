@@ -132,16 +132,27 @@ const ChainProductRow = memo(({ m, isDark, isCheapestInChain }: { m: PriceMatch;
 ChainProductRow.displayName = 'ChainProductRow';
 
 // בוני URL לאפליקציות הניווט השונות - לא פותחים ישר, מציגים picker למשתמש.
+// אם יש lat/lng - ניווט מדויק. אם יש רק כתובת (כמו במעיין 2000/שפע) -
+// ניווט לפי חיפוש כתובת. בכל מקרה ה-FAB ייפתח Waze/Maps עם היעד.
 const buildNavUrls = (branch: NearestBranch) => {
-  const { lat, lng, branchName } = branch;
+  const { lat, lng, branchName, address, city } = branch;
+  const hasCoords = typeof lat === 'number' && typeof lng === 'number';
+  const fullAddress = [address, city].filter(Boolean).join(', ');
+  const addressQuery = encodeURIComponent(fullAddress || branchName);
   const label = encodeURIComponent(branchName);
+
+  if (hasCoords) {
+    return {
+      waze: `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
+      googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`,
+      appleMaps: `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}`,
+    };
+  }
+  // ניווט לפי כתובת - האפליקציות יחפשו את היעד אוטומטית
   return {
-    // Waze - הפופולרי בישראל; עובד כ-deep link ו-web fallback
-    waze: `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
-    // Google Maps - נוח לכל פלטפורמה
-    googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`,
-    // Apple Maps - ל-iOS; בדפדפנים אחרים ייכשל
-    appleMaps: `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}`,
+    waze: `https://waze.com/ul?q=${addressQuery}&navigate=yes`,
+    googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${addressQuery}`,
+    appleMaps: `https://maps.apple.com/?daddr=${addressQuery}&q=${label}`,
   };
 };
 
@@ -286,7 +297,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           <CloseIcon sx={{ fontSize: 17 }} />
         </IconButton>
 
-        {/* תג מרחק זוהר במרכז למעלה */}
+        {/* תג מרחק זוהר במרכז למעלה - או "ניווט לפי כתובת" אם אין קואורדינטות */}
         <Box sx={{
           display: 'inline-flex', alignItems: 'baseline', gap: 0.4,
           px: 1.4, py: 0.5, borderRadius: '999px',
@@ -294,12 +305,20 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           boxShadow: '0 4px 14px rgba(20,184,166,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
           mb: 1.4,
         }}>
-          <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-            {branch.distanceKm}
-          </Typography>
-          <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', letterSpacing: 0.3 }}>
-            ק״מ
-          </Typography>
+          {typeof branch.distanceKm === 'number' ? (
+            <>
+              <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                {branch.distanceKm}
+              </Typography>
+              <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', letterSpacing: 0.3 }}>
+                ק״מ
+              </Typography>
+            </>
+          ) : (
+            <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: 0.3 }}>
+              ניווט לפי כתובת
+            </Typography>
+          )}
         </Box>
 
         <Typography sx={{
@@ -408,7 +427,7 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
         '&:active': { opacity: 0.85 },
       }}
     >
-      {/* תג מרחק בולט - אפשר לראות מרחוק */}
+      {/* תג מרחק בולט - אפשר לראות מרחוק. אם אין קואורדינטות, מציג "📍" בלבד */}
       <Box sx={{
         flexShrink: 0,
         minWidth: 48, px: 0.5, py: 0.5,
@@ -418,12 +437,18 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
         textAlign: 'center',
         boxShadow: '0 2px 6px rgba(124,58,237,0.3)',
       }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-          {branch.distanceKm}
-        </Typography>
-        <Typography sx={{ fontSize: 8, fontWeight: 700, opacity: 0.95, lineHeight: 1, mt: 0.2 }}>
-          ק"מ
-        </Typography>
+        {typeof branch.distanceKm === 'number' ? (
+          <>
+            <Typography sx={{ fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              {branch.distanceKm}
+            </Typography>
+            <Typography sx={{ fontSize: 8, fontWeight: 700, opacity: 0.95, lineHeight: 1, mt: 0.2 }}>
+              ק"מ
+            </Typography>
+          </>
+        ) : (
+          <Typography sx={{ fontSize: 16, fontWeight: 900, lineHeight: 1.5 }}>📍</Typography>
+        )}
       </Box>
 
       {/* שם הסניף + עיר/כתובת - הכתובת נשברת לשורות כדי שתמיד תהיה קריאה */}

@@ -16,9 +16,11 @@ export interface NearestBranch {
   branchName: string;
   city: string;
   address: string;
-  lat: number;
-  lng: number;
-  distanceKm: number;
+  // lat/lng/distanceKm אופציונליים - סניפים עם כתובת בלבד (ללא קואורדינטות)
+  // עדיין מוצגים, ועדיין ניתנים לניווט באמצעות חיפוש כתובת.
+  lat?: number;
+  lng?: number;
+  distanceKm?: number;
 }
 
 export interface UserLocation {
@@ -109,33 +111,52 @@ export function invalidateBranchCache(): void {
 // (פער < 2 ק"מ), מעדיפים את זה עם כתובת מלאה — הלקוח יודע איפה זה.
 export async function findNearestBranch(chainId: ChainId, user: UserLocation): Promise<NearestBranch | null> {
   const all = await getBranches();
-  // אוספים את כל הסניפים של הרשת עם מרחק
-  const candidates: Array<{ b: IBranchDoc; dist: number }> = [];
+  // 1. אוספים את כל הסניפים של הרשת עם קואורדינטות (לחישוב מרחק)
+  const withCoords: Array<{ b: IBranchDoc; dist: number }> = [];
+  // 2. סניפים עם כתובת אבל ללא קואורדינטות - מוצגים כ-fallback
+  const addressOnly: IBranchDoc[] = [];
   for (const b of all) {
     if (b.chainId !== chainId) continue;
-    if (typeof b.lat !== 'number' || typeof b.lng !== 'number') continue;
-    candidates.push({ b, dist: haversineKm(user, { lat: b.lat, lng: b.lng }) });
+    if (typeof b.lat === 'number' && typeof b.lng === 'number') {
+      withCoords.push({ b, dist: haversineKm(user, { lat: b.lat, lng: b.lng }) });
+    } else if (b.address || b.city) {
+      addressOnly.push(b);
+    }
   }
-  if (candidates.length === 0) return null;
-  // מיון: כתובת מלאה קודם, אחר כך הקרוב יותר. בתוך כתובות מלאות - הקרוב יותר.
-  candidates.sort((x, y) => {
-    const xHasInfo = (x.b.address || x.b.city) ? 1 : 0;
-    const yHasInfo = (y.b.address || y.b.city) ? 1 : 0;
-    // אם הפער בין השניים גדול מ-2 ק"מ, הקרוב מנצח גם אם אין לו כתובת
-    if (Math.abs(x.dist - y.dist) > 2) return x.dist - y.dist;
-    // פער קטן - נעדיף את זה עם הכתובת
-    if (xHasInfo !== yHasInfo) return yHasInfo - xHasInfo;
-    return x.dist - y.dist;
-  });
-  const { b: best, dist: bestDist } = candidates[0];
-  return {
-    branchName: best.storeName,
-    city: best.city || '',
-    address: best.address || '',
-    lat: best.lat!,
-    lng: best.lng!,
-    distanceKm: Math.round(bestDist * 10) / 10,
-  };
+
+  // אם יש סניפים עם קואורדינטות - מחזירים את הקרוב ביותר
+  if (withCoords.length > 0) {
+    withCoords.sort((x, y) => {
+      const xHasInfo = (x.b.address || x.b.city) ? 1 : 0;
+      const yHasInfo = (y.b.address || y.b.city) ? 1 : 0;
+      if (Math.abs(x.dist - y.dist) > 2) return x.dist - y.dist;
+      if (xHasInfo !== yHasInfo) return yHasInfo - xHasInfo;
+      return x.dist - y.dist;
+    });
+    const { b: best, dist: bestDist } = withCoords[0];
+    return {
+      branchName: best.storeName,
+      city: best.city || '',
+      address: best.address || '',
+      lat: best.lat!,
+      lng: best.lng!,
+      distanceKm: Math.round(bestDist * 10) / 10,
+    };
+  }
+
+  // אין קואורדינטות - מחזירים סניף ראשון עם כתובת (אם קיים).
+  // בלי distance, אבל ניתן לניווט דרך הכתובת.
+  if (addressOnly.length > 0) {
+    const best = addressOnly[0];
+    return {
+      branchName: best.storeName,
+      city: best.city || '',
+      address: best.address || '',
+      // lat/lng/distanceKm לא מוגדרים - הקליינט יציג בלי מרחק וינווט לפי כתובת
+    };
+  }
+
+  return null;
 }
 
 // ולידציה של קואורדינטות שהגיעו מהמשתמש.
