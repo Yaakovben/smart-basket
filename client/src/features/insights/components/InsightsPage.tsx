@@ -1417,7 +1417,7 @@ export const InsightsPage = memo(() => {
 
       </Box>
 
-      {/* ===== Bottom Navigation Bar - 2 טאבים, תובנות מודגש ===== */}
+      {/* ===== Bottom Navigation Bar - זהה בדיוק לבר של הבית ===== */}
       <Box sx={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         zIndex: 1000,
@@ -1426,19 +1426,24 @@ export const InsightsPage = memo(() => {
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
+        pb: 0,
         boxShadow: isDark
           ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
           : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
       }}>
         <Box sx={{
+          width: '100%',
           maxWidth: { xs: '100%', sm: 500, md: 600 },
           mx: 'auto',
           display: 'flex',
-          justifyContent: 'space-around',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          py: 1, px: 2,
-          minHeight: 60,
-          '@media (max-width: 360px)': { minHeight: 56 },
+          gap: { xs: 1, sm: 1.5 },
+          py: { xs: 0.6, sm: 0.85 },
+          px: { xs: 2.5, sm: 3.5 },
+          minHeight: 50,
+          '@media (max-width: 360px)': { py: 0.5, px: 2, minHeight: 46 },
+          '@media (max-width: 320px)': { py: 0.4, px: 1.5, minHeight: 42 },
         }}>
           {/* בית - לא מודגש */}
           <Box
@@ -1465,6 +1470,10 @@ export const InsightsPage = memo(() => {
               {t('home')}
             </Typography>
           </Box>
+
+          {/* spacer - שומר על אותו מרווח אמצעי כמו בבית (איפה שיש FAB),
+              כך שהטאבים יושבים באותו מיקום אופקי בדיוק. */}
+          <Box sx={{ width: 64, flexShrink: 0, '@media (max-width: 360px)': { width: 58 }, '@media (max-width: 320px)': { width: 52 } }} />
 
           {/* תובנות - מודגש (אנחנו כאן) */}
           <Box
