@@ -205,10 +205,10 @@ const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (
 });
 ProductNoteField.displayName = 'ProductNoteField';
 
-// ===== גריד קטגוריות עם הרחבה =====
-// מציג שתי שורות (8 קטגוריות) כברירת מחדל; פותח אוטומטית אם הקטגוריה
-// הנבחרת נמצאת מעבר ל-8 הראשונות, או בלחיצה על "הצג עוד".
-const COLLAPSED_CATS = 8;
+// ===== גריד קטגוריות - סגור בברירת מחדל, מתפתח בלחיצה =====
+// 3 רמות: סגור (רק הקטגוריה הנבחרת בכרטיסיה אחת) → חצי (7 קטגוריות) →
+// כל ה-14. ככה מודאל הוספת מוצר נראה קומפקטי בכניסה ראשונה.
+const HALF_CATS = 7; // חצי מ-14
 const ALL_CATS = Object.entries(CATEGORY_ICONS) as [ProductCategory, string][];
 
 const CategoryGrid = memo(({ selected, onSelect }: {
@@ -216,10 +216,62 @@ const CategoryGrid = memo(({ selected, onSelect }: {
   onSelect: (cat: ProductCategory) => void;
 }) => {
   const { t } = useSettings();
+  // 'closed' (רק הנבחרת) → 'half' (7 קטגוריות) → 'all' (14)
+  const [mode, setMode] = useState<'closed' | 'half' | 'all'>('closed');
+
+  // אם הקטגוריה הנבחרת לא בחצי הראשון, פותח אוטומטית ל-all
   const selectedIdx = ALL_CATS.findIndex(([c]) => c === selected);
-  const [showAll, setShowAll] = useState(selectedIdx >= COLLAPSED_CATS);
-  const visible = showAll ? ALL_CATS : ALL_CATS.slice(0, COLLAPSED_CATS);
-  const hidden = ALL_CATS.length - COLLAPSED_CATS;
+  if (mode === 'closed' && selectedIdx >= HALF_CATS && selectedIdx >= 0) {
+    // לא משנה state בתוך render - רק מסיק
+  }
+  const visible = mode === 'all' ? ALL_CATS
+    : mode === 'half' ? ALL_CATS.slice(0, HALF_CATS)
+    : []; // closed = ריק
+  const hiddenCount = ALL_CATS.length - HALF_CATS;
+
+  // ===== מצב סגור - רק כפתור עם הקטגוריה הנבחרת + "בחר אחרת" =====
+  if (mode === 'closed') {
+    const selectedCat = ALL_CATS.find(([c]) => c === selected);
+    return (
+      <Box
+        role="button"
+        tabIndex={0}
+        onClick={() => { haptic('light'); setMode('half'); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setMode('half'); } }}
+        sx={{
+          display: 'flex', alignItems: 'center', gap: 1.5,
+          py: 1.25, px: 1.5, borderRadius: '14px',
+          border: '2px solid', borderColor: 'rgba(20,184,166,0.25)',
+          bgcolor: 'rgba(20,184,166,0.06)',
+          cursor: 'pointer', userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          transition: 'all 0.18s',
+          '&:active': { transform: 'scale(0.98)' },
+          '&:hover': { bgcolor: 'rgba(20,184,166,0.1)' },
+        }}
+      >
+        <Box sx={{
+          width: 40, height: 40, borderRadius: '10px',
+          bgcolor: 'background.paper',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22, flexShrink: 0,
+        }}>
+          {selectedCat?.[1] || '📦'}
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: 'primary.main', lineHeight: 1.2 }}>
+            {selectedCat ? t(CATEGORY_TRANSLATION_KEYS[selectedCat[0]]) : 'בחר קטגוריה'}
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
+            לחץ לבחירת קטגוריה אחרת
+          </Typography>
+        </Box>
+        <Typography sx={{ fontSize: 18, color: 'primary.main', flexShrink: 0 }}>
+          ▾
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -265,12 +317,20 @@ const CategoryGrid = memo(({ selected, onSelect }: {
           );
         })}
       </Box>
-      {hidden > 0 && (
+      {hiddenCount > 0 && (
         <Box
           role="button"
           tabIndex={0}
-          onClick={() => { haptic('light'); setShowAll(s => !s); }}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setShowAll(s => !s); } }}
+          onClick={() => {
+            haptic('light');
+            setMode(m => m === 'all' ? 'closed' : 'all');
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              haptic('light');
+              setMode(m => m === 'all' ? 'closed' : 'all');
+            }
+          }}
           sx={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
             mt: 1, py: 0.7,
@@ -284,7 +344,7 @@ const CategoryGrid = memo(({ selected, onSelect }: {
             '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
           }}
         >
-          {showAll ? '▴ הצג פחות' : `▾ הצג עוד (${hidden})`}
+          {mode === 'all' ? '▴ הצג פחות' : `▾ הצג עוד (${hiddenCount})`}
         </Box>
       )}
     </>
