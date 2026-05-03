@@ -217,8 +217,13 @@ export const InsightsPage = memo(() => {
 
   return (
     <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(40px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-      {/* חיווי טעינה איטית - מופיע רק אחרי 4ש' של המתנה ובמסך השוואת מחירים */}
-      <SlowLoadIndicator active={tab === 'price' && priceLoading && !priceData} />
+      {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
+          המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
+      <SlowLoadIndicator
+        active={tab === 'price' && priceLoading && !priceData}
+        variant="toast"
+        message="מאחזר השוואת מחירים…"
+      />
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
         // הדר בצבעי האפליקציה - טורקיז במקום סגול, אחיד עם שאר המסכים

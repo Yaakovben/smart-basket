@@ -287,11 +287,12 @@ export const AppRouter = () => {
 
   return (
     <>
-      {/* חיווי טעינה איטי - רק אחרי כניסה למשתמש מאומת. בעמודי login/register
-          אין רשימות לטעון → לא מציגים את החיווי. */}
+      {/* חיווי טעינה איטי - מודאל מרכזי לכניסה ראשונית של משתמש מאומת. */}
       <SlowLoadIndicator
         active={!!user && listsLoading && lists.length === 0}
-        message="טוען את הרשימות שלך..."
+        variant="modal"
+        message="טוען את הרשימות שלך"
+        subMessage="מתחבר לשרת ומקבל את הרשימות העדכניות"
       />
       <Suspense fallback={<PageLoader />}>
       <Box sx={{
