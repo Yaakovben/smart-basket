@@ -7,29 +7,34 @@ interface Props {
   message?: string;
 }
 
-// אנימציות
-const walk = keyframes`
-  0% { transform: translateX(-40px); }
-  50% { transform: translateX(40px); }
-  100% { transform: translateX(-40px); }
-`;
-const bounce = keyframes`
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-`;
+// ===== אנימציות מותאמות smart-basket =====
+// fadeIn מהיר - 0.2s במקום 0.4s, מתאים גם להופעה לשבריר שנייה
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 `;
-const sparkle = keyframes`
-  0%, 100% { opacity: 0.3; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.1); }
+// פעימה של הסלסילה הראשית - גרף סינוס נקי
+const breathe = keyframes`
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+`;
+// סיבוב של "פירות" סביב הסלסילה - מעגל אמיתי, נראה כמו סטליט שמסתובב
+const orbit = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+// פס התקדמות אינסופי בסגנון iOS / Material - גל שעובר משמאל לימין
+const progressWave = keyframes`
+  0% { left: -35%; width: 35%; }
+  60% { left: 100%; width: 90%; }
+  100% { left: 100%; width: 0%; }
 `;
 
-// חיווי טעינה אסתטי שמופיע רק כשהטעינה לוקחת מעל 4 שניות.
-// מציג איש-עם-עגלה הולך לכיוון השרת (סלסילה) ומחזיר מידע - חזותית
-// "מי-מביא-את-המידע" שעוזר ללקוח להבין למה זה לוקח זמן.
-export const SlowLoadIndicator = ({ active, delayMs = 4000, message = 'אוסף מחירים מכל הסניפים...' }: Props) => {
+// ===== SlowLoadIndicator - חיווי טעינה custom של smart-basket =====
+// מציג עיגול טורקיז-גרדיאנט עם אייקון סלסילה מנופץ ושני "פירות" שמסתובבים
+// סביבו במסלול עגול. עיצוב ייחודי: לא emojis, לא ספינר MUI סטנדרטי, אלא
+// אנימציה שבנינו ב-CSS pure. תואם הופעה של שבריר שנייה (fade-in 0.2s).
+export const SlowLoadIndicator = ({ active, delayMs = 600, message = 'מסנכרן נתונים…' }: Props) => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -47,77 +52,131 @@ export const SlowLoadIndicator = ({ active, delayMs = 4000, message = 'אוסף 
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 1500,
-      animation: `${fadeIn} 0.4s ease-out`,
+      animation: `${fadeIn} 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)`,
       pointerEvents: 'none',
-      maxWidth: 320,
-      width: '90%',
+      maxWidth: 280,
+      width: 'auto',
     }}>
       <Box sx={{
-        bgcolor: 'rgba(20,184,166,0.95)',
-        color: 'white',
-        borderRadius: 3,
-        boxShadow: '0 12px 32px rgba(20,184,166,0.35), 0 4px 12px rgba(0,0,0,0.15)',
-        p: 2,
-        backdropFilter: 'blur(12px)',
+        // glassmorphism מוקפד עם גרדיאנט עדין של ה-brand color
+        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,250,0.95) 100%)',
+        border: '1px solid rgba(20,184,166,0.25)',
+        borderRadius: '20px',
+        boxShadow: [
+          'inset 0 1px 0 rgba(255,255,255,0.7)',
+          '0 4px 14px rgba(20,184,166,0.18)',
+          '0 16px 40px rgba(15,118,110,0.12)',
+        ].join(', '),
+        backdropFilter: 'blur(16px)',
+        px: 2.25, py: 1.5,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
       }}>
-        {/* האיש שהולך עם העגלה */}
+        {/* ===== הלוגו האנימטיבי - SVG-style טהור עם CSS ===== */}
         <Box sx={{
           position: 'relative',
-          height: 50,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mb: 1,
-          overflow: 'hidden',
+          width: 44, height: 44,
+          flexShrink: 0,
         }}>
-          {/* קווי תנועה דמיוניים מאחור */}
+          {/* מסלול חיצוני עדין (מסמן את האורבית) */}
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            borderRadius: '50%',
+            border: '1px dashed rgba(20,184,166,0.25)',
+          }} />
+
+          {/* "פרי" 1 שמסתובב - turquoise primary */}
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            animation: `${orbit} 1.8s linear infinite`,
+          }}>
+            <Box sx={{
+              position: 'absolute',
+              top: -3, left: '50%',
+              transform: 'translateX(-50%)',
+              width: 8, height: 8,
+              borderRadius: '50%',
+              backgroundImage: 'linear-gradient(135deg, #2DD4BF, #14B8A6)',
+              boxShadow: '0 2px 6px rgba(20,184,166,0.5)',
+            }} />
+          </Box>
+
+          {/* "פרי" 2 שמסתובב נגדית - turquoise secondary, מסלול הפוך */}
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            animation: `${orbit} 2.4s linear infinite reverse`,
+          }}>
+            <Box sx={{
+              position: 'absolute',
+              bottom: -3, left: '50%',
+              transform: 'translateX(-50%)',
+              width: 6, height: 6,
+              borderRadius: '50%',
+              backgroundImage: 'linear-gradient(135deg, #5EEAD4, #2DD4BF)',
+              boxShadow: '0 2px 4px rgba(45,212,191,0.5)',
+            }} />
+          </Box>
+
+          {/* הסלסילה במרכז - עיגול גרדיאנט שנושם */}
           <Box sx={{
             position: 'absolute',
-            top: '50%',
-            left: 0, right: 0,
-            height: 2,
-            background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)',
-            transform: 'translateY(-50%)',
-          }} />
-          {/* האיש + העגלה */}
-          <Box sx={{
-            display: 'inline-flex',
+            inset: 8,
+            borderRadius: '50%',
+            backgroundImage: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 60%, #0F766E 100%)',
+            boxShadow: [
+              'inset 0 1px 0 rgba(255,255,255,0.3)',
+              '0 4px 10px rgba(20,184,166,0.4)',
+            ].join(', '),
+            display: 'flex',
             alignItems: 'center',
-            gap: 0.5,
-            fontSize: 32,
-            animation: `${walk} 2.6s ease-in-out infinite`,
+            justifyContent: 'center',
+            animation: `${breathe} 1.6s ease-in-out infinite`,
           }}>
-            <Box sx={{ animation: `${bounce} 0.5s ease-in-out infinite` }}>🛒</Box>
-            <Box sx={{ animation: `${bounce} 0.5s ease-in-out infinite`, animationDelay: '0.05s' }}>🚶</Box>
+            {/* SVG של סלסילה - לא emoji */}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 7h14l-1.5 9.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 7z"
+                stroke="white"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M9 7l1.5-3a1.5 1.5 0 0 1 1.4-1h.2a1.5 1.5 0 0 1 1.4 1L15 7"
+                stroke="white"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+            </svg>
           </Box>
-          {/* "מקור" המידע - חנות בקצה השני */}
-          <Box sx={{ position: 'absolute', right: 12, fontSize: 24, animation: `${sparkle} 1.4s ease-in-out infinite` }}>🏪</Box>
-          <Box sx={{ position: 'absolute', left: 12, fontSize: 24, opacity: 0.8 }}>🏠</Box>
         </Box>
 
-        {/* טקסט */}
-        <Typography sx={{ fontSize: 14, fontWeight: 700, textAlign: 'center', lineHeight: 1.3 }}>
-          {message}
-        </Typography>
-        <Typography sx={{ fontSize: 11, opacity: 0.85, textAlign: 'center', mt: 0.4 }}>
-          רגע, השרת מאחזר עבורך נתונים טריים
-        </Typography>
-
-        {/* פס התקדמות עדין */}
-        <Box sx={{
-          mt: 1.5,
-          height: 3,
-          borderRadius: 1.5,
-          bgcolor: 'rgba(255,255,255,0.2)',
-          overflow: 'hidden',
-        }}>
+        {/* ===== טקסט ===== */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{
+            fontSize: 13.5, fontWeight: 800, color: '#0F766E',
+            lineHeight: 1.2, letterSpacing: -0.1,
+          }}>
+            {message}
+          </Typography>
+          {/* פס התקדמות אינסופי - גל שעובר */}
           <Box sx={{
-            height: '100%',
-            width: '40%',
-            bgcolor: 'white',
-            borderRadius: 1.5,
-            animation: `${walk} 1.6s ease-in-out infinite`,
-          }} />
+            mt: 0.7,
+            position: 'relative',
+            height: 3,
+            borderRadius: '2px',
+            bgcolor: 'rgba(20,184,166,0.12)',
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              position: 'absolute',
+              top: 0, height: '100%',
+              borderRadius: '2px',
+              backgroundImage: 'linear-gradient(90deg, #14B8A6, #2DD4BF, #14B8A6)',
+              animation: `${progressWave} 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
+            }} />
+          </Box>
         </Box>
       </Box>
     </Box>
