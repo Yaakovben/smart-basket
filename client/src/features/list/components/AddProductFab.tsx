@@ -93,30 +93,9 @@ export const AddProductFab = memo(({
     );
   }
 
-  // מצב מעט פריטים: FAB עגול קטן ללא טקסט (כפילות עם שדה ההוספה למעלה).
-  // השוני היחיד מהמצב הראשון: הכפתור לא נגרר. שאר העיצוב זהה.
-  return (
-    <Box sx={{
-      position: 'fixed',
-      bottom: 'calc(24px + env(safe-area-inset-bottom))',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 5,
-    }}>
-      <Fab
-        color="primary"
-        onClick={handleClick}
-        aria-label={t('addProduct')}
-        sx={{
-          width: { xs: 52, sm: 56 },
-          height: { xs: 52, sm: 56 },
-          touchAction: 'manipulation',
-        }}
-      >
-        <AddIcon sx={{ fontSize: { xs: 22, sm: 24 } }} />
-      </Fab>
-    </Box>
-  );
+  // מצב מעט פריטים (≤3): אין FAB בכלל. שדה ההוספה המהיר בראש הרשימה
+  // מספיק - אין צורך בכפתור צף שמתחרה איתו.
+  return null;
 });
 
 AddProductFab.displayName = 'AddProductFab';
