@@ -18,7 +18,6 @@ import AddIcon from '@mui/icons-material/Add';
 import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
@@ -863,26 +862,64 @@ export const HomeComponent = memo(({
 
       {/* Content - overscrollBehavior:contain מונע מ-pull-to-refresh ב-iOS להזיז את הבר */}
       <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
-        {/* מצב שגיאת חיבור: השרת למטה ואין רשימות */}
+        {/* מצב שגיאת חיבור: השרת למטה ואין רשימות. הקוד מנסה שוב אוטומטית
+            כל 4 שניות (useLists effect), ככה אין צורך בלחיצה ידנית - ברגע
+            שהחיבור חוזר, הרשימות מופיעות מעצמן. */}
         {listsFetchError && lists.length === 0 ? (
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
-            <Box sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: '50%', bgcolor: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: { xs: 2.5, sm: 3 } }}>
-              <CloudOffIcon sx={{ fontSize: { xs: 48, sm: 56 }, color: 'error.main', opacity: 0.8 }} />
+            <Box sx={{
+              width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: '50%',
+              bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              mb: { xs: 2.5, sm: 3 },
+              animation: 'connBreath 2s ease-in-out infinite',
+              '@keyframes connBreath': {
+                '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(245,158,11,0.3)' },
+                '50%': { transform: 'scale(1.05)', boxShadow: '0 0 0 12px rgba(245,158,11,0)' },
+              },
+            }}>
+              <CloudOffIcon sx={{ fontSize: { xs: 48, sm: 56 }, color: '#D97706', opacity: 0.85 }} />
             </Box>
-            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 600, color: 'text.primary', mb: 1 }}>
+            <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
               {t('connectionErrorTitle')}
             </Typography>
-            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 3, sm: 4 }, maxWidth: { xs: 260, sm: 280 } }}>
+            <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 }, maxWidth: { xs: 280, sm: 320 } }}>
               {t('connectionErrorDesc')}
             </Typography>
+            {/* חיווי "מנסה שוב" - 3 נקודות פעימות + טקסט */}
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 1,
+              px: 2, py: 1, borderRadius: 999,
+              bgcolor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1',
+              border: '1px solid', borderColor: 'rgba(20,184,166,0.3)',
+            }}>
+              <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
+                {[0, 1, 2].map(i => (
+                  <Box key={i} sx={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    bgcolor: '#0D9488',
+                    animation: 'connDot 1.2s ease-in-out infinite',
+                    animationDelay: `${i * 0.18}s`,
+                    '@keyframes connDot': {
+                      '0%, 100%': { opacity: 0.3, transform: 'scale(0.85)' },
+                      '50%': { opacity: 1, transform: 'scale(1)' },
+                    },
+                  }} />
+                ))}
+              </Box>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: '#0D9488' }}>
+                מנסה שוב…
+              </Typography>
+            </Box>
             <Button
-              variant="contained"
-              color="error"
+              variant="text"
               onClick={() => window.location.reload()}
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, px: { xs: 2.5, sm: 3 }, py: { xs: 1.25, sm: 1.5 }, fontSize: { xs: 14, sm: 15 } }}
+              sx={{
+                mt: 2, fontSize: 12, color: 'text.secondary', textDecoration: 'underline',
+                textTransform: 'none', '&:hover': { bgcolor: 'transparent', opacity: 0.7 },
+              }}
             >
-              <RefreshIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-              <span>{t('tryAgain')}</span>
+              נסה לטעון מחדש את הדף
             </Button>
           </Box>
         ) : listsLoading && display.length === 0 ? (

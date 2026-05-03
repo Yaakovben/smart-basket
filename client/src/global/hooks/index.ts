@@ -392,6 +392,24 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה מחדש רק כשמזהה המשתמש משתנה או האימות מסתיים
   }, [authLoading, user?.id, fetchLists]);
 
+  // Auto-retry: כשיש שגיאת רשת (אין רשת/השרת לא עונה), מנסים שוב כל 4 שניות
+  // עד שמצליחים. מפסיקים אם המשתמש נותק. ככה הלקוח לא תקוע במסך 'אין חיבור' -
+  // האפליקציה ממשיכה לנסות ברקע ומופיעה ברגע שהחיבור חוזר.
+  useEffect(() => {
+    if (!fetchError || !user || authLoading) return;
+    const id = window.setInterval(() => { void fetchLists(); }, 4000);
+    return () => window.clearInterval(id);
+  }, [fetchError, user, authLoading, fetchLists]);
+
+  // Auto-retry על אירוע 'online' (חזרת רשת ב-WiFi/4G) - מיידי, לא ממתין
+  // ל-interval של 4ש'.
+  useEffect(() => {
+    if (!user) return;
+    const onOnline = () => { if (fetchError) void fetchLists(); };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [user, fetchError, fetchLists]);
+
   const createList = useCallback(
     async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
       // שליחה לשרת קודם, הוספה ל-UI רק אחרי אישור

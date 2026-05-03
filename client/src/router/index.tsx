@@ -287,12 +287,12 @@ export const AppRouter = () => {
 
   return (
     <>
-      {/* חיווי טעינה איטי - מודאל מרכזי לכניסה ראשונית של משתמש מאומת. */}
+      {/* חיווי טעינה איטי - אחיד לכל המסכים: toast למטה (אותו מיקום כמו
+          'מאחזר השוואת מחירים') כדי לא לחסום את ה-UI ולשמור על עקביות. */}
       <SlowLoadIndicator
         active={!!user && listsLoading && lists.length === 0}
-        variant="modal"
-        message="טוען את הרשימות שלך"
-        subMessage="מתחבר לשרת ומקבל את הרשימות העדכניות"
+        variant="toast"
+        message="טוען את הרשימות שלך…"
       />
       <Suspense fallback={<PageLoader />}>
       <Box sx={{
