@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import {
   Box, TextField, Button, Typography, Alert,
   CircularProgress, InputAdornment, Paper, Collapse
@@ -35,7 +35,10 @@ interface LoginPageProps {
   onLogin: (user: User) => void;
 }
 
-export const LoginComponent = ({ onLogin }: LoginPageProps) => {
+// memo - LoginComponent מקבל onLogin מהראוטר. כשהראוטר re-renders עקב
+// presence/notifications, אם onLogin שמור (useCallback ב-handleLogin),
+// LoginComponent לא יעשה re-render. מונע פליקור של Google OAuth widget.
+const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [clearing, setClearing] = useState(false);
@@ -470,3 +473,6 @@ export const LoginComponent = ({ onLogin }: LoginPageProps) => {
     </Box>
   );
 };
+
+export const LoginComponent = memo(LoginComponentImpl);
+LoginComponent.displayName = 'LoginComponent';

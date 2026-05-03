@@ -243,13 +243,13 @@ export const AppRouter = () => {
     return null;
   }
 
-  const handleLogin = (u: User, loginMethod: LoginMethod = 'email') => {
+  const handleLogin = useCallback((u: User, loginMethod: LoginMethod = 'email') => {
     // מונע שהניווט יקרה לפני עדכון הסטייט (flushSync)
     flushSync(() => {
       login(u, loginMethod);
     });
     navigate("/");
-  };
+  }, [login, navigate]);
 
   const handleLogout = () => {
     logout();
