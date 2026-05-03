@@ -93,9 +93,39 @@ export const AddProductFab = memo(({
     );
   }
 
-  // מצב מעט פריטים (≤3): אין FAB בכלל. שדה ההוספה המהיר בראש הרשימה
-  // מספיק - אין צורך בכפתור צף שמתחרה איתו.
-  return null;
+  // מצב כפתור רגיל - fixed, ממורכז, לא מגיב לנגיעה על ה-wrapper
+  return (
+    <Box sx={{
+      position: 'fixed',
+      bottom: 'calc(20px + env(safe-area-inset-bottom))',
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'center',
+      zIndex: 5,
+      pointerEvents: 'none',
+    }}>
+      <Fab
+        color="primary"
+        variant="extended"
+        onClick={handleClick}
+        aria-label={t('addProduct')}
+        sx={{
+          px: 2.5,
+          gap: 0.75,
+          fontWeight: 600,
+          fontSize: 14,
+          textTransform: 'none',
+          boxShadow: '0 6px 20px rgba(20, 184, 166, 0.4)',
+          pointerEvents: 'auto',
+          touchAction: 'manipulation',
+        }}
+      >
+        <AddIcon sx={{ fontSize: 20 }} />
+        {t('addProduct')}
+      </Fab>
+    </Box>
+  );
 });
 
 AddProductFab.displayName = 'AddProductFab';
