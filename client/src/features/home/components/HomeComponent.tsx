@@ -1760,12 +1760,14 @@ export const HomeComponent = memo(({
       {/* FAB - באותו portal */}
       <Box
         sx={{
-          // fixed - נעול לויאופורט, זהה לבר.
-          // bottom: max של 34px (גובה מינימום) ו-safe-area של iOS.
-          // ב-Android safe-area=0 → בלי max ה-FAB יושב למעלה מידי על בר התחתון
-          // של המערכת. ה-34px מבטיח clearance מינימלי בכל פלטפורמה.
+          // bottom של ה-FAB מחושב כך שמרכז העיגול יושב בדיוק על שפת הבר העליונה.
+          // בר=60px, FAB radius=28px → bottom = 60-28 = 32px → מרכז ב-y=60 = שפת הבר.
+          // זה נותן חצי-FAB מעל הבר, חצי בתוך החתך - אסתטיקה סטנדרטית.
+          // max עם safe-area-inset-bottom: על iPhone עם home indicator (~34px), ה-max
+          // יבטיח שה-FAB יהיה מעל ה-indicator ולא יחפוף.
+          // על Android safe-area=0 → max(32, 0) = 32 → FAB מתואם בדיוק לבר.
           position: 'fixed',
-          bottom: 'max(34px, env(safe-area-inset-bottom))',
+          bottom: 'max(32px, env(safe-area-inset-bottom))',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,
