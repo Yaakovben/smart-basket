@@ -101,5 +101,10 @@ const priceSchema = new Schema<IPriceDoc>(
 // אינדקס מורכב: ברקוד + רשת = ייחודי (מחיר אחד לכל ברקוד לכל רשת)
 priceSchema.index({ barcode: 1, chainId: 1 }, { unique: true });
 priceSchema.index({ itemNameNormalized: 'text' });
+// אינדקס על updatedAt - מזרז את שאילתת הניקוי הלילי (cleanupOldPrices) שמחפשת
+// מסמכים ישנים. ללא TTL - הניקוי הוא ידני ב-batches (בטוח יותר ב-Atlas Free).
+// background: true - הבנייה הראשונית לא נועלת את הקולקציה. ב-Mongoose 6+ זה
+// ברירת המחדל אבל מציינים מפורשות לבטיחות.
+priceSchema.index({ updatedAt: 1 }, { background: true });
 
 export const Price = model<IPriceDoc>('Price', priceSchema);
