@@ -1678,9 +1678,11 @@ export const HomeComponent = memo(({
           // ללא padding-bottom של safe-area - הבר צמוד לחלוטין לתחתית
           // הפיזית של המסך גם ב-iPhone PWA. ה-home indicator עלול לחפוף.
           pb: 0,
-          boxShadow: isDark
-            ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
-            : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
+          // filter: drop-shadow במקום boxShadow כי mask-image חותך box-shadow.
+          // drop-shadow מכבד את הצורה הממוסכת ויוצר צל מעל הבר ככלול חתך ה-FAB.
+          filter: isDark
+            ? 'drop-shadow(0 -4px 14px rgba(0,0,0,0.4)) drop-shadow(0 -1px 3px rgba(0,0,0,0.25))'
+            : 'drop-shadow(0 -4px 14px rgba(0,0,0,0.08)) drop-shadow(0 -1px 3px rgba(0,0,0,0.04))',
           // חתך עגול רך/חלק במרכז העליון של הבר - גרדיאנט הדרגתי במקום
           // קצה חד של 1px. רדיוס 50, מעבר רך מ-38 (שקוף) ל-50 (אטום) =
           // 12px gradient transition. נותן חתך שמתערבב חלק עם הבר במקום
