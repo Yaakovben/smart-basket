@@ -10,6 +10,7 @@ import { BranchDAL } from '../dal/branch.dal';
 import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
+import { cityFallbackCoords } from './geocoder.service';
 import { logger } from '../../../config/logger';
 
 export interface NearestBranch {
@@ -144,15 +145,35 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
     };
   }
 
-  // אין קואורדינטות - מחזירים סניף ראשון עם כתובת (אם קיים).
-  // בלי distance, אבל ניתן לניווט דרך הכתובת.
+  // אין קואורדינטות - מנסים להעריך מרחק לפי קואורדינטות מרכז העיר (טבלת
+  // ערים קבועה, ללא קריאת רשת). זה מקורב אבל הרבה יותר טוב מ-"אין מרחק".
+  // מסומן ב-distanceKm עגול - הלקוח יציג מרחק עם רמז שזה משוער.
   if (addressOnly.length > 0) {
+    const withCityCoords: Array<{ b: IBranchDoc; dist: number; coords: { lat: number; lng: number } }> = [];
+    for (const b of addressOnly) {
+      const coords = cityFallbackCoords(b.city);
+      if (coords) {
+        withCityCoords.push({ b, coords, dist: haversineKm(user, coords) });
+      }
+    }
+    if (withCityCoords.length > 0) {
+      withCityCoords.sort((x, y) => x.dist - y.dist);
+      const { b: best, dist: bestDist, coords } = withCityCoords[0];
+      return {
+        branchName: best.storeName,
+        city: best.city || '',
+        address: best.address || '',
+        lat: coords.lat,
+        lng: coords.lng,
+        distanceKm: Math.round(bestDist * 10) / 10,
+      };
+    }
+    // לא הצלחנו אפילו fallback של עיר - חוזרים לסניף הראשון בלי מרחק
     const best = addressOnly[0];
     return {
       branchName: best.storeName,
       city: best.city || '',
       address: best.address || '',
-      // lat/lng/distanceKm לא מוגדרים - הקליינט יציג בלי מרחק וינווט לפי כתובת
     };
   }
 
