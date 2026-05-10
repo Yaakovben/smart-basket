@@ -320,12 +320,19 @@ async function processChainItems(
     };
   });
 
-  const BATCH_SIZE = 500;
+  // Batches קטנים + השהיה ביניהם → השרת ממשיך לענות מהר ללקוחות במהלך
+  // הסנכרון. 200 docs במקום 500 → bulkWrite קצר יותר → פחות נעילה.
+  // 100ms השהיה אחרי כל batch = event loop נושם, queries אחרים עוברים.
+  const BATCH_SIZE = 200;
+  const BATCH_DELAY_MS = 100;
   let totalUpserted = 0;
   for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
     const batch = inputs.slice(i, i + BATCH_SIZE);
     const affected = await PriceDAL.bulkUpsert(batch);
     totalUpserted += affected;
+    if (i + BATCH_SIZE < inputs.length) {
+      await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+    }
   }
 
   // סנכרון סניפים - לא חוסם את המחירים אם נכשל
