@@ -157,8 +157,10 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
   const pressTimerRef = useRef<number | null>(null);
   const longPressedRef = useRef(false);
 
-  const startNamePress = useCallback(() => {
+  const startNamePress = useCallback((e: React.PointerEvent) => {
     if (reorderMode || marquee) return;
+    // מונע סימון טקסט וה-callout של iOS בלחיצה ארוכה
+    if (e.pointerType === 'touch') e.preventDefault();
     pressTimerRef.current = window.setTimeout(() => {
       const wrap = nameWrapRef.current;
       const text = nameTextRef.current;
@@ -226,11 +228,17 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
             onPointerLeave={cancelNamePress}
             onPointerCancel={cancelNamePress}
             onClick={onNameClick}
+            onContextMenu={(e) => e.preventDefault()}
             sx={{
               flex: 1, minWidth: 0, overflow: 'hidden',
-              userSelect: 'none', WebkitUserSelect: 'none',
+              userSelect: 'none !important',
+              WebkitUserSelect: 'none !important',
               WebkitTouchCallout: 'none',
               touchAction: 'manipulation',
+              '& *': {
+                userSelect: 'none !important',
+                WebkitUserSelect: 'none !important',
+              },
             }}
           >
             <Typography
