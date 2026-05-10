@@ -1,7 +1,5 @@
 import { memo } from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
-import { haptic } from '../../../global/helpers';
+import { Box, Typography } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 
@@ -15,7 +13,7 @@ interface EmptyStateProps {
 }
 
 // ===== קומפוננטה =====
-export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurchased }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyStateProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
@@ -139,28 +137,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, onClearPurch
       <Typography sx={{ fontSize: { xs: 12.5, sm: 14 }, color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
         {config.description}
       </Typography>
-      {/* כפתור ניקוי כשהכל נקנה */}
-      {isAllDone && onClearPurchased && (
-        <Button
-          variant="outlined"
-          onClick={() => { haptic('light'); onClearPurchased(); }}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            px: { xs: 2.5, sm: 3 },
-            py: { xs: 1, sm: 1.25 },
-            fontSize: { xs: 13, sm: 14 },
-            borderColor: 'warning.main',
-            color: 'warning.main',
-            '&:hover': { borderColor: 'warning.dark', bgcolor: 'rgba(245,158,11,0.04)' }
-          }}
-        >
-          <PlaylistRemoveIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-          <span>{t('clearPurchased')}</span>
-        </Button>
-      )}
-      {/* כפתור הוספה לא מוצג כאן, ה-FAB הקבוע למטה תמיד זמין */}
+      {/* כפתור ניקוי הוסר מטאב 'לקנות' - מופיע רק בטאב 'נקנו' */}
     </Box>
   );
 });
