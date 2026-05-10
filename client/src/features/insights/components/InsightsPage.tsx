@@ -202,25 +202,9 @@ export const InsightsPage = memo(() => {
   // halo גדול עם 💡, כותרת ברכה, סקירת 3 התובנות שיופיעו, ו-CTA לחזרה
   // ליצירת רשימה ראשונה.
   if (!data || data.stats.totalProducts === 0) {
-    const previews: { emoji: string; title: string; sub: string; gradient: string; chip: string }[] = [
-      { emoji: '💰', title: 'השוואת מחירים', sub: 'נמצא לך את הרשת הזולה לסל שלך', gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)', chip: 'חיסכון עד 30%' },
-      { emoji: '🛍️', title: 'הרגלי קנייה', sub: 'מוצרים חוזרים, ימי שיא, קטגוריות', gradient: 'linear-gradient(135deg, #F59E0B, #DC2626)', chip: 'אישי' },
-      { emoji: '👥', title: 'תובנות קבוצה', sub: 'מי תורם הכי הרבה לרשימות המשותפות', gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1)', chip: 'משותף' },
-      { emoji: '💓', title: 'דופק קנייה', sub: 'ציון אישי שמשתפר עם השימוש', gradient: 'linear-gradient(135deg, #EC4899, #BE185D)', chip: 'גיימיפיקציה' },
-    ];
-    const steps: { n: number; emoji: string; title: string; sub: string }[] = [
-      { n: 1, emoji: '📝', title: 'הוסף מוצרים', sub: 'בנה רשימת קנייה' },
-      { n: 2, emoji: '✅', title: 'סמן שקנית', sub: 'בזמן הקנייה' },
-      { n: 3, emoji: '💡', title: 'קבל תובנות', sub: 'אוטומטית כאן' },
-    ];
-    const facts: { emoji: string; value: string; label: string }[] = [
-      { emoji: '🏪', value: '13+', label: 'רשתות' },
-      { emoji: '🔄', value: '24h', label: 'עדכון יומי' },
-      { emoji: '🎁', value: 'חינם', label: 'תמיד' },
-    ];
     return (
       <Box sx={{ height: '100dvh', bgcolor: 'background.default', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
-        {/* הדר זהה לעמוד הראשי - שמירה על הקשר */}
+        {/* הדר זהה לעמוד הראשי */}
         <Box sx={{
           background: isDark ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)' : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
           p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
@@ -240,162 +224,31 @@ export const InsightsPage = memo(() => {
           </Box>
         </Box>
 
-        <Box sx={{ px: 2, animation: `${fadeIn} 0.5s ease` }}>
-          {/* גיבור */}
+        {/* פשטות: גיבור + כפתור. נקודה. */}
+        <Box sx={{ px: 3, animation: `${fadeIn} 0.5s ease` }}>
           <InsightsEmptyState
             isDark={isDark}
             accent="#14B8A6"
             mainEmoji="💡"
             floatingItems={['📊', '💰', '🛍️', '⭐']}
             title="ברוך הבא לתובנות!"
-            description="כאן יופיע סיפור הקנייה האישי שלך - מה אתה קונה הכי הרבה, באיזו רשת תחסוך הכי הרבה, ומגמות לאורך זמן."
+            description="התחל ליצור רשימות וסמן מה שקנית - וכאן תקבל תובנות אישיות."
           />
-
-          {/* באנר עובדות מהירות - "credibility strip" */}
-          <Box sx={{
-            display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-            p: 1.25, mb: 2.5, borderRadius: '14px',
-            background: isDark
-              ? 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(20,184,166,0.04))'
-              : 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(94,234,212,0.04))',
-            border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)',
-            animation: `${fadeIn} 0.5s ease 0.1s both`,
-          }}>
-            {facts.map((f, i) => (
-              <Fragment key={i}>
-                <Box sx={{ textAlign: 'center', flex: 1 }}>
-                  <Box sx={{ fontSize: 18, mb: 0.25 }}>{f.emoji}</Box>
-                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'primary.main', lineHeight: 1 }}>
-                    {f.value}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.25 }}>
-                    {f.label}
-                  </Typography>
-                </Box>
-                {i < facts.length - 1 && (
-                  <Box sx={{ width: 1, height: 28, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }} />
-                )}
-              </Fragment>
-            ))}
-          </Box>
-
-          {/* "איך זה עובד" - 3 שלבים עם חיצים */}
-          <Typography sx={{ fontSize: 12, fontWeight: 800, color: 'text.secondary', textAlign: 'center', mb: 1, letterSpacing: 1, textTransform: 'uppercase' }}>
-            איך זה עובד
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 0.5, mb: 3, animation: `${fadeIn} 0.5s ease 0.2s both` }}>
-            {steps.map((s, i) => (
-              <Fragment key={s.n}>
-                <Box sx={{
-                  flex: 1, textAlign: 'center', p: 1.25, borderRadius: '14px',
-                  bgcolor: isDark ? 'rgba(20,184,166,0.06)' : 'rgba(20,184,166,0.04)',
-                  border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.16)' : 'rgba(20,184,166,0.12)',
-                  position: 'relative',
-                }}>
-                  <Box sx={{
-                    position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
-                    width: 20, height: 20, borderRadius: '50%',
-                    bgcolor: 'primary.main', color: 'white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 800,
-                    boxShadow: '0 2px 6px rgba(20,184,166,0.4)',
-                  }}>
-                    {s.n}
-                  </Box>
-                  <Box sx={{ fontSize: 24, mt: 0.5, mb: 0.4 }}>{s.emoji}</Box>
-                  <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-                    {s.title}
-                  </Typography>
-                  <Typography sx={{ fontSize: 9.5, color: 'text.secondary', mt: 0.25, lineHeight: 1.3 }}>
-                    {s.sub}
-                  </Typography>
-                </Box>
-                {i < steps.length - 1 && (
-                  <Box sx={{
-                    display: 'flex', alignItems: 'center', color: 'primary.main',
-                    fontSize: 18, fontWeight: 900, opacity: 0.6,
-                  }}>
-                    ←
-                  </Box>
-                )}
-              </Fragment>
-            ))}
-          </Box>
-
-          {/* תצוגה מקדימה של 4 התובנות שיופיעו - שדרוג עם chip קטן */}
-          <Typography sx={{ fontSize: 12, fontWeight: 800, color: 'text.secondary', textAlign: 'center', mb: 1, letterSpacing: 1, textTransform: 'uppercase' }}>
-            מה תקבל כאן
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.25, mb: 3 }}>
-            {previews.map((p, i) => (
-              <Box key={i} sx={{
-                position: 'relative', overflow: 'hidden',
-                p: 1.5, borderRadius: '16px',
-                border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.14)',
-                bgcolor: isDark ? 'rgba(20,184,166,0.06)' : 'rgba(20,184,166,0.04)',
-                animation: `${fadeIn} 0.5s ease ${0.3 + i * 0.08}s both`,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:active': { transform: 'scale(0.97)' },
-              }}>
-                {/* shine ברקע - גרדיאנט עדין מהפינה */}
-                <Box sx={{
-                  position: 'absolute', top: -20, right: -20, width: 80, height: 80,
-                  borderRadius: '50%', opacity: 0.08, background: p.gradient, pointerEvents: 'none',
-                }} />
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 0.75 }}>
-                  <Box sx={{
-                    width: 38, height: 38, borderRadius: '10px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, background: p.gradient,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                  }}>
-                    {p.emoji}
-                  </Box>
-                  <Box sx={{
-                    px: 0.7, py: 0.15, borderRadius: '999px',
-                    fontSize: 9, fontWeight: 800, color: 'primary.main',
-                    bgcolor: isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.1)',
-                    border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.3)' : 'rgba(20,184,166,0.2)',
-                  }}>
-                    {p.chip}
-                  </Box>
-                </Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
-                  {p.title}
-                </Typography>
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.4 }}>
-                  {p.sub}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-
-          {/* CTA - דומיננטי עם פולס עדין */}
           <Button
             onClick={() => { haptic('medium'); navigate('/'); }}
             fullWidth
             sx={{
-              py: 1.7, borderRadius: '14px', textTransform: 'none',
-              fontSize: 15.5, fontWeight: 800, color: 'white',
+              mt: 1, py: 1.5, borderRadius: '14px', textTransform: 'none',
+              fontSize: 15, fontWeight: 800, color: 'white',
               background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
               boxShadow: '0 8px 24px rgba(20,184,166,0.32)',
-              '&:hover': { background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)' },
               '&:active': { transform: 'scale(0.98)' },
               gap: 1,
-              animation: `welcomePulse 2.4s ease-in-out infinite`,
-              '@keyframes welcomePulse': {
-                '0%, 100%': { boxShadow: '0 8px 24px rgba(20,184,166,0.32)' },
-                '50%': { boxShadow: '0 10px 32px rgba(20,184,166,0.5)' },
-              },
             }}
             startIcon={<HomeIcon sx={{ fontSize: 20 }} />}
           >
-            התחל - בנה רשימה ראשונה
+            לרשימות שלי
           </Button>
-
-          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', textAlign: 'center', mt: 1.5, px: 2, lineHeight: 1.55 }}>
-            ✨ אין צורך בהגדרות. אין רישום נוסף. פשוט תתחיל.
-          </Typography>
         </Box>
       </Box>
     );
