@@ -176,7 +176,7 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{l.name}</Typography>
+          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', wordBreak: 'break-word', flex: 1, lineHeight: 1.25 }}>{l.name}</Typography>
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>

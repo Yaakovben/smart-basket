@@ -351,8 +351,14 @@ export const ListHeader = memo(({
         >
           <ArrowForwardIcon sx={{ color: 'white', fontSize: 22 }} />
         </IconButton>
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-          <Typography sx={{ color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center', '@media (max-width: 360px)': { fontSize: 15 } }}>
+        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <Typography sx={{
+            color: 'white', fontSize: { xs: 18, sm: 20 }, fontWeight: 700, textAlign: 'center',
+            '@media (max-width: 360px)': { fontSize: 15 },
+            // שם ארוך - שתי שורות מקסימום עם ellipsis במקום חיתוך לשורה אחת
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word', lineHeight: 1.2,
+          }}>
             {list.name}
           </Typography>
           {refreshing && <CircularProgress size={18} sx={{ color: 'white' }} />}
