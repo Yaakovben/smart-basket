@@ -121,6 +121,7 @@ export const priceComparisonApi = {
     }
   },
 
+
   // מחיקת סניפים לא-מאומתים (כל מה שאינו OSM או הוספה ידנית)
   async cleanupUnverifiedBranches(): Promise<{ success: boolean; message?: string; deletedCount?: number }> {
     try {

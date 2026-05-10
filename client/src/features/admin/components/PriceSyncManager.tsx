@@ -193,6 +193,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
+
   // מחיקה של סניפי seed לא-מאומתים (לא OSM ולא ידני)
   const handleCleanup = async () => {
     if (!confirm('למחוק את כל הסניפים מה-seed הישן? יישארו רק סניפים מ-OSM ומהוספה ידנית.')) return;

@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
 import { syncAllChains, getRegisteredChains, getLastSyncResults, getSyncProgress, syncBranchesFromOsm } from '../services/priceSync.service';
+import { geocodeAddress } from '../services/geocoder.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { Branch } from '../models/Branch.model';
@@ -64,6 +65,36 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
     // ניקוי מטמון של כל המשתמשים - אחרי סנכרון הנתונים הכל השתנה,
     // כולם צריכים לראות את המחירים והסניפים המעודכנים מיד.
     invalidateAllUsers();
+
+    // השלמת קואורדינטות לסניפים חדשים שאין להם lat/lng - 100 בכל סנכרון.
+    // רץ ברקע אחרי הסנכרון, סדרתי 1.1ש'/בקשה (Nominatim), לא חוסם.
+    void (async () => {
+      try {
+        const missingFilter = {
+          $or: [{ lat: { $exists: false } }, { lat: null }, { coordSource: 'unknown' as const }],
+          $and: [{ $or: [{ address: { $exists: true, $ne: '' } }, { city: { $exists: true, $ne: '' } }] }],
+        };
+        const needGeo = await Branch.find(missingFilter).limit(100).lean();
+        if (needGeo.length === 0) return;
+        logger.info(`[admin-refresh] geocoding ${needGeo.length} branches in background`);
+        let updated = 0;
+        for (const b of needGeo) {
+          try {
+            const coords = await geocodeAddress(b.address, b.city);
+            if (coords) {
+              await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
+              updated++;
+            }
+          } catch { /* skip */ }
+          await new Promise(r => setTimeout(r, 1100));
+        }
+        invalidateBranchCache();
+        invalidateAllUsers();
+        logger.info(`[admin-refresh] geocoded ${updated}/${needGeo.length} branches`);
+      } catch (err) {
+        logger.warn('[admin-refresh] geocoding failed:', err);
+      }
+    })();
   } catch (err) {
     logger.error('[admin-refresh] Unhandled error:', err);
   } finally {
@@ -575,3 +606,6 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   });
 });
 
+
+// (Endpoint geocodeCoords הוסר - הgeocoding משולב עכשיו ב-refreshPrices
+// ובקרון הלילי, אין צורך בכפתור נפרד.)
