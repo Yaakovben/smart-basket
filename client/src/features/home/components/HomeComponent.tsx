@@ -1178,56 +1178,6 @@ export const HomeComponent = memo(({
               ))}
             </Box>
           </Box>
-          {/* אפקט אבק בעת סגירה - חלקיקים קטנים מתפזרים בתחתית כשהפופאפ
-              "נוחת" על שולי המסך, נותן תחושה של חיכוך עם הקרקע */}
-          {menuClosing && (
-            <Box
-              aria-hidden
-              sx={{
-                position: 'fixed',
-                bottom: 'calc(env(safe-area-inset-bottom))',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: { xs: '100%', sm: 400 },
-                height: 0,
-                pointerEvents: 'none',
-                zIndex: 1000,
-                '@keyframes dustPuff': {
-                  '0%':   { opacity: 0,   transform: 'translate(0,0) scale(0.4)' },
-                  '40%':  { opacity: 0.7, transform: 'translate(var(--dx), -10px) scale(1)' },
-                  '100%': { opacity: 0,   transform: 'translate(calc(var(--dx) * 1.6), -22px) scale(0.6)' },
-                },
-              }}
-            >
-              {Array.from({ length: 14 }).map((_, i) => {
-                // פיזור סימטרי משני צידי המרכז + רנדומיות עדינה
-                const side = i % 2 === 0 ? 1 : -1;
-                const baseOffset = 10 + (i * 13) % 180;
-                const dx = side * (baseOffset + (i * 7) % 11);
-                const size = 4 + (i % 3) * 1.5;
-                const delay = 180 + (i * 9) % 90; // ms - מופיע כשהפופאפ נוחת
-                const duration = 420 + (i * 17) % 140;
-                return (
-                  <Box
-                    key={i}
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: '50%',
-                      width: size,
-                      height: size,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(150,150,150,0.55)',
-                      filter: 'blur(1px)',
-                      ['--dx' as string]: `${dx}px`,
-                      animation: `dustPuff ${duration}ms ease-out ${delay}ms forwards`,
-                      opacity: 0,
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          )}
         </>
       )}
 
