@@ -147,6 +147,46 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
     onSelect(l);
   }, [reorderMode, onSelect, l]);
 
+  // לחיצה ארוכה על שם הרשימה - מריץ את השם כסרט אם הוא חתוך. לחיצה
+  // רגילה ממשיכה לפתוח את הרשימה כרגיל. אם השם נכנס במלואו - לא קורה
+  // כלום, כדי לא לבזבז אנימציה על שמות קצרים.
+  const [marquee, setMarquee] = useState(false);
+  const [marqueeDx, setMarqueeDx] = useState(0);
+  const nameWrapRef = useRef<HTMLDivElement>(null);
+  const nameTextRef = useRef<HTMLSpanElement>(null);
+  const pressTimerRef = useRef<number | null>(null);
+  const longPressedRef = useRef(false);
+
+  const startNamePress = useCallback(() => {
+    if (reorderMode || marquee) return;
+    pressTimerRef.current = window.setTimeout(() => {
+      const wrap = nameWrapRef.current;
+      const text = nameTextRef.current;
+      if (!wrap || !text) return;
+      const overflow = text.scrollWidth - wrap.clientWidth;
+      if (overflow <= 0) return;
+      longPressedRef.current = true;
+      setMarqueeDx(overflow);
+      setMarquee(true);
+      haptic('light');
+    }, 500);
+  }, [reorderMode, marquee]);
+
+  const cancelNamePress = useCallback(() => {
+    if (pressTimerRef.current) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  }, []);
+
+  const onNameClick = useCallback((e: React.MouseEvent) => {
+    // אחרי לחיצה ארוכה - מבטלים את הקליק כדי שהרשימה לא תיפתח בטעות
+    if (longPressedRef.current) {
+      e.stopPropagation();
+      longPressedRef.current = false;
+    }
+  }, []);
+
   return (
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
@@ -176,7 +216,40 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography sx={{ fontSize: 16, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, lineHeight: 1.25 }}>{l.name}</Typography>
+          <Box
+            ref={nameWrapRef}
+            onPointerDown={startNamePress}
+            onPointerUp={cancelNamePress}
+            onPointerLeave={cancelNamePress}
+            onPointerCancel={cancelNamePress}
+            onClick={onNameClick}
+            sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}
+          >
+            <Typography
+              ref={nameTextRef}
+              component="span"
+              onAnimationEnd={() => { setMarquee(false); setMarqueeDx(0); }}
+              sx={{
+                fontSize: 16, fontWeight: 600, lineHeight: 1.25,
+                display: 'inline-block',
+                whiteSpace: 'nowrap',
+                maxWidth: marquee ? 'none' : '100%',
+                overflow: marquee ? 'visible' : 'hidden',
+                textOverflow: marquee ? 'clip' : 'ellipsis',
+                ...(marquee && {
+                  animation: `marqueeScroll ${Math.max(2200, marqueeDx * 22)}ms ease-in-out forwards`,
+                  '@keyframes marqueeScroll': {
+                    '0%':   { transform: 'translateX(0)' },
+                    '15%':  { transform: 'translateX(0)' },
+                    '85%':  { transform: `translateX(-${marqueeDx}px)` },
+                    '100%': { transform: `translateX(-${marqueeDx}px)` },
+                  },
+                }),
+              }}
+            >
+              {l.name}
+            </Typography>
+          </Box>
           <Chip label={l.isGroup ? t('group') : t('private')} size="small" sx={{ bgcolor: l.isGroup ? (isDark ? 'rgba(20,184,166,0.15)' : '#CCFBF1') : (isDark ? 'rgba(3,105,161,0.15)' : '#E0F2FE'), color: l.isGroup ? (isDark ? '#5EEAD4' : '#0D9488') : (isDark ? '#7DD3FC' : '#0369A1'), height: 22, flexShrink: 0 }} />
         </Box>
         <Typography sx={{ fontSize: 13, color: count > 0 ? 'warning.main' : totalProducts > 0 ? 'success.main' : 'text.disabled' }}>
