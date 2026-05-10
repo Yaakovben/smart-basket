@@ -55,16 +55,27 @@ async function fetchIndex(): Promise<{ path: string; files: CarrefourFile[] }> {
   return { path, files };
 }
 
-// מחלץ חותמת תאריך משם הקובץ - תבנית: PriceFull...-DATETIME12.gz
+// מחלץ חותמת תאריך משם הקובץ. Carrefour משתמשים בכמה תבניות:
+// ישן: PriceFull...-20260501150700.gz (12 ספרות רצופות)
+// חדש: PriceFull...-20260510-230012.gz (8 ספרות + מקף + 6 ספרות)
+// תופס את שניהם ומחזיר מחרוזת ניתנת להשוואה לקסיקוגרפית (ללא מקפים).
 function extractStamp(filename: string): string {
-  const m = filename.match(/(\d{12})\.(?:gz|xml)$/i);
-  return m ? m[1] : '';
+  const newFmt = filename.match(/(\d{8})-(\d{6})\.(?:gz|xml)$/i);
+  if (newFmt) return newFmt[1] + newFmt[2];
+  const oldFmt = filename.match(/(\d{12})\.(?:gz|xml)$/i);
+  return oldFmt ? oldFmt[1] : '';
 }
 
-// מחלץ את חתימת הסניף משם-קובץ - תבנית: PriceFull{chainId}-{storeId}-{stamp}.gz
+// מחלץ את חתימת הסניף משם-קובץ. תבניות:
+// ישן: PriceFull{chainId}-{storeId}-DATETIME12.gz
+// חדש: PriceFull{chainId}-{subChain}-{storeId}-DATE8-TIME6.gz
 function extractStoreId(filename: string): string {
-  const m = filename.match(/PriceFull\d+-(\d+)-\d{12}\.(?:gz|xml)$/i);
-  return m ? m[1] : '';
+  // נסה קודם את הפורמט החדש (3 חלקים מספריים אחרי chainId)
+  const newFmt = filename.match(/PriceFull\d+-(\d+)-(\d+)-\d{8}-\d{6}\.(?:gz|xml)$/i);
+  if (newFmt) return `${newFmt[1]}-${newFmt[2]}`; // subChain-storeId כייחודי
+  // פורמט ישן
+  const oldFmt = filename.match(/PriceFull\d+-(\d+)-\d{12}\.(?:gz|xml)$/i);
+  return oldFmt ? oldFmt[1] : '';
 }
 
 // בוחר את הקובץ הטרי ביותר לכל סניף בנפרד. הפורטל מפרסם 1+ קובץ פר-סניף
