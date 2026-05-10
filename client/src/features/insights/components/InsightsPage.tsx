@@ -183,18 +183,117 @@ export const InsightsPage = memo(() => {
     </Box>
   );
 
-  if (error || !data || data.stats.totalProducts === 0) return (
+  // מסך שגיאה - חיבור נכשל. נפרד ממצב "משתמש חדש" שמטופל למטה.
+  if (error) return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', p: 3, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-      <Box sx={{ fontSize: 56, mb: 2, animation: `${float} 2s ease infinite` }}>{error ? '⚠️' : '📊'}</Box>
-      <Typography sx={{ fontSize: 18, fontWeight: 800, mb: 1 }}>{error ? t('connectionErrorTitle') : t('noInsightsYet')}</Typography>
+      <Box sx={{ fontSize: 56, mb: 2, animation: `${float} 2s ease infinite` }}>⚠️</Box>
+      <Typography sx={{ fontSize: 18, fontWeight: 800, mb: 1 }}>{t('connectionErrorTitle')}</Typography>
       <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', mb: 3, maxWidth: 280 }}>
-        {error ? t('connectionErrorDesc') : t('noInsightsDesc')}
+        {t('connectionErrorDesc')}
       </Typography>
       <IconButton onClick={() => navigate(-1)} sx={{ bgcolor: 'primary.main', color: 'white', width: 44, height: 44 }}>
         <ArrowForwardIcon />
       </IconButton>
     </Box>
   );
+
+  // ===== חיווי משתמש חדש - אין עדיין מוצרים במערכת =====
+  // מסך פתיחה חם, ידידותי ומסביר. במקום "אין נתונים" יבש, מציג:
+  // halo גדול עם 💡, כותרת ברכה, סקירת 3 התובנות שיופיעו, ו-CTA לחזרה
+  // ליצירת רשימה ראשונה.
+  if (!data || data.stats.totalProducts === 0) {
+    const previews: { emoji: string; title: string; sub: string; gradient: string }[] = [
+      { emoji: '💰', title: 'השוואת מחירים', sub: 'נמצא לך את הרשת הזולה לסל שלך', gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)' },
+      { emoji: '🛍️', title: 'הרגלי קנייה', sub: 'מוצרים חוזרים, ימי שיא, קטגוריות', gradient: 'linear-gradient(135deg, #F59E0B, #DC2626)' },
+      { emoji: '👥', title: 'תובנות קבוצה', sub: 'מי תורם הכי הרבה לרשימות המשותפות', gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1)' },
+      { emoji: '💓', title: 'דופק קנייה', sub: 'ציון אישי שמשתפר עם השימוש', gradient: 'linear-gradient(135deg, #EC4899, #BE185D)' },
+    ];
+    return (
+      <Box sx={{ height: '100dvh', bgcolor: 'background.default', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
+        {/* הדר זהה לעמוד הראשי - שמירה על הקשר */}
+        <Box sx={{
+          background: isDark ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)' : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
+          p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
+          borderRadius: '0 0 24px 24px', position: 'relative', overflow: 'hidden', mb: 2,
+        }}>
+          <BetaRibbon corner="top-left" offsetTop={2} size="xl" />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
+              <ArrowForwardIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+            <Box sx={{ flex: 1, textAlign: 'center' }}>
+              <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
+                💡 {t('insights')}
+              </Typography>
+            </Box>
+            <Box sx={{ width: 36, flexShrink: 0 }} />
+          </Box>
+        </Box>
+
+        {/* גיבור: halo גדול עם 💡 + פריטים מרחפים */}
+        <Box sx={{ px: 2, animation: `${fadeIn} 0.5s ease` }}>
+          <InsightsEmptyState
+            isDark={isDark}
+            accent="#14B8A6"
+            mainEmoji="💡"
+            floatingItems={['📊', '💰', '🛍️', '⭐']}
+            title="ברוך הבא לתובנות!"
+            description="כאן יופיע סיפור הקנייה האישי שלך - מה אתה קונה הכי הרבה, באיזו רשת תחסוך הכי הרבה, ומגמות לאורך זמן. צריך רק להתחיל."
+          />
+
+          {/* תצוגה מקדימה של 4 התובנות שיופיעו */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.25, mb: 3, mt: 1 }}>
+            {previews.map((p, i) => (
+              <Box key={i} sx={{
+                p: 1.5, borderRadius: '16px',
+                border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(20,184,166,0.14)',
+                bgcolor: isDark ? 'rgba(20,184,166,0.06)' : 'rgba(20,184,166,0.04)',
+                animation: `${fadeIn} 0.5s ease ${0.1 + i * 0.08}s both`,
+              }}>
+                <Box sx={{
+                  width: 38, height: 38, borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, mb: 0.75, background: p.gradient,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                }}>
+                  {p.emoji}
+                </Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', mb: 0.25 }}>
+                  {p.title}
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.4 }}>
+                  {p.sub}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* CTA - חוזרים לעמוד הבית להתחיל קנייה */}
+          <Button
+            onClick={() => { haptic('medium'); navigate('/'); }}
+            fullWidth
+            sx={{
+              py: 1.5, borderRadius: '14px', textTransform: 'none',
+              fontSize: 15, fontWeight: 800, color: 'white',
+              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+              boxShadow: '0 8px 24px rgba(20,184,166,0.32)',
+              '&:hover': { background: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)' },
+              '&:active': { transform: 'scale(0.98)' },
+              gap: 1,
+            }}
+            startIcon={<HomeIcon sx={{ fontSize: 20 }} />}
+          >
+            התחל - בנה רשימה ראשונה
+          </Button>
+
+          {/* רמז: איך זה עובד */}
+          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', textAlign: 'center', mt: 1.5, px: 2, lineHeight: 1.55 }}>
+            הוסף מוצרים לרשימה, סמן ✅ אחרי שקנית, וחזור לכאן לראות תובנות.
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   const {
     topProducts, categoryBreakdown, stats, groupStats, shoppingScore,
