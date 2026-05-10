@@ -4,14 +4,16 @@ import { translations } from '../i18n/translations';
 import type { Language } from '../types';
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
+// מזהה רק שגיאות טעינת chunk אמיתיות. הבדיקה הגנרית של
+// "TypeError: Failed to fetch" הוסרה כי היא תפסה גם כשלי רשת רגילים
+// (חזרה מ-background, שיהוק רשת) וגרמה לחיווי שגוי של "מעדכן גרסה".
 const isChunkLoadError = (error: Error): boolean => {
   const message = error.message || '';
   return (
     message.includes('Failed to fetch dynamically imported module') ||
     message.includes('Loading chunk') ||
     message.includes('Loading CSS chunk') ||
-    message.includes('Importing a module script failed') ||
-    (error.name === 'TypeError' && message.includes('Failed to fetch'))
+    message.includes('Importing a module script failed')
   );
 };
 
