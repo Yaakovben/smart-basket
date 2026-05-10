@@ -357,9 +357,11 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
     res.json({ success: true, message: 'כבר רץ ברקע - נסה שוב בעוד דקה', updated: 0 });
     return;
   }
-  // צריך גם סניפים שבכלל אין להם שדה city/address (undefined) - לא רק null/''.
-  // לכן בודקים $exists: false וגם null וגם מחרוזת ריקה.
-  const missingFilter = {
+  // שני כיוונים:
+  // (א) reverse: יש lat/lng, חסר address/city → לוקחים כתובת מהקואורדינטות
+  // (ב) forward: יש address/city, אין lat/lng → לוקחים lat/lng מהכתובת
+  // הכי שכיח (ב) - Bina/Carrefour מחזירים כתובת בלי קואורדינטות.
+  const needReverse = {
     lat: { $exists: true, $ne: null },
     lng: { $exists: true, $ne: null },
     $or: [
@@ -369,22 +371,32 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
       { address: { $in: [null, ''] } },
     ],
   };
-  const totalMissing = await Branch.countDocuments(missingFilter);
-  const branches = await Branch.find(missingFilter).limit(50).lean();
+  const needForward = {
+    $or: [{ lat: { $exists: false } }, { lat: null }, { coordSource: 'unknown' as const }],
+    $and: [{ $or: [{ address: { $exists: true, $ne: '' } }, { city: { $exists: true, $ne: '' } }] }],
+  };
+  const [reverseCount, forwardCount, reverseBranches, forwardBranches] = await Promise.all([
+    Branch.countDocuments(needReverse),
+    Branch.countDocuments(needForward),
+    Branch.find(needReverse).limit(25).lean(),
+    Branch.find(needForward).limit(25).lean(),
+  ]);
+  const totalMissing = reverseCount + forwardCount;
+  const totalBatch = reverseBranches.length + forwardBranches.length;
 
-  if (branches.length === 0) {
-    res.json({ success: true, message: 'אין סניפים שזקוקים להשלמת כתובת', updated: 0, totalMissing: 0, remaining: 0 });
+  if (totalBatch === 0) {
+    res.json({ success: true, message: 'אין סניפים שזקוקים להשלמה', updated: 0, totalMissing: 0, remaining: 0 });
     return;
   }
 
   fillAddressesInProgress = true;
-  const remaining = Math.max(0, totalMissing - branches.length);
+  const remaining = Math.max(0, totalMissing - totalBatch);
   res.json({
     success: true,
     message: remaining > 0
-      ? `מעדכן ${branches.length} סניפים ברקע. נותרו ${remaining} - לחץ שוב לאחר סיום.`
-      : `מעדכן ${branches.length} סניפים ברקע - האחרונים. סיום בעוד כדקה.`,
-    checked: branches.length,
+      ? `מעדכן ${totalBatch} סניפים ברקע (${reverseBranches.length} כתובות + ${forwardBranches.length} קואורדינטות). נותרו ${remaining}.`
+      : `מעדכן ${totalBatch} סניפים ברקע - האחרונים. סיום בעוד כדקה.`,
+    checked: totalBatch,
     totalMissing,
     remaining,
   });
@@ -393,9 +405,10 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
     try {
       const axios = (await import('axios')).default;
       let updated = 0;
-      for (let i = 0; i < branches.length; i++) {
-        const b = branches[i];
-        if (i > 0) await new Promise(r => setTimeout(r, 1100));
+      // קודם reverse (כתובת מקואורדינטות)
+      for (let i = 0; i < reverseBranches.length; i++) {
+        const b = reverseBranches[i];
+        if (i > 0 || updated > 0) await new Promise(r => setTimeout(r, 1100));
         try {
           const r = await axios.get('https://nominatim.openstreetmap.org/reverse', {
             params: { lat: b.lat, lon: b.lng, format: 'json', 'accept-language': 'he' },
@@ -415,12 +428,26 @@ export const fillMissingAddresses = asyncHandler(async (_req: AuthRequest, res: 
             updated++;
           }
         } catch (e) {
-          logger.warn(`[fill-addresses] ${b.storeId}: ${e instanceof Error ? e.message : 'unknown'}`);
+          logger.warn(`[fill-addresses-reverse] ${b.storeId}: ${e instanceof Error ? e.message : 'unknown'}`);
+        }
+      }
+      // אחר כך forward (קואורדינטות מכתובת) - דרך geocodeAddress
+      for (let i = 0; i < forwardBranches.length; i++) {
+        const b = forwardBranches[i];
+        await new Promise(r => setTimeout(r, 1100));
+        try {
+          const coords = await geocodeAddress(b.address, b.city);
+          if (coords) {
+            await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
+            updated++;
+          }
+        } catch (e) {
+          logger.warn(`[fill-addresses-forward] ${b.storeId}: ${e instanceof Error ? e.message : 'unknown'}`);
         }
       }
       invalidateBranchCache();
       invalidateAllUsers();
-      logger.info(`[fill-addresses] background done, updated=${updated}/${branches.length}`);
+      logger.info(`[fill-addresses] done, updated=${updated}/${totalBatch}`);
     } catch (err) {
       logger.error('[fill-addresses] background failed:', err);
     } finally {
