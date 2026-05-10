@@ -165,8 +165,11 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
       if (!wrap || !text) return;
       const overflow = text.scrollWidth - wrap.clientWidth;
       if (overflow <= 0) return;
+      // ב-RTL הטקסט גולש שמאלה, אז כדי לחשוף אותו צריך לזוז ימינה (חיובי).
+      // ב-LTR גולש ימינה, צריך לזוז שמאלה (שלילי).
+      const isRtl = getComputedStyle(wrap).direction === 'rtl';
       longPressedRef.current = true;
-      setMarqueeDx(overflow);
+      setMarqueeDx(isRtl ? overflow : -overflow);
       setMarquee(true);
       haptic('light');
     }, 500);
@@ -223,7 +226,12 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
             onPointerLeave={cancelNamePress}
             onPointerCancel={cancelNamePress}
             onClick={onNameClick}
-            sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}
+            sx={{
+              flex: 1, minWidth: 0, overflow: 'hidden',
+              userSelect: 'none', WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              touchAction: 'manipulation',
+            }}
           >
             <Typography
               ref={nameTextRef}
@@ -236,13 +244,15 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
                 maxWidth: marquee ? 'none' : '100%',
                 overflow: marquee ? 'visible' : 'hidden',
                 textOverflow: marquee ? 'clip' : 'ellipsis',
+                userSelect: 'none', WebkitUserSelect: 'none',
                 ...(marquee && {
-                  animation: `marqueeScroll ${Math.max(2200, marqueeDx * 22)}ms ease-in-out forwards`,
+                  animation: `marqueeScroll ${Math.max(2400, Math.abs(marqueeDx) * 28)}ms ease-in-out forwards`,
                   '@keyframes marqueeScroll': {
                     '0%':   { transform: 'translateX(0)' },
-                    '15%':  { transform: 'translateX(0)' },
-                    '85%':  { transform: `translateX(-${marqueeDx}px)` },
-                    '100%': { transform: `translateX(-${marqueeDx}px)` },
+                    '12%':  { transform: 'translateX(0)' },
+                    '50%':  { transform: `translateX(${marqueeDx}px)` },
+                    '62%':  { transform: `translateX(${marqueeDx}px)` },
+                    '100%': { transform: 'translateX(0)' },
                   },
                 }),
               }}
