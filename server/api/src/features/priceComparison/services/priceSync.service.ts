@@ -320,18 +320,17 @@ async function processChainItems(
     };
   });
 
-  // Batches קטנים + השהיה ביניהם → השרת ממשיך לענות מהר ללקוחות במהלך
-  // הסנכרון. 200 docs במקום 500 → bulkWrite קצר יותר → פחות נעילה.
-  // 100ms השהיה אחרי כל batch = event loop נושם, queries אחרים עוברים.
+  // Batches של 200 docs (קטן יותר → bulkWrite קצר יותר → פחות נעילה ב-DB).
+  // setImmediate בין batches משחרר את ה-event loop ל-I/O events של לקוחות
+  // בלי להוסיף השהיה מלאכותית - בקשות אחרות עוברות מיד כשיש זמינות.
   const BATCH_SIZE = 200;
-  const BATCH_DELAY_MS = 100;
   let totalUpserted = 0;
   for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
     const batch = inputs.slice(i, i + BATCH_SIZE);
     const affected = await PriceDAL.bulkUpsert(batch);
     totalUpserted += affected;
     if (i + BATCH_SIZE < inputs.length) {
-      await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+      await new Promise<void>(r => setImmediate(r));
     }
   }
 
