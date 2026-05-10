@@ -6,7 +6,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import HomeIcon from '@mui/icons-material/Home';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { insightsApi, authApi, listsApi, type InsightsData } from '../../../services/api';
+import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
 import { SlowLoadIndicator } from '../../../global/components';
@@ -71,15 +71,16 @@ export const InsightsPage = memo(() => {
   const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
   // שגיאת טעינה של השוואת מחירים - מוצגת במקום "אין נתונים" שמטעה
   const [priceError, setPriceError] = useState(false);
-  // נסיים לטעון את הרשימות לפני שיורים השוואה - כדי שברירת המחדל תהיה
-  // רשימה ראשונה, לא 'כל הרשימות' שזה כבד.
-  const [listsLoaded, setListsLoaded] = useState(false);
-  // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר ב-localStorage לזכור
-  // בחירה בין כניסות. ברירת מחדל למשתמש חדש = הרשימה הראשונה (מתמלא ב-effect
-  // אחרי שטוענים את הרשימות) כדי למנוע השוואה כבדה על כל הרשימות בבת אחת.
-  const [selectedListId, setSelectedListId] = useState<string | null>(
-    () => safeStorage.getJSON<string | null>('sb_insights_selected_list', null)
-  );
+  // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר ב-localStorage לזכור בחירה
+  // בין כניסות. אם אין שמור - מנסים לקחת רשימה ראשונה מ-cache הקיים של מחירים
+  // כדי שהדיפולט יהיה רשימה אחת (קל) ולא 'כל הרשימות' (כבד).
+  const [selectedListId, setSelectedListId] = useState<string | null>(() => {
+    const saved = safeStorage.getJSON<string | null>('sb_insights_selected_list', null);
+    if (saved) return saved;
+    const cachedPrice = readCache<PriceComparisonData>(PRICE_CACHE_KEY);
+    if (cachedPrice?.lists && cachedPrice.lists.length > 0) return cachedPrice.lists[0].listId;
+    return null;
+  });
   // רשימה מלאה של כל הרשימות של המשתמש - נשמר מהטעינה הראשונית.
   const [allUserLists, setAllUserLists] = useState<{ id: string; name: string; icon: string }[]>([]);
   // קטגוריה מודגשת בטאב הרגלים - מוגדרת בלחיצה על מוצר מוביל, מסמנת
@@ -110,18 +111,6 @@ export const InsightsPage = memo(() => {
       .finally(() => setLoading(false));
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
-    // שליפת רשימות המשתמש - לפני שטוענים השוואת מחירים, כדי לבחור רשימה
-    // ברירת מחדל ולמנוע שאילתה כבדה של 'כל הרשימות'. אם אין selectedListId
-    // שמור ויש לפחות רשימה אחת - בוחרים את הראשונה.
-    listsApi.getLists().then(lists => {
-      if (lists && lists.length > 0) {
-        setAllUserLists(lists.map(l => ({ id: l.id, name: l.name, icon: l.icon || '🛒' })));
-        setSelectedListId(prev => {
-          if (prev && lists.some(l => l.id === prev)) return prev;
-          return lists[0].id;
-        });
-      }
-    }).catch(() => {}).finally(() => setListsLoaded(true));
   }, []);
 
   // שמירת בחירת הרשימה ב-localStorage - חוויית כניסה עקבית בין סשנים.
@@ -137,9 +126,6 @@ export const InsightsPage = memo(() => {
   // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
   useEffect(() => {
     if (tab !== 'price') return;
-    // ממתינים שטעינת הרשימות תסתיים לפני שיורים השוואה - אחרת השאילתה
-    // הראשונה תרוץ עם selectedListId=null (כל הרשימות), מה שכבד ואיטי.
-    if (!listsLoaded) return;
     // השהיה של 300ms - מעבר מהיר בין רשימות/שינויי מיקום לא יפוצצו את השרת בפניות חופפות.
     // הניקוי בתחילת הטיימר מבטל בקשה קודמת אם הערך השתנה.
     let cancelled = false;
@@ -153,6 +139,9 @@ export const InsightsPage = memo(() => {
         writeCache(PRICE_CACHE_KEY, res);
         if (selectedListId === null && res?.lists && res.lists.length > 0) {
           setAllUserLists(res.lists.map(l => ({ id: l.listId, name: l.listName, icon: l.listIcon })));
+          // שומרים את הרשימה הראשונה ב-localStorage כדי שבכניסה הבאה
+          // הדיפולט יהיה רשימה אחת ולא 'כל הרשימות' (כבד).
+          safeStorage.setJSON('sb_insights_selected_list', res.lists[0].listId);
         }
       } catch {
         if (cancelled) return;
@@ -179,7 +168,7 @@ export const InsightsPage = memo(() => {
       fetchWithRetry().finally(() => { if (!cancelled) setPriceLoading(false); });
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [tab, selectedListId, userLocation, listsLoaded]);
+  }, [tab, selectedListId, userLocation]);
 
   if (loading) return (
     <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 4, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
