@@ -4,6 +4,7 @@ import { PriceDAL } from '../dal/price.dal';
 import { Price } from '../models/Price.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
+import { geocodeAddress } from '../services/geocoder.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { logger } from '../../../config/logger';
 
@@ -141,6 +142,56 @@ async function cleanupOldPricesImpl(trigger: 'cron' | 'manual'): Promise<{ delet
   }
 }
 
+// Geocoding אוטומטי לסניפים בעלי כתובת אך ללא lat/lng. רץ אחרי הסנכרון
+// ב-04:00 בלבד (שעה שקטה - לא מפריע ללקוחות). Nominatim מגביל ל-1 בקשה
+// לשנייה, אז 100 סניפים = ~2 דקות. ב-DB עם 1000 סניפים חסרים זה ייקח 10
+// לילות עד שהכל יושלם - לא דרמטי, בריא.
+const GEOCODE_NIGHTLY_LIMIT = 100;
+const GEOCODE_DELAY_MS = 1100; // Nominatim TOS: 1 req/sec
+
+async function geocodeNightly(): Promise<void> {
+  try {
+    const needGeo = await BranchDAL.find(
+      {
+        $or: [
+          { lat: { $exists: false } },
+          { lat: null },
+          { coordSource: 'unknown' },
+        ],
+        $and: [
+          { $or: [
+            { address: { $exists: true, $ne: '' } },
+            { city: { $exists: true, $ne: '' } },
+          ] },
+        ],
+      },
+      { limit: GEOCODE_NIGHTLY_LIMIT },
+    );
+    if (needGeo.length === 0) {
+      logger.info('[geo-nightly] no branches need geocoding');
+      return;
+    }
+    logger.info(`[geo-nightly] geocoding ${needGeo.length} branches (rate-limited 1/sec)`);
+    let updated = 0;
+    for (const b of needGeo) {
+      try {
+        const coords = await geocodeAddress(b.address, b.city);
+        if (coords) {
+          await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
+          updated++;
+        }
+      } catch {
+        // שגיאה בודדת לא עוצרת את ה-batch
+      }
+      await new Promise(r => setTimeout(r, GEOCODE_DELAY_MS));
+    }
+    invalidateBranchCache();
+    logger.info(`[geo-nightly] updated ${updated}/${needGeo.length} branches`);
+  } catch (err) {
+    logger.error('[geo-nightly] failed:', err);
+  }
+}
+
 // סנכרון סניפים מ-OSM - אוטומטי בעת boot אם המאגר ריק, ובכל cron run.
 // רץ בנפרד מסנכרון המחירים כדי לא לעכב, ובלי NODE_TLS_REJECT_UNAUTHORIZED
 // (הפרסום של OSM הוא HTTPS תקני).
@@ -173,9 +224,11 @@ export function startPriceSyncJob(): void {
       await runSync('cron');
       await reloadSeedBranches('cron');
       await runOsmBranchSync('cron');
-      // ניקוי מחירים ישנים בסוף - אחרי שהסנכרון עדכן את הטריים, נמחק את
-      // הישנים. מונע ניפוח DB ב-Atlas Free.
+      // ניקוי מחירים ישנים - מונע ניפוח DB
       await cleanupOldPrices('cron');
+      // Geocoding ל-100 סניפים חסרי קואורדינטות. רץ סדרתי 1.1ש'/בקשה בגלל
+      // מגבלת Nominatim. 100 סניפים = ~2 דקות בלי השפעה על הלקוחות.
+      await geocodeNightly();
     },
     { timezone: TIMEZONE }
   );
