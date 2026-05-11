@@ -69,6 +69,8 @@ export const InsightsPage = memo(() => {
   // selectedWeekday + selectedWeekIdx הועברו ל-PulseTab.tsx
   // loading של מחירים - לא מראה לודר כשיש cache, רק בדיקה רקעית.
   const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
+  // תווית טעינה דינמית: אחרי קבלת הרשאת מיקום השרת ממפה סניפים, לא משווה מחירים
+  const [priceLoadingLabel, setPriceLoadingLabel] = useState<string>('משווה מחירים...');
   // שגיאת טעינה של השוואת מחירים - מוצגת במקום "אין נתונים" שמטעה
   const [priceError, setPriceError] = useState(false);
   // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר ב-localStorage לזכור בחירה
@@ -152,6 +154,8 @@ export const InsightsPage = memo(() => {
   // הראשונה (מונע fetch כבד של 'כל הרשימות' בכניסה). רץ פעם אחת בלבד, כדי
   // לא לבטל בחירה ידנית של המשתמש ב-'כל הרשימות' אחרי כן.
   const autoSelectedRef = useRef(false);
+  // עוקב אחרי המיקום הקודם כדי לזהות מתי המשתמש אישר מיקום בפעם הראשונה
+  const prevLocationRef = useRef<typeof userLocation>(null);
   useEffect(() => {
     if (autoSelectedRef.current) return;
     if (selectedListId === null && allUserLists.length > 0) {
@@ -205,6 +209,10 @@ export const InsightsPage = memo(() => {
     const timer = window.setTimeout(() => {
       setPriceLoading(true);
       setPriceError(false);
+      // תווית: אם זה הריצה הראשונה אחרי קבלת מיקום ה-API מאתר סניפים קרובים,
+      // אחרת זו השוואת מחירים רגילה. הפרדה זו חשובה כי המיקום משנה את הסניף הקרוב.
+      setPriceLoadingLabel(userLocation && !prevLocationRef.current ? 'מאתר סניפים קרובים...' : 'משווה מחירים...');
+      prevLocationRef.current = userLocation;
       fetchWithRetry().finally(() => { if (!cancelled) setPriceLoading(false); });
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
@@ -623,7 +631,7 @@ export const InsightsPage = memo(() => {
                 </Box>
               )}
               {/* פס דק עליון - מסמן רענון רקע בלי להפריע לתוכן הקיים */}
-              <TopProgressBar active={priceLoading} label="משווה מחירים..." />
+              <TopProgressBar active={priceLoading} label={priceLoadingLabel} />
               {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם.
                   קונטרסט הועצם (bg + טקסט כהה יותר) כדי שלא יוסתר בגלילה. */}
               {priceError && !priceLoading && (
