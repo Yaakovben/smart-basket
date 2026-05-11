@@ -4,6 +4,30 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
 
+// חיבור מוקדם לשרת ה-API: הדפדפן מתחיל DNS/TCP/TLS ברקע, מקביל לטעינת הקוד,
+// כך שהבקשה הראשונה יוצאת מיד בלי לחכות ל-handshake. רמז בלבד - אם לא נצליח, אין נזק.
+{
+  const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
+  if (apiUrl && typeof document !== 'undefined') {
+    try {
+      const origin = new URL(apiUrl).origin;
+      if (!document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = origin;
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+        const dns = document.createElement('link');
+        dns.rel = 'dns-prefetch';
+        dns.href = origin;
+        document.head.appendChild(dns);
+      }
+    } catch {
+      // URL לא תקין - מתעלמים, אין השלכה על שאר הקוד
+    }
+  }
+}
+
 // אתחול מערכת דיווח שגיאות מושהה כדי לא לחסום את הצגת הדף
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
 if (SENTRY_DSN && import.meta.env.PROD) {
