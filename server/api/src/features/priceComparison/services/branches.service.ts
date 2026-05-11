@@ -21,6 +21,9 @@ export interface NearestBranch {
   lat?: number;
   lng?: number;
   distanceKm?: number;
+  // האם המרחק שהוצג הוא הערכה (קואורדינטות לפי מרכז העיר) ולא מדויק.
+  // הלקוח חייב להציג סימן (~/בערך) כדי שהמשתמש ידע. true רק כש-coordSource='unknown'.
+  isApproximate?: boolean;
 }
 
 export interface UserLocation {
@@ -139,6 +142,9 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
       return x.dist - y.dist;
     });
     const { b: best, dist: bestDist } = withCoords[0];
+    // coordSource='unknown' = מרכז עיר, לא נקודה אמיתית. מסמנים שזו הערכה
+    // כדי שהלקוח יציג סימן ברור (~/בערך) ולא יטעה את המשתמש.
+    const isApproximate = best.coordSource === 'unknown';
     return {
       branchName: best.storeName,
       city: best.city || '',
@@ -146,6 +152,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
       lat: best.lat!,
       lng: best.lng!,
       distanceKm: Math.round(bestDist * 10) / 10,
+      isApproximate: isApproximate || undefined,
     };
   }
 

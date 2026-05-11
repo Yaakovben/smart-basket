@@ -308,10 +308,10 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           {typeof branch.distanceKm === 'number' ? (
             <>
               <Typography sx={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-                {branch.distanceKm}
+                {branch.isApproximate ? `~${branch.distanceKm}` : branch.distanceKm}
               </Typography>
               <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', letterSpacing: 0.3 }}>
-                ק״מ
+                ק״מ{branch.isApproximate ? ' (משוער)' : ''}
               </Typography>
             </>
           ) : (
@@ -440,10 +440,10 @@ const BranchInfo = memo(({ branch, isDark, onOpenPicker }: {
         {typeof branch.distanceKm === 'number' ? (
           <>
             <Typography sx={{ fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-              {branch.distanceKm}
+              {branch.isApproximate ? `~${branch.distanceKm}` : branch.distanceKm}
             </Typography>
             <Typography sx={{ fontSize: 8, fontWeight: 700, opacity: 0.95, lineHeight: 1, mt: 0.2 }}>
-              ק"מ
+              ק"מ{branch.isApproximate ? '*' : ''}
             </Typography>
           </>
         ) : (

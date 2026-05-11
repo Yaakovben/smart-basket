@@ -264,9 +264,16 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
                   <NearMeIcon sx={{ fontSize: 11, color: 'text.disabled' }} />
-                  <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 600 }}>
+                  <Typography
+                    sx={{
+                      fontSize: 10.5,
+                      color: chain.nearestBranch.isApproximate ? 'warning.main' : 'text.disabled',
+                      fontWeight: 600,
+                    }}
+                    title={chain.nearestBranch.isApproximate ? 'מרחק משוער לפי מרכז העיר - הכתובת לא נמצאה במפה' : undefined}
+                  >
                     {typeof chain.nearestBranch.distanceKm === 'number'
-                      ? `${chain.nearestBranch.distanceKm.toFixed(1)} ק"מ`
+                      ? `${chain.nearestBranch.isApproximate ? '~' : ''}${chain.nearestBranch.distanceKm.toFixed(1)} ק"מ`
                       : 'כתובת'}
                   </Typography>
                 </Box>

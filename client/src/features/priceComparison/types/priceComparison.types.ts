@@ -40,6 +40,9 @@ export interface NearestBranch {
   lat: number;
   lng: number;
   distanceKm: number;
+  // true = המרחק הוא הערכה (קואורדינטות מרכז עיר, לא כתובת מדויקת).
+  // ה-UI חייב לסמן ~ או "בערך" כדי שהמשתמש ידע שזה לא מדויק.
+  isApproximate?: boolean;
 }
 
 // סיכום השוואתי לרשת - משמש לתצוגת רנק של כל הרשתות ב-UI
