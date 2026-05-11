@@ -79,6 +79,17 @@ export const InsightsPage = memo(() => {
     if (saved) return saved;
     const cachedPrice = readCache<PriceComparisonData>(PRICE_CACHE_KEY);
     if (cachedPrice?.lists && cachedPrice.lists.length > 0) return cachedPrice.lists[0].listId;
+    // Fallback: cached_lists של useLists (קיים כמעט תמיד אחרי כניסה ראשונה),
+    // כדי שהדיפולט יהיה רשימה אחת ולא 'כל הרשימות' (כבד על השרת).
+    try {
+      const raw = localStorage.getItem('cached_lists');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed?.lists) && parsed.lists.length > 0) {
+          return parsed.lists[0]._id || parsed.lists[0].id || null;
+        }
+      }
+    } catch { /* ignore */ }
     return null;
   });
   // רשימה מלאה של כל הרשימות של המשתמש - נשמר מהטעינה הראשונית.
@@ -631,6 +642,13 @@ export const InsightsPage = memo(() => {
                 locationStatus={locationStatus}
                 onRequestLocation={requestLocation}
                 onResetLocationDenied={resetLocationDenied}
+                selectedListName={
+                  selectedListId
+                    ? (allUserLists.find(l => l.id === selectedListId)?.name
+                        ?? priceData?.lists?.find(l => l.listId === selectedListId)?.listName
+                        ?? null)
+                    : null
+                }
               />
             </>
           )
