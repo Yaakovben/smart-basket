@@ -71,6 +71,12 @@ export function useNotifications(user: User | null, initialData?: InitialNotific
   useEffect(() => {
     if (authLoading) return;
     if (user) {
+      // אם initialData כבר אוכלסה ב-effect הקודם (סימן '__initial__'), אין צורך
+      // ב-fetch נוסף - הנתונים טריים. רק מסמנים את המשתמש כמאותחל וחוזרים.
+      if (initializedForRef.current === '__initial__') {
+        initializedForRef.current = user.id;
+        return;
+      }
       if (initializedForRef.current && initializedForRef.current !== user.id) {
         initializedForRef.current = null;
       }

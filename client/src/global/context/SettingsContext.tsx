@@ -18,10 +18,14 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+// hadStoredSettings מסמן אם בכניסה הראשונית היה כבר מידע שמור.
+// משמש כדי לדלג על כתיבה ל-IDB באתחול כשאין שום שינוי לשמור (משתמש חדש).
+let hadStoredSettings = false;
 const loadSettings = (): AppSettings => {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (stored) {
+      hadStoredSettings = true;
       const parsed = JSON.parse(stored);
       return { ...DEFAULT_SETTINGS, ...parsed, notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications } };
     }
@@ -40,8 +44,11 @@ const saveSettings = (settings: AppSettings) => {
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const loaded = loadSettings();
-    // סנכרון ל-IndexedDB בטעינה ראשונית כדי שה-SW יקבל הגדרות עדכניות
-    saveNotifSettingsToIDB(loaded.notifications).catch(() => {/* ignore */});
+    // סנכרון ל-IndexedDB רק כשהיו הגדרות שמורות (כלומר שונה מברירת המחדל).
+    // למשתמש חדש בלי הגדרות אין מה לסנכרן ב-cold start - חוסך כתיבה ורינדור מיותרים.
+    if (hadStoredSettings) {
+      saveNotifSettingsToIDB(loaded.notifications).catch(() => {/* ignore */});
+    }
     return loaded;
   });
 
