@@ -182,13 +182,18 @@ export function cityFallbackCoords(city: string | undefined): GeocodeResult | nu
   return FALLBACK_CITY_COORDS[normalized] ?? null;
 }
 
-// תוקן ל-script - מחזיר fallback גם כשהשדה city לא ידוע, ע"י חיפוש בכתובת.
-// אם יש "עמק שרה" בכתובת אבל city="9000", נחזיר את מרכז באר שבע (עמק שרה).
-export function cityFallbackFromAnyField(city: string | undefined, address: string | undefined): GeocodeResult | null {
+// תוקן ל-script - מחזיר fallback גם כשהשדה city לא ידוע, ע"י חיפוש בכתובת
+// או בשם הסניף. אם יש "עמק שרה" בכתובת אבל city="9000", נחזיר את מרכז
+// באר שבע (עמק שרה). storeName חשוב במיוחד כי לעיתים זה הרמז היחיד
+// ("רמי לוי עפולה" → עפולה).
+export function cityFallbackFromAnyField(
+  city: string | undefined,
+  address: string | undefined,
+  storeName?: string | undefined
+): GeocodeResult | null {
   const direct = cityFallbackCoords(city);
   if (direct) return direct;
-  // השדה city לא נמצא במאגר - נסה לחלץ עיר מוכרת מהכתובת
-  const extracted = findKnownCityIn(address);
+  const extracted = findKnownCityIn([address, storeName].filter(Boolean).join(' '));
   if (extracted) return cityFallbackCoords(extracted);
   return null;
 }

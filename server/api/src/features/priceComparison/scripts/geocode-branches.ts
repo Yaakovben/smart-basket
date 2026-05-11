@@ -72,7 +72,7 @@ async function main() {
     // נופלים למרכז העיר אם יש - מסומן 'unknown' (לא 'geocoded') כדי שנדע
     // שזה לא מדויק וננסה שוב בהרצה הבאה (עם שיפורים ב-geocoder או מקור חדש).
     // cityFallbackFromAnyField מחפש גם בכתובת אם השדה city מכיל זבל.
-    const fb = cityFallbackFromAnyField(b.city, b.address);
+    const fb = cityFallbackFromAnyField(b.city, b.address, b.storeName);
     if (fb) {
       await BranchDAL.updateCoords(b._id.toString(), fb.lat, fb.lng, 'unknown');
       stats.cityFallback++;
