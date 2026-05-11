@@ -128,18 +128,16 @@
           <circle class="splash-ring" cx="50" cy="50" r="46"
                   fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5"
                   stroke-linecap="round"/>
-          <!-- אייקון סל בתוך מעגל לבן רך -->
-          <circle cx="50" cy="50" r="32" fill="rgba(255,255,255,0.96)"/>
-          <path d="M37 41 L41 64 C41.3 65.6 42.6 67 44.3 67 L57.7 67 C59.4 67 60.7 65.6 61 64 L65 41 C65.1 40.3 64.6 39.6 63.8 39.6 L38.2 39.6 C37.4 39.6 36.9 40.3 37 41 Z" fill="#0D9488"/>
-          <path d="M42 39 C42 35.5 44.3 31 50 31 C55.7 31 58 35.5 58 39" stroke="#0D9488" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path d="M44 52 L49 57 L57 47" stroke="white" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- אייקון סל בתוך מעגל כהה (טורקיז עמוק) -->
+          <circle cx="50" cy="50" r="32" fill="#0F766E"/>
+          <path d="M37 41 L41 64 C41.3 65.6 42.6 67 44.3 67 L57.7 67 C59.4 67 60.7 65.6 61 64 L65 41 C65.1 40.3 64.6 39.6 63.8 39.6 L38.2 39.6 C37.4 39.6 36.9 40.3 37 41 Z" fill="#fff"/>
+          <path d="M42 39 C42 35.5 44.3 31 50 31 C55.7 31 58 35.5 58 39" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M44 52 L49 57 L57 47" stroke="#0F766E" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
 
       <!-- שם המותג - גדול, נקי -->
       <div class="splash-brand">Smart Basket</div>
-      <!-- טקסט טעינה דק מתחת -->
-      <div id="splash-message" class="splash-msg">טוען...</div>
 
       <!-- Fallback - מוצג רק אחרי 15ש' או error -->
       <div id="load-error" class="splash-error">
@@ -149,16 +147,6 @@
       </div>
 
       <script>
-        // אישית: אם יש משתמש שמור, להגיד "ברוך שובך" במקום "טוען"
-        try {
-          var raw = localStorage.getItem('cached_user');
-          if (raw) {
-            var name = JSON.parse(raw).name;
-            var msgEl = document.getElementById('splash-message');
-            if (name && msgEl) { msgEl.textContent = 'ברוך שובך, ' + name; }
-          }
-        } catch(e) {}
-
         // Error handler גלובלי
         window.onerror = function(msg, url, line) {
           var error = document.getElementById('load-error');
