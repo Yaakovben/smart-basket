@@ -68,10 +68,11 @@ async function main() {
       continue;
     }
 
-    // נופלים למרכז העיר אם יש
+    // נופלים למרכז העיר אם יש - מסומן 'unknown' (לא 'geocoded') כדי שנדע
+    // שזה לא מדויק וננסה שוב בהרצה הבאה (עם שיפורים ב-geocoder או מקור חדש).
     const fb = cityFallbackCoords(b.city);
     if (fb) {
-      await BranchDAL.updateCoords(b._id.toString(), fb.lat, fb.lng, 'geocoded');
+      await BranchDAL.updateCoords(b._id.toString(), fb.lat, fb.lng, 'unknown');
       stats.cityFallback++;
       logger.warn(`${label}: city-fallback (${b.city}) → ${fb.lat.toFixed(4)},${fb.lng.toFixed(4)}`);
       continue;

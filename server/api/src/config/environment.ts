@@ -70,6 +70,10 @@ const envSchema = Joi.object({
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
   VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:yaakovbenyizchak1@gmail.com'),
+
+  // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
+  // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
+  LOCATIONIQ_API_KEY: Joi.string().optional(),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -105,6 +109,7 @@ export interface Environment {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_EMAIL: string;
+  LOCATIONIQ_API_KEY?: string;
 }
 
 export const env = parseEnv();

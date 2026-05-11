@@ -8,12 +8,16 @@
 
 import axios from 'axios';
 import { logger } from '../../../config/logger';
+import { env } from '../../../config/environment';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const LOCATIONIQ_URL = 'https://eu1.locationiq.com/v1/search';
 const USER_AGENT = 'smart-basket-branches/1.0 (price-comparison feature)';
-const MIN_DELAY_MS = 1100; // הגבלה של Nominatim - 1 בקשה/שנייה, שומרים ביטחון
+const NOMINATIM_MIN_DELAY_MS = 1100; // 1 בקשה/שנייה אצל Nominatim
+const LOCATIONIQ_MIN_DELAY_MS = 550;  // 2 בקשות/שנייה במסלול החינמי
 
-let lastRequestAt = 0;
+let nominatimLastRequestAt = 0;
+let locationiqLastRequestAt = 0;
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -103,29 +107,52 @@ export function cityFallbackCoords(city: string | undefined): GeocodeResult | nu
   return FALLBACK_CITY_COORDS[clean] ?? null;
 }
 
-// geocode מלא דרך Nominatim - יש להשתמש בזה רק בתוך תהליכי רקע (לא בבקשת משתמש).
-// מחזיר null אם Nominatim לא מצא או ה-API כשל.
-export async function geocodeAddress(
-  address: string | undefined,
-  city: string | undefined
-): Promise<GeocodeResult | null> {
-  const q = [address, city, 'Israel'].filter(Boolean).join(', ');
-  if (!q.trim() || q === 'Israel') return null;
+// בדיקה שהקואורדינטות בתוך גבולות ישראל (כולל יו"ש ורמת הגולן) -
+// מסנן תוצאות שגויות שמחזירות נקודה אקראית בעולם.
+const inIsraelBounds = (lat: number, lng: number): boolean =>
+  Number.isFinite(lat) && Number.isFinite(lng)
+  && lat >= 29 && lat <= 34
+  && lng >= 33 && lng <= 36;
 
-  // throttling: לא יותר מבקשה אחת בשנייה
-  const since = Date.now() - lastRequestAt;
-  if (since < MIN_DELAY_MS) await sleep(MIN_DELAY_MS - since);
-  lastRequestAt = Date.now();
+// וריאציות של הכתובת - אם הכתובת המלאה נכשלת, מנסים גרסאות פשוטות יותר.
+// משפר משמעותית את אחוז ההצלחה, במיוחד עם קיצורים ("ת״א" → "תל אביב").
+const cleanCity = (city: string | undefined): string => {
+  if (!city) return '';
+  return city.trim()
+    .replace(/^ת["׳]?א$/u, 'תל אביב')
+    .replace(/^י["׳]?ם$/u, 'ירושלים')
+    .replace(/^ב["׳]?ש$/u, 'באר שבע')
+    .replace(/^ר["׳]?ג$/u, 'רמת גן')
+    .replace(/^פ["׳]?ת$/u, 'פתח תקווה');
+};
+
+const buildQueryVariants = (address: string | undefined, city: string | undefined): string[] => {
+  const addr = address?.trim();
+  const cty = cleanCity(city);
+  const variants: string[] = [];
+  // 1. כתובת מלאה + עיר
+  if (addr && cty) variants.push(`${addr}, ${cty}, Israel`);
+  // 2. רחוב בלי מספר + עיר (לפעמים המספר משבש את החיפוש)
+  if (addr && cty) {
+    const noNum = addr.replace(/\s+\d+\s*$/, '').trim();
+    if (noNum && noNum !== addr) variants.push(`${noNum}, ${cty}, Israel`);
+  }
+  // 3. רק כתובת (אם אין עיר)
+  if (addr && !cty) variants.push(`${addr}, Israel`);
+  // לא מנסים רק עיר - זה יחזיר את מרכז העיר ועדיף ליפול ל-cityFallbackCoords
+  // המסומן כ-'unknown', במקום לסמן 'geocoded' עם נתון בלתי מדויק.
+  return variants;
+};
+
+// Nominatim - חינמי, איטי, פחות מדויק בעברית. ניסיון ראשון.
+async function tryNominatim(q: string): Promise<GeocodeResult | null> {
+  const since = Date.now() - nominatimLastRequestAt;
+  if (since < NOMINATIM_MIN_DELAY_MS) await sleep(NOMINATIM_MIN_DELAY_MS - since);
+  nominatimLastRequestAt = Date.now();
 
   try {
     const res = await axios.get<Array<{ lat: string; lon: string }>>(NOMINATIM_URL, {
-      params: {
-        q,
-        format: 'json',
-        limit: 1,
-        countrycodes: 'il',
-        'accept-language': 'he',
-      },
+      params: { q, format: 'json', limit: 1, countrycodes: 'il', 'accept-language': 'he' },
       headers: { 'User-Agent': USER_AGENT },
       timeout: 15_000,
     });
@@ -133,12 +160,66 @@ export async function geocodeAddress(
     if (!first) return null;
     const lat = parseFloat(first.lat);
     const lng = parseFloat(first.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-    // תוקף לישראל
-    if (lat < 29 || lat > 34 || lng < 33 || lng > 36) return null;
+    if (!inIsraelBounds(lat, lng)) return null;
     return { lat, lng };
   } catch (err) {
     logger.warn(`[geocoder] nominatim failed for "${q}": ${err instanceof Error ? err.message : 'unknown'}`);
     return null;
   }
+}
+
+// LocationIQ - דורש API key. fallback ל-Nominatim. מסלול חינמי: 5K/יום, 2/שנייה.
+async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
+  if (!env.LOCATIONIQ_API_KEY) return null;
+  const since = Date.now() - locationiqLastRequestAt;
+  if (since < LOCATIONIQ_MIN_DELAY_MS) await sleep(LOCATIONIQ_MIN_DELAY_MS - since);
+  locationiqLastRequestAt = Date.now();
+
+  try {
+    const res = await axios.get<Array<{ lat: string; lon: string }>>(LOCATIONIQ_URL, {
+      params: {
+        key: env.LOCATIONIQ_API_KEY,
+        q,
+        format: 'json',
+        limit: 1,
+        countrycodes: 'il',
+        'accept-language': 'he',
+      },
+      timeout: 15_000,
+    });
+    const first = res.data?.[0];
+    if (!first) return null;
+    const lat = parseFloat(first.lat);
+    const lng = parseFloat(first.lon);
+    if (!inIsraelBounds(lat, lng)) return null;
+    return { lat, lng };
+  } catch (err) {
+    const status = (err as { response?: { status?: number } }).response?.status;
+    logger.warn(`[geocoder] locationiq failed for "${q}" (status=${status}): ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+}
+
+// geocode מלא - יש להשתמש בזה רק בתוך תהליכי רקע (לא בבקשת משתמש).
+// סדר: Nominatim → LocationIQ (אם יש מפתח) → null. מנסה וריאציות של הכתובת
+// כדי להגדיל סיכוי הצלחה לכתובות בעברית (קיצורים, מספרי בית מבלבלים וכו').
+// מחזיר null אם כל הניסיונות נכשלו - הקורא יסמן geocodeFailedAt ולא ינסה שוב מיד.
+export async function geocodeAddress(
+  address: string | undefined,
+  city: string | undefined
+): Promise<GeocodeResult | null> {
+  const variants = buildQueryVariants(address, city);
+  if (variants.length === 0) return null;
+
+  for (const q of variants) {
+    const fromNominatim = await tryNominatim(q);
+    if (fromNominatim) return fromNominatim;
+  }
+  // Nominatim לא מצא כלום - LocationIQ דיוקו טוב יותר לעברית, מנסים אותו רק
+  // על הוריאציה הטובה ביותר (השלמה) כדי לא לבזבז מכסה.
+  if (env.LOCATIONIQ_API_KEY) {
+    const fromLocationIQ = await tryLocationIQ(variants[0]);
+    if (fromLocationIQ) return fromLocationIQ;
+  }
+  return null;
 }
