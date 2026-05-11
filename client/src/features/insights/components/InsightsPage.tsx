@@ -92,8 +92,23 @@ export const InsightsPage = memo(() => {
     } catch { /* ignore */ }
     return null;
   });
-  // רשימה מלאה של כל הרשימות של המשתמש - נשמר מהטעינה הראשונית.
-  const [allUserLists, setAllUserLists] = useState<{ id: string; name: string; icon: string }[]>([]);
+  // רשימה מלאה של כל הרשימות של המשתמש. אתחול מ-cached_lists (קיים תמיד אחרי
+  // כניסה ראשונה לבית), כדי שהבורר יראה את כל הרשימות מיד - גם לפני שהשרת ענה.
+  const [allUserLists, setAllUserLists] = useState<{ id: string; name: string; icon: string }[]>(() => {
+    try {
+      const raw = localStorage.getItem('cached_lists');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed?.lists)) return [];
+      return parsed.lists
+        .map((l: { _id?: string; id?: string; name?: string; icon?: string }) => ({
+          id: l._id || l.id || '',
+          name: l.name || '',
+          icon: l.icon || '📋',
+        }))
+        .filter((l: { id: string }) => l.id);
+    } catch { return []; }
+  });
   // קטגוריה מודגשת בטאב הרגלים - מוגדרת בלחיצה על מוצר מוביל, מסמנת
   // חיבור ויזואלי בין סקציית המוצרים לסקציית הקטגוריות.
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
