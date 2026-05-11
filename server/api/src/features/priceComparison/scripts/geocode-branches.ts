@@ -59,8 +59,9 @@ async function main() {
     i++;
     const label = `[${i}/${todo.length}] ${b.chainId} ${b.storeName}`;
 
-    // Nominatim עם הכתובת המלאה
-    const coords = await geocodeAddress(b.address, b.city);
+    // Nominatim עם הכתובת המלאה. מעבירים גם storeName - לפעמים שם הסניף
+    // כולל את שם העיר ("עפולה", "ביתר") וזה עוזר לוולידציה כשהשדה city זבל.
+    const coords = await geocodeAddress(b.address, b.city, b.storeName);
     if (coords) {
       await BranchDAL.updateCoords(b._id.toString(), coords.lat, coords.lng, 'geocoded');
       stats.geocoded++;

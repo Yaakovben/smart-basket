@@ -316,13 +316,15 @@ async function tryLocationIQ(q: string): Promise<GeocodeResult | null> {
 // מחזיר null אם כל הניסיונות נכשלו - הקורא יסמן geocodeFailedAt ולא ינסה שוב מיד.
 export async function geocodeAddress(
   address: string | undefined,
-  city: string | undefined
+  city: string | undefined,
+  storeName?: string | undefined
 ): Promise<GeocodeResult | null> {
-  // אם השדה city מכיל זבל (מיקוד/אפס/ריק) - נסה לחלץ שם עיר מהכתובת.
-  // הרבה רשתות שמות שם פוסטל קוד או store ID בשדה city במקום שם עיר אמיתי.
+  // אם השדה city מכיל זבל (מיקוד/אפס/ריק) - נסה לחלץ שם עיר מהכתובת
+  // ומשם הסניף. הרבה רשתות שמות שם פוסטל קוד או store ID בשדה city.
+  // שם הסניף הוא רמז חזק (לדוגמה: storeName='עפולה' עם city='7700').
   let effectiveCity = city;
   if (isJunkCity(city)) {
-    const extracted = findKnownCityIn(address);
+    const extracted = findKnownCityIn([address, storeName].filter(Boolean).join(' '));
     if (extracted) {
       effectiveCity = extracted;
     }
@@ -381,10 +383,14 @@ async function reverseLocationIQ(lat: number, lng: number): Promise<ReverseGeoco
       timeout: 15_000,
     });
     const a = res.data?.address || {};
-    const street = a.road || a.street || a.pedestrian || '';
+    let street = a.road || a.street || a.pedestrian || '';
     const houseNumber = a.house_number || '';
     const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
-    // אם אין שם רחוב, לא מחזירים רק מספר בית (חסר תועלת ומבלבל - "address: '40'")
+    // לפעמים ה-API מחזיר מספר טהור בשדה road (מיקוד שהוכנס בטעות). מתעלמים
+    // משם רחוב שאינו מכיל לפחות אות אחת בעברית או באנגלית.
+    if (street && !/[֐-׿a-zA-Z]/.test(street)) {
+      street = '';
+    }
     const address = street ? [street, houseNumber].filter(Boolean).join(' ').trim() : '';
     if (!address && !city) return null;
     return { address, city };
@@ -408,10 +414,14 @@ async function reverseNominatim(lat: number, lng: number): Promise<ReverseGeocod
       timeout: 15_000,
     });
     const a = res.data?.address || {};
-    const street = a.road || a.street || a.pedestrian || '';
+    let street = a.road || a.street || a.pedestrian || '';
     const houseNumber = a.house_number || '';
     const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
-    // אם אין שם רחוב, לא מחזירים רק מספר בית (חסר תועלת ומבלבל - "address: '40'")
+    // לפעמים ה-API מחזיר מספר טהור בשדה road (מיקוד שהוכנס בטעות). מתעלמים
+    // משם רחוב שאינו מכיל לפחות אות אחת בעברית או באנגלית.
+    if (street && !/[֐-׿a-zA-Z]/.test(street)) {
+      street = '';
+    }
     const address = street ? [street, houseNumber].filter(Boolean).join(' ').trim() : '';
     if (!address && !city) return null;
     return { address, city };
