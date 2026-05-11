@@ -109,7 +109,10 @@ export const SectionCard = ({ title, children, isDark }: {
 );
 
 // ===== מסך ריק עם דמות חמודה - דמות מרכזית, פריטים מרחפים, וטקסט CTA =====
-// שימוש: <InsightsEmptyState mainEmoji="🛍️" title="..." description="..." floatingItems={['🥕','🍞']} accent="#14B8A6" />
+// שימוש:
+//   <InsightsEmptyState mainEmoji="🛍️" title="..." description="..." floatingItems={['🥕','🍞']} accent="#14B8A6" />
+//   עם CTA: ...ctaLabel="התחל קנייה" ctaIcon={<HomeIcon />} onCtaClick={() => navigate('/')}
+//   עם טיפים: tips={['סמן מוצרים שקנית', 'הוסף מוצרים חדשים', ...]}
 export const InsightsEmptyState = ({
   mainEmoji,
   title,
@@ -117,6 +120,10 @@ export const InsightsEmptyState = ({
   floatingItems = ['✨', '⭐', '💫', '🌟'],
   accent = '#14B8A6',
   isDark,
+  ctaLabel,
+  ctaIcon,
+  onCtaClick,
+  tips,
 }: {
   mainEmoji: string;
   title: string;
@@ -124,63 +131,125 @@ export const InsightsEmptyState = ({
   floatingItems?: string[];
   accent?: string;
   isDark: boolean;
+  ctaLabel?: string;
+  ctaIcon?: React.ReactNode;
+  onCtaClick?: () => void;
+  tips?: string[];
 }) => (
   <Box sx={{
-    textAlign: 'center', py: { xs: 4, sm: 6 },
+    textAlign: 'center', py: { xs: 3, sm: 4 }, px: 2,
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     animation: `${fadeIn} 0.5s ease`,
   }}>
-    {/* דמות חמודה - אייקון מרכזי + halo + 4 פריטים מרחפים */}
-    <Box sx={{ position: 'relative', width: 180, height: 180, mb: 2 }}>
-      {/* halo gradient פולסים */}
-      <Box sx={{
-        position: 'absolute', inset: 0, borderRadius: '50%',
-        background: isDark
-          ? `radial-gradient(circle at center, ${accent}33, ${accent}08 70%)`
-          : `radial-gradient(circle at center, ${accent}25, ${accent}05 70%)`,
-        animation: `iesPulse 3s ease-in-out infinite`,
-        '@keyframes iesPulse': {
-          '0%, 100%': { transform: 'scale(1)', opacity: 0.7 },
-          '50%': { transform: 'scale(1.08)', opacity: 1 },
-        },
-      }} />
-      {/* אייקון מרכזי - צף */}
-      <Box sx={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 76,
-        animation: `iesFloat 3s ease-in-out infinite`,
-        '@keyframes iesFloat': {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-8px)' },
-        },
-      }}>
-        {mainEmoji}
-      </Box>
-      {/* פריטים מרחפים בקצוות */}
-      {floatingItems.slice(0, 4).map((emoji, i) => (
-        <Box key={i} sx={{
-          position: 'absolute',
-          fontSize: 22,
-          top: ['10%', '12%', '70%', '68%'][i],
-          left: ['10%', '78%', '8%', '78%'][i],
-          animation: `iesItem 2.8s ease-in-out ${i * 0.3}s infinite`,
-          '@keyframes iesItem': {
-            '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
-            '50%': { transform: 'translateY(-10px) rotate(5deg)', opacity: 1 },
+    {/* כרטיס מכיל עם רקע עדין + מסגרת רכה - נותן יותר נוכחות לאלמנט */}
+    <Box sx={{
+      width: '100%', maxWidth: 360,
+      p: { xs: 2.5, sm: 3 }, borderRadius: '20px',
+      bgcolor: isDark ? `${accent}08` : `${accent}06`,
+      border: '1px solid',
+      borderColor: isDark ? `${accent}22` : `${accent}18`,
+      boxShadow: isDark
+        ? `0 8px 24px ${accent}10`
+        : `0 8px 24px ${accent}10, inset 0 1px 0 rgba(255,255,255,0.5)`,
+    }}>
+      {/* דמות חמודה - אייקון מרכזי + halo + 4 פריטים מרחפים */}
+      <Box sx={{ position: 'relative', width: 160, height: 160, mx: 'auto', mb: 2 }}>
+        {/* halo gradient פולסים */}
+        <Box sx={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: isDark
+            ? `radial-gradient(circle at center, ${accent}40, ${accent}08 70%)`
+            : `radial-gradient(circle at center, ${accent}30, ${accent}05 70%)`,
+          animation: `iesPulse 3s ease-in-out infinite`,
+          '@keyframes iesPulse': {
+            '0%, 100%': { transform: 'scale(1)', opacity: 0.7 },
+            '50%': { transform: 'scale(1.1)', opacity: 1 },
           },
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+        }} />
+        {/* אייקון מרכזי - צף */}
+        <Box sx={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 68,
+          animation: `iesFloat 3s ease-in-out infinite`,
+          '@keyframes iesFloat': {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-8px)' },
+          },
         }}>
-          {emoji}
+          {mainEmoji}
         </Box>
-      ))}
+        {/* פריטים מרחפים בקצוות */}
+        {floatingItems.slice(0, 4).map((emoji, i) => (
+          <Box key={i} sx={{
+            position: 'absolute',
+            fontSize: 20,
+            top: ['8%', '10%', '70%', '68%'][i],
+            left: ['8%', '78%', '6%', '78%'][i],
+            animation: `iesItem 2.8s ease-in-out ${i * 0.3}s infinite`,
+            '@keyframes iesItem': {
+              '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+              '50%': { transform: 'translateY(-10px) rotate(5deg)', opacity: 1 },
+            },
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+          }}>
+            {emoji}
+          </Box>
+        ))}
+      </Box>
+      <Typography sx={{ fontSize: 17, fontWeight: 800, mb: 0.75, color: 'text.primary' }}>
+        {title}
+      </Typography>
+      <Typography sx={{ fontSize: 13, color: 'text.secondary', maxWidth: 300, mx: 'auto', lineHeight: 1.55 }}>
+        {description}
+      </Typography>
+
+      {/* טיפים מודרגים - אם סופקו, מציגים כצ'יפים קטנים */}
+      {tips && tips.length > 0 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.75, mt: 2 }}>
+          {tips.slice(0, 3).map((tip, i) => (
+            <Box key={i} sx={{
+              px: 1.25, py: 0.5, borderRadius: '999px',
+              fontSize: 10.5, fontWeight: 700,
+              color: accent,
+              bgcolor: isDark ? `${accent}1A` : `${accent}10`,
+              border: '1px solid',
+              borderColor: isDark ? `${accent}33` : `${accent}22`,
+            }}>
+              {tip}
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* CTA - כפתור אופציונלי לפעולה מומלצת */}
+      {ctaLabel && onCtaClick && (
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={onCtaClick}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onCtaClick(); }}
+          sx={{
+            mt: 2.25,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+            px: 2.5, py: 1.1,
+            borderRadius: '12px',
+            background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
+            color: 'white',
+            fontSize: 14, fontWeight: 800,
+            boxShadow: `0 6px 18px ${accent}50`,
+            cursor: 'pointer', userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'transform 0.15s, box-shadow 0.2s',
+            '&:hover': { boxShadow: `0 8px 24px ${accent}66` },
+            '&:active': { transform: 'scale(0.97)' },
+          }}
+        >
+          {ctaIcon}
+          <span>{ctaLabel}</span>
+        </Box>
+      )}
     </Box>
-    <Typography sx={{ fontSize: 17, fontWeight: 800, mb: 0.75, color: 'text.primary' }}>
-      {title}
-    </Typography>
-    <Typography sx={{ fontSize: 13, color: 'text.secondary', maxWidth: 300, mx: 'auto', lineHeight: 1.55, px: 2 }}>
-      {description}
-    </Typography>
   </Box>
 );
 

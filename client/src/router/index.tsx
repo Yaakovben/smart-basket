@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
-import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
@@ -124,6 +124,7 @@ const ListPageWrapper = ({
 // ראוטר ראשי
 export const AppRouter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useSettings();
 
   // hooks חייבים להיקרא לפני כל return מותנה
@@ -289,13 +290,18 @@ export const AppRouter = () => {
         message="טוען את הרשימות שלך…"
       />
       <Suspense fallback={<PageLoader />}>
-      <Box sx={{
-        // אנימציית fade בלבד (ללא transform) - transform על אב היה גורם
-        // ל-position:fixed של הבר/FAB להיתפס לאב הזה במקום לויאופורט,
-        // מה שגרם לבר להופיע גבוה ולחזור באנימציה איטית בכל גלילה.
-        '@keyframes pageIn': { from: { opacity: 0 }, to: { opacity: 1 } },
-        animation: 'pageIn 0.25s ease-out',
-      }}>
+      <Box
+        // ה-key נכפה לפי המקטע הראשון של ה-pathname (/, /list, /insights וכו)
+        // כדי שה-fade ייכנס מחדש בכל מעבר דף. ניווט בין רשימות (/list/A → /list/B)
+        // לא ייגרום ל-fade מיותר.
+        key={'/' + (location.pathname.split('/')[1] || '')}
+        sx={{
+          // fade בלבד (ללא transform) - transform על אב היה גורם ל-position:fixed
+          // של הבר/FAB להיתפס לאב הזה במקום לויאופורט.
+          '@keyframes pageIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+          animation: 'pageIn 0.28s ease-out',
+        }}
+      >
       <Routes>
         <Route
           path="/login"

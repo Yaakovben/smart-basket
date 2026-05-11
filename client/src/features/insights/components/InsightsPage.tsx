@@ -283,31 +283,20 @@ export const InsightsPage = memo(() => {
           </Box>
         </Box>
 
-        {/* פשטות: גיבור + כפתור. נקודה. */}
-        <Box sx={{ px: 3, animation: `${fadeIn} 0.5s ease` }}>
+        {/* פשטות: empty-state עם CTA + טיפים מובנים. נקודה. */}
+        <Box sx={{ px: 1, animation: `${fadeIn} 0.5s ease` }}>
           <InsightsEmptyState
             isDark={isDark}
             accent="#14B8A6"
             mainEmoji="💡"
             floatingItems={['📊', '💰', '🛍️', '⭐']}
             title="ברוך הבא לתובנות!"
-            description="התחל ליצור רשימות וסמן מה שקנית - וכאן תקבל תובנות אישיות."
+            description="התחל ליצור רשימות וסמן מה שקנית - וכאן תקבל תובנות אישיות, השוואת מחירים בין רשתות, וניתוח הרגלים."
+            tips={['השוואת מחירים', 'הרגלי קנייה', 'תובנות חכמות']}
+            ctaLabel="לרשימות שלי"
+            ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
+            onCtaClick={() => { haptic('medium'); navigate('/'); }}
           />
-          <Button
-            onClick={() => { haptic('medium'); navigate('/'); }}
-            fullWidth
-            sx={{
-              mt: 1, py: 1.5, borderRadius: '14px', textTransform: 'none',
-              fontSize: 15, fontWeight: 800, color: 'white',
-              background: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-              boxShadow: '0 8px 24px rgba(20,184,166,0.32)',
-              '&:active': { transform: 'scale(0.98)' },
-              gap: 1,
-            }}
-            startIcon={<HomeIcon sx={{ fontSize: 20 }} />}
-          >
-            לרשימות שלי
-          </Button>
         </Box>
       </Box>
     );
@@ -688,6 +677,10 @@ export const InsightsPage = memo(() => {
               floatingItems={['📝', '✨', '✅', '🎯']}
               title="אין רשימות פעילות"
               description="צור רשימה ראשונה ותתחיל להוסיף מוצרים. כאן תראה את הפעילות בכל הרשימות, חלוקת חברים בקבוצות, וסטטיסטיקות מלאות."
+              tips={['רשימות פרטיות', 'קבוצות משותפות', 'התראות בזמן אמת']}
+              ctaLabel="לרשימות שלי"
+              ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
+              onCtaClick={() => { haptic('medium'); navigate('/'); }}
             />
           );
 
@@ -1205,6 +1198,10 @@ export const InsightsPage = memo(() => {
                 floatingItems={['🥕', '🍞', '🥛', '🍎']}
                 title="עוד לא סימנת מוצרים כנקנו"
                 description="סמן ✅ על מוצרים שקנית, וכאן יופיעו הרגלי הקנייה שלך - מוצרים חוזרים, ימי שיא, קטגוריות מועדפות וכל מה שמספר עליך."
+                tips={['מוצרים חוזרים', 'ימי השיא שלך', 'קטגוריות מועדפות']}
+                ctaLabel="לרשימות שלי"
+                ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
+                onCtaClick={() => { haptic('medium'); navigate('/'); }}
               />
             );
           }

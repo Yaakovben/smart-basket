@@ -246,6 +246,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   }, [offset]);
 
   const doToggle = useCallback(() => {
+    haptic('medium'); // משוב מגע ברור על סימון כנקנה - הפעולה הכי שכיחה
     setOffset(0);
     onClose();
     onToggle(product.id);
