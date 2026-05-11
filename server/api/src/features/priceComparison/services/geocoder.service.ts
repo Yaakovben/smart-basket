@@ -101,10 +101,44 @@ const FALLBACK_CITY_COORDS: Record<string, GeocodeResult> = {
   'נחליאל': { lat: 31.9790, lng: 35.1230 },
 };
 
+// נורמליזציה של שמות ערים - הרבה פעמים הרשתות כותבות אותה עיר עם וריאציות
+// כתיב שונות ("ביתר עלית" / "ביתר עילית"). בלי נורמליזציה הוולידציה לא
+// מוצאת מרכז עיר ומקבלת תוצאות שגויות. מיפוי מקיף כדי לתפוס שגיאות נפוצות.
+const CITY_ALIASES: Record<string, string> = {
+  // יוד נופלת
+  'ביתר עלית': 'ביתר עילית',
+  'מודיעין עלית': 'מודיעין עילית',
+  'נוף הגלל': 'נוף הגליל',
+  // קרית/קריית
+  'קריית גת': 'קרית גת',
+  'קריית ביאליק': 'קרית ביאליק',
+  'קריית מוצקין': 'קרית מוצקין',
+  'קריית אתא': 'קרית אתא',
+  // עם/בלי "תל"
+  'אביב יפו': 'תל אביב-יפו',
+  'תל-אביב': 'תל אביב',
+  'תל אביב יפו': 'תל אביב-יפו',
+  // קיצורים נפוצים
+  'ת"א': 'תל אביב',
+  'תא': 'תל אביב',
+  'י-ם': 'ירושלים',
+  // עוד וריאציות
+  'נצרת עלית': 'נוף הגליל', // השם הישן
+  'מעלות תרשיחא': 'מעלות',
+  'בית-שמש': 'בית שמש',
+  'באר-שבע': 'באר שבע',
+};
+
+const normalizeCity = (city: string | undefined): string => {
+  if (!city) return '';
+  const trimmed = city.trim();
+  return CITY_ALIASES[trimmed] ?? trimmed;
+};
+
 export function cityFallbackCoords(city: string | undefined): GeocodeResult | null {
   if (!city) return null;
-  const clean = city.trim();
-  return FALLBACK_CITY_COORDS[clean] ?? null;
+  const normalized = normalizeCity(city);
+  return FALLBACK_CITY_COORDS[normalized] ?? null;
 }
 
 // בדיקה שהקואורדינטות בתוך גבולות ישראל (כולל יו"ש ורמת הגולן) -
