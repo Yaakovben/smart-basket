@@ -135,15 +135,9 @@ export const AppRouter = () => {
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
 
-  // הסתרת loader ראשוני כשבדיקת האימות הושלמה
+  // הסתרת loader ראשוני כשבדיקת האימות הושלמה - בלי RAF כפול
   useEffect(() => {
-    if (!authLoading) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          hideInitialLoader();
-        });
-      });
-    }
+    if (!authLoading) hideInitialLoader();
   }, [authLoading]);
 
   // הודעות מ-Service Worker: ניווט מהתראות, ורענון כשה-SW התעדכן.

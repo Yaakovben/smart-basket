@@ -75,16 +75,12 @@ handleNewVersion();
   } catch { /* ignore */ }
 })();
 
-// הסתרת מסך הטעינה הראשוני, נקרא כשהאימות מוכן
+// הסתרת מסך הטעינה הראשוני - הסרה מיידית בלי fade כדי לחסוך 300ms של המתנה
 export const hideInitialLoader = () => {
   const loader = document.getElementById('initial-loader');
   if (loader) {
-    loader.style.opacity = '0';
-    loader.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => {
-      loader.remove();
-      document.body.classList.add('app-loaded');
-    }, 300);
+    loader.remove();
+    document.body.classList.add('app-loaded');
   }
 };
 
