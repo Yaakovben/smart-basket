@@ -11,7 +11,9 @@ import { logger } from '../../../config/logger';
 import { env } from '../../../config/environment';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 const LOCATIONIQ_URL = 'https://eu1.locationiq.com/v1/search';
+const LOCATIONIQ_REVERSE_URL = 'https://eu1.locationiq.com/v1/reverse';
 const USER_AGENT = 'smart-basket-branches/1.0 (price-comparison feature)';
 const NOMINATIM_MIN_DELAY_MS = 1100; // 1 בקשה/שנייה אצל Nominatim
 const LOCATIONIQ_MIN_DELAY_MS = 550;  // 2 בקשות/שנייה במסלול החינמי
@@ -350,4 +352,78 @@ export async function geocodeAddress(
     }
   }
   return null;
+}
+
+// ============== Reverse geocoding - מ-lat/lng לכתובת ==============
+
+export interface ReverseGeocodeResult {
+  address: string;
+  city: string;
+}
+
+// reverse דרך LocationIQ - מועדף כי איכותו טובה לעברית.
+// מחזיר אובייקט עם שם רחוב+מספר (address) ושם עיר (city).
+async function reverseLocationIQ(lat: number, lng: number): Promise<ReverseGeocodeResult | null> {
+  if (!env.LOCATIONIQ_API_KEY) return null;
+  const since = Date.now() - locationiqLastRequestAt;
+  if (since < LOCATIONIQ_MIN_DELAY_MS) await sleep(LOCATIONIQ_MIN_DELAY_MS - since);
+  locationiqLastRequestAt = Date.now();
+
+  try {
+    const res = await axios.get<{ address?: Record<string, string>; display_name?: string }>(LOCATIONIQ_REVERSE_URL, {
+      params: {
+        key: env.LOCATIONIQ_API_KEY,
+        lat, lon: lng,
+        format: 'json',
+        'accept-language': 'he',
+        normalizeaddress: 1,
+      },
+      timeout: 15_000,
+    });
+    const a = res.data?.address || {};
+    const street = a.road || a.street || a.pedestrian || '';
+    const houseNumber = a.house_number || '';
+    const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
+    const address = [street, houseNumber].filter(Boolean).join(' ').trim();
+    if (!address && !city) return null;
+    return { address, city };
+  } catch (err) {
+    const status = (err as { response?: { status?: number } }).response?.status;
+    logger.warn(`[geocoder] reverse locationiq failed for ${lat},${lng} (status=${status}): ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+}
+
+// reverse דרך Nominatim - fallback. איטי יותר.
+async function reverseNominatim(lat: number, lng: number): Promise<ReverseGeocodeResult | null> {
+  const since = Date.now() - nominatimLastRequestAt;
+  if (since < NOMINATIM_MIN_DELAY_MS) await sleep(NOMINATIM_MIN_DELAY_MS - since);
+  nominatimLastRequestAt = Date.now();
+
+  try {
+    const res = await axios.get<{ address?: Record<string, string> }>(NOMINATIM_REVERSE_URL, {
+      params: { lat, lon: lng, format: 'json', 'accept-language': 'he', zoom: 18 },
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 15_000,
+    });
+    const a = res.data?.address || {};
+    const street = a.road || a.street || a.pedestrian || '';
+    const houseNumber = a.house_number || '';
+    const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
+    const address = [street, houseNumber].filter(Boolean).join(' ').trim();
+    if (!address && !city) return null;
+    return { address, city };
+  } catch (err) {
+    logger.warn(`[geocoder] reverse nominatim failed for ${lat},${lng}: ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+}
+
+// reverse geocoding מלא: lat/lng → כתובת. LocationIQ ראשון (איכות יותר טובה
+// לעברית), Nominatim fallback. מחזיר null אם שניהם נכשלו.
+export async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult | null> {
+  if (!inIsraelBounds(lat, lng)) return null;
+  const fromLocationIQ = await reverseLocationIQ(lat, lng);
+  if (fromLocationIQ) return fromLocationIQ;
+  return reverseNominatim(lat, lng);
 }
