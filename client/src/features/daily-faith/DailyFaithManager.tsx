@@ -8,7 +8,7 @@ import ClearIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Modal } from '../../global/components/Modal';
 import { ConfirmModal } from '../../global/components/ConfirmModal';
-import { PulseLoader } from '../../global/components/PulseLoader';
+import { ShimmerList } from '../../global/components/Shimmer';
 import { renderFaithText, stripFaithMarkers } from './formatFaithText';
 import { useSettings } from '../../global/context/SettingsContext';
 import { haptic } from '../../global/helpers';
@@ -358,8 +358,8 @@ export const DailyFaithManager = ({ onClose }: Props) => {
           pt: '2px', // הכרחי כדי שהמסכה הצפונית לא תחתוך מיד את הכרטיס הראשון
         }}>
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <PulseLoader size="md" label="טוען משפטי אמונה..." color="#B8860B" />
+            <Box sx={{ py: 1 }}>
+              <ShimmerList count={5} rowHeight={62} gap={8} />
             </Box>
           ) : filteredQuotes.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 5 }}>

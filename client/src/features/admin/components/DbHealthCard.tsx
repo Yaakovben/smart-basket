@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
-import { PulseLoader } from '../../../global/components';
+import { ShimmerBlock } from '../../../global/components';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import StorageIcon from '@mui/icons-material/Storage';
 import CloseIcon from '@mui/icons-material/Close';
@@ -205,8 +205,11 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         {loading && !data && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <PulseLoader size="md" label="טוען בריאות מסד נתונים..." />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
+            <ShimmerBlock height={140} radius={16} />
+            <ShimmerBlock height={68} radius={12} />
+            <ShimmerBlock height={68} radius={12} />
+            <ShimmerBlock height={68} radius={12} />
           </Box>
         )}
 

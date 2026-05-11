@@ -22,7 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { TextField, IconButton } from '@mui/material';
-import { Modal, PulseLoader } from '../../../global/components';
+import { Modal, ShimmerList, ShimmerBlock } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
 import { priceComparisonApi, type PriceSyncStatus } from '../../priceComparison';
@@ -310,8 +310,9 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     <Modal title="ניהול מאגר" onClose={onClose}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'hidden' }}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <PulseLoader size="md" label="טוען..." />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, py: 1 }}>
+            <ShimmerBlock height={56} radius={12} />
+            <ShimmerList count={6} rowHeight={52} gap={8} />
           </Box>
         ) : (
           <>
@@ -695,8 +696,10 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                           bgcolor: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
                         }}>
                           {isLoadingThis ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
-                              <PulseLoader size="sm" />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 1 }}>
+                              <ShimmerBlock height={48} radius={10} />
+                              <ShimmerBlock height={48} radius={10} />
+                              <ShimmerBlock height={48} radius={10} />
                             </Box>
                           ) : (
                             // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.
