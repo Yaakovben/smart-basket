@@ -114,6 +114,30 @@ const inIsraelBounds = (lat: number, lng: number): boolean =>
   && lat >= 29 && lat <= 34
   && lng >= 33 && lng <= 36;
 
+// מרחק haversine בק"מ - שימוש לוולידציה שהתוצאה קרובה לעיר המבוקשת
+const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371; // רדיוס כדור הארץ בק"מ
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+};
+
+// אימות שהתוצאה אכן בעיר המבוקשת - תוצאה רחוקה מ-25 ק"מ ממרכז העיר
+// כמעט בוודאות שגויה (Nominatim בלבל בשם דומה בעיר אחרת, למשל "אילת"
+// בכתובת קרית-חיים → תוצאה באילת הדרומית).
+const MAX_DIST_FROM_CITY_KM = 25;
+const validateNearCity = (
+  result: GeocodeResult,
+  city: string | undefined
+): boolean => {
+  const center = cityFallbackCoords(city);
+  if (!center) return true; // אין נתון השוואה - מקבלים
+  const dist = haversineKm(result.lat, result.lng, center.lat, center.lng);
+  return dist <= MAX_DIST_FROM_CITY_KM;
+};
+
 // וריאציות של הכתובת - אם הכתובת המלאה נכשלת, מנסים גרסאות פשוטות יותר.
 // משפר משמעותית את אחוז ההצלחה, במיוחד עם קיצורים ("ת״א" → "תל אביב").
 const cleanCity = (city: string | undefined): string => {
@@ -211,15 +235,26 @@ export async function geocodeAddress(
   const variants = buildQueryVariants(address, city);
   if (variants.length === 0) return null;
 
+  // Nominatim עם וולידציה - אם התוצאה רחוקה מהעיר זה כנראה התאמה שגויה
+  // (Nominatim מתבלבל לעיתים בשמות רחובות שדומים לשמות ערים אחרות).
   for (const q of variants) {
-    const fromNominatim = await tryNominatim(q);
-    if (fromNominatim) return fromNominatim;
+    const result = await tryNominatim(q);
+    if (result && validateNearCity(result, city)) return result;
+    if (result) {
+      logger.warn(`[geocoder] rejected nominatim result for "${q}" - far from city "${city}"`);
+    }
   }
-  // Nominatim לא מצא כלום - LocationIQ דיוקו טוב יותר לעברית, מנסים אותו רק
-  // על הוריאציה הטובה ביותר (השלמה) כדי לא לבזבז מכסה.
+  // Nominatim לא מצא או החזיר תוצאה רחוקה - LocationIQ מדויק יותר לעברית.
+  // מנסים על כל הוריאציות (לא רק הראשונה) כי כשל Nominatim לעיתים מצביע
+  // על כתובת מורכבת ש-LocationIQ יסתדר איתה.
   if (env.LOCATIONIQ_API_KEY) {
-    const fromLocationIQ = await tryLocationIQ(variants[0]);
-    if (fromLocationIQ) return fromLocationIQ;
+    for (const q of variants) {
+      const result = await tryLocationIQ(q);
+      if (result && validateNearCity(result, city)) return result;
+      if (result) {
+        logger.warn(`[geocoder] rejected locationiq result for "${q}" - far from city "${city}"`);
+      }
+    }
   }
   return null;
 }
