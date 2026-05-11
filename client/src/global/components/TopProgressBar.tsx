@@ -10,8 +10,8 @@
 import { Box, keyframes } from '@mui/material';
 
 const slide = keyframes`
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(380%); }
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
 `;
 
 interface Props {
@@ -24,19 +24,25 @@ export const TopProgressBar = ({ active, color = '#14B8A6' }: Props) => {
   return (
     <Box sx={{
       position: 'fixed',
-      top: 0, left: 0, right: 0,
-      height: 3,
+      top: 12,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 'min(72%, 420px)',
+      height: 5,
       zIndex: 10000,
-      bgcolor: `${color}22`,
+      bgcolor: `${color}1A`,
+      borderRadius: 999,
       overflow: 'hidden',
       pointerEvents: 'none',
+      boxShadow: `0 2px 8px ${color}33`,
     }}>
       <Box sx={{
-        width: '35%',
+        width: '45%',
         height: '100%',
-        background: `linear-gradient(90deg, transparent, ${color}, ${color}, transparent)`,
-        boxShadow: `0 0 8px ${color}80`,
-        animation: `${slide} 1.4s ease-in-out infinite`,
+        borderRadius: 999,
+        background: `linear-gradient(90deg, transparent, ${color}, #5EEAD4, ${color}, transparent)`,
+        boxShadow: `0 0 14px ${color}, 0 0 6px ${color}`,
+        animation: `${slide} 1.2s ease-in-out infinite`,
       }} />
     </Box>
   );
