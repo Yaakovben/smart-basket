@@ -339,6 +339,7 @@ export const InsightsPage = memo(() => {
         active={tab === 'price' && priceLoading && !priceData}
         variant="toast"
         message="מאחזר השוואת מחירים…"
+        delayMs={5000}
       />
       {/* ===== הדר גרדיאנט קומפקטי + ריבון BETA אלכסוני ===== */}
       <Box sx={{
