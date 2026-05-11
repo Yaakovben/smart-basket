@@ -384,7 +384,8 @@ async function reverseLocationIQ(lat: number, lng: number): Promise<ReverseGeoco
     const street = a.road || a.street || a.pedestrian || '';
     const houseNumber = a.house_number || '';
     const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
-    const address = [street, houseNumber].filter(Boolean).join(' ').trim();
+    // אם אין שם רחוב, לא מחזירים רק מספר בית (חסר תועלת ומבלבל - "address: '40'")
+    const address = street ? [street, houseNumber].filter(Boolean).join(' ').trim() : '';
     if (!address && !city) return null;
     return { address, city };
   } catch (err) {
@@ -410,7 +411,8 @@ async function reverseNominatim(lat: number, lng: number): Promise<ReverseGeocod
     const street = a.road || a.street || a.pedestrian || '';
     const houseNumber = a.house_number || '';
     const city = a.city || a.town || a.village || a.municipality || a.suburb || '';
-    const address = [street, houseNumber].filter(Boolean).join(' ').trim();
+    // אם אין שם רחוב, לא מחזירים רק מספר בית (חסר תועלת ומבלבל - "address: '40'")
+    const address = street ? [street, houseNumber].filter(Boolean).join(' ').trim() : '';
     if (!address && !city) return null;
     return { address, city };
   } catch (err) {
