@@ -138,18 +138,27 @@ ChainProductRow.displayName = 'ChainProductRow';
 const buildNavUrls = (branch: NearestBranch) => {
   const { lat, lng, branchName, address, city } = branch;
   const hasCoords = typeof lat === 'number' && typeof lng === 'number';
-  const fullAddress = [address, city].filter(Boolean).join(', ');
-  const addressQuery = encodeURIComponent(fullAddress || branchName);
+  // הכתובת המלאה - שם סניף + כתובת + עיר - עוזר לאפליקציות הניווט לדייק
+  // לסניף הספציפי גם אם הקואורדינטות מצביעות על מרכז אזור.
+  const fullAddress = [branchName, address, city].filter(Boolean).join(', ');
+  const addressQuery = encodeURIComponent(fullAddress);
   const label = encodeURIComponent(branchName);
 
   if (hasCoords) {
+    // משולב: קואורדינטות + טקסט - האפליקציה תעדיף את הטקסט אם היא מזהה
+    // אותו (POI מוכר), אחרת תיפול לקואורדינטות. כך מקבלים את הדיוק
+    // המקסימלי האפשרי בכל מקרה.
     return {
-      waze: `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
-      googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`,
-      appleMaps: `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}`,
+      // Waze: q=text מציע חיפוש; ll=coords נקודת התחלה. שילוב נותן את הטוב משניהם.
+      waze: `https://waze.com/ul?q=${addressQuery}&ll=${lat},${lng}&navigate=yes`,
+      // Google Maps: שם הסניף כיעד טקסטואלי - הוא יחפש את הסניף במאגר POI
+      // שלו (מדויק יותר מקואורדינטות בלבד). אם לא מוצא, הקואורדינטות בגיבוי.
+      googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${addressQuery}`,
+      // Apple Maps: daddr נקודת היעד, q תווית התצוגה. שילוב coord+text לדיוק.
+      appleMaps: `https://maps.apple.com/?daddr=${lat},${lng}&q=${label}&address=${addressQuery}`,
     };
   }
-  // ניווט לפי כתובת - האפליקציות יחפשו את היעד אוטומטית
+  // אין קואורדינטות - חיפוש לפי כתובת בלבד.
   return {
     waze: `https://waze.com/ul?q=${addressQuery}&navigate=yes`,
     googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${addressQuery}`,
