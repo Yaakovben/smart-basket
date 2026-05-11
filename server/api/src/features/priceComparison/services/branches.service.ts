@@ -125,9 +125,14 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
     const hasCoords = typeof b.lat === 'number' && typeof b.lng === 'number';
     const hasLocation = !!(b.address || b.city);
     if (!hasCoords && !hasLocation) continue;
-    if (hasCoords) {
+    // עקרון אמינות: coordSource='unknown' = מרכז עיר, לא נקודה אמיתית.
+    // לא משתמשים בו לחישוב מרחק (זה היה מטעה את הלקוח). מטפלים בו כסניף
+    // עם כתובת בלבד - הלקוח יראה את הכתובת ולחצן 'ניווט לפי כתובת',
+    // בלי מספר ק"מ שגוי.
+    const isPreciseCoords = hasCoords && b.coordSource !== 'unknown';
+    if (isPreciseCoords) {
       withCoords.push({ b, dist: haversineKm(user, { lat: b.lat!, lng: b.lng! }) });
-    } else {
+    } else if (hasLocation) {
       addressOnly.push(b);
     }
   }
