@@ -80,6 +80,16 @@ async function main() {
       continue;
     }
 
+    // אחרי שגאוקודינג נכשל ואין מרכז עיר - אם הסניף החזיק קואורדינטות
+    // מ-'geocoded' של הרצה קודמת (לפני וולידציה הדוקה), הקואורדינטות
+    // האלה כנראה שגויות. מורידים אותן ל-coordSource='unknown' עם
+    // הקואורדינטות הישנות מסומנות כלא-מדויקות (לא יוצגו מרחק ללקוח).
+    if (b.coordSource === 'geocoded' && typeof b.lat === 'number' && typeof b.lng === 'number') {
+      await BranchDAL.updateCoords(b._id.toString(), b.lat, b.lng, 'unknown');
+      stats.failed++;
+      logger.warn(`${label}: demoted to 'unknown' (had geocoded coords but validation failed)`);
+      continue;
+    }
     stats.failed++;
     logger.warn(`${label}: FAILED (city=${b.city || '?'}, address=${b.address || '?'})`);
   }
