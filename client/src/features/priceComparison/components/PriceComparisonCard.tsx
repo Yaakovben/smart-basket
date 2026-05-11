@@ -363,11 +363,13 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                   fontSize: 11, fontWeight: 800,
                   textTransform: 'none',
                   borderRadius: '8px',
-                  px: 1.5, py: 0.6,
+                  px: 1.75, py: 0.6,
                   flexShrink: 0,
                   minWidth: 0,
                   ml: 1,
-                  '& .MuiButton-startIcon': { mr: 1.5, ml: 0 },
+                  // ריווח גדול יותר בין האייקון לטקסט - היה צמוד מדי
+                  gap: 1,
+                  '& .MuiButton-startIcon': { mr: 0, ml: 0 },
                 }}
               >
                 ניווט
