@@ -12,6 +12,7 @@
  */
 
 import { memo, useState, useMemo } from 'react';
+import { siWaze, siGooglemaps } from 'simple-icons';
 import { Box, Typography, Collapse, IconButton, Dialog, keyframes } from '@mui/material';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -182,41 +183,28 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   // זיהוי iOS - Apple Maps רלוונטי רק שם, ב-Android הוא רק יוצר רעש
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // לוגואי אפליקציות - tiles בסגנון iOS, כמו במסך הראשי של הטלפון.
+  // לוגואים מ-Simple Icons (CC0) - paths רשמיים מהמותגים.
+  // ה-path הוא silhouette צבע אחד; שמנו אותו על tile מעוגל בצבע המותג כמו ב-iOS.
   const WazeLogo = (
-    // Waze: ריבוע תכלת מעוגל, בועת דיבור עגולה עם פנים מחייכות וזנב משולש מימין-למטה.
-    <Box component="svg" viewBox="0 0 64 64" sx={{ width: 56, height: 56 }}>
-      <rect width="64" height="64" rx="14" fill="#33CCFF"/>
-      {/* גוף הבועה - עגול כמעט מלא */}
-      <circle cx="32" cy="30" r="18" fill="#fff"/>
-      {/* זנב הבועה - משולש קטן בפינה תחתונה-ימנית */}
-      <path fill="#fff" d="M40 44 L48 52 L36 47 Z"/>
-      {/* עיניים - נקודות שחורות */}
-      <circle cx="26" cy="28" r="2.4" fill="#1F2A36"/>
-      <circle cx="38" cy="28" r="2.4" fill="#1F2A36"/>
-      {/* חיוך */}
-      <path d="M25 35 Q32 41 39 35" stroke="#1F2A36" strokeWidth="2" fill="none" strokeLinecap="round"/>
+    // Waze (siWaze, hex #33CCFF) - silhouette לבן על tile תכלת.
+    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 56, height: 56 }}>
+      <rect width="32" height="32" rx="7.5" fill="#33CCFF"/>
+      <g transform="translate(4 4)">
+        <path fill="#fff" d={siWaze.path} />
+      </g>
     </Box>
   );
   const GoogleMapsLogo = (
-    // Google Maps: ריבוע לבן, סיכת מיקום אדומה עם נקודה לבנה.
-    <Box component="svg" viewBox="0 0 64 64" sx={{ width: 56, height: 56 }}>
-      <rect width="64" height="64" rx="14" fill="#fff"/>
-      {/* רמזי מפה דקים מאחורי הסיכה - מקבל את ההרגשה של "מפה" */}
-      <path d="M4 20 L60 12" stroke="#FBBC04" strokeWidth="2" opacity="0.4"/>
-      <path d="M4 50 L60 44" stroke="#34A853" strokeWidth="2.5" opacity="0.4"/>
-      <path d="M12 4 L16 60" stroke="#4285F4" strokeWidth="1.8" opacity="0.3"/>
-      <path d="M48 4 L52 60" stroke="#EA4335" strokeWidth="1.5" opacity="0.25"/>
-      {/* צל מתחת לסיכה */}
-      <ellipse cx="32" cy="52" rx="7" ry="1.8" fill="rgba(0,0,0,0.22)"/>
-      {/* סיכת המיקום - teardrop קלאסי */}
-      <path fill="#EA4335" d="M32 12C23.5 12 16.5 18.8 16.5 27.3c0 10.5 15.5 25 15.5 25s15.5-14.5 15.5-25C47.5 18.8 40.5 12 32 12z"/>
-      {/* חור לבן במרכז */}
-      <circle cx="32" cy="26" r="5.8" fill="#fff"/>
+    // Google Maps (siGooglemaps, hex #4285F4) - silhouette כחול-גוגל על tile לבן.
+    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 56, height: 56 }}>
+      <rect width="32" height="32" rx="7.5" fill="#fff"/>
+      <g transform="translate(4 4)">
+        <path fill="#4285F4" d={siGooglemaps.path} />
+      </g>
     </Box>
   );
   const AppleMapsLogo = (
-    // Apple Maps "מפות": רקע מפה ירקרק עם חץ ניווט לבן באלכסון.
+    // Apple Maps אין ב-Simple Icons (לא brand מותג). שומרים את החץ הירוק הקודם.
     <Box component="svg" viewBox="0 0 64 64" sx={{ width: 56, height: 56 }}>
       <defs>
         <linearGradient id="mapsBg" x1="0" y1="0" x2="1" y2="1">
@@ -225,10 +213,8 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="14" fill="url(#mapsBg)"/>
-      {/* קווי כביש דקים לתחושת מפה */}
       <path d="M0 28 Q22 22 64 30" stroke="rgba(255,255,255,0.25)" strokeWidth="2" fill="none"/>
       <path d="M0 44 Q26 38 64 46" stroke="rgba(255,255,255,0.18)" strokeWidth="2" fill="none"/>
-      {/* חץ ניווט במרכז */}
       <path fill="#fff" d="M47 13 L21 27 c-1.1.6-.9 2.3.3 2.7 L31 33 l3.3 9.7 c.4 1.2 2.1 1.3 2.7.2 L51 17 c.6-1.2-.7-2.3-1.9-1.7 L47 13z"/>
     </Box>
   );
