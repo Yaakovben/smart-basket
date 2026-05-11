@@ -17,7 +17,7 @@ import { env } from '../../../config/environment';
 import { logger } from '../../../config/logger';
 import { BranchDAL } from '../dal/branch.dal';
 import { Branch } from '../models/Branch.model';
-import { geocodeAddress, cityFallbackCoords } from '../services/geocoder.service';
+import { geocodeAddress, cityFallbackFromAnyField } from '../services/geocoder.service';
 
 interface Stats {
   total: number;
@@ -70,7 +70,8 @@ async function main() {
 
     // נופלים למרכז העיר אם יש - מסומן 'unknown' (לא 'geocoded') כדי שנדע
     // שזה לא מדויק וננסה שוב בהרצה הבאה (עם שיפורים ב-geocoder או מקור חדש).
-    const fb = cityFallbackCoords(b.city);
+    // cityFallbackFromAnyField מחפש גם בכתובת אם השדה city מכיל זבל.
+    const fb = cityFallbackFromAnyField(b.city, b.address);
     if (fb) {
       await BranchDAL.updateCoords(b._id.toString(), fb.lat, fb.lng, 'unknown');
       stats.cityFallback++;

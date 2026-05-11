@@ -99,6 +99,20 @@ const FALLBACK_CITY_COORDS: Record<string, GeocodeResult> = {
   'קדומים': { lat: 32.1787, lng: 35.1046 },
   'פסגות': { lat: 31.9005, lng: 35.2770 },
   'נחליאל': { lat: 31.9790, lng: 35.1230 },
+  // אזורים נוספים שצריך לקחת בחשבון:
+  'גבע בנימין': { lat: 31.8773, lng: 35.2873 },
+  'אדם': { lat: 31.8400, lng: 35.2700 },
+  'גוש עציון': { lat: 31.6500, lng: 35.1300 },
+  'יבנה': { lat: 31.8779, lng: 34.7388 },
+  'גן יבנה': { lat: 31.7858, lng: 34.7058 },
+  'גדרה': { lat: 31.8133, lng: 34.7780 },
+  'יהוד': { lat: 32.0322, lng: 34.8898 },
+  'אור יהודה': { lat: 32.0292, lng: 34.8517 },
+  'מבשרת ציון': { lat: 31.7950, lng: 35.1419 },
+  'גני תקווה': { lat: 32.0648, lng: 34.8754 },
+  'יישוב הרב': { lat: 31.6953, lng: 35.1167 }, // ביתר עילית
+  'הקוצר': { lat: 31.2518, lng: 34.7915 }, // עמק שרה - באר שבע
+  'עמק שרה': { lat: 31.2518, lng: 34.7915 },
 };
 
 // נורמליזציה של שמות ערים - הרבה פעמים הרשתות כותבות אותה עיר עם וריאציות
@@ -129,6 +143,31 @@ const CITY_ALIASES: Record<string, string> = {
   'באר-שבע': 'באר שבע',
 };
 
+// זיהוי שדה city ממולא בזבל (מספר מיקוד, '0', '?', או ריק)
+const isJunkCity = (city: string | undefined): boolean => {
+  if (!city) return true;
+  const t = city.trim();
+  if (t === '' || t === '?' || t === '-') return true;
+  // מספר טהור = מיקוד או store ID שהוכנס בטעות לשדה עיר
+  if (/^\d+$/.test(t)) return true;
+  // קצר מדי - לא שם עיר אמיתי
+  if (t.length < 2) return true;
+  return false;
+};
+
+// חיפוש שם עיר מוכר בתוך טקסט (כתובת/שם סניף) - שימושי כשהשדה city
+// מכיל זבל אבל הכתובת מציינת את העיר במפורש.
+const findKnownCityIn = (text: string | undefined): string | null => {
+  if (!text) return null;
+  // עוברים על שמות הערים מהארוך לקצר (כדי שתל אביב-יפו ייתפס לפני תל אביב)
+  const cityNames = [...Object.keys(FALLBACK_CITY_COORDS), ...Object.keys(CITY_ALIASES)]
+    .sort((a, b) => b.length - a.length);
+  for (const name of cityNames) {
+    if (text.includes(name)) return name;
+  }
+  return null;
+};
+
 const normalizeCity = (city: string | undefined): string => {
   if (!city) return '';
   const trimmed = city.trim();
@@ -139,6 +178,17 @@ export function cityFallbackCoords(city: string | undefined): GeocodeResult | nu
   if (!city) return null;
   const normalized = normalizeCity(city);
   return FALLBACK_CITY_COORDS[normalized] ?? null;
+}
+
+// תוקן ל-script - מחזיר fallback גם כשהשדה city לא ידוע, ע"י חיפוש בכתובת.
+// אם יש "עמק שרה" בכתובת אבל city="9000", נחזיר את מרכז באר שבע (עמק שרה).
+export function cityFallbackFromAnyField(city: string | undefined, address: string | undefined): GeocodeResult | null {
+  const direct = cityFallbackCoords(city);
+  if (direct) return direct;
+  // השדה city לא נמצא במאגר - נסה לחלץ עיר מוכרת מהכתובת
+  const extracted = findKnownCityIn(address);
+  if (extracted) return cityFallbackCoords(extracted);
+  return null;
 }
 
 // בדיקה שהקואורדינטות בתוך גבולות ישראל (כולל יו"ש ורמת הגולן) -
@@ -266,16 +316,25 @@ export async function geocodeAddress(
   address: string | undefined,
   city: string | undefined
 ): Promise<GeocodeResult | null> {
-  const variants = buildQueryVariants(address, city);
+  // אם השדה city מכיל זבל (מיקוד/אפס/ריק) - נסה לחלץ שם עיר מהכתובת.
+  // הרבה רשתות שמות שם פוסטל קוד או store ID בשדה city במקום שם עיר אמיתי.
+  let effectiveCity = city;
+  if (isJunkCity(city)) {
+    const extracted = findKnownCityIn(address);
+    if (extracted) {
+      effectiveCity = extracted;
+    }
+  }
+  const variants = buildQueryVariants(address, effectiveCity);
   if (variants.length === 0) return null;
 
   // Nominatim עם וולידציה - אם התוצאה רחוקה מהעיר זה כנראה התאמה שגויה
   // (Nominatim מתבלבל לעיתים בשמות רחובות שדומים לשמות ערים אחרות).
   for (const q of variants) {
     const result = await tryNominatim(q);
-    if (result && validateNearCity(result, city)) return result;
+    if (result && validateNearCity(result, effectiveCity)) return result;
     if (result) {
-      logger.warn(`[geocoder] rejected nominatim result for "${q}" - far from city "${city}"`);
+      logger.warn(`[geocoder] rejected nominatim result for "${q}" - far from city "${effectiveCity}"`);
     }
   }
   // Nominatim לא מצא או החזיר תוצאה רחוקה - LocationIQ מדויק יותר לעברית.
@@ -284,9 +343,9 @@ export async function geocodeAddress(
   if (env.LOCATIONIQ_API_KEY) {
     for (const q of variants) {
       const result = await tryLocationIQ(q);
-      if (result && validateNearCity(result, city)) return result;
+      if (result && validateNearCity(result, effectiveCity)) return result;
       if (result) {
-        logger.warn(`[geocoder] rejected locationiq result for "${q}" - far from city "${city}"`);
+        logger.warn(`[geocoder] rejected locationiq result for "${q}" - far from city "${effectiveCity}"`);
       }
     }
   }
