@@ -148,6 +148,14 @@ export const InsightsPage = memo(() => {
     safeStorage.setJSON('sb_insights_selected_list', selectedListId);
   }, [selectedListId]);
 
+  // הגנה: אם נכנסנו עם selectedListId=null אבל יש לנו רשימות - בוחרים אוטומטית
+  // את הראשונה. מונע fetch של 'כל הרשימות' (כבד על השרת) במקרי קצה.
+  useEffect(() => {
+    if (selectedListId === null && allUserLists.length > 0) {
+      setSelectedListId(allUserLists[0].id);
+    }
+  }, [selectedListId, allUserLists]);
+
   // טעינה/רענון של השוואת מחירים - רץ כשהטאב 'price', selectedListId או userLocation משתנים.
   // ה-cache המקומי מראה נתונים מיד; הבקשה הזו מרעננת ברקע.
   useEffect(() => {
@@ -563,30 +571,8 @@ export const InsightsPage = memo(() => {
                     pb: 0.5,
                     '&::-webkit-scrollbar': { display: 'none' },
                   }}>
-                    {/* כרטיס "כל הרשימות" */}
-                    <Box
-                      onClick={() => { haptic('light'); setSelectedListId(null); }}
-                      sx={{
-                        flexShrink: 0,
-                        px: 1.5, py: 0.75,
-                        borderRadius: '999px',
-                        border: '1.5px solid',
-                        cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 0.5,
-                        bgcolor: selectedListId === null
-                          ? '#14B8A6'
-                          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
-                        color: selectedListId === null ? 'white' : 'text.primary',
-                        borderColor: selectedListId === null
-                          ? '#14B8A6'
-                          : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
-                        fontSize: 12, fontWeight: 700,
-                        transition: 'all 0.15s',
-                        '&:active': { transform: 'scale(0.96)' },
-                      }}
-                    >
-                      🛒 כל הרשימות
-                    </Box>
+                    {/* הוסר כפתור "כל הרשימות" - מצב כבד מדי על השרת.
+                        המשתמש חייב לבחור רשימה ספציפית. */}
                     {allUserLists.map(l => (
                       <Box
                         key={l.id}
