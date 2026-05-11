@@ -118,9 +118,14 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
   const addressOnly: IBranchDoc[] = [];
   for (const b of all) {
     if (b.chainId !== chainId) continue;
-    if (typeof b.lat === 'number' && typeof b.lng === 'number') {
-      withCoords.push({ b, dist: haversineKm(user, { lat: b.lat, lng: b.lng }) });
-    } else if (b.address || b.city) {
+    // סינון: סניף בלי קואורדינטות וגם בלי כתובת וגם בלי עיר - אין מה
+    // להציג ללקוח (אי-אפשר לחשב מרחק, אי-אפשר לנווט). מסונן החוצה.
+    const hasCoords = typeof b.lat === 'number' && typeof b.lng === 'number';
+    const hasLocation = !!(b.address || b.city);
+    if (!hasCoords && !hasLocation) continue;
+    if (hasCoords) {
+      withCoords.push({ b, dist: haversineKm(user, { lat: b.lat!, lng: b.lng! }) });
+    } else {
       addressOnly.push(b);
     }
   }

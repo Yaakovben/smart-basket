@@ -4,6 +4,7 @@ import { PriceDAL } from '../dal/price.dal';
 import { Price } from '../models/Price.model';
 import { BranchDAL, type UpsertBranchInput } from '../dal/branch.dal';
 import { invalidateBranchCache } from '../services/branches.service';
+import { geocodeAddress } from '../services/geocoder.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { logger } from '../../../config/logger';
 
@@ -141,8 +142,37 @@ async function cleanupOldPricesImpl(trigger: 'cron' | 'manual'): Promise<{ delet
   }
 }
 
-// (geocodeNightly הוסר - הgeocoding רץ עכשיו רק כשאדמין לוחץ 'סנכרון מחדש',
-// משולב ב-refreshPrices. אין צורך לבזבז בקשות Nominatim בכל לילה.)
+// Geocoding לילי - משלים קואורדינטות אמיתיות לסניפים עם כתובת בלי lat/lng.
+// רץ ברקע אחרי סנכרון, מוגבל ל-50 סניפים לריצה (Nominatim 1 req/s = ~55 שניות).
+// אפס השפעה על בקשות משתמש - יוצא מתהליך הקרון.
+const GEOCODE_BATCH_LIMIT = 50;
+
+async function runNightlyGeocode(trigger: 'cron'): Promise<void> {
+  try {
+    const missing = await BranchDAL.findMissingCoords(GEOCODE_BATCH_LIMIT);
+    if (missing.length === 0) {
+      logger.info(`[geocode-nightly] ${trigger}: nothing to geocode`);
+      return;
+    }
+    let success = 0;
+    let skipped = 0;
+    for (const b of missing) {
+      if (!b.address && !b.city) { skipped++; continue; }
+      const coords = await geocodeAddress(b.address, b.city);
+      if (coords) {
+        const idStr = (b as { _id: { toString(): string } })._id.toString();
+        await BranchDAL.updateCoords(idStr, coords.lat, coords.lng, 'geocoded');
+        success++;
+      } else {
+        skipped++;
+      }
+    }
+    invalidateBranchCache();
+    logger.info(`[geocode-nightly] ${trigger}: geocoded ${success}/${missing.length} (skipped ${skipped})`);
+  } catch (err) {
+    logger.error(`[geocode-nightly] ${trigger}: failed:`, err);
+  }
+}
 
 // סנכרון סניפים מ-OSM - אוטומטי בעת boot אם המאגר ריק, ובכל cron run.
 // רץ בנפרד מסנכרון המחירים כדי לא לעכב, ובלי NODE_TLS_REJECT_UNAUTHORIZED
@@ -178,8 +208,8 @@ export function startPriceSyncJob(): void {
       await runOsmBranchSync('cron');
       // ניקוי מחירים ישנים - מונע ניפוח DB
       await cleanupOldPrices('cron');
-      // הוסר: geocoding לילי. הgeocoding רץ עכשיו רק כשאדמין לוחץ
-      // 'סנכרון מחדש' - לא צריך לבזבז בקשות Nominatim בכל לילה.
+      // Geocoding ברקע - משלים קואורדינטות אמיתיות לסניפים עם כתובת בלבד
+      await runNightlyGeocode('cron');
     },
     { timezone: TIMEZONE }
   );
