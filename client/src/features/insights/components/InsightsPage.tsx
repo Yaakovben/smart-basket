@@ -1,6 +1,6 @@
-import { useState, useEffect, memo, Fragment } from 'react';
+import { useState, useEffect, useRef, memo, Fragment } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Typography, IconButton, CircularProgress, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
+import { Box, Typography, IconButton, Paper, Tabs, Tab, LinearProgress, Button, Skeleton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupIcon from '@mui/icons-material/Group';
 import HomeIcon from '@mui/icons-material/Home';
@@ -9,7 +9,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
-import { SlowLoadIndicator } from '../../../global/components';
+import { SlowLoadIndicator, PulseLoader } from '../../../global/components';
 import { PulseTab } from './tabs/PulseTab';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic, safeStorage } from '../../../global/helpers';
@@ -148,11 +148,17 @@ export const InsightsPage = memo(() => {
     safeStorage.setJSON('sb_insights_selected_list', selectedListId);
   }, [selectedListId]);
 
-  // הגנה: אם נכנסנו עם selectedListId=null אבל יש לנו רשימות - בוחרים אוטומטית
-  // את הראשונה. מונע fetch של 'כל הרשימות' (כבד על השרת) במקרי קצה.
+  // הגנה: אם נכנסנו עם selectedListId=null אבל יש רשימות - בוחרים אוטומטית את
+  // הראשונה (מונע fetch כבד של 'כל הרשימות' בכניסה). רץ פעם אחת בלבד, כדי
+  // לא לבטל בחירה ידנית של המשתמש ב-'כל הרשימות' אחרי כן.
+  const autoSelectedRef = useRef(false);
   useEffect(() => {
+    if (autoSelectedRef.current) return;
     if (selectedListId === null && allUserLists.length > 0) {
+      autoSelectedRef.current = true;
       setSelectedListId(allUserLists[0].id);
+    } else if (selectedListId !== null) {
+      autoSelectedRef.current = true;
     }
   }, [selectedListId, allUserLists]);
 
@@ -571,8 +577,31 @@ export const InsightsPage = memo(() => {
                     pb: 0.5,
                     '&::-webkit-scrollbar': { display: 'none' },
                   }}>
-                    {/* הוסר כפתור "כל הרשימות" - מצב כבד מדי על השרת.
-                        המשתמש חייב לבחור רשימה ספציפית. */}
+                    {/* "כל הרשימות" - אפשרי, אבל לא דיפולט (אפקט auto-select בוחר רשימה ראשונה
+                        כדי למנוע עומס בכניסה). המשתמש יכול לבחור 'הכל' באופן יזום. */}
+                    <Box
+                      onClick={() => { haptic('light'); setSelectedListId(null); }}
+                      sx={{
+                        flexShrink: 0,
+                        px: 1.5, py: 0.75,
+                        borderRadius: '999px',
+                        border: '1.5px solid',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 0.5,
+                        bgcolor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(20,184,166,0.04)'),
+                        color: selectedListId === null ? 'white' : 'text.primary',
+                        borderColor: selectedListId === null
+                          ? '#14B8A6'
+                          : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)'),
+                        fontSize: 12, fontWeight: 700,
+                        transition: 'all 0.15s',
+                        '&:active': { transform: 'scale(0.96)' },
+                      }}
+                    >
+                      🛒 כל הרשימות
+                    </Box>
                     {allUserLists.map(l => (
                       <Box
                         key={l.id}
@@ -607,17 +636,17 @@ export const InsightsPage = memo(() => {
                   </Box>
                 </Box>
               )}
-              {/* אינדיקטור רענון דיסקרטי - מוצג רק כשיש נתונים וגם רענון רקע בפעולה */}
+              {/* אינדיקטור רענון דיסקרטי - חיווי PulseLoader אחיד */}
               {priceLoading && (
                 <Box sx={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-                  py: 0.75, mb: 1, borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
+                  py: 0.85, mb: 1, borderRadius: '10px',
                   bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.08)',
                   border: '1px solid',
                   borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)',
                 }}>
-                  <CircularProgress size={12} sx={{ color: '#14B8A6' }} />
-                  <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#0D9488' }}>
+                  <PulseLoader size="sm" />
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: '#0D9488' }}>
                     מעדכן נתונים...
                   </Typography>
                 </Box>
