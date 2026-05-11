@@ -174,25 +174,6 @@ export const PriceSyncManager = ({ onClose }: Props) => {
     }
   };
 
-  // השלמת כתובות חסרות (reverse geocoding לסניפים בלי city/address)
-  const [fillingAddrs, setFillingAddrs] = useState(false);
-  const handleFillAddresses = async () => {
-    haptic('medium');
-    setFillingAddrs(true);
-    setFeedback(null);
-    try {
-      const res = await priceComparisonApi.fillMissingAddresses();
-      setFeedback({
-        msg: res.success ? `✓ ${res.message}` : `שגיאה: ${res.message}`,
-        tone: res.success ? 'info' : 'error',
-      });
-      load();
-      setChainBranches(new Map());
-    } finally {
-      setFillingAddrs(false);
-    }
-  };
-
 
   // מחיקה של סניפי seed לא-מאומתים (לא OSM ולא ידני)
   const handleCleanup = async () => {
@@ -427,20 +408,6 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                   }}
                 >
                   📥 ייבוא המוני
-                </Button>
-                <Button
-                  size="small"
-                  onClick={handleFillAddresses}
-                  disabled={fillingAddrs}
-                  startIcon={fillingAddrs ? <CircularProgress size={11} sx={{ color: '#0EA5E9' }} /> : null}
-                  sx={{
-                    fontSize: 11, color: '#0EA5E9', textTransform: 'none',
-                    minHeight: 0, py: 0.4, px: 1,
-                    '&:hover': { bgcolor: 'rgba(14,165,233,0.05)' },
-                    '& .MuiButton-startIcon': { marginInlineEnd: 0.4 },
-                  }}
-                >
-                  🌐 השלם כתובות חסרות
                 </Button>
                 <Button
                   size="small"
