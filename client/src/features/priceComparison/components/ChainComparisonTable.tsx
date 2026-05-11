@@ -204,18 +204,32 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     </Box>
   );
   const AppleMapsLogo = (
-    // Apple Maps אין ב-Simple Icons (לא brand מותג). שומרים את החץ הירוק הקודם.
+    // Apple Maps - tile עם מפה צבעונית (כביש כחול, שטחים ירוק/ורוד/צהוב)
+    // ועיגול ניווט כחול במרכז עם חץ לבן. השראה מהאייקון הרשמי של iOS.
     <Box component="svg" viewBox="0 0 64 64" sx={{ width: 56, height: 56 }}>
-      <defs>
-        <linearGradient id="mapsBg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#5BC489"/>
-          <stop offset="1" stopColor="#2E9D74"/>
-        </linearGradient>
-      </defs>
-      <rect width="64" height="64" rx="14" fill="url(#mapsBg)"/>
-      <path d="M0 28 Q22 22 64 30" stroke="rgba(255,255,255,0.25)" strokeWidth="2" fill="none"/>
-      <path d="M0 44 Q26 38 64 46" stroke="rgba(255,255,255,0.18)" strokeWidth="2" fill="none"/>
-      <path fill="#fff" d="M47 13 L21 27 c-1.1.6-.9 2.3.3 2.7 L31 33 l3.3 9.7 c.4 1.2 2.1 1.3 2.7.2 L51 17 c.6-1.2-.7-2.3-1.9-1.7 L47 13z"/>
+      <clipPath id="appleMapsClip">
+        <rect width="64" height="64" rx="14"/>
+      </clipPath>
+      <g clipPath="url(#appleMapsClip)">
+        {/* רקע לבן בסיסי */}
+        <rect width="64" height="64" fill="#FAFAF6"/>
+        {/* שטח ירוק בפינה ימנית-עליונה */}
+        <path d="M30 0 H64 V36 Q48 36 38 24 Q32 16 30 0z" fill="#4CD37D"/>
+        {/* כביש כחול אנכי */}
+        <path d="M22 0 H32 V64 H22 z" fill="#4DA3F7"/>
+        {/* פינה ורודה תחתונה-שמאלית */}
+        <path d="M0 36 H22 V64 H0 z" fill="#F5A0C2"/>
+        {/* פינה צהובה תחתונה-ימנית */}
+        <path d="M32 50 H64 V64 H32 z" fill="#FFD23F"/>
+        {/* דרך לבנה אופקית באמצע */}
+        <path d="M0 36 H64 V44 H0 z" fill="#FAFAF6"/>
+        {/* עיגול לבן מסביב לעיגול הכחול - מסגרת */}
+        <circle cx="32" cy="34" r="13" fill="#fff"/>
+        {/* עיגול כחול במרכז */}
+        <circle cx="32" cy="34" r="10" fill="#1A8CFF"/>
+        {/* חץ ניווט לבן */}
+        <path fill="#fff" d="M32 28 L37 39 L32 36.5 L27 39 Z"/>
+      </g>
     </Box>
   );
 
