@@ -22,7 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { TextField, IconButton } from '@mui/material';
-import { Modal } from '../../../global/components';
+import { Modal, PulseLoader } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
 import { priceComparisonApi, type PriceSyncStatus } from '../../priceComparison';
@@ -311,7 +311,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'hidden' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
+            <PulseLoader size="md" label="טוען..." />
           </Box>
         ) : (
           <>
@@ -696,7 +696,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
                         }}>
                           {isLoadingThis ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
-                              <CircularProgress size={16} sx={{ color: '#14B8A6' }} />
+                              <PulseLoader size="sm" />
                             </Box>
                           ) : (
                             // הצגנו תמיד את הכותרת + כפתור "הוסף סניף" - גם כשהמאגר ריק.
