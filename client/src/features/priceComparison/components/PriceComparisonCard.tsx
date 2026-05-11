@@ -263,18 +263,29 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
-                  <NearMeIcon sx={{ fontSize: 11, color: 'text.disabled' }} />
+                  <NearMeIcon sx={{
+                    fontSize: 11,
+                    color: typeof chain.nearestBranch.distanceKm === 'number' ? 'text.disabled' : 'warning.main',
+                  }} />
                   <Typography
                     sx={{
                       fontSize: 10.5,
-                      color: chain.nearestBranch.isApproximate ? 'warning.main' : 'text.disabled',
+                      color: typeof chain.nearestBranch.distanceKm === 'number'
+                        ? (chain.nearestBranch.isApproximate ? 'warning.main' : 'text.disabled')
+                        : 'warning.main',
                       fontWeight: 600,
                     }}
-                    title={chain.nearestBranch.isApproximate ? 'מרחק משוער לפי מרכז העיר - הכתובת לא נמצאה במפה' : undefined}
+                    title={
+                      typeof chain.nearestBranch.distanceKm !== 'number'
+                        ? 'אין לנו מיקום מדויק - המרחק לא ידוע. ניתן לנווט לפי הכתובת'
+                        : chain.nearestBranch.isApproximate
+                          ? 'מרחק משוער לפי מרכז העיר - הכתובת לא נמצאה במפה'
+                          : undefined
+                    }
                   >
                     {typeof chain.nearestBranch.distanceKm === 'number'
                       ? `${chain.nearestBranch.isApproximate ? '~' : ''}${chain.nearestBranch.distanceKm.toFixed(1)} ק"מ`
-                      : 'כתובת'}
+                      : 'מיקום לא מדויק'}
                   </Typography>
                 </Box>
               </>

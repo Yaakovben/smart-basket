@@ -344,9 +344,14 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
               </Typography>
             </>
           ) : (
-            <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: 0.3 }}>
-              ניווט לפי כתובת
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.2 }}>
+              <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: 0.3 }}>
+                מרחק לא ידוע
+              </Typography>
+              <Typography sx={{ fontSize: 8.5, fontWeight: 600, color: 'rgba(255,255,255,0.85)', lineHeight: 1 }}>
+                ניווט לפי כתובת
+              </Typography>
+            </Box>
           )}
         </Box>
 
