@@ -78,7 +78,7 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
       .lean();
   }
 
-  async updateCoords(id: string, lat: number, lng: number, source: 'portal' | 'geocoded' | 'unknown') {
+  async updateCoords(id: string, lat: number, lng: number, source: 'portal' | 'geocoded' | 'manual' | 'unknown') {
     return this.model.updateOne({ _id: id }, { $set: { lat, lng, coordSource: source } });
   }
 

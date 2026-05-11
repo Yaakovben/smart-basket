@@ -129,6 +129,7 @@ export async function findNearestBranch(chainId: ChainId, user: UserLocation): P
     // לא משתמשים בו לחישוב מרחק (זה היה מטעה את הלקוח). מטפלים בו כסניף
     // עם כתובת בלבד - הלקוח יראה את הכתובת ולחצן 'ניווט לפי כתובת',
     // בלי מספר ק"מ שגוי.
+    // portal/geocoded/manual = מדויק מספיק להצגת מרחק.
     const isPreciseCoords = hasCoords && b.coordSource !== 'unknown';
     if (isPreciseCoords) {
       withCoords.push({ b, dist: haversineKm(user, { lat: b.lat!, lng: b.lng! }) });

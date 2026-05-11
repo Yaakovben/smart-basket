@@ -42,10 +42,13 @@ async function main() {
     failed: 0,
   };
 
-  // ממיינים: קודם סניפים בלי קואורדינטות בכלל, אחר כך 'unknown'/'geocoded' מהעיר
+  // ממיינים: קודם סניפים בלי קואורדינטות בכלל, אחר כך 'unknown'/'geocoded' מהעיר.
+  // 'portal' ו-'manual' נחשבים פתורים - לא נוגעים בהם:
+  //  portal = נתון רשמי מהרשת
+  //  manual = הוגדר ידנית ע"י אדמין, ההגדרה צריכה להישמר
   const todo = all.filter(b => {
     const hasCoords = typeof b.lat === 'number' && typeof b.lng === 'number';
-    if (b.coordSource === 'portal' && hasCoords) {
+    if ((b.coordSource === 'portal' || b.coordSource === 'manual') && hasCoords) {
       stats.alreadyResolved++;
       return false;
     }
