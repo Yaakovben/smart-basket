@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { safeStorage } from '../../../global/helpers';
 
-export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable' | 'error';
+export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'blocked' | 'unavailable' | 'error';
 
 export interface UserLocation {
   lat: number;
@@ -112,6 +112,8 @@ export function useUserLocation() {
     // שינה את ההרשאה בהגדרות הדפדפן.
     safeStorage.remove(DENIED_KEY);
     setStatus('requesting');
+    // טיימסטמפ לזיהוי דחייה מיידית = הדפדפן חוסם לצמיתות ולא בכלל מציג prompt
+    const requestedAt = Date.now();
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -123,7 +125,11 @@ export function useUserLocation() {
       },
       (err) => {
         if (err.code === 1) {
-          setStatus('denied');
+          // אם השגיאה הגיעה בפחות מ-300ms, זו דחייה אוטומטית של הדפדפן
+          // (לא בקש prompt מהמשתמש). זה אומר שהמיקום חסום בהגדרות הדפדפן
+          // ו'נסה שוב' לא יעזור - צריך לפתוח הגדרות אתר ידנית.
+          const wasInstant = Date.now() - requestedAt < 300;
+          setStatus(wasInstant ? 'blocked' : 'denied');
           safeStorage.set(DENIED_KEY, '1');
           safeStorage.remove(GRANTED_KEY);
         } else {

@@ -568,26 +568,31 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         </Box>
       )}
 
-      {(locationStatus === 'denied' || locationStatus === 'unavailable' || locationStatus === 'error') && (
+      {(locationStatus === 'denied' || locationStatus === 'blocked' || locationStatus === 'unavailable' || locationStatus === 'error') && (
         <Box sx={{
-          mb: 1.25, p: 1, borderRadius: '10px',
-          display: 'flex', alignItems: 'center', gap: 0.75,
+          mb: 1.25, p: 1.25, borderRadius: '10px',
+          display: 'flex', alignItems: 'flex-start', gap: 0.75,
           bgcolor: isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.06)',
           border: '1px solid',
           borderColor: isDark ? 'rgba(245,158,11,0.25)' : 'rgba(245,158,11,0.2)',
         }}>
-          <LocationOffIcon sx={{ fontSize: 16, color: '#D97706', flexShrink: 0 }} />
+          <LocationOffIcon sx={{ fontSize: 16, color: '#D97706', flexShrink: 0, mt: 0.15 }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
-              {locationStatus === 'denied' ? 'מיקום לא משותף' : locationStatus === 'unavailable' ? 'הדפדפן לא תומך במיקום' : 'לא הצלחנו לקבל מיקום'}
+              {locationStatus === 'blocked' ? 'המיקום חסום בדפדפן'
+                : locationStatus === 'denied' ? 'מיקום לא משותף'
+                : locationStatus === 'unavailable' ? 'הדפדפן לא תומך במיקום'
+                : 'לא הצלחנו לקבל מיקום'}
             </Typography>
-            <Typography sx={{ fontSize: 9.5, color: 'text.secondary', mt: 0.15, lineHeight: 1.3 }}>
-              {locationStatus === 'denied'
+            <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.25, lineHeight: 1.4 }}>
+              {locationStatus === 'blocked'
+                ? 'לחצו על אייקון 🔒 ליד כתובת הדף → "הגדרות אתר" → אפשרו "מיקום" → רעננו את הדף'
+                : locationStatus === 'denied'
                 ? 'אם רוצים, אפשרו מיקום בהגדרות הדפדפן או לחצו "נסה שוב"'
                 : 'נסה שוב או רענן את הדף'}
             </Typography>
           </Box>
-          {locationStatus !== 'unavailable' && onRequestLocation && (
+          {locationStatus !== 'unavailable' && locationStatus !== 'blocked' && onRequestLocation && (
             <Box
               role="button"
               tabIndex={0}
