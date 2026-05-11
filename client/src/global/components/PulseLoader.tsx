@@ -92,7 +92,7 @@ export const PulseLoader = ({
     <Box sx={{
       position: 'fixed', inset: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at center top, #0F766E 0%, #0D9488 45%, #134E4A 100%)',
+      background: 'radial-gradient(ellipse at center top, #2DD4BF 0%, #14B8A6 50%, #0D9488 100%)',
       zIndex: 9999,
     }}>
       {inner}
