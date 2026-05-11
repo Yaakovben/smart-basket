@@ -192,10 +192,8 @@
         letter-spacing: 0.3px;
       "></p>
 
-      <!-- חיווי גלי-קול דיסקרטי בתחתית - אותו רעיון שמופיע בכל האפליקציה (PulseLoader) -->
-      <div class="loader-wave" style="position: absolute; bottom: 14%;">
-        <span></span>
-        <span></span>
+      <!-- חיווי טעינה דיסקרטי - 3 נקודות מקפצות בעדינות -->
+      <div class="loader-dots" style="position: absolute; bottom: 14%;">
         <span></span>
         <span></span>
         <span></span>
@@ -263,34 +261,29 @@
           50%      { transform: translateY(-4px) scale(1.025); }
         }
 
-        /* גלי קול/equalizer - 5 פסים אנכיים שנעים בעדינות.
-           אותו דפוס בדיוק שמופיע בכל האפליקציה (PulseLoader). */
-        .loader-wave {
+        /* 3 נקודות מקפצות בעדינות - דפוס קלאסי ומוכר.
+           הופעה אחרי 500ms כדי לא להציק במצבים מהירים. */
+        .loader-dots {
           display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          gap: 6px;
-          height: 32px;
+          gap: 10px;
           opacity: 0;
-          animation: waveAppear 0.4s ease-out 0.5s forwards;
+          animation: dotsAppear 0.4s ease-out 0.5s forwards;
         }
-        .loader-wave span {
-          width: 5px;
-          height: 100%;
-          border-radius: 3px;
-          background: rgba(255,255,255,0.92);
-          transform-origin: bottom;
-          animation: waveBar 1.1s ease-in-out infinite;
+        .loader-dots span {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.95);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+          animation: dotBounce 1.3s ease-in-out infinite;
         }
-        .loader-wave span:nth-child(1) { animation-delay: 0s; }
-        .loader-wave span:nth-child(2) { animation-delay: 0.12s; }
-        .loader-wave span:nth-child(3) { animation-delay: 0.24s; }
-        .loader-wave span:nth-child(4) { animation-delay: 0.36s; }
-        .loader-wave span:nth-child(5) { animation-delay: 0.48s; }
-        @keyframes waveAppear { to { opacity: 1; } }
-        @keyframes waveBar {
-          0%, 100% { transform: scaleY(0.35); opacity: 0.55; }
-          50%      { transform: scaleY(1); opacity: 1; }
+        .loader-dots span:nth-child(1) { animation-delay: 0s; }
+        .loader-dots span:nth-child(2) { animation-delay: 0.18s; }
+        .loader-dots span:nth-child(3) { animation-delay: 0.36s; }
+        @keyframes dotsAppear { to { opacity: 1; } }
+        @keyframes dotBounce {
+          0%, 80%, 100% { transform: translateY(0) scale(0.65); opacity: 0.5; }
+          40%           { transform: translateY(-8px) scale(1); opacity: 1; }
         }
       </style>
     </div>
