@@ -585,8 +585,19 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 : 'לא הצלחנו לקבל מיקום'}
             </Typography>
             <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.25, lineHeight: 1.4 }}>
-              {locationStatus === 'blocked'
-                ? 'לחצו על אייקון 🔒 ליד כתובת הדף → "הגדרות אתר" → אפשרו "מיקום" → רעננו את הדף'
+              {locationStatus === 'blocked' ? (() => {
+                // הוראות מותאמות לפי הפלטפורמה - באייפון אין אייקון מנעול בכתובת.
+                const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+                const isIOS = /iPad|iPhone|iPod/.test(ua);
+                if (isIOS) {
+                  return 'הגדרות iOS → Safari → מיקום → "תוך כדי שימוש באפליקציה". לאחר מכן רעננו את הדף.';
+                }
+                const isAndroid = /Android/.test(ua);
+                if (isAndroid) {
+                  return 'הקישו על ה-⋮ בדפדפן → "הגדרות אתר" → הרשו "מיקום" → רעננו את הדף.';
+                }
+                return 'פתחו את הגדרות האתר בדפדפן, הרשו "מיקום", ורעננו את הדף.';
+              })()
                 : locationStatus === 'denied'
                 ? 'אם רוצים, אפשרו מיקום בהגדרות הדפדפן או לחצו "נסה שוב"'
                 : 'נסה שוב או רענן את הדף'}
