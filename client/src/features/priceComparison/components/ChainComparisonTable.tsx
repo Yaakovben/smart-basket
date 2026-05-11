@@ -182,30 +182,30 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   // זיהוי iOS - Apple Maps רלוונטי רק שם, ב-Android הוא רק יוצר רעש
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // לוגואים מזוהים מיידית - SVG בועת-Waze, סיכת גוגל, סיכת אפל מינימלית.
+  // לוגואים בסגנון רשמי - מבוסס על מה שמשתמשים מזהים מיד באפליקציות עצמן.
   const WazeLogo = (
-    // בועת דיבור לבנה עם 2 עיניים שחורות וחיוך - על רקע תכלת.
-    // ההקטנה ל-22px משאירה טבעת תכלת נראית סביב הבועה במרכז ה-badge.
-    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 22, height: 22 }}>
-      <path fill="#fff"
-        d="M16 4C9.4 4 4 8.9 4 14.9c0 1.5.3 2.9.9 4.2.3.7.4 1.5.2 2.3-.2.8-.6 1.5-1.2 2.1-.4.4-.2 1 .3 1.1.5.1 1.1.2 1.7.2 1.5 0 2.9-.4 4.1-1.1 2 .8 4.2 1.3 6.5 1.3 6.6 0 12-4.9 12-10.9C28 8.9 22.6 4 16 4z" />
-      <circle cx="12.5" cy="14" r="1.7" fill="#1E3A4C" />
-      <circle cx="19.5" cy="14" r="1.7" fill="#1E3A4C" />
-      <path fill="#1E3A4C" d="M11.5 17.5c1 1.4 2.6 2.3 4.5 2.3s3.5-.9 4.5-2.3c.2-.3-.1-.7-.4-.6-1.1.5-2.5.8-4.1.8s-3-.3-4.1-.8c-.3-.1-.6.3-.4.6z" />
+    // לוגו Waze הרשמי: בועת דיבור לבנה עם פנים מחייכות וזנב משולש בפינה התחתונה-שמאלית.
+    <Box component="svg" viewBox="0 0 64 64" sx={{ width: 30, height: 30 }}>
+      <path fill="#fff" d="M32 8c-13.2 0-24 9.6-24 21.4 0 3.2.7 6.2 2 8.9.6 1.2.8 2.6.5 4-.4 1.7-1.4 3.1-2.7 4-1 .8-.5 2.4.7 2.6 1 .2 2 .3 3 .3 3.4 0 6.6-1 9.3-2.7 3.4 1.5 7.3 2.3 11.2 2.3 13.2 0 24-9.6 24-21.4C56 17.6 45.2 8 32 8z"/>
+      <circle cx="24.5" cy="28" r="3" fill="#1F2A36"/>
+      <circle cx="39.5" cy="28" r="3" fill="#1F2A36"/>
+      <path fill="#1F2A36" d="M22 35.5c2 3.2 5.7 5.3 10 5.3s8-2.1 10-5.3c.4-.6-.3-1.3-.9-1-2.6 1.3-5.7 2-9.1 2s-6.5-.7-9.1-2c-.6-.3-1.3.4-.9 1z"/>
     </Box>
   );
   const GoogleMapsLogo = (
-    // סיכת מיקום קלאסית של Google Maps - אדום עם נקודה לבנה
-    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 28, height: 28 }}>
-      <path fill="#EA4335" d="M16 2C9.4 2 4 7.4 4 14c0 8.8 12 16 12 16s12-7.2 12-16c0-6.6-5.4-12-12-12z" />
-      <circle cx="16" cy="14" r="5" fill="#fff" />
-      <circle cx="16" cy="14" r="2.4" fill="#EA4335" />
+    // לוגו Google Maps הרשמי: סיכת מיקום אדומה עם נקודה לבנה במרכז, צל מתחת.
+    <Box component="svg" viewBox="0 0 64 64" sx={{ width: 32, height: 32 }}>
+      <ellipse cx="32" cy="56" rx="9" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+      <path fill="#EA4335" d="M32 4C20.4 4 11 13.4 11 25c0 14.6 17 30 19.4 32.2.9.8 2.3.8 3.2 0C36 55 53 39.6 53 25 53 13.4 43.6 4 32 4z"/>
+      <circle cx="32" cy="24" r="9" fill="#fff"/>
+      <circle cx="32" cy="24" r="5.5" fill="#1A73E8"/>
     </Box>
   );
   const AppleMapsLogo = (
-    // סיכת מפה מינימליסטית של Apple Maps
-    <Box component="svg" viewBox="0 0 32 32" sx={{ width: 28, height: 28 }}>
-      <path fill="#fff" d="M16 2C9.4 2 4 7.4 4 14c0 8.8 12 16 12 16s12-7.2 12-16c0-6.6-5.4-12-12-12zm0 16.5a4.5 4.5 0 110-9 4.5 4.5 0 010 9z" />
+    // לוגו Apple Maps - סיכה מינימליסטית עם חור (ring), בסגנון iOS.
+    <Box component="svg" viewBox="0 0 64 64" sx={{ width: 32, height: 32 }}>
+      <ellipse cx="32" cy="56" rx="9" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+      <path fill="#fff" d="M32 4C20.4 4 11 13.4 11 25c0 14.6 17 30 19.4 32.2.9.8 2.3.8 3.2 0C36 55 53 39.6 53 25 53 13.4 43.6 4 32 4zm0 28a7 7 0 110-14 7 7 0 010 14z"/>
     </Box>
   );
 
@@ -281,20 +281,25 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           : 'linear-gradient(165deg, rgba(20,184,166,0.10) 0%, rgba(20,184,166,0.02) 100%)',
         textAlign: 'center',
       }}>
+        {/* X לסגירה - אותו עיצוב כמו ב-Modal הגלובלי לאחידות אפליקציה */}
         <IconButton
-          size="small"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
           aria-label="סגור"
+          disableRipple
+          disableFocusRipple
           sx={{
             position: 'absolute', top: 10, insetInlineEnd: 12,
-            color: 'text.secondary',
-            bgcolor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.06)',
-            backdropFilter: 'blur(6px)',
-            '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)' },
-            width: 30, height: 30,
+            bgcolor: 'action.hover',
+            width: 36, height: 36,
+            touchAction: 'manipulation',
+            transition: 'opacity 0.1s, background-color 0.15s',
+            '&:hover': { bgcolor: 'action.hover' },
+            '&:active': { opacity: 0.7, bgcolor: 'action.selected' },
+            '@media (max-width: 360px)': { width: 32, height: 32 },
           }}
         >
-          <CloseIcon sx={{ fontSize: 17 }} />
+          <CloseIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
         </IconButton>
 
         {/* תג מרחק זוהר במרכז למעלה - או "ניווט לפי כתובת" אם אין קואורדינטות */}

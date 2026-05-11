@@ -367,7 +367,7 @@ const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded
                   flexShrink: 0,
                   minWidth: 0,
                   ml: 1,
-                  '& .MuiButton-startIcon': { mr: 0.85, ml: 0 },
+                  '& .MuiButton-startIcon': { mr: 1.5, ml: 0 },
                 }}
               >
                 ניווט
