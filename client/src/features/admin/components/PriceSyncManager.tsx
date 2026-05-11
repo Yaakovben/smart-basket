@@ -67,7 +67,7 @@ const StatCard = ({ icon, value, label, color, isDark }: {
   icon: React.ReactNode; value: string | number; label: string; color: string; isDark: boolean;
 }) => (
   <Box sx={{
-    flex: 1,
+    flexShrink: 0, minWidth: 120,
     p: 1.5, borderRadius: '14px',
     bgcolor: isDark ? `${color}1A` : `${color}10`,
     border: '1px solid', borderColor: `${color}33`,
@@ -79,7 +79,7 @@ const StatCard = ({ icon, value, label, color, isDark }: {
         {label}
       </Typography>
     </Box>
-    <Typography sx={{ fontSize: 22, fontWeight: 900, color, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+    <Typography sx={{ fontSize: 22, fontWeight: 900, color, lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
       {value}
     </Typography>
   </Box>
@@ -308,7 +308,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
 
   return (
     <Modal title="ניהול מאגר" onClose={onClose}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: '100%', overflowX: 'hidden' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
@@ -316,7 +316,14 @@ export const PriceSyncManager = ({ onClose }: Props) => {
         ) : (
           <>
             {/* ===== כרטיסי סיכום: מחירים + סניפים + סניפים עם מיקום ===== */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* גלילה אופקית רק על הכרטיסים הללו; שאר הדף לא גולל הצידה. */}
+            <Box sx={{
+              display: 'flex', gap: 1,
+              overflowX: 'auto', overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' },
+              mx: -2.5, px: 2.5,
+            }}>
               <StatCard
                 icon={<StorefrontIcon sx={{ fontSize: 14, color: '#0D9488' }} />}
                 value={totalPrices.toLocaleString('he-IL')}
