@@ -623,7 +623,7 @@ export const InsightsPage = memo(() => {
                 </Box>
               )}
               {/* פס דק עליון - מסמן רענון רקע בלי להפריע לתוכן הקיים */}
-              <TopProgressBar active={priceLoading} />
+              <TopProgressBar active={priceLoading} label="משווה מחירים..." />
               {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם.
                   קונטרסט הועצם (bg + טקסט כהה יותר) כדי שלא יוסתר בגלילה. */}
               {priceError && !priceLoading && (
