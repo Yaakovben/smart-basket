@@ -131,84 +131,47 @@
       z-index: 9999;
       overflow: hidden;
     ">
-      <!-- אייקון האפליקציה - לוגו עם breathe עדין, ללא טבעות מתפשטות -->
-      <div style="
-        position: relative;
-        width: 130px;
-        height: 130px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <!-- לוגו זהה ל-favicon.svg - עם breathe ו-drop-shadow עמוק -->
-        <svg class="loader-logo" width="116" height="116" viewBox="0 0 512 512" style="position: relative; z-index: 2;">
-          <defs>
-            <linearGradient id="lg-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#14B8A6"/>
-              <stop offset="100%" stop-color="#0D9488"/>
-            </linearGradient>
-            <filter id="lg-s"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.12"/></filter>
-          </defs>
-          <rect width="512" height="512" rx="112" fill="url(#lg-bg)"/>
-          <g filter="url(#lg-s)">
-            <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white"/>
-            <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
-          </g>
-          <path d="M230 250 L256 286 L282 250" stroke="#0D9488" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.055"/>
-          <line x1="256" y1="286" x2="256" y2="345" stroke="#0D9488" stroke-width="4.5" stroke-linecap="round" opacity="0.055"/>
-          <path d="M216 286 L248 318 L304 258" stroke="#14B8A6" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
+      <!-- לוגו במרכז עליון - אופציונלי, אבל נותן אנקור ויזואלי -->
+      <svg class="loader-logo" width="80" height="80" viewBox="0 0 512 512" style="margin-bottom: 32px;">
+        <defs>
+          <linearGradient id="lg-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.7"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="112" fill="url(#lg-bg)"/>
+        <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="#14B8A6"/>
+        <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="#14B8A6" stroke-width="22" fill="none" stroke-linecap="round"/>
+        <path d="M216 286 L248 318 L304 258" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
 
-      <!-- שם האפליקציה - באופן בולט, ברנדינג מובהק -->
-      <h1 style="
-        color: white;
-        font-size: 22px;
-        font-weight: 800;
-        margin: 24px 0 0;
-        letter-spacing: 1.2px;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      ">Smart Basket</h1>
-
-      <!-- קו מפריד עדין מתחת לשם האפליקציה - touch של refinement -->
-      <div style="
-        width: 36px;
-        height: 2px;
-        background: rgba(255,255,255,0.45);
-        margin: 10px 0 0;
-        border-radius: 2px;
-      "></div>
-
-      <!-- ברכה אישית למשתמש חוזר (גובה קבוע למנוע קפיצות layout) -->
-      <p id="welcome-name" style="
-        color: rgba(255,255,255,0.92);
-        font-size: 14px;
-        font-weight: 500;
-        margin: 12px 0 0;
-        opacity: 0;
-        transition: opacity 0.5s ease;
-        min-height: 20px;
-        line-height: 20px;
-        letter-spacing: 0.3px;
-      "></p>
-
-      <!-- חיווי טעינה דיסקרטי - 3 נקודות מקפצות בעדינות -->
-      <div class="loader-dots" style="position: absolute; bottom: 14%;">
-        <span></span>
-        <span></span>
-        <span></span>
+      <!-- ===== כרטיס לבן עם הודעת טעינה (בסגנון התמונה) ===== -->
+      <div class="splash-card">
+        <!-- אייקון סל בריבוע מעוגל - הברנדינג של הכרטיס -->
+        <div class="splash-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+        </div>
+        <!-- טקסט + נקודות -->
+        <div class="splash-card-body">
+          <p id="splash-message">טוען את האפליקציה...</p>
+          <div class="splash-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
 
       <script>
-        // הצגת ברכה אישית למשתמש חוזר - "שלום, X" במקום אימוג'י, מתחבר לטון בוגר
+        // אם יש משתמש שמור - מציגים הודעה אישית יותר במקום הגנרית
         try {
           var raw = localStorage.getItem('cached_user');
           if (raw) {
             var name = JSON.parse(raw).name;
-            if (name) {
-              var el = document.getElementById('welcome-name');
-              if (el) { el.textContent = 'שלום, ' + name; el.style.opacity = '1'; }
-            }
+            var msgEl = document.getElementById('splash-message');
+            if (name && msgEl) { msgEl.textContent = 'טוען את הרשימות של ' + name + '...'; }
           }
         } catch(e) {}
       </script>
@@ -251,39 +214,101 @@
       </script>
 
       <style>
-        /* breathe עדין על הלוגו - לא קופצני, רגוע ובוגר. */
+        /* לוגו עליון - breathe עדין */
         .loader-logo {
-          filter: drop-shadow(0 12px 32px rgba(0,0,0,0.28));
+          filter: drop-shadow(0 8px 24px rgba(0,0,0,0.22));
           animation: logoBreathe 3.2s ease-in-out infinite;
         }
         @keyframes logoBreathe {
           0%, 100% { transform: translateY(0) scale(1); }
-          50%      { transform: translateY(-4px) scale(1.025); }
+          50%      { transform: translateY(-4px) scale(1.04); }
         }
 
-        /* 3 נקודות מקפצות בעדינות - דפוס קלאסי ומוכר.
-           הופעה אחרי 500ms כדי לא להציק במצבים מהירים. */
-        .loader-dots {
+        /* ===== כרטיס הטעינה הלבן - בסגנון התמונה ===== */
+        .splash-card {
           display: flex;
-          gap: 10px;
-          opacity: 0;
-          animation: dotsAppear 0.4s ease-out 0.5s forwards;
+          align-items: center;
+          gap: 14px;
+          padding: 16px 22px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.9));
+          box-shadow: 0 12px 36px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          position: relative;
+          overflow: hidden;
+          min-width: 240px;
+          animation: cardEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .loader-dots span {
-          width: 10px;
-          height: 10px;
+        @keyframes cardEnter {
+          from { opacity: 0; transform: translateY(12px) scale(0.94); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* shimmer - גל אור שעובר על הכרטיס - האפקט היפה שזז */
+        .splash-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(110deg, transparent 30%, rgba(20,184,166,0.12) 50%, transparent 70%);
+          animation: shimmerSweep 2.4s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes shimmerSweep {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        /* ריבוע האייקון בכרטיס */
+        .splash-card-icon {
+          flex-shrink: 0;
+          width: 38px;
+          height: 38px;
+          border-radius: 11px;
+          background: linear-gradient(135deg, #14B8A6, #0D9488);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(20,184,166,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+          animation: iconBreathe 2.4s ease-in-out infinite;
+        }
+        @keyframes iconBreathe {
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.06); }
+        }
+
+        /* גוף הכרטיס - טקסט ונקודות */
+        .splash-card-body {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 0;
+        }
+        #splash-message {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 800;
+          color: #0F172A;
+          letter-spacing: 0.2px;
+          white-space: nowrap;
+        }
+        .splash-dots {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+        }
+        .splash-dots span {
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: rgba(255,255,255,0.95);
-          box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-          animation: dotBounce 1.3s ease-in-out infinite;
+          background: #14B8A6;
+          animation: dotBounce 1.2s ease-in-out infinite;
         }
-        .loader-dots span:nth-child(1) { animation-delay: 0s; }
-        .loader-dots span:nth-child(2) { animation-delay: 0.18s; }
-        .loader-dots span:nth-child(3) { animation-delay: 0.36s; }
-        @keyframes dotsAppear { to { opacity: 1; } }
+        .splash-dots span:nth-child(1) { animation-delay: 0s; }
+        .splash-dots span:nth-child(2) { animation-delay: 0.16s; }
+        .splash-dots span:nth-child(3) { animation-delay: 0.32s; }
         @keyframes dotBounce {
           0%, 80%, 100% { transform: translateY(0) scale(0.65); opacity: 0.5; }
-          40%           { transform: translateY(-8px) scale(1); opacity: 1; }
+          40%           { transform: translateY(-5px) scale(1); opacity: 1; }
         }
       </style>
     </div>
