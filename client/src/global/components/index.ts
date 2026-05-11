@@ -8,6 +8,8 @@ export { OfflineBanner } from './OfflineBanner';
 export { ReconnectingBanner } from './ReconnectingBanner';
 export { PageSkeleton } from './PageSkeleton';
 export { PulseLoader } from './PulseLoader';
+export { TopProgressBar } from './TopProgressBar';
+export { ShimmerBlock, ShimmerList } from './Shimmer';
 export { SlowLoadIndicator } from './SlowLoadIndicator';
 export { Toast } from './Toast';
 export { QRScanner } from './QRScanner';

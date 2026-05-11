@@ -9,7 +9,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
-import { SlowLoadIndicator, PulseLoader } from '../../../global/components';
+import { SlowLoadIndicator, TopProgressBar, ShimmerList } from '../../../global/components';
 import { PulseTab } from './tabs/PulseTab';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic, safeStorage } from '../../../global/helpers';
@@ -529,12 +529,9 @@ export const InsightsPage = memo(() => {
                 </Button>
               </Box>
             ) : priceLoading ? (
-              // שלד בצורת כרטיסי השוואת מחירים - תחושה שהמסך כבר שם
+              // Shimmer - placeholder אלגנטי שמרמז על מבנה המסך הצפוי
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-                <Skeleton variant="rounded" height={48} sx={{ borderRadius: '12px' }} />
-                {[1, 2, 3, 4].map(i => (
-                  <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: '14px' }} />
-                ))}
+                <ShimmerList count={5} rowHeight={68} gap={10} />
               </Box>
             ) : (
               <InsightsLoader text="אין נתוני מחירים כרגע" size="md" />
@@ -636,21 +633,8 @@ export const InsightsPage = memo(() => {
                   </Box>
                 </Box>
               )}
-              {/* אינדיקטור רענון דיסקרטי - חיווי PulseLoader אחיד */}
-              {priceLoading && (
-                <Box sx={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
-                  py: 0.85, mb: 1, borderRadius: '10px',
-                  bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.08)',
-                  border: '1px solid',
-                  borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.2)',
-                }}>
-                  <PulseLoader size="sm" />
-                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: '#0D9488' }}>
-                    מעדכן נתונים...
-                  </Typography>
-                </Box>
-              )}
+              {/* פס דק עליון - מסמן רענון רקע בלי להפריע לתוכן הקיים */}
+              <TopProgressBar active={priceLoading} />
               {/* שגיאה עם cache קיים - באנר אזהרה לא-חוסם.
                   קונטרסט הועצם (bg + טקסט כהה יותר) כדי שלא יוסתר בגלילה. */}
               {priceError && !priceLoading && (
