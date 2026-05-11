@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react';
-import { Box, Typography, Button, Collapse, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Collapse } from '@mui/material';
 import { translations } from '../i18n/translations';
+import { PulseLoader } from './PulseLoader';
 import type { Language } from '../types';
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
@@ -135,15 +136,14 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // בזמן ריענון אוטומטי (שגיאת chunk) - מסך טעינה נקי במקום מסך קריסה
+      // בזמן ריענון אוטומטי - PulseLoader אחיד מסך מלא
       if (this.state.isReloading) {
         return (
-          <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-            <CircularProgress size={40} sx={{ mb: 2 }} />
-            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
-              {translations[getLanguage()].updatingVersion}
-            </Typography>
-          </Box>
+          <PulseLoader
+            fullScreen
+            size="lg"
+            label={translations[getLanguage()].updatingVersion}
+          />
         );
       }
 

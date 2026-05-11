@@ -7,6 +7,7 @@ export { Modal } from './Modal';
 export { OfflineBanner } from './OfflineBanner';
 export { ReconnectingBanner } from './ReconnectingBanner';
 export { PageSkeleton } from './PageSkeleton';
+export { PulseLoader } from './PulseLoader';
 export { SlowLoadIndicator } from './SlowLoadIndicator';
 export { Toast } from './Toast';
 export { QRScanner } from './QRScanner';
