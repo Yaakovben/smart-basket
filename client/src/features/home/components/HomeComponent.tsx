@@ -21,8 +21,6 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import GroupIcon from '@mui/icons-material/Group';
-import LockIcon from '@mui/icons-material/Lock';
 import type { List, Product, User, ToastType } from '../../../global/types';
 import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
@@ -271,9 +269,6 @@ const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDele
             </Typography>
           </Box>
           <Chip
-            icon={l.isGroup
-              ? <GroupIcon sx={{ fontSize: 13, color: 'inherit !important' }} />
-              : <LockIcon sx={{ fontSize: 12, color: 'inherit !important' }} />}
             label={l.isGroup ? t('group') : t('private')}
             size="small"
             sx={{
