@@ -21,6 +21,10 @@ class SocketService {
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
+  // מונה רענוני טוקן בסשן החיבור הנוכחי - גארד נגד לולאה אם השרת
+  // ממשיך לדחות טוקנים אחרי refresh (clock skew, ENV mismatch וכו'). מאופס
+  // אחרי חיבור מוצלח.
+  private authRefreshAttempts = 0;
 
   connect() {
     const token = getAccessToken();
@@ -39,6 +43,8 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
+      // איפוס מונה רענוני טוקן - הסשן הנוכחי תקין
+      this.authRefreshAttempts = 0;
       // הצטרפות מחדש לכל הרשימות אחרי reconnect
       this.joinedLists.forEach((listId) => {
         this.socket?.emit('join:list', listId);
@@ -55,15 +61,19 @@ class SocketService {
     this.socket.on('connect_error', async (error) => {
       const msg = error.message.toLowerCase();
       const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('token expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
-      if (isAuthError) {
-        // שימוש ברענון המרכזי, אותה פונקציה שה HTTP interceptor משתמש בה
-        // מונע race condition עם refresh token rotation
-        const newToken = await refreshAccessToken();
-        if (newToken && this.socket) {
-          this.socket.auth = { token: newToken };
-          if (!this.socket.connected) {
-            this.socket.connect();
-          }
+      if (!isAuthError) return;
+      // גארד נגד לולאת refresh - אם השרת ממשיך לדחות גם אחרי 3 נסיונות,
+      // עוצרים. הלקוח לא יוצא מהאפליקציה - רק מפסיק לנסות עד שהמשתמש
+      // יחזור (visibilitychange) או יתחבר מחדש לרשת.
+      if (this.authRefreshAttempts >= 3) return;
+      this.authRefreshAttempts++;
+      // שימוש ברענון המרכזי, אותה פונקציה שה HTTP interceptor משתמש בה
+      // מונע race condition עם refresh token rotation
+      const newToken = await refreshAccessToken();
+      if (newToken && this.socket) {
+        this.socket.auth = { token: newToken };
+        if (!this.socket.connected) {
+          this.socket.connect();
         }
       }
     });
@@ -85,6 +95,8 @@ class SocketService {
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         if (!this.socket?.connected) {
+          // איפוס מונה refresh - חזרה מרקע = הזדמנות חדשה לנסות
+          this.authRefreshAttempts = 0;
           // רענון פרואקטיבי: לא מתחברים עם טוקן פג תוקף
           this.reconnectWithFreshToken();
         }
