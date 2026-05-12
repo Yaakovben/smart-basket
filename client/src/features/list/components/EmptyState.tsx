@@ -77,9 +77,10 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyState
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      // flex:1 ממלא את כל גובה ה-content מתחת לבר העליון ומעל ה-FAB,
-      // ו-justifyContent:center ממקם את הקבוצה באמצע אנכי האמיתי.
-      flex: 1,
+      // calc(100vh - 220px) - גובה viewport פחות הבר העליון והתחתון = אזור התוכן.
+      // ה-EmptyState תופס את כל המקום הזה, וה-justifyContent:center ממקם
+      // אותו במרכז האנכי האמיתי בלי לדרוש flex container בהורה.
+      minHeight: 'calc(100dvh - 220px)',
     }}>
       {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
       <Box sx={{

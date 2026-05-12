@@ -485,10 +485,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          // display:flex עם direction:column - מאפשר ל-EmptyState (flex:1)
-          // למלא את כל הגובה הפנוי וכך להופיע במרכז האנכי האמיתי.
-          display: 'flex',
-          flexDirection: 'column',
           p: { xs: 1.5, sm: 2.5 },
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch',
