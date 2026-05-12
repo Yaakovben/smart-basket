@@ -297,10 +297,10 @@ export const InsightsPage = memo(() => {
             isDark={isDark}
             accent="#14B8A6"
             mainEmoji="💡"
-            floatingItems={['📊', '💰', '🛍️', '⭐']}
+            floatingItems={['💰', '📍', '📊', '🛒']}
             title="ברוך הבא לתובנות!"
-            description="התחל ליצור רשימות וסמן מה שקנית - וכאן תקבל תובנות אישיות, השוואת מחירים בין רשתות, וניתוח הרגלים."
-            tips={['השוואת מחירים', 'הרגלי קנייה', 'תובנות חכמות']}
+            description="צור רשימה ראשונה - וכאן תקבל השוואת מחירים בין רשתות, מפת הסניפים הקרובים אליך, וניתוח הרגלי הקנייה שלך."
+            tips={['💰 הכי זול', '📍 הכי קרוב', '📊 הרגלים']}
             ctaLabel="לרשימות שלי"
             ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
             onCtaClick={() => { haptic('medium'); navigate('/'); }}
