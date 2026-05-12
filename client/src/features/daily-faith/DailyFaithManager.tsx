@@ -359,7 +359,7 @@ export const DailyFaithManager = ({ onClose }: Props) => {
         }}>
           {loading ? (
             <Box sx={{ py: 1 }}>
-              <ShimmerList count={5} rowHeight={62} gap={8} color="#F59E0B" />
+              <ShimmerList count={5} rowHeight={62} gap={8} color="#FCD34D" />
             </Box>
           ) : filteredQuotes.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 5 }}>
