@@ -77,10 +77,13 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyState
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      // calc(100vh - 220px) - גובה viewport פחות הבר העליון והתחתון = אזור התוכן.
-      // ה-EmptyState תופס את כל המקום הזה, וה-justifyContent:center ממקם
-      // אותו במרכז האנכי האמיתי בלי לדרוש flex container בהורה.
-      minHeight: 'calc(100dvh - 220px)',
+      // calc(100dvh - 320px) - גובה viewport פחות הבר העליון, ה-FAB והבר התחתון.
+      // ה-EmptyState תופס את המקום שבין ההדר ל-FAB, וה-justifyContent:center
+      // ממקם אותו במרכז האנכי האמיתי - בלי שה-FAB יסתיר את הכפתור.
+      minHeight: 'calc(100dvh - 320px)',
+      // pb נדיב נוסף - מבטיח שגם אם הכפתור הוסף-מוצר יתווסף בעתיד הוא לא יסתתר
+      // מאחורי ה-FAB ומאחורי safe-area-inset-bottom.
+      pb: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
       {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
       <Box sx={{
