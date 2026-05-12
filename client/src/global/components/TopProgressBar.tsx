@@ -43,9 +43,9 @@ const fadeOut = keyframes`
 // העגלה רוכבת מימין לשמאל - מתקדמת לכיוון הקריאה ב-RTL.
 // ה-scaleX(-1) הופך את האימוג'י כך שהיא "פונה" לכיוון התנועה.
 const basketRide = keyframes`
-  0%   { left: calc(100% - 14px); transform: scaleX(-1) translateY(0); }
-  50%  { transform: scaleX(-1) translateY(-2px); }
-  100% { left: -6px; transform: scaleX(-1) translateY(0); }
+  0%   { left: calc(100% - 14px); transform: translateY(0); }
+  50%  { transform: translateY(-2px); }
+  100% { left: -6px; transform: translateY(0); }
 `;
 
 interface Props {
