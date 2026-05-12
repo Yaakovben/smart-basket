@@ -207,44 +207,50 @@ export const AppRouter = () => {
   useSocketNotifications(user, showToast, listNames, addPersistedNotification, handleMemberRemoved, handleListDeleted, isPushSubscribed);
 
   const handleDeleteAllData = useCallback(async () => {
+    // שלב 1: בקשת מחיקה לשרת. אם נכשל - לא נוגעים בכלום.
+    // 401/404 מתפרשים כ"הקשבון כבר לא קיים" → המשך כרגיל לניקוי מקומי.
+    // ה-axios interceptor מנסה refresh על 401, אבל בגלל שזו DELETE לא רגישה
+    // לנסיון חוזר, אין צורך לתפוס מקרה זה במיוחד.
     try {
-      // 1. מחיקת חשבון מהשרת - לפני שמשנים state כלשהו, כדי שהטוקנים עוד תקפים.
       await authApi.deleteAccount();
-
-      // 2. ניקוי אחסון. לא מפעילים logout() כדי לא לטריגר cascade של setState
-      // ב-hooks (useLists, useNotifications, socket) — מיד אחר כך עושים hard
-      // navigation שממילא הורג את כל ה-state והרכיבים.
-      try { localStorage.clear(); } catch { /* ignore */ }
-      try { sessionStorage.clear(); } catch { /* ignore */ }
-
-      // 3. ניקוי SW + caches במקביל (לא קריטי לתוצאה, אבל מנקה זיכרון).
-      try {
-        if ('caches' in window) {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-        }
-      } catch { /* ignore */ }
-      try {
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(reg => reg.unregister()));
-        }
-      } catch { /* ignore */ }
-
-      // 4. ניקוי IndexedDB של טוקני אימות (לא מנוקה ע"י localStorage.clear).
-      try {
-        if (typeof indexedDB !== 'undefined') {
-          indexedDB.deleteDatabase('sb_auth');
-        }
-      } catch { /* ignore */ }
-
-      // 5. Hard navigation - replace (לא assign) כדי שגם כפתור 'אחורה' לא יחזור
-      // למצב המחוק. הדף נטען מאפס: אין re-render cascade, אין race conditions,
-      // אין hooks שרצים על user שלא קיים, אין בקשות שעוד ב-pipeline.
-      window.location.replace('/login');
-    } catch {
-      showToast(t('errorOccurred'), 'error');
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const isAlreadyGone = status === 401 || status === 403 || status === 404;
+      if (!isAlreadyGone) {
+        showToast(t('errorOccurred'), 'error');
+        return;
+      }
+      // החשבון כבר נמחק (אולי מטאב אחר) - ממשיכים לניקוי מקומי כדי להחזיר
+      // את הלקוח למצב נקי.
     }
+
+    // שלב 2: ניקוי async מקדים של SW + caches. עוד לא נגענו ב-state/storage,
+    // אז אם משהו נכשל אנחנו לא ב-state חלקי. ה-await כאן בטוח כי React לא
+    // קורא מ-caches/SW כדי לעדכן state.
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+    } catch { /* best-effort, לא קריטי */ }
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+    } catch { /* best-effort */ }
+
+    // שלב 3: ניקוי storage ו-hard-redirect - הכל סינכרוני וברצף, בלי await
+    // ביניהם, כדי שלא ייפתח חלון שבו React רץ עם storage חצי-מנוקה.
+    try { localStorage.clear(); } catch { /* ignore */ }
+    try { sessionStorage.clear(); } catch { /* ignore */ }
+    try {
+      if (typeof indexedDB !== 'undefined') {
+        indexedDB.deleteDatabase('sb_auth');
+      }
+    } catch { /* ignore */ }
+    // replace (לא assign) כדי שלא ניתן יהיה לחזור עם 'אחורה' למצב המחוק.
+    window.location.replace('/login');
   }, [showToast, t]);
 
   // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
