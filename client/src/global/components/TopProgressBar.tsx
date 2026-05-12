@@ -12,14 +12,15 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
 
+// הפסים נעים מימין לשמאל - תואם RTL ולתחושת "התקדמות קדימה" של העגלה
 const slidePrimary = keyframes`
-  0%   { transform: translateX(-120%); }
-  100% { transform: translateX(240%); }
+  0%   { transform: translateX(240%); }
+  100% { transform: translateX(-120%); }
 `;
 
 const slideSecondary = keyframes`
-  0%   { transform: translateX(-160%); }
-  100% { transform: translateX(280%); }
+  0%   { transform: translateX(280%); }
+  100% { transform: translateX(-160%); }
 `;
 
 const pulse = keyframes`
@@ -39,10 +40,12 @@ const fadeOut = keyframes`
 
 // אייקון הסל הזעיר רוכב על הפס, מאזן (translateY) קל לתחושת קפיצה עדינה.
 // הריצה תואמת לקצב של הפס הראשי (1.4s).
+// העגלה רוכבת מימין לשמאל - מתקדמת לכיוון הקריאה ב-RTL.
+// ה-scaleX(-1) הופך את האימוג'י כך שהיא "פונה" לכיוון התנועה.
 const basketRide = keyframes`
-  0%   { left: -6px;  transform: translateY(0); }
-  50%  { transform: translateY(-2px); }
-  100% { left: calc(100% - 14px); transform: translateY(0); }
+  0%   { left: calc(100% - 14px); transform: scaleX(-1) translateY(0); }
+  50%  { transform: scaleX(-1) translateY(-2px); }
+  100% { left: -6px; transform: scaleX(-1) translateY(0); }
 `;
 
 interface Props {
@@ -94,13 +97,13 @@ export const TopProgressBar = ({ active, color = '#14B8A6', label }: Props) => {
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid rgba(0,0,0,0.06)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.06)',
-        minWidth: 200,
+        minWidth: 280,
       }}>
         <Box sx={{
           // עטיפה חיצונית - שומרת על מיקום יחסי לאייקון הסל הרוכב מעל הפס.
           // ה-overflow:visible כאן חיוני - אחרת הסל ייחתך.
           position: 'relative',
-          width: 160,
+          width: 240,
           pt: '14px',
         }}>
           {/* אייקון הסל הזעיר שרוכב מעל הפס - "השליח" שמביא את הנתונים */}
