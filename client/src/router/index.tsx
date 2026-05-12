@@ -224,21 +224,33 @@ export const AppRouter = () => {
       // את הלקוח למצב נקי.
     }
 
-    // שלב 2: ניקוי async מקדים של SW + caches. עוד לא נגענו ב-state/storage,
-    // אז אם משהו נכשל אנחנו לא ב-state חלקי. ה-await כאן בטוח כי React לא
-    // קורא מ-caches/SW כדי לעדכן state.
-    try {
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-    } catch { /* best-effort, לא קריטי */ }
-    try {
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(reg => reg.unregister()));
-      }
-    } catch { /* best-effort */ }
+    // שלב 2: ניקוי async מקדים של SW + caches עם timeout. ה-await כאן בטוח כי
+    // React לא קורא מ-caches/SW כדי לעדכן state. ה-timeout מבטיח שלא נחכה
+    // לנצח אם הדפדפן תקוע (קרה ב-Chrome ישן + iOS Safari לפעמים).
+    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T | null> =>
+      Promise.race([
+        p.catch(() => null as T | null),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), ms)),
+      ]);
+
+    await withTimeout(
+      (async () => {
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+      })(),
+      2000,
+    );
+    await withTimeout(
+      (async () => {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+      })(),
+      2000,
+    );
 
     // שלב 3: ניקוי storage ו-hard-redirect - הכל סינכרוני וברצף, בלי await
     // ביניהם, כדי שלא ייפתח חלון שבו React רץ עם storage חצי-מנוקה.
