@@ -123,19 +123,23 @@
 
       <!-- לוגו מרכזי - הסל. ה-stroke הזוהר זז סביבו = הטעינה -->
       <div class="splash-logo-wrap">
-        <svg class="splash-logo" viewBox="0 0 100 100" aria-hidden="true">
-          <!-- אייקון שקית קניות - מרובע מעוגל ברקע, שקית לבנה עם ידיות וצ'ק -->
-          <rect x="14" y="14" width="72" height="72" rx="18" fill="#2DD4BF"/>
-          <!-- ידיות השקית - שני קווים מעוקלים -->
-          <path d="M40 42 V36 C40 31 43.6 28 50 28 C56.4 28 60 31 60 36 V42"
-                stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <!-- גוף השקית - מלבן מעוגל עם בסיס מעט רחב יותר -->
-          <path d="M34 44 H66 L63 70 C62.8 71.7 61.4 73 59.7 73 H40.3 C38.6 73 37.2 71.7 37 70 Z"
-                fill="#fff"/>
-          <!-- צ'ק מארק במרכז השקית -->
-          <path d="M44 56 L48.5 61 L57 51"
-                stroke="#0D9488" stroke-width="3.2" fill="none"
-                stroke-linecap="round" stroke-linejoin="round"/>
+        <svg class="splash-logo" viewBox="0 0 512 512" aria-hidden="true">
+          <!-- זהה ל-favicon.svg - לוגו אחיד בכל האפליקציה -->
+          <defs>
+            <linearGradient id="splashBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#14B8A6"/>
+              <stop offset="100%" stop-color="#0D9488"/>
+            </linearGradient>
+            <filter id="splashShadow">
+              <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.12"/>
+            </filter>
+          </defs>
+          <rect width="512" height="512" rx="112" fill="url(#splashBg)"/>
+          <g filter="url(#splashShadow)">
+            <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white"/>
+            <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
+          </g>
+          <path d="M216 286 L248 318 L304 258" stroke="#14B8A6" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
 
