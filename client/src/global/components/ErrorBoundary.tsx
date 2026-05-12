@@ -14,18 +14,9 @@ const haloPulse = keyframes`
   0%, 100% { transform: scale(0.92); opacity: 0.55; }
   50%      { transform: scale(1.08); opacity: 0.9; }
 `;
-const sparkleDown = keyframes`
-  0%   { transform: translateY(-8px); opacity: 0; }
-  40%  { opacity: 1; }
-  100% { transform: translateY(36px); opacity: 0; }
-`;
 const progressSlide = keyframes`
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(220%); }
-`;
-const dotBounce = keyframes`
-  0%, 80%, 100% { transform: translateY(0) scale(0.6); opacity: 0.5; }
-  40%           { transform: translateY(-5px) scale(1); opacity: 1; }
 `;
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
@@ -176,88 +167,67 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
             overflow: 'hidden',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
           }}>
-            {/* Halo פועם מאחורי הרקטה - עומק + תנועה */}
+            {/* Halo עגול מאחורי הרקטה - עומק רך, בלי הבזקים */}
             <Box sx={{
               position: 'absolute',
-              width: 260, height: 260,
+              width: 240, height: 240,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 70%)',
-              animation: `${haloPulse} 2.4s ease-in-out infinite`,
+              background: 'rgba(255,255,255,0.10)',
+              animation: `${haloPulse} 2.8s ease-in-out infinite`,
             }} />
 
-            {/* Container של הרקטה + ה-sparks שיורדים */}
-            <Box sx={{ position: 'relative', mb: 4 }}>
-              {/* פסי מהירות שיורדים מתחת לרקטה */}
-              {[0, 1, 2].map(i => (
-                <Box key={i} sx={{
-                  position: 'absolute',
-                  top: 56,
-                  left: `${42 + i * 14}px`,
-                  width: 3, height: 12,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.75)',
-                  animation: `${sparkleDown} 1.1s ease-in ${i * 0.18}s infinite`,
-                }} />
-              ))}
-              {/* הרקטה עצמה - emoji גדול עם אנימציית עלייה רכה */}
-              <Box sx={{
-                fontSize: 88,
-                lineHeight: 1,
-                filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.25))',
-                animation: `${rocketRise} 1.6s ease-in-out infinite`,
-                position: 'relative',
-                zIndex: 1,
-              }}>
-                🚀
-              </Box>
+            {/* רקטה במרכז */}
+            <Box sx={{
+              fontSize: 84,
+              lineHeight: 1,
+              filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.18))',
+              animation: `${rocketRise} 2.4s ease-in-out infinite`,
+              mb: 4,
+              position: 'relative',
+              zIndex: 1,
+            }}>
+              🚀
             </Box>
 
-            {/* טקסט ראשי */}
+            {/* כותרת */}
             <Typography sx={{
-              fontSize: 22, fontWeight: 800, mb: 0.5,
+              fontSize: 20, fontWeight: 800, mb: 0.5,
               textShadow: '0 2px 8px rgba(0,0,0,0.18)',
               letterSpacing: 0.3,
+              position: 'relative', zIndex: 1,
             }}>
               {t.updatingVersion}
             </Typography>
+            {/* כותרת משנה */}
             <Typography sx={{
-              fontSize: 13, fontWeight: 500,
-              color: 'rgba(255,255,255,0.88)',
-              mb: 3,
-              maxWidth: 280, textAlign: 'center', lineHeight: 1.5,
+              fontSize: 12.5, fontWeight: 500,
+              color: 'rgba(255,255,255,0.85)',
+              textAlign: 'center', lineHeight: 1.5,
+              position: 'relative', zIndex: 1,
             }}>
-              טוענים את הגרסה החדשה ביותר עבורך
+              גרסה חדשה זמינה — טוען עדכון
             </Typography>
 
-            {/* פס פרוגרס אינדיטרמיניסטי */}
+            {/* פס פרוגרס דק בתחתית המסך */}
             <Box sx={{
-              position: 'relative',
-              width: 180, height: 4,
+              position: 'absolute',
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'min(60%, 240px)',
+              height: 3,
               borderRadius: 999,
-              bgcolor: 'rgba(255,255,255,0.25)',
+              bgcolor: 'rgba(255,255,255,0.22)',
               overflow: 'hidden',
-              mb: 2,
             }}>
               <Box sx={{
                 position: 'absolute',
                 top: 0, left: 0,
-                width: '45%', height: '100%',
+                width: '40%', height: '100%',
                 borderRadius: 999,
                 bgcolor: '#fff',
-                boxShadow: '0 0 12px rgba(255,255,255,0.6)',
-                animation: `${progressSlide} 1.4s ease-in-out infinite`,
+                animation: `${progressSlide} 1.6s ease-in-out infinite`,
               }} />
-            </Box>
-
-            {/* שלוש נקודות מהבהבות מתחת */}
-            <Box sx={{ display: 'flex', gap: 0.75 }}>
-              {[0, 1, 2].map(i => (
-                <Box key={i} sx={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  bgcolor: '#fff',
-                  animation: `${dotBounce} 1.2s ease-in-out ${i * 0.16}s infinite`,
-                }} />
-              ))}
             </Box>
           </Box>
         );
