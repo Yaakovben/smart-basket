@@ -9,7 +9,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { PriceComparisonCard, BetaRibbon, priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { InsightsLoader } from './InsightsLoader';
-import { SlowLoadIndicator, TopProgressBar, ShimmerList, ShimmerBlock } from '../../../global/components';
+import { SlowLoadIndicator, TopProgressBar, ShimmerList } from '../../../global/components';
 import { PulseTab } from './tabs/PulseTab';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { haptic, safeStorage } from '../../../global/helpers';
@@ -218,35 +218,11 @@ export const InsightsPage = memo(() => {
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [tab, selectedListId, userLocation]);
 
+  // טעינה ראשונית - בסגנון YouTube: רק פס דק עליון, בלי שלד מלא.
+  // הרקע נשאר בצבע האפליקציה כדי שלא יהיה קפיצה ויזואלית כשהתוכן נכנס.
   if (loading) return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 4, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-      {/* הדר: באנר עליון - גרדיאנט תואם בדיוק לעמוד האמיתי, מונע קפיצה ויזואלית.
-          הבלוקים בפנים משתמשים ב-ShimmerBlock לעקביות עם שאר האפליקציה. */}
-      <Box sx={{
-        background: isDark
-          ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)'
-          : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
-        p: '48px 16px 16px',
-        borderRadius: '0 0 24px 24px',
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <ShimmerBlock width={40} height={40} circle color="#FFFFFF" />
-          <ShimmerBlock width={140} height={26} radius={8} color="#FFFFFF" />
-          <Box sx={{ width: 40 }} />
-        </Box>
-        <Box sx={{ display: 'flex', gap: 0.75, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '12px', p: 0.5 }}>
-          {[1, 2, 3, 4].map(i => (
-            <Box key={i} sx={{ flex: 1 }}>
-              <ShimmerBlock height={34} radius={8} color="#FFFFFF" />
-            </Box>
-          ))}
-        </Box>
-      </Box>
-      {/* תוכן: שורת בחירת רשימה + רשימת כרטיסי השוואה */}
-      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-        <ShimmerBlock height={48} radius={12} />
-        <ShimmerList count={4} rowHeight={72} gap={10} />
-      </Box>
+    <Box sx={{ height: '100dvh', bgcolor: 'background.default' }}>
+      <TopProgressBar active label="טוען תובנות..." />
     </Box>
   );
 
