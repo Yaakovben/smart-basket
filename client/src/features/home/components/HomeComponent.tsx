@@ -1034,12 +1034,12 @@ export const HomeComponent = memo(({
                 bgcolor: 'background.paper',
                 border: '1px solid', borderColor: 'divider',
               }}>
-                <ShimmerBlock width={44} height={44} radius={12} />
+                <ShimmerBlock width={44} height={44} radius={12} color="#94A3B8" />
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                  <ShimmerBlock width="60%" height={14} radius={6} />
-                  <ShimmerBlock width="35%" height={11} radius={6} />
+                  <ShimmerBlock width="60%" height={14} radius={6} color="#94A3B8" />
+                  <ShimmerBlock width="35%" height={11} radius={6} color="#94A3B8" />
                 </Box>
-                <ShimmerBlock width={24} height={24} radius={6} />
+                <ShimmerBlock width={24} height={24} radius={6} color="#94A3B8" />
               </Box>
             ))}
           </Box>
