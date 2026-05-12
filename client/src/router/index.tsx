@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary, SlowLoadIndicator } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
 import { DailyFaithGate } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
@@ -282,13 +282,8 @@ export const AppRouter = () => {
 
   return (
     <>
-      {/* חיווי טעינה איטי - אחיד לכל המסכים: toast למטה (אותו מיקום כמו
-          'מאחזר השוואת מחירים') כדי לא לחסום את ה-UI ולשמור על עקביות. */}
-      <SlowLoadIndicator
-        active={!!user && listsLoading && lists.length === 0}
-        variant="toast"
-        message="טוען את הרשימות שלך…"
-      />
+      {/* ה-toast 'טוען את הרשימות שלך' הוסר - השלד של כרטיסי הרשימות
+          ב-HomeComponent כבר נותן ללקוח אינדיקציה ברורה שמשהו טוען. */}
       <Suspense fallback={<PageLoader />}>
       <Box
         // ה-key נכפה לפי המקטע הראשון של ה-pathname (/, /list, /insights וכו)
