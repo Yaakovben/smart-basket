@@ -25,8 +25,21 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
 
   async bulkUpsert(items: UpsertBranchInput[]) {
     if (items.length === 0) return 0;
+    // שאיבת רשימת סניפים שמסומנים coordSource='manual' - לא נוגעים בהם בכלל.
+    // ההגדרות הידניות הן הכי מדויקות ולא צריך לדרוס אותן בסנכרון אוטומטי.
+    const keys = items.map(i => ({ chainId: i.chainId, storeId: i.storeId }));
+    const manualBranches = await this.model.find(
+      { $or: keys, coordSource: 'manual' },
+      { chainId: 1, storeId: 1 }
+    ).lean();
+    const manualSet = new Set(manualBranches.map(b => `${b.chainId}::${b.storeId}`));
+    if (manualSet.size > 0) {
+      console.log(`[bulkUpsert] דילוג על ${manualSet.size} סניפים עם coordSource='manual'`);
+    }
+    const filtered = items.filter(i => !manualSet.has(`${i.chainId}::${i.storeId}`));
+    if (filtered.length === 0) return 0;
     const now = new Date();
-    const ops = items.map(item => {
+    const ops = filtered.map(item => {
       // הפרדה: שדות "קשיחים" (תמיד נכתבים) ושדות אופציונליים שנכתבים רק אם קיים ערך.
       // המטרה: סנכרון מהפורטל לא ימחק כתובת שהגיעה מ-OSM, ולהיפך.
       const $set: Record<string, unknown> = {
