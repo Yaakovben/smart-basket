@@ -1,6 +1,51 @@
 # 🛒 Smart Basket
 
-אפליקציית רשימות קניות שיתופית בזמן אמת - PWA עם תמיכה מלאה במובייל.
+אפליקציית רשימות קניות שיתופית בזמן אמת — PWA מלאה עם השוואת מחירים בין רשתות בישראל.
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-14B8A6?style=for-the-badge&logo=vercel&logoColor=white)](https://smart-basket.vercel.app)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+
+## 🌐 דמו חי
+
+**אתר:** https://smart-basket.vercel.app
+*(או הירשמו עם Google בלחיצה אחת — אין צורך באימייל אמת בסביבת דמו)*
+
+## ⚡ סקירה מהירה — 30 שניות
+
+- **שיתופיות בזמן אמת** דרך Socket.io — שני משתמשים רואים שינויים מיד
+- **השוואת מחירים** מקבצי XML רשמיים של הרשתות (חוק שקיפות המחירים)
+- **איתור סניף קרוב** עם geolocation + Nominatim
+- **התראות Push** דרך VAPID
+- **התקנה כאפליקציה** מובייל (PWA installable, מצב אופליין חלקי)
+- **RTL מלא** + מצב כהה/בהיר + דו-לשוני
+
+### 📦 Tech Stack
+
+**Frontend:** React 19 · Vite 7 · TypeScript · MUI 7 · React Router 7 · socket.io-client · vite-plugin-pwa
+**Backend (API):** Node + Express · TypeScript · Mongoose · JWT (rotation) · Joi · web-push · node-cron
+**Backend (Socket):** Node + socket.io · שירות נפרד
+**DB / Infra:** MongoDB Atlas · Vercel · Render · Sentry · Logtail
+
+### 🚀 Quick Start
+```bash
+git clone <repo-url> && cd smart-basket
+
+# Server
+cd server/api
+cp .env.example .env   # עדכן עם פרטי MongoDB ו-JWT secrets
+npm install && npm run dev
+
+# Client (טרמינל חדש)
+cd ../../client
+cp .env.example .env
+npm install && npm start
+
+# פתח http://localhost:5173
+```
 
 ---
 
