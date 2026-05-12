@@ -1026,20 +1026,21 @@ export const HomeComponent = memo(({
         ) : listsLoading && display.length === 0 ? (
           // סקלטון בצורת כרטיסי רשימות - נותן ללקוח תחושה שמשהו טוען וכבר תופס
           // את המקום שהרשימות יתפסו, במקום מסך ריק לבן.
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, px: { xs: 1.5, sm: 2.5 }, pt: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: { xs: 1.5, sm: 2.5 }, pt: 1 }}>
             {Array.from({ length: 4 }).map((_, i) => (
               <Box key={i} sx={{
-                display: 'flex', alignItems: 'center', gap: 1.25,
-                p: 1.5, borderRadius: '16px',
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                p: 2, borderRadius: '16px',
                 bgcolor: 'background.paper',
                 border: '1px solid', borderColor: 'divider',
+                minHeight: 80,
               }}>
-                <ShimmerBlock width={44} height={44} radius={12} color="#94A3B8" />
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                  <ShimmerBlock width="60%" height={14} radius={6} color="#94A3B8" />
-                  <ShimmerBlock width="35%" height={11} radius={6} color="#94A3B8" />
+                <ShimmerBlock width={52} height={52} radius={14} color="#94A3B8" />
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <ShimmerBlock width="65%" height={18} radius={8} color="#94A3B8" />
+                  <ShimmerBlock width="40%" height={14} radius={7} color="#94A3B8" />
                 </Box>
-                <ShimmerBlock width={24} height={24} radius={6} color="#94A3B8" />
+                <ShimmerBlock width={28} height={28} radius={8} color="#94A3B8" />
               </Box>
             ))}
           </Box>
