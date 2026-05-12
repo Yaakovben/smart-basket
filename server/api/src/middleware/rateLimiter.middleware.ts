@@ -45,17 +45,19 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, // לא סופר התחברויות מוצלחות
 });
 
-// הגבלת הרשמה - 10 ניסיונות לשעה
-// מונע ספאם, אך סובלני למשתמשים שנכשלים בוולידציה או מתקנים שדות
+// הגבלת הרשמה - 30 ניסיונות לשעה, רישום מוצלח לא נספר.
+// מונע ספאם בלבד; משתמש לגיטימי שמתקן שדות בוולידציה (סיסמה קצרה,
+// מייל לא תקין, שם תפוס) לא ייחסם. גם משפחה מאותו IP יכולה להירשם.
 export const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 30,
   message: {
     success: false,
     message: 'Too many registration attempts, please try again later',
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
 });
 
 // הגבלת שינוי סיסמה - 5 ניסיונות לשעה
