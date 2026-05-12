@@ -616,6 +616,9 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   const ageMs = latest?.updatedAt ? Date.now() - new Date(latest.updatedAt).getTime() : null;
   const ageHours = ageMs !== null ? ageMs / (60 * 60 * 1000) : null;
 
+  // פיזור סניפים לפי מקור הקואורדינטות - לתצוגת אדמין מפורטת
+  const branchSourceBreakdown = await BranchDAL.countsBySource();
+
   const responseData = {
     syncInProgress: adminSyncInProgress,
     syncProgress: getSyncProgress(),
@@ -625,6 +628,7 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
     chains,
     totalPrices: chains.reduce((s, c) => s + c.count, 0),
     healthSummary,
+    branchSourceBreakdown,
   };
   statusCache = { data: responseData, expiresAt: Date.now() + STATUS_CACHE_TTL_MS };
   res.json({

@@ -110,6 +110,30 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
     ]);
     return res.map(r => ({ chainId: r._id, count: r.count, withCoords: r.withCoords }));
   }
+
+  // ספירה גלובלית לפי coordSource - לצורך תצוגת אדמין מפורטת
+  async countsBySource(): Promise<{ portal: number; geocoded: number; manual: number; unknown: number; noCoords: number; total: number }> {
+    const res = await this.model.aggregate<{ _id: string; count: number; withCoords: number }>([
+      {
+        $group: {
+          _id: '$coordSource',
+          count: { $sum: 1 },
+          withCoords: {
+            $sum: { $cond: [{ $and: [{ $ne: ['$lat', null] }, { $ne: ['$lat', undefined] }] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+    const result = { portal: 0, geocoded: 0, manual: 0, unknown: 0, noCoords: 0, total: 0 };
+    for (const r of res) {
+      const key = r._id as 'portal' | 'geocoded' | 'manual' | 'unknown';
+      if (key in result) result[key] = r.count;
+      // סניפים ללא lat גם אם coordSource מוגדר (לדוגמה unknown) - מסומנים כ-noCoords
+      if (r._id === 'unknown' || r._id === null) result.noCoords += (r.count - r.withCoords);
+      result.total += r.count;
+    }
+    return result;
+  }
 }
 
 export const BranchDAL = new BranchDALClass();

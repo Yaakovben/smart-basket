@@ -34,6 +34,15 @@ export interface BranchSyncState {
   error: string | null;
 }
 
+export interface BranchSourceBreakdown {
+  portal: number;    // מהפורטל הרשמי (StoresFull XML)
+  geocoded: number;  // מ-Nominatim/LocationIQ עם וולידציה
+  manual: number;    // הוגדר ידנית באדמין - לא נדרס בסנכרון
+  unknown: number;   // מרכז עיר בלבד / לא מדויק
+  noCoords: number;  // ללא קואורדינטות כלל
+  total: number;
+}
+
 export interface PriceSyncStatus {
   syncInProgress: boolean;
   syncProgress?: PriceSyncProgress;
@@ -42,6 +51,7 @@ export interface PriceSyncStatus {
   ageHours: number | null;
   chains: PriceChainStatus[];
   totalPrices: number;
+  branchSourceBreakdown?: BranchSourceBreakdown;
 }
 
 export interface UserLocation {
