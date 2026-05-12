@@ -208,30 +208,44 @@ export const AppRouter = () => {
 
   const handleDeleteAllData = useCallback(async () => {
     try {
-      // מחיקת חשבון מהשרת
+      // 1. מחיקת חשבון מהשרת - לפני שמשנים state כלשהו, כדי שהטוקנים עוד תקפים.
       await authApi.deleteAccount();
 
-      localStorage.clear();
+      // 2. ניקוי אחסון. לא מפעילים logout() כדי לא לטריגר cascade של setState
+      // ב-hooks (useLists, useNotifications, socket) — מיד אחר כך עושים hard
+      // navigation שממילא הורג את כל ה-state והרכיבים.
+      try { localStorage.clear(); } catch { /* ignore */ }
+      try { sessionStorage.clear(); } catch { /* ignore */ }
 
-      // ניקוי cache
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
+      // 3. ניקוי SW + caches במקביל (לא קריטי לתוצאה, אבל מנקה זיכרון).
+      try {
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+      } catch { /* ignore */ }
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+      } catch { /* ignore */ }
 
-      // ביטול רישום Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map(reg => reg.unregister()));
-      }
+      // 4. ניקוי IndexedDB של טוקני אימות (לא מנוקה ע"י localStorage.clear).
+      try {
+        if (typeof indexedDB !== 'undefined') {
+          indexedDB.deleteDatabase('sb_auth');
+        }
+      } catch { /* ignore */ }
 
-      // התנתקות וניווט לדף התחברות
-      logout();
-      navigate("/login");
+      // 5. Hard navigation - replace (לא assign) כדי שגם כפתור 'אחורה' לא יחזור
+      // למצב המחוק. הדף נטען מאפס: אין re-render cascade, אין race conditions,
+      // אין hooks שרצים על user שלא קיים, אין בקשות שעוד ב-pipeline.
+      window.location.replace('/login');
     } catch {
       showToast(t('errorOccurred'), 'error');
     }
-  }, [logout, navigate, showToast, t]);
+  }, [showToast, t]);
 
   // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
   if (authLoading) {
