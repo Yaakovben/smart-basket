@@ -32,7 +32,8 @@ interface ShimmerBlockProps {
   radius?: number | string;
   circle?: boolean;
   sx?: object;
-  // צבע ה-shimmer ב-hex - דיפולט טורקיז. שימושי להתאמת הצבע לסקציה (התראות = כתום וכו').
+  // צבע ה-shimmer ב-hex - דיפולט אפור ניטרלי לאחידות בכל האפליקציה.
+  // ניתן לדרוס לסקציות נושאיות (כתום להתראות, צהוב לחיזוק רוחני וכו').
   color?: string;
 }
 
@@ -42,7 +43,7 @@ export const ShimmerBlock = ({
   radius = 8,
   circle,
   sx,
-  color = '#14B8A6',
+  color = '#94A3B8',
 }: ShimmerBlockProps) => {
   const rgb = hexToRgb(color);
   return (
