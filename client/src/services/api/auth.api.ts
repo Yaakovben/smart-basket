@@ -8,6 +8,9 @@ export interface User {
   avatarEmoji: string;
   isAdmin: boolean;
   createdAt: string;
+  // קבוצות מושתקות - מקור האמת ל-push filtering בשרת. אופציונלי
+  // כי GET /me לא תמיד מחזיר אותו (תלוי גרסת השרת/projection).
+  mutedGroupIds?: string[];
 }
 
 export interface AuthResponse {

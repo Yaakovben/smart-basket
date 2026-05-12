@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { AppSettings, Language, ThemeMode, NotificationSettings } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../constants';
 import { translations, type TranslationKeys } from '../i18n/translations';
 import { saveNotifSettingsToIDB } from '../../settingsIDB';
+import { authApi } from '../../services/api';
 
 interface SettingsContextType {
   settings: AppSettings;
@@ -76,6 +77,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  // Toggle אופטימי בקליינט + סנכרון מיידי לשרת. ה-server source-of-truth
+  // (User.mutedGroupIds ב-MongoDB) הוא זה שמכריע אם להישלח push בפועל.
+  // לכן חובה לסנכרן - אחרת השתקה לא תעצור התראות וביטול לא יחזיר אותן.
   const toggleGroupMute = useCallback((groupId: string) => {
     setSettings(prev => {
       const muted = prev.notifications.mutedGroupIds || [];
@@ -86,6 +90,30 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       saveSettings(updated);
       return updated;
     });
+    // שליחה לשרת ברקע. נכשל בשקט - הקליינט כבר התעדכן אופטימית.
+    authApi.toggleMuteGroup(groupId).catch(() => { /* ignore */ });
+  }, []);
+
+  // סנכרון חד-פעמי בעת טעינה: מושכים את הרשימה האמיתית מהשרת
+  // ומשלבים עם הקיים מקומית. השרת תמיד מנצח. רץ פעם בכל session.
+  const syncedRef = useRef(false);
+  useEffect(() => {
+    if (syncedRef.current) return;
+    syncedRef.current = true;
+    authApi.getProfile()
+      .then(profile => {
+        if (!profile?.mutedGroupIds) return;
+        const serverMuted = profile.mutedGroupIds.map(String);
+        setSettings(prev => {
+          const localMuted = prev.notifications.mutedGroupIds || [];
+          if (localMuted.length === serverMuted.length
+              && localMuted.every(id => serverMuted.includes(id))) return prev;
+          const updated = { ...prev, notifications: { ...prev.notifications, mutedGroupIds: serverMuted } };
+          saveSettings(updated);
+          return updated;
+        });
+      })
+      .catch(() => { /* offline / not logged in - לא קריטי */ });
   }, []);
 
   const isGroupMuted = useCallback((groupId: string): boolean => {
