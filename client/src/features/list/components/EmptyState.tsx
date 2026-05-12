@@ -77,10 +77,9 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyState
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      // ממלא את כל השטח הפנוי באלמנט ההורה - האייקון יושב באמת באמצע אנכי
-      // במקום לתפוס רק minHeight ולהיתקע למעלה.
+      // flex:1 ממלא את כל גובה ה-content מתחת לבר העליון ומעל ה-FAB,
+      // ו-justifyContent:center ממקם את הקבוצה באמצע אנכי האמיתי.
       flex: 1,
-      minHeight: { xs: '60vh', sm: '65vh' },
     }}>
       {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
       <Box sx={{

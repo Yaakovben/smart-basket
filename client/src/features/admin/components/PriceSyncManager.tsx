@@ -21,6 +21,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import PublicIcon from '@mui/icons-material/Public';
+import EditLocationIcon from '@mui/icons-material/EditLocation';
+import LocationSearchingIcon from '@mui/icons-material/LocationSearching';
+import LocationOffIcon from '@mui/icons-material/LocationOff';
 import { TextField, IconButton } from '@mui/material';
 import { Modal, ShimmerList, ShimmerBlock } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -30,6 +36,97 @@ import { priceComparisonApi, type PriceSyncStatus } from '../../priceComparison'
 interface Props {
   onClose: () => void;
 }
+
+// מודאל הסבר מפורט לאדמין - איך הסניפים והמחירים מגיעים למאגר
+const HelpModal = ({ onClose, isDark }: { onClose: () => void; isDark: boolean }) => (
+  <Modal title="איך פועל המאגר?" onClose={onClose}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 13, lineHeight: 1.6 }}>
+
+      {/* סקציה 1: סוגי מקורות לסניפים */}
+      <Box>
+        <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', mb: 1 }}>
+          🏪 מקורות הסניפים (לפי דיוק)
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+          <SourceRow icon={<PublicIcon sx={{ fontSize: 16, color: '#10B981' }} />} label="פורטל" desc="הגיע מקובץ הרשת הרשמי (StoresFull.xml). מדויק 100%." color="#10B981" isDark={isDark} />
+          <SourceRow icon={<LocationSearchingIcon sx={{ fontSize: 16, color: '#0D9488' }} />} label="מקורב (geocoded)" desc="כתובת זוהתה אוטומטית דרך Nominatim/LocationIQ. עברה ולידציה (במרחק עד 12 ק&quot;מ ממרכז העיר). מדויק לרוב." color="#0D9488" isDark={isDark} />
+          <SourceRow icon={<VerifiedIcon sx={{ fontSize: 16, color: '#10B981' }} />} label="ידני (manual)" desc="הוגדר ידנית באדמין. סנכרון אוטומטי לעולם לא ידרוס אותו." color="#10B981" isDark={isDark} />
+          <SourceRow icon={<EditLocationIcon sx={{ fontSize: 16, color: '#F59E0B' }} />} label="לא מדויק (unknown)" desc="קואורדינטות = מרכז העיר. לא מציג מרחק ללקוח (כדי לא להטעות), אבל הניווט עובד דרך הכתובת." color="#F59E0B" isDark={isDark} />
+          <SourceRow icon={<LocationOffIcon sx={{ fontSize: 16, color: '#DC2626' }} />} label="חסר מיקום" desc="אין קואורדינטות כלל. הסניף עדיין מוצג אם יש לו כתובת/עיר." color="#DC2626" isDark={isDark} />
+        </Box>
+      </Box>
+
+      {/* סקציה 2: תהליך הסנכרון */}
+      <Box>
+        <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', mb: 1 }}>
+          🔄 תהליך הסנכרון (אוטומטי)
+        </Typography>
+        <Box sx={{ pl: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography sx={{ fontSize: 12.5 }}>1. <b>04:00 בלילה</b> - cron יומי מפעיל סנכרון מכל הרשתות.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>2. <b>מחירים</b> - שאיבת PriceFull.xml מכל פורטל רשמי, וקובצי מחירים יומיים.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>3. <b>סניפים</b> - שאיבת StoresFull.xml; אם רשת לא פרסמה - נופלים ל-OSM.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>4. <b>Geocoding</b> - לכל סניף שאין קואורדינטות, ניסיון מ-Nominatim ואז LocationIQ.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>5. <b>וולידציה</b> - תוצאה רחוקה יותר מ-12 ק&quot;מ ממרכז העיר נדחית.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>6. <b>ניקוי</b> - מחירים ישנים מ-14 ימים נמחקים אוטומטית.</Typography>
+        </Box>
+      </Box>
+
+      {/* סקציה 3: אמינות ללקוח */}
+      <Box>
+        <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', mb: 1 }}>
+          🛡️ ערבות אמינות
+        </Typography>
+        <Box sx={{ pl: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>אם מוצג מרחק ללקוח</b> - הוא מדויק 100% (portal/geocoded מאומת/manual).</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>אם לא מציגים מרחק</b> - מציגים &quot;ניווט לפי כתובת&quot;. הניווט עצמו עובד דרך POI של Waze/Google.</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>לעולם לא מציגים נתון שגוי</b> - עדיף בלי מידע מאשר מידע מטעה.</Typography>
+        </Box>
+      </Box>
+
+      {/* סקציה 4: רענון ידני */}
+      <Box>
+        <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#0D9488', mb: 1 }}>
+          ⚡ פעולות באדמין
+        </Typography>
+        <Box sx={{ pl: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>רענן עכשיו</b> - מפעיל סנכרון מחירים + סניפים מיידי (במקום לחכות ל-04:00).</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>ייבוא המוני</b> - העלאת CSV של סניפים בפעם אחת (לרשתות שלא פרסמו StoresFull).</Typography>
+          <Typography sx={{ fontSize: 12.5 }}>• <b>נקה seed</b> - מסיר סניפים שהוטענו מ-KNOWN_BRANCHES (זהירות).</Typography>
+        </Box>
+      </Box>
+
+    </Box>
+  </Modal>
+);
+
+// צ'יפ קטן להצגת ספירת מקור בפיזור (בראש האדמין)
+const SourceChip = ({ label, value, color, isDark }: { label: string; value: number; color: string; isDark: boolean }) => (
+  <Box sx={{
+    display: 'inline-flex', alignItems: 'center', gap: 0.4,
+    px: 1, py: 0.4, borderRadius: '999px',
+    bgcolor: isDark ? `${color}26` : `${color}14`,
+    border: '1px solid', borderColor: `${color}40`,
+  }}>
+    <Typography sx={{ fontSize: 11, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{value}</Typography>
+    <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.secondary' }}>{label}</Typography>
+  </Box>
+);
+
+// שורה במודאל ההסבר
+const SourceRow = ({ icon, label, desc, color, isDark }: { icon: React.ReactNode; label: string; desc: string; color: string; isDark: boolean }) => (
+  <Box sx={{
+    display: 'flex', alignItems: 'flex-start', gap: 1,
+    p: 1, borderRadius: '10px',
+    bgcolor: isDark ? `${color}1A` : `${color}10`,
+    border: '1px solid', borderColor: `${color}33`,
+  }}>
+    <Box sx={{ flexShrink: 0, mt: 0.25 }}>{icon}</Box>
+    <Box>
+      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color }}>{label}</Typography>
+      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', lineHeight: 1.5 }}>{desc}</Typography>
+    </Box>
+  </Box>
+);
 
 const spin = keyframes`from{transform:rotate(0)}to{transform:rotate(360deg)}`;
 
@@ -88,6 +185,7 @@ const StatCard = ({ icon, value, label, color, isDark }: {
 export const PriceSyncManager = ({ onClose }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
+  const [showHelp, setShowHelp] = useState(false);
   const [status, setStatus] = useState<PriceSyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -329,13 +427,40 @@ export const PriceSyncManager = ({ onClose }: Props) => {
               />
             </Box>
 
-            {/* מתי עודכן */}
+            {/* מתי עודכן + כפתור עזרה */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, color: 'text.secondary' }}>
               <ScheduleIcon sx={{ fontSize: 13 }} />
               <Typography sx={{ fontSize: 11.5 }}>
                 עודכן {formatAge(status?.ageHours ?? null, status?.lastUpdatedISO)}
               </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setShowHelp(true)}
+                sx={{ ml: 0.5, p: 0.25, color: '#0D9488' }}
+                aria-label="הסבר מפורט על המאגר"
+                title="איך פועל המאגר? - הסבר לאדמין"
+              >
+                <HelpOutlineIcon sx={{ fontSize: 16 }} />
+              </IconButton>
             </Box>
+
+            {/* ===== פיזור מקורות הסניפים - מידע מפורט לאדמין ===== */}
+            {status?.branchSourceBreakdown && (
+              <Box sx={{
+                display: 'flex', flexWrap: 'wrap', gap: 0.5,
+                p: 1, borderRadius: '10px',
+                bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                border: '1px solid', borderColor: 'divider',
+              }}>
+                <SourceChip label="פורטל" value={status.branchSourceBreakdown.portal} color="#10B981" isDark={isDark} />
+                <SourceChip label="מקורב" value={status.branchSourceBreakdown.geocoded} color="#0D9488" isDark={isDark} />
+                <SourceChip label="ידני" value={status.branchSourceBreakdown.manual} color="#7C3AED" isDark={isDark} />
+                <SourceChip label="לא מדויק" value={status.branchSourceBreakdown.unknown} color="#F59E0B" isDark={isDark} />
+                {status.branchSourceBreakdown.noCoords > 0 && (
+                  <SourceChip label="חסר מיקום" value={status.branchSourceBreakdown.noCoords} color="#DC2626" isDark={isDark} />
+                )}
+              </Box>
+            )}
 
             {/* ===== באנר פרוגרס בזמן סנכרון פעיל ===== */}
             {syncActive && (() => {
@@ -850,6 +975,7 @@ export const PriceSyncManager = ({ onClose }: Props) => {
           </>
         )}
       </Box>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} isDark={isDark} />}
     </Modal>
   );
 };
