@@ -26,7 +26,7 @@ import type { LocalNotification } from '../../../global/hooks';
 import type { PersistedNotification } from '../../../services/api';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic, LIST_ICONS, GROUP_ICONS, LIST_COLORS, MENU_OPTIONS, SIZES, COMMON_STYLES, canShowSecondaryPopup, markPopupShown } from '../../../global/helpers';
-import { Modal, ConfirmModal, ListMenu, QRScanner } from '../../../global/components';
+import { Modal, ConfirmModal, ListMenu, QRScanner, ShimmerBlock } from '../../../global/components';
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
@@ -1024,9 +1024,25 @@ export const HomeComponent = memo(({
             </Button>
           </Box>
         ) : listsLoading && display.length === 0 ? (
-          // טוען בשקט - לא מציגים empty-state ולא סקלטון נוסף (PageSkeleton של
-          // ה-Suspense כבר הוצג לפני). מונע ריצוד של 2 סקלטונים שונים.
-          <Box sx={{ minHeight: '60vh' }} />
+          // סקלטון בצורת כרטיסי רשימות - נותן ללקוח תחושה שמשהו טוען וכבר תופס
+          // את המקום שהרשימות יתפסו, במקום מסך ריק לבן.
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, px: { xs: 1.5, sm: 2.5 }, pt: 1 }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Box key={i} sx={{
+                display: 'flex', alignItems: 'center', gap: 1.25,
+                p: 1.5, borderRadius: '16px',
+                bgcolor: 'background.paper',
+                border: '1px solid', borderColor: 'divider',
+              }}>
+                <ShimmerBlock width={44} height={44} radius={12} />
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  <ShimmerBlock width="60%" height={14} radius={6} />
+                  <ShimmerBlock width="35%" height={11} radius={6} />
+                </Box>
+                <ShimmerBlock width={24} height={24} radius={6} />
+              </Box>
+            ))}
+          </Box>
         ) : display.length === 0 ? (
           // ממלא את כל הגובה כדי שהאייקון יהיה במרכז אנכי במסך, לא מעל באמצע
           <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
