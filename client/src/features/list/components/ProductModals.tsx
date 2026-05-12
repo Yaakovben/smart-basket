@@ -216,8 +216,9 @@ const CategoryGrid = memo(({ selected, onSelect }: {
   onSelect: (cat: ProductCategory) => void;
 }) => {
   const { t } = useSettings();
-  const selectedIdx = ALL_CATS.findIndex(([c]) => c === selected);
-  const [showAll, setShowAll] = useState(selectedIdx >= COLLAPSED_CATS);
+  // תמיד סגור בכניסה - 8 הקטגוריות הראשונות בלבד. גם אם הקטגוריה הנבחרת
+  // היא 'אחר' (ברירת המחדל, ב-index 13) - הגריד נשאר מצומצם עד שהמשתמש לוחץ.
+  const [showAll, setShowAll] = useState(false);
   const visible = showAll ? ALL_CATS : ALL_CATS.slice(0, COLLAPSED_CATS);
   const hidden = ALL_CATS.length - COLLAPSED_CATS;
 
