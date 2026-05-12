@@ -139,14 +139,14 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
           <Box sx={{
             width: { xs: 80, sm: 88 },
             height: { xs: 80, sm: 88 },
-            background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+            background: '#2DD4BF',
             borderRadius: { xs: '22px', sm: '24px' },
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
             mb: { xs: 2.5, sm: 3 },
-            boxShadow: '0 12px 32px rgba(20, 184, 166, 0.3)'
+            boxShadow: '0 12px 32px rgba(45, 212, 191, 0.3)'
           }}>
             <AppLogo />
           </Box>
