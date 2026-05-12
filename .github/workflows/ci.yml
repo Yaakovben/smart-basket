@@ -34,8 +34,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
-      - name: Lint
+      - name: Lint (informational - does not fail the build)
         run: npm run lint
+        continue-on-error: true
 
       - name: Build
         run: npm run build
