@@ -37,6 +37,14 @@ const fadeOut = keyframes`
   to   { opacity: 0; transform: translate(-50%, -6px); }
 `;
 
+// אייקון הסל הזעיר רוכב על הפס, מאזן (translateY) קל לתחושת קפיצה עדינה.
+// הריצה תואמת לקצב של הפס הראשי (1.4s).
+const basketRide = keyframes`
+  0%   { left: -6px;  transform: translateY(0); }
+  50%  { transform: translateY(-2px); }
+  100% { left: calc(100% - 14px); transform: translateY(0); }
+`;
+
 interface Props {
   active: boolean;
   color?: string;
@@ -89,8 +97,31 @@ export const TopProgressBar = ({ active, color = '#14B8A6', label }: Props) => {
         minWidth: 200,
       }}>
         <Box sx={{
+          // עטיפה חיצונית - שומרת על מיקום יחסי לאייקון הסל הרוכב מעל הפס.
+          // ה-overflow:visible כאן חיוני - אחרת הסל ייחתך.
           position: 'relative',
           width: 160,
+          pt: '14px',
+        }}>
+          {/* אייקון הסל הזעיר שרוכב מעל הפס - "השליח" שמביא את הנתונים */}
+          <Box
+            component="span"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: '-6px',
+              fontSize: 13,
+              lineHeight: 1,
+              filter: `drop-shadow(0 1px 2px ${color}66)`,
+              animation: `${basketRide} 1.4s ease-in-out infinite`,
+              pointerEvents: 'none',
+            }}
+          >
+            🛒
+          </Box>
+        <Box sx={{
+          position: 'relative',
+          width: '100%',
           height: 5,
           bgcolor: `${color}1A`,
           borderRadius: 999,
@@ -121,6 +152,7 @@ export const TopProgressBar = ({ active, color = '#14B8A6', label }: Props) => {
             animation: `${slideSecondary} 2.1s ease-in-out infinite`,
             animationDelay: '0.4s',
           }} />
+        </Box>
         </Box>
         {label && (
           <Typography sx={{
