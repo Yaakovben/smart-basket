@@ -269,8 +269,3 @@ export async function markAllAsRead(userId: string, listId?: string): Promise<nu
 export async function deleteNotificationsForList(listId: string): Promise<number> {
   return NotificationDAL.deleteByListId(listId);
 }
-
-/** מחיקה ידנית של התראות ישנות. TTL אינדקס עושה את זה אוטומטית. */
-export async function deleteOldNotifications(days: number): Promise<number> {
-  return NotificationDAL.deleteOldNotifications(days);
-}

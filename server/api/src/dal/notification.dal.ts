@@ -1,6 +1,6 @@
 import mongoose, { type ClientSession } from 'mongoose';
 import { Notification, type INotificationDoc, type NotificationType } from '../models';
-import { BaseDAL } from './base.dal';
+import { createBaseDal } from './base.dal';
 
 export interface CreateNotificationInput {
   type: NotificationType;
@@ -20,10 +20,8 @@ export interface PaginationOptions {
   unreadOnly?: boolean;
 }
 
-class NotificationDALClass extends BaseDAL<INotificationDoc> {
-  constructor() {
-    super(Notification);
-  }
+export const NotificationDAL = {
+  ...createBaseDal<INotificationDoc>(Notification),
 
   async findByUser(userId: string, options: PaginationOptions = {}): Promise<{ notifications: INotificationDoc[]; total: number; pages: number }> {
     const page = options.page || 1;
@@ -35,12 +33,12 @@ class NotificationDALClass extends BaseDAL<INotificationDoc> {
     if (options.unreadOnly) filter.read = false;
 
     const [notifications, total] = await Promise.all([
-      this.model
+      Notification
         .find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      this.model.countDocuments(filter),
+      Notification.countDocuments(filter),
     ]);
 
     return {
@@ -48,56 +46,54 @@ class NotificationDALClass extends BaseDAL<INotificationDoc> {
       total,
       pages: Math.ceil(total / limit),
     };
-  }
+  },
 
   async countUnread(userId: string, listId?: string): Promise<number> {
     const filter: Record<string, unknown> = { targetUserId: userId, read: false };
     if (listId) filter.listId = listId;
-    return this.model.countDocuments(filter);
-  }
+    return Notification.countDocuments(filter);
+  },
 
   async markAsRead(notificationId: string): Promise<INotificationDoc | null> {
-    return this.model.findByIdAndUpdate(notificationId, { read: true }, { new: true });
-  }
+    return Notification.findByIdAndUpdate(notificationId, { read: true }, { new: true });
+  },
 
   async markAllAsRead(userId: string, listId?: string): Promise<number> {
     const filter: Record<string, unknown> = { targetUserId: userId, read: false };
     if (listId) filter.listId = listId;
 
-    const result = await this.model.updateMany(filter, { read: true });
+    const result = await Notification.updateMany(filter, { read: true });
     return result.modifiedCount;
-  }
+  },
 
   async createNotification(input: CreateNotificationInput): Promise<INotificationDoc> {
-    return this.model.create(input) as Promise<INotificationDoc>;
-  }
+    return Notification.create(input) as Promise<INotificationDoc>;
+  },
 
   async createMany(notifications: CreateNotificationInput[]): Promise<INotificationDoc[]> {
-    const docs = await this.model.insertMany(notifications);
+    const docs = await Notification.insertMany(notifications);
     return docs as unknown as INotificationDoc[];
-  }
+  },
 
   async deleteByListId(listId: string): Promise<number> {
-    const result = await this.model.deleteMany({ listId });
+    const result = await Notification.deleteMany({ listId });
     return result.deletedCount;
-  }
+  },
 
   async deleteOldNotifications(days: number): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const result = await this.model.deleteMany({ createdAt: { $lt: cutoffDate } });
+    const result = await Notification.deleteMany({ createdAt: { $lt: cutoffDate } });
     return result.deletedCount;
-  }
+  },
 
   async deleteByUserId(userId: string, session: ClientSession): Promise<number> {
     const uid = new mongoose.Types.ObjectId(userId);
-    const result = await this.model.deleteMany(
+    const result = await Notification.deleteMany(
       { $or: [{ actorId: uid }, { targetUserId: uid }] },
       { session }
     );
     return result.deletedCount;
-  }
-}
-
-export const NotificationDAL = new NotificationDALClass();
+  },
+};

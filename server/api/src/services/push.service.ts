@@ -33,7 +33,7 @@ export interface PushPayload {
 // ============== הגדרות ==============
 
 /** האם Push מופעל כלל (יש מפתחות VAPID). */
-export function isEnabled(): boolean {
+function isEnabled(): boolean {
   return !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
 }
 

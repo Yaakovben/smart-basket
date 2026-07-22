@@ -1,4 +1,5 @@
-import type { List } from '../../../global/types';
+import type { List, User, ToastType } from '../../../global/types';
+import type { PersistedNotification } from '../../../services/api';
 
 // ===== טיפוסי מצב טופס =====
 export interface NewListForm {
@@ -63,4 +64,25 @@ export interface UseHomeReturn {
   updateEditListField: <K extends keyof List>(field: K, value: List[K]) => void;
   saveEditList: () => void;
   deleteList: () => void;
+}
+
+// ===== Props של HomeComponent =====
+export interface HomePageProps {
+  lists: List[];
+  listsLoading?: boolean;
+  listsFetchError?: boolean;
+  user: User;
+  onSelectList: (list: List) => void;
+  onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;
+  onDeleteList: (listId: string) => void | Promise<void>;
+  onLeaveList?: (listId: string) => void | Promise<void>;
+  onEditList: (list: List) => void | Promise<void>;
+  onJoinGroup: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  onLogout: () => void;
+  showToast: (message: string, type?: ToastType) => void;
+  // התראות שמורות מה-API
+  persistedNotifications?: PersistedNotification[];
+  notificationsLoading?: boolean;
+  onMarkPersistedNotificationRead?: (notificationId: string) => void;
+  onClearAllPersistedNotifications?: (listId?: string) => void;
 }

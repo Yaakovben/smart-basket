@@ -18,10 +18,7 @@ export {
   GROUP_ICONS,
   LIST_COLORS,
   SWIPE_ACTIONS_WIDTH,
-  STORAGE_KEYS,
   MENU_OPTIONS,
-  DEFAULT_SETTINGS,
-  LANGUAGES,
   SIZES,
   COMMON_STYLES,
   BRAND_COLORS,
@@ -36,15 +33,11 @@ export {
 
 // עיצוב תאריכים
 export {
-  getLocale,
-  formatDateLong,
   formatDateShort,
   formatTimeShort,
   getRelativeTime,
   isToday,
-  isYesterday,
   isActiveToday,
-  isActiveThisWeek,
   isActiveThisMonth
 } from './dateFormatting';
 

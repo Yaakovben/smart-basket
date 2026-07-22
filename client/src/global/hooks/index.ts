@@ -6,8 +6,6 @@ import { getAccessToken, clearTokens, rehydrateTokensFromIdb } from "../../servi
 
 // ייצוא חוזר
 export { useDebounce } from './useDebounce';
-export { useIsDark } from './useIsDark';
-export { useBodyScrollLock } from './useBodyScrollLock';
 export { useSocketNotifications, type LocalNotification } from './useSocketNotifications';
 export { useServiceWorker } from './useServiceWorker';
 export { useNotifications } from './useNotifications';
@@ -266,7 +264,7 @@ export function useAuth() {
 }
 
 // המרת חבר מפורמט API לפורמט לקוח
-export const convertApiMember = (apiMember: ApiMember): Member => ({
+const convertApiMember = (apiMember: ApiMember): Member => ({
   id: apiMember.user.id,
   name: apiMember.user.name,
   email: apiMember.user.email,

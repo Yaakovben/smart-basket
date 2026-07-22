@@ -8,8 +8,6 @@ import { broadcastProductAdded, broadcastProductToggled, broadcastProductDeleted
 let subscriber: Redis | null = null;
 let isRedisHealthy = false;
 
-export const getRedisHealth = (): boolean => isRedisHealthy;
-
 interface RedisEvent {
   type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted';
   listId: string;

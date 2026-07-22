@@ -115,5 +115,3 @@ export const listsApi = {
     return response.data.data;
   },
 };
-
-export default listsApi;

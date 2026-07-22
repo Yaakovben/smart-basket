@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
-import { BaseDAL } from '../../dal/base.dal';
+import { createBaseDal } from '../../dal/base.dal';
 import { DailyFaith, type IDailyFaith } from './daily-faith.model';
 
-class DailyFaithDALClass extends BaseDAL<IDailyFaith> {
-  constructor() {
-    super(DailyFaith);
-  }
+export const DailyFaithDAL = {
+  ...createBaseDal<IDailyFaith>(DailyFaith),
 
   async findAllSorted(): Promise<IDailyFaith[]> {
-    return this.model.find({}).sort({ createdAt: -1 });
-  }
+    return DailyFaith.find({}).sort({ createdAt: -1 });
+  },
 
   /**
    * מחזיר ציטוט אקראי אחד. אם מועברים מזהים להחרגה, מנסה קודם
@@ -25,18 +23,16 @@ class DailyFaithDALClass extends BaseDAL<IDailyFaith> {
     const tryExclude = excludeObjectIds.length > 0;
 
     if (tryExclude) {
-      const filtered = await this.model.aggregate([
+      const filtered = await DailyFaith.aggregate([
         { $match: { _id: { $nin: excludeObjectIds } } },
         { $sample: { size: 1 } },
       ]);
-      if (filtered[0]) return this.model.findById(filtered[0]._id);
+      if (filtered[0]) return DailyFaith.findById(filtered[0]._id);
       // כל המשפטים במאגר נצפו — נופלים למשפט אקראי לחלוטין
     }
 
-    const result = await this.model.aggregate([{ $sample: { size: 1 } }]);
+    const result = await DailyFaith.aggregate([{ $sample: { size: 1 } }]);
     if (!result[0]) return null;
-    return this.model.findById(result[0]._id);
-  }
-}
-
-export const DailyFaithDAL = new DailyFaithDALClass();
+    return DailyFaith.findById(result[0]._id);
+  },
+};

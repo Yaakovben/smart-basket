@@ -86,5 +86,3 @@ export const notificationsApi = {
     return response.data.data.markedCount;
   },
 };
-
-export default notificationsApi;

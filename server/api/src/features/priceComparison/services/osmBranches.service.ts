@@ -184,7 +184,7 @@ async function tryOverpassEndpoint(
  * מנסה כמה nodes ציבוריים של Overpass ברצף עד שאחד מצליח.
  * מחזיר מערך ריק אם כולם נכשלו (לוג מפורט בלוגים).
  */
-export async function fetchOsmBranches(chainId: ChainId): Promise<OsmBranch[]> {
+async function fetchOsmBranches(chainId: ChainId): Promise<OsmBranch[]> {
   const query = buildOverpassQuery(chainId);
   if (!query) return [];
 

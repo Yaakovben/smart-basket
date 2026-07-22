@@ -11,16 +11,6 @@ export const getLocale = (language: Language): string => {
 };
 
 // ===== עיצוב תאריכים =====
-export const formatDateLong = (timestamp: string, language: Language): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString(getLocale(language), {
-    weekday: 'long',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
-
 export const formatDateShort = (timestamp: string, language: Language): string => {
   const date = new Date(timestamp);
   return date.toLocaleDateString(getLocale(language), {
@@ -87,17 +77,8 @@ const todayStr = () => new Date().toISOString().split('T')[0];
 
 export const isToday = (dateStr: string): boolean => dateStr === todayStr();
 
-export const isYesterday = (dateStr: string): boolean => {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return dateStr === d.toISOString().split('T')[0];
-};
-
 export const isActiveToday = (timestamp?: string): boolean =>
   !!timestamp && timestamp.startsWith(todayStr());
-
-export const isActiveThisWeek = (timestamp?: string): boolean =>
-  !!timestamp && new Date(timestamp) > new Date(Date.now() - 7 * 86400000);
 
 export const isActiveThisMonth = (timestamp?: string): boolean => {
   if (!timestamp) return false;

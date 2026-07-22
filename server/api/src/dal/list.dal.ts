@@ -1,43 +1,41 @@
 import crypto from 'crypto';
 import mongoose, { type ClientSession } from 'mongoose';
 import { List, type IList } from '../models';
-import { BaseDAL } from './base.dal';
+import { createBaseDal } from './base.dal';
 import { AppError } from '../errors';
 
-class ListDALClass extends BaseDAL<IList> {
-  constructor() {
-    super(List);
-  }
+export const ListDAL = {
+  ...createBaseDal<IList>(List),
 
   async findUserLists(userId: string): Promise<IList[]> {
     const uid = new mongoose.Types.ObjectId(userId);
-    return this.model.find({
+    return List.find({
       $or: [{ owner: uid }, { 'members.user': uid }],
     }).sort({ updatedAt: -1 });
-  }
+  },
 
   async findUserListsPopulated(userId: string): Promise<IList[]> {
     const uid = new mongoose.Types.ObjectId(userId);
-    return this.model
+    return List
       .find({ $or: [{ owner: uid }, { 'members.user': uid }] })
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
       .populate('members.user', 'name email avatarColor avatarEmoji')
       .sort({ updatedAt: -1 });
-  }
+  },
 
   async findByIdPopulated(listId: string): Promise<IList | null> {
-    return this.model
+    return List
       .findById(listId)
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
       .populate('members.user', 'name email avatarColor avatarEmoji');
-  }
+  },
 
   async findByInviteCode(inviteCode: string): Promise<IList | null> {
-    return this.model.findOne({ inviteCode: inviteCode.toUpperCase() });
-  }
+    return List.findOne({ inviteCode: inviteCode.toUpperCase() });
+  },
 
   async addMember(listId: string, userId: string, isAdmin = false): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
+    return List.findByIdAndUpdate(
       listId,
       {
         $push: {
@@ -50,32 +48,32 @@ class ListDALClass extends BaseDAL<IList> {
       },
       { new: true }
     );
-  }
+  },
 
   async removeMember(listId: string, userId: string): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(
+    return List.findByIdAndUpdate(
       listId,
       { $pull: { members: { user: new mongoose.Types.ObjectId(userId) } } },
       { new: true }
     );
-  }
+  },
 
   async setMemberAdmin(listId: string, memberId: string, isAdmin: boolean): Promise<IList | null> {
-    return this.model.findOneAndUpdate(
+    return List.findOneAndUpdate(
       { _id: listId, 'members.user': new mongoose.Types.ObjectId(memberId) },
       { $set: { 'members.$.isAdmin': isAdmin } },
       { new: true }
     );
-  }
+  },
 
   async isMember(listId: string, userId: string): Promise<boolean> {
-    const list = await this.model.findById(listId);
+    const list = await List.findById(listId);
     if (!list) return false;
     return (
       list.owner.toString() === userId ||
       list.members.some((m) => m.user.toString() === userId)
     );
-  }
+  },
 
   // יצירת קוד הזמנה ייחודי בן 6 תווים
   async generateUniqueInviteCode(): Promise<string> {
@@ -88,58 +86,56 @@ class ListDALClass extends BaseDAL<IList> {
       for (let i = 0; i < 6; i++) {
         code += chars.charAt(bytes[i] % chars.length);
       }
-      const existing = await this.model.findOne({ inviteCode: code });
+      const existing = await List.findOne({ inviteCode: code });
       if (!existing) return code;
     }
 
     throw new AppError('Failed to generate unique invite code after maximum retries', 500, 'INVITE_CODE_GENERATION_FAILED');
-  }
+  },
 
   // עדכון updatedAt של הרשימה כשמוצרים משתנים (מוצרים בקולקשן נפרד)
   async touchUpdatedAt(listId: string): Promise<void> {
-    await this.model.updateOne(
+    await List.updateOne(
       { _id: listId },
       { $set: { updatedAt: new Date() } }
     );
-  }
+  },
 
   // מתודות עם session לטרנזקציות
   async findPrivateListIds(ownerId: string, session: ClientSession): Promise<string[]> {
     const uid = new mongoose.Types.ObjectId(ownerId);
-    const lists = await this.model.find({ owner: uid, isGroup: false }, { _id: 1 }).session(session).lean();
+    const lists = await List.find({ owner: uid, isGroup: false }, { _id: 1 }).session(session).lean();
     return lists.map(l => l._id.toString());
-  }
+  },
 
   async deletePrivateLists(ownerId: string, session: ClientSession): Promise<number> {
     const uid = new mongoose.Types.ObjectId(ownerId);
-    const result = await this.model.deleteMany({ owner: uid, isGroup: false }, { session });
+    const result = await List.deleteMany({ owner: uid, isGroup: false }, { session });
     return result.deletedCount;
-  }
+  },
 
   async findOwnedGroups(ownerId: string, session: ClientSession): Promise<IList[]> {
     const uid = new mongoose.Types.ObjectId(ownerId);
-    return this.model.find({ owner: uid, isGroup: true }).session(session);
-  }
+    return List.find({ owner: uid, isGroup: true }).session(session);
+  },
 
   async transferOwnership(listId: string, newOwnerId: mongoose.Types.ObjectId, session: ClientSession): Promise<IList | null> {
-    return this.model.findByIdAndUpdate(listId, {
+    return List.findByIdAndUpdate(listId, {
       $set: { owner: newOwnerId },
       $pull: { members: { user: newOwnerId } }
     }, { session, new: true });
-  }
+  },
 
   async deleteByIdWithSession(listId: string, session: ClientSession): Promise<IList | null> {
-    return this.model.findByIdAndDelete(listId, { session });
-  }
+    return List.findByIdAndDelete(listId, { session });
+  },
 
   async removeUserFromAllLists(userId: string, session: ClientSession): Promise<void> {
     const uid = new mongoose.Types.ObjectId(userId);
-    await this.model.updateMany(
+    await List.updateMany(
       { 'members.user': uid },
       { $pull: { members: { user: uid } } },
       { session }
     );
-  }
-}
-
-export const ListDAL = new ListDALClass();
+  },
+};

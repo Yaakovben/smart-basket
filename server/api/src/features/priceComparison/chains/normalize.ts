@@ -63,33 +63,3 @@ export function stemHebrew(word: string): string {
   return word;
 }
 
-export function tokensSimilar(a: string, b: string): boolean {
-  if (a === b) return true;
-  // התאמה לפי תחילית: מילה אחת מתחילה במילה השנייה ובהפרש קל בלבד.
-  // למשל "חלב" מול "חלבי" - אותו מוצר ביסודו.
-  if (a.length >= 4 && b.length >= 4) {
-    if (a.startsWith(b) && a.length - b.length <= 2) return true;
-    if (b.startsWith(a) && b.length - a.length <= 2) return true;
-  }
-  const sa = stemHebrew(a);
-  const sb = stemHebrew(b);
-  return sa === sb && (sa !== a || sb !== b);
-}
-
-// התאמת שם מוצר של המשתמש לשם של רשת.
-// משתמש ב-tokensSimilar לטובת זיהוי וריאציות כתיב/סיומות, לא רק התאמה מדויקת.
-// רף ההתאמה: 60% מהטוקנים של המשתמש חייבים להופיע.
-// לחיפושים קצרים (טוקן יחיד) הרף יורד ל-100% (חייב להיות שם).
-export function isLikelyMatch(userName: string, chainName: string): boolean {
-  const userTokens = normalizeProductName(userName).split(' ').filter(Boolean);
-  const chainTokens = normalizeProductName(chainName).split(' ').filter(Boolean);
-  if (userTokens.length === 0) return false;
-  let hits = 0;
-  for (const ut of userTokens) {
-    // התאמה מדויקת או לפי שורש/תחילית
-    if (chainTokens.some(ct => tokensSimilar(ut, ct))) hits++;
-  }
-  // טוקן יחיד = חייב התאמה. שניים+ = 60% מספיק.
-  const threshold = userTokens.length === 1 ? 1 : 0.6;
-  return hits / userTokens.length >= threshold;
-}

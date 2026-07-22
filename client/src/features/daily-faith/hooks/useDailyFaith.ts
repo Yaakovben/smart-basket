@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
-import { markPopupShown, safeStorage } from '../../global/helpers';
+import { dailyFaithApi, type DailyFaith } from '../services/daily-faith.api';
+import { markPopupShown, safeStorage } from '../../../global/helpers';
 
 const STORAGE_KEY = 'sb_daily_faith_last_shown';
 const PENDING_KEY = 'sb_daily_faith_pending'; // משפט שהוצג ועדיין לא נסגר - יוצג שוב עד שילחץ סגור

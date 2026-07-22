@@ -5,7 +5,7 @@ interface VapidKeyResponse {
 }
 
 /** קבלת מפתח VAPID ציבורי */
-export const getVapidPublicKey = async (): Promise<string | null> => {
+const getVapidPublicKey = async (): Promise<string | null> => {
   try {
     const response = await apiClient.get<{ data: VapidKeyResponse }>('/push/vapid-public-key');
     return response.data.data.publicKey;
@@ -15,7 +15,7 @@ export const getVapidPublicKey = async (): Promise<string | null> => {
 };
 
 /** הרשמה להתראות push */
-export const subscribeToPush = async (subscription: PushSubscription): Promise<boolean> => {
+const subscribeToPush = async (subscription: PushSubscription): Promise<boolean> => {
   try {
     await apiClient.post('/push/subscribe', {
       subscription: subscription.toJSON(),
@@ -27,7 +27,7 @@ export const subscribeToPush = async (subscription: PushSubscription): Promise<b
 };
 
 /** ביטול הרשמה להתראות push */
-export const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> => {
+const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> => {
   try {
     await apiClient.post('/push/unsubscribe', { endpoint });
     return true;
@@ -37,7 +37,7 @@ export const unsubscribeFromPush = async (endpoint?: string): Promise<boolean> =
 };
 
 /** ביטול כל ההרשמות ל-push (דפדפן + שרת). משמש ב-logout. */
-export const unsubscribeAllPush = async (): Promise<void> => {
+const unsubscribeAllPush = async (): Promise<void> => {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       return;

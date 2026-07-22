@@ -62,5 +62,3 @@ export const productsApi = {
     await apiClient.delete(`/lists/${listId}/products/${productId}`);
   },
 };
-
-export default productsApi;

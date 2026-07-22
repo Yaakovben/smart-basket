@@ -34,7 +34,7 @@ export interface UserLocation {
 const EARTH_RADIUS_KM = 6371;
 
 // חישוב מרחק בין שתי נקודות ב-GPS בנוסחת Haversine.
-export function haversineKm(a: UserLocation, b: UserLocation): number {
+function haversineKm(a: UserLocation, b: UserLocation): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);

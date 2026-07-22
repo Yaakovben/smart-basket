@@ -1,4 +1,3 @@
-export { BaseDAL } from './base.dal';
 export { UserDAL } from './user.dal';
 export { ListDAL } from './list.dal';
 export { ProductDAL } from './product.dal';

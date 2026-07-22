@@ -109,7 +109,7 @@ const CLEANUP_OLDER_THAN_DAYS = 14;
 const CLEANUP_BATCH_SIZE = 1000;
 const CLEANUP_MAX_BATCHES = 100; // עד 100K מסמכים בריצה - די לכל יום
 
-export async function cleanupOldPrices(trigger: 'cron' | 'manual' = 'manual'): Promise<{ deleted: number }> {
+async function cleanupOldPrices(trigger: 'cron' | 'manual' = 'manual'): Promise<{ deleted: number }> {
   const result = await cleanupOldPricesImpl(trigger);
   return result;
 }

@@ -2,17 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, keyframes } from '@mui/material';
 
-// כלי עזר: ימים יחסיים בעברית מדויקת ("3 ימים", "יום", "שבוע")
-const formatDaysHebrew = (days: number): string => {
-  if (days <= 0) return 'היום';
-  if (days === 1) return 'יום';
-  if (days === 2) return 'יומיים';
-  if (days < 7) return `${days} ימים`;
-  if (days < 14) return 'שבוע';
-  if (days < 30) return `${Math.round(days / 7)} שבועות`;
-  return `${Math.round(days / 30)} חודשים`;
-};
-
 // אנימציות משותפות לעמוד התובנות
 export const float = keyframes`0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}`;
 export const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
@@ -689,8 +678,6 @@ export const GroupLeadershipHero = ({ leadingCount, totalGroups }: {
     </Box>
   );
 };
-
-export { formatDaysHebrew };
 
 // ===== Category Donut - דונאט אנימטיבי במקום בר שטוח =====
 // SVG טהור, בלי תלות חיצונית. סיבוב הדרגתי, hover להגדלה,

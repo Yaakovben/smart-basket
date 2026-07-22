@@ -139,5 +139,3 @@ export const authApi = {
     clearTokens();
   },
 };
-
-export default authApi;

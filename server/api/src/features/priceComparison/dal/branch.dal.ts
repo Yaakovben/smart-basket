@@ -1,6 +1,6 @@
 import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
-import { BaseDAL } from '../../../dal/base.dal';
+import { createBaseDal } from '../../../dal/base.dal';
 
 export interface UpsertBranchInput {
   chainId: ChainId;
@@ -18,17 +18,15 @@ export interface UpsertBranchInput {
   storeType?: string;
 }
 
-class BranchDALClass extends BaseDAL<IBranchDoc> {
-  constructor() {
-    super(Branch);
-  }
+export const BranchDAL = {
+  ...createBaseDal<IBranchDoc>(Branch),
 
   async bulkUpsert(items: UpsertBranchInput[]) {
     if (items.length === 0) return 0;
     // שאיבת רשימת סניפים שמסומנים coordSource='manual' - לא נוגעים בהם בכלל.
     // ההגדרות הידניות הן הכי מדויקות ולא צריך לדרוס אותן בסנכרון אוטומטי.
     const keys = items.map(i => ({ chainId: i.chainId, storeId: i.storeId }));
-    const manualBranches = await this.model.find(
+    const manualBranches = await Branch.find(
       { $or: keys, coordSource: 'manual' },
       { chainId: 1, storeId: 1 }
     ).lean();
@@ -69,35 +67,35 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
         },
       };
     });
-    const res = await this.model.bulkWrite(ops, { ordered: false });
+    const res = await Branch.bulkWrite(ops, { ordered: false });
     return (res.upsertedCount || 0) + (res.modifiedCount || 0);
-  }
+  },
 
   // כל הסניפים של רשת - לחישוב נציג קרוב ל-user
   async findByChain(chainId: ChainId) {
-    return this.model.find({ chainId }).sort({ city: 1, storeName: 1 }).lean();
-  }
+    return Branch.find({ chainId }).sort({ city: 1, storeName: 1 }).lean();
+  },
 
   // כל הסניפים - לחישוב כל הרשתות בבת אחת (cached ב-service)
   async findAll() {
-    return this.model.find({}).lean();
-  }
+    return Branch.find({}).lean();
+  },
 
   // סניפים שחסר להם lat/lng - לרוץ geocoding עליהם
   async findMissingCoords(limit = 50) {
-    return this.model
+    return Branch
       .find({ $or: [{ lat: { $exists: false } }, { lat: null }] })
       .limit(limit)
       .lean();
-  }
+  },
 
   async updateCoords(id: string, lat: number, lng: number, source: 'portal' | 'geocoded' | 'manual' | 'unknown') {
-    return this.model.updateOne({ _id: id }, { $set: { lat, lng, coordSource: source } });
-  }
+    return Branch.updateOne({ _id: id }, { $set: { lat, lng, coordSource: source } });
+  },
 
   // ספירת סניפים לפי רשת - למסך אדמין
   async countsByChain(): Promise<Array<{ chainId: ChainId; count: number; withCoords: number }>> {
-    const res = await this.model.aggregate<{ _id: ChainId; count: number; withCoords: number }>([
+    const res = await Branch.aggregate<{ _id: ChainId; count: number; withCoords: number }>([
       {
         $group: {
           _id: '$chainId',
@@ -109,11 +107,11 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
       },
     ]);
     return res.map(r => ({ chainId: r._id, count: r.count, withCoords: r.withCoords }));
-  }
+  },
 
   // ספירה גלובלית לפי coordSource - לצורך תצוגת אדמין מפורטת
   async countsBySource(): Promise<{ portal: number; geocoded: number; manual: number; unknown: number; noCoords: number; total: number }> {
-    const res = await this.model.aggregate<{ _id: string; count: number; withCoords: number }>([
+    const res = await Branch.aggregate<{ _id: string; count: number; withCoords: number }>([
       {
         $group: {
           _id: '$coordSource',
@@ -133,7 +131,5 @@ class BranchDALClass extends BaseDAL<IBranchDoc> {
       result.total += r.count;
     }
     return result;
-  }
-}
-
-export const BranchDAL = new BranchDALClass();
+  },
+};

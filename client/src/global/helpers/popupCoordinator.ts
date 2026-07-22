@@ -17,7 +17,7 @@ type PopupKind = 'daily-faith' | 'pwa-install' | 'push-notify';
 const SESSION_KEY = 'sb_popup_shown_session';
 
 // האם כבר הוצג popup כלשהו בסשן הנוכחי של הדפדפן?
-export const wasAnyPopupShownThisSession = (): boolean => {
+const wasAnyPopupShownThisSession = (): boolean => {
   try {
     return !!sessionStorage.getItem(SESSION_KEY);
   } catch {

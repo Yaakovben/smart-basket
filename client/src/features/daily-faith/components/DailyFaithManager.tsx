@@ -6,13 +6,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ClearIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Modal } from '../../global/components/Modal';
-import { ConfirmModal } from '../../global/components/ConfirmModal';
-import { ShimmerList } from '../../global/components/Shimmer';
-import { renderFaithText, stripFaithMarkers } from './formatFaithText';
-import { useSettings } from '../../global/context/SettingsContext';
-import { haptic } from '../../global/helpers';
-import { dailyFaithApi, type DailyFaith } from './daily-faith.api';
+import { Modal } from '../../../global/components/Modal';
+import { ConfirmModal } from '../../../global/components/ConfirmModal';
+import { ShimmerList } from '../../../global/components/Shimmer';
+import { renderFaithText, stripFaithMarkers } from '../helpers/formatFaithText';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { haptic } from '../../../global/helpers';
+import { dailyFaithApi, type DailyFaith } from '../services/daily-faith.api';
 
 interface Props {
   onClose: () => void;

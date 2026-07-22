@@ -108,5 +108,3 @@ export interface DbHealth {
   collectionCount: number;
   collections: DbHealthCollection[];
 }
-
-export default adminApi;

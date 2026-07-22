@@ -80,7 +80,7 @@ let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
 // timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',

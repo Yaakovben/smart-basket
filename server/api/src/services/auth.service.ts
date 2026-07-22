@@ -9,7 +9,7 @@
 import { UserDAL, LoginActivityDAL } from '../dal';
 import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
-import { createTokens, refreshAccessToken, invalidateRefreshToken } from './token.service';
+import { createTokens } from './token.service';
 import { env } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
@@ -151,19 +151,4 @@ export async function googleAuth(
 
   const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'google', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
-}
-
-/**
- * רענון access token באמצעות refresh token.
- * מחזיר null אם ה-refresh פג תוקף / לא תקף.
- */
-export async function refreshToken(refreshTokenValue: string): Promise<AuthTokens | null> {
-  return refreshAccessToken(refreshTokenValue);
-}
-
-/**
- * יציאה מהמערכת — ביטול ה-refresh token הנוכחי בלבד.
- */
-export async function logout(refreshTokenValue: string): Promise<void> {
-  await invalidateRefreshToken(refreshTokenValue);
 }

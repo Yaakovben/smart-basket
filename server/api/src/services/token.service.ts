@@ -20,7 +20,7 @@ import type { TokenPayload, AuthTokens } from '../types';
 /**
  * יוצר access token חדש עם payload של המשתמש.
  */
-export function generateAccessToken(payload: TokenPayload): string {
+function generateAccessToken(payload: TokenPayload): string {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn'],
   });
@@ -29,7 +29,7 @@ export function generateAccessToken(payload: TokenPayload): string {
 /**
  * יוצר refresh token אקראי (מחרוזת הקס של 128 תווים).
  */
-export function generateRefreshToken(): string {
+function generateRefreshToken(): string {
   return crypto.randomBytes(64).toString('hex');
 }
 
@@ -111,17 +111,4 @@ export async function invalidateRefreshToken(refreshToken: string): Promise<void
  */
 export async function invalidateAllUserTokens(userId: string): Promise<void> {
   await TokenDAL.deleteByUser(userId);
-}
-
-// ============== אימות ==============
-
-/**
- * מאמת access token. מחזיר payload אם תקין, null אחרת.
- */
-export function verifyAccessToken(token: string): TokenPayload | null {
-  try {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
-  } catch {
-    return null;
-  }
 }

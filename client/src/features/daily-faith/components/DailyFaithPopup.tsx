@@ -1,8 +1,8 @@
 import { Dialog, Box, Typography, Button, IconButton, Fade } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
-import { useSettings } from '../../global/context/SettingsContext';
-import { haptic } from '../../global/helpers';
-import { renderFaithText, stripFaithMarkers } from './formatFaithText';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { haptic } from '../../../global/helpers';
+import { renderFaithText, stripFaithMarkers } from '../helpers/formatFaithText';
 
 interface DailyFaithPopupProps {
   text: string;

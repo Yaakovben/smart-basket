@@ -21,7 +21,7 @@
 
 import axios from 'axios';
 import { logger } from '../../../config/logger';
-import { parseXmlBuffer, parseStoresXml } from './publishedPrices.factory';
+import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
 } from './types';

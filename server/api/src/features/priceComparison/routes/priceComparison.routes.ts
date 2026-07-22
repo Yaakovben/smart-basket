@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getComparison, refreshPrices, refreshBranches, getStatus, testOsm, loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches, fillMissingAddresses } from '../controllers/priceComparison.controller';
+import { getComparison, refreshPrices, refreshBranches } from '../controllers/sync.controller';
+import { loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches } from '../controllers/branches.controller';
+import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
+import { testOsm } from '../controllers/diagnostics.controller';
+import { getStatus } from '../controllers/status.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();

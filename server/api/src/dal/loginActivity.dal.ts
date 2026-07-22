@@ -1,10 +1,8 @@
 import { LoginActivity, type ILoginActivity, type LoginMethod } from '../models';
-import { BaseDAL } from './base.dal';
+import { createBaseDal } from './base.dal';
 
-class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
-  constructor() {
-    super(LoginActivity);
-  }
+export const LoginActivityDAL = {
+  ...createBaseDal<ILoginActivity>(LoginActivity),
 
   async findPaginated(options: { page?: number; limit?: number } = {}): Promise<{
     activities: ILoginActivity[];
@@ -15,12 +13,12 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     const skip = (page - 1) * limit;
 
     const [activities, total] = await Promise.all([
-      this.model.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean() as unknown as Promise<ILoginActivity[]>,
-      this.model.countDocuments(),
+      LoginActivity.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean() as unknown as Promise<ILoginActivity[]>,
+      LoginActivity.countDocuments(),
     ]);
 
     return { activities, total };
-  }
+  },
 
   // סטטיסטיקות התחברות לכל משתמש
   // משתמש ב-$max במקום $sort+$push - חוסך מיון כבד וצריכת זיכרון
@@ -31,7 +29,7 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     lastLoginMethod: string | null;
     lastAppOpenAt: Date | null;
   }>> {
-    return this.model.aggregate([
+    return LoginActivity.aggregate([
       {
         $group: {
           _id: '$user',
@@ -77,14 +75,14 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
         },
       },
     ]);
-  }
+  },
 
   // ספירת כניסות מתאריך מסוים (כולל ייחודיים)
   async getStatsSince(since: Date): Promise<{
     totalLogins: number;
     uniqueUsers: number;
   }> {
-    const result = await this.model.aggregate([
+    const result = await LoginActivity.aggregate([
       { $match: { createdAt: { $gte: since } } },
       {
         $group: {
@@ -102,16 +100,16 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
       },
     ]);
     return result[0] || { totalLogins: 0, uniqueUsers: 0 };
-  }
+  },
 
   async countSince(since: Date): Promise<number> {
-    return this.model.countDocuments({ createdAt: { $gte: since } });
-  }
+    return LoginActivity.countDocuments({ createdAt: { $gte: since } });
+  },
 
   async deleteByUser(userId: string): Promise<number> {
-    const result = await this.model.deleteMany({ user: userId });
+    const result = await LoginActivity.deleteMany({ user: userId });
     return result.deletedCount;
-  }
+  },
 
   async logActivity(data: {
     userId: string;
@@ -121,7 +119,7 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
     ipAddress?: string;
     userAgent?: string;
   }): Promise<ILoginActivity> {
-    return this.model.create({
+    return LoginActivity.create({
       user: data.userId,
       userName: data.userName,
       userEmail: data.userEmail,
@@ -129,7 +127,5 @@ class LoginActivityDALClass extends BaseDAL<ILoginActivity> {
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
     }) as Promise<ILoginActivity>;
-  }
-}
-
-export const LoginActivityDAL = new LoginActivityDALClass();
+  },
+};

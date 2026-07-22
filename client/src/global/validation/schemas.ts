@@ -1,24 +1,19 @@
 import { z } from 'zod';
 
 // ===== סכמות אימות =====
-export const emailSchema = z
+const emailSchema = z
   .string()
   .min(1, 'enterEmail')
   .email('invalidEmail');
 
-export const passwordSchema = z
+const passwordSchema = z
   .string()
   .min(8, 'passwordTooShort');
 
-export const nameSchema = z
+const nameSchema = z
   .string()
   .min(1, 'enterName')
   .min(2, 'nameTooShort');
-
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, 'enterPassword')
-});
 
 export const registerSchema = z.object({
   name: nameSchema,
@@ -27,12 +22,12 @@ export const registerSchema = z.object({
 });
 
 // ===== סכמות מוצר =====
-export const productNameSchema = z
+const productNameSchema = z
   .string()
   .min(1, 'enterProductName')
   .min(2, 'productNameTooShort');
 
-export const quantitySchema = z
+const quantitySchema = z
   .number()
   .min(1, 'quantityMin');
 
@@ -43,30 +38,9 @@ export const newProductSchema = z.object({
   category: z.string()
 });
 
-// ===== סכמות רשימה =====
-export const listNameSchema = z
-  .string()
-  .min(1, 'enterListName')
-  .min(2, 'nameTooShort');
-
-export const newListSchema = z.object({
-  name: listNameSchema,
-  icon: z.string(),
-  color: z.string()
-});
-
-// ===== סכמת הצטרפות לרשימה =====
-export const joinGroupSchema = z.object({
-  code: z.string().length(6, 'invalidGroupCode'),
-  password: z.string().length(4, 'invalidGroupPassword')
-});
-
 // ===== טיפוסים מסכמות =====
-export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type NewProductFormData = z.infer<typeof newProductSchema>;
-export type NewListFormData = z.infer<typeof newListSchema>;
-export type JoinGroupFormData = z.infer<typeof joinGroupSchema>;
 
 // ===== עזר ולידציה =====
 export type ValidationResult<T> =

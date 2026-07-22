@@ -1,36 +1,32 @@
 import { PushSubscription, type IPushSubscription } from '../models';
-import { BaseDAL } from './base.dal';
+import { createBaseDal } from './base.dal';
 import type { ClientSession } from 'mongoose';
 
-class PushSubscriptionDALClass extends BaseDAL<IPushSubscription> {
-  constructor() {
-    super(PushSubscription);
-  }
+export const PushSubscriptionDAL = {
+  ...createBaseDal<IPushSubscription>(PushSubscription),
 
   async findByUserId(userId: string): Promise<IPushSubscription[]> {
-    return this.model.find({ userId });
-  }
+    return PushSubscription.find({ userId });
+  },
 
   async findByUserIds(userIds: string[]): Promise<IPushSubscription[]> {
-    return this.model.find({ userId: { $in: userIds } });
-  }
+    return PushSubscription.find({ userId: { $in: userIds } });
+  },
 
   async deleteByEndpoint(endpoint: string): Promise<void> {
-    await this.model.deleteOne({ endpoint });
-  }
+    await PushSubscription.deleteOne({ endpoint });
+  },
 
   async deleteByUserAndEndpoint(userId: string, endpoint: string): Promise<void> {
-    await this.model.deleteOne({ userId, endpoint });
-  }
+    await PushSubscription.deleteOne({ userId, endpoint });
+  },
 
   async deleteByUserId(userId: string, session?: ClientSession): Promise<number> {
-    const result = await this.model.deleteMany({ userId }, session ? { session } : {});
+    const result = await PushSubscription.deleteMany({ userId }, session ? { session } : {});
     return result.deletedCount;
-  }
+  },
 
   async countByUserId(userId: string): Promise<number> {
-    return this.model.countDocuments({ userId });
-  }
-}
-
-export const PushSubscriptionDAL = new PushSubscriptionDALClass();
+    return PushSubscription.countDocuments({ userId });
+  },
+};

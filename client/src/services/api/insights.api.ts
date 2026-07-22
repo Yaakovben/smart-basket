@@ -45,6 +45,21 @@ export interface InsightsData {
   categoryCycles: { category: string; avgDays: number; lastPurchased: string; samples: number }[];
   upcomingNeeds: { category: string; daysOverdue: number; nextDateISO: string }[];
   anomalies: { type: 'returning' | 'fading' | 'surge'; category: string; description: string }[];
+  spending: {
+    enabled: boolean;
+    monthTotal: number | null;
+    monthMatchedCount: number;
+    monthUnmatchedCount: number;
+    projectedMonthTotal: number | null;
+    daysElapsed: number;
+    daysInMonth: number;
+    topCategory: { category: string; amount: number; percentage: number } | null;
+    categoryBreakdown: { category: string; amount: number; percentage: number }[];
+    previousMonthTotal: number | null;
+    monthGrowthPct: number | null;
+    hasBaseline: boolean;
+    disclaimer: string;
+  };
 }
 
 // השוואת מחירים הועברה למודול נפרד: src/features/priceComparison

@@ -5,7 +5,7 @@ import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
-import { DailyFaithGate } from "../features/daily-faith";
+import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -13,7 +13,7 @@ import { authApi } from "../services/api";
 import { hideInitialLoader } from "../App";
 
 // טעינה ישירה של דף התחברות בלבד
-import { LoginPage } from "../features/auth/auth";
+import { LoginPage } from "../features/auth/pages/LoginPage";
 
 // טעינה עצלה של כל הדפים כולל דף הבית (prefetch מיידי)
 const homeImport = () => import("../features/home/home").then(m => ({ default: m.HomePage }));
@@ -24,7 +24,7 @@ const ProfilePage = lazy(() => import("../features/profile/profile").then(m => (
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
-const ClearCachePage = lazy(() => import("../features/utils/utils").then(m => ({ default: m.ClearCachePage })));
+const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const InsightsPage = lazy(() => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage })));
 
 // ניתוב QR - שומר code+password ומפנה לדף הבית
@@ -265,11 +265,10 @@ export const AppRouter = () => {
     window.location.replace('/login');
   }, [showToast, t]);
 
-  // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
-  if (authLoading) {
-    return null;
-  }
-
+  // כל ה-hooks (כולל useCallback) חייבים להיקרא לפני ה-early return למטה,
+  // אחרת מספר ה-hooks משתנה בין הרינדור שבו authLoading=true לרינדור שבו
+  // הוא הופך ל-false, וריאקט זורק "Rendered more hooks than during the
+  // previous render" (קורס לכל האפליקציה בכל התחברות טרייה).
   const handleLogin = useCallback((u: User, loginMethod: LoginMethod = 'email') => {
     // מונע שהניווט יקרה לפני עדכון הסטייט (flushSync)
     flushSync(() => {
@@ -277,6 +276,25 @@ export const AppRouter = () => {
     });
     navigate("/");
   }, [login, navigate]);
+
+  // handlers שלא תופסים שגיאות - useHome מטפל ב-UI (ספינר, טוסט, שגיאה).
+  // useCallback - פרופים יציבים מונעים re-render של HomePage memo'd ושל סבים.
+  const handleCreateList = useCallback(async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
+    await createList(list);
+  }, [createList]);
+
+  const handleDeleteList = useCallback(async (id: string) => {
+    await deleteList(id);
+  }, [deleteList]);
+
+  const handleEditList = useCallback(async (list: List) => {
+    await updateList(list);
+  }, [updateList]);
+
+  // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
+  if (authLoading) {
+    return null;
+  }
 
   const handleLogout = () => {
     logout();
@@ -297,20 +315,6 @@ export const AppRouter = () => {
       showToast(t('errorOccurred'), 'error');
     }
   };
-
-  // handlers שלא תופסים שגיאות - useHome מטפל ב-UI (ספינר, טוסט, שגיאה).
-  // useCallback - פרופים יציבים מונעים re-render של HomePage memo'd ושל סבים.
-  const handleCreateList = useCallback(async (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => {
-    await createList(list);
-  }, [createList]);
-
-  const handleDeleteList = useCallback(async (id: string) => {
-    await deleteList(id);
-  }, [deleteList]);
-
-  const handleEditList = useCallback(async (list: List) => {
-    await updateList(list);
-  }, [updateList]);
 
   return (
     <>
@@ -426,7 +430,7 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      <DailyFaithGate enabled={!!user && !authLoading} />
+      <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>
   );
