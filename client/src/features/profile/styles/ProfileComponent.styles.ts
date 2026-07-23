@@ -1,0 +1,70 @@
+import type { SxProps, Theme } from '@mui/material';
+import { COMMON_STYLES } from '../../../global/helpers';
+
+export const glassButtonSx = COMMON_STYLES.glassIconButton;
+
+export const labelSx: SxProps<Theme> = {
+  ...COMMON_STYLES.label,
+  fontSize: 12,
+  mb: 0.75,
+};
+
+export const headerSx = (editing: boolean): SxProps<Theme> => ({
+  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+  p: editing
+    ? { xs: 'max(16px, env(safe-area-inset-top)) 16px', sm: '16px 20px' }
+    : { xs: 'max(32px, env(safe-area-inset-top) + 12px) 16px 32px', sm: '32px 20px 32px' },
+  textAlign: 'center',
+  flexShrink: 0,
+});
+
+export const viewAvatarCircleSx = (bgColor: string | undefined): SxProps<Theme> => ({
+  width: 80, height: 80, borderRadius: '50%',
+  bgcolor: bgColor || 'rgba(255,255,255,0.2)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  mx: 'auto', mb: 1.5,
+  border: '3px solid rgba(255,255,255,0.3)',
+  color: 'white',
+});
+
+export const contentAreaSx = (editing: boolean): SxProps<Theme> => ({
+  flex: 1, overflowY: 'auto', p: 2, pt: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
+  mt: editing ? 0 : -3,
+  WebkitOverflowScrolling: 'touch',
+});
+
+export const editAvatarPreviewSx = (bgColor: string): SxProps<Theme> => ({
+  width: 88, height: 88, borderRadius: '50%',
+  bgcolor: bgColor,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  color: 'white',
+  border: '3px solid', borderColor: 'divider',
+  boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+});
+
+export const colorSwatchSx = (color: string, isSelected: boolean): SxProps<Theme> => ({
+  width: 36, height: 36, borderRadius: '50%',
+  bgcolor: color,
+  border: isSelected ? '3px solid' : '3px solid transparent',
+  borderColor: isSelected ? 'text.primary' : 'transparent',
+  cursor: 'pointer',
+  transition: 'transform 0.15s',
+  '&:hover': { transform: 'scale(1.1)' },
+});
+
+export const emojiSwatchSx = (isSelected: boolean): SxProps<Theme> => ({
+  width: 42, height: 42, borderRadius: '10px',
+  border: isSelected ? '2px solid' : '1.5px solid',
+  borderColor: isSelected ? 'primary.main' : 'divider',
+  bgcolor: isSelected ? 'primary.light' : 'background.paper',
+  fontSize: 22, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  transition: 'all 0.15s',
+  '&:hover': { borderColor: 'primary.main' },
+});
+
+export const logoutButtonSx: SxProps<Theme> = {
+  mt: 2.5, py: 1.5, borderRadius: '12px',
+  bgcolor: '#FEE2E2', color: '#DC2626', fontWeight: 600, fontSize: 15, gap: 1,
+  '&:hover': { bgcolor: '#FECACA' },
+};

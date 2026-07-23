@@ -339,6 +339,8 @@ type TranslationKey =
   | 'noUserData'
   | 'offlineMessage'
   | 'reconnectingMessage'
+  | 'serverUnreachableMessage'
+  | 'slowConnectionHint'
   // Clear Cache Page
   | 'clearCacheTitle'
   | 'clearCacheSubtitle'
@@ -790,6 +792,8 @@ export const translations: Record<Language, Translations> = {
     noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
     offlineMessage: 'אין חיבור לאינטרנט',
     reconnectingMessage: 'מתחבר מחדש...',
+    serverUnreachableMessage: 'אין חיבור לשרת - מנסים להתחבר מחדש...',
+    slowConnectionHint: 'עדיין מתחברים... זה יכול לקחת עד דקה בהתחלה קרה',
     // Clear Cache Page
     clearCacheTitle: 'ניקוי מטמון',
     clearCacheSubtitle: 'מנקה נתונים שמורים...',
@@ -1233,6 +1237,8 @@ export const translations: Record<Language, Translations> = {
     noUserData: 'Error: No user data received from server',
     offlineMessage: 'No internet connection',
     reconnectingMessage: 'Reconnecting...',
+    serverUnreachableMessage: 'Can\'t reach the server - retrying...',
+    slowConnectionHint: 'Still connecting... this can take up to a minute on a cold start',
     // Clear Cache Page
     clearCacheTitle: 'Clear Cache',
     clearCacheSubtitle: 'Clearing saved data...',
@@ -1675,6 +1681,8 @@ export const translations: Record<Language, Translations> = {
     noUserData: 'Ошибка: данные пользователя не получены от сервера',
     offlineMessage: 'Нет подключения к интернету',
     reconnectingMessage: 'Переподключение...',
+    serverUnreachableMessage: 'Нет связи с сервером - повторное подключение...',
+    slowConnectionHint: 'Всё ещё подключаемся... это может занять до минуты при холодном старте',
     // Clear Cache Page
     clearCacheTitle: 'Очистка кэша',
     clearCacheSubtitle: 'Очистка сохранённых данных...',

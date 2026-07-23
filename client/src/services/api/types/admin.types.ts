@@ -1,0 +1,79 @@
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarColor: string;
+  avatarEmoji: string;
+  googleId?: string;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // סטטיסטיקות התחברות מהשרת (aggregation)
+  totalLogins: number;
+  lastLoginAt: string | null;
+  lastLoginMethod: 'email' | 'google' | 'app_open' | null;
+  lastAppOpenAt: string | null;
+}
+
+export interface AdminLoginActivity {
+  id: string;
+  user: string;
+  userName: string;
+  userEmail: string;
+  loginMethod: 'email' | 'google' | 'app_open';
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export interface PaginatedActivity {
+  activities: AdminLoginActivity[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  loginsToday: number;
+  uniqueUsersToday: number;
+  loginsThisMonth: number;
+  uniqueUsersThisMonth: number;
+}
+
+export interface AdminUserList {
+  id: string;
+  name: string;
+  isGroup: boolean;
+  isOwner: boolean;
+  membersCount: number;
+  productCount: number;
+  purchasedCount: number;
+}
+
+export interface AdminUserDetails {
+  lists: AdminUserList[];
+}
+
+export interface DbHealthCollection {
+  name: string;
+  documents: number;
+  size: number;
+  storageSize: number;
+  indexSize: number;
+}
+
+export interface DbHealth {
+  limitMB: number;
+  dataSize: number;
+  storageSize: number;
+  indexSize: number;
+  totalSize: number;
+  usedPct: number;
+  status: 'ok' | 'warning' | 'critical';
+  collectionCount: number;
+  collections: DbHealthCollection[];
+}

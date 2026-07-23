@@ -1,0 +1,74 @@
+import { Box, Typography, Button, Collapse } from '@mui/material';
+import type { translations } from '../i18n/translations';
+import {
+  errorScreenSx, errorIconCircleSx, errorTitleSx, errorDescSx,
+  actionsColumnSx, actionsRowSx, actionButtonSx, dangerButtonSx,
+  toggleDetailsBtnSx, detailsBoxSx, detailsErrorTextSx, detailsStackTextSx, copyBtnSx, copyHintSx,
+} from '../styles/ErrorBoundary.styles';
+
+interface ErrorBoundaryFallbackProps {
+  t: (typeof translations)[keyof typeof translations];
+  error: Error | null;
+  showDetails: boolean;
+  copied: boolean;
+  onReset: () => void;
+  onRefresh: () => void;
+  onClearCacheAndReload: () => void;
+  onToggleDetails: () => void;
+  onCopyErrorDetails: () => void;
+}
+
+/** מסך שגיאה כללי - מוצג כשלא הוגדר fallback מותאם אישית */
+export const ErrorBoundaryFallback = ({
+  t, error, showDetails, copied,
+  onReset, onRefresh, onClearCacheAndReload, onToggleDetails, onCopyErrorDetails,
+}: ErrorBoundaryFallbackProps) => (
+  <Box sx={errorScreenSx}>
+    <Box sx={errorIconCircleSx}>
+      😵
+    </Box>
+    <Typography variant="h5" sx={errorTitleSx}>
+      {t.errorTitle}
+    </Typography>
+    <Typography sx={errorDescSx}>
+      {t.errorDescription}
+    </Typography>
+    <Box sx={actionsColumnSx}>
+      <Box sx={actionsRowSx}>
+        <Button variant="outlined" onClick={onReset} sx={actionButtonSx}>
+          {t.tryAgain}
+        </Button>
+        <Button variant="contained" onClick={onRefresh} sx={actionButtonSx}>
+          {t.refreshPage}
+        </Button>
+      </Box>
+      <Button variant="contained" onClick={onClearCacheAndReload} sx={dangerButtonSx}>
+        {t.clearCacheAndReload}
+      </Button>
+    </Box>
+
+    {/* פרטי שגיאה לדיווח */}
+    <Button variant="text" onClick={onToggleDetails} sx={toggleDetailsBtnSx}>
+      {showDetails ? t.hideErrorDetails : t.showErrorDetails}
+    </Button>
+
+    <Collapse in={showDetails}>
+      <Box sx={detailsBoxSx}>
+        <Typography sx={detailsErrorTextSx}>
+          {error?.name}: {error?.message}
+        </Typography>
+        {error?.stack && (
+          <Typography sx={detailsStackTextSx}>
+            {error.stack.split('\n').slice(0, 5).join('\n')}
+          </Typography>
+        )}
+        <Button variant="outlined" size="small" onClick={onCopyErrorDetails} sx={copyBtnSx}>
+          {copied ? t.copiedToClipboard : t.copyErrorDetails}
+        </Button>
+        <Typography sx={copyHintSx}>
+          {t.copyAndSendToSupport}
+        </Typography>
+      </Box>
+    </Collapse>
+  </Box>
+);

@@ -1,5 +1,7 @@
 import type { LoginActivity, User } from '../../../global/types';
 
+export type UserFilter = 'all' | 'online' | 'activeToday' | 'loginsToday' | 'activeThisMonth';
+
 export interface UserWithLastLogin extends User {
   lastLoginAt?: string;
   lastLoginMethod?: 'email' | 'google' | 'app_open';

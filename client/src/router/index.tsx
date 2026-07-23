@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
+import { ServerConnectionBanner } from "../global/components/ServerConnectionBanner";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
@@ -430,6 +431,9 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
+      {/* באנר קבוע - נשאר כל עוד יש כשל תקשורת אמיתי מול השרת, בניגוד ל-toast
+          החולף למעלה. כך המצב "אין חיבור" משתקף גם אחרי שה-toast נעלם. */}
+      <ServerConnectionBanner visible={!authLoading && !!(listsFetchError || notificationsFetchError || initialData.connectionError)} />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

@@ -1,23 +1,8 @@
 import { Component, type ReactNode } from 'react';
-import { Box, Typography, Button, Collapse, keyframes } from '@mui/material';
 import { translations } from '../i18n/translations';
 import type { Language } from '../types';
-
-// אנימציות למסך 'מעדכן גרסה' - תחושת שדרוג עליז: רקטה שעולה, נקודות פסים
-// מתפצלות מטה לתחושת מהירות, ופעימת halo מאחור.
-const rocketRise = keyframes`
-  0%   { transform: translateY(0) rotate(-4deg); }
-  50%  { transform: translateY(-10px) rotate(0deg); }
-  100% { transform: translateY(0) rotate(4deg); }
-`;
-const haloPulse = keyframes`
-  0%, 100% { transform: scale(0.92); opacity: 0.55; }
-  50%      { transform: scale(1.08); opacity: 0.9; }
-`;
-const progressSlide = keyframes`
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(220%); }
-`;
+import { ErrorBoundaryReloadingScreen } from './ErrorBoundaryReloadingScreen';
+import { ErrorBoundaryFallback } from './ErrorBoundaryFallback';
 
 // זיהוי שגיאות טעינת chunk (קורה כשגרסה חדשה נפרסת והקבצים הישנים נמחקו)
 // מזהה רק שגיאות טעינת chunk אמיתיות. הבדיקה הגנרית של
@@ -151,86 +136,10 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // בזמן ריענון אוטומטי - מסך 'מעדכן גרסה' מעוצב במיוחד.
-      // השראה: רקטה (שדרוג) + halo פועם + פס פרוגרס + נקודות מהבהבות.
-      // נותן תחושה של "משהו טוב קורה" במקום loader גנרי.
+      // בזמן ריענון אוטומטי - מסך 'מעדכן גרסה' מעוצב במיוחד
       if (this.state.isReloading) {
         const t = translations[getLanguage()];
-        return (
-          <Box sx={{
-            position: 'fixed', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            background: '#14B8A6',
-            color: '#fff',
-            zIndex: 99999,
-            overflow: 'hidden',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-          }}>
-            {/* Halo עגול מאחורי הרקטה - עומק רך, בלי הבזקים */}
-            <Box sx={{
-              position: 'absolute',
-              width: 240, height: 240,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.10)',
-              animation: `${haloPulse} 2.8s ease-in-out infinite`,
-            }} />
-
-            {/* רקטה במרכז */}
-            <Box sx={{
-              fontSize: 84,
-              lineHeight: 1,
-              filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.18))',
-              animation: `${rocketRise} 2.4s ease-in-out infinite`,
-              mb: 4,
-              position: 'relative',
-              zIndex: 1,
-            }}>
-              🚀
-            </Box>
-
-            {/* כותרת */}
-            <Typography sx={{
-              fontSize: 20, fontWeight: 800, mb: 0.5,
-              textShadow: '0 2px 8px rgba(0,0,0,0.18)',
-              letterSpacing: 0.3,
-              position: 'relative', zIndex: 1,
-            }}>
-              {t.updatingVersion}
-            </Typography>
-            {/* כותרת משנה */}
-            <Typography sx={{
-              fontSize: 12.5, fontWeight: 500,
-              color: 'rgba(255,255,255,0.85)',
-              textAlign: 'center', lineHeight: 1.5,
-              position: 'relative', zIndex: 1,
-            }}>
-              גרסה חדשה זמינה — טוען עדכון
-            </Typography>
-
-            {/* פס פרוגרס דק בתחתית המסך */}
-            <Box sx={{
-              position: 'absolute',
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'min(60%, 240px)',
-              height: 3,
-              borderRadius: 999,
-              bgcolor: 'rgba(255,255,255,0.22)',
-              overflow: 'hidden',
-            }}>
-              <Box sx={{
-                position: 'absolute',
-                top: 0, left: 0,
-                width: '40%', height: '100%',
-                borderRadius: 999,
-                bgcolor: '#fff',
-                animation: `${progressSlide} 1.6s ease-in-out infinite`,
-              }} />
-            </Box>
-          </Box>
-        );
+        return <ErrorBoundaryReloadingScreen t={t} />;
       }
 
       if (this.props.fallback) {
@@ -242,114 +151,17 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
       const { error, showDetails, copied } = this.state;
 
       return (
-        <Box
-          sx={{
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: 3,
-            textAlign: 'center',
-            bgcolor: 'background.default',
-            overflow: 'auto'
-          }}
-        >
-          <Box
-            sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '20px',
-              bgcolor: 'rgba(239, 68, 68, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 3,
-              fontSize: 40
-            }}
-          >
-            😵
-          </Box>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}
-          >
-            {t.errorTitle}
-          </Typography>
-          <Typography
-            sx={{ color: 'text.secondary', mb: 3, maxWidth: 300 }}
-          >
-            {t.errorDescription}
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2, width: '100%', maxWidth: 300 }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={this.handleReset}
-                sx={{ borderRadius: '12px', px: 3, flex: 1 }}
-              >
-                {t.tryAgain}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={this.handleRefresh}
-                sx={{ borderRadius: '12px', px: 3, flex: 1 }}
-              >
-                {t.refreshPage}
-              </Button>
-            </Box>
-            <Button
-              variant="contained"
-              onClick={this.handleClearCacheAndReload}
-              sx={{ borderRadius: '12px', px: 3, bgcolor: '#EF4444', '&:hover': { bgcolor: '#DC2626' } }}
-            >
-              {t.clearCacheAndReload}
-            </Button>
-          </Box>
-
-          {/* פרטי שגיאה לדיווח */}
-          <Button
-            variant="text"
-            onClick={this.toggleDetails}
-            sx={{ color: 'text.secondary', fontSize: 13, mb: 1 }}
-          >
-            {showDetails ? t.hideErrorDetails : t.showErrorDetails}
-          </Button>
-
-          <Collapse in={showDetails}>
-            <Box
-              sx={{
-                bgcolor: 'rgba(0,0,0,0.05)',
-                borderRadius: '12px',
-                p: 2,
-                maxWidth: 320,
-                width: '100%',
-                textAlign: 'left',
-                mb: 2
-              }}
-            >
-              <Typography sx={{ fontSize: 12, color: 'error.main', fontFamily: 'monospace', wordBreak: 'break-word' }}>
-                {error?.name}: {error?.message}
-              </Typography>
-              {error?.stack && (
-                <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace', mt: 1, maxHeight: 100, overflow: 'auto', wordBreak: 'break-word' }}>
-                  {error.stack.split('\n').slice(0, 5).join('\n')}
-                </Typography>
-              )}
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={this.copyErrorDetails}
-                sx={{ mt: 1.5, fontSize: 12, borderRadius: '8px' }}
-              >
-                {copied ? t.copiedToClipboard : t.copyErrorDetails}
-              </Button>
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 1 }}>
-                {t.copyAndSendToSupport}
-              </Typography>
-            </Box>
-          </Collapse>
-        </Box>
+        <ErrorBoundaryFallback
+          t={t}
+          error={error}
+          showDetails={showDetails}
+          copied={copied}
+          onReset={this.handleReset}
+          onRefresh={this.handleRefresh}
+          onClearCacheAndReload={this.handleClearCacheAndReload}
+          onToggleDetails={this.toggleDetails}
+          onCopyErrorDetails={this.copyErrorDetails}
+        />
       );
     }
 

@@ -18,6 +18,7 @@ export interface UseAuthReturn {
   error: string;
   googleLoading: boolean;
   emailLoading: boolean;
+  slowSubmit: boolean;
   isNewUser: boolean;
   showEmailForm: boolean;
   emailSuggestion: string | null;

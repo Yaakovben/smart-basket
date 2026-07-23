@@ -1,12 +1,42 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createHash } from 'node:crypto'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// מחשב hash תוכן על כל src/ + package.json, ולא Date.now() - כך שהגרסה
+// משתנה רק כשמשהו רלוונטי ללקוח באמת השתנה, ולא בכל build (כולל deploys
+// שנוגעים רק בשרת, או commits ריקים של "trigger redeploy"). מונע את מסך
+// "מעדכן גרסה..." המוצג שווא כשלא היה שינוי אמיתי בקליינט.
+function hashDir(dir: string, hash: ReturnType<typeof createHash>): void {
+  for (const name of readdirSync(dir).sort()) {
+    const full = join(dir, name)
+    const stat = statSync(full)
+    if (stat.isDirectory()) {
+      hashDir(full, hash)
+    } else {
+      hash.update(name)
+      hash.update(readFileSync(full))
+    }
+  }
+}
+
+function computeBuildVersion(): string {
+  const hash = createHash('sha256')
+  hashDir(join(__dirname, 'src'), hash)
+  hash.update(readFileSync(join(__dirname, 'package.json')))
+  return hash.digest('hex').slice(0, 12)
+}
 
 // https://vite.dev/config/
 export default defineConfig({
   define: {
-    // Unique build ID injected at build time — changes on every deploy
-    '__BUILD_VERSION__': JSON.stringify(Date.now().toString()),
+    // Content-hash build ID - משתנה רק כששינוי אמיתי קרה תחת client/src או package.json
+    '__BUILD_VERSION__': JSON.stringify(computeBuildVersion()),
   },
   plugins: [
     react(),
