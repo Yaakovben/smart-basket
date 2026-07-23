@@ -81,13 +81,6 @@ type TranslationKey =
   | 'items'
   | 'listsCount'
   | 'completed'
-  | 'justNow'
-  | 'minutesAgo'
-  | 'hoursAgo'
-  | 'daysAgo'
-  | 'agoMinutes'
-  | 'agoHours'
-  | 'agoDays'
   | 'group'
   | 'private'
   // List
@@ -357,14 +350,6 @@ type TranslationKey =
   | 'quickAddPlaceholder'
   | 'searchProducts'
   // What's New
-  // Time formatting
-  | 'timeNow'
-  | 'timeMinutesAgo'
-  | 'timeHoursAgo'
-  | 'timeYesterday'
-  | 'timeDaysAgo'
-  | 'timeWeeksAgo'
-  | 'timeMonthsAgo'
   // Push notification prompt
   | 'pushNotifBlocked'
   | 'pushNotifBlockedDesc'
@@ -534,13 +519,6 @@ export const translations: Record<Language, Translations> = {
     items: 'פריטים',
     listsCount: 'רשימות',
     completed: 'הושלם',
-    justNow: 'עכשיו',
-    minutesAgo: 'ד׳',
-    hoursAgo: 'ש׳',
-    daysAgo: 'י׳',
-    agoMinutes: 'לפני {n} דק׳',
-    agoHours: 'לפני {n} שע׳',
-    agoDays: 'לפני {n} ימים',
     group: 'משותפת',
     private: 'פרטית',
     // List
@@ -810,14 +788,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'הוספת מוצר מהירה...',
     searchProducts: 'חיפוש מוצרים...',
     // What's New
-    // Time formatting
-    timeNow: 'עכשיו',
-    timeMinutesAgo: 'לפני {count} דק׳',
-    timeHoursAgo: 'היום {time}',
-    timeYesterday: 'אתמול',
-    timeDaysAgo: 'לפני {count} ימים',
-    timeWeeksAgo: 'לפני {count} שבועות',
-    timeMonthsAgo: 'לפני {count} חודשים',
     // Push notification prompt
     pushNotifBlocked: 'ההתראות נחסמו',
     pushNotifBlockedDesc: 'כדי להפעיל התראות, יש לאפשר אותן\nבהגדרות הדפדפן → הרשאות → התראות',
@@ -980,13 +950,6 @@ export const translations: Record<Language, Translations> = {
     items: 'items',
     listsCount: 'lists',
     completed: 'Completed',
-    justNow: 'now',
-    minutesAgo: 'm',
-    hoursAgo: 'h',
-    daysAgo: 'd',
-    agoMinutes: '{n} min ago',
-    agoHours: '{n}h ago',
-    agoDays: '{n}d ago',
     group: 'Shared',
     private: 'Private',
     // List
@@ -1255,14 +1218,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Quick add product...',
     searchProducts: 'Search products...',
     // What's New
-    // Time formatting
-    timeNow: 'Now',
-    timeMinutesAgo: '{count}m ago',
-    timeHoursAgo: 'Today {time}',
-    timeYesterday: 'Yesterday',
-    timeDaysAgo: '{count}d ago',
-    timeWeeksAgo: '{count}w ago',
-    timeMonthsAgo: '{count}mo ago',
     // Push notification prompt
     pushNotifBlocked: 'Notifications Blocked',
     pushNotifBlockedDesc: 'To enable notifications, allow them in\nBrowser Settings → Permissions → Notifications',
@@ -1424,13 +1379,6 @@ export const translations: Record<Language, Translations> = {
     items: 'товаров',
     listsCount: 'списков',
     completed: 'Завершено',
-    justNow: 'сейчас',
-    minutesAgo: 'м',
-    hoursAgo: 'ч',
-    daysAgo: 'д',
-    agoMinutes: '{n} мин назад',
-    agoHours: '{n} ч назад',
-    agoDays: '{n} д назад',
     group: 'Совместный',
     private: 'Личный',
     // List
@@ -1699,14 +1647,6 @@ export const translations: Record<Language, Translations> = {
     quickAddPlaceholder: 'Быстро добавить товар...',
     searchProducts: 'Поиск товаров...',
     // What's New
-    // Time formatting
-    timeNow: 'Сейчас',
-    timeMinutesAgo: '{count} мин. назад',
-    timeHoursAgo: 'Сегодня {time}',
-    timeYesterday: 'Вчера',
-    timeDaysAgo: '{count} дн. назад',
-    timeWeeksAgo: '{count} нед. назад',
-    timeMonthsAgo: '{count} мес. назад',
     // Push notification prompt
     pushNotifBlocked: 'Уведомления заблокированы',
     pushNotifBlockedDesc: 'Чтобы включить уведомления, разрешите их\nв настройках браузера → Разрешения → Уведомления',

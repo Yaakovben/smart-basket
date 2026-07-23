@@ -13,6 +13,8 @@ import { memo, useState, useCallback } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
 import { ChainCard } from './ChainCard';
@@ -23,7 +25,6 @@ import { PriceComparisonEmptyStates } from './PriceComparisonEmptyStates';
 import { PriceComparisonFooter } from './PriceComparisonFooter';
 import {
   type SortMode,
-  formatRelative,
   getCheapestChain,
   getSavings,
   hasAnyChainLocation,
@@ -44,16 +45,20 @@ interface Props {
 }
 
 export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, selectedListName }: Props) => {
+  const { settings } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
   const [sortMode, setSortMode] = useState<SortMode>('distance');
   // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+  const toggleExpanded = useCallback((id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
+  }, []);
 
   if (loading || !data) return null;
 
-  const freshness = formatRelative(data.lastUpdatedISO);
+  const freshness = data.lastUpdatedISO ? getRelativeTime(data.lastUpdatedISO, settings.language) : null;
   const hasChainData = data.chainTotals?.some(c => c.matchedCount > 0) ?? false;
   const hasAnyPendingItems = data.totalPending > 0;
 
@@ -62,10 +67,6 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   // האם יש מיקום לפחות לרשת אחת - מאפשר מיון "קרוב" / "משולב"
   const hasAnyLocation = hasAnyChainLocation(data.chainTotals);
   const sortedChains = getSortedChains(data.chainTotals, sortMode, hasAnyLocation);
-
-  const toggleExpanded = useCallback((id: string) => {
-    setExpandedId(prev => prev === id ? null : id);
-  }, []);
 
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור פירוט. ההצגה
   // מתחילה במצב "סקירה" של כל הרשתות, וכל אחת נפתחת בלחיצה ידנית.

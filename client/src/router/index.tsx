@@ -432,8 +432,12 @@ export const AppRouter = () => {
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
       {/* באנר קבוע - נשאר כל עוד יש כשל תקשורת אמיתי מול השרת, בניגוד ל-toast
-          החולף למעלה. כך המצב "אין חיבור" משתקף גם אחרי שה-toast נעלם. */}
-      <ServerConnectionBanner visible={!authLoading && !!(listsFetchError || notificationsFetchError || initialData.connectionError)} />
+          החולף למעלה. כך המצב "אין חיבור" משתקף גם אחרי שה-toast נעלם.
+          לא כוללים את initialData.connectionError - זה דגל חד-פעמי מ-useAuth
+          שלא מתאפס לעולם ברגע שהחיבור חוזר (בדיקה חד-פעמית ב-mount), ולכן
+          גרם לבאנר להישאר תקוע "דלוק" גם כשהיה חיבור תקין. listsFetchError/
+          notificationsFetchError כן מתאפסים בכל retry מוצלח - אלה המקור האמין. */}
+      <ServerConnectionBanner visible={!authLoading && !!(listsFetchError || notificationsFetchError)} />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

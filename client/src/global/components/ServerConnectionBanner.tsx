@@ -3,9 +3,11 @@ import { Box, Typography } from '@mui/material';
 import { useSettings } from '../context/SettingsContext';
 
 interface Props {
-  // true כשיש כשל תקשורת אמיתי מול השרת (listsFetchError/notificationsFetchError/connectionError) -
+  // true כשיש כשל תקשורת אמיתי מול השרת (listsFetchError/notificationsFetchError) -
   // בניגוד ל-OfflineBanner, המצב הזה נקבע ע"י ה-caller (יודע אם בקשות באמת נכשלות),
-  // לא מנוחש כאן. הבאנר נשאר גלוי כל עוד visible=true - עד שהבקשה הבאה מצליחה.
+  // לא מנוחש כאן. הבאנר נשאר גלוי כל עוד visible=true - עד שהבקשה הבאה מצליחה
+  // (חשוב: ה-caller חייב להעביר כאן רק דגלים שבאמת מתאפסים בהצלחה - ראה הערה
+  // ב-router/index.tsx לגבי initialData.connectionError שלא מתאפס).
   visible: boolean;
 }
 
@@ -36,7 +38,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
       left: 0,
       right: 0,
       zIndex: 9999,
-      bgcolor: '#D97706',
+      bgcolor: '#F59E0B',
       pt: 'max(env(safe-area-inset-top), 6px)',
       pb: '6px',
       px: 2,

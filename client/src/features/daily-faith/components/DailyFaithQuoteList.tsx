@@ -3,7 +3,7 @@ import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import { ShimmerList } from '../../../global/components/Shimmer';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { renderFaithText } from '../helpers/formatFaithText';
-import { formatRelativeDate } from '../helpers/dailyFaithManagerHelpers';
+import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import type { DailyFaith } from '../services/daily-faith.api';
 import {
   listScrollBoxSx, sentenceRowSx, sentenceNumberSx, sentenceTextSx, sentenceMetaRowSx,
@@ -22,7 +22,7 @@ interface DailyFaithQuoteListProps {
 // גלילה: momentum חלק ב-iOS, overscrollBehavior:contain מונע bounce של הדף מאחור,
 // scrollbar דק ומודרני בדסקטופ, עם פייד עדין למעלה ולמטה שמעיד שיש עוד תוכן.
 export const DailyFaithQuoteList = ({ loading, quotes, search, isDark, onDeleteRequest }: DailyFaithQuoteListProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
 
   return (
     <Box sx={listScrollBoxSx}>
@@ -59,7 +59,7 @@ export const DailyFaithQuoteList = ({ loading, quotes, search, isDark, onDeleteR
                 {/* תאריך + אורך */}
                 <Box sx={sentenceMetaRowSx}>
                   <Typography sx={sentenceMetaTextSx}>
-                    {formatRelativeDate(q.createdAt)}
+                    {getRelativeTime(q.createdAt, settings.language)}
                   </Typography>
                   <Typography sx={sentenceMetaTextSx}>·</Typography>
                   <Typography sx={sentenceMetaTabularSx}>

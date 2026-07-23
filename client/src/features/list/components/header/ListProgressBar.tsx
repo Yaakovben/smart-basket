@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type { TranslationKeys } from '../../../../global/i18n/translations';
 import { useSettings } from '../../../../global/context/SettingsContext';
+import { getRelativeTime } from '../../../../global/helpers/dateFormatting';
 
 // ===== אנימציות בר התקדמות =====
 const pulseGlow = keyframes`
@@ -16,19 +16,6 @@ const checkBounce = keyframes`
   100% { transform: scale(1); opacity: 1; }
 `;
 
-// ===== פונקציית זמן יחסי =====
-const getTimeAgo = (dateStr: string | undefined, t: (key: TranslationKeys) => string): string => {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return t('justNow');
-  if (minutes < 60) return t('agoMinutes').replace('{n}', String(minutes));
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return t('agoHours').replace('{n}', String(hours));
-  const days = Math.floor(hours / 24);
-  return t('agoDays').replace('{n}', String(days));
-};
-
 // ===== סטטוס: זמן עדכון + בר התקדמות =====
 interface ListProgressBarProps {
   updatedAt?: string;
@@ -37,7 +24,7 @@ interface ListProgressBarProps {
 }
 
 export const ListProgressBar = memo(({ updatedAt, pendingCount, purchasedCount }: ListProgressBarProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
 
   if (!(updatedAt || (pendingCount + purchasedCount) > 0)) return null;
 
@@ -75,7 +62,7 @@ export const ListProgressBar = memo(({ updatedAt, pendingCount, purchasedCount }
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
             <AccessTimeIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }} />
             <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
-              {t('updated')} {getTimeAgo(updatedAt, t)}
+              {t('updated')} {updatedAt ? getRelativeTime(updatedAt, settings.language) : ''}
             </Typography>
           </Box>
         )}

@@ -3,9 +3,7 @@ import { Box, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { LocalNotification } from '../../../global/hooks';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { getLocale } from '../../../global/helpers/dateFormatting';
-import type { Language } from '../../../global/types';
-import type { TranslationKeys } from '../../../global/i18n/translations';
+import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 
 // ===== אנימציות =====
 const notificationDismissKeyframes = {
@@ -52,37 +50,6 @@ const getAccentColor = (type: LocalNotification['type']): string => {
     case 'list_clear': return '#F59E0B';
     default: return '#6B7280';
   }
-};
-
-const getTimeDisplay = (
-  timestamp: Date,
-  language: Language,
-  t: (key: TranslationKeys) => string
-): string => {
-  const now = new Date();
-  const diffMs = now.getTime() - timestamp.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  const isToday = timestamp.toDateString() === now.toDateString();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday = timestamp.toDateString() === yesterday.toDateString();
-
-  if (diffMin < 1) return t('timeNow');
-  if (diffMin < 60 && isToday) return t('timeMinutesAgo').replace('{count}', String(diffMin));
-  if (isToday) {
-    const time = timestamp.toLocaleTimeString(getLocale(language), { hour: '2-digit', minute: '2-digit' });
-    return t('timeHoursAgo').replace('{time}', time);
-  }
-  if (isYesterday) return t('timeYesterday');
-  if (diffDays < 7) return t('timeDaysAgo').replace('{count}', String(diffDays));
-  if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7);
-    return t('timeWeeksAgo').replace('{count}', language === 'he' ? (weeks === 1 ? 'שבוע' : `${weeks} שבועות`) : String(weeks));
-  }
-  const months = Math.floor(diffDays / 30);
-  return t('timeMonthsAgo').replace('{count}', language === 'he' ? (months === 1 ? 'חודש' : `${months} חודשים`) : String(months));
 };
 
 // ===== טייפים =====
@@ -197,7 +164,7 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
           </Typography>
           <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'text.disabled', flexShrink: 0 }} />
           <Typography sx={{ fontSize: 11.5, color: 'text.disabled', whiteSpace: 'nowrap' }}>
-            {getTimeDisplay(n.timestamp, settings.language, t)}
+            {getRelativeTime(n.timestamp.toISOString(), settings.language)}
           </Typography>
         </Box>
       </Box>

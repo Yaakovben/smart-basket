@@ -4,19 +4,6 @@ import type { PriceChainTotal } from '../types/priceComparison.types';
 
 export type SortMode = 'distance' | 'price' | 'combined';
 
-// פורמט יחסי קצר לזמן הצגה
-export const formatRelative = (iso: string | null): string => {
-  if (!iso) return 'לא ידוע';
-  const diff = Date.now() - new Date(iso).getTime();
-  if (diff < 0) return 'זה עתה';
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `לפני ${mins || 1} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שעות`;
-  const days = Math.floor(hours / 24);
-  return `לפני ${days} ימים`;
-};
-
 // הזולה ההוגנת: שלמות קודם לפי מחיר; אם אין שלמות, מבין הרשתות עם
 // מספר ההתאמות המקסימלי - הזולה. ככה רשת עם 3 התאמות לא תופיע כ"זולה"
 // מול רשת עם 8 התאמות בכמה שקלים יותר.
