@@ -1,12 +1,12 @@
 import { Box, Typography } from '@mui/material';
-import type { translations } from '../i18n/translations';
+import type { Translations } from '../i18n/translations';
 import {
   reloadingScreenSx, reloadingHaloSx, reloadingRocketSx, reloadingTitleSx, reloadingSubtitleSx,
   reloadingProgressTrackSx, reloadingProgressBarSx,
 } from '../styles/ErrorBoundary.styles';
 
 interface ErrorBoundaryReloadingScreenProps {
-  t: (typeof translations)[keyof typeof translations];
+  t: Translations;
 }
 
 /**

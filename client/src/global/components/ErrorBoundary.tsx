@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { translations } from '../i18n/translations';
+import { getTranslationsSync } from '../i18n/translations';
 import type { Language } from '../types';
 import { ErrorBoundaryReloadingScreen } from './ErrorBoundaryReloadingScreen';
 import { ErrorBoundaryFallback } from './ErrorBoundaryFallback';
@@ -138,7 +138,7 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
     if (this.state.hasError) {
       // בזמן ריענון אוטומטי - מסך 'מעדכן גרסה' מעוצב במיוחד
       if (this.state.isReloading) {
-        const t = translations[getLanguage()];
+        const t = getTranslationsSync(getLanguage());
         return <ErrorBoundaryReloadingScreen t={t} />;
       }
 
@@ -147,7 +147,7 @@ ${error.stack ? `\nStack:\n${error.stack}` : ''}
       }
 
       const lang = getLanguage();
-      const t = translations[lang];
+      const t = getTranslationsSync(lang);
       const { error, showDetails, copied } = this.state;
 
       return (

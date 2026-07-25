@@ -1,5 +1,5 @@
 import { Box, Typography, Button, Collapse } from '@mui/material';
-import type { translations } from '../i18n/translations';
+import type { Translations } from '../i18n/translations';
 import {
   errorScreenSx, errorIconCircleSx, errorTitleSx, errorDescSx,
   actionsColumnSx, actionsRowSx, actionButtonSx, dangerButtonSx,
@@ -7,7 +7,7 @@ import {
 } from '../styles/ErrorBoundary.styles';
 
 interface ErrorBoundaryFallbackProps {
-  t: (typeof translations)[keyof typeof translations];
+  t: Translations;
   error: Error | null;
   showDetails: boolean;
   copied: boolean;

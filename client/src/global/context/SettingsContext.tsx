@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { AppSettings, Language, ThemeMode, NotificationSettings } from '../types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '../constants';
-import { translations, type TranslationKeys } from '../i18n/translations';
+import { loadTranslations, getTranslationsSync, type TranslationKeys, type Translations } from '../i18n/translations';
 import { saveNotifSettingsToIDB } from '../../settingsIDB';
 import { authApi } from '../../services/api';
 
@@ -128,9 +128,22 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const t = useCallback((key: TranslationKeys): string => {
-    return translations[settings.language][key] || key;
+  // מילון התרגומים הפעיל - מתחיל מגישה סינכרונית (עברית מיד, או שפה
+  // שכבר נטענה בסשן הזה), ומתעדכן ברקע אם השפה הנוכחית טרם נטענה
+  // (אנגלית/רוסית, שנטענות בטעינה עצלה כדי לא לנפח את ה-bundle הראשי).
+  const [dict, setDict] = useState<Translations>(() => getTranslationsSync(settings.language));
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTranslations(settings.language).then(loaded => {
+      if (!cancelled) setDict(loaded);
+    });
+    return () => { cancelled = true; };
   }, [settings.language]);
+
+  const t = useCallback((key: TranslationKeys): string => {
+    return dict[key] || key;
+  }, [dict]);
 
   const value = useMemo(() => ({
     settings,
