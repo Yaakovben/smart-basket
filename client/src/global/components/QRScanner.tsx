@@ -3,7 +3,7 @@ import { Dialog, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { BrowserQRCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
 import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { haptic } from '../helpers';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
@@ -15,17 +15,25 @@ import {
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
 } from '../styles/QRScanner.styles';
 
+const PRODUCT_BARCODE_FORMATS = [
+  BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_128,
+];
+
 interface QRScannerProps {
   open: boolean;
   onClose: () => void;
   onScan: (value: string) => void;
+  // 'qr' (ברירת מחדל) - הצטרפות לקבוצה. 'barcode' - ברקוד מוצר (EAN/UPC) להוספה מהירה.
+  mode?: 'qr' | 'barcode';
 }
 
 /**
- * סורק QR מובנה באפליקציה. מבוסס על @zxing/browser (קל משמעותית מ-html5-qrcode).
- * מבקש הרשאת מצלמה, ומאפשר גם לבחור תמונה מהגלריה אם ה-QR התקבל כקובץ.
+ * סורק QR/ברקוד מובנה באפליקציה. מבוסס על @zxing/browser (קל משמעותית מ-html5-qrcode).
+ * מבקש הרשאת מצלמה, ומאפשר גם לבחור תמונה מהגלריה אם הקוד התקבל כקובץ.
  */
-export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
+export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
   // הסכמה מקדימה: המצלמה תיפתח רק אחרי שהמשתמש אישר ספציפית פעם ראשונה.
@@ -37,7 +45,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
   });
   const [galleryConsent, setGalleryConsent] = useState(false);
 
-  const { videoRef, error, starting } = useQRCameraScanner({ open, cameraConsent, onScan });
+  const { videoRef, error, starting } = useQRCameraScanner({ open, cameraConsent, onScan, mode });
 
   // איפוס גלריה/שגיאת קובץ כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
   useEffect(() => {
@@ -61,11 +69,11 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
     setFileScanError(null);
 
     try {
-      // hints אגרסיביים - זהה לסריקת מצלמה (TRY_HARDER חיוני כדי לזהות QR בצבעים לא-סטנדרטיים)
+      // hints אגרסיביים - זהה לסריקת מצלמה (TRY_HARDER חיוני כדי לזהות בצבעים לא-סטנדרטיים)
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, true);
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-      const reader = new BrowserQRCodeReader(hints);
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, mode === 'barcode' ? PRODUCT_BARCODE_FORMATS : [BarcodeFormat.QR_CODE]);
+      const reader = mode === 'barcode' ? new BrowserMultiFormatReader(hints) : new BrowserQRCodeReader(hints);
       const url = URL.createObjectURL(file);
       try {
         const result = await reader.decodeFromImageUrl(url);
@@ -75,7 +83,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
         URL.revokeObjectURL(url);
       }
     } catch {
-      setFileScanError('לא זיהינו QR בתמונה. ודא שה-QR ברור ומלא בתמונה.');
+      setFileScanError(mode === 'barcode' ? 'לא זיהינו ברקוד בתמונה. ודא שהוא ברור ומלא בתמונה.' : 'לא זיהינו QR בתמונה. ודא שה-QR ברור ומלא בתמונה.');
     }
   };
 
@@ -90,7 +98,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
           </IconButton>
           <Box sx={headerTitleRowSx}>
             <QrCodeScannerIcon />
-            <Typography sx={{ fontWeight: 700 }}>סרוק QR</Typography>
+            <Typography sx={{ fontWeight: 700 }}>{mode === 'barcode' ? 'סרוק ברקוד' : 'סרוק QR'}</Typography>
           </Box>
           <Box sx={{ width: 40 }} />
         </Box>
@@ -129,7 +137,7 @@ export const QRScanner = ({ open, onClose, onScan }: QRScannerProps) => {
           {!error && (
             <Box sx={bottomStatusSx}>
               <Typography sx={statusTextSx}>
-                {starting ? 'פותח את המצלמה...' : 'כוון את ה-QR למרכז המסך'}
+                {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'כוון את הברקוד למרכז המסך' : 'כוון את ה-QR למרכז המסך'}
               </Typography>
               {fileScanError && (
                 <Typography sx={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', bgcolor: 'rgba(0,0,0,0.6)', px: 1.5, py: 0.75, borderRadius: '10px' }}>

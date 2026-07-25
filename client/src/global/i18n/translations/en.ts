@@ -117,6 +117,8 @@ export const en: Translations = {
   addProduct: 'Add Product',
   newProduct: 'New Product',
   productName: 'Product Name',
+  scanBarcode: 'Scan barcode',
+  barcodeNotFound: 'No product found for this barcode. Enter the name manually.',
   quantity: 'Quantity',
   unit: 'Unit',
   category: 'Category',

@@ -6,14 +6,13 @@ import type { InsightTab } from '../types/insights-types';
 interface InsightsHeroCardProps {
   tab: InsightTab;
   groupStats: InsightsData['groupStats'];
-  topProducts: InsightsData['topProducts'];
   shoppingScore?: number;
 }
 
 interface Insight { emoji: string; title: string; subtitle?: string; gradient: string }
 
 // Hero card - תובנת היום, ניסוח חיובי וברור. שונה לפי הטאב הנוכחי.
-export const InsightsHeroCard = ({ tab, groupStats, topProducts, shoppingScore }: InsightsHeroCardProps) => {
+export const InsightsHeroCard = ({ tab, groupStats, shoppingScore }: InsightsHeroCardProps) => {
   let insight: Insight | null = null;
   // טאב מחירים: כרטיס Hero של PriceComparisonCard כבר מציג 'הזול ב-X' באופן בולט -
   // אין צורך בכרטיס "תובנת היום" נוסף שיציג אותו דבר. מדלגים כדי למנוע כפילות.
@@ -27,15 +26,7 @@ export const InsightsHeroCard = ({ tab, groupStats, topProducts, shoppingScore }
       subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
       gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     };
-  } else if (tab === 'habits' && topProducts?.[0]) {
-    const top = topProducts[0];
-    insight = {
-      emoji: '🏆',
-      title: `${top.name} — מוצר השבוע`,
-      subtitle: `הוספתם ${top.count} פעמים`,
-      gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-    };
-  } else if (tab === 'pulse' && shoppingScore !== undefined) {
+  } else if (tab === 'activity' && shoppingScore !== undefined) {
     const label = shoppingScore >= 80 ? 'אלוף!' : shoppingScore >= 60 ? 'בדרך הנכונה' : shoppingScore >= 40 ? 'מתפתחים' : 'יש לאן לצמוח';
     insight = {
       emoji: shoppingScore >= 80 ? '🎯' : shoppingScore >= 60 ? '📈' : '🌱',

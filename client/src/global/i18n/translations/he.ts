@@ -116,6 +116,8 @@ export const he: Translations = {
   addProduct: 'הוסף מוצר',
   newProduct: 'מוצר חדש',
   productName: 'שם המוצר',
+  scanBarcode: 'סרוק ברקוד',
+  barcodeNotFound: 'לא נמצא מוצר עם הברקוד הזה. הזן את השם ידנית.',
   quantity: 'כמות',
   unit: 'יחידה',
   category: 'קטגוריה',

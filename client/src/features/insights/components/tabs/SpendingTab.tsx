@@ -59,7 +59,7 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
   const hasGrowth = spending.hasBaseline && growth !== null;
   const growthUp = hasGrowth && growth! > 0;
   const growthDown = hasGrowth && growth! < 0;
-  // בהוצאות "עלייה" היא לא-רצויה ולהפך מ-PulseTab (שם עלייה בפעילות חיובית) -
+  // בהוצאות "עלייה" היא לא-רצויה ולהפך מטאב הפעילות (שם עלייה בפעילות חיובית) -
   // לכן הצבעים הפוכים: יותר הוצאה = אדום, פחות הוצאה = ירוק.
   const growthColor = !hasGrowth ? '#94A3B8' : growthUp ? '#EF4444' : growthDown ? '#22C55E' : '#94A3B8';
   const GrowthIcon = growthUp ? TrendingUpIcon : growthDown ? TrendingDownIcon : TrendingFlatIcon;

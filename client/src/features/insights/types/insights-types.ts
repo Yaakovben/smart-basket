@@ -1,4 +1,4 @@
-export type InsightTab = 'price' | 'lists' | 'habits' | 'pulse' | 'spending';
+export type InsightTab = 'price' | 'lists' | 'activity' | 'spending';
 
 export interface InsightsListMeta {
   id: string;

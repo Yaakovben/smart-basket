@@ -52,22 +52,36 @@ export async function createTokens(userId: string, email: string, name: string):
 
 // ============== רענון ==============
 
+// חלון חסד אחרי rotation - טוקן שהוחלף עדיין "עובד" לזמן קצר הזה, כדי
+// שרענון שהצליח בשרת אבל איבד את התשובה ברשת (קליטה גרועה) לא ינתק את
+// המשתמש. ראה RefreshToken.model.ts + findByPreviousToken.
+const ROTATION_GRACE_MS = 60 * 1000;
+
 /**
  * מחליף refresh token בזוג טוקנים חדש (rotation אטומי).
  *
  * מחזיר null אם:
- *  - הטוקן לא קיים / פג תוקפו
+ *  - הטוקן לא קיים / פג תוקפו, ולא נמצא גם כטוקן-קודם בתוך חלון החסד
  *  - המשתמש נמחק בינתיים
- *  - race condition (בקשה מקבילה כבר החליפה את הטוקן)
+ *  - race condition (בקשה מקבילה כבר החליפה את הטוקן, ואין עדיין חלון חסד)
  */
 export async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
-  const tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
+  let tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
+  let isReplay = false;
 
-  // טוקן לא קיים או פג תוקף → מנקים אם נמצא ומחזירים null
-  if (!tokenDoc || tokenDoc.expiresAt < new Date()) {
-    if (tokenDoc) await tokenDoc.deleteOne();
+  if (!tokenDoc) {
+    // אולי זה replay של טוקן שכבר סובב - תשובת הרענון הקודמת אבדה ברשת
+    // אצל הלקוח, אבל הרענון עצמו כבר הצליח בשרת. בתוך חלון החסד מחזירים
+    // את הזוג הנוכחי במקום לדחות, כדי לא לנתק על בעיית רשת חולפת.
+    tokenDoc = await TokenDAL.findByPreviousToken(refreshToken);
+    isReplay = true;
+  } else if (tokenDoc.expiresAt < new Date()) {
+    // טוקן פג תוקף לגמרי - מנקים ומחזירים null
+    await tokenDoc.deleteOne();
     return null;
   }
+
+  if (!tokenDoc) return null;
 
   const user = tokenDoc.user as unknown as { _id: string; email: string; name: string } | null;
 
@@ -79,6 +93,14 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
 
   const userId = user._id.toString();
   const newAccessToken = generateAccessToken({ userId, email: user.email, name: user.name });
+
+  // replay בתוך חלון החסד: לא מסובבים שוב (זה יכתוב-דריסה על סיבוב אמיתי
+  // ומחדש את שרשרת ה-replay) - רק מנפיקים access token טרי לאותו refresh
+  // token הנוכחי, שכבר פעיל.
+  if (isReplay) {
+    return { accessToken: newAccessToken, refreshToken: tokenDoc.token };
+  }
+
   const newRefreshToken = generateRefreshToken();
 
   // עדכון אטומי — מצליח רק אם הטוקן הישן עדיין קיים.
@@ -87,7 +109,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
     tokenDoc._id.toString(),
     refreshToken,
     newRefreshToken,
-    new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+    new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    ROTATION_GRACE_MS
   );
 
   // בקשה מקבילה כבר הספיקה להחליף את הטוקן

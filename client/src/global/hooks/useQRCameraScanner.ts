@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { BrowserQRCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
 import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { haptic } from '../helpers';
+
+// פורמטים סטנדרטיים של ברקוד מוצר (לא QR) - EAN/UPC הם הנפוצים במדפי סופר.
+const PRODUCT_BARCODE_FORMATS = [
+  BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_128,
+];
 
 interface UseQRCameraScannerParams {
   open: boolean;
   cameraConsent: boolean;
   onScan: (value: string) => void;
+  // 'qr' (ברירת מחדל) - הצטרפות לקבוצה. 'barcode' - ברקוד מוצר (EAN/UPC).
+  mode?: 'qr' | 'barcode';
 }
 
 interface UseQRCameraScannerResult {
@@ -19,7 +28,7 @@ interface UseQRCameraScannerResult {
  * מנהל את מחזור החיים של סריקת QR דרך המצלמה: בקשת הרשאה, פתיחת ה-reader
  * ופענוח מתמשך מול הוידאו. מנקה את הסריקה בסגירה/unmount, ומאפס שגיאה בסגירת הדיאלוג.
  */
-export const useQRCameraScanner = ({ open, cameraConsent, onScan }: UseQRCameraScannerParams): UseQRCameraScannerResult => {
+export const useQRCameraScanner = ({ open, cameraConsent, onScan, mode = 'qr' }: UseQRCameraScannerParams): UseQRCameraScannerResult => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,11 +65,15 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan }: UseQRCameraS
           throw permErr;
         }
 
-        // Hints: TRY_HARDER + פורמט QR בלבד = זיהוי אגרסיבי יותר ולא מבזבז זמן על barcode.
+        // Hints: TRY_HARDER + רשימת פורמטים מצומצמת לפי mode = זיהוי אגרסיבי
+        // יותר ולא מבזבז זמן על פורמטים לא-רלוונטיים.
         const hints = new Map();
         hints.set(DecodeHintType.TRY_HARDER, true);
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-        const reader = new BrowserQRCodeReader(hints, { delayBetweenScanAttempts: 150, delayBetweenScanSuccess: 150 });
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, mode === 'barcode' ? PRODUCT_BARCODE_FORMATS : [BarcodeFormat.QR_CODE]);
+        const readerOptions = { delayBetweenScanAttempts: 150, delayBetweenScanSuccess: 150 };
+        const reader = mode === 'barcode'
+          ? new BrowserMultiFormatReader(hints, readerOptions)
+          : new BrowserQRCodeReader(hints, readerOptions);
         const video = videoRef.current;
         if (!video) throw new Error('video element missing');
 
@@ -99,7 +112,7 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan }: UseQRCameraS
       try { controlsRef.current?.stop(); } catch { /* ignore */ }
       controlsRef.current = null;
     };
-  }, [open, cameraConsent, onScan]);
+  }, [open, cameraConsent, onScan, mode]);
 
   return { videoRef, error, starting };
 };

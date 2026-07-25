@@ -113,6 +113,8 @@ export type TranslationKeys =
   | 'addProduct'
   | 'newProduct'
   | 'productName'
+  | 'scanBarcode'
+  | 'barcodeNotFound'
   | 'quantity'
   | 'unit'
   | 'category'

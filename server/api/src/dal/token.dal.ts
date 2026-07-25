@@ -39,10 +39,24 @@ export const TokenDAL = {
     return RefreshToken.findOne({ token }).populate('user');
   },
 
-  async rotateToken(tokenId: string, oldToken: string, newToken: string, expiresAt: Date): Promise<IRefreshToken | null> {
+  // replay של טוקן שכבר הוחלף (rotation) אבל עדיין בתוך חלון ה-grace -
+  // ראה הערה ב-RefreshToken.model.ts. מחזיר את המסמך הנוכחי (עם ה-token החדש).
+  async findByPreviousToken(token: string): Promise<IRefreshToken | null> {
+    return RefreshToken.findOne({
+      previousToken: token,
+      previousTokenGraceUntil: { $gt: new Date() },
+    }).populate('user');
+  },
+
+  async rotateToken(tokenId: string, oldToken: string, newToken: string, expiresAt: Date, graceMs: number): Promise<IRefreshToken | null> {
     return RefreshToken.findOneAndUpdate(
       { _id: tokenId, token: oldToken },
-      { token: newToken, expiresAt },
+      {
+        token: newToken,
+        expiresAt,
+        previousToken: oldToken,
+        previousTokenGraceUntil: new Date(Date.now() + graceMs),
+      },
       { new: true }
     );
   },

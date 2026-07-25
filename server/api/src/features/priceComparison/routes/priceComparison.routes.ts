@@ -4,6 +4,7 @@ import { loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, delete
 import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
 import { testOsm } from '../controllers/diagnostics.controller';
 import { getStatus } from '../controllers/status.controller';
+import { lookupBarcode } from '../controllers/barcode.controller';
 import { authenticate, isAdmin } from '../../../middleware';
 
 const router = Router();
@@ -12,6 +13,7 @@ router.use(authenticate);
 
 // פתוח לכל משתמש מאומת
 router.get('/', getComparison);
+router.get('/barcode/:barcode', lookupBarcode);
 
 // ניהול: אדמין בלבד
 router.post('/refresh', isAdmin, refreshPrices);

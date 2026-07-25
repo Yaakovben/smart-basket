@@ -117,6 +117,8 @@ export const ru: Translations = {
   addProduct: 'Добавить товар',
   newProduct: 'Новый товар',
   productName: 'Название товара',
+  scanBarcode: 'Сканировать штрихкод',
+  barcodeNotFound: 'Товар с таким штрихкодом не найден. Введите название вручную.',
   quantity: 'Количество',
   unit: 'Единица',
   category: 'Категория',

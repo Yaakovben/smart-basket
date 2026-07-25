@@ -60,6 +60,16 @@ export interface UserLocation {
 }
 
 export const priceComparisonApi = {
+  // שם מוצר לפי ברקוד שנסרק (הוספת מוצר מהירה) - null אם לא נמצא במאגר המחירים.
+  async lookupBarcode(barcode: string): Promise<{ name: string } | null> {
+    try {
+      const response = await apiClient.get<{ data: { name: string } | null }>(`/price-comparison/barcode/${barcode}`);
+      return response.data.data;
+    } catch {
+      return null;
+    }
+  },
+
   // תובנות השוואת מחירים — תלוי ב-JWT של המשתמש.
   // listId אופציונלי: אם מועבר, ההשוואה מצומצמת לרשימה הזו בלבד.
   // location אופציונלי: אם מועבר, כל רשת תקבל nearestBranch עם מרחק.

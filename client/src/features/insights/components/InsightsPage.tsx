@@ -16,11 +16,10 @@ import { InsightsHeroCard } from './InsightsHeroCard';
 import { InsightsBottomNav } from './InsightsBottomNav';
 import { PriceTab } from './tabs/PriceTab';
 import { ListsTab } from './tabs/ListsTab';
-import { HabitsTab } from './tabs/HabitsTab';
-import { PulseTab } from './tabs/PulseTab';
+import { ActivityTab } from './tabs/ActivityTab';
 import { SpendingTab } from './tabs/SpendingTab';
 
-const VALID_TABS: InsightTab[] = ['price', 'lists', 'habits', 'pulse', 'spending'];
+const VALID_TABS: InsightTab[] = ['price', 'lists', 'activity', 'spending'];
 
 export const InsightsPage = memo(() => {
   const navigate = useNavigate();
@@ -76,7 +75,7 @@ export const InsightsPage = memo(() => {
 
       <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
-      <InsightsHeroCard tab={tab} groupStats={data.groupStats} topProducts={data.topProducts} shoppingScore={data.shoppingScore} />
+      <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} />
 
       {/* ===== תוכן לפי טאב ===== */}
       <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>
@@ -109,11 +108,9 @@ export const InsightsPage = memo(() => {
           />
         )}
 
-        {tab === 'habits' && (
-          <HabitsTab data={data} isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
+        {tab === 'activity' && (
+          <ActivityTab data={data} isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
         )}
-
-        {tab === 'pulse' && <PulseTab data={data} isDark={isDark} t={tStr} />}
 
         {tab === 'spending' && <SpendingTab data={data} isDark={isDark} t={tStr} />}
       </Box>

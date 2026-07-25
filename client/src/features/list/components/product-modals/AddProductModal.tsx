@@ -1,10 +1,12 @@
-import { memo, useRef, useCallback, useMemo } from 'react';
-import { Box, Typography, TextField, Button, Select, MenuItem, Alert, FormControl } from '@mui/material';
+import { memo, useRef, useCallback, useMemo, useState } from 'react';
+import { Box, Typography, TextField, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
 import { detectCategory } from '../../../../global/helpers/categoryDetector';
-import { Modal } from '../../../../global/components';
+import { Modal, QRScanner } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
+import { priceComparisonApi } from '../../../priceComparison';
 import type { NewProductForm } from '../../types/list-types';
 import { ProductNoteField } from './ProductNoteField';
 import { CategoryGrid } from './CategoryGrid';
@@ -60,6 +62,9 @@ export const AddProductModal = memo(({
 }: AddProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanNotice, setScanNotice] = useState<string | null>(null);
 
   const isNameValid = newProduct.name.trim().length >= 2;
 
@@ -100,6 +105,7 @@ export const AddProductModal = memo(({
 
   const handleNameChange = useCallback((value: string) => {
     onUpdateField('name', value);
+    setScanNotice(null);
     if (!userChangedCategory.current) {
       const detected = detectCategory(value.trim());
       if (detected !== 'אחר') {
@@ -107,6 +113,22 @@ export const AddProductModal = memo(({
       }
     }
   }, [onUpdateField]);
+
+  // סריקת ברקוד מוצר - חיפוש שם לפי הברקוד במאגר המחירים; אם נמצא, ממלא
+  // את שם המוצר (וזה גם מפעיל זיהוי קטגוריה אוטומטי כרגיל).
+  const handleBarcodeScanned = useCallback(async (barcode: string) => {
+    setShowScanner(false);
+    setScanNotice(null);
+    setScanLoading(true);
+    const result = await priceComparisonApi.lookupBarcode(barcode);
+    setScanLoading(false);
+    if (result) {
+      handleNameChange(result.name);
+      haptic('medium');
+    } else {
+      setScanNotice(t('barcodeNotFound'));
+    }
+  }, [handleNameChange, t]);
 
   const handleCategoryClick = useCallback((cat: ProductCategory) => {
     haptic('light');
@@ -138,6 +160,13 @@ export const AddProductModal = memo(({
   if (!isOpen) return null;
 
   return (
+    <>
+    <QRScanner
+      open={showScanner}
+      mode="barcode"
+      onClose={() => setShowScanner(false)}
+      onScan={handleBarcodeScanned}
+    />
     <Modal title={t('newProduct')} onClose={onClose}>
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} role="alert">
@@ -166,7 +195,27 @@ export const AddProductModal = memo(({
             enterKeyHint: 'next',
             maxLength: 100
           }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => { haptic('light'); setShowScanner(true); }}
+                  disabled={scanLoading}
+                  aria-label={t('scanBarcode')}
+                  edge="end"
+                  size="small"
+                >
+                  <QrCodeScannerIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
+        {scanNotice && (
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5, px: 0.25 }}>
+            {scanNotice}
+          </Typography>
+        )}
         {/* הוספו לאחרונה - chips של מוצרים מההיסטוריה לכניסה מהירה.
             רק כשהשדה ריק - אחרת filteredSuggestions תופס את המקום. */}
         {recentSuggestions.length > 0 && (
@@ -303,6 +352,7 @@ export const AddProductModal = memo(({
         {t('add')}
       </Button>
     </Modal>
+    </>
   );
 });
 
