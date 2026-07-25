@@ -1,7 +1,7 @@
 import type { Language } from '../types';
 
 // ===== מיפוי שפה ל-locale =====
-export const getLocale = (language: Language): string => {
+const getLocale = (language: Language): string => {
   const locales: Record<Language, string> = {
     he: 'he-IL',
     en: 'en-US',
