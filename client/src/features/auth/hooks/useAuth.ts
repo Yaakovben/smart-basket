@@ -6,6 +6,7 @@ import { isValidEmail } from '../helpers/auth-helpers';
 import { registerSchema, validateForm } from '../../../global/validation';
 import type { UseAuthReturn } from '../types/auth-types';
 import { authApi } from '../../../services/api';
+import { trackEvent } from '../../../global/services/analytics';
 import { useEmailAvailability } from './useEmailAvailability';
 
 // ===== טיפוסים =====
@@ -98,6 +99,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         }
         const { user } = result;
         haptic('medium');
+        trackEvent('user_signed_up', { method: 'email' });
         onLogin(user, 'email');
         return;
       } catch (registerError: unknown) {
@@ -125,6 +127,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
     try {
       const { user } = await authApi.login({ email: email.trim(), password });
       haptic('medium');
+      trackEvent('user_logged_in', { method: 'email' });
       onLogin(user, 'email');
     } catch (loginError: unknown) {
       const apiError = loginError as { response?: { status?: number; data?: { error?: string; message?: string } }; code?: string; message?: string };
@@ -180,6 +183,7 @@ export const useAuth = ({ onLogin }: UseAuthParams): UseAuthReturn => {
         try {
           const { user } = await authApi.googleAuth(tokenResponse.access_token);
           haptic('medium');
+          trackEvent('user_logged_in', { method: 'google' });
           onLogin(user, 'google');
           return;
         } catch (error: unknown) {

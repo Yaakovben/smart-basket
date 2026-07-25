@@ -3,6 +3,7 @@ import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { List, Product, User } from "../types";
 import { listsApi } from "../../services/api";
 import { socketService } from "../../services/socket";
+import { trackEvent } from "../services/analytics";
 import { convertApiList } from "./converters";
 
 export function useListActions(user: User | null, lists: List[], setLists: Dispatch<SetStateAction<List[]>>) {
@@ -20,6 +21,7 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
       const converted = convertApiList(newList);
       setLists((prev) => [...prev, converted]);
       socketService.joinList(newList.id);
+      trackEvent('list_created', { isGroup: list.isGroup });
 
       return converted;
     },
@@ -120,6 +122,7 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         socketService.joinList(joinedList.id, () => {
           socketService.emitMemberJoined(joinedList.id, joinedList.name, user!.name);
         });
+        trackEvent('group_joined'); // לופ ויראלי - הצטרפות דרך קוד הזמנה
         return { success: true };
       } catch (error: unknown) {
         const apiError = error as { response?: { status?: number; data?: { message?: string; error?: string } }; code?: string };

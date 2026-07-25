@@ -7,6 +7,7 @@ import { detectCategory } from '../../../../global/helpers/categoryDetector';
 import { Modal, QRScanner } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison';
+import { trackEvent } from '../../../../global/services/analytics';
 import type { NewProductForm } from '../../types/list-types';
 import { ProductNoteField } from './ProductNoteField';
 import { CategoryGrid } from './CategoryGrid';
@@ -122,6 +123,7 @@ export const AddProductModal = memo(({
     setScanLoading(true);
     const result = await priceComparisonApi.lookupBarcode(barcode);
     setScanLoading(false);
+    trackEvent('barcode_scanned', { found: !!result });
     if (result) {
       handleNameChange(result.name);
       haptic('medium');

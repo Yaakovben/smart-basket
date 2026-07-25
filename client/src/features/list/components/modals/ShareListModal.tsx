@@ -6,6 +6,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { List, Product } from '../../../../global/types';
 import { COMMON_STYLES, generateShareListMessage, BRAND_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
+import { trackEvent } from '../../../../global/services/analytics';
 import { modalOverlaySx, modalContainerSx } from '../../helpers/listModalStyles';
 import { WhatsAppIcon } from './WhatsAppIcon';
 
@@ -41,7 +42,7 @@ export const ShareListModal = memo(({
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(generateShareListMessage(list, t))
-      .then(() => { showToast(t('copied')); onClose(); })
+      .then(() => { trackEvent('list_shared', { channel: 'copy' }); showToast(t('copied')); onClose(); })
       .catch(() => showToast(t('copyError')));
   };
 
@@ -101,6 +102,7 @@ export const ShareListModal = memo(({
           <Button
             onClick={() => {
               const message = generateShareListMessage(list, t);
+              trackEvent('list_shared', { channel: 'whatsapp' });
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
             }}
             fullWidth

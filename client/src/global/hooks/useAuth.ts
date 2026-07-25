@@ -3,6 +3,7 @@ import type { User, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, notificationsApi, type ApiList } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens, rehydrateTokensFromIdb } from "../../services/api/client";
+import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 
 // דגל מודולרי למניעת רישום כפול של פתיחת אפליקציה (שורד StrictMode re-mount)
 let _appOpenLogged = false;
@@ -148,6 +149,7 @@ export function useAuth() {
       // שמירת משתמש לטעינה מיידית בביקור הבא
       try { localStorage.setItem('cached_user', JSON.stringify({ ...userData, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
       setUser(userData);
+      identifyUser(userData.id);
       // פעילות כניסה נשמרת בשרת
       // חיבור socket אחרי כניסה
       socketService.connect();
@@ -156,6 +158,7 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
+    resetAnalyticsUser();
     try {
       // ביטול מנוי להתראות push לפני התנתקות
       // מסיר את המנוי גם מהשרת וגם מהדפדפן

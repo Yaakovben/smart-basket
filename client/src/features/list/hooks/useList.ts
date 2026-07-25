@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useDebounce } from '../../../global/hooks';
@@ -60,8 +60,12 @@ export const useList = ({
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
   // ===== מניעת תנאי מרוץ - refs משותפים בין הוספה לעדכון מוצרים =====
+  // מסונכרן ב-effect (לא בזמן render) - נקרא רק מתוך callbacks/handlers
+  // שרצים תמיד אחרי commit, כך שאין השהיה מעשית מול הגרסה הישנה שכתבה ל-ref בזמן render.
   const productsRef = useRef(list.products);
-  productsRef.current = list.products;
+  useEffect(() => {
+    productsRef.current = list.products;
+  });
   // תור פעולות ממתינות למוצרים עם מזהה זמני
   const pendingTempActions = useRef(new Map<string, 'toggle'>());
 

@@ -22,6 +22,10 @@ interface UseQRCameraScannerResult {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   error: string | null;
   starting: boolean;
+  // true אם המצלמה פועלת כבר כמה שניות בלי לזהות שום קוד - כנראה בעיית
+  // איכות סריקה (תאורה/מיקוד/זווית), לא "הקוד לא קיים במאגר" (זה מגיע
+  // רק אחרי פענוח מוצלח, ב-onScan של הקורא - שתי תקלות שונות לגמרי).
+  slowScan: boolean;
 }
 
 /**
@@ -33,18 +37,21 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan, mode = 'qr' }:
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [slowScan, setSlowScan] = useState(false);
 
-  // איפוס שגיאה בלבד כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
+  // איפוס שגיאה/רמז-איכות כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
   useEffect(() => {
-    if (!open) setError(null);
+    if (!open) { setError(null); setSlowScan(false); }
   }, [open]);
 
   useEffect(() => {
     if (!open || !cameraConsent) return;
     let cancelled = false;
+    let slowScanTimer: ReturnType<typeof setTimeout> | null = null;
 
     const start = async () => {
       setError(null);
+      setSlowScan(false);
       setStarting(true);
       try {
         // צעד 1: בקשת הרשאת מצלמה מפורשת. מציג את ה-prompt של הדפדפן ומחזיר שגיאה ברורה אם נדחה.
@@ -95,6 +102,10 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan, mode = 'qr' }:
           return;
         }
         controlsRef.current = controls;
+        // המצלמה פועלת ומנסה לפענח - אם 7 שניות עוברות בלי שום זיהוי,
+        // כנראה שהבעיה היא איכות הסריקה (תאורה/מיקוד/זווית) ולא שהקוד
+        // "לא קיים" (זה מגיע רק אחרי פענוח מוצלח, בקריאה ל-onScan למעלה).
+        slowScanTimer = setTimeout(() => { if (!cancelled) setSlowScan(true); }, 7000);
       } catch (e) {
         if (cancelled) return;
         const msg = e instanceof Error ? e.message : 'לא ניתן לפתוח את המצלמה';
@@ -109,10 +120,11 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan, mode = 'qr' }:
 
     return () => {
       cancelled = true;
+      if (slowScanTimer) clearTimeout(slowScanTimer);
       try { controlsRef.current?.stop(); } catch { /* ignore */ }
       controlsRef.current = null;
     };
   }, [open, cameraConsent, onScan, mode]);
 
-  return { videoRef, error, starting };
+  return { videoRef, error, starting, slowScan };
 };

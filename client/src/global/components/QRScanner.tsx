@@ -45,7 +45,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
   });
   const [galleryConsent, setGalleryConsent] = useState(false);
 
-  const { videoRef, error, starting } = useQRCameraScanner({ open, cameraConsent, onScan, mode });
+  const { videoRef, error, starting, slowScan } = useQRCameraScanner({ open, cameraConsent, onScan, mode });
 
   // איפוס גלריה/שגיאת קובץ כשנסגר; ההסכמה לא נמחקת - היוזר אישר פעם, מספיק.
   useEffect(() => {
@@ -110,6 +110,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               galleryConsent={galleryConsent}
               onOpenCamera={() => setCameraConsent(true)}
               onPickGallery={() => { setGalleryConsent(true); fileInputRef.current?.click(); }}
+              mode={mode}
             />
           )}
 
@@ -139,6 +140,16 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               <Typography sx={statusTextSx}>
                 {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'כוון את הברקוד למרכז המסך' : 'כוון את ה-QR למרכז המסך'}
               </Typography>
+              {/* מוצג רק אחרי כמה שניות בלי זיהוי - כנראה בעיית איכות סריקה
+                  (תאורה/מיקוד/מרחק), שונה לגמרי מ"הברקוד לא נמצא במאגר"
+                  (זו שגיאה שמגיעה רק אחרי זיהוי מוצלח, מוצגת ב-AddProductModal). */}
+              {!starting && slowScan && !fileScanError && (
+                <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', textAlign: 'center', bgcolor: 'rgba(0,0,0,0.5)', px: 1.5, py: 0.75, borderRadius: '10px', lineHeight: 1.5 }}>
+                  {mode === 'barcode'
+                    ? 'לא מצליחים לזהות? ודאו תאורה טובה, קרבו את הברקוד ושהוא ישר ובפוקוס'
+                    : 'לא מצליחים לזהות? ודאו תאורה טובה והחזיקו את הקוד ישר ובפוקוס'}
+                </Typography>
+              )}
               {fileScanError && (
                 <Typography sx={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', bgcolor: 'rgba(0,0,0,0.6)', px: 1.5, py: 0.75, borderRadius: '10px' }}>
                   {fileScanError}

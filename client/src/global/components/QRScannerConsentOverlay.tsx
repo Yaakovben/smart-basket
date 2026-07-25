@@ -11,6 +11,8 @@ interface QRScannerConsentOverlayProps {
   galleryConsent: boolean;
   onOpenCamera: () => void;
   onPickGallery: () => void;
+  // 'qr' (ברירת מחדל) - הצטרפות לקבוצה. 'barcode' - ברקוד מוצר להוספה מהירה.
+  mode?: 'qr' | 'barcode';
 }
 
 /**
@@ -18,14 +20,17 @@ interface QRScannerConsentOverlayProps {
  * השקיפות הזו הכרחית ל-PWA: מסביר למה צריך הרשאה לפני שהדפדפן שואל,
  * נותן למשתמש שליטה. בלעדיו - ייתכן שהמשתמש ידחה אוטומטית "כי לא ברור".
  */
-export const QRScannerConsentOverlay = ({ fileScanError, galleryConsent, onOpenCamera, onPickGallery }: QRScannerConsentOverlayProps) => (
+export const QRScannerConsentOverlay = ({ fileScanError, galleryConsent, onOpenCamera, onPickGallery, mode = 'qr' }: QRScannerConsentOverlayProps) => (
   <Box sx={consentOverlaySx}>
     <QrCodeScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />
     <Typography sx={{ fontSize: 18, fontWeight: 800 }}>
-      סריקת QR להצטרפות
+      {mode === 'barcode' ? 'סריקת ברקוד מוצר' : 'סריקת QR להצטרפות'}
     </Typography>
     <Typography sx={consentDescSx}>
-      לסריקת קוד QR נשתמש במצלמה של המכשיר שלך, או בתמונה שתבחרו מהגלריה.
+      {mode === 'barcode'
+        ? <>לסריקת ברקוד המוצר נשתמש במצלמה של המכשיר שלך, או בתמונה שתבחרו מהגלריה - כדי להוסיף את המוצר במהירות.</>
+        : <>לסריקת קוד QR נשתמש במצלמה של המכשיר שלך, או בתמונה שתבחרו מהגלריה.</>
+      }
       <br />
       <b>אין שמירה של תמונות או וידאו</b> — הסריקה מתבצעת מקומית במכשיר בלבד.
     </Typography>

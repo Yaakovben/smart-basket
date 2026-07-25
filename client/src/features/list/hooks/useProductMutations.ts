@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, type RefObject } from 'react';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
+import { trackEvent } from '../../../global/services/analytics';
 import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
@@ -260,6 +261,7 @@ export const useProductMutations = ({
         );
         try {
           await productsApi.resetProducts(list.id);
+          trackEvent('list_reset'); // רשימה חוזרת - אינדיקציה חזקה ל-retention
           showToast(t('listReset'), 'success');
         } catch {
           onUpdateProductsForList(list.id, (current) =>

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
+import { initAnalytics } from './global/services/analytics'
 
 // חיבור מוקדם לשרת ה-API: הדפדפן מתחיל DNS/TCP/TLS ברקע, מקביל לטעינת הקוד,
 // כך שהבקשה הראשונה יוצאת מיד בלי לחכות ל-handshake. רמז בלבד - אם לא נצליח, אין נזק.
@@ -50,6 +51,9 @@ if (SENTRY_DSN && import.meta.env.PROD) {
     setTimeout(deferInit, 1000)
   }
 }
+
+// אנליטיקס מוצרי (PostHog) - מושהה, no-op עד ש-VITE_POSTHOG_KEY יוגדר בסביבה
+initAnalytics()
 
 // חייב להיות מוגדר במשתני סביבה
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
