@@ -23,9 +23,12 @@ export const PrintListView = ({ list, pendingProducts }: PrintListViewProps) => 
 
   return (
     <div className="print-list-view" style={{ display: 'none', direction: 'rtl', fontFamily: 'Arial, sans-serif', padding: 24, color: '#000' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '2px solid #000', paddingBottom: 12, marginBottom: 16 }}>
-        <span style={{ fontSize: 32 }}>{list.icon}</span>
-        <div>
+      {/* בלי flexbox בכוונה - html2canvas (המצלם את ה-DOM הזה ל-PDF ב-iOS,
+          ראו generateListPdf.ts) מסתבך עם flex ב-Safari/WebKit ומשמיט את
+          הפריט הראשון (השם) בשורה. float/table נתמכים באמינות בכל המנועים. */}
+      <div style={{ borderBottom: '2px solid #000', paddingBottom: 12, marginBottom: 16, overflow: 'hidden' }}>
+        <div style={{ float: 'right', fontSize: 32, marginInlineStart: 10 }}>{list.icon}</div>
+        <div style={{ overflow: 'hidden' }}>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{list.name}</div>
           <div style={{ fontSize: 12, color: '#555' }}>{formatDateShort(new Date().toISOString(), settings.language)}</div>
         </div>
@@ -39,12 +42,16 @@ export const PrintListView = ({ list, pendingProducts }: PrintListViewProps) => 
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
               {CATEGORY_ICONS[category]} {t(CATEGORY_TRANSLATION_KEYS[category])}
             </div>
-            {products.map(p => (
-              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                <span>☐ {p.name}</span>
-                <span>{p.quantity} {p.unit}</span>
-              </div>
-            ))}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <tbody>
+                {products.map(p => (
+                  <tr key={p.id} style={{ borderBottom: '1px solid #ddd' }}>
+                    <td style={{ padding: '4px 8px', textAlign: 'right' }}>☐ {p.name}</td>
+                    <td style={{ padding: '4px 8px', textAlign: 'left', whiteSpace: 'nowrap', width: '1%' }}>{p.quantity} {p.unit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ))
       )}
