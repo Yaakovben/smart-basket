@@ -136,7 +136,7 @@ export const ShareListModal = memo(({
             aria-label={t('copy')}
             startIcon={<ContentCopyIcon />}
             // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם PDF)
-            sx={{ gap: 1, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+            sx={{ gap: 1, py: 0.75, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
           >
             {t('copy')}
           </Button>
@@ -147,7 +147,7 @@ export const ShareListModal = memo(({
             startIcon={<PictureAsPdfIcon />}
             aria-label={t('exportPdf')}
             // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם כפתור ההעתקה)
-            sx={{ gap: 1, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+            sx={{ gap: 1, py: 0.75, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
           >
             {t('exportPdf')}
           </Button>
