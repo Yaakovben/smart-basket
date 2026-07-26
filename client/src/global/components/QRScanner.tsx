@@ -3,8 +3,6 @@ import { Dialog, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { BrowserQRCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
-import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { haptic } from '../helpers';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
 import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
@@ -15,11 +13,10 @@ import {
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
 } from '../styles/QRScanner.styles';
 
-const PRODUCT_BARCODE_FORMATS = [
-  BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
-  BarcodeFormat.CODE_128,
-];
+// @zxing/* לא מיובא סטטית בכוונה - נטען דינמית רק כשבאמת נבחרת תמונה
+// מהגלריה (למטה ב-handleFileSelected), כדי לא לגרור את החבילה הכבדה הזו
+// לתוך ה-chunk של הסורק כשהמצלמה החיה משתמשת ב-Barcode Detection API
+// הילידי בלבד (ראו useQRCameraScanner.ts).
 
 interface QRScannerProps {
   open: boolean;
@@ -69,6 +66,13 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
     setFileScanError(null);
 
     try {
+      const [{ BrowserQRCodeReader, BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] =
+        await Promise.all([import('@zxing/browser'), import('@zxing/library')]);
+      const PRODUCT_BARCODE_FORMATS = [
+        BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+      ];
       // TRY_HARDER חיוני כאן (בניגוד לסריקת מצלמה חיה) - זו תמונה בודדת,
       // אין "פריים הבא" לנסות בו, אז שווה לפענח ביסודיות גם אם זה איטי יותר.
       const hints = new Map();

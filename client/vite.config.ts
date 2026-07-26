@@ -87,15 +87,21 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split vendor libraries into separate chunks
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          // פונקציה (לא אובייקט) כי הצורה המקוצרת לא תפסה נכון תת-נתיבים עמוקים
+          // כמו react-dom/cjs/react-dom-client.production.js - הוא היה מסתנן
+          // ל-entry chunk הראשי במקום ל-vendor-react (552KB לא-ממוזערים!).
+          if (/[\\/]react-dom[\\/]|[\\/]react[\\/]|[\\/]react-router/.test(id)) return 'vendor-react'
           // MUI and Emotion must be together (MUI depends on Emotion)
-          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          if (/[\\/]@mui[\\/]|[\\/]@emotion[\\/]/.test(id)) return 'vendor-mui'
           // Socket.io in separate chunk (loaded after auth)
-          'vendor-socket': ['socket.io-client'],
+          if (/[\\/]socket\.io-client[\\/]/.test(id)) return 'vendor-socket'
           // Sentry in separate chunk (monitoring can load late)
-          'vendor-sentry': ['@sentry/react'],
+          if (/[\\/]@sentry[\\/]/.test(id)) return 'vendor-sentry'
+          // zxing נטען אך ורק דרך import() דינמי (ראו useQRCameraScanner.ts +
+          // QRScanner.tsx) - שם משלו רק לנוחות דיבוג, לא הופך אותו לטעינה מיידית.
+          if (/[\\/]@zxing[\\/]/.test(id)) return 'vendor-zxing'
         }
       }
     }

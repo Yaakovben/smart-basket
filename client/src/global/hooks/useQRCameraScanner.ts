@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { BrowserQRCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
-import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { haptic } from '../helpers';
 
-// פורמטים סטנדרטיים של ברקוד מוצר (לא QR) - EAN/UPC הם הנפוצים במדפי סופר.
-const PRODUCT_BARCODE_FORMATS = [
-  BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
-  BarcodeFormat.CODE_128,
-];
+// @zxing/* לא מיובא סטטית בכוונה - זו רק חבילת ה-fallback ל-ZXing (נטענת
+// דינמית למטה, רק אם ה-Barcode Detection API הילידי לא נתמך/נכשל). כך מכשירים
+// עם תמיכה ילידית (רוב כרום/אנדרואיד) לא מורידים בכלל את ה-chunk הכבד של zxing.
 
 // אותם פורמטים בשמות המחרוזת של ה-Barcode Detection API הילידי - רץ בקוד
 // native של המערכת/דפדפן, מהיר משמעותית מפענוח ב-JS (ZXing). כרגע נתמך בעיקר
@@ -154,6 +149,18 @@ export const useQRCameraScanner = ({ open, cameraConsent, onScan, mode = 'qr' }:
         }
 
         if (!usedNative) {
+          // טעינה דינמית - רק עכשיו, כשבאמת אין ברירה אחרת מלבד ZXing, מורידים
+          // את ה-chunk הכבד שלו (ראו הערה למעלה).
+          const [{ BrowserQRCodeReader, BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] =
+            await Promise.all([import('@zxing/browser'), import('@zxing/library')]);
+
+          // פורמטים סטנדרטיים של ברקוד מוצר (לא QR) - EAN/UPC הם הנפוצים במדפי סופר.
+          const PRODUCT_BARCODE_FORMATS = [
+            BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+            BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+            BarcodeFormat.CODE_128,
+          ];
+
           // הינטים: TRY_HARDER לא מופעל כאן בכוונה - זה סטרימינג חי עם עשרות
           // ניסיונות בשנייה, אז עדיף ניסיון מהיר וזול שרץ שוב מיד על הפריים
           // הבא, על פני ניסיון יסודי-אך-איטי על כל פריים בודד. TRY_HARDER כן
