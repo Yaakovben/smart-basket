@@ -50,9 +50,13 @@ export const ShareListModal = memo(({
 
   // ייצוא/שיתוף כ-PDF: מסתמך על דיאלוג ההדפסה של הדפדפן (window.print) על
   // PrintListView שמעוצב ייעודית להדפסה - בלי להוסיף ספריית PDF לבאנדל.
+  // window.print() חייב להיות הפעולה הראשונה בתוך handler הקליק, לפני כל
+  // קריאה אחרת (גם קריאה סינכרונית תמימה כמו trackEvent) - חלק מהדפדפנים/
+  // דפדפני PWA מזהים "פעולה יזומה ע"י משתמש" רק אם אין שום דבר לפניה,
+  // ואחרת עלולים לחסום אותה בדיוק כמו שחוסמים חלון קופץ (popup).
   const handlePrint = () => {
-    trackEvent('list_shared', { channel: 'pdf' });
     window.print();
+    trackEvent('list_shared', { channel: 'pdf' });
   };
 
   return (
@@ -111,8 +115,9 @@ export const ShareListModal = memo(({
           <Button
             onClick={() => {
               const message = generateShareListMessage(list, t);
-              trackEvent('list_shared', { channel: 'whatsapp' });
+              // window.open לפני trackEvent - מאותה סיבה כמו ב-handlePrint, למנוע חסימת popup-blocker
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+              trackEvent('list_shared', { channel: 'whatsapp' });
             }}
             fullWidth
             sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
@@ -133,11 +138,20 @@ export const ShareListModal = memo(({
           </Button>
         </Box>
         <Button
+          variant="outlined"
           fullWidth
           onClick={handlePrint}
           startIcon={<PictureAsPdfIcon />}
-          sx={{ mt: 1.25, color: 'text.secondary', gap: 1 }}
           aria-label={t('exportPdf')}
+          sx={{
+            mt: 1.25,
+            gap: 1,
+            borderColor: 'rgba(239,68,68,0.3)',
+            color: '#EF4444',
+            '&:hover': { borderColor: '#EF4444', bgcolor: 'rgba(239,68,68,0.06)' },
+            // אייקון בגודל קבוע 20x20, אחיד עם כפתור ההעתקה
+            '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } }
+          }}
         >
           {t('exportPdf')}
         </Button>
