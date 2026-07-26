@@ -4,9 +4,14 @@ import { getAccessToken, refreshAccessToken, isTokenExpired } from '../api/clien
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
 // הגדרות התחברות מחדש מותאמות למובייל
+// reconnectionAttempts: Infinity - עם מגבלה (20 קודם), אחרי שהם מתמצים
+// ה-socket מפסיק לגמרי לנסות: 'connect_error' מפסיק להיורות, 'connect' לא
+// יורה יותר לעולם, וה-banner נשאר תקוע "מתחבר מחדש" גם אחרי שהשרת חוזר -
+// בלי שום סימן ברור למה (בדיוק "ניתוקים לא ברורים"). אין סיבה להפסיק לנסות
+// אף פעם - השרת יכול לחזור אחרי כל זמן, ואין עלות ממשית בלנסות שוב כל 10ש'.
 const RECONNECTION_CONFIG = {
   reconnection: true,
-  reconnectionAttempts: 20,
+  reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 10000,
   randomizationFactor: 0.5,
@@ -25,6 +30,11 @@ class SocketService {
   // ממשיך לדחות טוקנים אחרי refresh (clock skew, ENV mismatch וכו'). מאופס
   // אחרי חיבור מוצלח.
   private authRefreshAttempts = 0;
+  // רצף כשלונות connect_error רצופים (לא-אימות) - איפוס בכל 'connect' מוצלח.
+  // דורש כמה כשלונות ברצף לפני שמדווחים "שרת לא נגיש", כי כשל בודד בניסיון
+  // הראשון (למשל websocket transport שנכשל לפני נפילה חזרה ל-polling) הוא
+  // דבר נורמלי ולא סימן אמיתי לניתוק.
+  private connectErrorStreak = 0;
 
   connect() {
     const token = getAccessToken();
@@ -45,6 +55,7 @@ class SocketService {
     this.socket.on('connect', () => {
       // איפוס מונה רענוני טוקן - הסשן הנוכחי תקין
       this.authRefreshAttempts = 0;
+      this.connectErrorStreak = 0;
       // הצטרפות מחדש לכל הרשימות אחרי reconnect
       this.joinedLists.forEach((listId) => {
         this.socket?.emit('join:list', listId);
@@ -64,8 +75,13 @@ class SocketService {
       if (!isAuthError) {
         // לא שגיאת אימות - כנראה השרת לא נגיש בכלל (עוד לפני חיבור ראשוני
         // מוצלח, ולכן 'disconnect' לא נורה - הוא נורה רק אחרי ניתוק מחיבור
-        // שכבר הצליח). מעבירים הלאה כדי שה-banner יוכל להגיב גם למקרה הזה.
-        this.emit('connect_error', undefined);
+        // שכבר הצליח). מעבירים הלאה כדי שה-banner יוכל להגיב גם למקרה הזה -
+        // אבל רק אחרי כמה כשלונות רצופים, לא על הראשון (יכול להיות blip
+        // חד-פעמי כמו websocket transport שנכשל לפני נפילה חזרה ל-polling).
+        this.connectErrorStreak++;
+        if (this.connectErrorStreak >= 2) {
+          this.emit('connect_error', undefined);
+        }
         return;
       }
       // גארד נגד לולאת refresh - אם השרת ממשיך לדחות גם אחרי 3 נסיונות,
