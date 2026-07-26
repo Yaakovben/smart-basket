@@ -349,7 +349,7 @@ export const ru: Translations = {
   // Share
   shareListDescription: 'Поделитесь своим списком покупок',
   copyList: 'Копировать список',
-  downloadPdf: 'Скачать PDF',
+  sharePdf: 'Поделиться как PDF',
   // Quick Add
   quickAddPlaceholder: 'Быстро добавить товар...',
   searchProducts: 'Поиск товаров...',

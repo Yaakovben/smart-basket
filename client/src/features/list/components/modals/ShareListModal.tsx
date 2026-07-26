@@ -196,7 +196,7 @@ export const ShareListModal = memo(({
           </MenuItem>
           <MenuItem onClick={handlePrint}>
             <ListItemIcon><PictureAsPdfIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>{t('downloadPdf')}</ListItemText>
+            <ListItemText>{t('sharePdf')}</ListItemText>
           </MenuItem>
         </Menu>
       </Box>

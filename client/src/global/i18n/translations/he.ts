@@ -349,7 +349,7 @@ export const he: Translations = {
   // Share
   shareListDescription: 'שתף את רשימת הקניות שלך',
   copyList: 'העתק רשימה',
-  downloadPdf: 'הורד PDF',
+  sharePdf: 'שתף כ-PDF',
   // Quick Add
   quickAddPlaceholder: 'הוספת מוצר מהירה...',
   searchProducts: 'חיפוש מוצרים...',

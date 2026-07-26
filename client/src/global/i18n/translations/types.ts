@@ -347,7 +347,7 @@ export type TranslationKeys =
   // Share
   | 'shareListDescription'
   | 'copyList'
-  | 'downloadPdf'
+  | 'sharePdf'
   // Quick Add
   | 'quickAddPlaceholder'
   | 'searchProducts'

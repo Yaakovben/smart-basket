@@ -349,7 +349,7 @@ export const en: Translations = {
   // Share
   shareListDescription: 'Share your shopping list',
   copyList: 'Copy list',
-  downloadPdf: 'Download PDF',
+  sharePdf: 'Share as PDF',
   // Quick Add
   quickAddPlaceholder: 'Quick add product...',
   searchProducts: 'Search products...',
