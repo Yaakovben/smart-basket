@@ -111,50 +111,47 @@ export const ShareListModal = memo(({
             )}
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1.25 }}>
-          <Button
-            onClick={() => {
-              const message = generateShareListMessage(list, t);
-              // window.open לפני trackEvent - מאותה סיבה כמו ב-handlePrint, למנוע חסימת popup-blocker
-              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-              trackEvent('list_shared', { channel: 'whatsapp' });
-            }}
-            fullWidth
-            sx={{ bgcolor: BRAND_COLORS.whatsapp, color: 'white', '&:hover': { bgcolor: BRAND_COLORS.whatsappHover }, gap: 1 }}
-            aria-label="WhatsApp"
-          >
-            <WhatsAppIcon />
-          </Button>
+        <Button
+          onClick={() => {
+            const message = generateShareListMessage(list, t);
+            // window.open לפני trackEvent - מאותה סיבה כמו ב-handlePrint, למנוע חסימת popup-blocker
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+            trackEvent('list_shared', { channel: 'whatsapp' });
+          }}
+          fullWidth
+          sx={{
+            bgcolor: BRAND_COLORS.whatsapp, color: 'white',
+            '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
+            gap: 1, py: 1.5, fontSize: 16,
+          }}
+          aria-label="WhatsApp"
+        >
+          <WhatsAppIcon />
+        </Button>
+        <Box sx={{ display: 'flex', gap: 1.25, mt: 1.25 }}>
           <Button
             variant="outlined"
             fullWidth
             onClick={handleCopy}
             aria-label={t('copy')}
             startIcon={<ContentCopyIcon />}
-            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם WhatsAppIcon)
+            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם PDF)
             sx={{ gap: 1, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
           >
             {t('copy')}
           </Button>
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={handlePrint}
+            startIcon={<PictureAsPdfIcon />}
+            aria-label={t('exportPdf')}
+            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם כפתור ההעתקה)
+            sx={{ gap: 1, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+          >
+            {t('exportPdf')}
+          </Button>
         </Box>
-        <Button
-          variant="outlined"
-          fullWidth
-          onClick={handlePrint}
-          startIcon={<PictureAsPdfIcon />}
-          aria-label={t('exportPdf')}
-          sx={{
-            mt: 1.25,
-            gap: 1,
-            borderColor: 'rgba(239,68,68,0.3)',
-            color: '#EF4444',
-            '&:hover': { borderColor: '#EF4444', bgcolor: 'rgba(239,68,68,0.06)' },
-            // אייקון בגודל קבוע 20x20, אחיד עם כפתור ההעתקה
-            '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } }
-          }}
-        >
-          {t('exportPdf')}
-        </Button>
       </Box>
       <PrintListView list={list} pendingProducts={pendingProducts} />
     </>

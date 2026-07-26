@@ -140,7 +140,6 @@ export function useAuth() {
       setLoading(false);
     };
     checkAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback(

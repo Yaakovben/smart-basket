@@ -9,4 +9,7 @@ export { TopProgressBar } from './TopProgressBar';
 export { ShimmerBlock, ShimmerList } from './Shimmer';
 export { SlowLoadIndicator } from './SlowLoadIndicator';
 export { Toast } from './Toast';
-export { QRScanner } from './QRScanner';
+// QRScanner לא מיוצא מהברל בכוונה: הוא גורר את @zxing (spergot ~250KB+)
+// שאין לו sideEffects:false, כך שאם ייוצא מכאן, כל מי שמייבא כל דבר אחר
+// מהברל הזה (כולל קוד ש-eager, לא lazy) גורר את zxing כולו איתו לתוך
+// ה-chunk הראשי. הצרכנים מייבאים אותו ישירות מ-'./QRScanner' + React.lazy.

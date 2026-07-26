@@ -1,10 +1,12 @@
-import { memo, useRef, useCallback, useMemo, useState } from 'react';
+import { memo, useRef, useCallback, useMemo, useState, lazy, Suspense } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
 import { detectCategory } from '../../../../global/helpers/categoryDetector';
-import { Modal, QRScanner } from '../../../../global/components';
+import { Modal } from '../../../../global/components';
+// טעינה עצלה: @zxing נטען רק כשהמשתמש בפועל פותח את סורק הברקוד
+const QRScanner = lazy(() => import('../../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison';
 import { trackEvent } from '../../../../global/services/analytics';
@@ -64,6 +66,9 @@ export const AddProductModal = memo(({
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
   const [showScanner, setShowScanner] = useState(false);
+  // נדלק פעם אחת עם הפתיחה הראשונה - כדי שה-chunk הכבד של הסורק (@zxing)
+  // ייטען פעם אחת בלבד וסגירת הדיאלוג לא תפרק/תטען אותו מחדש.
+  const [scannerMounted, setScannerMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
 
@@ -163,12 +168,16 @@ export const AddProductModal = memo(({
 
   return (
     <>
-    <QRScanner
-      open={showScanner}
-      mode="barcode"
-      onClose={() => setShowScanner(false)}
-      onScan={handleBarcodeScanned}
-    />
+    {scannerMounted && (
+      <Suspense fallback={null}>
+        <QRScanner
+          open={showScanner}
+          mode="barcode"
+          onClose={() => setShowScanner(false)}
+          onScan={handleBarcodeScanned}
+        />
+      </Suspense>
+    )}
     <Modal title={t('newProduct')} onClose={onClose}>
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} role="alert">
@@ -201,7 +210,7 @@ export const AddProductModal = memo(({
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => { haptic('light'); setShowScanner(true); }}
+                  onClick={() => { haptic('light'); setScannerMounted(true); setShowScanner(true); }}
                   disabled={scanLoading}
                   aria-label={t('scanBarcode')}
                   edge="end"

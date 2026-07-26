@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import type { List } from '../../../global/types';
-import { ConfirmModal, QRScanner } from '../../../global/components';
+import { ConfirmModal } from '../../../global/components';
+// טעינה עצלה: @zxing נטען רק כשהמשתמש בפועל פותח את הסורק, לא בכל טעינת דף הבית
+const QRScanner = lazy(() => import('../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useHome } from '../hooks/useHome';
@@ -41,6 +43,9 @@ export const HomeComponent = memo(({
 
   // סורק QR להצטרפות — נפתח מתוך JoinModal
   const [showQRScanner, setShowQRScanner] = useState(false);
+  // נדלק פעם אחת עם הפתיחה הראשונה ונשאר true - כדי שה-chunk הכבד של
+  // הסורק (@zxing) ייטען פעם אחת בלבד וסגירת הדיאלוג לא תפרק/תטען אותו מחדש.
+  const [scannerMounted, setScannerMounted] = useState(false);
 
   // אנימציית סגירה לתפריט "מה תרצה ליצור?" - state בלבד, ה-callback מוגדר
   // אחרי useHome כי הוא תלוי ב-setShowMenu שמגיע משם.
@@ -212,7 +217,7 @@ export const HomeComponent = memo(({
           onPassChange={setJoinPass}
           onClearError={() => setJoinError('')}
           onSubmit={handleJoin}
-          onOpenQRScanner={() => setShowQRScanner(true)}
+          onOpenQRScanner={() => { setScannerMounted(true); setShowQRScanner(true); }}
           t={t}
         />
       )}
@@ -342,7 +347,10 @@ export const HomeComponent = memo(({
 
       <PwaInstallPrompt t={t} />
 
-      {/* סורק QR - קופץ מעל JoinModal, ממלא את הקוד והסיסמה אוטומטית */}
+      {/* סורק QR - קופץ מעל JoinModal, ממלא את הקוד והסיסמה אוטומטית.
+          scannerMounted דוחה את טעינת ה-chunk (@zxing) עד לפתיחה ראשונה בפועל. */}
+      {scannerMounted && (
+      <Suspense fallback={null}>
       <QRScanner
         open={showQRScanner}
         onClose={() => setShowQRScanner(false)}
@@ -380,6 +388,8 @@ export const HomeComponent = memo(({
           }
         }}
       />
+      </Suspense>
+      )}
     </Box>
 
       {/* Bottom Navigation + FAB - ב-portal ל-document.body, ראה HomeBottomNav */}
