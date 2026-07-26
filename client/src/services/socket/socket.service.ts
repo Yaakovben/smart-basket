@@ -61,7 +61,13 @@ class SocketService {
     this.socket.on('connect_error', async (error) => {
       const msg = error.message.toLowerCase();
       const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('token expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
-      if (!isAuthError) return;
+      if (!isAuthError) {
+        // לא שגיאת אימות - כנראה השרת לא נגיש בכלל (עוד לפני חיבור ראשוני
+        // מוצלח, ולכן 'disconnect' לא נורה - הוא נורה רק אחרי ניתוק מחיבור
+        // שכבר הצליח). מעבירים הלאה כדי שה-banner יוכל להגיב גם למקרה הזה.
+        this.emit('connect_error', undefined);
+        return;
+      }
       // גארד נגד לולאת refresh - אם השרת ממשיך לדחות גם אחרי 3 נסיונות,
       // עוצרים. הלקוח לא יוצא מהאפליקציה - רק מפסיק לנסות עד שהמשתמש
       // יחזור (visibilitychange) או יתחבר מחדש לרשת.

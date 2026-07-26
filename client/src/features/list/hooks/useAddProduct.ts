@@ -16,8 +16,6 @@ interface UseAddProductParams {
   t: (key: TranslationKeys) => string;
   productsRef: RefObject<Product[]>;
   pendingTempActions: RefObject<Map<string, 'toggle'>>;
-  beginSync: () => void;
-  endSync: () => void;
   newProduct: NewProductForm;
   setNewProduct: (data: NewProductForm) => void;
   setShowAdd: (show: boolean) => void;
@@ -36,8 +34,6 @@ export const useAddProduct = ({
   t,
   productsRef,
   pendingTempActions,
-  beginSync,
-  endSync,
   newProduct,
   setNewProduct,
   setShowAdd,
@@ -72,7 +68,6 @@ export const useAddProduct = ({
     };
     onUpdateProductsForList(list.id, (current) => [...current, tempProduct]);
 
-    beginSync();
     try {
       const addedProduct = await productsApi.addProduct(list.id, productData);
       const realId = addedProduct.id;
@@ -118,10 +113,8 @@ export const useAddProduct = ({
         current.filter(p => p.id !== tempId)
       );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      endSync();
     }
-  }, [list.id, user.name, onUpdateProductsForList, showToast, t, setOpenItemId, pendingTempActions, beginSync, endSync]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t, setOpenItemId, pendingTempActions]);
 
   // בדיקת כפילות מוצר
   const checkDuplicate = useCallback((name: string): Product | undefined => {
@@ -199,7 +192,6 @@ export const useAddProduct = ({
       )
     );
 
-    beginSync();
     try {
       await productsApi.updateProduct(list.id, existing.id, { quantity: newQuantity });
       showToast(t('updated'));
@@ -218,10 +210,8 @@ export const useAddProduct = ({
         )
       );
       showToast(t('errorOccurred'), 'error');
-    } finally {
-      endSync();
     }
-  }, [duplicateProduct, list.id, user.name, onUpdateProductsForList, showToast, t, beginSync, endSync]);
+  }, [duplicateProduct, list.id, user.name, onUpdateProductsForList, showToast, t]);
 
   // טיפול בכפילות - הוספה בכל זאת
   const handleDuplicateAddNew = useCallback(async () => {

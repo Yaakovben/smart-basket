@@ -120,5 +120,4 @@ export interface UseListReturn {
   handleClearList: (filter: 'all' | 'purchased' | 'pending') => void;
   handleResetList: () => void;
   showCelebration: boolean;
-  isSyncing: boolean;
 }

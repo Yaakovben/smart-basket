@@ -41,14 +41,21 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
 
   // מעקב socket בזמן אמת - זהה למה שהיה ב-ReconnectingBanner. דיליי של 3
   // שניות אחרי ניתוק מונע הבזקים על ניתוקים קצרים/רגילים (החלפת רשת וכו').
+  // 'connect_error' (לא-אימות) נצרך גם כן: זה האות היחיד כשהשרת לא נגיש
+  // עוד *לפני* חיבור ראשוני מוצלח - 'disconnect' לא נורה במקרה הזה כי הוא
+  // מניח שהיה חיבור פעיל שנפל.
   useEffect(() => {
     let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const unsubDisconnect = socketService.on('disconnect', () => {
+    const scheduleShow = () => {
+      if (disconnectTimer) return;
       disconnectTimer = setTimeout(() => {
         if (navigator.onLine) setSocketDisconnected(true);
       }, 3000);
-    });
+    };
+
+    const unsubDisconnect = socketService.on('disconnect', scheduleShow);
+    const unsubConnectError = socketService.on('connect_error', scheduleShow);
 
     const unsubConnect = socketService.on('connect', () => {
       if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null; }
@@ -58,6 +65,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     return () => {
       if (disconnectTimer) clearTimeout(disconnectTimer);
       unsubDisconnect();
+      unsubConnectError();
       unsubConnect();
     };
   }, []);

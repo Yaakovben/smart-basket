@@ -350,7 +350,6 @@ export const en: Translations = {
   shareListDescription: 'Share your shopping list',
   exportPdf: 'Export / print as PDF',
   exportPdfShort: 'PDF',
-  syncing: 'Saving...',
   // Quick Add
   quickAddPlaceholder: 'Quick add product...',
   searchProducts: 'Search products...',

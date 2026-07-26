@@ -92,9 +92,14 @@ export default defineConfig({
           // פונקציה (לא אובייקט) כי הצורה המקוצרת לא תפסה נכון תת-נתיבים עמוקים
           // כמו react-dom/cjs/react-dom-client.production.js - הוא היה מסתנן
           // ל-entry chunk הראשי במקום ל-vendor-react (552KB לא-ממוזערים!).
-          if (/[\\/]react-dom[\\/]|[\\/]react[\\/]|[\\/]react-router/.test(id)) return 'vendor-react'
-          // MUI and Emotion must be together (MUI depends on Emotion)
-          if (/[\\/]@mui[\\/]|[\\/]@emotion[\\/]/.test(id)) return 'vendor-mui'
+          //
+          // react/react-dom/react-router ו-mui/emotion חייבים בחתיכה אחת (לא
+          // שני chunks נפרדים): מבחן build הראה תלות מעגלית אמיתית בין השניים
+          // (vendor-mui מייבא מ-vendor-react וגם ההפך) - ברגע שהם בשני chunks
+          // עצמאיים, הטעינה נופלת אקראית ל-"ReferenceError: Cannot access 'X'
+          // before initialization" בהתאם לסדר הטעינה בדפדפן. mui/emotion תלויים
+          // ב-react גם ככה, אז אין הפסד בשילובם יחד.
+          if (/[\\/]react-dom[\\/]|[\\/]react[\\/]|[\\/]react-router[\\/]|[\\/]@mui[\\/]|[\\/]@emotion[\\/]/.test(id)) return 'vendor-react'
           // Socket.io in separate chunk (loaded after auth)
           if (/[\\/]socket\.io-client[\\/]/.test(id)) return 'vendor-socket'
           // Sentry in separate chunk (monitoring can load late)

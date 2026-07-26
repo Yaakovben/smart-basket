@@ -348,7 +348,6 @@ export type TranslationKeys =
   | 'shareListDescription'
   | 'exportPdf'
   | 'exportPdfShort'
-  | 'syncing'
   // Quick Add
   | 'quickAddPlaceholder'
   | 'searchProducts'
