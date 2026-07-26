@@ -1,9 +1,10 @@
-import { memo, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, Avatar, Chip } from '@mui/material';
+import { memo, useEffect, useState } from 'react';
+import { Box, Typography, Button, IconButton, Avatar, Chip, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { List, Product } from '../../../../global/types';
 import { COMMON_STYLES, generateShareListMessage, BRAND_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -29,6 +30,8 @@ export const ShareListModal = memo(({
   showToast
 }: ShareListModalProps) => {
   const { t } = useSettings();
+  // תפריט "עוד" (העתק/PDF) - נפתח מכפתור שלוש הנקודות ליד כפתור הוואטסאפ
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<HTMLElement | null>(null);
 
   // מניעת גלילת רקע כשמודאל פתוח
   useEffect(() => {
@@ -43,6 +46,7 @@ export const ShareListModal = memo(({
   if (!isOpen) return null;
 
   const handleCopy = () => {
+    setMoreMenuAnchor(null);
     navigator.clipboard?.writeText(generateShareListMessage(list, t))
       .then(() => { trackEvent('list_shared', { channel: 'copy' }); showToast(t('copied')); onClose(); })
       .catch(() => showToast(t('copyError')));
@@ -62,13 +66,17 @@ export const ShareListModal = memo(({
   // גם "שמור כ-PDF"), בלי לגעת בזרימה הקיימת שכבר עובדת בכרום/אנדרואיד.
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const handlePrint = () => {
+    // חשוב: window.print()/navigator.share() חייבים להישאר הפעולה הראשונה -
+    // סגירת התפריט (setState) מגיעה רק אחריהם, לא לפניהם.
     if (isIOS && navigator.share) {
       navigator.share({ text: generateShareListMessage(list, t) }).catch(() => {});
       trackEvent('list_shared', { channel: 'pdf_ios_share' });
+      setMoreMenuAnchor(null);
       return;
     }
     window.print();
     trackEvent('list_shared', { channel: 'pdf' });
+    setMoreMenuAnchor(null);
   };
 
   return (
@@ -123,47 +131,49 @@ export const ShareListModal = memo(({
             )}
           </Box>
         </Box>
-        <Button
-          onClick={() => {
-            const message = generateShareListMessage(list, t);
-            // window.open לפני trackEvent - מאותה סיבה כמו ב-handlePrint, למנוע חסימת popup-blocker
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
-            trackEvent('list_shared', { channel: 'whatsapp' });
-          }}
-          fullWidth
-          sx={{
-            bgcolor: BRAND_COLORS.whatsapp, color: 'white',
-            '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
-            gap: 1, py: 1.5, fontSize: 16,
-          }}
-          aria-label="WhatsApp"
-        >
-          <WhatsAppIcon />
-        </Button>
-        <Box sx={{ display: 'flex', gap: 1.25, mt: 1.25 }}>
+        <Box sx={{ display: 'flex', gap: 1.25 }}>
           <Button
-            variant="outlined"
-            fullWidth
-            onClick={handleCopy}
-            aria-label={t('copy')}
-            startIcon={<ContentCopyIcon sx={{ fontSize: '20px !important' }} />}
-            // minHeight דורס את ברירת המחדל הגלובלית (48) - כפתור משני קומפקטי,
-            // נמוך בבירור מכפתור ה-WhatsApp הראשי מעליו.
-            sx={{ gap: 0.75, minHeight: 40, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '6px' } }}
+            onClick={() => {
+              const message = generateShareListMessage(list, t);
+              // window.open לפני trackEvent - מאותה סיבה כמו ב-handlePrint, למנוע חסימת popup-blocker
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+              trackEvent('list_shared', { channel: 'whatsapp' });
+            }}
+            sx={{
+              flex: 3,
+              bgcolor: BRAND_COLORS.whatsapp, color: 'white',
+              '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
+              gap: 1, py: 1.5, fontSize: 16,
+            }}
+            aria-label="WhatsApp"
           >
-            {t('copy')}
+            <WhatsAppIcon />
           </Button>
           <Button
             variant="outlined"
-            fullWidth
-            onClick={handlePrint}
-            aria-label={t('exportPdf')}
-            startIcon={<PictureAsPdfIcon sx={{ fontSize: '20px !important' }} />}
-            sx={{ gap: 0.75, minHeight: 40, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '6px' } }}
+            onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
+            aria-label="אפשרויות נוספות"
+            sx={{ flex: 1, minWidth: 0, py: 1.5 }}
           >
-            {t('exportPdfShort')}
+            <MoreVertIcon />
           </Button>
         </Box>
+        <Menu
+          anchorEl={moreMenuAnchor}
+          open={!!moreMenuAnchor}
+          onClose={() => setMoreMenuAnchor(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        >
+          <MenuItem onClick={handleCopy}>
+            <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
+            <ListItemText>{t('copy')}</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handlePrint}>
+            <ListItemIcon><PictureAsPdfIcon fontSize="small" /></ListItemIcon>
+            <ListItemText>{t('exportPdfShort')}</ListItemText>
+          </MenuItem>
+        </Menu>
       </Box>
       <PrintListView list={list} pendingProducts={pendingProducts} />
     </>
