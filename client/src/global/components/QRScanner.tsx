@@ -69,7 +69,8 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
     setFileScanError(null);
 
     try {
-      // hints אגרסיביים - זהה לסריקת מצלמה (TRY_HARDER חיוני כדי לזהות בצבעים לא-סטנדרטיים)
+      // TRY_HARDER חיוני כאן (בניגוד לסריקת מצלמה חיה) - זו תמונה בודדת,
+      // אין "פריים הבא" לנסות בו, אז שווה לפענח ביסודיות גם אם זה איטי יותר.
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, true);
       hints.set(DecodeHintType.POSSIBLE_FORMATS, mode === 'barcode' ? PRODUCT_BARCODE_FORMATS : [BarcodeFormat.QR_CODE]);
