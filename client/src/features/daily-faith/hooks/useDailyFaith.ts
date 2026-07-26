@@ -80,6 +80,9 @@ export function useDailyFaith(enabled: boolean) {
     if (!ALWAYS_SHOW) {
       const pending = safeStorage.getJSON<DailyFaith | null>(PENDING_KEY, null);
       if (pending && pending.id && pending.text) {
+        // טעינת משפט שמור מ-localStorage מסשן קודם - לא ניתן לחשב את זה ברינדור
+        // כי תלוי גם ב-enabled/timing checks למעלה, לא רק בפרופס.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setQuote(pending);
         markPopupShown('daily-faith');
         try { sessionStorage.setItem('sb_faith_session_shown', '1'); } catch { /* */ }

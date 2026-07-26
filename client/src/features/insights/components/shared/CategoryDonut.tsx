@@ -24,15 +24,19 @@ export const CategoryDonut = ({ items, isDark }: {
   // נבחרת לתצוגה במרכז: hover או הראשונה
   const displayed = items.find(c => c.category === hovered) || items[0];
 
-  // צבירת אורכי קשת לכל קטגוריה
-  let cumulative = 0;
-  const arcs = items.map(item => {
-    const fraction = item.count / total;
-    const length = fraction * circumference;
-    const offset = -cumulative * circumference - 0.25 * circumference; // התחלה ב-12:00
-    cumulative += fraction;
-    return { ...item, length, offset, fraction };
-  });
+  // צבירת אורכי קשת לכל קטגוריה - reduce עם accumulator מקומי (לא let חיצוני)
+  // כדי לא לבצע מוטציה על משתנה מחוץ ל-closure.
+  const { arcs } = items.reduce<{ cumulative: number; arcs: (typeof items[number] & { length: number; offset: number; fraction: number })[] }>(
+    (acc, item) => {
+      const fraction = item.count / total;
+      const length = fraction * circumference;
+      const offset = -acc.cumulative * circumference - 0.25 * circumference; // התחלה ב-12:00
+      acc.arcs.push({ ...item, length, offset, fraction });
+      acc.cumulative += fraction;
+      return acc;
+    },
+    { cumulative: 0, arcs: [] }
+  );
 
   return (
     <Box sx={{

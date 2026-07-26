@@ -99,7 +99,7 @@ export function useSocketNotifications(
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     // פונקציית עזר משותפת ל-4 אירועי מוצר
     const handleProductEvent = (

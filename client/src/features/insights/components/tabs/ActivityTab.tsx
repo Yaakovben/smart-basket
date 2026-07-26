@@ -78,6 +78,7 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
     heroIcon = '🔥';
     heroText = <>אתה <b>{streaks.currentWeeks} שבועות</b> ברצף — המשך כך!</>;
   } else if (hasPrediction) {
+    // eslint-disable-next-line react-hooks/purity -- טקסט "בעוד X ימים" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
     const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - Date.now()) / 86_400_000));
     heroIcon = '🛒';
     heroText = days === 0

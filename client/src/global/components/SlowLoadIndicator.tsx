@@ -67,7 +67,11 @@ export const SlowLoadIndicator = ({
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!active) { setShow(false); return; }
+    if (!active) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShow(false);
+      return;
+    }
     const t = window.setTimeout(() => setShow(true), delayMs);
     return () => window.clearTimeout(t);
   }, [active, delayMs]);

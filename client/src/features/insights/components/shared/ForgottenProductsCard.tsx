@@ -32,6 +32,7 @@ export const ForgottenProductsCard = ({ items, isDark }: {
       </Box>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6 }}>
         {items.slice(0, 5).map((p, i) => {
+          // eslint-disable-next-line react-hooks/purity -- טקסט "לפני X ימים" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
           const daysAgo = Math.max(1, Math.floor((Date.now() - new Date(p.lastSeen).getTime()) / 86_400_000));
           return (
             <Box key={i} sx={{

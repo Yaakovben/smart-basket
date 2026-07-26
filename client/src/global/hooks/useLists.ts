@@ -96,7 +96,7 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   // טעינת כל הרשימות מחדש כשהאפליקציה חוזרת לחזית (למשל אחרי לחיצה על התראה)
   // אירועי socket שנשלחו בזמן שהאפליקציה ברקע אבדו, לכן צריך טעינה חדשה
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {

@@ -75,6 +75,8 @@ export function useInsightsData(tab: InsightTab) {
     if (autoSelectedRef.current) return;
     if (selectedListId === null && allUserLists.length > 0) {
       autoSelectedRef.current = true;
+      // בחירה אוטומטית חד-פעמית ברגע שהרשימות נטענות (אסינכרוני) - לא ניתן לחשב ברינדור
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedListId(allUserLists[0].id);
     } else if (selectedListId !== null) {
       autoSelectedRef.current = true;

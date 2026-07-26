@@ -68,6 +68,7 @@ export const PriceSyncChainListItem = ({
               📍 {c.branchCount && c.branchCount > 0 ? `${c.branchCount} סניפים` : 'אין סניפים'}
             </Typography>
             {c.lastSyncAt && (() => {
+              // eslint-disable-next-line react-hooks/purity -- טקסט "לפני X" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
               const ageH = (Date.now() - new Date(c.lastSyncAt).getTime()) / 3_600_000;
               const stale = ageH > 24;
               const label = ageH < 1 ? 'פחות משעה' : ageH < 24 ? `${Math.round(ageH)}ש` : `${Math.round(ageH / 24)}י`;

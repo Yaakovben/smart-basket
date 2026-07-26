@@ -197,6 +197,10 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
       />
 
+      {/* pullActiveRef.current: ref מכוון בכוונה (לא state) כדי להימנע מ-render נוסף
+          במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
+          לרגע הרינדור הבא. ראה usePullToRefresh.ts. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
       <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} pullActive={pullActiveRef.current} />
 
       {/* Content */}
@@ -210,6 +214,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           WebkitOverflowScrolling: 'touch',
           willChange: 'scroll-position',
           transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance, PULL_MAX)}px)` : 'none',
+          // pullActiveRef: ראה הערה למעלה ליד PullToRefreshIndicator
+          // eslint-disable-next-line react-hooks/refs
           transition: pullActiveRef.current ? 'none' : 'transform 0.2s ease',
         }}
         onTouchStart={handlePullStart}

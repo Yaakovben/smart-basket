@@ -62,6 +62,9 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
   // היה גורם לטעינה מחדש בכל פעם שאדמין חוזר מטאב אחר → עומס מיותר.
   // אם אדמין רוצה לרענן יש כפתור Refresh במסך.
   useEffect(() => {
+    // fetchData מגדיר loading/error מיידית (spinner) לפני הבקשה האסינכרונית -
+    // דפוס "fetch on mount" סטנדרטי, אין דרך להימנע מ-setState סינכרוני כאן.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 

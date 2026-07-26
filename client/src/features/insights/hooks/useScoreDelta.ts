@@ -12,6 +12,8 @@ export const useScoreDelta = (currentScore: number): number | null => {
       const raw = window.localStorage.getItem(KEY);
       const last = raw ? parseInt(raw, 10) : NaN;
       if (!isNaN(last) && last !== currentScore) {
+        // תלוי בקריאת localStorage (I/O), לא ניתן לחשב ברינדור
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDelta(currentScore - last);
       }
       window.localStorage.setItem(KEY, String(currentScore));

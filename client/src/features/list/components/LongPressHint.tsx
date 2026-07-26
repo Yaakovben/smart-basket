@@ -19,17 +19,17 @@ const pulseFinger = keyframes`
 export const LongPressHint = memo(() => {
   const [show, setShow] = useState(() => safeStorage.get(HINT_KEY) !== 'true');
 
+  const dismiss = () => {
+    setShow(false);
+    safeStorage.set(HINT_KEY, 'true');
+  };
+
   useEffect(() => {
     if (!show) return;
     // נעלם אוטומטית אחרי 12 שניות — המשתמש לא חייב ללחוץ X
     const timer = window.setTimeout(() => dismiss(), 12_000);
     return () => window.clearTimeout(timer);
   }, [show]);
-
-  const dismiss = () => {
-    setShow(false);
-    safeStorage.set(HINT_KEY, 'true');
-  };
 
   if (!show) return null;
 

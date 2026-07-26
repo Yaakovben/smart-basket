@@ -26,6 +26,8 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
   const [tab, setTab] = useState<'text' | 'qr'>('text');
   const [hasSwitched, setHasSwitched] = useState(false);
 
+  // איפוס טאב/דגל כשהמודאל נסגר - התאמה ל-prop חיצוני (isOpen)
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (!isOpen) { setTab('text'); setHasSwitched(false); } }, [isOpen]);
 
   if (!isOpen) return null;

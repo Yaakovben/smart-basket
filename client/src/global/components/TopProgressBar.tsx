@@ -61,6 +61,7 @@ export const TopProgressBar = ({ active, color = '#14B8A6', label }: Props) => {
 
   useEffect(() => {
     if (active) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExiting(false);
       setVisible(true);
     } else if (visible) {

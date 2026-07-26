@@ -82,6 +82,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
     if (!isOpen && offset > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOffset(0);
     }
   }, [isOpen, offset]);

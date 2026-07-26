@@ -13,13 +13,16 @@ export const useCelebration = (products: Product[]) => {
 
   useEffect(() => () => clearTimeout(celebrationTimer.current), []);
 
-  // זיהוי חגיגה: כל המוצרים נקנו + המשתמש זה עתה סימן מוצר
+  // זיהוי חגיגה: כל המוצרים נקנו + המשתמש זה עתה סימן מוצר. setState כאן
+  // מלווה תמיד ברטט+טיימר (side effects אמיתיים) - אי אפשר להזיז ל-render
+  // כי הפתרון החלופי (השוואת ref) אסור באותה מידה ע"י react-hooks/refs.
   useEffect(() => {
     if (!justMarkedPurchased.current) return;
     // איפוס הדגל תמיד כדי למנוע הפעלה שגויה מאירועי socket
     justMarkedPurchased.current = false;
     if (products.length > 0 && products.every((p: Product) => p.isPurchased)) {
       clearTimeout(celebrationTimer.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowCelebration(true);
       haptic('heavy');
       celebrationTimer.current = setTimeout(() => setShowCelebration(false), 3000);

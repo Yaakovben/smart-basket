@@ -77,7 +77,6 @@ export const useHome = ({
         if (password) setJoinPass(password);
       }, 100);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ===== מצב טפסים =====
