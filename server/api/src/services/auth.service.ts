@@ -10,7 +10,7 @@ import { UserDAL, LoginActivityDAL } from '../dal';
 import { ConflictError, AuthError } from '../errors';
 import { sanitizeText } from '../utils';
 import { createTokens } from './token.service';
-import { env } from '../config';
+import { env, logger } from '../config';
 import type { RegisterInput, LoginInput } from '../validators';
 import type { AuthTokens, IUserResponse } from '../types';
 
@@ -31,6 +31,8 @@ async function createTokensAndLog(
 ): Promise<AuthTokens> {
   const tokens = await createTokens(userId, email, name);
   await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, ipAddress, userAgent });
+  // מאפס את דגל תזכורת חוסר-הפעילות - לא על הנתיב הקריטי, לא חוסם את ההתחברות
+  UserDAL.clearInactivityReminderFlag(userId).catch(err => logger.warn('Failed to clear inactivity flag:', err));
   return tokens;
 }
 

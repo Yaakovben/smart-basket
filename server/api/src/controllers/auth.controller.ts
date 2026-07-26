@@ -13,7 +13,7 @@ import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from
 import { asyncHandler } from '../utils';
 import { AuthError } from '../errors';
 import { logger } from '../config';
-import { LoginActivityDAL } from '../dal';
+import { LoginActivityDAL, UserDAL } from '../dal';
 import * as authService from '../services/auth.service';
 import { refreshAccessToken, invalidateRefreshToken } from '../services/token.service';
 
@@ -98,6 +98,8 @@ export const logAppOpen = asyncHandler(async (req: AuthRequest, res: Response) =
     ipAddress,
     userAgent,
   }).catch(err => logger.warn('Failed to log app open:', err));
+  // מאפס את דגל תזכורת חוסר-הפעילות - ראו auth.service.ts createTokensAndLog
+  UserDAL.clearInactivityReminderFlag(user.id).catch(err => logger.warn('Failed to clear inactivity flag:', err));
 
   res.status(204).send();
 });

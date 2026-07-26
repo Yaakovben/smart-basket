@@ -12,6 +12,7 @@ export interface IUser extends Document {
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
   listOrder: string[];
+  inactivityReminderSentAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -63,6 +64,12 @@ const userSchema = new Schema<IUser>(
     listOrder: [{
       type: String,
     }],
+    // מתי נשלחה תזכורת "שבת בפתח" בפעם האחרונה (null = לא נשלחה, או שהתאפסה
+    // אחרי שהמשתמש חזר לפעילות). ראו jobs/inactivityReminder.job.ts.
+    inactivityReminderSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -93,5 +100,6 @@ userSchema.methods.comparePassword = async function (
 
 // אינדקסים ל-email ו-googleId נוצרים ע"י unique: true
 userSchema.index({ mutedGroupIds: 1 });
+userSchema.index({ inactivityReminderSentAt: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);

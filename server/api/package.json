@@ -10,7 +10,8 @@
     "lint": "eslint src/**/*.ts",
     "refresh-prices": "ts-node-dev --transpile-only src/features/priceComparison/scripts/refresh-prices.ts",
     "geocode-branches": "ts-node-dev --transpile-only src/features/priceComparison/scripts/geocode-branches.ts",
-    "fill-addresses": "ts-node-dev --transpile-only src/features/priceComparison/scripts/fill-missing-addresses.ts"
+    "fill-addresses": "ts-node-dev --transpile-only src/features/priceComparison/scripts/fill-missing-addresses.ts",
+    "check-inactivity": "ts-node-dev --transpile-only src/jobs/scripts/run-inactivity-check.ts"
   },
   "keywords": [
     "smartbasket",
