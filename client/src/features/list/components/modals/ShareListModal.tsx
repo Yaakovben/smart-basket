@@ -153,9 +153,10 @@ export const ShareListModal = memo(({
             variant="outlined"
             onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
             aria-label="אפשרויות נוספות"
-            sx={{ flex: 1, minWidth: 0, py: 1.5 }}
+            startIcon={<MoreVertIcon />}
+            sx={{ flex: 1, minWidth: 0, py: 1.5, gap: 0.5, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '4px' } }}
           >
-            <MoreVertIcon />
+            עוד
           </Button>
         </Box>
         <Menu
