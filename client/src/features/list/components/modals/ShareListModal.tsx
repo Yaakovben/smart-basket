@@ -54,7 +54,19 @@ export const ShareListModal = memo(({
   // קריאה אחרת (גם קריאה סינכרונית תמימה כמו trackEvent) - חלק מהדפדפנים/
   // דפדפני PWA מזהים "פעולה יזומה ע"י משתמש" רק אם אין שום דבר לפניה,
   // ואחרת עלולים לחסום אותה בדיוק כמו שחוסמים חלון קופץ (popup).
+  //
+  // iOS Safari (בעיקר כ-PWA מותקן) חוסם את window.print() לגמרי עם הודעת
+  // "האפשרות להדפיס באופן אוטומטי נחסמה" - זו לא בעיית תזמון בקוד, זו
+  // מגבלת פלטפורמה בלי דרך לעקוף אותה. לכן ב-iOS משתמשים ב-Share Sheet
+  // המובנה (navigator.share) במקום - המשתמש יכול לבחור משם "הדפסה" (וממנה
+  // גם "שמור כ-PDF"), בלי לגעת בזרימה הקיימת שכבר עובדת בכרום/אנדרואיד.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const handlePrint = () => {
+    if (isIOS && navigator.share) {
+      navigator.share({ text: generateShareListMessage(list, t) }).catch(() => {});
+      trackEvent('list_shared', { channel: 'pdf_ios_share' });
+      return;
+    }
     window.print();
     trackEvent('list_shared', { channel: 'pdf' });
   };
