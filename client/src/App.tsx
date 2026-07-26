@@ -34,6 +34,10 @@ const handleNewVersion = () => {
   if (storedVersion) {
     localStorage.setItem('app_build_version', buildVersion);
     sessionStorage.setItem('version_reload_done', buildVersion);
+    // מסמן שכבר רעננו הפעם - מונע רענון כפול: אחרי שה-SW נרשם מחדש (בוטל
+    // כאן ולמטה) הוא יפעיל activate ויבקש עוד רענון (ראו sw.ts + router/index.tsx),
+    // אבל הרענון הזה כבר מכסה את אותו עדכון, אז אין צורך בשני.
+    try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch { /* storage חסום */ }
     // מסך עדכון: רקטה + halo, מסביר למשתמש שמתבצע עדכון לפני הרענון.
     // מוזרק כ-HTML גולמי כי זה רץ לפני שה-React מורכב.
     showUpdateOverlay();
@@ -138,15 +142,6 @@ handleNewVersion();
     fetch(healthUrl, { method: 'GET', cache: 'no-store', credentials: 'omit' }).catch(() => {});
   } catch { /* ignore */ }
 })();
-
-// הסתרת מסך הטעינה הראשוני - הסרה מיידית בלי fade כדי לחסוך 300ms של המתנה
-export const hideInitialLoader = () => {
-  const loader = document.getElementById('initial-loader');
-  if (loader) {
-    loader.remove();
-    document.body.classList.add('app-loaded');
-  }
-};
 
 const ThemedApp = () => {
   const { settings } = useSettings();

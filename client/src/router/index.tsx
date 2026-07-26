@@ -11,7 +11,7 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
-import { hideInitialLoader } from "../App";
+import { hideInitialLoader } from "../global/helpers/initialLoader";
 
 // טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/pages/LoginPage";
