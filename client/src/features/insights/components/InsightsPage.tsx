@@ -2,10 +2,10 @@ import { memo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { SlowLoadIndicator } from '../../../global/components';
+import { SlowLoadIndicator, ErrorBoundary } from '../../../global/components';
 import { haptic } from '../../../global/helpers';
 import { useInsightsData } from '../hooks/useInsightsData';
-import { tabEnter } from './insightsShared';
+import { tabEnter, InsightsEmptyState } from './insightsShared';
 import type { InsightTab } from '../types/insights-types';
 import { InsightsHeader } from './InsightsHeader';
 import { InsightsLoadingState } from './InsightsLoadingState';
@@ -62,6 +62,23 @@ export const InsightsPage = memo(() => {
     );
   }
 
+  // נופל-בטוח פר-טאב: אם טאב בודד קורס, רק התוכן שלו מוחלף בהודעה ידידותית -
+  // הכותרת/בר-הטאבים/ניווט תחתון נשארים תקינים כדי שאפשר לעבור לטאב אחר
+  // או לחזור הביתה, במקום לאבד את כל עמוד התובנות (ErrorBoundary כללי יותר
+  // קיים ב-router/index.tsx, אבל הוא היה מחליף את כל העמוד).
+  const tabCrashFallback = (
+    <InsightsEmptyState
+      isDark={isDark}
+      accent="#F59E0B"
+      mainEmoji="😕"
+      floatingItems={['⚠️', '🔧', '💤']}
+      title="הטאב הזה לא נטען כרגע"
+      description="נסה טאב אחר למעלה, או חזור מאוחר יותר."
+      ctaLabel="לדף הבית"
+      onCtaClick={() => navigate('/')}
+    />
+  );
+
   return (
     <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
@@ -77,42 +94,52 @@ export const InsightsPage = memo(() => {
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
       <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} />
 
-      {/* ===== תוכן לפי טאב ===== */}
+      {/* ===== תוכן לפי טאב - כל טאב עטוף ב-ErrorBoundary נפרד ===== */}
       <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>
         {tab === 'price' && (
-          <PriceTab
-            isDark={isDark}
-            priceData={priceData}
-            priceLoading={priceLoading}
-            priceLoadingLabel={priceLoadingLabel}
-            priceError={priceError}
-            onRetry={retryPriceFetch}
-            locationStatus={locationStatus}
-            onRequestLocation={requestLocation}
-            onResetLocationDenied={resetLocationDenied}
-            selectedListId={selectedListId}
-            onSelectListId={setSelectedListId}
-            allUserLists={allUserLists}
-          />
+          <ErrorBoundary fallback={tabCrashFallback}>
+            <PriceTab
+              isDark={isDark}
+              priceData={priceData}
+              priceLoading={priceLoading}
+              priceLoadingLabel={priceLoadingLabel}
+              priceError={priceError}
+              onRetry={retryPriceFetch}
+              locationStatus={locationStatus}
+              onRequestLocation={requestLocation}
+              onResetLocationDenied={resetLocationDenied}
+              selectedListId={selectedListId}
+              onSelectListId={setSelectedListId}
+              allUserLists={allUserLists}
+            />
+          </ErrorBoundary>
         )}
 
         {tab === 'lists' && (
-          <ListsTab
-            isDark={isDark}
-            stats={data.stats}
-            groupStats={data.groupStats}
-            priceData={priceData}
-            currentUserName={currentUserName}
-            onNavigateHome={() => navigate('/')}
-            onNavigateToList={(listId) => navigate(`/list/${listId}`)}
-          />
+          <ErrorBoundary fallback={tabCrashFallback}>
+            <ListsTab
+              isDark={isDark}
+              stats={data.stats}
+              groupStats={data.groupStats}
+              priceData={priceData}
+              currentUserName={currentUserName}
+              onNavigateHome={() => navigate('/')}
+              onNavigateToList={(listId) => navigate(`/list/${listId}`)}
+            />
+          </ErrorBoundary>
         )}
 
         {tab === 'activity' && (
-          <ActivityTab data={data} isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
+          <ErrorBoundary fallback={tabCrashFallback}>
+            <ActivityTab data={data} isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />
+          </ErrorBoundary>
         )}
 
-        {tab === 'spending' && <SpendingTab data={data} isDark={isDark} t={tStr} />}
+        {tab === 'spending' && (
+          <ErrorBoundary fallback={tabCrashFallback}>
+            <SpendingTab data={data} isDark={isDark} t={tStr} />
+          </ErrorBoundary>
+        )}
       </Box>
 
       <InsightsBottomNav isDark={isDark} onNavigateHome={() => navigate('/')} t={tStr} />

@@ -29,7 +29,10 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
   const { spending } = data;
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
 
-  if (!spending.enabled) {
+  // הגנה: אם data הגיע מ-cache מקומי ישן (מלפני שהתווסף שדה spending), הוא
+  // עלול להיות undefined לרגע עד שהנתונים הטריים מהשרת דורסים אותו - בלי
+  // ההגנה הזו זו קריסה (Cannot read properties of undefined).
+  if (!spending || !spending.enabled) {
     return (
       <InsightsEmptyState
         isDark={isDark}
