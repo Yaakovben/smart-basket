@@ -23,10 +23,25 @@ interface Props {
 // (ממזג את מה שהיה קודם ReconnectingBanner - שני האותות היו יכולים להציג שני
 // באנרים חופפים). מוצג רק כשהמכשיר כן מחובר לאינטרנט (navigator.onLine) - שם
 // OfflineBanner כבר מכסה את המקרה של ניתוק מלא.
+// דיליי גרייס לפני הצגת הבאנר - לכל אחד מהאותות. חוזר מרקע לחזית (יציאה
+// וחזרה לאפליקציה) גורם לפעמים לבקשה הראשונה להיכשל רגעית עד שהחיבור/טוקן
+// מתייצבים; בלי דיליי זה מהבהב באנר שגיאה מיידי גם כשהחיבור בסדר גמור
+// שנייה אחר כך.
+const GRACE_MS = 4000;
+
 export const ServerConnectionBanner = ({ visible }: Props) => {
   const { t } = useSettings();
   const [deviceOnline, setDeviceOnline] = useState(navigator.onLine);
   const [socketDisconnected, setSocketDisconnected] = useState(false);
+  const [fetchErrorConfirmed, setFetchErrorConfirmed] = useState(false);
+  // איפוס מיידי כש-visible חוזר ל-false - נעשה בזמן render (התבנית המתועדת
+  // ב-React ל"התאמת state לשינוי prop"), לא ב-effect, כדי לא לקרוא ל-setState
+  // באופן סינכרוני בתוך גוף ה-effect.
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (!visible) setFetchErrorConfirmed(false);
+  }
 
   useEffect(() => {
     const handleOnline = () => setDeviceOnline(true);
@@ -39,8 +54,16 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     };
   }, []);
 
-  // מעקב socket בזמן אמת - זהה למה שהיה ב-ReconnectingBanner. דיליי של 3
-  // שניות אחרי ניתוק מונע הבזקים על ניתוקים קצרים/רגילים (החלפת רשת וכו').
+  // דיליי על אות ה-fetch (visible) - בלי זה, בקשת GET שנכשלת פעם אחת מיד
+  // בחזרה מרקע מציגה שגיאה מיידית גם אם ה-retry האוטומטי מצליח שנייה אחר כך.
+  useEffect(() => {
+    if (!visible) return;
+    const timer = setTimeout(() => setFetchErrorConfirmed(true), GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [visible]);
+
+  // מעקב socket בזמן אמת - זהה למה שהיה ב-ReconnectingBanner. דיליי אחרי
+  // ניתוק מונע הבזקים על ניתוקים קצרים/רגילים (החלפת רשת וכו').
   // 'connect_error' (לא-אימות) נצרך גם כן: זה האות היחיד כשהשרת לא נגיש
   // עוד *לפני* חיבור ראשוני מוצלח - 'disconnect' לא נורה במקרה הזה כי הוא
   // מניח שהיה חיבור פעיל שנפל.
@@ -51,7 +74,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
       if (disconnectTimer) return;
       disconnectTimer = setTimeout(() => {
         if (navigator.onLine) setSocketDisconnected(true);
-      }, 3000);
+      }, GRACE_MS);
     };
 
     const unsubDisconnect = socketService.on('disconnect', scheduleShow);
@@ -70,7 +93,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     };
   }, []);
 
-  const shouldShow = (visible || socketDisconnected) && deviceOnline;
+  const shouldShow = (fetchErrorConfirmed || socketDisconnected) && deviceOnline;
   if (!shouldShow) return null;
 
   return (
@@ -98,7 +121,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
         fontWeight: 600,
         lineHeight: 1.4,
       }}>
-        {socketDisconnected && !visible ? t('reconnectingMessage') : t('serverUnreachableMessage')}
+        {socketDisconnected && !fetchErrorConfirmed ? t('reconnectingMessage') : t('serverUnreachableMessage')}
       </Typography>
     </Box>
   );
