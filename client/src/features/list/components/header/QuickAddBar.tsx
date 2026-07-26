@@ -1,6 +1,7 @@
 import { memo, useState, useCallback, useRef, useMemo } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import type { List } from '../../../../global/types';
@@ -132,6 +133,17 @@ export const QuickAddBar = memo(({ list, onQuickAdd }: QuickAddBarProps) => {
             const ready = quickAddValue.trim().length >= 2;
             return (
               <InputAdornment position="end" sx={{ gap: 0.25 }}>
+                {quickAddValue.length > 2 && (
+                  <IconButton
+                    onClick={() => { haptic('light'); setQuickAddValue(''); }}
+                    size="small"
+                    sx={{ color: 'text.secondary', width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}
+                    aria-label={t('close')}
+                    tabIndex={-1}
+                  >
+                    <CloseIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                )}
                 {speechSupported && (!ready || isListening) && (
                   <IconButton
                     onClick={toggleSpeech}
