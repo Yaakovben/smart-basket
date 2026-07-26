@@ -348,8 +348,8 @@ export const he: Translations = {
   clearCacheStepCookies: 'ניקוי עוגיות',
   // Share
   shareListDescription: 'שתף את רשימת הקניות שלך',
-  exportPdf: 'ייצוא / הדפסה כ-PDF',
-  exportPdfShort: 'PDF',
+  copyList: 'העתק רשימה',
+  downloadPdf: 'הורד PDF',
   // Quick Add
   quickAddPlaceholder: 'הוספת מוצר מהירה...',
   searchProducts: 'חיפוש מוצרים...',

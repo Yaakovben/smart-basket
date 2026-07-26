@@ -346,8 +346,8 @@ export type TranslationKeys =
   | 'clearCacheStepCookies'
   // Share
   | 'shareListDescription'
-  | 'exportPdf'
-  | 'exportPdfShort'
+  | 'copyList'
+  | 'downloadPdf'
   // Quick Add
   | 'quickAddPlaceholder'
   | 'searchProducts'

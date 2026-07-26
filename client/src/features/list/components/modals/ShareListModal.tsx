@@ -12,6 +12,7 @@ import { trackEvent } from '../../../../global/services/analytics';
 import { modalOverlaySx, modalContainerSx } from '../../helpers/listModalStyles';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { PrintListView } from './PrintListView';
+import { generateListPdf } from './generateListPdf';
 
 // ===== מודאל שיתוף רשימה =====
 interface ShareListModalProps {
@@ -61,17 +62,41 @@ export const ShareListModal = memo(({
   //
   // iOS Safari (בעיקר כ-PWA מותקן) חוסם את window.print() לגמרי עם הודעת
   // "האפשרות להדפיס באופן אוטומטי נחסמה" - זו לא בעיית תזמון בקוד, זו
-  // מגבלת פלטפורמה בלי דרך לעקוף אותה. לכן ב-iOS משתמשים ב-Share Sheet
-  // המובנה (navigator.share) במקום - המשתמש יכול לבחור משם "הדפסה" (וממנה
-  // גם "שמור כ-PDF"), בלי לגעת בזרימה הקיימת שכבר עובדת בכרום/אנדרואיד.
+  // מגבלת פלטפורמה בלי דרך לעקוף אותה. לכן ב-iOS מייצרים קובץ PDF אמיתי
+  // בצד הלקוח (צילום ה-DOM של PrintListView, ראו generateListPdf.ts) ומשתפים
+  // אותו כקובץ דרך ה-Share Sheet - בלי לגעת בזרימת window.print() הקיימת
+  // שכבר עובדת בכרום/אנדרואיד.
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const handlePrint = () => {
-    // חשוב: window.print()/navigator.share() חייבים להישאר הפעולה הראשונה -
-    // סגירת התפריט (setState) מגיעה רק אחריהם, לא לפניהם.
-    if (isIOS && navigator.share) {
-      navigator.share({ text: generateShareListMessage(list, t) }).catch(() => {});
-      trackEvent('list_shared', { channel: 'pdf_ios_share' });
+    if (isIOS) {
       setMoreMenuAnchor(null);
+      trackEvent('list_shared', { channel: 'pdf_ios' });
+      generateListPdf(list.name)
+        .then(async (pdfFile) => {
+          if (pdfFile && navigator.share && navigator.canShare?.({ files: [pdfFile] })) {
+            try {
+              await navigator.share({ files: [pdfFile], title: list.name });
+              return;
+            } catch (err) {
+              // AbortError = המשתמש ביטל בכוונה, לא נופלים לשום דבר אחר.
+              if ((err as DOMException)?.name === 'AbortError') return;
+              // כשלון אחר (למשל iOS חסם את הקריאה בגלל זמן העיבוד) - נופלים
+              // להורדה ישירה כדי שהמשתמש עדיין יקבל את הקובץ בפועל.
+            }
+            const url = URL.createObjectURL(pdfFile);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = pdfFile.name;
+            a.click();
+            URL.revokeObjectURL(url);
+            return;
+          }
+          // אין תמיכה בשיתוף קבצים, או שיצירת ה-PDF נכשלה - חזרה לטקסט רגיל.
+          if (navigator.share) {
+            await navigator.share({ text: generateShareListMessage(list, t) }).catch(() => {});
+          }
+        })
+        .catch(() => showToast(t('errorOccurred')));
       return;
     }
     window.print();
@@ -140,23 +165,22 @@ export const ShareListModal = memo(({
               trackEvent('list_shared', { channel: 'whatsapp' });
             }}
             sx={{
-              flex: 3,
+              flex: 1,
               bgcolor: BRAND_COLORS.whatsapp, color: 'white',
               '&:hover': { bgcolor: BRAND_COLORS.whatsappHover },
               gap: 1, py: 1.5, fontSize: 16,
             }}
             aria-label="WhatsApp"
           >
-            <WhatsAppIcon />
+            <WhatsAppIcon size={23} />
           </Button>
           <Button
             variant="outlined"
             onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
             aria-label="אפשרויות נוספות"
-            startIcon={<MoreVertIcon />}
-            sx={{ flex: 1, minWidth: 0, py: 1.5, gap: 0.5, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '4px' } }}
+            sx={{ flex: '0 0 auto', minWidth: 0, width: 52, py: 1.5, px: 0 }}
           >
-            עוד
+            <MoreVertIcon />
           </Button>
         </Box>
         <Menu
@@ -168,11 +192,11 @@ export const ShareListModal = memo(({
         >
           <MenuItem onClick={handleCopy}>
             <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>{t('copy')}</ListItemText>
+            <ListItemText>{t('copyList')}</ListItemText>
           </MenuItem>
           <MenuItem onClick={handlePrint}>
             <ListItemIcon><PictureAsPdfIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>{t('exportPdfShort')}</ListItemText>
+            <ListItemText>{t('downloadPdf')}</ListItemText>
           </MenuItem>
         </Menu>
       </Box>

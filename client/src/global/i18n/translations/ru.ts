@@ -348,8 +348,8 @@ export const ru: Translations = {
   clearCacheStepCookies: 'Очистка cookies',
   // Share
   shareListDescription: 'Поделитесь своим списком покупок',
-  exportPdf: 'Экспорт / печать в PDF',
-  exportPdfShort: 'PDF',
+  copyList: 'Копировать список',
+  downloadPdf: 'Скачать PDF',
   // Quick Add
   quickAddPlaceholder: 'Быстро добавить товар...',
   searchProducts: 'Поиск товаров...',

@@ -348,8 +348,8 @@ export const en: Translations = {
   clearCacheStepCookies: 'Clearing cookies',
   // Share
   shareListDescription: 'Share your shopping list',
-  exportPdf: 'Export / print as PDF',
-  exportPdfShort: 'PDF',
+  copyList: 'Copy list',
+  downloadPdf: 'Download PDF',
   // Quick Add
   quickAddPlaceholder: 'Quick add product...',
   searchProducts: 'Search products...',
