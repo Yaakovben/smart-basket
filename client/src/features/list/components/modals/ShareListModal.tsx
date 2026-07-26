@@ -3,12 +3,14 @@ import { Box, Typography, Button, IconButton, Avatar, Chip } from '@mui/material
 import CloseIcon from '@mui/icons-material/Close';
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import type { List, Product } from '../../../../global/types';
 import { COMMON_STYLES, generateShareListMessage, BRAND_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { trackEvent } from '../../../../global/services/analytics';
 import { modalOverlaySx, modalContainerSx } from '../../helpers/listModalStyles';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { PrintListView } from './PrintListView';
 
 // ===== מודאל שיתוף רשימה =====
 interface ShareListModalProps {
@@ -44,6 +46,13 @@ export const ShareListModal = memo(({
     navigator.clipboard?.writeText(generateShareListMessage(list, t))
       .then(() => { trackEvent('list_shared', { channel: 'copy' }); showToast(t('copied')); onClose(); })
       .catch(() => showToast(t('copyError')));
+  };
+
+  // ייצוא/שיתוף כ-PDF: מסתמך על דיאלוג ההדפסה של הדפדפן (window.print) על
+  // PrintListView שמעוצב ייעודית להדפסה - בלי להוסיף ספריית PDF לבאנדל.
+  const handlePrint = () => {
+    trackEvent('list_shared', { channel: 'pdf' });
+    window.print();
   };
 
   return (
@@ -123,7 +132,17 @@ export const ShareListModal = memo(({
             {t('copy')}
           </Button>
         </Box>
+        <Button
+          fullWidth
+          onClick={handlePrint}
+          startIcon={<PictureAsPdfIcon />}
+          sx={{ mt: 1.25, color: 'text.secondary', gap: 1 }}
+          aria-label={t('exportPdf')}
+        >
+          {t('exportPdf')}
+        </Button>
       </Box>
+      <PrintListView list={list} pendingProducts={pendingProducts} />
     </>
   );
 });

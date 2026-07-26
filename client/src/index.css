@@ -100,3 +100,20 @@ input, textarea, select {
     overscroll-behavior-y: none;
   }
 }
+
+/* הדפסה/ייצוא כ-PDF של רשימה (PrintListView): מסתירים הכל חוץ מהתוכן
+   המיועד להדפסה, כדי לא להדפיס את שאר ה-UI של האפליקציה. .print-list-view
+   עצמו מוסתר עם display:none במסך הרגיל ורק ה-media query הזה חושף אותו. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-list-view, .print-list-view * {
+    visibility: visible;
+  }
+  .print-list-view {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+  }
+}
