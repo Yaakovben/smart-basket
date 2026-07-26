@@ -349,6 +349,8 @@ export const ru: Translations = {
   // Share
   shareListDescription: 'Поделитесь своим списком покупок',
   exportPdf: 'Экспорт / печать в PDF',
+  exportPdfShort: 'PDF',
+  syncing: 'Сохранение...',
   // Quick Add
   quickAddPlaceholder: 'Быстро добавить товар...',
   searchProducts: 'Поиск товаров...',

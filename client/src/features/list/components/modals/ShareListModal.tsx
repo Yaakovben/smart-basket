@@ -134,9 +134,10 @@ export const ShareListModal = memo(({
             fullWidth
             onClick={handleCopy}
             aria-label={t('copy')}
-            startIcon={<ContentCopyIcon />}
-            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם PDF)
-            sx={{ gap: 1, py: 0.75, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+            startIcon={<ContentCopyIcon sx={{ fontSize: '20px !important' }} />}
+            // minHeight דורס את ברירת המחדל הגלובלית (48) - כפתור משני קומפקטי,
+            // נמוך בבירור מכפתור ה-WhatsApp הראשי מעליו.
+            sx={{ gap: 0.75, minHeight: 40, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '6px' } }}
           >
             {t('copy')}
           </Button>
@@ -144,12 +145,11 @@ export const ShareListModal = memo(({
             variant="outlined"
             fullWidth
             onClick={handlePrint}
-            startIcon={<PictureAsPdfIcon />}
             aria-label={t('exportPdf')}
-            // אייקון בגודל קבוע 20x20 בכל המכשירים (אחיד עם כפתור ההעתקה)
-            sx={{ gap: 1, py: 0.75, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '8px', '& svg': { width: 20, height: 20, fontSize: 20 } } }}
+            startIcon={<PictureAsPdfIcon sx={{ fontSize: '20px !important' }} />}
+            sx={{ gap: 0.75, minHeight: 40, '& .MuiButton-startIcon': { marginInlineStart: 0, marginInlineEnd: '6px' } }}
           >
-            {t('exportPdf')}
+            {t('exportPdfShort')}
           </Button>
         </Box>
       </Box>

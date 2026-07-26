@@ -2,7 +2,7 @@ import { memo, useState, useRef, useCallback, useMemo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType } from '../../../global/types';
-import { ConfirmModal } from '../../../global/components';
+import { ConfirmModal, TopProgressBar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
@@ -68,7 +68,8 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
-    refreshList, showClearList, setShowClearList, handleClearList, handleResetList, showCelebration
+    refreshList, showClearList, setShowClearList, handleClearList, handleResetList, showCelebration,
+    isSyncing
   } = useList({
     list, user, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, onBack, showToast
   });
@@ -158,6 +159,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* מציג "שומר..." כל עוד יש פעולה שממתינה לאישור השרת (עדכון אופטימי -
+          המשתמש צריך לדעת שהפעולה עוד לא באמת נשמרה אם יסגור את האפליקציה עכשיו) */}
+      <TopProgressBar active={isSyncing} label={t('syncing')} />
       {/* Header */}
       <ListHeader
         list={list}

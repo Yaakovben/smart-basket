@@ -349,6 +349,8 @@ export const he: Translations = {
   // Share
   shareListDescription: 'שתף את רשימת הקניות שלך',
   exportPdf: 'ייצוא / הדפסה כ-PDF',
+  exportPdfShort: 'PDF',
+  syncing: 'שומר...',
   // Quick Add
   quickAddPlaceholder: 'הוספת מוצר מהירה...',
   searchProducts: 'חיפוש מוצרים...',

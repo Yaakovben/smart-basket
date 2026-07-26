@@ -69,6 +69,21 @@ export const useList = ({
   // תור פעולות ממתינות למוצרים עם מזהה זמני
   const pendingTempActions = useRef(new Map<string, 'toggle'>());
 
+  // ===== מצב "שומר..." - משקף פעולות שממתינות לאישור השרת =====
+  // חשוב בגלל עדכון אופטימי: אם המשתמש סוגר את האפליקציה בזמן שהבקשה עוד
+  // באוויר (שרת לא רץ/מתעורר לאט), הפעולה לא באמת נשמרה בלי שהוא ידע.
+  // מונה (לא boolean) כי כמה פעולות יכולות לרוץ בו-זמנית.
+  const pendingSyncCount = useRef(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const beginSync = useCallback(() => {
+    pendingSyncCount.current += 1;
+    setIsSyncing(true);
+  }, []);
+  const endSync = useCallback(() => {
+    pendingSyncCount.current = Math.max(0, pendingSyncCount.current - 1);
+    if (pendingSyncCount.current === 0) setIsSyncing(false);
+  }, []);
+
   // ===== ערכים מחושבים =====
   const pending = useMemo(
     () => list.products.filter((p: Product) => !p.isPurchased),
@@ -146,6 +161,8 @@ export const useList = ({
     t,
     productsRef,
     pendingTempActions,
+    beginSync,
+    endSync,
     newProduct: productForm.newProduct,
     setNewProduct: productForm.setNewProduct,
     setShowAdd: productForm.setShowAdd,
@@ -170,6 +187,8 @@ export const useList = ({
     t,
     productsRef,
     pendingTempActions,
+    beginSync,
+    endSync,
     dismissHint,
     markPurchased,
     clearMarked,
@@ -282,6 +301,7 @@ export const useList = ({
     setShowClearList,
     handleClearList,
     handleResetList,
-    showCelebration
+    showCelebration,
+    isSyncing
   };
 };

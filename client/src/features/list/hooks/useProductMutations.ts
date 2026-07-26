@@ -16,6 +16,8 @@ interface UseProductMutationsParams {
   t: (key: TranslationKeys) => string;
   productsRef: RefObject<Product[]>;
   pendingTempActions: RefObject<Map<string, 'toggle'>>;
+  beginSync: () => void;
+  endSync: () => void;
   dismissHint: () => void;
   markPurchased: () => void;
   clearMarked: () => void;
@@ -37,6 +39,8 @@ export const useProductMutations = ({
   t,
   productsRef,
   pendingTempActions,
+  beginSync,
+  endSync,
   dismissHint,
   markPurchased,
   clearMarked,
@@ -73,6 +77,7 @@ export const useProductMutations = ({
       return;
     }
 
+    beginSync();
     try {
       await productsApi.updateProduct(list.id, productId, { isPurchased: newIsPurchased });
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
@@ -86,8 +91,10 @@ export const useProductMutations = ({
         )
       );
       showToast(t('errorOccurred'), 'error');
+    } finally {
+      endSync();
     }
-  }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint, markPurchased, productsRef, pendingTempActions]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint, markPurchased, productsRef, pendingTempActions, beginSync, endSync]);
 
   const deleteProduct = useCallback(async (productId: string) => {
     if (isTempId(productId)) return;
@@ -105,6 +112,7 @@ export const useProductMutations = ({
       current.filter(p => p.id !== productId)
     );
 
+    beginSync();
     try {
       await productsApi.deleteProduct(list.id, productId);
       const stackSize = deletedStackRef.current.length;
@@ -161,8 +169,10 @@ export const useProductMutations = ({
       });
       deletedStackRef.current = deletedStackRef.current.filter(d => d.product.id !== productId);
       showToast(t('errorOccurred'), 'error');
+    } finally {
+      endSync();
     }
-  }, [list.id, user.name, onUpdateProductsForList, showToast, t, clearMarked, productsRef]);
+  }, [list.id, user.name, onUpdateProductsForList, showToast, t, clearMarked, productsRef, beginSync, endSync]);
 
   // ===== ניקוי רשימה =====
   const [showClearList, setShowClearList] = useState(false);
@@ -188,6 +198,7 @@ export const useProductMutations = ({
           : current.filter(p => p.isPurchased)
     );
 
+    beginSync();
     try {
       await productsApi.clearProducts(list.id, filter);
       // עדכון חברי קבוצה דרך socket, התראה אחת של ניקוי רשימה
@@ -198,8 +209,10 @@ export const useProductMutations = ({
       // שחזור
       onUpdateProductsForList(list.id, (current) => [...current, ...affectedItems]);
       showToast(t('errorOccurred'), 'error');
+    } finally {
+      endSync();
     }
-  }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t, clearMarked]);
+  }, [list.id, list.products, user.name, onUpdateProductsForList, showToast, t, clearMarked, beginSync, endSync]);
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
@@ -224,6 +237,7 @@ export const useProductMutations = ({
       current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note } : p)
     );
 
+    beginSync();
     try {
       await productsApi.updateProduct(list.id, editData.id, changes);
       showToast(t('saved'));
@@ -241,8 +255,10 @@ export const useProductMutations = ({
         current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note } : p)
       );
       showToast(t('errorOccurred'), 'error');
+    } finally {
+      endSync();
     }
-  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t, setShowEdit, setOriginalEditProduct]);
+  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t, setShowEdit, setOriginalEditProduct, beginSync, endSync]);
 
   // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") =====
   const handleResetList = useCallback(() => {
@@ -259,6 +275,7 @@ export const useProductMutations = ({
         onUpdateProductsForList(list.id, (current) =>
           current.map(p => p.isPurchased ? { ...p, isPurchased: false } : p)
         );
+        beginSync();
         try {
           await productsApi.resetProducts(list.id);
           trackEvent('list_reset'); // רשימה חוזרת - אינדיקציה חזקה ל-retention
@@ -268,10 +285,12 @@ export const useProductMutations = ({
             current.map(p => purchasedIds.has(p.id) ? { ...p, isPurchased: true } : p)
           );
           showToast(t('errorOccurred'), 'error');
+        } finally {
+          endSync();
         }
       }
     });
-  }, [list.id, onUpdateProductsForList, showToast, t, setConfirm, productsRef]);
+  }, [list.id, onUpdateProductsForList, showToast, t, setConfirm, productsRef, beginSync, endSync]);
 
   return {
     toggleProduct,
