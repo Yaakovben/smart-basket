@@ -71,6 +71,9 @@ class SocketService {
     // שגיאת אימות: רענון טוקן דרך הפונקציה המרכזית המשותפת
     this.socket.on('connect_error', async (error) => {
       const msg = error.message.toLowerCase();
+      // לוג תמיד (גם ב-production) - זו החתיכה היחידה של מידע אמיתי שיש לנו
+      // כשמישהו מדווח "תקוע במתחבר מחדש" בלי גישה ל-devtools בזמן אמת.
+      console.error('[socket] connect_error:', error.message, error);
       const isAuthError = msg === 'authentication error' || msg.includes('jwt expired') || msg.includes('token expired') || msg.includes('invalid token') || msg.includes('jwt malformed') || msg.includes('no token');
       if (!isAuthError) {
         // לא שגיאת אימות - כנראה השרת לא נגיש בכלל (עוד לפני חיבור ראשוני
