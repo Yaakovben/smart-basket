@@ -1,3 +1,4 @@
+export { ClearableTextField } from './ClearableTextField';
 export { ConfirmModal } from './ConfirmModal';
 export { ErrorBoundary } from './ErrorBoundary';
 export { ListMenu } from './ListMenu';

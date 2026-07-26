@@ -1,7 +1,8 @@
-import { Box, Typography, TextField, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
+import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
+import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { glassButtonSx } from '../helpers/homeStyles';
@@ -112,11 +113,12 @@ export const HomeHeader = ({
         </Box>
       </Box>
 
-      <TextField
+      <ClearableTextField
         fullWidth
         placeholder={t('search')}
         value={search}
         onChange={e => onSearchChange(e.target.value)}
+        onClear={() => onSearchChange('')}
         size="small"
         sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}

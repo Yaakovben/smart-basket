@@ -1,5 +1,6 @@
 import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
+import { keyframes } from '@mui/material';
 
 export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000' };
 
@@ -40,31 +41,53 @@ export const inlineErrorChipSx: SxProps<Theme> = {
 
 export const videoStyle: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover' };
 
-// מסגרת עזר מרובעת במרכז המסך
+// מסגרת עזר מרובעת במרכז המסך - עיצוב "פינות בלבד" (בלי מסגרת מלאה) עם
+// זוהר עדין וקו סריקה נע - מרגיש בוגר/פרימיום יותר ממסגרת מלאה שטוחה.
 export const frameOverlaySx: SxProps<Theme> = {
   position: 'absolute', inset: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   pointerEvents: 'none',
 };
 export const frameBoxSx: SxProps<Theme> = {
-  width: 240, height: 240, maxWidth: '70vw', maxHeight: '70vw',
-  border: '3px solid rgba(255,255,255,0.9)',
-  borderRadius: '16px',
-  boxShadow: '0 0 0 9999px rgba(0,0,0,0.35)',
+  width: 252, height: 252, maxWidth: '72vw', maxHeight: '72vw',
+  borderRadius: '28px',
+  // וינייטה חזקה מעט יותר מקודם - מבליטה את המסגרת הבהירה במרכז, מרגישה קולנועית יותר
+  boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
   position: 'relative',
+  overflow: 'hidden',
 };
-// 4 פינות מודגשות של מסגרת הסריקה
+// 4 פינות עדינות - קו דק, זווית מעוגלת, וזוהר טורקיז (drop-shadow) במקום
+// מסגרת מלאה שטוחה. הפינות בלבד (בלי קו מחבר) הן שפה ויזואלית נפוצה
+// בסורקים פרימיום (למשל מסמכים ב-iOS) ומרגישות פחות "טכניות"/גנריות.
 export const FRAME_CORNER_POSITIONS = [
-  { top: -3, left: -3, borderRight: 0, borderBottom: 0 },
-  { top: -3, right: -3, borderLeft: 0, borderBottom: 0 },
-  { bottom: -3, left: -3, borderRight: 0, borderTop: 0 },
-  { bottom: -3, right: -3, borderLeft: 0, borderTop: 0 },
+  { top: 0, left: 0, borderRight: 0, borderBottom: 0, borderTopLeftRadius: '18px' },
+  { top: 0, right: 0, borderLeft: 0, borderBottom: 0, borderTopRightRadius: '18px' },
+  { bottom: 0, left: 0, borderRight: 0, borderTop: 0, borderBottomLeftRadius: '18px' },
+  { bottom: 0, right: 0, borderLeft: 0, borderTop: 0, borderBottomRightRadius: '18px' },
 ] as const;
 export const frameCornerSx = (pos: (typeof FRAME_CORNER_POSITIONS)[number]): SxProps<Theme> => ({
-  position: 'absolute', width: 24, height: 24,
-  border: '4px solid #14B8A6', borderRadius: '4px',
+  position: 'absolute', width: 30, height: 30,
+  border: '3px solid #2DD4BF',
+  filter: 'drop-shadow(0 0 5px rgba(45,212,191,0.65))',
   ...pos,
 });
+
+// קו סריקה נע - שקוף→בהיר→שקוף, נע לאט מלמעלה למטה וחזרה בתוך המסגרת.
+// תנועה איטית ורציפה (לא קופצנית) כדי לשמור על תחושה "בוגרת", לא צעצועית.
+const scanLineSweep = keyframes`
+  0%   { top: 6%; opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { top: 94%; opacity: 1; }
+  92%  { opacity: 1; }
+  100% { top: 6%; opacity: 0; }
+`;
+export const scanLineSx: SxProps<Theme> = {
+  position: 'absolute', left: '8%', right: '8%', height: '2px',
+  borderRadius: '2px',
+  background: 'linear-gradient(90deg, transparent, #5EEAD4 25%, #99F6E4 50%, #5EEAD4 75%, transparent)',
+  boxShadow: '0 0 8px 1px rgba(94,234,212,0.8)',
+  animation: `${scanLineSweep} 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite`,
+};
 
 // שורת סטטוס תחתונה ("כוון את ה-QR למרכז המסך")
 export const bottomStatusSx: SxProps<Theme> = {

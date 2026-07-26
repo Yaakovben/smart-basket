@@ -1,10 +1,10 @@
 import { memo, useRef, useCallback, useMemo, useState, lazy, Suspense } from 'react';
-import { Box, Typography, TextField, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
+import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
 import { detectCategory } from '../../../../global/helpers/categoryDetector';
-import { Modal } from '../../../../global/components';
+import { Modal, ClearableTextField } from '../../../../global/components';
 // טעינה עצלה: @zxing נטען רק כשהמשתמש בפועל פותח את סורק הברקוד
 const QRScanner = lazy(() => import('../../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -193,12 +193,13 @@ export const AddProductModal = memo(({
             </Typography>
           )}
         </Box>
-        <TextField
+        <ClearableTextField
           autoFocus
           id="product-name"
           fullWidth
           value={newProduct.name}
           onChange={e => handleNameChange(e.target.value)}
+          onClear={() => handleNameChange('')}
           onKeyDown={handleNameKeyDown}
           placeholder={t('productName')}
           aria-required="true"

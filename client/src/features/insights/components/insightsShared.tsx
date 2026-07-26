@@ -6,16 +6,12 @@ export { float, fadeIn, tabEnter, dayLabels, scoreEmoji } from './shared/animati
 export { AnimatedNumber, StatCard, SectionCard, HeroInsight } from './shared/StatAtoms';
 export { InsightsEmptyState } from './shared/InsightsEmptyState';
 export { PersonalityCard } from './shared/PersonalityCard';
-export { computeAchievements } from '../helpers/achievements';
-export { AchievementBadges } from './shared/AchievementsSection';
 export { ForgottenProductsCard } from './shared/ForgottenProductsCard';
 export { SpotlightProduct } from './shared/SpotlightProduct';
 export { SmartTipsCarousel } from './shared/SmartTipsCarousel';
 export { GroupLeadershipHero } from './shared/GroupLeadershipHero';
 export { CategoryDonut } from './shared/CategoryDonut';
-export { MonthRecapCard } from './shared/MonthRecapCard';
 export { ActivityDotCalendar } from './shared/ActivityDotCalendar';
-export { MilestoneProgress } from './shared/MilestoneProgress';
 export { RadialHourClock } from './shared/RadialHourClock';
 export { useScoreDelta } from '../hooks/useScoreDelta';
 export { ScoreTrendBadge } from './shared/ScoreTrendBadge';

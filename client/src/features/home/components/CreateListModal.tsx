@@ -1,7 +1,7 @@
-import { Box, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { LIST_ICONS, GROUP_ICONS, LIST_COLORS, SIZES } from '../../../global/helpers';
-import { Modal } from '../../../global/components';
+import { Modal, ClearableTextField } from '../../../global/components';
 import type { NewListForm } from '../types/home-types';
 import { iconSelectSx, colorSelectSx } from '../helpers/homeStyles';
 
@@ -30,7 +30,7 @@ export const CreateListModal = ({ isGroup, newL, createError, creatingList, onCl
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>{isGroup ? t('groupName') : t('listName')}</Typography>
-        <TextField autoFocus fullWidth value={newL.name} onChange={e => onUpdateField('name', e.target.value)} size="small" />
+        <ClearableTextField autoFocus fullWidth value={newL.name} onChange={e => onUpdateField('name', e.target.value)} onClear={() => onUpdateField('name', '')} size="small" />
       </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 1 }}>{t('icon')}</Typography>

@@ -1,5 +1,6 @@
-import { Box, Typography, Paper, TextField, InputAdornment, Button } from '@mui/material';
+import { Box, Typography, Paper, InputAdornment, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { ClearableTextField } from '../../../global/components';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { LoginActivity, Language } from '../../../global/types';
 import type { UserWithLastLogin } from '../types';
@@ -51,12 +52,13 @@ export const AdminDashboardContent = ({
 
     {/* חיפוש */}
     {!loading && (
-      <TextField
+      <ClearableTextField
         fullWidth
         size="small"
         placeholder={t('searchCustomer')}
         value={userSearch}
         onChange={(e) => setUserSearch(e.target.value)}
+        onClear={() => setUserSearch('')}
         sx={{
           mb: 2,
           '& .MuiOutlinedInput-root': {

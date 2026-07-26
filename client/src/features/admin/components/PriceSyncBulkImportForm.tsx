@@ -1,4 +1,5 @@
-import { Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { ClearableTextField } from '../../../global/components';
 import type { PriceChainStatus } from '../../priceComparison';
 
 interface PriceSyncBulkImportFormProps {
@@ -42,11 +43,12 @@ export const PriceSyncBulkImportForm = ({ chains, bulkChainId, setBulkChainId, b
         <option key={c.chainId} value={c.chainId}>{c.chainName}</option>
       ))}
     </select>
-    <TextField
+    <ClearableTextField
       multiline minRows={4} maxRows={10}
       placeholder={'שופרסל בני ברק, בני ברק, רבי עקיבא 50, 32.0858, 34.8330\nשופרסל אלעד, אלעד, שמעון בן שטח 12, 32.0525, 34.9520'}
       value={bulkText}
       onChange={e => setBulkText(e.target.value)}
+      onClear={() => setBulkText('')}
       sx={{
         '& textarea': { fontSize: 11, fontFamily: 'monospace', lineHeight: 1.5 },
         '& .MuiInputBase-root': { p: 0.75 },

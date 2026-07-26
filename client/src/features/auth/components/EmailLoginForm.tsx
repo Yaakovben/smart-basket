@@ -1,4 +1,5 @@
 import { Box, TextField, Typography, Button, CircularProgress, InputAdornment, Collapse } from '@mui/material';
+import { ClearableTextField } from '../../../global/components';
 import { getPasswordStrength } from '../helpers/auth-helpers';
 import { LoginErrorAlert } from './LoginErrorAlert';
 import type { UseAuthReturn } from '../types/auth-types';
@@ -80,11 +81,12 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
 
           {/* Name Field - For new users, shown between email and password */}
           <Collapse in={emailChecked && isNewUser}>
-            <TextField
+            <ClearableTextField
               fullWidth
               label={t('name')}
               value={name}
               onChange={e => setName(e.target.value)}
+              onClear={() => setName('')}
               placeholder={t('name')}
               autoComplete="name"
               size="small"
@@ -97,12 +99,13 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
           </Collapse>
 
           {/* Password Field - Always visible */}
-          <TextField
+          <ClearableTextField
             fullWidth
             type="password"
             label={t('password')}
             value={password}
             onChange={e => handlePasswordChange(e.target.value)}
+            onClear={() => handlePasswordChange('')}
             placeholder="••••••••"
             autoComplete={isNewUser ? 'new-password' : 'current-password'}
             size="small"

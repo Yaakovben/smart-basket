@@ -9,7 +9,7 @@ import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
 import {
   dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, videoAreaSx,
   videoStyle, frameOverlaySx, frameBoxSx, FRAME_CORNER_POSITIONS, frameCornerSx,
-  bottomStatusSx, statusTextSx, galleryPillButtonSx,
+  scanLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
 } from '../styles/QRScanner.styles';
 
@@ -136,6 +136,8 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
                 {FRAME_CORNER_POSITIONS.map((pos, i) => (
                   <Box key={i} sx={frameCornerSx(pos)} />
                 ))}
+                {/* קו סריקה נע - מדגיש שהסריקה פעילה בזמן אמת */}
+                <Box sx={scanLineSx} />
               </Box>
             </Box>
           )}

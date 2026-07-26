@@ -1,6 +1,7 @@
-import { Box, Typography, TextField, Button, IconButton, CircularProgress, Collapse } from '@mui/material';
+import { Box, Typography, Button, IconButton, CircularProgress, Collapse } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { ClearableTextField } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
 import { MAX_TEXT_LENGTH, getCharCountColor } from '../helpers/dailyFaithManagerHelpers';
@@ -36,7 +37,7 @@ export const DailyFaithAddCard = ({ text, onTextChange, saving, onAdd, showForma
       </Box>
 
       {/* שדה טקסט ברוחב מלא */}
-      <TextField
+      <ClearableTextField
         fullWidth
         multiline
         minRows={2}
@@ -45,6 +46,7 @@ export const DailyFaithAddCard = ({ text, onTextChange, saving, onAdd, showForma
         placeholder={t('dailyFaithPlaceholder')}
         value={text}
         onChange={(e) => onTextChange(e.target.value.slice(0, MAX_TEXT_LENGTH))}
+        onClear={() => onTextChange('')}
         onKeyDown={(e) => {
           // קיצור דרך: Ctrl/Cmd + Enter לשמירה מהירה
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && text.trim().length >= 2 && !saving) {

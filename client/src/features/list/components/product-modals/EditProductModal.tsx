@@ -1,8 +1,8 @@
 import { memo, useRef, useCallback } from 'react';
-import { Box, Typography, TextField, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
 import type { Product, ProductUnit } from '../../../../global/types';
 import { haptic, COMMON_STYLES } from '../../../../global/helpers';
-import { Modal } from '../../../../global/components';
+import { Modal, ClearableTextField } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ProductNoteField } from './ProductNoteField';
 import { CategoryGrid } from './CategoryGrid';
@@ -78,12 +78,13 @@ export const EditProductModal = memo(({
     <Modal title={t('editProduct')} onClose={() => !saving && onClose()}>
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="edit-product-name" sx={labelSx}>{t('name')}</Typography>
-        <TextField
+        <ClearableTextField
           autoFocus
           id="edit-product-name"
           fullWidth
           value={product.name}
           onChange={e => onUpdateField('name', e.target.value)}
+          onClear={() => onUpdateField('name', '')}
           onKeyDown={handleNameKeyDown}
           aria-required="true"
           inputProps={{

@@ -1,4 +1,5 @@
 import { Box, Typography, TextField, Button } from '@mui/material';
+import { ClearableTextField } from '../../../global/components';
 import type { NewBranchForm } from '../types/priceSync-types';
 
 interface PriceSyncBranchAddFormProps {
@@ -17,15 +18,18 @@ export const PriceSyncBranchAddForm = ({ newBranch, setNewBranch, isDark, onSave
     border: '1px dashed', borderColor: 'rgba(20,184,166,0.3)',
     display: 'flex', flexDirection: 'column', gap: 0.6,
   }}>
-    <TextField size="small" placeholder="שם הסניף *" value={newBranch.storeName}
+    <ClearableTextField size="small" placeholder="שם הסניף *" value={newBranch.storeName}
       onChange={e => setNewBranch(p => ({ ...p, storeName: e.target.value }))}
+      onClear={() => setNewBranch(p => ({ ...p, storeName: '' }))}
       sx={{ '& input': { fontSize: 12, py: 0.6 } }} />
     <Box sx={{ display: 'flex', gap: 0.5 }}>
-      <TextField size="small" placeholder="עיר" value={newBranch.city}
+      <ClearableTextField size="small" placeholder="עיר" value={newBranch.city}
         onChange={e => setNewBranch(p => ({ ...p, city: e.target.value }))}
+        onClear={() => setNewBranch(p => ({ ...p, city: '' }))}
         sx={{ flex: 1, '& input': { fontSize: 12, py: 0.6 } }} />
-      <TextField size="small" placeholder="כתובת" value={newBranch.address}
+      <ClearableTextField size="small" placeholder="כתובת" value={newBranch.address}
         onChange={e => setNewBranch(p => ({ ...p, address: e.target.value }))}
+        onClear={() => setNewBranch(p => ({ ...p, address: '' }))}
         sx={{ flex: 1, '& input': { fontSize: 12, py: 0.6 } }} />
     </Box>
     <Box sx={{ display: 'flex', gap: 0.5 }}>

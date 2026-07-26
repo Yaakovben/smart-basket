@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { Box, Typography, TextField } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import { ClearableTextField } from '../../../../global/components';
 import { COMMON_STYLES, LIST_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { EditListForm } from '../../types/list-types';
@@ -38,11 +39,12 @@ export const EditListBasicFields = memo(({ editData, onUpdateData, icons }: Edit
 
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('name')}</Typography>
-        <TextField
+        <ClearableTextField
           autoFocus
           fullWidth
           value={editData.name}
           onChange={e => onUpdateData({ ...editData, name: e.target.value })}
+          onClear={() => onUpdateData({ ...editData, name: '' })}
           size="small"
         />
       </Box>

@@ -1,13 +1,13 @@
 import { memo } from 'react';
 import HomeIcon from '@mui/icons-material/Home';
 import type { InsightsData } from '../../../../services/api';
-import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS } from '../../../../global/constants';
+import { CATEGORY_ICONS } from '../../../../global/constants';
 import { haptic } from '../../../../global/helpers';
 import {
-  HeroInsight, InsightsEmptyState, PersonalityCard, ActivityDotCalendar,
-  AchievementBadges, computeAchievements, ForgottenProductsCard,
-  SpotlightProduct, SmartTipsCarousel, MonthRecapCard, MilestoneProgress,
+  HeroInsight, InsightsEmptyState, PersonalityCard,
+  ActivityDotCalendar, ForgottenProductsCard, SpotlightProduct, SmartTipsCarousel,
 } from '../insightsShared';
+import { ActivitySection } from './ActivitySection';
 import { HabitsTopProducts } from './HabitsTopProducts';
 import { HabitsCategoryBreakdown } from './HabitsCategoryBreakdown';
 import { HabitsCategoryCycles } from './HabitsCategoryCycles';
@@ -23,11 +23,16 @@ import { PulseHourlyActivity } from './pulse/PulseHourlyActivity';
 
 /**
  * ActivityTab - טאב "פעילות" ממוזג של עמוד התובנות (איחוד "הרגלים" + "דופק").
- * הסקציות מסודרות בסדר סיפורי: זהות/ציון → הישגים → מוצרים/קטגוריות →
- * מגמות → תחזיות/התראות. כל כרטיס מחשב את הנתונים הנגזרים שלו בעצמו
- * מהנתונים הגולמיים, כדי לשמור את הקובץ הזה כאורקסטרטור דק.
+ * מחולק לסקציות גלויות ומתקפלות (ActivitySection) בסדר סיפורי: זהות/ציון →
+ * מוצרים/קטגוריות → מגמות → תחזיות/התראות. כל כרטיס מחשב את הנתונים
+ * הנגזרים שלו בעצמו מהנתונים הגולמיים, כדי לשמור את הקובץ הזה כאורקסטרטור דק.
  *
- * כפילויות שהוסרו בעת האיחוד (היו מוצגות פעמיים באותם 2 טאבים נפרדים):
+ * הוסרו לגמרי (גימיק/גיימיפיקציה בלי מידע אמיתי, לא רק כפילות):
+ * - תגי הישגים + התקדמות ליעד (AchievementBadges/MilestoneProgress).
+ * - "סיכום החודש" בסגנון Wrapped (MonthRecapCard) - סליידים צבעוניים
+ *   שעטפו נתונים אמיתיים בעיצוב "רשתי חברתי", לא הוסיפו מידע.
+ *
+ * כפילויות שהוסרו בעת האיחוד המקורי (היו מוצגות פעמיים באותם 2 טאבים נפרדים):
  * - "השעה הזהובה" מול "פעילות לפי שעות" - שתיהן פירשו את hourlyActivity
  *   לאותם buckets (בוקר/צהריים/ערב/לילה). נשאר "פעילות לפי שעות" (השעון
  *   הרדיאלי עשיר יותר).
@@ -60,8 +65,8 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
         mainEmoji="📊"
         floatingItems={['🔥', '🏆', '🎯', '📈']}
         title="עוד אין נתוני פעילות"
-        description="הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה שלך, ההישגים, המוצרים והקטגוריות המובילים, מגמות וגרפים, ותחזית הקנייה הבאה."
-        tips={['ציון קנייה', 'הישגים', 'מגמות וקטגוריות']}
+        description="הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה שלך, המוצרים והקטגוריות המובילים, מגמות וגרפים, ותחזית הקנייה הבאה."
+        tips={['ציון קנייה', 'מגמות וקטגוריות', 'תחזיות']}
         ctaLabel="לרשימות שלי"
         ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
         onCtaClick={() => { haptic('medium'); onNavigateHome(); }}
@@ -88,105 +93,50 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
       : <>הקנייה הבאה צפויה <b>בעוד {days} ימים</b></>;
   }
 
-  // הישגים - מחושבים מנתונים שכבר יש
-  const achievements = computeAchievements({
-    totalPurchased: stats.totalPurchased,
-    totalLists: stats.totalLists,
-    currentWeeks: streaks?.currentWeeks ?? 0,
-    longestWeeks: streaks?.longestWeeks ?? 0,
-    completionRate: stats.completionRate,
-    categoryCount: categoryBreakdown.length,
-  });
-
   const heroProduct = topProducts[0];
   const heroProductIcon = heroProduct
     ? (CATEGORY_ICONS[heroProduct.category as keyof typeof CATEGORY_ICONS] || '🛒')
     : null;
-  const topCategory = categoryBreakdown[0];
-  const topCategoryLabel = topCategory
-    ? (CATEGORY_TRANSLATION_KEYS[topCategory.category as keyof typeof CATEGORY_TRANSLATION_KEYS]
-        ? t(CATEGORY_TRANSLATION_KEYS[topCategory.category as keyof typeof CATEGORY_TRANSLATION_KEYS])
-        : topCategory.category)
-    : null;
-
-  // Recap slides - "החודש שלך" בסגנון Wrapped. נבנה רק עובדות אמיתיות.
-  const recapSlides: { emoji: string; headline: React.ReactNode; sub: string; gradient: string }[] = [];
-  if (stats.totalPurchased > 0) recapSlides.push({
-    emoji: '🛒',
-    headline: <><b>{stats.totalPurchased}</b> פריטים נקנו</>,
-    sub: 'סך הכל בחשבון שלך',
-    gradient: 'linear-gradient(135deg, #14B8A6, #0D9488 60%, #0F766E)',
-  });
-  if (heroProduct && heroProduct.count >= 2) recapSlides.push({
-    emoji: heroProductIcon || '⭐',
-    headline: <>הכוכב: <b>{heroProduct.name}</b></>,
-    sub: `קנית ${heroProduct.count} פעמים — האהוב`,
-    gradient: 'linear-gradient(135deg, #F59E0B, #DC2626 70%)',
-  });
-  if (topCategory) recapSlides.push({
-    emoji: CATEGORY_ICONS[topCategory.category as keyof typeof CATEGORY_ICONS] || '📊',
-    headline: <><b>{topCategory.percentage}%</b> מהקניות</>,
-    sub: `הקטגוריה ${topCategoryLabel} שולטת אצלך`,
-    gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1 60%, #4F46E5)',
-  });
-  if (stats.completionRate >= 50) recapSlides.push({
-    emoji: stats.completionRate >= 80 ? '🏆' : '⚡',
-    headline: <><b>{stats.completionRate}%</b> השלמה</>,
-    sub: stats.completionRate >= 80 ? 'מצוין — יעיל ומדויק' : 'יפה, יש לאן להתקדם',
-    gradient: 'linear-gradient(135deg, #10B981, #059669 70%)',
-  });
-  if ((streaks?.currentWeeks ?? 0) >= 2) recapSlides.push({
-    emoji: '🔥',
-    headline: <><b>{streaks!.currentWeeks}</b> שבועות רצוף</>,
-    sub: 'בערך כל שבוע יש פעילות — סטריק חי',
-    gradient: 'linear-gradient(135deg, #EF4444, #DC2626 60%, #991B1B)',
-  });
 
   return (
     <>
       {/* ===== זהות: מי אתה כקונה, וציון הפעילות שלך ===== */}
       <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
-      {shoppingPersonality && stats.totalProducts >= 5 && (
-        <PersonalityCard personality={shoppingPersonality} isDark={isDark} />
-      )}
-      <PulseScoreCard shoppingScore={shoppingScore} completionRate={stats.completionRate} isDark={isDark} />
-      <PulseStatsRow streaks={streaks} monthComparison={monthComparison} shoppingFrequency={shoppingFrequency} isDark={isDark} />
 
-      {/* ===== הישגים וסיכום החודש ===== */}
-      <AchievementBadges items={achievements} isDark={isDark} />
-      <MilestoneProgress
-        stats={{ totalPurchased: stats.totalPurchased, totalLists: stats.totalLists }}
-        streaks={streaks}
-        completionRate={stats.completionRate}
-        isDark={isDark}
-      />
-      {recapSlides.length >= 2 && (
-        <MonthRecapCard slides={recapSlides} isDark={isDark} />
-      )}
+      <ActivitySection title="הזהות שלך" icon="🎯" isDark={isDark}>
+        {shoppingPersonality && stats.totalProducts >= 5 && (
+          <PersonalityCard personality={shoppingPersonality} isDark={isDark} />
+        )}
+        <PulseScoreCard shoppingScore={shoppingScore} completionRate={stats.completionRate} isDark={isDark} />
+        <PulseStatsRow streaks={streaks} monthComparison={monthComparison} shoppingFrequency={shoppingFrequency} isDark={isDark} />
+      </ActivitySection>
 
-      {/* ===== מוצרים וקטגוריות ===== */}
-      {heroProduct && heroProduct.count >= 3 && heroProductIcon && (
-        <SpotlightProduct name={heroProduct.name} count={heroProduct.count} icon={heroProductIcon} isDark={isDark} />
-      )}
-      <HabitsTopProducts topProducts={topProducts} isDark={isDark} t={t} />
-      <HabitsCategoryBreakdown categoryBreakdown={categoryBreakdown} isDark={isDark} t={t} />
-      <ForgottenProductsCard items={forgotten || []} isDark={isDark} />
+      <ActivitySection title="מוצרים וקטגוריות" icon="📦" isDark={isDark}>
+        {heroProduct && heroProduct.count >= 3 && heroProductIcon && (
+          <SpotlightProduct name={heroProduct.name} count={heroProduct.count} icon={heroProductIcon} isDark={isDark} />
+        )}
+        <HabitsTopProducts topProducts={topProducts} isDark={isDark} t={t} />
+        <HabitsCategoryBreakdown categoryBreakdown={categoryBreakdown} isDark={isDark} t={t} />
+        <ForgottenProductsCard items={forgotten || []} isDark={isDark} />
+      </ActivitySection>
 
-      {/* ===== מגמות ודפוסים ===== */}
-      <ActivityDotCalendar weeklyTrends={weeklyTrends || []} isDark={isDark} />
-      <PulseMomentumCard weeklyTrends={weeklyTrends} />
-      <PulseWeeklyTrend weeklyTrends={weeklyTrends} isDark={isDark} />
-      <PulseWeekdayHeatmap weekdayActivity={weekdayActivity} isDark={isDark} />
-      <PulseHourlyActivity hourlyActivity={hourlyActivity} isDark={isDark} />
+      <ActivitySection title="מגמות ודפוסים" icon="📈" isDark={isDark} defaultExpanded={false}>
+        <ActivityDotCalendar weeklyTrends={weeklyTrends || []} isDark={isDark} />
+        <PulseMomentumCard weeklyTrends={weeklyTrends} />
+        <PulseWeeklyTrend weeklyTrends={weeklyTrends} isDark={isDark} />
+        <PulseWeekdayHeatmap weekdayActivity={weekdayActivity} isDark={isDark} />
+        <PulseHourlyActivity hourlyActivity={hourlyActivity} isDark={isDark} />
+      </ActivitySection>
 
-      {/* ===== תחזיות והתראות ===== */}
-      <PulsePredictionCard shoppingFrequency={shoppingFrequency} isDark={isDark} />
-      <PulseUpcomingNeeds upcomingNeeds={upcomingNeeds} isDark={isDark} t={t} />
-      <HabitsCategoryCycles categoryCycles={categoryCycles} isDark={isDark} t={t} />
-      <PulseAnomalies anomalies={anomalies} isDark={isDark} />
-      {smartTips && smartTips.length > 0 && (
-        <SmartTipsCarousel tips={smartTips} isDark={isDark} />
-      )}
+      <ActivitySection title="תחזיות והתראות" icon="🔮" isDark={isDark} defaultExpanded={false}>
+        <PulsePredictionCard shoppingFrequency={shoppingFrequency} isDark={isDark} />
+        <PulseUpcomingNeeds upcomingNeeds={upcomingNeeds} isDark={isDark} t={t} />
+        <HabitsCategoryCycles categoryCycles={categoryCycles} isDark={isDark} t={t} />
+        <PulseAnomalies anomalies={anomalies} isDark={isDark} />
+        {smartTips && smartTips.length > 0 && (
+          <SmartTipsCarousel tips={smartTips} isDark={isDark} />
+        )}
+      </ActivitySection>
     </>
   );
 });

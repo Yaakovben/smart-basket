@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, TextField, Button, Paper, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Button, Paper, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
-import { ConfirmModal } from '../../../global/components';
+import { ConfirmModal, ClearableTextField } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
@@ -104,11 +104,12 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             {/* Name Field */}
             <Box sx={{ mb: 2 }}>
               <Typography sx={labelSx}>{t('name')}</Typography>
-              <TextField
+              <ClearableTextField
                 fullWidth
                 size="small"
                 value={editProfile.name}
                 onChange={e => updateEditField('name', e.target.value)}
+                onClear={() => updateEditField('name', '')}
                 placeholder={t('name')}
               />
             </Box>
@@ -116,11 +117,12 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             {/* Email Field */}
             <Box sx={{ mb: 2.5 }}>
               <Typography sx={labelSx}>{t('email')}</Typography>
-              <TextField
+              <ClearableTextField
                 fullWidth
                 size="small"
                 value={editProfile.email}
                 onChange={e => updateEditField('email', e.target.value)}
+                onClear={() => updateEditField('email', '')}
                 placeholder="example@email.com"
               />
             </Box>
