@@ -8,15 +8,16 @@ interface UseSpeechToTextParams {
   onFinalResult?: (text: string) => void;
 }
 
-// עטיפת Web Speech API להוספה קולית מהירה - רק Chrome/Edge/Android,
-// לא Safari/iOS (מדווח תמיכה אבל לא עובד בפועל).
+// עטיפת Web Speech API להוספה קולית מהירה - רק דסקטופ (Chrome/Edge).
+// לא Safari/iOS (מדווח תמיכה אבל לא עובד בפועל), ולא אנדרואיד (הוסר לפי בקשה).
 export const useSpeechToText = ({ language, setValue, onFinalResult }: UseSpeechToTextParams) => {
   const [isListening, setIsListening] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const isApple = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || /^((?!chrome|android).)*safari/i.test(navigator.userAgent));
-  const SpeechRecognitionClass = !isApple && typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+  const SpeechRecognitionClass = !isApple && !isAndroid && typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
   const speechSupported = !!SpeechRecognitionClass;
 
   useEffect(() => {
