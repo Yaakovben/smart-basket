@@ -89,22 +89,21 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
     async (listId: string) => {
       const listToDelete = lists.find((l) => l.id === listId);
 
-      // הודעת socket לחברי הקבוצה לפני מחיקה
+      // הודעת socket לחברי הקבוצה - fire-and-forget, לא חוסם את המחיקה עצמה.
+      // קודם היה await על ack עם fallback של עד 5 שניות (!) לפני שהמחיקה
+      // בכלל התחילה - כל עיכוב/ניתוק בסוקט הפך "מחיקת רשימה" לאיטית באופן
+      // דרמטי. הנתונים הדרושים (שם, מזהי חברים) כבר נלכדים כאן למעלה, אז אין
+      // תלות סדר אמיתית בין השליחה למחיקה עצמה - שתיהן יכולות לרוץ במקביל.
       if (listToDelete?.isGroup && user) {
         const memberIds = listToDelete.members
           .map((m) => m.id)
           .filter((id) => id !== user.id);
         if (memberIds.length > 0) {
-          await new Promise<void>((resolve) => {
-            socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name, () => {
-              resolve();
-            });
-            setTimeout(resolve, 5000);
-          });
+          socketService.emitListDeleted(listId, listToDelete.name, memberIds, user.name);
         }
       }
 
-      // מחיקה בשרת קודם, הסרה מה-UI רק אחרי אישור
+      // מחיקה בשרת, הסרה מה-UI רק אחרי אישור
       await listsApi.deleteList(listId);
       setLists((prev) => prev.filter((l) => l.id !== listId));
     },
@@ -163,17 +162,13 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
 
       const listToLeave = lists.find((l) => l.id === listId);
 
-      // הודעת socket לחברי הקבוצה לפני עזיבה
+      // הודעת socket לחברי הקבוצה - fire-and-forget, לא חוסם את העזיבה עצמה
+      // (ראו הערה זהה ב-deleteList למעלה).
       if (listToLeave) {
-        await new Promise<void>((resolve) => {
-          socketService.emitMemberLeft(listId, listToLeave.name, user.name, () => {
-            resolve();
-          });
-          setTimeout(resolve, 5000);
-        });
+        socketService.emitMemberLeft(listId, listToLeave.name, user.name);
       }
 
-      // עזיבה בשרת קודם, הסרה מה-UI רק אחרי אישור
+      // עזיבה בשרת, הסרה מה-UI רק אחרי אישור
       await listsApi.leaveGroup(listId);
       socketService.leaveList(listId);
       setLists((prev) => prev.filter((l) => l.id !== listId));
