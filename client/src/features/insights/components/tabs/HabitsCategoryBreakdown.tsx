@@ -33,7 +33,12 @@ export const HabitsCategoryBreakdown = ({ categoryBreakdown, isDark, t }: Habits
       {/* דונאט עם תווית מרכזית מתחלפת + legend מינימליסטי */}
       {donutItems.length > 0 && (
         <Box sx={{ mb: 2 }}>
-          <CategoryDonut items={donutItems} isDark={isDark} />
+          <CategoryDonut
+            items={donutItems}
+            isDark={isDark}
+            selected={highlightedCategory}
+            onSelect={(cat) => setHighlightedCategory(prev => prev === cat ? null : cat)}
+          />
         </Box>
       )}
       {/* בר מחולק אופקי - השוואה מהירה של כל הקטגוריות בבת אחת */}

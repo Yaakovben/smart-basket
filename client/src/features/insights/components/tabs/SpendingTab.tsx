@@ -171,7 +171,12 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
       {donutItems.length > 0 && (
         <SectionCard title="💸 פילוח הוצאה לפי קטגוריה" isDark={isDark}>
           <Box sx={{ mb: 2 }}>
-            <CategoryDonut items={donutItems} isDark={isDark} />
+            <CategoryDonut
+              items={donutItems}
+              isDark={isDark}
+              selected={highlightedCategory}
+              onSelect={(cat) => setHighlightedCategory(prev => prev === cat ? null : cat)}
+            />
           </Box>
           {/* בר מחולק אופקי - השוואה מהירה של כל הקטגוריות בבת אחת (עקבי עם טאב הרגלים) */}
           <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>

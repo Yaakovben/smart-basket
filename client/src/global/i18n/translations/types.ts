@@ -332,6 +332,7 @@ export type TranslationKeys =
   | 'noUserData'
   | 'offlineMessage'
   | 'reconnectingMessage'
+  | 'connectingMessage'
   | 'serverUnreachableMessage'
   | 'slowConnectionHint'
   // Clear Cache Page

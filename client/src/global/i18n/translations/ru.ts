@@ -334,6 +334,7 @@ export const ru: Translations = {
   noUserData: 'Ошибка: данные пользователя не получены от сервера',
   offlineMessage: 'Нет подключения к интернету',
   reconnectingMessage: 'Переподключение...',
+  connectingMessage: 'Подключение к серверу...',
   serverUnreachableMessage: 'Нет связи с сервером - повторное подключение...',
   slowConnectionHint: 'Всё ещё подключаемся... это может занять до минуты при холодном старте',
   // Clear Cache Page

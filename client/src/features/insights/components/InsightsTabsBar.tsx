@@ -51,9 +51,9 @@ export const InsightsTabsBar = ({ isDark, tab, onTabChange }: InsightsTabsBarPro
           }}
         >
           <Tab value="price" label="💰 מחירים" />
+          <Tab value="spending" label="🧾 הוצאות" />
           <Tab value="lists" label="📋 רשימות" />
           <Tab value="activity" label="📊 פעילות" />
-          <Tab value="spending" label="🧾 הוצאות" />
         </Tabs>
       </Paper>
     </Box>

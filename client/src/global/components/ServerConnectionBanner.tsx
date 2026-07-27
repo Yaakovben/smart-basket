@@ -34,6 +34,11 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
   const [deviceOnline, setDeviceOnline] = useState(navigator.onLine);
   const [socketDisconnected, setSocketDisconnected] = useState(false);
   const [fetchErrorConfirmed, setFetchErrorConfirmed] = useState(false);
+  // האם הצלחנו להתחבר לפחות פעם אחת בסשן הזה - קובע את הניסוח: "מתחבר..."
+  // (נייטרלי, מצופה - למשל שרת Render חינמי שמתעורר מ-sleep ולוקח 30-50ש')
+  // לעומת "מתחבר מחדש..." (מרמז שהיה חיבור תקין ונפל - זה המצב המבהיל באמת).
+  // בלי ההבחנה הזו, כל cold-start נראה כאילו "השרת קרס" גם כשהוא פשוט עדיין מתעורר.
+  const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
   // איפוס מיידי כש-visible חוזר ל-false - נעשה בזמן render (התבנית המתועדת
   // ב-React ל"התאמת state לשינוי prop"), לא ב-effect, כדי לא לקרוא ל-setState
   // באופן סינכרוני בתוך גוף ה-effect.
@@ -83,6 +88,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     const unsubConnect = socketService.on('connect', () => {
       if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null; }
       setSocketDisconnected(false);
+      setHasConnectedOnce(true);
     });
 
     return () => {
@@ -121,7 +127,9 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
         fontWeight: 600,
         lineHeight: 1.4,
       }}>
-        {socketDisconnected && !fetchErrorConfirmed ? t('reconnectingMessage') : t('serverUnreachableMessage')}
+        {socketDisconnected && !fetchErrorConfirmed
+          ? (hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage'))
+          : t('serverUnreachableMessage')}
       </Typography>
     </Box>
   );

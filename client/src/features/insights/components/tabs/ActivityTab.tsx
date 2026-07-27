@@ -49,11 +49,17 @@ interface Props {
 }
 
 export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => {
+  // ברירות מחדל לכל שדה מסוג מערך: data יכול להגיע מ-cache מקומי ישן שנשמר
+  // לפני שהשדה הזה נוסף ל-API (בדיוק כמו ש-SpendingTab צריך להגן על spending) -
+  // בלי ברירת מחדל, קומפוננטת-בת שקוראת ל-x.length/x.map על undefined קורסת
+  // מיד עם כניסה לטאב, וה-ErrorBoundary לוכד את זה כ"הטאב לא נטען" - בדיוק
+  // התופעה של קריסה חד-פעמית "כשנכנסים לשם".
   const {
-    stats, topProducts, categoryBreakdown, categoryCycles,
-    shoppingScore, streaks, shoppingFrequency, monthComparison,
-    weeklyTrends, weekdayActivity, hourlyActivity, upcomingNeeds, anomalies,
-    shoppingPersonality, forgotten, smartTips,
+    stats,
+    topProducts = [], categoryBreakdown = [], categoryCycles = [],
+    shoppingScore = 0, streaks, shoppingFrequency, monthComparison,
+    weeklyTrends = [], weekdayActivity = [], hourlyActivity = [], upcomingNeeds = [], anomalies = [],
+    shoppingPersonality, forgotten = [], smartTips = [],
   } = data;
 
   const hasAnyActivity = stats.totalPurchased > 0 || topProducts.length > 0 || shoppingScore > 0;

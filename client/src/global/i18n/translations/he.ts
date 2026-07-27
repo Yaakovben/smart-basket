@@ -334,6 +334,7 @@ export const he: Translations = {
   noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
   offlineMessage: 'אין חיבור לאינטרנט',
   reconnectingMessage: 'מתחבר מחדש...',
+  connectingMessage: 'מתחבר לשרת...',
   serverUnreachableMessage: 'אין חיבור לשרת - מנסים להתחבר מחדש...',
   slowConnectionHint: 'עדיין מתחברים... זה יכול לקחת עד דקה בהתחלה קרה',
   // Clear Cache Page

@@ -1,28 +1,45 @@
-import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { fadeIn } from './animations';
+import { haptic } from '../../../../global/helpers';
+
+interface CategoryDonutItem {
+  category: string; count: number; percentage: number; color: string; icon: string; label: string;
+}
 
 // ===== Category Donut - דונאט אנימטיבי במקום בר שטוח =====
-// SVG טהור, בלי תלות חיצונית. סיבוב הדרגתי, hover להגדלה,
-// תווית במרכז עם הקטגוריה הנבחרת. הופך את "פילוח קטגוריות" מטבלה
-// משעממת לוויזואליזציה שכיף להסתכל עליה.
-export const CategoryDonut = ({ items, isDark }: {
-  items: { category: string; count: number; percentage: number; color: string; icon: string; label: string }[];
+// SVG טהור, בלי תלות חיצונית. סיבוב הדרגתי, תווית במרכז עם הקטגוריה הנבחרת.
+//
+// selected/onSelect מגיעים מההורה (controlled) - קודם הרכיב ניהל בעצמו state
+// פנימי (hover) שלא היה מסונכרן עם רשימת הקטגוריות שההורה מציג מתחת (ל-SpendingTab
+// ול-HabitsCategoryBreakdown יש שתיהן רשימה חיצונית משלהן) - לחיצה על שורה ברשימה
+// לא עדכנה את העוגה, ולחיצה על העוגה לא עדכנה את הרשימה. שני מקורות state
+// לא-מסונכרנים לאותה בחירה בדיוק זה מה שגרם לתחושת "לא מגיב טוב".
+export const CategoryDonut = ({ items, isDark, selected, onSelect }: {
+  items: CategoryDonutItem[];
   isDark: boolean;
+  selected: string | null;
+  onSelect: (category: string) => void;
 }) => {
-  const [hovered, setHovered] = useState<string | null>(null);
   if (!items || items.length === 0) return null;
 
   const size = 180;
   const center = size / 2;
   const radius = 70;
   const stroke = 28;
+  // hit-area בלתי-נראית ורחבה יותר מהקו הוויזואלי - בלי זה נגיעה שמפספסת
+  // את הטבעת הדקה ב-1-2 פיקסלים (נפוץ מאוד במגע) פשוט לא עושה כלום.
+  const hitStroke = 44;
   const innerRadius = radius - stroke / 2;
   const total = items.reduce((s, c) => s + c.count, 0);
   const circumference = 2 * Math.PI * innerRadius;
 
-  // נבחרת לתצוגה במרכז: hover או הראשונה
-  const displayed = items.find(c => c.category === hovered) || items[0];
+  // נבחרת לתצוגה במרכז: הנבחרת מבחוץ, או הראשונה כברירת מחדל
+  const displayed = items.find(c => c.category === selected) || items[0];
+
+  const handleSelect = (category: string) => {
+    haptic('light');
+    onSelect(category);
+  };
 
   // צבירת אורכי קשת לכל קטגוריה - reduce עם accumulator מקומי (לא let חיצוני)
   // כדי לא לבצע מוטציה על משתנה מחוץ ל-closure.
@@ -40,10 +57,9 @@ export const CategoryDonut = ({ items, isDark }: {
 
   return (
     <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 1.5,
+      display: 'flex', justifyContent: 'center',
       animation: `${fadeIn} 0.45s ease both`,
     }}>
-      {/* SVG דונאט */}
       <Box sx={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
         <svg width={size} height={size} style={{ transform: 'rotate(0deg)' }}>
           {/* רקע מעגל */}
@@ -56,25 +72,34 @@ export const CategoryDonut = ({ items, isDark }: {
           {arcs.map((arc, i) => {
             const isActive = arc.category === displayed.category;
             return (
-              <circle
-                key={arc.category}
-                cx={center} cy={center} r={innerRadius}
-                fill="none"
-                stroke={arc.color}
-                strokeWidth={isActive ? stroke + 4 : stroke}
-                strokeDasharray={`${arc.length} ${circumference}`}
-                strokeDashoffset={arc.offset}
-                strokeLinecap="butt"
-                onMouseEnter={() => setHovered(arc.category)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={() => setHovered(prev => prev === arc.category ? null : arc.category)}
-                style={{
-                  cursor: 'pointer',
-                  transition: 'stroke-width 0.2s ease, opacity 0.2s ease',
-                  opacity: hovered && !isActive ? 0.55 : 1,
-                  animation: `donutDraw 0.9s ease ${i * 0.05}s both`,
-                }}
-              />
+              <g key={arc.category} onClick={() => handleSelect(arc.category)} style={{ cursor: 'pointer' }}>
+                {/* קו ויזואלי - דק, לא לוכד קליקים בעצמו */}
+                <circle
+                  cx={center} cy={center} r={innerRadius}
+                  fill="none"
+                  stroke={arc.color}
+                  strokeWidth={isActive ? stroke + 4 : stroke}
+                  strokeDasharray={`${arc.length} ${circumference}`}
+                  strokeDashoffset={arc.offset}
+                  strokeLinecap="butt"
+                  style={{
+                    pointerEvents: 'none',
+                    transition: 'stroke-width 0.2s ease, opacity 0.2s ease',
+                    opacity: !isActive ? 0.55 : 1,
+                    animation: `donutDraw 0.9s ease ${i * 0.05}s both`,
+                  }}
+                />
+                {/* hit-area שקופה ורחבה - זו שבאמת לוכדת את הנגיעה/קליק */}
+                <circle
+                  cx={center} cy={center} r={innerRadius}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={hitStroke}
+                  strokeDasharray={`${arc.length} ${circumference}`}
+                  strokeDashoffset={arc.offset}
+                  strokeLinecap="butt"
+                />
+              </g>
             );
           })}
           <style>{`
@@ -101,35 +126,6 @@ export const CategoryDonut = ({ items, isDark }: {
             {displayed.percentage}%
           </Typography>
         </Box>
-      </Box>
-      {/* legend */}
-      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-        {items.slice(0, 6).map((item) => {
-          const isActive = item.category === displayed.category;
-          return (
-            <Box key={item.category}
-              onMouseEnter={() => setHovered(item.category)}
-              onMouseLeave={() => setHovered(null)}
-              onClick={() => setHovered(prev => prev === item.category ? null : item.category)}
-              sx={{
-                display: 'flex', alignItems: 'center', gap: 0.6,
-                px: 0.7, py: 0.4, borderRadius: '8px',
-                cursor: 'pointer',
-                bgcolor: isActive ? `${item.color}18` : 'transparent',
-                border: '1px solid', borderColor: isActive ? `${item.color}40` : 'transparent',
-                transition: 'background 0.15s, border-color 0.15s',
-              }}
-            >
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: item.color, flexShrink: 0 }} />
-              <Typography sx={{ fontSize: 11.5, fontWeight: isActive ? 800 : 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {item.label}
-              </Typography>
-              <Typography sx={{ fontSize: 11, fontWeight: 800, color: item.color, fontVariantNumeric: 'tabular-nums' }}>
-                {item.percentage}%
-              </Typography>
-            </Box>
-          );
-        })}
       </Box>
     </Box>
   );

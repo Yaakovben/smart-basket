@@ -334,6 +334,7 @@ export const en: Translations = {
   noUserData: 'Error: No user data received from server',
   offlineMessage: 'No internet connection',
   reconnectingMessage: 'Reconnecting...',
+  connectingMessage: 'Connecting to server...',
   serverUnreachableMessage: 'Can\'t reach the server - retrying...',
   slowConnectionHint: 'Still connecting... this can take up to a minute on a cold start',
   // Clear Cache Page
