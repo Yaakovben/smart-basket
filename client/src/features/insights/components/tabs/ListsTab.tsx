@@ -60,6 +60,15 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
     ? allMembers.reduce((best, m) => m.added > best.added ? m : best, allMembers[0])
     : null;
 
+  // "מוסיף" מול "קונה בפועל" - שני תפקידים שונים שיכולים להיות אנשים שונים.
+  // מוצג רק כשזה מעניין (מישהו אחר עם קנייה משמעותית), לא סתם חוזר על אותו שם.
+  const topBuyer = allMembers.length > 0
+    ? allMembers.reduce((best, m) => m.purchased > best.purchased ? m : best, allMembers[0])
+    : null;
+  const showTopBuyerContrast = !!(
+    topBuyer && topBuyer.purchased > 0 && topContributor && topBuyer.name !== topContributor.name
+  );
+
   // ספירת קבוצות שבהן המשתמש הנוכחי מוביל (rank=1).
   // מוביל = הוסיף הכי הרבה. רק קבוצות עם פעילות אמיתית נספרות.
   const leadingGroupsCount = currentUserName
@@ -102,6 +111,32 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
             </Typography>
             <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
               הוסיף <b>{topContributor.added}</b> פריטים · {topContributor.group}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* ניגוד "מוסיף" מול "קונה" - רק כשזה מישהו אחר, מדגיש שהוספה לרשימה
+          וקנייה בפועל הם לא תמיד אותו אדם */}
+      {showTopBuyerContrast && topBuyer && (
+        <Box sx={{
+          mb: 1.75, p: 1.5, borderRadius: '14px',
+          background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+          color: 'white',
+          display: 'flex', alignItems: 'center', gap: 1.25,
+          boxShadow: '0 4px 14px rgba(217,119,6,0.3)',
+          animation: `${fadeIn} 0.45s ease 0.15s both`,
+        }}>
+          <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🛍️</Typography>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
+              אבל מי שבאמת קונה
+            </Typography>
+            <Typography sx={{ fontSize: 16, fontWeight: 800, lineHeight: 1.2, mt: 0.15 }}>
+              {topBuyer.name}
+            </Typography>
+            <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
+              קנה <b>{topBuyer.purchased}</b> פריטים · {topBuyer.group}
             </Typography>
           </Box>
         </Box>

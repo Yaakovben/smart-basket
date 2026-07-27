@@ -9,6 +9,8 @@ import { fadeIn } from '../insightsShared';
 // פלטת צבעים קבועה לחברי קבוצה - טורקיז ראשון (תואם לאפליקציה), שאר הצבעים לבידול בלבד
 const MEMBER_PALETTE = ['#14B8A6', '#0D9488', '#3B82F6', '#22C55E', '#A16207', '#EC4899', '#EF4444'];
 
+const formatILS = (n: number) => `₪${Math.round(n).toLocaleString('he-IL')}`;
+
 type GroupStat = InsightsData['groupStats'][number];
 
 interface SectionHeaderInfo { emoji: string; label: string; count: number }
@@ -155,17 +157,29 @@ export const ListsTabItem = ({
                 </Box>
               )}
             </Box>
-            {/* סיכום פעילות — לא מחירים */}
+            {/* סיכום פעילות + הערכת מחיר (מהתאמת המוצרים למאגר המחירים -
+                נתון שכבר מחושב לטאב "מחירים" אבל לא הוצג פה בכלל). מוצג
+                לכל סוגי הרשימות, כולל פרטיות שאין להן שום תובנה אחרת. */}
             {L.isGroup && g && memberTotalAdded > 0 ? (
               <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
                 <b>{memberTotalAdded}</b> נוספו · <b>{memberTotalPurchased}</b> נקנו
                 <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
                   ({purchasedPct}%)
                 </Typography>
+                {L.estimatedTotal > 0 && (
+                  <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
+                    · הערכה {formatILS(L.estimatedTotal)}
+                  </Typography>
+                )}
               </Typography>
             ) : L.pendingCount > 0 ? (
               <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
                 <b>{L.pendingCount}</b> פריטים ממתינים לקנייה
+                {L.estimatedTotal > 0 && (
+                  <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
+                    · הערכה {formatILS(L.estimatedTotal)}
+                  </Typography>
+                )}
               </Typography>
             ) : (
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
