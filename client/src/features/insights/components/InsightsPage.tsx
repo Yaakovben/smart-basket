@@ -37,7 +37,7 @@ export const InsightsPage = memo(() => {
   };
 
   const {
-    data, priceData, loading, error, currentUserName,
+    data, priceData, allListsPriceData, loading, error, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     locationStatus, requestLocation, resetLocationDenied,
@@ -121,7 +121,7 @@ export const InsightsPage = memo(() => {
               isDark={isDark}
               stats={data.stats}
               groupStats={data.groupStats}
-              priceData={priceData}
+              priceData={allListsPriceData}
               currentUserName={currentUserName}
               onNavigateHome={() => navigate('/')}
               onNavigateToList={(listId) => navigate(`/list/${listId}`)}

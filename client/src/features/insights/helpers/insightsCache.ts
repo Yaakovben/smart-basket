@@ -4,6 +4,7 @@ import { safeStorage } from '../../../global/helpers';
 // תוקף: 24 שעות (הנתונים לא משתנים הרבה בין פתיחות).
 export const INSIGHTS_CACHE_KEY = 'sb_insights_cache_v1';
 export const PRICE_CACHE_KEY = 'sb_price_cache_v1';
+export const ALL_LISTS_PRICE_CACHE_KEY = 'sb_all_lists_price_cache_v1';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 interface CachedEnvelope<T> { data: T; at: number }

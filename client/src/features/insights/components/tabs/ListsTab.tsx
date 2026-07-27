@@ -21,6 +21,11 @@ interface ListsTabProps {
 
 // טאב "רשימות" של עמוד התובנות - סקירת פעילות בכל הרשימות/קבוצות, כולל
 // חלוקת תרומה בין חברים. הכרטיס הבודד לכל רשימה חי ב-ListsTabItem.
+//
+// priceData כאן הוא allListsPriceData (ראו useInsightsData) - גרסה לא-מסוננת
+// ייעודית לטאב הזה, לא ה-priceData הרגיל שמסונן לפי selectedListId בטאב
+// "מחירים". שימוש בגרסה המסוננת גרם לטאב הזה (שאמור להראות הכל) להציג
+// רשימה/קבוצה אחת בלבד כשהייתה רשימה ספציפית נבחרת בטאב האחר.
 export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUserName, onNavigateHome, onNavigateToList }: ListsTabProps) => {
   // רשימות שפתוחות להצגת כל החברים (כשיש מעל 4)
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());

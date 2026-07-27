@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { safeStorage } from '../../../global/helpers';
-import { INSIGHTS_CACHE_KEY, PRICE_CACHE_KEY, readCache, writeCache } from '../helpers/insightsCache';
+import { INSIGHTS_CACHE_KEY, PRICE_CACHE_KEY, ALL_LISTS_PRICE_CACHE_KEY, readCache, writeCache } from '../helpers/insightsCache';
 import type { InsightTab, InsightsListMeta } from '../types/insights-types';
 
 // רשימה מלאה של כל הרשימות של המשתמש מ-cached_lists (קיים תמיד אחרי כניסה
@@ -34,6 +34,12 @@ export function useInsightsData(tab: InsightTab) {
   const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
   const [priceLoadingLabel, setPriceLoadingLabel] = useState<string>('משווה מחירים...');
   const [priceError, setPriceError] = useState(false);
+  // השוואת מחירים לא-מסוננת (כל הרשימות, בלי listId) - ייעודי לטאב "רשימות".
+  // priceData הרגיל מוגבל לרשימה שנבחרה בטאב "מחירים" (selectedListId) -
+  // שימוש בו לטאב "רשימות" (שאמור להראות סקירה של הכל) גרם לקבוצה אחת בלבד
+  // להיראות כשיש רשימה ספציפית נבחרת. state נפרד לגמרי כדי לא לגעת בהתנהגות
+  // הקיימת/הביצועים של טאב "מחירים".
+  const [allListsPriceData, setAllListsPriceData] = useState<PriceComparisonData | null>(() => readCache<PriceComparisonData>(ALL_LISTS_PRICE_CACHE_KEY));
 
   // רשימה ספציפית נבחרת - null = כל הרשימות. נשמר ב-localStorage לזכור בחירה
   // בין כניסות. אם אין שמור - מנסים לקחת רשימה ראשונה מ-cache הקיים.
@@ -142,6 +148,23 @@ export function useInsightsData(tab: InsightTab) {
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [tab, selectedListId, userLocation]);
 
+  // גרסה לא-מסוננת (כל הרשימות) לטאב "רשימות" בלבד - נטענת פעם אחת כשנכנסים
+  // לטאב הזה (לא תלויה ב-selectedListId, אז לא נטענת שוב כשמחליפים רשימה
+  // נבחרת בטאב "מחירים"). יש cache בשרת לפי userId עבור המקרה הלא-מסונן,
+  // כך שזה לרוב זול/מהיר גם אם המשתמש כבר טען את טאב "מחירים" בלי סינון.
+  useEffect(() => {
+    if (tab !== 'lists' || allListsPriceData) return;
+    let cancelled = false;
+    priceComparisonApi.getComparison(undefined, userLocation ?? undefined)
+      .then(res => {
+        if (cancelled) return;
+        setAllListsPriceData(res);
+        writeCache(ALL_LISTS_PRICE_CACHE_KEY, res);
+      })
+      .catch(() => { /* טאב "רשימות" נופל בחזרה ל-groupStats אם זה נכשל */ });
+    return () => { cancelled = true; };
+  }, [tab, allListsPriceData, userLocation]);
+
   // ניסיון ידני יחיד - משמש את כפתור "נסה שוב" במסך שגיאת מחירים
   const retryPriceFetch = () => {
     setPriceError(false);
@@ -153,7 +176,7 @@ export function useInsightsData(tab: InsightTab) {
   };
 
   return {
-    data, priceData, loading, error, currentUserName,
+    data, priceData, allListsPriceData, loading, error, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
