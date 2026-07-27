@@ -21,6 +21,8 @@ dotenv.config();
  * - CORS_ORIGIN: Allowed origins for CORS, comma-separated (default: http://localhost:5173)
  * - ADMIN_EMAIL: Default admin user email
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
+ * - OCR_API_KEY: OCR.space API key for "scan list photo" feature (free tier,
+ *   register at ocr.space/ocrapi/freekey). Feature silently no-ops if absent.
  */
 const envSchema = Joi.object({
   // סביבת ריצה
@@ -74,6 +76,10 @@ const envSchema = Joi.object({
   // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
+
+  // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
+  // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
+  OCR_API_KEY: Joi.string().optional(),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -110,6 +116,7 @@ export interface Environment {
   VAPID_PRIVATE_KEY?: string;
   VAPID_EMAIL: string;
   LOCATIONIQ_API_KEY?: string;
+  OCR_API_KEY?: string;
 }
 
 export const env = parseEnv();

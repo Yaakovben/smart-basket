@@ -8,6 +8,8 @@ export type { List as ApiList, Member as ApiMember } from './types/lists.types';
 
 export { productsApi } from './products.api';
 
+export { ocrApi } from './ocr.api';
+
 export { adminApi } from './admin.api';
 export type { AdminUser, AdminLoginActivity, AdminStats, AdminUserList } from './types/admin.types';
 

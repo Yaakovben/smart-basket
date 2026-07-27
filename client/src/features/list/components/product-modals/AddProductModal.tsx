@@ -1,12 +1,14 @@
 import { memo, useRef, useCallback, useMemo, useState, lazy, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
 import { haptic, CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, COMMON_STYLES } from '../../../../global/helpers';
 import { detectCategory } from '../../../../global/helpers/categoryDetector';
 import { Modal, ClearableTextField } from '../../../../global/components';
 // טעינה עצלה: @zxing נטען רק כשהמשתמש בפועל פותח את סורק הברקוד
 const QRScanner = lazy(() => import('../../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
+const ScanListPhoto = lazy(() => import('./ScanListPhoto').then(m => ({ default: m.ScanListPhoto })));
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison';
 import { trackEvent } from '../../../../global/services/analytics';
@@ -50,6 +52,7 @@ interface AddProductModalProps {
   onUpdateField: <K extends keyof NewProductForm>(field: K, value: NewProductForm[K]) => void;
   onIncrement: () => void;
   onDecrement: () => void;
+  onQuickAdd: (name: string) => void | Promise<void>;
 }
 
 export const AddProductModal = memo(({
@@ -61,7 +64,8 @@ export const AddProductModal = memo(({
   onAdd,
   onUpdateField,
   onIncrement,
-  onDecrement
+  onDecrement,
+  onQuickAdd
 }: AddProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
@@ -69,6 +73,8 @@ export const AddProductModal = memo(({
   // נדלק פעם אחת עם הפתיחה הראשונה - כדי שה-chunk הכבד של הסורק (@zxing)
   // ייטען פעם אחת בלבד וסגירת הדיאלוג לא תפרק/תטען אותו מחדש.
   const [scannerMounted, setScannerMounted] = useState(false);
+  const [showScanList, setShowScanList] = useState(false);
+  const [scanListMounted, setScanListMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
 
@@ -137,6 +143,14 @@ export const AddProductModal = memo(({
     }
   }, [handleNameChange, t]);
 
+  // אישור מסך סריקת הרשימה - הוספה ברצף (לא במקביל) כדי לא לפגוע בבדיקת
+  // כפילויות של onQuickAdd, שמסתמכת על המוצרים שכבר נוספו בלולאה הזו.
+  const handleScanListConfirm = useCallback(async (names: string[]) => {
+    for (const name of names) {
+      await onQuickAdd(name);
+    }
+  }, [onQuickAdd]);
+
   const handleCategoryClick = useCallback((cat: ProductCategory) => {
     haptic('light');
     userChangedCategory.current = true;
@@ -178,12 +192,30 @@ export const AddProductModal = memo(({
         />
       </Suspense>
     )}
+    {scanListMounted && (
+      <Suspense fallback={null}>
+        <ScanListPhoto
+          open={showScanList}
+          onClose={() => setShowScanList(false)}
+          onConfirm={handleScanListConfirm}
+        />
+      </Suspense>
+    )}
     <Modal title={t('newProduct')} onClose={onClose}>
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} role="alert">
           {error}
         </Alert>
       )}
+      <Button
+        fullWidth
+        variant="outlined"
+        startIcon={<DocumentScannerIcon />}
+        onClick={() => { haptic('light'); setScanListMounted(true); setShowScanList(true); }}
+        sx={{ mb: 2, borderRadius: '12px', py: 1 }}
+      >
+        סרוק רשימה שלמה מהדף
+      </Button>
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography component="label" htmlFor="product-name" sx={labelSx}>{t('name')}</Typography>

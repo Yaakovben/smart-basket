@@ -320,6 +320,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onUpdateField={updateNewProductField}
         onIncrement={() => incrementQuantity('new')}
         onDecrement={() => decrementQuantity('new')}
+        onQuickAdd={handleQuickAdd}
       />
 
       <EditProductModal

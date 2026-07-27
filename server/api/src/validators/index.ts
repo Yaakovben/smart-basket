@@ -6,3 +6,4 @@ export type { ProductUnit, ProductCategory } from '../constants';
 export { userValidator, type UpdateProfileInput, type ChangePasswordInput } from './user.validator';
 export { notificationValidator, type NotificationType, type GetNotificationsQuery, type CreateNotificationInput, type BroadcastNotificationInput } from './notification.validator';
 export { adminValidator } from './admin.validator';
+export { ocrValidator, type ScanListInput } from './ocr.validator';

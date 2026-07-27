@@ -7,6 +7,7 @@ import adminRoutes from './admin.routes';
 import notificationRoutes from './notification.routes';
 import pushRoutes from './push.routes';
 import insightsRoutes from './insights.routes';
+import ocrRoutes from './ocr.routes';
 import { dailyFaithRoutes } from '../features/daily-faith';
 import { priceComparisonRoutes } from '../features/priceComparison';
 
@@ -20,6 +21,7 @@ router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/push', pushRoutes);
 router.use('/insights', insightsRoutes);
+router.use('/ocr', ocrRoutes);
 router.use('/price-comparison', priceComparisonRoutes);
 router.use('/daily-faith', dailyFaithRoutes);
 
