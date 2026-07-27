@@ -49,6 +49,7 @@ interface ListHeaderProps {
   hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
+  onScanList?: () => void;
 }
 
 // ===== קומפוננטה =====
@@ -81,7 +82,8 @@ export const ListHeader = memo(({
   onShoppingMode,
   hasPurchased = false,
   hasProducts = false,
-  onLeave
+  onLeave,
+  onScanList
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -234,6 +236,7 @@ export const ListHeader = memo(({
         hasPurchased={hasPurchased}
         hasProducts={hasProducts}
         onLeave={onLeave}
+        onScanList={onScanList}
       />
 
       {/* Members Row (Group Only) - מוסתר ב-landscape כדי לצמצם גובה הדר */}

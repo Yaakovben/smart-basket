@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useMemo } from 'react';
+import { memo, useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType } from '../../../global/types';
@@ -25,6 +25,8 @@ import { CategoryFilterChips } from './CategoryFilterChips';
 import { SelectionActionBar } from './SelectionActionBar';
 import { DuplicateProductModal } from './DuplicateProductModal';
 import { AddProductModal } from './product-modals/AddProductModal';
+// טעינה עצלה - נדרשת רק כשבאמת פותחים "סרוק רשימה" מהתפריט, לא בכל טעינת הרשימה
+const ScanListPhoto = lazy(() => import('./product-modals/ScanListPhoto').then(m => ({ default: m.ScanListPhoto })));
 import { EditProductModal } from './product-modals/EditProductModal';
 import { ProductDetailsModal } from './product-modals/ProductDetailsModal';
 import { InviteModal } from './modals/InviteModal';
@@ -79,6 +81,17 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   } = useProductSelection({ list, onUpdateProductsForList, showToast, t });
 
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  // סריקת רשימה מהדף (OCR) - נפתח מתפריט "עוד" בכותרת (ליד השיתוף)
+  const [showScanList, setShowScanList] = useState(false);
+  const [scanListMounted, setScanListMounted] = useState(false);
+  // הוספה ברצף (לא במקביל) כדי לא לפגוע בבדיקת הכפילויות של handleQuickAdd,
+  // שמסתמכת על המוצרים שכבר נוספו בלולאה הזו.
+  const handleScanListConfirm = useCallback(async (names: string[]) => {
+    for (const name of names) {
+      await handleQuickAdd(name);
+    }
+  }, [handleQuickAdd]);
 
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(refreshList);
 
@@ -195,7 +208,18 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
+        onScanList={withExitSelection(() => { setScanListMounted(true); setShowScanList(true); })!}
       />
+
+      {scanListMounted && (
+        <Suspense fallback={null}>
+          <ScanListPhoto
+            open={showScanList}
+            onClose={() => setShowScanList(false)}
+            onConfirm={handleScanListConfirm}
+          />
+        </Suspense>
+      )}
 
       {/* pullActiveRef.current: ref מכוון בכוונה (לא state) כדי להימנע מ-render נוסף
           במגע - עודכן סינכרונית לפני setPullDistance באותו handler, אז תמיד עקבי
@@ -320,7 +344,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onUpdateField={updateNewProductField}
         onIncrement={() => incrementQuantity('new')}
         onDecrement={() => decrementQuantity('new')}
-        onQuickAdd={handleQuickAdd}
       />
 
       <EditProductModal

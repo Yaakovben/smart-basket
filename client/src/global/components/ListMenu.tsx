@@ -9,6 +9,7 @@ import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { useSettings } from '../context/SettingsContext';
 import { menuPaperSx, menuItemSx, menuLabelSx, dividerSx, muteToggleBoxSx, muteToggleLabelSx } from '../styles/ListMenu.styles';
 
@@ -31,6 +32,7 @@ interface ListMenuProps {
   hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
+  onScanList?: () => void;
   stopPropagation?: boolean;
 }
 
@@ -52,6 +54,7 @@ export const ListMenu = memo(({
   onClearList,
   hasProducts = false,
   onLeave,
+  onScanList,
   stopPropagation = false
 }: ListMenuProps) => {
   const { t } = useSettings();
@@ -89,10 +92,23 @@ export const ListMenu = memo(({
         </>
       )}
 
+      {/* סריקת רשימה מהדף (OCR) */}
+      {onScanList && (
+        <>
+          {(onRefresh || (onShoppingMode && hasProducts)) && <Divider sx={dividerSx} />}
+          <MenuItem onClick={() => { onClose(); onScanList(); }} sx={menuItemSx}>
+            <DocumentScannerIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+            <Typography sx={menuLabelSx}>
+              סרוק רשימה מהדף
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+
       {/* Mute Toggle, רק בקבוצות */}
       {isGroup && (
         <>
-          {onRefresh && <Divider sx={dividerSx} />}
+          {(onRefresh || onScanList) && <Divider sx={dividerSx} />}
           <Box sx={{ px: 1.5, py: 0.5 }}>
             <Box
               onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
@@ -120,7 +136,7 @@ export const ListMenu = memo(({
       {/* עריכה */}
       {isOwner && (
         <>
-          {(onRefresh || isGroup) && <Divider sx={dividerSx} />}
+          {(onRefresh || isGroup || onScanList) && <Divider sx={dividerSx} />}
           <MenuItem onClick={() => { onClose(); onEdit(); }} sx={menuItemSx}>
             <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
             <Typography sx={menuLabelSx}>
