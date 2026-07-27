@@ -82,11 +82,18 @@ export const InsightsBottomNav = ({ isDark, onNavigateHome, t }: InsightsBottomN
           }}
         >
           <InsightsIcon sx={{ fontSize: 24, color: '#0D9488' }} />
+          {/* פס מוארך מתחת לאייקון מסמן "פעיל", עם אנימציית "מתיחה" בכניסה -
+              זהה לזו שב-HomeBottomNav, כדי שההתנהגות תהיה עקבית בין שני הטאבים. */}
           <Box sx={{
             width: 18, height: 3, borderRadius: '2px',
             backgroundImage: 'linear-gradient(90deg, #14B8A6, #0D9488)',
             boxShadow: '0 1px 3px rgba(20,184,166,0.4)',
             mt: 0.1,
+            animation: 'tabIndicatorIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            '@keyframes tabIndicatorIn': {
+              from: { width: 0, opacity: 0 },
+              to: { width: 18, opacity: 1 },
+            },
           }} />
           <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#0D9488', letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
             {t('insights')}
