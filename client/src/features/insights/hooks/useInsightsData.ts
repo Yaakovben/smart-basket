@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { insightsApi, authApi, type InsightsData } from '../../../services/api';
 import { priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { safeStorage } from '../../../global/helpers';
@@ -50,15 +50,31 @@ export function useInsightsData(tab: InsightTab) {
   // מיקום המשתמש (אופציונלי) - כשהוא קיים, השרת מצרף סניף קרוב + מרחק לכל רשת.
   const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
 
-  // רענון insights ברקע - תמיד רץ, מעדכן cache מקומי לפעם הבאה.
-  useEffect(() => {
+  // רענון insights - מעדכן cache מקומי לפעם הבאה.
+  const fetchInsights = useCallback(() => {
     insightsApi.getInsights()
       .then(res => { setData(res); writeCache(INSIGHTS_CACHE_KEY, res); })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchInsights();
     // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
     authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה ראשונית בלבד, ראו fetchInsights לרענון חוזר
   }, []);
+
+  // רענון חוזר כשחוזרים לטאב/לאפליקציה - בלי זה, לחזור לתובנות אחרי שסימנת
+  // מוצר כנקנה ברשימה (בטאב/דף אחר) מציג נתונים ישנים מה-mount הקודם עד
+  // שתעשה רענון ידני. אותו דפוס בדיוק כמו useLists.ts.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchInsights();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [fetchInsights]);
 
   // שמירת בחירת הרשימה - לא שומרים null ('כל הרשימות'), זה מצב כבד שמאט טעינה.
   useEffect(() => {
@@ -76,7 +92,6 @@ export function useInsightsData(tab: InsightTab) {
     if (selectedListId === null && allUserLists.length > 0) {
       autoSelectedRef.current = true;
       // בחירה אוטומטית חד-פעמית ברגע שהרשימות נטענות (אסינכרוני) - לא ניתן לחשב ברינדור
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedListId(allUserLists[0].id);
     } else if (selectedListId !== null) {
       autoSelectedRef.current = true;

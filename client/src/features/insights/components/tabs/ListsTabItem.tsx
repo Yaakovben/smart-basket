@@ -83,21 +83,12 @@ export const ListsTabItem = ({
       <Box
         role="button"
         tabIndex={0}
-        // ניווט רק בלחיצה כפולה (מהירה) - מונע ניווט בטעות בזמן
-        // צפייה בנתונים. הלחיצה הראשונה מסומנת ב-haptic קל ופותחת
-        // חלון של 350ms ללחיצה השנייה. גם פועל ב-touch (double-tap).
-        onClick={(e) => {
-          const target = e.currentTarget as HTMLElement & { __lastTap?: number };
-          const now = Date.now();
-          const last = target.__lastTap || 0;
-          if (now - last < 350) {
-            target.__lastTap = 0;
-            haptic('medium');
-            onNavigate(L.listId);
-          } else {
-            target.__lastTap = now;
-            haptic('light');
-          }
+        // ניווט בלחיצה אחת - היה דורש לחיצה כפולה (350ms) בלי שום רמז ויזואלי
+        // לכך, מה שגרם לכרטיס שנראה לגמרי לחיץ (cursor:pointer, hover, active)
+        // "לא להגיב" בלחיצה ראשונה. עקבי עכשיו עם כל כרטיס לחיץ אחר באפליקציה.
+        onClick={() => {
+          haptic('medium');
+          onNavigate(L.listId);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
