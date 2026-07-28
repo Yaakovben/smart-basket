@@ -6,14 +6,15 @@ export async function getGroupStats(lists: { _id: any; name: string; icon: strin
   const groupLists = lists.filter(l => l.isGroup && l.members.length > 0);
   if (groupLists.length === 0) return [];
 
-  const results: InsightsData['groupStats'] = [];
-
-  for (const list of groupLists.slice(0, 5)) {
+  // שאילתה נפרדת (עצמאית לגמרי) לכל קבוצה - היה רץ ברצף (עד 5 round-trips
+  // ל-DB בזה אחר זה), עכשיו במקביל. משפיע ישירות על זמן תגובה של עמוד
+  // התובנות עבור כל משתמש עם יותר מקבוצה אחת.
+  const perListResults = await Promise.all(groupLists.slice(0, 5).map(async (list): Promise<InsightsData['groupStats'][number] | null> => {
     const products = await Product.find({ listId: list._id })
       .populate('addedBy', 'name')
       .lean();
 
-    if (products.length === 0) continue;
+    if (products.length === 0) return null;
 
     // ספירה לפי משתמש: מי הוסיף ומי קנה. שומר גם userId כדי לזהות את המשתמש הנוכחי.
     const memberStats = new Map<string, { id: string; name: string; added: number; purchased: number }>();
@@ -57,7 +58,7 @@ export async function getGroupStats(lists: { _id: any; name: string; icon: strin
       };
     }
 
-    results.push({
+    return {
       name: list.name,
       icon: list.icon,
       membersCount: list.members.length + 1,
@@ -65,8 +66,8 @@ export async function getGroupStats(lists: { _id: any; name: string; icon: strin
       topBuyer,
       memberBreakdown: breakdown,
       userContribution,
-    });
-  }
+    };
+  }));
 
-  return results;
+  return perListResults.filter((r): r is InsightsData['groupStats'][number] => r !== null);
 }
