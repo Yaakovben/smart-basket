@@ -6,7 +6,6 @@ import { trackEvent } from '../../../global/services/analytics';
 import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
-import type { ConfirmState } from '../types/list-types';
 
 interface UseProductMutationsParams {
   list: List;
@@ -19,7 +18,6 @@ interface UseProductMutationsParams {
   dismissHint: () => void;
   markPurchased: () => void;
   clearMarked: () => void;
-  setConfirm: (confirm: ConfirmState | null) => void;
   showEdit: Product | null;
   setShowEdit: (product: Product | null) => void;
   originalEditProduct: Product | null;
@@ -40,7 +38,6 @@ export const useProductMutations = ({
   dismissHint,
   markPurchased,
   clearMarked,
-  setConfirm,
   showEdit,
   setShowEdit,
   originalEditProduct,
@@ -244,34 +241,27 @@ export const useProductMutations = ({
     }
   }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t, setShowEdit, setOriginalEditProduct]);
 
-  // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") =====
-  const handleResetList = useCallback(() => {
+  // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") - כרטיס בתוך מודאל הניקוי =====
+  const handleResetList = useCallback(async () => {
     if (!productsRef.current.some(p => p.isPurchased)) return;
-
-    setConfirm({
-      title: t('resetList'),
-      message: t('resetListConfirm'),
-      onConfirm: async () => {
-        setConfirm(null);
-        // snapshot נוכחי של מוצרים שנקנו (מה-ref, לא מ-closure ישן)
-        const purchasedIds = new Set(productsRef.current.filter(p => p.isPurchased).map(p => p.id));
-        haptic('medium');
-        onUpdateProductsForList(list.id, (current) =>
-          current.map(p => p.isPurchased ? { ...p, isPurchased: false } : p)
-        );
-        try {
-          await productsApi.resetProducts(list.id);
-          trackEvent('list_reset'); // רשימה חוזרת - אינדיקציה חזקה ל-retention
-          showToast(t('listReset'), 'success');
-        } catch {
-          onUpdateProductsForList(list.id, (current) =>
-            current.map(p => purchasedIds.has(p.id) ? { ...p, isPurchased: true } : p)
-          );
-          showToast(t('errorOccurred'), 'error');
-        }
-      }
-    });
-  }, [list.id, onUpdateProductsForList, showToast, t, setConfirm, productsRef]);
+    setShowClearList(false);
+    // snapshot נוכחי של מוצרים שנקנו (מה-ref, לא מ-closure ישן)
+    const purchasedIds = new Set(productsRef.current.filter(p => p.isPurchased).map(p => p.id));
+    haptic('medium');
+    onUpdateProductsForList(list.id, (current) =>
+      current.map(p => p.isPurchased ? { ...p, isPurchased: false } : p)
+    );
+    try {
+      await productsApi.resetProducts(list.id);
+      trackEvent('list_reset'); // רשימה חוזרת - אינדיקציה חזקה ל-retention
+      showToast(t('listReset'), 'success');
+    } catch {
+      onUpdateProductsForList(list.id, (current) =>
+        current.map(p => purchasedIds.has(p.id) ? { ...p, isPurchased: true } : p)
+      );
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [list.id, onUpdateProductsForList, showToast, t, productsRef]);
 
   return {
     toggleProduct,

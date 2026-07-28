@@ -6,7 +6,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
@@ -26,10 +25,8 @@ interface ListMenuProps {
   onDelete: () => void;
   onRefresh?: () => void;
   onClearList?: () => void;
-  onResetList?: () => void;
   onShoppingMode?: () => void;
   onDuplicate?: () => void;
-  hasPurchased?: boolean;
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
@@ -48,9 +45,7 @@ export const ListMenu = memo(({
   onEdit,
   onDelete,
   onRefresh,
-  onResetList,
   onShoppingMode,
-  hasPurchased = false,
   onClearList,
   hasProducts = false,
   onLeave,
@@ -58,6 +53,13 @@ export const ListMenu = memo(({
   stopPropagation = false
 }: ListMenuProps) => {
   const { t } = useSettings();
+
+  // קיבוץ פריטי התפריט לשלוש קבוצות הגיוניות, עם הפרדה (Divider) רק בין
+  // קבוצות ולא בין פריטים בתוך אותה קבוצה: (1) רענון/מצב קנייה/סריקה,
+  // (2) השתקה/עריכה/ניקוי, (3) מחיקה/עזיבה.
+  const hasGroup1 = !!onRefresh || !!(onShoppingMode && hasProducts) || !!onScanList;
+  const hasGroup2 = isGroup || isOwner || !!(onClearList && hasProducts);
+  const hasGroup3 = isOwner || (!isOwner && isGroup && !!onLeave);
 
   return (
     <Menu
@@ -81,121 +83,93 @@ export const ListMenu = memo(({
 
       {/* מצב קנייה */}
       {onShoppingMode && hasProducts && (
-        <>
-          {onRefresh && <Divider sx={dividerSx} />}
-          <MenuItem onClick={() => { onClose(); onShoppingMode(); }} sx={menuItemSx}>
-            <ShoppingCartCheckoutIcon sx={{ color: '#22C55E', fontSize: 22 }} />
-            <Typography sx={menuLabelSx}>
-              {t('shoppingMode')}
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onShoppingMode(); }} sx={menuItemSx}>
+          <ShoppingCartCheckoutIcon sx={{ color: '#22C55E', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            {t('shoppingMode')}
+          </Typography>
+        </MenuItem>
       )}
 
       {/* סריקת רשימה מהדף (OCR) */}
       {onScanList && (
-        <>
-          {(onRefresh || (onShoppingMode && hasProducts)) && <Divider sx={dividerSx} />}
-          <MenuItem onClick={() => { onClose(); onScanList(); }} sx={menuItemSx}>
-            <DocumentScannerIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-            <Typography sx={menuLabelSx}>
-              סרוק רשימה מהדף
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onScanList(); }} sx={menuItemSx}>
+          <DocumentScannerIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            סרוק רשימת קניות
+          </Typography>
+        </MenuItem>
       )}
+
+      {/* הפרדה בין קבוצת רענון/סריקה לקבוצת השתקה/עריכה/ניקוי */}
+      {hasGroup1 && hasGroup2 && <Divider sx={dividerSx} />}
 
       {/* Mute Toggle, רק בקבוצות */}
       {isGroup && (
-        <>
-          {(onRefresh || onScanList) && <Divider sx={dividerSx} />}
-          <Box sx={{ px: 1.5, py: 0.5 }}>
-            <Box
-              onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
-              sx={muteToggleBoxSx(isMuted, mainNotificationsOff)}
-            >
-              {isMuted || mainNotificationsOff
-                ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'text.disabled' : 'error.main', fontSize: 22 }} />
-                : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-              }
-              <Box sx={{ flex: 1 }}>
-                <Typography sx={muteToggleLabelSx(isMuted)}>
-                  {isMuted ? t('unmuteGroup') : t('muteGroup')}
+        <Box sx={{ px: 1.5, py: 0.5 }}>
+          <Box
+            onClick={() => { if (!mainNotificationsOff) { onClose(); onToggleMute(); } }}
+            sx={muteToggleBoxSx(isMuted, mainNotificationsOff)}
+          >
+            {isMuted || mainNotificationsOff
+              ? <VolumeOffIcon sx={{ color: mainNotificationsOff ? 'text.disabled' : 'error.main', fontSize: 22 }} />
+              : <VolumeUpIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+            }
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={muteToggleLabelSx(isMuted)}>
+                {isMuted ? t('unmuteGroup') : t('muteGroup')}
+              </Typography>
+              {mainNotificationsOff && (
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
+                  {t('notificationsOff')}
                 </Typography>
-                {mainNotificationsOff && (
-                  <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                    {t('notificationsOff')}
-                  </Typography>
-                )}
-              </Box>
+              )}
             </Box>
           </Box>
-        </>
+        </Box>
       )}
 
       {/* עריכה */}
       {isOwner && (
-        <>
-          {(onRefresh || isGroup || onScanList) && <Divider sx={dividerSx} />}
-          <MenuItem onClick={() => { onClose(); onEdit(); }} sx={menuItemSx}>
-            <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-            <Typography sx={menuLabelSx}>
-              {isGroup ? t('editGroup') : t('editList')}
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onEdit(); }} sx={menuItemSx}>
+          <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            {isGroup ? t('editGroup') : t('editList')}
+          </Typography>
+        </MenuItem>
       )}
 
       {/* ניקוי רשימה */}
       {onClearList && hasProducts && (
-        <>
-          <Divider sx={dividerSx} />
-          <MenuItem onClick={() => { onClose(); onClearList(); }} sx={menuItemSx}>
-            <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
-            <Typography sx={menuLabelSx}>
-              {t('clearList')}
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onClearList(); }} sx={menuItemSx}>
+          <PlaylistRemoveIcon sx={{ color: 'warning.main', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            {t('clearList')}
+          </Typography>
+        </MenuItem>
       )}
 
-      {/* איפוס רשימה */}
-      {onResetList && hasPurchased && (
-        <>
-          <Divider sx={dividerSx} />
-          <MenuItem onClick={() => { onClose(); onResetList(); }} sx={menuItemSx}>
-            <RestartAltIcon sx={{ color: 'info.main', fontSize: 22 }} />
-            <Typography sx={menuLabelSx}>
-              {t('resetList')}
-            </Typography>
-          </MenuItem>
-        </>
-      )}
+      {/* הפרדה בין קבוצת השתקה/עריכה/ניקוי לקבוצת מחיקה/עזיבה */}
+      {hasGroup2 && hasGroup3 && <Divider sx={dividerSx} />}
 
       {/* מחיקת רשימה */}
       {isOwner && (
-        <>
-          <Divider sx={dividerSx} />
-          <MenuItem onClick={() => { onClose(); onDelete(); }} sx={menuItemSx}>
-            <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
-            <Typography sx={{ ...menuLabelSx, color: 'error.main' }}>
-              {isGroup ? t('deleteGroup') : t('deleteList')}
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onDelete(); }} sx={menuItemSx}>
+          <DeleteOutlineIcon sx={{ color: 'error.main', fontSize: 22 }} />
+          <Typography sx={{ ...menuLabelSx, color: 'error.main' }}>
+            {isGroup ? t('deleteGroup') : t('deleteList')}
+          </Typography>
+        </MenuItem>
       )}
 
       {/* עזיבת רשימה */}
       {!isOwner && isGroup && onLeave && (
-        <>
-          <Divider sx={dividerSx} />
-          <MenuItem onClick={() => { onClose(); onLeave(); }} sx={menuItemSx}>
-            <LogoutIcon sx={{ color: 'error.main', fontSize: 22 }} />
-            <Typography sx={{ ...menuLabelSx, color: 'error.main' }}>
-              {t('leaveGroup')}
-            </Typography>
-          </MenuItem>
-        </>
+        <MenuItem onClick={() => { onClose(); onLeave(); }} sx={menuItemSx}>
+          <LogoutIcon sx={{ color: 'error.main', fontSize: 22 }} />
+          <Typography sx={{ ...menuLabelSx, color: 'error.main' }}>
+            {t('leaveGroup')}
+          </Typography>
+        </MenuItem>
       )}
     </Menu>
   );

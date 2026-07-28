@@ -173,7 +173,6 @@ export const useList = ({
     dismissHint,
     markPurchased,
     clearMarked,
-    setConfirm,
     showEdit: productForm.showEdit,
     setShowEdit: productForm.setShowEdit,
     originalEditProduct: productForm.originalEditProduct,

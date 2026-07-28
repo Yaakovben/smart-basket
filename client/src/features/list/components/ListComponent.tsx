@@ -204,8 +204,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onRefresh={refreshList}
         refreshing={refreshing}
         onClearList={withExitSelection(() => setShowClearList(true))!}
-        onResetList={withExitSelection(handleResetList)!}
-        hasPurchased={purchased.length > 0}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
         onScanList={withExitSelection(() => { setScanListMounted(true); setShowScanList(true); })!}
@@ -464,6 +462,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           pendingCount={pending.length}
           purchasedCount={purchased.length}
           onClear={handleClearList}
+          onReset={handleResetList}
           onClose={() => setShowClearList(false)}
         />
       )}

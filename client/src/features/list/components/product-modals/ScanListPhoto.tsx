@@ -64,11 +64,13 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
   const [phase, setPhase] = useState<Phase>('intro');
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [detectedTitle, setDetectedTitle] = useState<string | null>(null);
 
   const reset = () => {
     setPhase('intro');
     setItems([]);
     setErrorMsg('');
+    setDetectedTitle(null);
   };
 
   const handleClose = () => {
@@ -85,12 +87,13 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
     try {
       const compressed = await compressImageFile(file);
       const text = await ocrApi.scanList(compressed);
-      const parsed = parseOcrList(text);
+      const { items: parsed, detectedTitle: title } = parseOcrList(text);
       if (parsed.length === 0) {
         setErrorMsg('לא זיהינו טקסט ברור בתמונה. נסה תמונה ברורה וחדה יותר, עם תאורה טובה.');
         setPhase('error');
         return;
       }
+      setDetectedTitle(title);
       setItems(parsed.map((p, i) => ({ ...p, id: `${i}-${p.name}`, checked: true })));
       setPhase('review');
     } catch {
@@ -132,11 +135,13 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
 
   return (
     <Dialog open={open} onClose={handleClose} fullScreen>
+      {/* בלי capture="environment" בכוונה - זה כופה פתיחת מצלמה ישירות
+          ומדלג על אפשרות "בחר מהגלריה" בדפדפנים רבים. בלי זה, ה-picker
+          הטבעי של המערכת מציג גם מצלמה וגם גלריה (כמו בגלריית QRScanner). */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={handleFileSelected}
       />
@@ -193,6 +198,11 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
               <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
                 זיהינו {items.length} שורות - בטל סימון/מחק מה שלא רלוונטי, ותקן שמות לפי הצורך.
               </Typography>
+              {detectedTitle && (
+                <Typography sx={{ fontSize: 12, color: 'text.disabled', mb: 1.5, fontStyle: 'italic' }}>
+                  זיהינו גם כותרת "{detectedTitle}" - לא נוספה כפריט.
+                </Typography>
+              )}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {items.map(it => (
                   <Box key={it.id} sx={{
