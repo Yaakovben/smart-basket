@@ -10,17 +10,14 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import { Box, Typography, Button, keyframes } from '@mui/material';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { Box, Typography, keyframes } from '@mui/material';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
-import { Modal } from '../../../global/components';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
-import { BranchesMapView } from './BranchesMapView';
+import { BranchesMapDialog } from './BranchesMapDialog';
 import { ChainCard } from './ChainCard';
 import { ChainSortBar } from './ChainSortBar';
 import { LocationStatusBanner } from './LocationStatusBanner';
@@ -56,7 +53,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const [sortMode, setSortMode] = useState<SortMode>('distance');
   // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
-  // מפת כל הסניפים (Leaflet/OSM חינמי) - נפתחת ב-modal בלחיצה על אייקון המפה
+  // מפת כל הסניפים (Leaflet/OSM חינמי) - נפתחת במסך מלא, כפתור בבר המיון
   const [mapOpen, setMapOpen] = useState(false);
   const toggleExpanded = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
@@ -91,30 +88,6 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         )}
       </Box>
 
-      {/* כפתור מפת סניפים - שורה משלו עם טקסט גלוי (לא רק אייקון) ושטח לחיצה
-          נוח (44px), כדי שיהיה קל למצוא ולהפעיל ולא יתחרה על מקום עם "עודכן". */}
-      <Button
-        onClick={() => setMapOpen(true)}
-        aria-label="הצג את כל הסניפים על מפה"
-        startIcon={<MapOutlinedIcon sx={{ fontSize: 18 }} />}
-        endIcon={<ChevronLeftIcon sx={{ fontSize: 16 }} />}
-        fullWidth
-        sx={{
-          justifyContent: 'space-between',
-          minHeight: 44,
-          mb: 1.25,
-          px: 1.5,
-          borderRadius: '12px',
-          textTransform: 'none',
-          fontSize: 13, fontWeight: 700,
-          color: '#0D9488',
-          bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
-          '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
-        }}
-      >
-        הצג סניפים על מפה
-      </Button>
-
       {/* באנר מיקום - רק אם רלוונטי */}
       <LocationStatusBanner locationStatus={locationStatus} onRequestLocation={onRequestLocation} isDark={isDark} />
 
@@ -132,7 +105,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* בר מיון - תמיד גלוי. "קרוב"/"משולב" מעומעמים בלי מיקום */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (
-        <ChainSortBar sortMode={sortMode} setSortMode={setSortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} />
+        <ChainSortBar sortMode={sortMode} setSortMode={setSortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onOpenMap={() => setMapOpen(true)} />
       )}
 
       {/* CARDS STACK - כרטיס לכל רשת. ההדגשה ברקע אוטומטית על המוביל לפי המיון. */}
@@ -165,12 +138,9 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
       {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
 
-      {/* מודאל מפת סניפים - Leaflet + OpenStreetMap, חינמי לגמרי */}
-      {mapOpen && (
-        <Modal title="מפת סניפים" onClose={() => setMapOpen(false)}>
-          <BranchesMapView isDark={isDark} />
-        </Modal>
-      )}
+      {/* מפת סניפים במסך מלא - Leaflet + OpenStreetMap, חינמי לגמרי.
+          מסך מלא ולא Modal-גיליון קטן, כדי שהמפה תקבל מספיק מקום אמיתי. */}
+      {mapOpen && <BranchesMapDialog isDark={isDark} onClose={() => setMapOpen(false)} />}
 
       {/* FOOTER - מטא קומפקטית */}
       <PriceComparisonFooter sourceUrl={data.sourceUrl} sourceName={data.sourceName} />

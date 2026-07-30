@@ -36,25 +36,48 @@ function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: num
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// אייקון פין מותאם אישית (SVG inline) בצבע הטורקיז של האפליקציה - נמנעים
-// מבעיית ה-assets הקלאסית של leaflet (marker-icon.png לא נטען נכון עם bundlers).
-// צל אליפסה מתחת לפין (כמו ב-Google Maps) נותן תחושת עומק/"אמיתיות" במקום
-// פין שטוח שמרחף על המפה. אנימציית drop-in מוגדרת ב-<style> הגלובלי למטה.
-const branchIcon = L.divIcon({
-  className: 'sb-branch-marker',
-  html: `
-    <div class="sb-pin-wrap">
-      <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35))">
-        <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="#14B8A6" stroke="#0D9488" stroke-width="1"/>
-        <circle cx="15" cy="15" r="6" fill="#fff"/>
-      </svg>
-      <div class="sb-pin-shadow"></div>
-    </div>
-  `,
-  iconSize: [30, 40],
-  iconAnchor: [15, 40],
-  popupAnchor: [0, -36],
-});
+// זיהוי רשת דרך צבע בלבד לא עובד כאן: ולידציה עם validate_palette.js (ראו
+// שיחת התכנון) הראתה שמעבר ל-3 קטגוריות תחת בדיקת "כל הזוגות" (רלוונטית
+// לפינים מפוזרים על מפה, בניגוד לעמודות בסדר קבוע) הגוונים כבר לא ניתנים
+// להבחנה בבטחה (גם לעיוורי צבעים וגם לראייה רגילה) - ויש כאן ~15 רשתות.
+// לכן הזהות עוברת דרך מונוגרם טקסטואלי בתוך פין באותו צבע מותג אחיד,
+// לא דרך גוון - זה גם נגיש יותר וגם קריא יותר מ-15 גוונים דומים.
+const branchIconCache = new Map<string, L.DivIcon>();
+
+// מונוגרם דו-אותיות מתוך שם הרשת: אות ראשונה משתי המילים הראשונות
+// (מתעלם ממילים מספריות כמו "2000"), או שתי האותיות הראשונות אם מילה אחת.
+function getChainMonogram(chainName: string): string {
+  const words = chainName.trim().split(/\s+/).filter(w => w && !/^\d+$/.test(w));
+  if (words.length >= 2) return `${words[0][0] || ''}${words[1][0] || ''}`;
+  return (words[0] || chainName).slice(0, 2);
+}
+
+// אייקון פין (SVG inline) - נמנעים מבעיית ה-assets הקלאסית של leaflet
+// (marker-icon.png לא נטען נכון עם bundlers). צל אליפסה מתחת לפין (כמו
+// ב-Google Maps) נותן תחושת עומק. אנימציית drop-in מוגדרת ב-<style> למטה.
+function getBranchIcon(chainName: string): L.DivIcon {
+  const cached = branchIconCache.get(chainName);
+  if (cached) return cached;
+  const monogram = getChainMonogram(chainName);
+  const icon = L.divIcon({
+    className: 'sb-branch-marker',
+    html: `
+      <div class="sb-pin-wrap">
+        <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35))">
+          <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="#14B8A6" stroke="#0D9488" stroke-width="1"/>
+          <circle cx="15" cy="14" r="9.5" fill="#fff"/>
+          <text x="15" y="14.5" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="800" font-family="system-ui,-apple-system,sans-serif" fill="#0D9488">${monogram}</text>
+        </svg>
+        <div class="sb-pin-shadow"></div>
+      </div>
+    `,
+    iconSize: [30, 40],
+    iconAnchor: [15, 40],
+    popupAnchor: [0, -36],
+  });
+  branchIconCache.set(chainName, icon);
+  return icon;
+}
 
 // אייקון נקודת מיקום המשתמש - עיגול כחול עם טבעת "פועם" (pulse) שמרגישה
 // כמו מיקום חי בזמן אמת (בהשראת Google Maps "blue dot"), לא נקודה סטטית.
@@ -103,9 +126,12 @@ interface NearbyBranchApi {
 
 interface Props {
   isDark?: boolean;
+  // true כשהמפה מתארחת במסך מלא (BranchesMapDialog) - ממלאת את כל הגובה
+  // הפנוי במקום לקבל גובה קבוע. ברירת המחדל (440px) משמשת רק לשימוש עצמאי.
+  fillHeight?: boolean;
 }
 
-export const BranchesMapView = ({ isDark = false }: Props) => {
+export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) => {
   const { location } = useUserLocation();
   const [branches, setBranches] = useState<NearbyBranchApi[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +172,13 @@ export const BranchesMapView = ({ isDark = false }: Props) => {
   };
 
   return (
-    <Box sx={{ position: 'relative' }} className={isDark ? 'sb-map-dark' : undefined}>
+    <Box
+      sx={{
+        position: 'relative',
+        ...(fillHeight && { height: '100%', display: 'flex', flexDirection: 'column' }),
+      }}
+      className={isDark ? 'sb-map-dark' : undefined}
+    >
       {/* עיצוב מותאם לרכיבי Leaflet (פופאפ/זום/פינים) - אלה DOM גולמי שלא
           עובר sx/MUI, ולכן חייבים override גלובלי מוגבל ל-scope הזה. פין
           עם "נפילה" קלה + טבעת פועמת סביב נקודת המשתמש הן מה שהופך מפה
@@ -169,14 +201,45 @@ export const BranchesMapView = ({ isDark = false }: Props) => {
         .sb-map-dark .leaflet-popup-content-wrapper, .sb-map-dark .leaflet-popup-tip { background: #1e293b !important; color: #e2e8f0 !important; }
         .sb-map-dark .leaflet-control-attribution { background: rgba(30,41,59,0.75) !important; color: #cbd5e1 !important; }
         .sb-map-dark .leaflet-control-attribution a { color: #93c5fd !important; }
+        /* משתמשים שכיבו אנימציות במערכת (הגדרת נגישות) - מכבדים את זה, לא
+           רק עיצוב: פינים "נופלים" וטבעת פועמת הן תנועה לא-פונקציונלית. */
+        @media (prefers-reduced-motion: reduce) {
+          .sb-branch-marker, .sb-user-pulse-ring { animation: none !important; }
+        }
+        /* פוקוס מקלדת גלוי על פינים - Leaflet הופך אותם ל-focusable (tabindex)
+           אבל לא מספק outline ברירת מחדל, כך שמשתמשי מקלדת "מאבדים" את המיקוד. */
+        .leaflet-interactive:focus-visible { outline: 3px solid #14B8A6; outline-offset: 2px; }
+        /* חלופה נגישה לקוראי מסך - תוכן אמיתי, מוסתר ויזואלית בלבד */
+        .sb-sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+          overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
       `}</style>
-      <Box sx={{
-        height: 440,
-        borderRadius: '14px',
-        overflow: 'hidden',
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-      }}>
+      {/* חלופה טקסטואלית לקוראי מסך: Leaflet מרנדר div-ים גולמיים בלי משמעות
+          סמנטית (attribute "alt" על div לא נקרא ע"י קוראי מסך), אז במקום
+          לנסות "לתקן" ARIA על המפה עצמה - נותנים רשימה אמיתית ושקולה,
+          מוסתרת חזותית, עם אותה פעולת ניווט כמו בפופאפ. */}
+      {branches && branches.length > 0 && (
+        <ul className="sb-sr-only" aria-label="רשימת סניפים קרובים">
+          {branches.map((b, idx) => (
+            <li key={`sr-${b.chainId}-${b.storeName}-${idx}`}>
+              {b.chainName} {b.storeName}{(b.address || b.city) ? `, ${[b.address, b.city].filter(Boolean).join(', ')}` : ''}
+              <button type="button" onClick={() => openNav(b)}>ניווט לסניף {b.chainName} {b.storeName}</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Box
+        role="region"
+        aria-label="מפת סניפים קרובים"
+        sx={{
+          ...(fillHeight ? { flex: 1, minHeight: 0 } : { height: 440 }),
+          borderRadius: '14px',
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+        }}
+      >
         <MapContainer center={center} zoom={zoom} zoomControl={false} style={{ width: '100%', height: '100%' }}>
           {/* טיילים של CARTO (בנויים על OSM) - חינמי לגמרי, בלי מפתח API, רק
               attribution. נבחר על פני טייל ה-OSM הגולמי כי הוא הרבה יותר "חי"
@@ -201,7 +264,7 @@ export const BranchesMapView = ({ isDark = false }: Props) => {
           )}
 
           {branches?.map((b, idx) => (
-            <Marker key={`${b.chainId}-${b.storeName}-${idx}`} position={[b.lat, b.lng]} icon={branchIcon}>
+            <Marker key={`${b.chainId}-${b.storeName}-${idx}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
               <Popup className="sb-popup">
                 <Box sx={{ minWidth: 160, textAlign: 'right', direction: 'rtl' }}>
                   <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488' }}>
