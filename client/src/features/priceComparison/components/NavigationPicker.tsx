@@ -6,7 +6,7 @@
 import { memo } from 'react';
 import { siWaze, siGooglemaps } from 'simple-icons';
 import { Box, Typography, IconButton, Dialog } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import type { NearestBranch } from '../types/priceComparison.types';
 
@@ -192,25 +192,25 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           : 'linear-gradient(165deg, rgba(20,184,166,0.10) 0%, rgba(20,184,166,0.02) 100%)',
         textAlign: 'center',
       }}>
-        {/* X לסגירה - אותו עיצוב כמו ב-Modal הגלובלי לאחידות אפליקציה */}
+        {/* חץ חזרה - עקבי עם שאר האפליקציה */}
         <IconButton
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          aria-label="סגור"
+          aria-label="חזור"
           disableRipple
           disableFocusRipple
           sx={{
-            position: 'absolute', top: 10, insetInlineEnd: 12,
+            position: 'absolute', top: 10, insetInlineStart: 12,
             bgcolor: 'action.hover',
             width: 36, height: 36,
             touchAction: 'manipulation',
             transition: 'opacity 0.1s, background-color 0.15s',
-            '&:hover': { bgcolor: 'action.hover' },
-            '&:active': { opacity: 0.7, bgcolor: 'action.selected' },
+            '&:hover': { bgcolor: 'action.selected' },
+            '&:active': { opacity: 0.7 },
             '@media (max-width: 360px)': { width: 32, height: 32 },
           }}
         >
-          <CloseIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+          <ArrowForwardIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
         </IconButton>
 
         {/* תג מרחק זוהר במרכז למעלה - או "ניווט לפי כתובת" אם אין קואורדינטות */}

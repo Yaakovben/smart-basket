@@ -1,4 +1,5 @@
 // חישובים טהורים להשוואת רשתות בכרטיס העליון - מיון, זיהוי הזולה וחיסכון.
+// גם: מיפוי cheapestPriceByProduct לחוויית "הכי זול" בכל מוצר.
 
 import type { PriceChainTotal } from '../types/priceComparison.types';
 
@@ -27,6 +28,26 @@ export const getSavings = (chainTotals: PriceChainTotal[] | undefined, cheapest:
 
 export const hasAnyChainLocation = (chainTotals: PriceChainTotal[] | undefined): boolean =>
   (chainTotals || []).some(c => c.nearestBranch);
+
+// בונה Map: productId → { cheapest, mostExpensive } - לחוויית "הכי זול" per-product.
+export const buildCheapestPriceMap = (chainTotals: PriceChainTotal[] | undefined): Map<string, { cheapest: number; mostExpensive: number }> => {
+  const result = new Map<string, { cheapest: number; mostExpensive: number }>();
+  for (const chain of (chainTotals || [])) {
+    for (const m of chain.matches) {
+      if (!m.matched) continue;
+      const existing = result.get(m.productId);
+      if (!existing) {
+        result.set(m.productId, { cheapest: m.price, mostExpensive: m.price });
+      } else {
+        result.set(m.productId, {
+          cheapest: Math.min(existing.cheapest, m.price),
+          mostExpensive: Math.max(existing.mostExpensive, m.price),
+        });
+      }
+    }
+  }
+  return result;
+};
 
 // מיון לפי סורט-מוד. "קרוב" - לפי מרחק; "זול" - לפי מחיר;
 // "משולב" - ציון מנורמל 50/50. אם אין מיקום, "קרוב"/"משולב" נופלים ל-price.

@@ -32,7 +32,7 @@ interface HomeListContentProps {
   onCancelReorder: () => void;
   onSaveOrder: () => void;
   onEnterReorder: () => void;
-  onDragHandleStart: (index: number, clientY: number) => void;
+  onDragHandleStart: (index: number, clientY: number, clientX?: number) => void;
   t: (key: TranslationKeys) => string;
 }
 
@@ -117,12 +117,12 @@ export const HomeListContent = ({
               border: '1px solid', borderColor: 'divider',
               minHeight: 80,
             }}>
-              <ShimmerBlock width={52} height={52} radius={14} color="#94A3B8" />
+              <ShimmerBlock width={52} height={52} radius={14} />
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <ShimmerBlock width="65%" height={18} radius={8} color="#94A3B8" />
-                <ShimmerBlock width="40%" height={14} radius={7} color="#94A3B8" />
+                <ShimmerBlock width="65%" height={18} radius={8} />
+                <ShimmerBlock width="40%" height={14} radius={7} />
               </Box>
-              <ShimmerBlock width={28} height={28} radius={8} color="#94A3B8" />
+              <ShimmerBlock width={28} height={28} radius={8} />
             </Box>
           ))}
         </Box>
@@ -134,8 +134,8 @@ export const HomeListContent = ({
             <Box sx={{
               position: 'absolute', inset: 0, borderRadius: '50%',
               background: tab === 'groups'
-                ? 'linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.06))'
-                : 'linear-gradient(135deg, rgba(20,184,166,0.18), rgba(16,185,129,0.06))',
+                ? 'linear-gradient(135deg, rgba(20,184,166,0.15), rgba(13,148,136,0.06))'
+                : 'linear-gradient(135deg, rgba(20,184,166,0.18), rgba(13,148,136,0.06))',
               animation: 'pulseRing 3s ease-in-out infinite',
               '@keyframes pulseRing': {
                 '0%, 100%': { transform: 'scale(1)' },
@@ -239,12 +239,12 @@ export const HomeListContent = ({
             isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
             onDragHandleTouch={reorderMode ? (e: React.TouchEvent) => {
               e.stopPropagation();
-              onDragHandleStart(idx, e.touches[0].clientY);
+              onDragHandleStart(idx, e.touches[0].clientY, e.touches[0].clientX);
             } : undefined}
             onDragHandleMouse={reorderMode ? (e: React.MouseEvent) => {
               e.stopPropagation();
               e.preventDefault();
-              onDragHandleStart(idx, e.clientY);
+              onDragHandleStart(idx, e.clientY, e.clientX);
             } : undefined}
           />
         </Box>

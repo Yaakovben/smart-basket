@@ -30,8 +30,8 @@ export const ChainBranchInfo = memo(({ branch, isDark, onNavigate }: {
       onClick={onNavigate}
       startIcon={<NearMeIcon sx={{ fontSize: 15 }} />}
       sx={{
-        bgcolor: '#7C3AED',
-        '&:hover': { bgcolor: '#6D28D9' },
+        bgcolor: '#0D9488',
+        '&:hover': { bgcolor: '#0F766E' },
         fontSize: 11, fontWeight: 800,
         textTransform: 'none',
         borderRadius: '8px',

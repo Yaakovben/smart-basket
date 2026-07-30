@@ -2,10 +2,17 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-// גובה מפורש עם dvh (לא vh) - בדפדפני מובייל 100vh כולל את השטח שמתחת
-// לסרגל הכתובת שמתקפל/נפתח, ולכן גדול מהאזור הנראה בפועל וגורם לצורך בגלילה.
-// dvh מתעדכן דינמית לגובה ה-viewport הנראה בפועל.
-export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000', height: '100dvh', maxHeight: '100dvh' };
+// bottom-sheet גדול עם dvh - מותיר מרווח עליון קטן, dvh מכסה בדיוק את
+// האזור הנראה במובייל בלי לכלול את סרגל הכתובת שמתקפל/נפתח.
+export const dialogPaperSx: SxProps<Theme> = {
+  bgcolor: '#000',
+  borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
+  m: { xs: 0, sm: 2 },
+  maxHeight: { xs: '92dvh', sm: '90dvh' },
+  height: { xs: '92dvh', sm: 'auto' },
+  width: { xs: '100%', sm: 480 },
+  overflow: 'hidden',
+};
 
 export const rootBoxSx: SxProps<Theme> = { position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' };
 

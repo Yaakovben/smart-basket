@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Dialog, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { haptic } from '../helpers';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
 import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
 import {
-  dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, videoAreaSx,
+  dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, dragHandleSx, videoAreaSx,
   videoStyle, frameOverlaySx, frameBoxSx, FRAME_CORNER_POSITIONS, frameCornerSx,
   scanLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
@@ -93,19 +94,51 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullScreen PaperProps={{ sx: dialogPaperSx }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      PaperProps={{ sx: dialogPaperSx }}
+      sx={{ '& .MuiDialog-container': { alignItems: { xs: 'flex-end', sm: 'center' } } }}
+    >
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
 
       <Box sx={rootBoxSx}>
+        {/* drag handle - מובייל בלבד */}
+        <Box sx={dragHandleSx}>
+          <Box sx={{ width: 44, height: 5, borderRadius: '3px', bgcolor: 'rgba(255,255,255,0.3)' }} />
+        </Box>
+
+        {/* הדר שקוף מעל המצלמה - X תמיד גלוי */}
         <Box sx={headerSx}>
-          <IconButton onClick={onClose} aria-label="סגור" sx={{ color: 'white' }}>
-            <CloseIcon />
-          </IconButton>
           <Box sx={headerTitleRowSx}>
-            <QrCodeScannerIcon />
-            <Typography sx={{ fontWeight: 700 }}>{mode === 'barcode' ? 'סרוק ברקוד' : 'סרוק QR'}</Typography>
+            {mode === 'barcode'
+              ? <BarcodeScannerIcon sx={{ fontSize: 22 }} />
+              : <QrCodeScannerIcon sx={{ fontSize: 22 }} />}
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: 15, lineHeight: 1.1 }}>
+                {mode === 'barcode' ? 'סריקת ברקוד מוצר' : 'סריקת קוד QR'}
+              </Typography>
+              {mode === 'barcode' && (
+                <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>
+                  EAN-13 · EAN-8 · UPC-A · UPC-E
+                </Typography>
+              )}
+            </Box>
           </Box>
-          <Box sx={{ width: 40 }} />
+          <IconButton
+            onClick={onClose}
+            aria-label="סגור"
+            sx={{
+              color: 'white',
+              bgcolor: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(4px)',
+              width: 36, height: 36,
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.65)' },
+              '&:active': { opacity: 0.75 },
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 20 }} />
+          </IconButton>
         </Box>
 
         <Box sx={videoAreaSx}>
