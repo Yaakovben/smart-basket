@@ -2,7 +2,10 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000' };
+// גובה מפורש עם dvh (לא vh) - בדפדפני מובייל 100vh כולל את השטח שמתחת
+// לסרגל הכתובת שמתקפל/נפתח, ולכן גדול מהאזור הנראה בפועל וגורם לצורך בגלילה.
+// dvh מתעדכן דינמית לגובה ה-viewport הנראה בפועל.
+export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000', height: '100dvh', maxHeight: '100dvh' };
 
 export const rootBoxSx: SxProps<Theme> = { position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' };
 
