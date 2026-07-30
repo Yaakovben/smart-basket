@@ -1,4 +1,4 @@
-import { Box, Paper, Tabs, Tab, Typography } from '@mui/material';
+import { Box, Paper, Tabs, Tab } from '@mui/material';
 import type { InsightTab } from '../types/insights-types';
 
 interface InsightsTabsBarProps {
