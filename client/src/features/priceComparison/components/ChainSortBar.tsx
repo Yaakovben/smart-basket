@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Divider } from '@mui/material';
 import { haptic } from '../../../global/helpers';
 import type { SortMode } from '../helpers/priceComparisonCardHelpers';
 
@@ -55,9 +55,20 @@ interface ChainSortBarProps {
   isDark: boolean;
 }
 
-// בר מיון - תמיד גלוי. "קרוב"/"משולב" מעומעמים בלי מיקום
+// בר מיון - תמיד גלוי. "קרוב"/"משולב" מעומעמים בלי מיקום.
+// עיצוב "שני" מובחן ממה שנראה כ-InsightsTabsBar הראשי:
+// - גופן קטן יותר (11.5px), גובה נמוך יותר
+// - תווית "מיון" להבהיר את ההיררכיה
 export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark }: ChainSortBarProps) => (
   <Box sx={{ mb: 1.25 }}>
+    {/* תווית "שני" - מבדילה מהטאבים הראשיים */}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.6 }}>
+      <Divider sx={{ flex: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }} />
+      <Typography sx={{ fontSize: 9.5, fontWeight: 700, color: 'text.disabled', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+        מיין לפי
+      </Typography>
+      <Divider sx={{ flex: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }} />
+    </Box>
     <Box sx={{ display: 'flex', gap: 0.5, px: 0.25 }}>
       <SortChip mode="distance" emoji="📍" label="קרוב" requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
       <SortChip mode="price" emoji="💰" label="זול" sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />

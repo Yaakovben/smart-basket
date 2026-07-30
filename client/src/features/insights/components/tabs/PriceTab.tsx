@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import type { LocationStatus } from '../../../priceComparison/hooks/useUserLocation';
+import type { LocationStatus, UserLocation } from '../../../priceComparison/hooks/useUserLocation';
 import { PriceComparisonCard, type PriceComparisonData } from '../../../priceComparison';
 import { ShimmerList, TopProgressBar } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -15,6 +15,7 @@ interface PriceTabProps {
   priceError: boolean;
   onRetry: () => void;
   locationStatus: LocationStatus;
+  userLocation?: UserLocation | null;
   onRequestLocation: () => void;
   onResetLocationDenied: () => void;
   selectedListId: string | null;
@@ -25,7 +26,7 @@ interface PriceTabProps {
 // טאב "מחירים" של עמוד התובנות - השוואת מחירים בין רשתות לרשימה נבחרת.
 export const PriceTab = memo(({
   isDark, priceData, priceLoading, priceLoadingLabel, priceError, onRetry,
-  locationStatus, onRequestLocation, onResetLocationDenied,
+  locationStatus, userLocation, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
 }: PriceTabProps) => {
   if (!priceData) {
@@ -175,6 +176,7 @@ export const PriceTab = memo(({
         data={priceData}
         isDark={isDark}
         locationStatus={locationStatus}
+        userLocation={userLocation}
         onRequestLocation={onRequestLocation}
         onResetLocationDenied={onResetLocationDenied}
         selectedListName={

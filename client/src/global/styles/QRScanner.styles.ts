@@ -2,17 +2,42 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000' };
+export const dialogPaperSx: SxProps<Theme> = {
+  bgcolor: '#000',
+  // לא fullScreen - bottom-sheet גדול שמשאיר מרווח עליון קטן
+  borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
+  m: { xs: 0, sm: 2 },
+  maxHeight: { xs: '92dvh', sm: '90dvh' },
+  width: { xs: '100%', sm: 480 },
+  overflow: 'hidden',
+};
 
 export const rootBoxSx: SxProps<Theme> = { position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' };
 
+// הדר בפריסה נורמלית (לא absolute) כדי שלא יחפוף את ה-drag handle.
+// רקע חצי שקוף כהה על הוידאו שיורד מתחת לכותרת.
 export const headerSx: SxProps<Theme> = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  px: 2, py: 1.5, bgcolor: 'rgba(0,0,0,0.6)', color: 'white', zIndex: 2,
+  px: 2, py: 1.25,
+  bgcolor: 'rgba(0,0,0,0.72)',
+  color: 'white',
+  zIndex: 2,
+  flexShrink: 0,
 };
 export const headerTitleRowSx: SxProps<Theme> = { display: 'flex', alignItems: 'center', gap: 1 };
 
-export const videoAreaSx: SxProps<Theme> = { flex: 1, position: 'relative', bgcolor: '#000' };
+// drag handle למובייל
+export const dragHandleSx: SxProps<Theme> = {
+  display: { xs: 'flex', sm: 'none' },
+  justifyContent: 'center',
+  pt: 1, pb: 0.5, bgcolor: '#000',
+};
+
+export const videoAreaSx: SxProps<Theme> = {
+  flex: 1, position: 'relative', bgcolor: '#000',
+  // גובה מינימלי כדי שתמיד יהיה מספיק מקום למצלמה
+  minHeight: { xs: 280, sm: 360 },
+};
 
 // מסך הסכמה ראשוני - לפני פתיחת מצלמה/גלריה
 export const consentOverlaySx: SxProps<Theme> = {

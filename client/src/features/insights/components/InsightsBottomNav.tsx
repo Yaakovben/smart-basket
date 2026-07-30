@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { haptic } from '../../../global/helpers';
 
@@ -59,7 +59,7 @@ export const InsightsBottomNav = ({ isDark, onNavigateHome, t }: InsightsBottomN
             '&:active': { opacity: 0.6 },
           }}
         >
-          <HomeIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.55 }} />
+          <HomeOutlinedIcon sx={{ fontSize: 24, color: 'text.primary', opacity: 0.55 }} />
           <Box sx={{ width: 18, height: 3, mt: 0.1 }} />
           <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.primary', opacity: 0.65, letterSpacing: 0.2, lineHeight: 1, mt: 0.15 }}>
             {t('home')}

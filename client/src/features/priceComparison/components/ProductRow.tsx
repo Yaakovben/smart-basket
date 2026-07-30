@@ -2,8 +2,16 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { PriceMatch } from '../types/priceComparison.types';
 
-// שורת מוצר בתוך כרטיס מורחב - שם + מחיר. אם לא נמצא: מוצג בעמום.
-export const ProductRow = memo(({ match, isDark }: { match: PriceMatch; isDark: boolean }) => {
+interface ProductRowProps {
+  match: PriceMatch;
+  isDark: boolean;
+  // נתוני השוואה חוצת-רשתות - אופציונלי, מוצג רק כשיש מידע
+  cheapestPrice?: number;
+  mostExpensivePrice?: number;
+}
+
+// שורת מוצר בתוך כרטיס מורחב - שם + מחיר + אינדיקטור "הכי זול"
+export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice }: ProductRowProps) => {
   if (!match.matched) {
     return (
       <Box sx={{
@@ -21,18 +29,43 @@ export const ProductRow = memo(({ match, isDark }: { match: PriceMatch; isDark: 
       </Box>
     );
   }
+
   const subtotal = match.price * match.userQuantity;
-  // אם השם של המוצר ברשת שונה מהשם שהמשתמש רשם - מציגים אותו כדי שהלקוח
-  // יראה "זוהה כ: ..." ויוכל לוודא שההתאמה נכונה.
   const showIdentifiedAs = match.itemName && match.itemName.trim().toLowerCase() !== match.userProductName.trim().toLowerCase();
+
+  // חישוב מצב מחיר: הכי זול, הכי יקר, או אמצע
+  const isCheapest = cheapestPrice !== undefined && Math.abs(match.price - cheapestPrice) < 0.01;
+  const isMostExpensive = mostExpensivePrice !== undefined && Math.abs(match.price - mostExpensivePrice) < 0.01 && mostExpensivePrice > cheapestPrice!;
+  const hasComparison = cheapestPrice !== undefined && mostExpensivePrice !== undefined && mostExpensivePrice > cheapestPrice;
+
+  // אחוז חיסכון אפשרי (כמה יותר יקר מהזול)
+  const savingsPct = hasComparison && !isCheapest
+    ? Math.round(((match.price - cheapestPrice!) / cheapestPrice!) * 100)
+    : 0;
+
   return (
     <Box sx={{
-      display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.6, px: 1,
+      display: 'flex', alignItems: 'flex-start', gap: 1, py: 0.65, px: 1,
       borderRadius: '8px',
+      bgcolor: isCheapest
+        ? (isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.05)')
+        : 'transparent',
+      transition: 'background-color 0.15s',
     }}>
-      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10B981', flexShrink: 0, mt: 0.65 }} />
+      {/* נקודת מצב */}
+      <Box sx={{
+        width: 6, height: 6, borderRadius: '50%',
+        bgcolor: isCheapest ? '#10B981' : (isMostExpensive ? '#EF4444' : '#94A3B8'),
+        flexShrink: 0, mt: 0.65,
+        boxShadow: isCheapest ? '0 0 4px rgba(16,185,129,0.4)' : 'none',
+      }} />
+
+      {/* שם המוצר */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <Typography sx={{
+          fontSize: 12.5, fontWeight: 600, color: 'text.primary',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
           {match.userProductName}
         </Typography>
         {showIdentifiedAs && (
@@ -51,9 +84,32 @@ export const ProductRow = memo(({ match, isDark }: { match: PriceMatch; isDark: 
           </Typography>
         )}
       </Box>
-      <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0F766E', fontVariantNumeric: 'tabular-nums', flexShrink: 0, mt: 0.25 }}>
-        ₪{match.price.toFixed(2)}
-      </Typography>
+
+      {/* מחיר + תג השוואה */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 0.2 }}>
+        <Typography sx={{
+          fontSize: 13, fontWeight: 800,
+          color: isCheapest ? '#059669' : (isMostExpensive ? '#DC2626' : '#0F766E'),
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          ₪{match.price.toFixed(2)}
+        </Typography>
+        {/* תג השוואה - הכי זול / +X% */}
+        {isCheapest && hasComparison && (
+          <Box sx={{
+            px: 0.6, py: 0.1, borderRadius: '4px',
+            bgcolor: '#10B981', color: 'white',
+            fontSize: 8.5, fontWeight: 800, lineHeight: 1.2, letterSpacing: 0.2,
+          }}>
+            הכי זול
+          </Box>
+        )}
+        {!isCheapest && savingsPct > 0 && (
+          <Typography sx={{ fontSize: 9, color: 'text.disabled', fontVariantNumeric: 'tabular-nums' }}>
+            +{savingsPct}%
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 });

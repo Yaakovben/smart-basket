@@ -29,9 +29,11 @@ interface ChainCardProps {
   hasLocation: boolean;
   // צבע ההדגשה לפי מצב המיון - ירוק/תכלת/סגול
   winnerColor: { main: string; bgLight: string; bgDark: string; borderLight: string; borderDark: string };
+  // מיפוי cheapestPrice לכל מוצר - לחוויית "הכי זול" per-product
+  cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
 }
 
-export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation, winnerColor }: ChainCardProps) => {
+export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -208,7 +210,7 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
 
       {/* תוכן מורחב - רשימת מוצרים + סניף קרוב */}
       <Collapse in={expanded} unmountOnExit>
-        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} />
+        <ChainCardDetails chain={chain} isDark={isDark} hasMatches={hasMatches} onNavigate={handleNavigate} cheapestPriceMap={cheapestPriceMap} />
       </Collapse>
     </Box>
   );

@@ -8,16 +8,18 @@ interface ChainCardDetailsProps {
   isDark: boolean;
   hasMatches: boolean;
   onNavigate: (e: React.MouseEvent) => void;
+  // מיפוי cheapestPrice לכל מוצר - לחוויית "הכי זול" per-product
+  cheapestPriceMap?: Map<string, { cheapest: number; mostExpensive: number }>;
 }
 
 // תוכן מורחב - רשימת מוצרים + סניף קרוב. מוצג בתוך ה-Collapse של כרטיס רשת.
-export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate }: ChainCardDetailsProps) => (
+export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheapestPriceMap }: ChainCardDetailsProps) => (
   <Box sx={{
     px: 1.5, pb: 1.5,
     borderTop: '1px dashed',
     borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
   }}>
-    {/* סניף קרוב + ניווט - רקע ניטרלי במקום סגול */}
+    {/* סניף קרוב + ניווט */}
     {chain.nearestBranch && (
       <ChainBranchInfo branch={chain.nearestBranch} isDark={isDark} onNavigate={onNavigate} />
     )}
@@ -25,10 +27,18 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate }: Chai
     {/* רשימת מוצרים */}
     {hasMatches ? (
       <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-        {chain.matches.map((m) => (
-          <ProductRow key={`${m.productId}-${m.chainId}`} match={m} isDark={isDark} />
-        ))}
-        {/* הסבר עדין על שיטת ההתאמה - מודגש למשתמש שזה לא תמיד 1:1 */}
+        {chain.matches.map((m) => {
+          const priceInfo = cheapestPriceMap?.get(m.productId);
+          return (
+            <ProductRow
+              key={`${m.productId}-${m.chainId}`}
+              match={m}
+              isDark={isDark}
+              cheapestPrice={priceInfo?.cheapest}
+              mostExpensivePrice={priceInfo?.mostExpensive}
+            />
+          );
+        })}
         <Typography sx={{
           fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
           mt: 1, lineHeight: 1.45, fontStyle: 'italic', px: 1,
