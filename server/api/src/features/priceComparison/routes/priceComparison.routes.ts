@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getComparison, refreshPrices, refreshBranches } from '../controllers/sync.controller';
-import { loadKnownBranchesSeed, getBranchesByChain, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches } from '../controllers/branches.controller';
+import { loadKnownBranchesSeed, getBranchesByChain, getBranchesNearby, createOrUpdateBranch, deleteBranch, cleanupUnverifiedBranches, bulkAddBranches } from '../controllers/branches.controller';
 import { fillMissingAddresses } from '../controllers/fillAddresses.controller';
 import { testOsm } from '../controllers/diagnostics.controller';
 import { getStatus } from '../controllers/status.controller';
@@ -14,6 +14,7 @@ router.use(authenticate);
 // פתוח לכל משתמש מאומת
 router.get('/', getComparison);
 router.get('/barcode/:barcode', lookupBarcode);
+router.get('/branches-nearby', getBranchesNearby);
 
 // ניהול: אדמין בלבד
 router.post('/refresh', isAdmin, refreshPrices);
