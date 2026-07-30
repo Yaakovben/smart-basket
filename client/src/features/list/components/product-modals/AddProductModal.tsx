@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useMemo, useState, lazy, Suspense } from 'react';
+import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
@@ -71,6 +71,15 @@ export const AddProductModal = memo(({
   const [scannerMounted, setScannerMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
+
+  // חימום מקדים של ה-chunk של הסורק ברגע שהמודאל נפתח (לא ממתינים ללחיצה
+  // על כפתור הברקוד) - כשהמשתמש בפועל ילחץ לסרוק, ה-JS כבר בקאש והמסך
+  // נפתח כמעט מיידית במקום לחכות להורדת רשת.
+  useEffect(() => {
+    if (isOpen) {
+      import('../../../../global/components/QRScanner');
+    }
+  }, [isOpen]);
 
   const isNameValid = newProduct.name.trim().length >= 2;
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { isActiveToday, isActiveThisMonth } from '../../../global/helpers';
 import type { UserFilter, UserWithLastLogin } from '../types';
 
@@ -18,9 +18,18 @@ export const useAdminUserFilter = (
 ): UseAdminUserFilterReturn => {
   const [userSearch, setUserSearch] = useState('');
   const [userFilter, setUserFilter] = useState<UserFilter>('all');
+  const lastClickRef = useRef<{ filter: UserFilter; time: number }>({ filter: 'all', time: 0 });
 
   // לחיצה על כרטיס סטטיסטיקה = מסנן/מבטל סינון
+  // לחיצה כפולה מהירה (תוך 500ms) על אותו כרטיס מתעלמת מהלחיצה השנייה,
+  // כדי שדאבל-קליק לא יבטל את הסינון מיד אחרי שנבחר
   const handleFilterClick = useCallback((filter: UserFilter) => {
+    const now = Date.now();
+    const last = lastClickRef.current;
+    lastClickRef.current = { filter, time: now };
+    if (last.filter === filter && now - last.time < 500) {
+      return;
+    }
     setUserFilter(prev => prev === filter ? 'all' : filter);
   }, []);
 

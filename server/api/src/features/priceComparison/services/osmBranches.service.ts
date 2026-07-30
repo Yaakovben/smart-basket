@@ -81,6 +81,10 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
     brands: ['Carrefour', 'Yaynot Bitan', 'Yaynot Bitan Carrefour', 'Yenot Bitan', 'Mega', 'Mega Bool', "Mega Ba'Ir"],
     names: ['קרפור', 'יינות ביתן', 'יינות ביתן Carrefour', 'מגה', 'מגה בעיר', 'מגה בול'],
   },
+  netto: {
+    brands: ['Netto', 'Netto Malinda', 'Super Netto'],
+    names: ['נטו', 'נטו מלינדה', 'סופר נטו'],
+  },
 };
 
 export interface OsmBranch {

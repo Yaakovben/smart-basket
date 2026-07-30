@@ -7,25 +7,23 @@
  *  3. Footer chip - מטא: עדכון אחרון, מקור, דיווח
  *
  * אין טבלאות, אין modals. כל אינטראקציה inline.
- * כפתור מפה 🗺️ בכותרת פותח BranchMap עם מרקרי סניפים.
  */
 
 import { memo, useState, useCallback } from 'react';
-import { Box, Typography, keyframes, IconButton, Tooltip } from '@mui/material';
-import MapIcon from '@mui/icons-material/Map';
+import { Box, Typography, keyframes } from '@mui/material';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
-import type { LocationStatus, UserLocation } from '../hooks/useUserLocation';
+import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
+import { BranchesMapDialog } from './BranchesMapDialog';
 import { ChainCard } from './ChainCard';
 import { ChainSortBar } from './ChainSortBar';
 import { LocationStatusBanner } from './LocationStatusBanner';
 import { SavingsHero } from './SavingsHero';
 import { PriceComparisonEmptyStates } from './PriceComparisonEmptyStates';
 import { PriceComparisonFooter } from './PriceComparisonFooter';
-import { BranchMap } from './BranchMap';
 import {
   type SortMode,
   getCheapestChain,
@@ -42,19 +40,22 @@ interface Props {
   loading?: boolean;
   isDark?: boolean;
   locationStatus?: LocationStatus;
-  userLocation?: UserLocation | null;
   onRequestLocation?: () => void;
   onResetLocationDenied?: () => void;
+  // שם הרשימה שנבחרה - להתאמת הודעות ריק ("ברשימה הזאת" במקום "ברשימות שלך")
   selectedListName?: string | null;
 }
 
-export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, userLocation, onRequestLocation, selectedListName }: Props) => {
+export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, selectedListName }: Props) => {
   const { settings } = useSettings();
+  // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
   const [sortMode, setSortMode] = useState<SortMode>('distance');
+  // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+  // מפת כל הסניפים (Leaflet/OSM חינמי) - נפתחת במסך מלא, כפתור בבר המיון
   const [mapOpen, setMapOpen] = useState(false);
-
   const toggleExpanded = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
   }, []);
@@ -67,20 +68,17 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
   const cheapest = getCheapestChain(data.chainTotals);
   const savings = getSavings(data.chainTotals, cheapest);
+  // האם יש מיקום לפחות לרשת אחת - מאפשר מיון "קרוב" / "משולב"
   const hasAnyLocation = hasAnyChainLocation(data.chainTotals);
   const sortedChains = getSortedChains(data.chainTotals, sortMode, hasAnyLocation);
   const cheapestPriceMap = buildCheapestPriceMap(data.chainTotals);
 
-  // סניפים שיש להם קואורדינטות - לכפתור המפה
-  const hasBranchesForMap = data.chainTotals?.some(c => c.nearestBranch?.lat) ?? false;
-
-  // מיקום משתמש להצגה ב-BranchMap
-  const userLocLat = userLocation?.lat;
-  const userLocLng = userLocation?.lng;
+  // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור פירוט. ההצגה
+  // מתחילה במצב "סקירה" של כל הרשתות, וכל אחת נפתחת בלחיצה ידנית.
 
   return (
     <Box sx={{ animation: `${fadeIn} 0.5s ease 0.45s both`, mb: 2 }}>
-      {/* כותרת קומפקטית + כפתור מפה */}
+      {/* כותרת קומפקטית */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25, px: 0.25 }}>
         <Typography sx={{ fontSize: 16, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
         <BetaBadge size="sm" />
@@ -90,43 +88,12 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
             עודכן {freshness}
           </Typography>
         )}
-        {/* כפתור מפה - מופיע רק כשיש סניפים להציג */}
-        {hasBranchesForMap && (
-          <Tooltip title={mapOpen ? 'סגור מפה' : 'מפת סניפים'} placement="left">
-            <IconButton
-              onClick={() => setMapOpen(v => !v)}
-              size="small"
-              sx={{
-                width: 32, height: 32,
-                // כשמפה פתוחה - נראה active (צבע מלא)
-                bgcolor: mapOpen
-                  ? '#0D9488'
-                  : (isDark ? 'rgba(20,184,166,0.15)' : 'rgba(20,184,166,0.1)'),
-                color: mapOpen ? 'white' : '#0D9488',
-                borderRadius: '10px',
-                border: `1px solid ${mapOpen ? '#0D9488' : 'rgba(20,184,166,0.3)'}`,
-                transition: 'all 0.18s cubic-bezier(0.34,1.56,0.64,1)',
-                boxShadow: mapOpen ? '0 2px 8px rgba(13,148,136,0.4)' : 'none',
-                '&:hover': {
-                  bgcolor: mapOpen
-                    ? '#0F766E'
-                    : (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.18)'),
-                },
-                '&:active': { transform: 'scale(0.93)' },
-              }}
-              aria-label={mapOpen ? 'סגור מפת סניפים' : 'פתח מפת סניפים'}
-              aria-pressed={mapOpen}
-            >
-              <MapIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
       </Box>
 
-      {/* באנר מיקום */}
+      {/* באנר מיקום - רק אם רלוונטי */}
       <LocationStatusBanner locationStatus={locationStatus} onRequestLocation={onRequestLocation} isDark={isDark} />
 
-      {/* HERO */}
+      {/* HERO - חיסכון מובלט אבל לא צועק */}
       {hasChainData && cheapest && <SavingsHero cheapest={cheapest} savings={savings} />}
 
       {/* מצבים ריקים */}
@@ -138,13 +105,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         isDark={isDark}
       />
 
-      {/* בר מיון */}
+      {/* בר מיון - תמיד גלוי. "קרוב"/"משולב" מעומעמים בלי מיקום */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (
-        <ChainSortBar sortMode={sortMode} setSortMode={setSortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} />
+        <ChainSortBar sortMode={sortMode} setSortMode={setSortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onOpenMap={() => setMapOpen(true)} />
       )}
 
-      {/* CARDS STACK */}
+      {/* CARDS STACK - כרטיס לכל רשת. ההדגשה ברקע אוטומטית על המוביל לפי המיון. */}
       {data.enabled && hasAnyPendingItems && sortedChains.length > 0 && (() => {
+        // צבע אחיד למנצח בכל מצב מיון - ירוק "זול" של האפליקציה
         const winnerColor = { main: '#10B981', bgLight: 'rgba(16,185,129,0.12)', bgDark: 'rgba(16,185,129,0.20)', borderLight: 'rgba(16,185,129,0.45)', borderDark: 'rgba(16,185,129,0.5)' };
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -153,6 +121,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 key={chain.chainId}
                 chain={chain}
                 rank={idx + 1}
+                // המנצח = השורה הראשונה בסדר הנוכחי (תקף לכל מצב מיון).
+                // ככה תמיד יש הדגשה ויזואלית בראש - זול / קרוב / משולב.
                 isWinner={idx === 0 && chain.matchedCount > 0}
                 cheapestTotal={cheapest?.total || 0}
                 isDark={isDark}
@@ -168,19 +138,14 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
         );
       })()}
 
-      {/* Picker ניווט */}
+      {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
 
-      {/* מפת סניפים */}
-      <BranchMap
-        open={mapOpen}
-        onClose={() => setMapOpen(false)}
-        chainTotals={data.chainTotals || []}
-        userLat={userLocLat}
-        userLng={userLocLng}
-      />
+      {/* מפת סניפים במסך מלא - Leaflet + OpenStreetMap, חינמי לגמרי.
+          מסך מלא ולא Modal-גיליון קטן, כדי שהמפה תקבל מספיק מקום אמיתי. */}
+      {mapOpen && <BranchesMapDialog isDark={isDark} onClose={() => setMapOpen(false)} />}
 
-      {/* FOOTER */}
+      {/* FOOTER - מטא קומפקטית */}
       <PriceComparisonFooter sourceUrl={data.sourceUrl} sourceName={data.sourceName} />
     </Box>
   );
