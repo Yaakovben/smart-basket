@@ -6,11 +6,12 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, IconButton, Tooltip } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { priceComparisonApi } from '../services/priceComparison.api';
 import { NavigationPicker } from './NavigationPicker';
@@ -37,26 +38,58 @@ function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: num
 
 // אייקון פין מותאם אישית (SVG inline) בצבע הטורקיז של האפליקציה - נמנעים
 // מבעיית ה-assets הקלאסית של leaflet (marker-icon.png לא נטען נכון עם bundlers).
+// צל אליפסה מתחת לפין (כמו ב-Google Maps) נותן תחושת עומק/"אמיתיות" במקום
+// פין שטוח שמרחף על המפה. אנימציית drop-in מוגדרת ב-<style> הגלובלי למטה.
 const branchIcon = L.divIcon({
   className: 'sb-branch-marker',
   html: `
-    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="#14B8A6" stroke="#0D9488" stroke-width="1"/>
-      <circle cx="15" cy="15" r="6" fill="#fff"/>
-    </svg>
+    <div class="sb-pin-wrap">
+      <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35))">
+        <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="#14B8A6" stroke="#0D9488" stroke-width="1"/>
+        <circle cx="15" cy="15" r="6" fill="#fff"/>
+      </svg>
+      <div class="sb-pin-shadow"></div>
+    </div>
   `,
   iconSize: [30, 40],
   iconAnchor: [15, 40],
   popupAnchor: [0, -36],
 });
 
-// אייקון נקודת מיקום המשתמש - עיגול כחול פשוט
+// אייקון נקודת מיקום המשתמש - עיגול כחול עם טבעת "פועם" (pulse) שמרגישה
+// כמו מיקום חי בזמן אמת (בהשראת Google Maps "blue dot"), לא נקודה סטטית.
 const userIcon = L.divIcon({
   className: 'sb-user-marker',
-  html: `<div style="width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,0.4)"></div>`,
+  html: `
+    <div class="sb-user-pulse-ring"></div>
+    <div style="width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);position:relative;z-index:1"></div>
+  `,
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
+
+// כפתור "מרכז אליי" צף - צריך גישה למופע המפה עצמו (useMap), ולכן
+// חייב לחיות כרכיב-בן בתוך MapContainer ולא לקבל את המפה כ-prop.
+const RecenterButton = ({ location }: { location: { lat: number; lng: number } | null }) => {
+  const map = useMap();
+  if (!location) return null;
+  return (
+    <Tooltip title="מרכז למיקום שלי" placement="left">
+      <IconButton
+        onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_LOCATION_ZOOM), { duration: 0.6 })}
+        aria-label="מרכז למיקום שלי"
+        sx={{
+          position: 'absolute', bottom: 12, insetInlineEnd: 12, zIndex: 1000,
+          bgcolor: 'background.paper', width: 40, height: 40,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          '&:hover': { bgcolor: 'background.paper' },
+        }}
+      >
+        <MyLocationIcon sx={{ fontSize: 20, color: '#2563EB' }} />
+      </IconButton>
+    </Tooltip>
+  );
+};
 
 interface NearbyBranchApi {
   chainId: string;
@@ -113,7 +146,30 @@ export const BranchesMapView = ({ isDark = false }: Props) => {
   };
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative' }} className={isDark ? 'sb-map-dark' : undefined}>
+      {/* עיצוב מותאם לרכיבי Leaflet (פופאפ/זום/פינים) - אלה DOM גולמי שלא
+          עובר sx/MUI, ולכן חייבים override גלובלי מוגבל ל-scope הזה. פין
+          עם "נפילה" קלה + טבעת פועמת סביב נקודת המשתמש הן מה שהופך מפה
+          סטטית להרגיש חיה, בהשראת Google Maps. */}
+      <style>{`
+        .sb-branch-marker { animation: sbPinDrop .45s cubic-bezier(.34,1.56,.64,1) both; transform-origin: bottom center; }
+        @keyframes sbPinDrop { from { transform: translateY(-14px) scale(.6); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .sb-pin-wrap { position: relative; }
+        .sb-pin-shadow { position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 14px; height: 5px; border-radius: 50%; background: rgba(0,0,0,0.35); filter: blur(1px); }
+        .sb-user-marker { z-index: 500 !important; }
+        .sb-user-pulse-ring { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: rgba(37,99,235,0.45); animation: sbUserPulse 2s ease-out infinite; }
+        @keyframes sbUserPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.4); opacity: 0; } }
+        .sb-popup .leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.22); }
+        .sb-popup .leaflet-popup-content { margin: 10px 12px; }
+        .sb-popup .leaflet-popup-close-button { top: 6px !important; inset-inline-end: 6px !important; }
+        .leaflet-control-zoom { border: none !important; border-radius: 10px !important; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.22) !important; }
+        .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
+        .leaflet-control-attribution { border-radius: 6px 0 0 0 !important; }
+        .sb-map-dark .leaflet-control-zoom a { background: #1e293b !important; color: #e2e8f0 !important; }
+        .sb-map-dark .leaflet-popup-content-wrapper, .sb-map-dark .leaflet-popup-tip { background: #1e293b !important; color: #e2e8f0 !important; }
+        .sb-map-dark .leaflet-control-attribution { background: rgba(30,41,59,0.75) !important; color: #cbd5e1 !important; }
+        .sb-map-dark .leaflet-control-attribution a { color: #93c5fd !important; }
+      `}</style>
       <Box sx={{
         height: 440,
         borderRadius: '14px',
@@ -121,23 +177,32 @@ export const BranchesMapView = ({ isDark = false }: Props) => {
         border: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
       }}>
-        <MapContainer center={center} zoom={zoom} style={{ width: '100%', height: '100%' }}>
-          {/* OpenStreetMap raster tiles - חינמי לגמרי, בלי מפתח API. attribution
-              חובה לפי מדיניות השימוש של OSM ומוצג אוטומטית בפינת המפה. */}
+        <MapContainer center={center} zoom={zoom} zoomControl={false} style={{ width: '100%', height: '100%' }}>
+          {/* טיילים של CARTO (בנויים על OSM) - חינמי לגמרי, בלי מפתח API, רק
+              attribution. נבחר על פני טייל ה-OSM הגולמי כי הוא הרבה יותר "חי"
+              ועשיר בצבע (וריאנט Voyager/Dark תואם למצב בהיר/כהה של האפליקציה),
+              ולא נראה שטוח ומיושן כמו הטייל הבסיסי. */}
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url={isDark
+              ? 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
+
+          {/* זום מותאם מיקום bottom-left כדי לא להתנגש עם כפתור "מרכז אליי"
+              (bottom-right) ועם ה-attribution (bottom-right גם הוא) */}
+          <ZoomControl position="bottomleft" />
+          <RecenterButton location={location} />
 
           {location && (
             <Marker position={[location.lat, location.lng]} icon={userIcon}>
-              <Popup>המיקום שלך</Popup>
+              <Popup className="sb-popup">המיקום שלך</Popup>
             </Marker>
           )}
 
           {branches?.map((b, idx) => (
             <Marker key={`${b.chainId}-${b.storeName}-${idx}`} position={[b.lat, b.lng]} icon={branchIcon}>
-              <Popup>
+              <Popup className="sb-popup">
                 <Box sx={{ minWidth: 160, textAlign: 'right', direction: 'rtl' }}>
                   <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488' }}>
                     {b.chainName}

@@ -10,8 +10,9 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import { Box, Typography, IconButton, keyframes } from '@mui/material';
+import { Box, Typography, Button, keyframes } from '@mui/material';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -88,20 +89,31 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
             עודכן {freshness}
           </Typography>
         )}
-        {/* מפת סניפים חינמית (Leaflet/OSM) - נוחות בלי לצאת מהאפליקציה */}
-        <IconButton
-          onClick={() => setMapOpen(true)}
-          aria-label="מפת סניפים"
-          size="small"
-          sx={{
-            bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
-            width: 30, height: 30,
-            '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
-          }}
-        >
-          <MapOutlinedIcon sx={{ fontSize: 17, color: '#0D9488' }} />
-        </IconButton>
       </Box>
+
+      {/* כפתור מפת סניפים - שורה משלו עם טקסט גלוי (לא רק אייקון) ושטח לחיצה
+          נוח (44px), כדי שיהיה קל למצוא ולהפעיל ולא יתחרה על מקום עם "עודכן". */}
+      <Button
+        onClick={() => setMapOpen(true)}
+        aria-label="הצג את כל הסניפים על מפה"
+        startIcon={<MapOutlinedIcon sx={{ fontSize: 18 }} />}
+        endIcon={<ChevronLeftIcon sx={{ fontSize: 16 }} />}
+        fullWidth
+        sx={{
+          justifyContent: 'space-between',
+          minHeight: 44,
+          mb: 1.25,
+          px: 1.5,
+          borderRadius: '12px',
+          textTransform: 'none',
+          fontSize: 13, fontWeight: 700,
+          color: '#0D9488',
+          bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
+          '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
+        }}
+      >
+        הצג סניפים על מפה
+      </Button>
 
       {/* באנר מיקום - רק אם רלוונטי */}
       <LocationStatusBanner locationStatus={locationStatus} onRequestLocation={onRequestLocation} isDark={isDark} />
