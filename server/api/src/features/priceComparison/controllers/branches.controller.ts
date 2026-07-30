@@ -1,12 +1,15 @@
 import type { Response } from 'express';
 import { invalidateAllUsers } from '../services/priceComparison.service';
-import { invalidateBranchCache } from '../services/branches.service';
+import { invalidateBranchCache, getNearbyBranches, parseUserLocation } from '../services/branches.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { Branch } from '../models/Branch.model';
 import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
+
+const DEFAULT_NEARBY_RADIUS_KM = 15;
+const MAX_NEARBY_RADIUS_KM = 100;
 
 const CHAIN_NAMES: Record<string, string> = {
   shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
@@ -88,6 +91,25 @@ export const getBranchesByChain = asyncHandler(async (req: AuthRequest, res: Res
       hasCoords: typeof b.lat === 'number' && typeof b.lng === 'number',
       coordSource: b.coordSource,
     })),
+  });
+});
+
+// GET /api/price-comparison/branches-nearby (פתוח לכל משתמש מאומת) - סניפים למפה
+// query: lat?, lng?, radiusKm? (ברירת מחדל 15 ק"מ, מקסימום 100).
+// בלי lat/lng - מחזיר עד 500 סניפים (ראה getNearbyBranches). שדות קלילים בלבד.
+export const getBranchesNearby = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const user = parseUserLocation(req.query.lat, req.query.lng);
+  let radiusKm = DEFAULT_NEARBY_RADIUS_KM;
+  const radiusRaw = req.query.radiusKm;
+  if (typeof radiusRaw === 'string') {
+    const parsed = Number(radiusRaw);
+    if (Number.isFinite(parsed) && parsed > 0) radiusKm = Math.min(parsed, MAX_NEARBY_RADIUS_KM);
+  }
+  const branches = await getNearbyBranches(user, radiusKm);
+  res.json({
+    success: true,
+    count: branches.length,
+    branches,
   });
 });
 

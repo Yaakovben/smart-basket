@@ -189,3 +189,50 @@ export function parseUserLocation(
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return { lat, lng };
 }
+
+// שדה קליל של סניף למפה ציבורית - בלי storeId/coordSource/lastSyncedAt וכו'
+// (שדות פנימיים שלא רלוונטיים/בטוחים ללקוח).
+export interface NearbyBranch {
+  chainId: ChainId;
+  chainName: string;
+  storeName: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+}
+
+const NEARBY_NO_LOCATION_LIMIT = 500;
+
+function toNearbyBranch(b: IBranchDoc): NearbyBranch {
+  return {
+    chainId: b.chainId,
+    chainName: b.chainName,
+    storeName: b.storeName,
+    address: b.address || '',
+    city: b.city || '',
+    lat: b.lat!,
+    lng: b.lng!,
+  };
+}
+
+// סניפים למפה ציבורית (ללא אימות אדמין). אם יש מיקום משתמש - מסננים
+// לפי רדיוס (haversine, כמו findNearestBranch). בלי מיקום - מגבילים
+// למספר קבוע כדי שהאנדפוינט לא ישמש לשליפת כל טבלת הסניפים בבת אחת.
+export async function getNearbyBranches(
+  user: UserLocation | null,
+  radiusKm: number
+): Promise<NearbyBranch[]> {
+  const all = await getBranches();
+  const withCoords = all.filter(b => typeof b.lat === 'number' && typeof b.lng === 'number');
+
+  if (user) {
+    return withCoords
+      .map(b => ({ b, dist: haversineKm(user, { lat: b.lat!, lng: b.lng! }) }))
+      .filter(({ dist }) => dist <= radiusKm)
+      .sort((x, y) => x.dist - y.dist)
+      .map(({ b }) => toNearbyBranch(b));
+  }
+
+  return withCoords.slice(0, NEARBY_NO_LOCATION_LIMIT).map(toNearbyBranch);
+}

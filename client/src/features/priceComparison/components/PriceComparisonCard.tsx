@@ -10,13 +10,16 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import { Box, Typography, keyframes } from '@mui/material';
+import { Box, Typography, IconButton, keyframes } from '@mui/material';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
+import { Modal } from '../../../global/components';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
+import { BranchesMapView } from './BranchesMapView';
 import { ChainCard } from './ChainCard';
 import { ChainSortBar } from './ChainSortBar';
 import { LocationStatusBanner } from './LocationStatusBanner';
@@ -52,6 +55,8 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const [sortMode, setSortMode] = useState<SortMode>('distance');
   // ה-branch שנבחר לפתיחת picker ניווט (Waze/Google/Apple)
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+  // מפת כל הסניפים (Leaflet/OSM חינמי) - נפתחת ב-modal בלחיצה על אייקון המפה
+  const [mapOpen, setMapOpen] = useState(false);
   const toggleExpanded = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
   }, []);
@@ -83,6 +88,19 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
             עודכן {freshness}
           </Typography>
         )}
+        {/* מפת סניפים חינמית (Leaflet/OSM) - נוחות בלי לצאת מהאפליקציה */}
+        <IconButton
+          onClick={() => setMapOpen(true)}
+          aria-label="מפת סניפים"
+          size="small"
+          sx={{
+            bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
+            width: 30, height: 30,
+            '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
+          }}
+        >
+          <MapOutlinedIcon sx={{ fontSize: 17, color: '#0D9488' }} />
+        </IconButton>
       </Box>
 
       {/* באנר מיקום - רק אם רלוונטי */}
@@ -134,6 +152,13 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* Picker ניווט - Waze / Google Maps / Apple Maps */}
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />
+
+      {/* מודאל מפת סניפים - Leaflet + OpenStreetMap, חינמי לגמרי */}
+      {mapOpen && (
+        <Modal title="מפת סניפים" onClose={() => setMapOpen(false)}>
+          <BranchesMapView isDark={isDark} />
+        </Modal>
+      )}
 
       {/* FOOTER - מטא קומפקטית */}
       <PriceComparisonFooter sourceUrl={data.sourceUrl} sourceName={data.sourceName} />
