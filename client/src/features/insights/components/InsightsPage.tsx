@@ -40,7 +40,7 @@ export const InsightsPage = memo(() => {
     data, priceData, allListsPriceData, loading, error, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
-    userLocation, locationStatus, requestLocation, resetLocationDenied,
+    locationStatus, requestLocation, resetLocationDenied,
   } = useInsightsData(tab);
 
   const tStr = t as (k: string) => string;
@@ -106,7 +106,6 @@ export const InsightsPage = memo(() => {
               priceError={priceError}
               onRetry={retryPriceFetch}
               locationStatus={locationStatus}
-              userLocation={userLocation}
               onRequestLocation={requestLocation}
               onResetLocationDenied={resetLocationDenied}
               selectedListId={selectedListId}

@@ -22,6 +22,13 @@ export const headerSx: SxProps<Theme> = {
 };
 export const headerTitleRowSx: SxProps<Theme> = { display: 'flex', alignItems: 'center', gap: 1 };
 
+// drag handle למובייל
+export const dragHandleSx: SxProps<Theme> = {
+  display: { xs: 'flex', sm: 'none' },
+  justifyContent: 'center',
+  pt: 1, pb: 0.5, bgcolor: '#000',
+};
+
 export const videoAreaSx: SxProps<Theme> = { flex: 1, position: 'relative', bgcolor: '#000' };
 
 // מסך הסכמה ראשוני - לפני פתיחת מצלמה/גלריה
