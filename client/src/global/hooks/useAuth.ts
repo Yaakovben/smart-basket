@@ -5,8 +5,19 @@ import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens, rehydrateTokensFromIdb } from "../../services/api/client";
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 
-// דגל מודולרי למניעת רישום כפול של פתיחת אפליקציה (שורד StrictMode re-mount)
-let _appOpenLogged = false;
+// זמן הרישום האחרון של פתיחת אפליקציה (מודולרי, שורד StrictMode re-mount).
+// לא רק "פעם אחת לכל טעינה": מתעדכן גם כשה-PWA/טאב חוזר לחזית אחרי שהיה
+// ברקע, כדי ש"כניסה אחרונה" בדשבורד האדמין ישקף שימוש אמיתי ולא ישאר תקוע
+// מהפתיחה הראשונה של הסשן.
+let _lastAppOpenLogAt = 0;
+const APP_OPEN_LOG_THROTTLE_MS = 15 * 60 * 1000; // 15 דקות
+
+const logAppOpenThrottled = () => {
+  const now = Date.now();
+  if (now - _lastAppOpenLogAt < APP_OPEN_LOG_THROTTLE_MS) return;
+  _lastAppOpenLogAt = now;
+  authApi.logAppOpen();
+};
 
 // טיפוס נתונים ראשוניים לטעינה מקבילית (פנימי ל-useAuth בלבד)
 interface InitialData {
@@ -117,11 +128,8 @@ export function useAuth() {
         // חיבור socket אחרי אימות מוצלח
         socketService.connect();
 
-        // רישום פתיחת אפליקציה לאדמין (פעם אחת בלבד)
-        if (!_appOpenLogged) {
-          _appOpenLogged = true;
-          authApi.logAppOpen();
-        }
+        // רישום פתיחת אפליקציה לאדמין (throttled)
+        logAppOpenThrottled();
       } catch (error) {
         clearTimeout(timeoutId!);
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
@@ -140,6 +148,19 @@ export function useAuth() {
       setLoading(false);
     };
     checkAuth();
+  }, []);
+
+  // רישום פתיחת אפליקציה גם כש-PWA/טאב חוזר לחזית מהרקע (לא רק ב-mount הראשוני).
+  // מובייל/PWA לרוב לא עושים reload מלא כשחוזרים מהרקע, אז בלי זה "כניסה אחרונה"
+  // נשארת תקועה מהפתיחה הראשונה של הסשן.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && getAccessToken()) {
+        logAppOpenThrottled();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const login = useCallback(
