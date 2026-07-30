@@ -7,8 +7,10 @@ import { authApi } from '../../../services/api';
 // כמה ms צריך להחזיק על handle לפני שמתחילה גרירה.
 // מאפשר גלילה טבעית ולא מפעיל drag בטעות בתנועה מהירה.
 const DRAG_ACTIVATION_DELAY_MS = 180;
-// טולרנס תנועה (px) - אם המשתמש זז יותר מזה לפני ה-delay, לא מתחיל גרירה
-const DRAG_ACTIVATION_TOLERANCE_PX = 10;
+// טולרנס תנועה (px) - גלילה אנכית מעל סף זה מבטלת את ה-drag
+const DRAG_CANCEL_VERTICAL_PX = 8;
+// תנועה אופקית גדולה מזה = בוודאי גלילה אופקית (בפחות זמן)
+const DRAG_CANCEL_HORIZONTAL_PX = 12;
 
 // לוגיקת גרירה-לסידור-מחדש של כרטיסי רשימה במסך הבית.
 // גרסה משופרת: long-press (180ms) לפני הפעלת drag - מאפשר גלילה טבעית.
@@ -90,17 +92,16 @@ export function useListReorder(
 
   // handleDragMove - מטפל בתנועה בשני שלבים: pending או גרירה פעילה
   const handleDragMove = useCallback((clientY: number, clientX = 0) => {
-    // שלב pending: בדוק אם המשתמש זז יותר מהטולרנס (=גלילה, לא גרירה)
+    // שלב pending: בדוק אם מדובר בגלילה ולא בגרירה
     if (pendingDragRef.current) {
       const { startY, startX } = pendingDragRef.current;
       const dy = Math.abs(clientY - startY);
       const dx = Math.abs(clientX - startX);
-      const totalMove = Math.sqrt(dy * dy + dx * dx);
-      if (totalMove > DRAG_ACTIVATION_TOLERANCE_PX) {
-        // המשתמש זז מהר - זוהי גלילה. בטל drag.
-        cancelPending();
-      }
-      // אחרת: ממשיכים לחכות לטיימר
+      // אם המשתמש זז אופקית בצורה ברורה - זוהי גלילה אופקית, בטל מיד
+      if (dx > DRAG_CANCEL_HORIZONTAL_PX) { cancelPending(); return; }
+      // אם המשתמש זז אנכית מעל הסף - זוהי גלילה אנכית, בטל מיד
+      if (dy > DRAG_CANCEL_VERTICAL_PX) { cancelPending(); return; }
+      // תנועה קטנה מאוד - ממשיכים לחכות לטיימר
       return;
     }
 

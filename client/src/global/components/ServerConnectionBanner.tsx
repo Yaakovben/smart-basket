@@ -69,9 +69,9 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     };
   }, []);
 
-  // בסביבת DEV: לא מציגים על socket בלבד (השרת מאותחל לאט)
-  const isDev = import.meta.env.DEV;
-  const shouldShow = deviceOnline && (fetchErrorConfirmed || (!isDev && socketDisconnected));
+  // בסביבת לא-פרודקשן: לא מציגים ספינר על socket בלבד (השרת מאותחל לאט)
+  const isNonProd = !import.meta.env.PROD;
+  const shouldShow = deviceOnline && (fetchErrorConfirmed || (!isNonProd && socketDisconnected));
 
   if (!shouldShow) return null;
 

@@ -10,7 +10,7 @@ import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
 import {
   dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, dragHandleSx, videoAreaSx,
   videoStyle, frameOverlaySx, frameBoxSx, FRAME_CORNER_POSITIONS, frameCornerSx,
-  scanLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
+  scanLineSx, barcodeAimLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
 } from '../styles/QRScanner.styles';
 
@@ -129,11 +129,11 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
             onClick={onClose}
             aria-label="סגור"
             sx={{
-              color: 'white',
-              bgcolor: 'rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(4px)',
+              color: '#111',
+              bgcolor: 'rgba(255,255,255,0.92)',
               width: 36, height: 36,
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.65)' },
+              flexShrink: 0,
+              '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
               '&:active': { opacity: 0.75 },
             }}
           >
@@ -171,6 +171,8 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
                 ))}
                 {/* קו סריקה נע - מדגיש שהסריקה פעילה בזמן אמת */}
                 <Box sx={scanLineSx} />
+                {/* קו עזר אופקי בברקוד - מרמז שיש ליישר את הברקוד אופקית */}
+                {mode === 'barcode' && <Box sx={barcodeAimLineSx} />}
               </Box>
             </Box>
           )}

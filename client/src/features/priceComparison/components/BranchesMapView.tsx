@@ -102,7 +102,11 @@ const RecenterButton = ({ location }: { location: { lat: number; lng: number } |
         onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_LOCATION_ZOOM), { duration: 0.6 })}
         aria-label="מרכז למיקום שלי"
         sx={{
-          position: 'absolute', bottom: 12, insetInlineEnd: 12, zIndex: 1000,
+          // bottom: 36px - מעל ה-attribution שגובהו ~24px + מרווח; topright
+          // כדי לא להתנגש עם בקרי הזום שעברו ל-topright אבל לשמור על זרימה
+          // ויזואלית (location = "איפה אני" → קרוב לגרף זום).
+          // השתמשנו ב-right/bottom ולא insetInlineEnd כי leaflet מחשב לפי LTR.
+          position: 'absolute', bottom: 36, right: 10, zIndex: 1000,
           bgcolor: 'background.paper', width: 40, height: 40,
           boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           '&:hover': { bgcolor: 'background.paper' },
@@ -252,9 +256,9 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
 
-          {/* זום מותאם מיקום bottom-left כדי לא להתנגש עם כפתור "מרכז אליי"
-              (bottom-right) ועם ה-attribution (bottom-right גם הוא) */}
-          <ZoomControl position="bottomleft" />
+          {/* זום: topright - רחוק מ-attribution (bottomright) וממרכז-אליי (bottomright).
+              כפתור "מרכז אליי" ב-bottomright, מספיק גבוה שלא יחפוף את ה-attribution. */}
+          <ZoomControl position="topright" />
           <RecenterButton location={location} />
 
           {location && (

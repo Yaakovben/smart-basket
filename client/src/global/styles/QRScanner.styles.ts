@@ -2,14 +2,16 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-// bottom-sheet גדול עם dvh - מותיר מרווח עליון קטן, dvh מכסה בדיוק את
+// bottom-sheet מודאלי עם dvh - מותיר מרווח עליון משמעותי, dvh מכסה בדיוק את
 // האזור הנראה במובייל בלי לכלול את סרגל הכתובת שמתקפל/נפתח.
+// הגובה מוגבל ל-78dvh כדי שהדיאלוג לא ייראה כמו מסך מלא אלא כמו מודל.
 export const dialogPaperSx: SxProps<Theme> = {
   bgcolor: '#000',
   borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
   m: { xs: 0, sm: 2 },
-  maxHeight: { xs: '92dvh', sm: '90dvh' },
-  height: { xs: '92dvh', sm: 'auto' },
+  maxHeight: { xs: '78dvh', sm: '82dvh' },
+  minHeight: { xs: '480px', sm: '480px' },
+  height: { xs: '78dvh', sm: 'auto' },
   width: { xs: '100%', sm: 480 },
   overflow: 'hidden',
 };
@@ -104,6 +106,17 @@ export const scanLineSx: SxProps<Theme> = {
   background: 'linear-gradient(90deg, transparent, #5EEAD4 25%, #99F6E4 50%, #5EEAD4 75%, transparent)',
   boxShadow: '0 0 8px 1px rgba(94,234,212,0.8)',
   animation: `${scanLineSweep} 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite`,
+};
+
+// קו עזר אופקי לברקוד - מרמז שיש ליישר את הברקוד אופקית בתוך המסגרת
+export const barcodeAimLineSx: SxProps<Theme> = {
+  position: 'absolute', left: '8%', right: '8%', top: '50%',
+  transform: 'translateY(-50%)',
+  height: '2px',
+  background: 'linear-gradient(90deg, transparent, rgba(255,200,50,0.6) 20%, rgba(255,220,80,0.9) 50%, rgba(255,200,50,0.6) 80%, transparent)',
+  boxShadow: '0 0 6px 1px rgba(255,210,60,0.5)',
+  borderRadius: '2px',
+  pointerEvents: 'none',
 };
 
 // שורת סטטוס תחתונה ("כוון את ה-QR למרכז המסך")
