@@ -64,7 +64,7 @@ async function ensureSeedLoaded(): Promise<void> {
       shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
       osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
       stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
-      victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
+      victory: 'ויקטורי', maayan_2000: 'מעיין 2000', netto: 'נטו',
     };
     // טעינת KNOWN_BRANCHES בכל startup (idempotent דרך upsert על
     // chainId+storeId). חשוב: גם אם יש סניפים, רשתות חדשות שנוספו

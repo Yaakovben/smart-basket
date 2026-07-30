@@ -8,6 +8,7 @@ export { stopMarketAdapter } from './stop-market.adapter';
 export { politzerAdapter } from './politzer.adapter';
 export { doralonAdapter } from './doralon.adapter';
 export { victoryAdapter } from './victory.adapter';
+export { nettoAdapter } from './netto.adapter';
 export { maayan2000Adapter } from './maayan-2000.adapter';
 export { shefaBirkatHashemAdapter } from './shefa-birkat-hashem.adapter';
 export { superSapirAdapter } from './super-sapir.adapter';
