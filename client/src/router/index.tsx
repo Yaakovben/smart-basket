@@ -86,9 +86,28 @@ const ListPageWrapper = ({
   const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
 
-  // קבוצה יציבה של משתמשים מקוונים ברשימה הנוכחית
   const onlineArr = listId ? onlineUsers[listId] : undefined;
   const onlineUserIds = useMemo(() => new Set(onlineArr || []), [onlineArr]);
+
+  const handleBack = useCallback(() => navigate("/"), [navigate]);
+  const handleLeaveList = useCallback(async (id: string) => {
+    try {
+      await leaveList(id);
+      showToast(t('left'));
+      navigate("/");
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [leaveList, showToast, t, navigate]);
+  const handleDeleteList = useCallback(async (id: string) => {
+    try {
+      await deleteList(id);
+      showToast(t('deleted'));
+      navigate("/");
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [deleteList, showToast, t, navigate]);
 
   if (!list) return <Navigate to="/" replace />;
 
@@ -96,28 +115,12 @@ const ListPageWrapper = ({
     <ListPage
       list={list}
       user={user}
-      onBack={() => navigate("/")}
+      onBack={handleBack}
       onUpdateList={updateList}
       onUpdateListLocal={updateListLocal}
       onUpdateProductsForList={updateProductsForList}
-      onLeaveList={async (id: string) => {
-        try {
-          await leaveList(id);
-          showToast(t('left'));
-          navigate("/");
-        } catch {
-          showToast(t('errorOccurred'), 'error');
-        }
-      }}
-      onDeleteList={async (id: string) => {
-        try {
-          await deleteList(id);
-          showToast(t('deleted'));
-          navigate("/");
-        } catch {
-          showToast(t('errorOccurred'), 'error');
-        }
-      }}
+      onLeaveList={handleLeaveList}
+      onDeleteList={handleDeleteList}
       showToast={showToast}
       onlineUserIds={onlineUserIds}
     />
