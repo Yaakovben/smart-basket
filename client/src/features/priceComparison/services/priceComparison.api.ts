@@ -103,33 +103,6 @@ export const priceComparisonApi = {
     return response.data.data;
   },
 
-  // סניפים למפה ציבורית - פתוח לכל משתמש מאומת. עם location - מסונן לרדיוס
-  // סביב המשתמש (ברירת מחדל 15 ק"מ). בלי location - עד 500 סניפים (ראה שרת).
-  async getNearbyBranches(location?: UserLocation, radiusKm?: number): Promise<Array<{
-    chainId: string;
-    chainName: string;
-    storeName: string;
-    address: string;
-    city: string;
-    lat: number;
-    lng: number;
-  }>> {
-    try {
-      const params = new URLSearchParams();
-      if (location) {
-        params.set('lat', String(location.lat));
-        params.set('lng', String(location.lng));
-      }
-      if (radiusKm) params.set('radiusKm', String(radiusKm));
-      const query = params.toString() ? `?${params.toString()}` : '';
-      const response = await apiClient.get<{ success: boolean; count: number; branches: Array<{
-        chainId: string; chainName: string; storeName: string; address: string; city: string; lat: number; lng: number;
-      }> }>(`/price-comparison/branches-nearby${query}`);
-      return response.data.branches;
-    } catch {
-      return [];
-    }
-  },
 
   // ----- Admin only: ניהול המאגר -----
   async getStatus(): Promise<PriceSyncStatus> {
