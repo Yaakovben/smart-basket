@@ -37,13 +37,17 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => (
     onClose={onClose}
     fullScreen
     TransitionComponent={SlideUp}
+    disableScrollLock
     PaperProps={{ sx: { height: '100dvh', maxHeight: '100dvh', bgcolor: 'background.default' } }}
   >
     <Box sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* כותרת - background.paper כמו ב-AppBar, לא background.default של המפה */}
       <Box sx={{
         display: 'flex', alignItems: 'center', gap: 1,
-        px: 1, py: 1, flexShrink: 0,
+        px: 1,
+        pt: 'max(env(safe-area-inset-top) + 8px, 12px)',
+        pb: 1,
+        flexShrink: 0,
         bgcolor: 'background.paper',
         borderBottom: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
@@ -62,7 +66,7 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => (
         <Typography sx={{ fontWeight: 800, fontSize: 16, flex: 1 }}>מפת סניפים</Typography>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+      <Box sx={{ flex: 1, minHeight: 0, position: 'relative', touchAction: 'none' }}>
         <BranchesMapView isDark={isDark} fillHeight />
       </Box>
     </Box>
