@@ -71,37 +71,57 @@ export const ListHeader = memo(({
     }
   }, [showSearch, onSearchChange]);
 
+  const searchButton = (
+    <IconButton
+      onClick={handleToggleSearch}
+      sx={{
+        ...glassButtonSx,
+        bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+        transition: 'all 0.2s ease',
+        flexShrink: 0,
+      }}
+      aria-label={showSearch ? t('close') : t('search')}
+    >
+      {showSearch
+        ? <SearchOffIcon sx={{ color: 'white', fontSize: 20 }} />
+        : <SearchIcon sx={{ color: 'white', fontSize: 20 }} />}
+    </IconButton>
+  );
+
   return (
     <Box sx={{
-      background: isDark
-        ? 'linear-gradient(135deg, #0D9488, #047857)'
-        : 'linear-gradient(135deg, #14B8A6, #0D9488)',
-      // padding קומפקטי בכוונה - הפחתת גובה Header מגדילה שטח הרשימה
-      pt: 'max(env(safe-area-inset-top) + 6px, 36px)',
-      pb: '8px',
-      px: { xs: '12px', sm: '16px' },
-      borderRadius: { xs: '0 0 18px 18px', sm: '0 0 22px 22px' },
+      background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+      p: { xs: 'max(40px, env(safe-area-inset-top) + 8px) 14px 10px', sm: '44px 20px 16px' },
+      borderRadius: { xs: '0 0 20px 20px', sm: '0 0 24px 24px' },
       flexShrink: 0,
-      boxShadow: isDark ? '0 3px 12px rgba(0,0,0,0.3)' : '0 3px 12px rgba(13,148,136,0.15)',
+      boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(13,148,136,0.15)',
       '@media (max-width: 360px)': {
-        pt: 'max(env(safe-area-inset-top) + 4px, 30px)',
-        pb: '6px',
-        px: '10px',
+        p: 'max(30px, env(safe-area-inset-top) + 6px) 10px 8px',
+      },
+      '@media (max-width: 320px)': {
+        p: 'max(22px, env(safe-area-inset-top) + 4px) 8px 6px',
+        borderRadius: '0 0 14px 14px',
+        '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '4px !important' },
+        '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
+        '& > .MuiBox-root': { marginBottom: '4px !important' },
       },
       '@media (orientation: landscape) and (max-height: 500px)': {
         position: 'relative',
-        pt: 'max(env(safe-area-inset-top) + 2px, 4px)',
-        pb: '4px',
-        px: '40px',
+        p: 'max(2px, env(safe-area-inset-top) + 2px) 40px 4px',
         borderRadius: '0 0 8px 8px',
+        '& > * + *': { marginTop: '2px !important' },
+        '& > .MuiBox-root': { marginBottom: '2px !important' },
         '& .MuiOutlinedInput-root': { minHeight: '28px !important', height: '28px !important' },
         '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
-        '& .MuiTab-root': { minHeight: '24px !important', py: '0 !important', fontSize: '11.5px !important' },
+        '& .MuiTab-root': {
+          minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
+        },
         '& [class*="MuiIconButton-root"]': { width: '26px !important', height: '26px !important' },
         '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
       },
     }}>
-      {/* כפתור back מרחף ב-landscape */}
+      {/* כפתור back מרחף - מוצג רק ב-landscape */}
       <IconButton onClick={onBack} aria-label={t('back')} sx={{
         display: 'none',
         '@media (orientation: landscape) and (max-height: 500px)': {
@@ -113,54 +133,37 @@ export const ListHeader = memo(({
         <ArrowForwardIcon sx={{ fontSize: 16 }} />
       </IconButton>
 
-      {/* ===== שורה 1: ניווט + כותרת + כלים ===== */}
+      {/* ===== שורה 1: חזרה + כותרת + שיתוף + תפריט ===== */}
       <Box sx={{
-        display: 'flex', alignItems: 'center', gap: 0.75, mb: '6px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        mb: { xs: 0.75, sm: 1.5 },
+        '@media (max-width: 360px)': { mb: 0.5 },
         '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
       }}>
-        {/* חזרה */}
         <IconButton onClick={onBack} sx={glassButtonSx} aria-label={t('back')}>
-          <ArrowForwardIcon sx={{ color: 'white', fontSize: 20 }} />
+          <ArrowForwardIcon sx={{ color: 'white', fontSize: 22 }} />
         </IconButton>
-
-        {/* כותרת */}
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
           <Typography sx={{
-            color: 'white', fontWeight: 700, lineHeight: 1.2,
-            fontSize: { xs: 16, sm: 18 },
+            color: 'white', fontSize: { xs: 17, sm: 19 }, fontWeight: 700, textAlign: 'center',
             '@media (max-width: 360px)': { fontSize: 14 },
-            display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical',
-            overflow: 'hidden', textOverflow: 'ellipsis',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word', lineHeight: 1.2,
           }}>
             {list.name}
           </Typography>
-          {refreshing && <CircularProgress size={14} sx={{ color: 'white', flexShrink: 0 }} />}
+          {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
-
-        {/* כלים: חיפוש + שיתוף + תפריט */}
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-          <IconButton
-            onClick={handleToggleSearch}
-            sx={{
-              ...glassButtonSx,
-              bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
-            }}
-            aria-label={showSearch ? t('close') : t('search')}
-          >
-            {showSearch
-              ? <SearchOffIcon sx={{ color: 'white', fontSize: 19 }} />
-              : <SearchIcon sx={{ color: 'white', fontSize: 19 }} />}
-          </IconButton>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
-            <ShareIcon sx={{ color: 'white', fontSize: 19 }} />
+            <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
           <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} sx={glassButtonSx} aria-label={t('groupSettings')}>
-            <MoreVertIcon sx={{ color: 'white', fontSize: 19 }} />
+            <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
         </Box>
       </Box>
 
-      {/* Options Menu */}
       <ListMenu
         anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}
         isGroup={list.isGroup} isOwner={isOwner} isMuted={isMuted}
@@ -170,23 +173,44 @@ export const ListHeader = memo(({
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList}
       />
 
-      {/* ===== שורה 2 (קבוצות בלבד): משתתפים ===== */}
+      {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
       {list.isGroup && (
         <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 0.75, mb: '6px',
-          '@media (max-width: 360px)': { gap: 0.5 },
+          display: 'flex', alignItems: 'center', gap: 0.75,
+          mb: { xs: 0.75, sm: 1 },
+          '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 },
           '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
         }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
           <IconButton onClick={onShowInvite} sx={glassButtonSx} aria-label={t('inviteFriends')}>
-            <PersonAddIcon sx={{ color: 'white', fontSize: 19 }} />
+            <PersonAddIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
+          <Box sx={{ flex: 1 }} />
+          {searchButton}
         </Box>
       )}
 
-      {/* ===== שדה חיפוש (מתקפל) ===== */}
+      {/* ===== שורת QuickAdd + חיפוש (רשימה פרטית) ===== */}
+      <Box sx={{
+        mb: { xs: 0.75, sm: 1 },
+        '@media (max-width: 360px)': { mb: 0.5 },
+        '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+      }}>
+        {!list.isGroup ? (
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
+            </Box>
+            {searchButton}
+          </Box>
+        ) : (
+          <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
+        )}
+      </Box>
+
+      {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}
       <Collapse in={showSearch}>
-        <Box sx={{ mb: '6px' }}>
+        <Box sx={{ mb: 0.75 }}>
           <TextField
             inputRef={searchInputRef}
             fullWidth
@@ -196,22 +220,22 @@ export const ListHeader = memo(({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'background.paper', borderRadius: '12px', height: 40,
+                bgcolor: 'background.paper', borderRadius: '14px', height: 44,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(255,255,255,0.3)' }
+                '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)' }
               },
               '& .MuiOutlinedInput-input': { fontSize: 16, color: 'text.primary' }
             }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                  <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: search ? (
                 <InputAdornment position="end">
                   <IconButton onClick={() => onSearchChange('')} size="small" sx={{ color: 'text.secondary' }} aria-label={t('close')}>
-                    <CloseIcon sx={{ fontSize: 16 }} />
+                    <CloseIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </InputAdornment>
               ) : null,
@@ -220,18 +244,7 @@ export const ListHeader = memo(({
         </Box>
       </Collapse>
 
-      {/* ===== שורת QuickAdd ===== */}
-      <Box sx={{
-        mb: '6px',
-        '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
-        // QuickAdd גובה מצומצם
-        '& .MuiOutlinedInput-root': { height: { xs: '38px', sm: '42px' } },
-        '& .MuiOutlinedInput-input': { py: '6px !important' },
-      }}>
-        <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
-      </Box>
-
-      {/* ===== טאבים (קנה / נקנה) - גבוה קומפקטי ===== */}
+      {/* ===== טאבים ===== */}
       <Tabs
         value={filter}
         onChange={(_, v) => onFilterChange(v)}
@@ -239,24 +252,24 @@ export const ListHeader = memo(({
         aria-label={t('toBuy')}
         sx={{
           bgcolor: 'rgba(255,255,255,0.15)',
-          borderRadius: '12px',
-          p: '4px',
+          borderRadius: '14px',
+          p: 0.6,
           minHeight: 'auto',
           '& .MuiTabs-indicator': { display: 'none' },
           '& .MuiTab-root': {
-            borderRadius: '8px',
-            py: '5px',
-            px: { xs: '8px', sm: '16px' },
-            minHeight: 32,
-            fontSize: { xs: 13, sm: 14 },
+            borderRadius: '10px',
+            py: { xs: 0.75, sm: 1.5 },
+            px: { xs: 1, sm: 2 },
+            minHeight: { xs: 38, sm: 48 },
+            fontSize: { xs: 13.5, sm: 15 },
             fontWeight: 700,
             color: 'rgba(255,255,255,0.9)',
             textTransform: 'none',
             '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' },
           },
           '@media (max-width: 360px)': {
-            p: '3px',
-            '& .MuiTab-root': { py: '4px', px: '6px', minHeight: 28, fontSize: 11 },
+            p: 0.4,
+            '& .MuiTab-root': { py: 0.5, px: 0.75, minHeight: 32, fontSize: 11 },
           },
         }}
       >

@@ -25,6 +25,9 @@ import { CategoryFilterChips } from './CategoryFilterChips';
 import { SelectionActionBar } from './SelectionActionBar';
 import { DuplicateProductModal } from './DuplicateProductModal';
 import { AddProductModal } from './product-modals/AddProductModal';
+// prefetch מיידי של QRScanner כשנכנסים לרשימה - כך כשהמשתמש לוחץ "סרוק ברקוד"
+// ב-AddProductModal ה-chunk כבר נטען ואין עיכוב
+import('../../../global/components/QRScanner').catch(() => {});
 // טעינה עצלה - נדרשת רק כשבאמת פותחים "סרוק רשימה" מהתפריט, לא בכל טעינת הרשימה
 const ScanListPhoto = lazy(() => import('./product-modals/ScanListPhoto').then(m => ({ default: m.ScanListPhoto })));
 import { EditProductModal } from './product-modals/EditProductModal';

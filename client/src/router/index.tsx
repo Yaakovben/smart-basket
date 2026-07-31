@@ -20,7 +20,9 @@ import { LoginPage } from "../features/auth/pages/LoginPage";
 const homeImport = () => import("../features/home/home").then(m => ({ default: m.HomePage }));
 homeImport(); // prefetch מיידי במקביל לאימות
 const HomePage = lazy(homeImport);
-const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
+const listImport = () => import("../features/list/list").then(m => ({ default: m.ListPage }));
+listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
+const ListPage = lazy(listImport);
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
