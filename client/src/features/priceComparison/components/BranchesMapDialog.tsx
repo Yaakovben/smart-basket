@@ -38,8 +38,8 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
       {/* הדר זהה לסגנון InsightsHeader */}
       <Box sx={{
         background: dark
-          ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)'
-          : 'linear-gradient(160deg, #0D9488, #14B8A6, #2DD4BF)',
+          ? 'linear-gradient(160deg, #134E4A, #0F766E)'
+          : 'linear-gradient(160deg, #0F766E, #0D9488, #14B8A6)',
         pt: 'max(env(safe-area-inset-top) + 12px, 48px)',
         pb: '16px',
         px: 2,

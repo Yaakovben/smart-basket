@@ -138,8 +138,11 @@ export const AddProductModal = memo(({
     const result = await priceComparisonApi.lookupBarcode(barcode);
     setScanLoading(false);
     trackEvent('barcode_scanned', { found: !!result });
-    if (result) {
-      handleNameChange(result.name);
+    // סינון שמות-פלייסהולדר שחוזרים לפעמים מספריות OCR/ברקוד
+    const validName = result?.name?.trim();
+    const isPlaceholder = !validName || /^(no text selected|no text|undefined|null)$/i.test(validName);
+    if (result && !isPlaceholder) {
+      handleNameChange(validName!);
       haptic('medium');
     } else {
       setScanNotice(t('barcodeNotFound'));

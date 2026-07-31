@@ -172,7 +172,10 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                 size="large"
                 startIcon={<DocumentScannerIcon />}
                 onClick={() => { haptic('medium'); fileInputRef.current?.click(); }}
-                sx={{ mt: 1, borderRadius: '12px', px: 4 }}
+                sx={{
+                  mt: 1, borderRadius: '12px', px: 4,
+                  '& .MuiButton-startIcon': { marginInlineEnd: '10px', marginInlineStart: 0 },
+                }}
               >
                 צלם / בחר תמונה
               </Button>
