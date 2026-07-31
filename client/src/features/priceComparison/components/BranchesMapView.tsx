@@ -252,8 +252,8 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
               ולא נראה שטוח ומיושן כמו הטייל הבסיסי. */}
           <TileLayer
             url={isDark
-              ? 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png'
-              : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'}
+              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
 
@@ -268,7 +268,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
             </Marker>
           )}
 
-          {branches?.map((b, idx) => (
+          {branches?.filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && b.lat !== 0 && b.lng !== 0).map((b, idx) => (
             <Marker key={`${b.chainId}-${b.storeName}-${idx}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
               <Popup className="sb-popup">
                 <Box sx={{ minWidth: 160, textAlign: 'right', direction: 'rtl' }}>

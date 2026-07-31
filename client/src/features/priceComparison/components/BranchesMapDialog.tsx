@@ -1,24 +1,10 @@
-/**
- * BranchesMapDialog - עוטף את BranchesMapView במסך מלא (לא Modal-גיליון קטן),
- * כדי שהמפה תקבל מספיק מקום אמיתי במקום להידחס. אותו דפוס fullScreen Dialog
- * + dvh (לא vh) כמו ב-QRScanner - vh בדפדפני מובייל גדול מהשטח הנראה בפועל
- * (כולל את השטח מתחת לסרגל הכתובת) וגורם לגלילה מיותרת.
- */
-
-/**
- * כפתור סגירה: חץ שמאלה (ArrowForwardIcon בממשק RTL) - עקבי עם ListHeader
- * ושאר מסכי האפליקציה. כותרת ה-header צבועה ב-background.paper (לא default)
- * כדי לשמור על מראה "כרטיס" נפרד מרקע המפה.
- */
-
 import { Dialog, Box, Typography, IconButton, Slide } from '@mui/material';
 import type { TransitionProps } from '@mui/material/transitions';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import { forwardRef } from 'react';
 import { BranchesMapView } from './BranchesMapView';
+import { useSettings } from '../../../global/context/SettingsContext';
 
-// אנימציית כניסה מלמטה - עקבית עם bottom-sheet ועם ה-NavigationPicker
 const SlideUp = forwardRef(function SlideUp(
   props: TransitionProps & { children: React.ReactElement },
   ref: React.Ref<unknown>,
@@ -31,44 +17,63 @@ interface Props {
   onClose: () => void;
 }
 
-export const BranchesMapDialog = ({ isDark, onClose }: Props) => (
-  <Dialog
-    open
-    onClose={onClose}
-    fullScreen
-    TransitionComponent={SlideUp}
-    disableScrollLock
-    PaperProps={{ sx: { height: '100dvh', maxHeight: '100dvh', bgcolor: 'background.default' } }}
-  >
-    <Box sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* כותרת - background.paper כמו ב-AppBar, לא background.default של המפה */}
-      <Box sx={{
-        display: 'flex', alignItems: 'center', gap: 1,
-        px: 1,
-        pt: 'max(env(safe-area-inset-top) + 8px, 12px)',
-        pb: 1,
-        flexShrink: 0,
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-        boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.07)',
-      }}>
-        {/* חץ חזרה - insetInlineStart לתמיכה ב-RTL */}
-        <IconButton
-          onClick={onClose}
-          aria-label="חזור"
-          sx={{ color: 'text.primary' }}
-        >
-          <ArrowForwardIcon sx={{ fontSize: 22 }} />
-        </IconButton>
+export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
+  const { settings } = useSettings();
+  const dark = settings.theme === 'dark';
 
-        <MapOutlinedIcon sx={{ color: '#0D9488', fontSize: 20 }} />
-        <Typography sx={{ fontWeight: 800, fontSize: 16, flex: 1 }}>מפת סניפים</Typography>
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      fullScreen
+      TransitionComponent={SlideUp}
+      PaperProps={{
+        sx: {
+          height: '100dvh', maxHeight: '100dvh',
+          bgcolor: 'background.default',
+          display: 'flex', flexDirection: 'column',
+        },
+      }}
+    >
+      {/* הדר זהה לסגנון InsightsHeader */}
+      <Box sx={{
+        background: dark
+          ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)'
+          : 'linear-gradient(160deg, #0D9488, #14B8A6, #2DD4BF)',
+        pt: 'max(env(safe-area-inset-top) + 12px, 48px)',
+        pb: '16px',
+        px: 2,
+        borderRadius: '0 0 24px 24px',
+        position: 'relative',
+        overflow: 'hidden',
+        flexShrink: 0,
+        boxShadow: '0 4px 16px rgba(13,148,136,0.2)',
+      }}>
+        <Box sx={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative' }}>
+          <IconButton
+            onClick={onClose}
+            aria-label="חזור"
+            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', width: 38, height: 38, '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' } }}
+          >
+            <ArrowForwardIcon sx={{ fontSize: 21 }} />
+          </IconButton>
+
+          <Box sx={{ flex: 1, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
+              🗺️ מפת סניפים
+            </Typography>
+          </Box>
+
+          <Box sx={{ width: 38, flexShrink: 0 }} />
+        </Box>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, position: 'relative', touchAction: 'none' }}>
+      {/* תוכן המפה */}
+      <Box sx={{ flex: 1, minHeight: 0, mt: 0.5 }}>
         <BranchesMapView isDark={isDark} fillHeight />
       </Box>
-    </Box>
-  </Dialog>
-);
+    </Dialog>
+  );
+};
