@@ -155,6 +155,8 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {/* ברשימה פרטית - כפתור חיפוש בשורת הכותרת (אין שורת Members) */}
+          {!list.isGroup && searchButton}
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
@@ -186,17 +188,6 @@ export const ListHeader = memo(({
             <PersonAddIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
           <Box sx={{ flex: 1 }} />
-          {searchButton}
-        </Box>
-      )}
-
-      {/* ===== שורת חיפוש (רשימה פרטית בלבד - מעל QuickAdd) ===== */}
-      {!list.isGroup && (
-        <Box sx={{
-          display: 'flex', justifyContent: 'flex-end',
-          mb: { xs: 0.5, sm: 0.75 },
-          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
-        }}>
           {searchButton}
         </Box>
       )}
