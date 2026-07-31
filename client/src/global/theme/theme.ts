@@ -48,7 +48,7 @@ const COLORS = {
     divider: '#374151',
     border: '#4B5563',
     inputBg: '#374151',
-    headerGradient: 'linear-gradient(135deg, #0D9488, #047857)',
+    headerGradient: 'linear-gradient(135deg, #134E4A, #0F766E)',
     cardShadow: '0 4px 12px rgba(0,0,0,0.5)'
   }
 } as const;

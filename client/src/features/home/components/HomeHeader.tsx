@@ -35,7 +35,7 @@ export const HomeHeader = ({
 }: HomeHeaderProps) => {
   return (
     <Box sx={{
-      background: isDark ? 'linear-gradient(135deg, #0D9488, #047857)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+      background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #0F766E, #0D9488, #14B8A6)',
       p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
