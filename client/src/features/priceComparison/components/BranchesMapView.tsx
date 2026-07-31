@@ -106,7 +106,8 @@ const RecenterButton = ({ location }: { location: { lat: number; lng: number } |
           // כדי לא להתנגש עם בקרי הזום שעברו ל-topright אבל לשמור על זרימה
           // ויזואלית (location = "איפה אני" → קרוב לגרף זום).
           // השתמשנו ב-right/bottom ולא insetInlineEnd כי leaflet מחשב לפי LTR.
-          position: 'absolute', bottom: 36, right: 10, zIndex: 1000,
+          // bottom: 80px - מתחת לזום שב-topright ומעל ה-attribution
+          position: 'absolute', bottom: 10, right: 10, zIndex: 1000,
           bgcolor: 'background.paper', width: 40, height: 40,
           boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           '&:hover': { bgcolor: 'background.paper' },
@@ -288,7 +289,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
                     onClick={() => openNav(b)}
                     startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
                     sx={{
-                      mt: 1, bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' },
+                      mt: 1, bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' },
                       fontSize: 11, fontWeight: 800, textTransform: 'none',
                       borderRadius: '8px', px: 1.5, py: 0.4, minWidth: 0,
                     }}
@@ -311,16 +312,28 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         </Box>
       )}
 
-      {!loading && branches && branches.length === 0 && (
-        <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', mt: 1.25 }}>
-          לא נמצאו סניפים באזור שלך
-        </Typography>
+      {!loading && branches !== null && branches.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 2, px: 3 }}>
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', fontWeight: 600 }}>
+            לא נמצאו סניפים באזור שלך
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.5 }}>
+            נסה להרחיב את אזור החיפוש או לבדוק שוב מאוחר יותר
+          </Typography>
+        </Box>
       )}
 
-      {!location && (
-        <Typography sx={{ fontSize: 11, color: 'text.disabled', textAlign: 'center', mt: 1.25 }}>
-          מציג פריסה ארצית - שתף מיקום כדי לראות סניפים קרובים אליך
-        </Typography>
+      {!location && !loading && (
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 1,
+          px: 2, py: 1, mt: 0.5,
+          bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.06)',
+          borderRadius: '10px', border: '1px solid rgba(20,184,166,0.2)',
+        }}>
+          <Typography sx={{ fontSize: 11.5, color: '#0D9488', fontWeight: 600 }}>
+            📍 שתף מיקום כדי לראות סניפים קרובים אליך — כרגע מוצגת פריסה ארצית
+          </Typography>
+        </Box>
       )}
 
       <NavigationPicker branch={navBranch} isDark={isDark} onClose={() => setNavBranch(null)} />

@@ -60,6 +60,24 @@ export interface UserLocation {
 }
 
 export const priceComparisonApi = {
+  // סניפים קרובים למיקום המשתמש - endpoint ציבורי (לא admin).
+  // משמש ל-BranchesMapView. מחזיר את כל הסניפים בטווח radiusKm (ברירת מחדל 25).
+  async getNearbyBranches(
+    location?: { lat: number; lng: number },
+    radiusKm?: number,
+  ): Promise<Array<{ chainId: string; chainName: string; storeName: string; address: string; city: string; lat: number; lng: number }>> {
+    try {
+      const params = new URLSearchParams();
+      if (location) { params.set('lat', String(location.lat)); params.set('lng', String(location.lng)); }
+      if (radiusKm) params.set('radiusKm', String(radiusKm));
+      const query = params.toString() ? `?${params}` : '';
+      const res = await apiClient.get<{ branches: Array<{ chainId: string; chainName: string; storeName: string; address: string; city: string; lat: number; lng: number }> }>(`/price-comparison/branches-nearby${query}`);
+      return res.data.branches ?? [];
+    } catch {
+      return [];
+    }
+  },
+
   // שם מוצר לפי ברקוד שנסרק (הוספת מוצר מהירה) - null אם לא נמצא במאגר המחירים.
   async lookupBarcode(barcode: string): Promise<{ name: string } | null> {
     try {
