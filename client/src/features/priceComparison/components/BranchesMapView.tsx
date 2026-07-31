@@ -1,15 +1,14 @@
 /**
- * BranchesMapView - מפת סניפים חופשית (Leaflet + OpenStreetMap, בלי API key/חיוב).
- * מציגה את כל הסניפים הקרובים למשתמש (או פריסה ארצית אם אין מיקום) עם פופאפ
- * לכל סניף וכפתור "ניווט" שפותח את אותו picker חיצוני (Waze/Google/Apple)
- * שכבר קיים בהשוואת המחירים - לא כופלים לוגיקת deep-link.
+ * BranchesMapView - מפת סניפים (Leaflet + CartoDB, ללא API key).
+ * גישת height: position absolute+inset:0 על MapContainer - האמינה ביותר
+ * ב-Leaflet כי היא לא תלויה בהתנהגות flex/100% של ה-parent.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Box, Typography, Button, CircularProgress, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, IconButton } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useUserLocation } from '../hooks/useUserLocation';
@@ -17,131 +16,109 @@ import { priceComparisonApi } from '../services/priceComparison.api';
 import { NavigationPicker } from './NavigationPicker';
 import type { NearestBranch } from '../types/priceComparison.types';
 
-// ברירת מחדל כשאין מיקום משתמש - מרכז הארץ (תל אביב), זום רחב שמראה את רוב הסניפים
-const ISRAEL_DEFAULT_CENTER: [number, number] = [32.0853, 34.7818];
-const ISRAEL_DEFAULT_ZOOM = 8;
-const USER_LOCATION_ZOOM = 13;
-// רדיוס חיפוש כשיש מיקום - קצת יותר נדיב מברירת המחדל של ה-API (15) כי
-// במפה יש ערך להראות גם סניפים קצת יותר רחוקים, לא רק את הקרוב ביותר.
-const NEARBY_RADIUS_KM = 20;
+const ISRAEL_CENTER: [number, number] = [31.7683, 35.2137];
+const ISRAEL_ZOOM = 8;
+const USER_ZOOM = 13;
+const NEARBY_RADIUS_KM = 25;
 
-// חישוב מרחק - עותק קליל של הנוסחה בשרת (branches.service.ts), רק כדי
-// למלא distanceKm בפופאפ הניווט. לא שווה לייבא מודול שרת ללקוח בשביל זה.
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const R = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const R = 6371, r = (d: number) => (d * Math.PI) / 180;
+  const dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-// זיהוי רשת דרך צבע בלבד לא עובד כאן: ולידציה עם validate_palette.js (ראו
-// שיחת התכנון) הראתה שמעבר ל-3 קטגוריות תחת בדיקת "כל הזוגות" (רלוונטית
-// לפינים מפוזרים על מפה, בניגוד לעמודות בסדר קבוע) הגוונים כבר לא ניתנים
-// להבחנה בבטחה (גם לעיוורי צבעים וגם לראייה רגילה) - ויש כאן ~15 רשתות.
-// לכן הזהות עוברת דרך מונוגרם טקסטואלי בתוך פין באותו צבע מותג אחיד,
-// לא דרך גוון - זה גם נגיש יותר וגם קריא יותר מ-15 גוונים דומים.
-const branchIconCache = new Map<string, L.DivIcon>();
-
-// מונוגרם דו-אותיות מתוך שם הרשת: אות ראשונה משתי המילים הראשונות
-// (מתעלם ממילים מספריות כמו "2000"), או שתי האותיות הראשונות אם מילה אחת.
-function getChainMonogram(chainName: string): string {
-  const words = chainName.trim().split(/\s+/).filter(w => w && !/^\d+$/.test(w));
-  if (words.length >= 2) return `${words[0][0] || ''}${words[1][0] || ''}`;
-  return (words[0] || chainName).slice(0, 2);
+function getMonogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(w => !/^\d+$/.test(w));
+  if (words.length >= 2) return `${words[0][0] ?? ''}${words[1][0] ?? ''}`;
+  return (words[0] ?? name).slice(0, 2);
 }
 
-// אייקון פין (SVG inline) - נמנעים מבעיית ה-assets הקלאסית של leaflet
-// (marker-icon.png לא נטען נכון עם bundlers). צל אליפסה מתחת לפין (כמו
-// ב-Google Maps) נותן תחושת עומק. אנימציית drop-in מוגדרת ב-<style> למטה.
+const iconCache = new Map<string, L.DivIcon>();
 function getBranchIcon(chainName: string): L.DivIcon {
-  const cached = branchIconCache.get(chainName);
-  if (cached) return cached;
-  const monogram = getChainMonogram(chainName);
+  if (iconCache.has(chainName)) return iconCache.get(chainName)!;
+  const m = getMonogram(chainName);
   const icon = L.divIcon({
-    className: 'sb-branch-marker',
-    html: `
-      <div class="sb-pin-wrap">
-        <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35))">
-          <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="#14B8A6" stroke="#0D9488" stroke-width="1"/>
-          <circle cx="15" cy="14" r="9.5" fill="#fff"/>
-          <text x="15" y="14.5" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="800" font-family="system-ui,-apple-system,sans-serif" fill="#0D9488">${monogram}</text>
-        </svg>
-        <div class="sb-pin-shadow"></div>
-      </div>
-    `,
-    iconSize: [30, 40],
-    iconAnchor: [15, 40],
-    popupAnchor: [0, -36],
+    className: 'sb-pin',
+    html: `<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg">
+      <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter>
+      <path filter="url(#sh)" d="M16 1C7.7 1 1 7.7 1 16c0 11 15 27 15 27s15-16 15-27C31 7.7 24.3 1 16 1z" fill="#14B8A6" stroke="#0D9488" stroke-width="1.5"/>
+      <circle cx="16" cy="15" r="9" fill="white"/>
+      <text x="16" y="15.5" text-anchor="middle" dominant-baseline="central" font-size="${m.length === 1 ? 10 : 8}" font-weight="900" font-family="system-ui,sans-serif" fill="#0D9488">${m}</text>
+    </svg>`,
+    iconSize: [32, 44],
+    iconAnchor: [16, 44],
+    popupAnchor: [0, -42],
   });
-  branchIconCache.set(chainName, icon);
+  iconCache.set(chainName, icon);
   return icon;
 }
 
-// אייקון נקודת מיקום המשתמש - עיגול כחול עם טבעת "פועם" (pulse) שמרגישה
-// כמו מיקום חי בזמן אמת (בהשראת Google Maps "blue dot"), לא נקודה סטטית.
 const userIcon = L.divIcon({
-  className: 'sb-user-marker',
-  html: `
-    <div class="sb-user-pulse-ring"></div>
-    <div style="width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);position:relative;z-index:1"></div>
-  `,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  className: 'sb-user',
+  html: `<div style="position:relative;width:20px;height:20px">
+    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,0.35);animation:sbPulse 2s ease-out infinite"></div>
+    <div style="position:absolute;inset:3px;border-radius:50%;background:#2563EB;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>
+  </div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
 
-// כפתור "מרכז אליי" צף - צריך גישה למופע המפה עצמו (useMap), ולכן
-// חייב לחיות כרכיב-בן בתוך MapContainer ולא לקבל את המפה כ-prop.
-const RecenterButton = ({ location }: { location: { lat: number; lng: number } | null }) => {
+// מרכז מפה למיקום משתמש
+function MapFlyTo({ location }: { location: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const done = useRef(false);
+  useEffect(() => {
+    if (location && !done.current) {
+      done.current = true;
+      map.flyTo([location.lat, location.lng], USER_ZOOM, { duration: 0.8 });
+    }
+  }, [location, map]);
+  return null;
+}
+
+// כפתור חזרה למיקום
+function RecenterBtn({ location }: { location: { lat: number; lng: number } | null }) {
   const map = useMap();
   if (!location) return null;
   return (
-    <Tooltip title="מרכז למיקום שלי" placement="left">
-      <IconButton
-        onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_LOCATION_ZOOM), { duration: 0.6 })}
-        aria-label="מרכז למיקום שלי"
-        sx={{
-          // bottom: 36px - מעל ה-attribution שגובהו ~24px + מרווח; topright
-          // כדי לא להתנגש עם בקרי הזום שעברו ל-topright אבל לשמור על זרימה
-          // ויזואלית (location = "איפה אני" → קרוב לגרף זום).
-          // השתמשנו ב-right/bottom ולא insetInlineEnd כי leaflet מחשב לפי LTR.
-          // bottom: 80px - מתחת לזום שב-topright ומעל ה-attribution
-          position: 'absolute', bottom: 10, right: 10, zIndex: 1000,
-          bgcolor: 'background.paper', width: 40, height: 40,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-          '&:hover': { bgcolor: 'background.paper' },
-        }}
-      >
-        <MyLocationIcon sx={{ fontSize: 20, color: '#2563EB' }} />
-      </IconButton>
-    </Tooltip>
+    <IconButton
+      onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_ZOOM), { duration: 0.6 })}
+      aria-label="מרכז למיקום שלי"
+      sx={{
+        position: 'absolute', bottom: 28, right: 10, zIndex: 1000,
+        bgcolor: 'white', width: 40, height: 40, borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+        '&:hover': { bgcolor: '#f0fdfa' },
+      }}
+    >
+      <MyLocationIcon sx={{ fontSize: 20, color: '#0D9488' }} />
+    </IconButton>
   );
-};
+}
 
-interface NearbyBranchApi {
-  chainId: string;
-  chainName: string;
-  storeName: string;
-  address: string;
-  city: string;
-  lat: number;
-  lng: number;
+// invalidateSize אחרי שהמפה נפתחת ב-Dialog - Leaflet לא מחשב גודל נכון
+function MapSizer() {
+  const map = useMap();
+  useEffect(() => { setTimeout(() => map.invalidateSize(), 150); }, [map]);
+  useMapEvents({ resize: () => map.invalidateSize() });
+  return null;
+}
+
+interface NearbyBranch {
+  chainId: string; chainName: string; storeName: string;
+  address: string; city: string; lat: number; lng: number;
 }
 
 interface Props {
   isDark?: boolean;
-  // true כשהמפה מתארחת במסך מלא (BranchesMapDialog) - ממלאת את כל הגובה
-  // הפנוי במקום לקבל גובה קבוע. ברירת המחדל (440px) משמשת רק לשימוש עצמאי.
   fillHeight?: boolean;
 }
 
 export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) => {
   const { location } = useUserLocation();
-  const [branches, setBranches] = useState<NearbyBranchApi[] | null>(null);
+  const [branches, setBranches] = useState<NearbyBranch[] | null>(null);
   const [loading, setLoading] = useState(true);
-  // הסניף שנבחר לפתיחת picker ניווט (Waze/Google/Apple) - אותו רכיב
-  // בדיוק כמו בהשוואת המחירים, בלי לשכפל לוגיקת deep-link.
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
 
   useEffect(() => {
@@ -149,150 +126,97 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
     setLoading(true);
     priceComparisonApi.getNearbyBranches(location ?? undefined, location ? NEARBY_RADIUS_KM : undefined)
       .then(res => { if (!cancelled) setBranches(res); })
+      .catch(() => { if (!cancelled) setBranches([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location?.lat, location?.lng]);
 
-  const center = useMemo<[number, number]>(
-    () => location ? [location.lat, location.lng] : ISRAEL_DEFAULT_CENTER,
-    [location]
+  const validBranches = useMemo(
+    () => (branches ?? []).filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && b.lat !== 0 && b.lng !== 0),
+    [branches]
   );
-  const zoom = location ? USER_LOCATION_ZOOM : ISRAEL_DEFAULT_ZOOM;
 
-  const openNav = (b: NearbyBranchApi) => {
-    // distanceKm מחושב רק אם יש מיקום משתמש - בדיוק כמו בהתנהגות השרת
-    // (findNearestBranch). NavigationPicker כבר יודע להתמודד עם ערך חסר.
-    const distanceKm = location
-      ? Math.round(haversineKm(location, b) * 10) / 10
-      : (undefined as unknown as number);
+  const openNav = (b: NearbyBranch) => {
     setNavBranch({
       branchName: `${b.chainName} - ${b.storeName}`,
-      city: b.city,
-      address: b.address,
-      lat: b.lat,
-      lng: b.lng,
-      distanceKm,
+      city: b.city, address: b.address, lat: b.lat, lng: b.lng,
+      distanceKm: location ? Math.round(haversineKm(location, b) * 10) / 10 : (undefined as unknown as number),
     });
   };
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        ...(fillHeight && { height: '100%', display: 'flex', flexDirection: 'column' }),
-      }}
-      className={isDark ? 'sb-map-dark' : undefined}
-    >
-      {/* עיצוב מותאם לרכיבי Leaflet (פופאפ/זום/פינים) - אלה DOM גולמי שלא
-          עובר sx/MUI, ולכן חייבים override גלובלי מוגבל ל-scope הזה. פין
-          עם "נפילה" קלה + טבעת פועמת סביב נקודת המשתמש הן מה שהופך מפה
-          סטטית להרגיש חיה, בהשראת Google Maps. */}
+    <Box sx={{
+      position: 'relative',
+      ...(fillHeight ? { height: '100%' } : { height: 440 }),
+    }}>
+      {/* CSS גלובלי לרכיבי Leaflet */}
       <style>{`
-        .sb-branch-marker { animation: sbPinDrop .45s cubic-bezier(.34,1.56,.64,1) both; transform-origin: bottom center; }
-        @keyframes sbPinDrop { from { transform: translateY(-14px) scale(.6); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-        .sb-pin-wrap { position: relative; }
-        .sb-pin-shadow { position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 14px; height: 5px; border-radius: 50%; background: rgba(0,0,0,0.35); filter: blur(1px); }
-        .sb-user-marker { z-index: 500 !important; }
-        .sb-user-pulse-ring { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: rgba(37,99,235,0.45); animation: sbUserPulse 2s ease-out infinite; }
-        @keyframes sbUserPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.4); opacity: 0; } }
-        .sb-popup .leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.22); }
-        .sb-popup .leaflet-popup-content { margin: 10px 12px; }
-        .sb-popup .leaflet-popup-close-button { top: 6px !important; inset-inline-end: 6px !important; }
-        .leaflet-control-zoom { border: none !important; border-radius: 10px !important; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.22) !important; }
-        .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
-        .leaflet-control-attribution { border-radius: 6px 0 0 0 !important; }
-        .sb-map-dark .leaflet-control-zoom a { background: #1e293b !important; color: #e2e8f0 !important; }
-        .sb-map-dark .leaflet-popup-content-wrapper, .sb-map-dark .leaflet-popup-tip { background: #1e293b !important; color: #e2e8f0 !important; }
-        .sb-map-dark .leaflet-control-attribution { background: rgba(30,41,59,0.75) !important; color: #cbd5e1 !important; }
-        .sb-map-dark .leaflet-control-attribution a { color: #93c5fd !important; }
-        /* משתמשים שכיבו אנימציות במערכת (הגדרת נגישות) - מכבדים את זה, לא
-           רק עיצוב: פינים "נופלים" וטבעת פועמת הן תנועה לא-פונקציונלית. */
-        @media (prefers-reduced-motion: reduce) {
-          .sb-branch-marker, .sb-user-pulse-ring { animation: none !important; }
-        }
-        /* פוקוס מקלדת גלוי על פינים - Leaflet הופך אותם ל-focusable (tabindex)
-           אבל לא מספק outline ברירת מחדל, כך שמשתמשי מקלדת "מאבדים" את המיקוד. */
-        .leaflet-interactive:focus-visible { outline: 3px solid #14B8A6; outline-offset: 2px; }
-        /* חלופה נגישה לקוראי מסך - תוכן אמיתי, מוסתר ויזואלית בלבד */
-        .sb-sr-only {
-          position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-          overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-        }
+        .sb-pin { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        @keyframes sbPulse { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(3.5);opacity:0} }
+        .sb-popup .leaflet-popup-content-wrapper { border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.18); padding:0; }
+        .sb-popup .leaflet-popup-content { margin:12px 14px; min-width:150px; }
+        .sb-popup .leaflet-popup-close-button { top:8px!important; right:8px!important; font-size:16px!important; }
+        .leaflet-control-zoom { border:none!important; border-radius:10px!important; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.18)!important; }
+        .leaflet-control-zoom a { width:36px!important; height:36px!important; line-height:36px!important; font-size:18px!important; }
+        ${isDark ? `
+        .leaflet-control-zoom a { background:#1e293b!important; color:#e2e8f0!important; }
+        .sb-popup .leaflet-popup-content-wrapper,.sb-popup .leaflet-popup-tip { background:#1e293b!important; color:#e2e8f0!important; }
+        .leaflet-control-attribution { background:rgba(30,41,59,0.8)!important; color:#94a3b8!important; }
+        ` : ''}
+        @media(prefers-reduced-motion:reduce){.sb-pin,[class*="sbPulse"]{animation:none!important}}
       `}</style>
-      {/* חלופה טקסטואלית לקוראי מסך: Leaflet מרנדר div-ים גולמיים בלי משמעות
-          סמנטית (attribute "alt" על div לא נקרא ע"י קוראי מסך), אז במקום
-          לנסות "לתקן" ARIA על המפה עצמה - נותנים רשימה אמיתית ושקולה,
-          מוסתרת חזותית, עם אותה פעולת ניווט כמו בפופאפ. */}
-      {branches && branches.length > 0 && (
-        <ul className="sb-sr-only" aria-label="רשימת סניפים קרובים">
-          {branches.map((b, idx) => (
-            <li key={`sr-${b.chainId}-${b.storeName}-${idx}`}>
-              {b.chainName} {b.storeName}{(b.address || b.city) ? `, ${[b.address, b.city].filter(Boolean).join(', ')}` : ''}
-              <button type="button" onClick={() => openNav(b)}>ניווט לסניף {b.chainName} {b.storeName}</button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <Box
-        role="region"
-        aria-label="מפת סניפים קרובים"
-        sx={{
-          ...(fillHeight ? { flex: 1, minHeight: 0 } : { height: 440 }),
-          borderRadius: '14px',
-          overflow: 'hidden',
-          border: '1px solid',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-        }}
-      >
-        <MapContainer center={center} zoom={zoom} zoomControl={false} style={{ width: '100%', height: '100%' }}>
-          {/* טיילים של CARTO (בנויים על OSM) - חינמי לגמרי, בלי מפתח API, רק
-              attribution. נבחר על פני טייל ה-OSM הגולמי כי הוא הרבה יותר "חי"
-              ועשיר בצבע (וריאנט Voyager/Dark תואם למצב בהיר/כהה של האפליקציה),
-              ולא נראה שטוח ומיושן כמו הטייל הבסיסי. */}
+
+      {/* MapContainer - position absolute ממלא 100% בדיוק */}
+      <Box sx={{
+        position: 'absolute', inset: 0,
+        borderRadius: fillHeight ? 0 : '14px',
+        overflow: 'hidden',
+      }}>
+        <MapContainer
+          center={ISRAEL_CENTER}
+          zoom={ISRAEL_ZOOM}
+          zoomControl={false}
+          style={{ width: '100%', height: '100%' }}
+          preferCanvas
+        >
           <TileLayer
             url={isDark
               ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
               : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
           />
-
-          {/* זום: topright - רחוק מ-attribution (bottomright) וממרכז-אליי (bottomright).
-              כפתור "מרכז אליי" ב-bottomright, מספיק גבוה שלא יחפוף את ה-attribution. */}
           <ZoomControl position="topright" />
-          <RecenterButton location={location} />
+          <MapSizer />
+          <MapFlyTo location={location} />
+          <RecenterBtn location={location} />
 
           {location && (
             <Marker position={[location.lat, location.lng]} icon={userIcon}>
-              <Popup className="sb-popup">המיקום שלך</Popup>
+              <Popup className="sb-popup"><b>המיקום שלי</b></Popup>
             </Marker>
           )}
 
-          {branches?.filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && b.lat !== 0 && b.lng !== 0).map((b, idx) => (
-            <Marker key={`${b.chainId}-${b.storeName}-${idx}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
+          {validBranches.map((b, i) => (
+            <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
               <Popup className="sb-popup">
-                <Box sx={{ minWidth: 160, textAlign: 'right', direction: 'rtl' }}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488' }}>
+                <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488', mb: 0.25 }}>
                     {b.chainName}
                   </Typography>
-                  <Typography sx={{ fontSize: 12.5, fontWeight: 700, mt: 0.25 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.25 }}>
                     {b.storeName}
                   </Typography>
                   {(b.address || b.city) && (
-                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, color: '#6B7280', mb: 0.75 }}>
                       {[b.address, b.city].filter(Boolean).join(', ')}
                     </Typography>
                   )}
                   <Button
-                    size="small"
-                    variant="contained"
+                    size="small" variant="contained"
                     onClick={() => openNav(b)}
                     startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-                    sx={{
-                      mt: 1, bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' },
-                      fontSize: 11, fontWeight: 800, textTransform: 'none',
-                      borderRadius: '8px', px: 1.5, py: 0.4, minWidth: 0,
-                    }}
+                    sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 11.5, fontWeight: 800, textTransform: 'none', borderRadius: '8px' }}
                   >
                     ניווט
                   </Button>
@@ -303,35 +227,47 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         </MapContainer>
       </Box>
 
+      {/* ספינר טעינה */}
       {loading && (
         <Box sx={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          bgcolor: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.55)', borderRadius: '14px',
+          position: 'absolute', inset: 0, zIndex: 1000,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          bgcolor: isDark ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.7)',
+          backdropFilter: 'blur(4px)',
+          borderRadius: fillHeight ? 0 : '14px',
+          gap: 1,
         }}>
-          <CircularProgress size={28} sx={{ color: '#14B8A6' }} />
+          <CircularProgress size={32} sx={{ color: '#14B8A6' }} />
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
+            טוען סניפים...
+          </Typography>
         </Box>
       )}
 
-      {!loading && branches !== null && branches.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 2, px: 3 }}>
+      {/* הודעות על גבי המפה */}
+      {!loading && validBranches.length === 0 && (
+        <Box sx={{
+          position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000, bgcolor: 'background.paper', borderRadius: '12px',
+          px: 2, py: 1, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          border: '1px solid', borderColor: 'divider',
+          maxWidth: '80%', textAlign: 'center',
+        }}>
           <Typography sx={{ fontSize: 13, color: 'text.secondary', fontWeight: 600 }}>
-            לא נמצאו סניפים באזור שלך
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.5 }}>
-            נסה להרחיב את אזור החיפוש או לבדוק שוב מאוחר יותר
+            לא נמצאו סניפים באזור
           </Typography>
         </Box>
       )}
 
       {!location && !loading && (
         <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 1,
-          px: 2, py: 1, mt: 0.5,
-          bgcolor: isDark ? 'rgba(20,184,166,0.1)' : 'rgba(20,184,166,0.06)',
-          borderRadius: '10px', border: '1px solid rgba(20,184,166,0.2)',
+          position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000, bgcolor: 'rgba(13,148,136,0.9)', borderRadius: '12px',
+          px: 2, py: 1, boxShadow: '0 4px 16px rgba(13,148,136,0.3)',
+          maxWidth: '85%', textAlign: 'center',
         }}>
-          <Typography sx={{ fontSize: 11.5, color: '#0D9488', fontWeight: 600 }}>
-            📍 שתף מיקום כדי לראות סניפים קרובים אליך — כרגע מוצגת פריסה ארצית
+          <Typography sx={{ fontSize: 12, color: 'white', fontWeight: 700 }}>
+            📍 שתף מיקום לראות סניפים קרובים
           </Typography>
         </Box>
       )}
