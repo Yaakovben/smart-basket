@@ -190,22 +190,24 @@ export const ListHeader = memo(({
         </Box>
       )}
 
-      {/* ===== שורת QuickAdd + חיפוש (רשימה פרטית) ===== */}
+      {/* ===== שורת חיפוש (רשימה פרטית בלבד - מעל QuickAdd) ===== */}
+      {!list.isGroup && (
+        <Box sx={{
+          display: 'flex', justifyContent: 'flex-end',
+          mb: { xs: 0.5, sm: 0.75 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
+          {searchButton}
+        </Box>
+      )}
+
+      {/* ===== שורת QuickAdd ===== */}
       <Box sx={{
         mb: { xs: 0.75, sm: 1 },
         '@media (max-width: 360px)': { mb: 0.5 },
         '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
       }}>
-        {!list.isGroup ? (
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
-            </Box>
-            {searchButton}
-          </Box>
-        ) : (
-          <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
-        )}
+        <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
       </Box>
 
       {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}
