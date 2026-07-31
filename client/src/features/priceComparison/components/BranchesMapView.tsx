@@ -97,10 +97,14 @@ function RecenterBtn({ location }: { location: { lat: number; lng: number } | nu
   );
 }
 
-// invalidateSize אחרי שהמפה נפתחת ב-Dialog - Leaflet לא מחשב גודל נכון
+// invalidateSize - Dialog animation לוקח ~500ms, לכן מריצים פעמיים
 function MapSizer() {
   const map = useMap();
-  useEffect(() => { setTimeout(() => map.invalidateSize(), 150); }, [map]);
+  useEffect(() => {
+    const t1 = setTimeout(() => map.invalidateSize(), 300);
+    const t2 = setTimeout(() => map.invalidateSize(), 900);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [map]);
   useMapEvents({ resize: () => map.invalidateSize() });
   return null;
 }
@@ -147,8 +151,10 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
 
   return (
     <Box sx={{
-      position: 'relative',
-      ...(fillHeight ? { height: '100%' } : { height: 440 }),
+      // fillHeight: position absolute ממלא parent; sinon: גובה קבוע
+      ...(fillHeight
+        ? { position: 'absolute', inset: 0 }
+        : { position: 'relative', height: 440 }),
     }}>
       {/* CSS גלובלי לרכיבי Leaflet */}
       <style>{`
@@ -156,7 +162,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         @keyframes sbPulse { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(3.5);opacity:0} }
         .sb-popup .leaflet-popup-content-wrapper { border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,0.18); padding:0; }
         .sb-popup .leaflet-popup-content { margin:12px 14px; min-width:150px; }
-        .sb-popup .leaflet-popup-close-button { top:8px!important; right:8px!important; font-size:16px!important; }
+        .sb-popup .leaflet-popup-close-button { top:8px!important; left:8px!important; right:auto!important; font-size:16px!important; }
         .leaflet-control-zoom { border:none!important; border-radius:10px!important; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.18)!important; }
         .leaflet-control-zoom a { width:36px!important; height:36px!important; line-height:36px!important; font-size:18px!important; }
         ${isDark ? `
@@ -178,7 +184,6 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           zoom={ISRAEL_ZOOM}
           zoomControl={false}
           style={{ width: '100%', height: '100%' }}
-          preferCanvas
         >
           <TileLayer
             url={isDark

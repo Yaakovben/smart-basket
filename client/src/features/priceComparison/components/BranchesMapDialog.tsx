@@ -70,8 +70,8 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
         </Box>
       </Box>
 
-      {/* תוכן המפה */}
-      <Box sx={{ flex: 1, minHeight: 0, mt: 0.5 }}>
+      {/* תוכן המפה - position relative עם גובה מחושב */}
+      <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <BranchesMapView isDark={isDark} fillHeight />
       </Box>
     </Dialog>
