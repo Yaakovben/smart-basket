@@ -15,7 +15,7 @@ const Transition = forwardRef(function Transition(
   props: TransitionProps & { children: ReactElement },
   ref: Ref<unknown>,
 ) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} timeout={180} {...props} />;
 });
 
 export const Modal = ({ title, onClose, children }: ModalProps) => {

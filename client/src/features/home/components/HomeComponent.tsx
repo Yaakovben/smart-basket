@@ -71,7 +71,7 @@ export const HomeComponent = memo(({
     window.setTimeout(() => {
       setShowMenu(false);
       setMenuClosing(false);
-    }, 280);
+    }, 160);
   }, [setShowMenu]);
 
   // ===== אדפטר עבור EditListModal המשותף =====

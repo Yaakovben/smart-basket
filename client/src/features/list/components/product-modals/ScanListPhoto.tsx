@@ -134,7 +134,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullScreen>
+    <Dialog open={open} onClose={handleClose} fullScreen transitionDuration={180}>
       {/* בלי capture="environment" בכוונה - זה כופה פתיחת מצלמה ישירות
           ומדלג על אפשרות "בחר מהגלריה" בדפדפנים רבים. בלי זה, ה-picker
           הטבעי של המערכת מציג גם מצלמה וגם גלריה (כמו בגלריית QRScanner). */}

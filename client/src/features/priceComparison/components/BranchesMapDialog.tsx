@@ -9,7 +9,7 @@ const SlideUp = forwardRef(function SlideUp(
   props: TransitionProps & { children: React.ReactElement },
   ref: React.Ref<unknown>,
 ) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} timeout={180} {...props} />;
 });
 
 interface Props {
