@@ -183,7 +183,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
         {!error && (
           <Box sx={bottomStatusSx}>
             <Typography sx={statusTextSx}>
-              {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'כוון את הברקוד לקו הכחול' : 'כוון את ה-QR למרכז המסך'}
+              {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'סרוק ברקוד מוצר' : 'כוון את ה-QR למרכז המסך'}
             </Typography>
             {!starting && slowScan && !fileScanError && (
               <Typography sx={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.5 }}>

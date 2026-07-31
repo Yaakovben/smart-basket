@@ -114,10 +114,9 @@ export const scanLineSx: SxProps<Theme> = {
 export const barcodeAimLineSx: SxProps<Theme> = {
   position: 'absolute', left: '4%', right: '4%', top: '50%',
   transform: 'translateY(-50%)',
-  height: '2.5px',
-  background: 'linear-gradient(90deg, transparent, rgba(20,184,166,0.5) 15%, #14B8A6 40%, #5EEAD4 50%, #14B8A6 60%, rgba(20,184,166,0.5) 85%, transparent)',
-  boxShadow: '0 0 8px 2px rgba(20,184,166,0.6)',
-  borderRadius: '2px',
+  height: '1px',
+  background: 'linear-gradient(90deg, transparent, rgba(20,184,166,0.4) 15%, #14B8A6 40%, #5EEAD4 50%, #14B8A6 60%, rgba(20,184,166,0.4) 85%, transparent)',
+  boxShadow: '0 0 4px 1px rgba(20,184,166,0.4)',
   pointerEvents: 'none',
 };
 
