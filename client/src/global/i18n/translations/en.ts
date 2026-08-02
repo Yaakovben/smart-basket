@@ -127,6 +127,8 @@ export const en: Translations = {
   deleteProduct: 'Delete Product',
   productDetails: 'Product Details',
   addedBy: 'Added by',
+  updatedByLabel: 'Edited by',
+  purchasedByLabel: 'Bought by',
   date: 'Date',
   time: 'Time',
   you: 'You',

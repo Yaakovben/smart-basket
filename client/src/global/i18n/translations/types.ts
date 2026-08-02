@@ -123,6 +123,8 @@ export type TranslationKeys =
   | 'deleteProduct'
   | 'productDetails'
   | 'addedBy'
+  | 'updatedByLabel'
+  | 'purchasedByLabel'
   | 'date'
   | 'time'
   | 'you'

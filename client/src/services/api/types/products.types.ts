@@ -25,6 +25,8 @@ export interface ApiProductResponse {
   category: Product['category'];
   isPurchased: boolean;
   addedBy: string;
+  updatedBy?: string | null;
+  purchasedBy?: string | null;
   createdAt: string;
   note?: string;
 }

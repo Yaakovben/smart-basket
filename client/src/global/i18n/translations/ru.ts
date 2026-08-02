@@ -127,6 +127,8 @@ export const ru: Translations = {
   deleteProduct: 'Удалить товар',
   productDetails: 'Детали товара',
   addedBy: 'Добавлено',
+  updatedByLabel: 'Изменено',
+  purchasedByLabel: 'Куплено',
   date: 'Дата',
   time: 'Время',
   you: 'Вы',

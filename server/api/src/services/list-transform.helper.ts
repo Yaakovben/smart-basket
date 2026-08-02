@@ -17,8 +17,10 @@ const transformProduct = (p: IProductDoc | Record<string, unknown>): Record<stri
   delete pJson.__v;
   delete pJson.listId;
 
-  if (pJson.addedBy && typeof pJson.addedBy === 'object') {
-    pJson.addedBy = (pJson.addedBy as { name?: string }).name || 'Unknown';
+  for (const field of ['addedBy', 'updatedBy', 'purchasedBy'] as const) {
+    if (pJson[field] && typeof pJson[field] === 'object') {
+      pJson[field] = (pJson[field] as { name?: string }).name || 'Unknown';
+    }
   }
   return pJson;
 };

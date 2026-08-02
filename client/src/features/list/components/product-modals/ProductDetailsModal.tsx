@@ -21,9 +21,17 @@ export const ProductDetailsModal = memo(({
 
   if (!product) return null;
 
+  // "עודכן ע״י" מוצג רק אם יש עורך שונה מהמוסיף (עריכה בפועל קרתה, לא
+  // רק הוספה). "נקנה ע״י" מוצג רק אם המוצר כרגע מסומן כנקנה ויש לו קונה.
   const detailRows = [
     { label: t('category'), value: t(CATEGORY_TRANSLATION_KEYS[product.category]) },
     { label: t('addedBy'), value: product.addedBy === currentUserName ? t('you') : product.addedBy, highlight: product.addedBy === currentUserName },
+    ...(product.updatedBy && product.updatedBy !== product.addedBy
+      ? [{ label: t('updatedByLabel'), value: product.updatedBy === currentUserName ? t('you') : product.updatedBy, highlight: product.updatedBy === currentUserName }]
+      : []),
+    ...(product.isPurchased && product.purchasedBy
+      ? [{ label: t('purchasedByLabel'), value: product.purchasedBy === currentUserName ? t('you') : product.purchasedBy, highlight: product.purchasedBy === currentUserName }]
+      : []),
     { label: t('date'), value: product.createdAt ? formatDateShort(product.createdAt, settings.language) : '-' },
     { label: t('time'), value: product.createdAt ? formatTimeShort(product.createdAt, settings.language) : '-' }
   ];

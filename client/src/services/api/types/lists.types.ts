@@ -18,6 +18,8 @@ export interface Product {
   category: 'מוצרי חלב' | 'מאפים' | 'אפייה' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'פיצוחים' | 'קפואים' | 'שימורים ויבשים' | 'תבלינים ורטבים' | 'ניקיון' | 'אחר';
   isPurchased: boolean;
   addedBy: string;
+  updatedBy?: string | null;
+  purchasedBy?: string | null;
   createdAt: string;
   note?: string;
 }

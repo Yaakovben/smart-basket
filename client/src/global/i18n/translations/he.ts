@@ -126,6 +126,8 @@ export const he: Translations = {
   deleteProduct: 'מחק מוצר',
   productDetails: 'פרטי מוצר',
   addedBy: 'נוסף ע״י',
+  updatedByLabel: 'עודכן ע״י',
+  purchasedByLabel: 'נקנה ע״י',
   date: 'תאריך',
   time: 'שעה',
   you: 'את/ה',

@@ -438,6 +438,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           </Box>
           <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
             {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
+            {/* "נקנה ע״י" עדיף על "עודכן ע״י" כשהמוצר נקנה - זו הפעולה הכי
+                רלוונטית כרגע. שתיהן מוצגות רק כשהעושה שונה מהמוסיף המקורי -
+                אחרת זה רק חוזר על אותו מידע. */}
+            {isPurchased && product.purchasedBy && product.purchasedBy !== product.addedBy && (
+              <> • {t('purchasedByLabel')} {product.purchasedBy === currentUserName ? t('you') : product.purchasedBy}</>
+            )}
+            {!isPurchased && product.updatedBy && product.updatedBy !== product.addedBy && (
+              <> • {t('updatedByLabel')} {product.updatedBy === currentUserName ? t('you') : product.updatedBy}</>
+            )}
           </Typography>
         </Box>
         {isPurchased && (

@@ -11,6 +11,12 @@ export interface IProductDoc extends Document {
   category: ProductCategory;
   isPurchased: boolean;
   addedBy: Types.ObjectId;
+  // מי ערך לאחרונה שדה תוכן (שם/כמות/יחידה/קטגוריה/הערה) - לא כולל סימון קנייה,
+  // שיש לו ייחוס נפרד (purchasedBy). null אם מעולם לא נערך אחרי היצירה.
+  updatedBy?: Types.ObjectId | null;
+  // מי סימן את המוצר כ"נקנה" לאחרונה. מתאפס ל-null כשמסמנים "לא נקנה" -
+  // אין טעם ב"מי קנה" למוצר שכרגע לא מסומן כנקנה.
+  purchasedBy?: Types.ObjectId | null;
   position: number;
   note?: string;
   createdAt: Date;
@@ -56,6 +62,16 @@ const productSchema = new Schema<IProductDoc>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    purchasedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
     position: {
       type: Number,

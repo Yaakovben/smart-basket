@@ -20,6 +20,8 @@ export const ProductDAL = {
     return Product
       .find({ listId })
       .populate('addedBy', 'name')
+      .populate('updatedBy', 'name')
+      .populate('purchasedBy', 'name')
       .sort({ position: 1, createdAt: 1 })
       .lean();
   },
@@ -29,6 +31,8 @@ export const ProductDAL = {
     const products = await Product
       .find({ listId: { $in: objectIds } })
       .populate('addedBy', 'name')
+      .populate('updatedBy', 'name')
+      .populate('purchasedBy', 'name')
       .sort({ position: 1, createdAt: 1 })
       .lean();
 
@@ -61,7 +65,9 @@ export const ProductDAL = {
   async updateProduct(productId: string, updates: Partial<IProductDoc>): Promise<IProductDoc | null> {
     return Product
       .findByIdAndUpdate(productId, updates, { new: true })
-      .populate('addedBy', 'name');
+      .populate('addedBy', 'name')
+      .populate('updatedBy', 'name')
+      .populate('purchasedBy', 'name');
   },
 
   async deleteProduct(productId: string): Promise<IProductDoc | null> {

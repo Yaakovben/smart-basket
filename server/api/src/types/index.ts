@@ -44,6 +44,8 @@ export interface IProductResponse {
   category: ProductCategory;
   isPurchased: boolean;
   addedBy: string;
+  updatedBy?: string | null;
+  purchasedBy?: string | null;
   createdAt: Date;
 }
 
