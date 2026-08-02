@@ -28,7 +28,11 @@ import { AddProductModal } from './product-modals/AddProductModal';
 // prefetch מיידי של QRScanner כשנכנסים לרשימה - כך כשהמשתמש לוחץ "סרוק ברקוד"
 // ב-AddProductModal ה-chunk כבר נטען ואין עיכוב
 import('../../../global/components/QRScanner').catch(() => {});
-// טעינה עצלה - נדרשת רק כשבאמת פותחים "סרוק רשימה" מהתפריט, לא בכל טעינת הרשימה
+// טעינה עצלה + prefetch מיידי - ה-chunk קטן מאוד (כ-3KB gzip) אז אין עלות
+// אמיתית לטעון אותו תמיד, אבל בלי prefetch היה delay שקט (Suspense
+// fallback={null}) בין סגירת תפריט "עוד" ללחיצה בפועל על "סרוק רשימה",
+// כי הדפדפן היה רק אז מתחיל להוריד את ה-chunk.
+import('./product-modals/ScanListPhoto').catch(() => {});
 const ScanListPhoto = lazy(() => import('./product-modals/ScanListPhoto').then(m => ({ default: m.ScanListPhoto })));
 import { EditProductModal } from './product-modals/EditProductModal';
 import { ProductDetailsModal } from './product-modals/ProductDetailsModal';
