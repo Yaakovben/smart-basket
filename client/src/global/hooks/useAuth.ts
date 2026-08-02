@@ -90,16 +90,39 @@ export function useAuth() {
       });
 
       try {
-        // טעינת פרופיל, רשימות והתראות במקביל (timeout 10 שניות)
-        const [profile, listsResult, notificationsResult] = await Promise.race([
-          Promise.all([
-            authApi.getProfile(),
-            listsApi.getLists().catch(() => null),
-            notificationsApi.getNotifications({ limit: 50 }).catch(() => null),
-          ]),
+        // רשימות/התראות נורות בנפרד מהפרופיל ולא ממתינות זו לזו - כל אחת
+        // מעדכנת את initialData ברגע שהיא עצמה מוכנה. לפני התיקון, שלוש
+        // הקריאות חיכו יחד ב-Promise.all יחיד: אם רשימות חזרו תוך 200ms
+        // אבל התראות לקחו 3 שניות, המשתמש היה רואה מסך ריק 3 שניות למרות
+        // שהמידע האמיתי (הרשימות) כבר היה מוכן - "waterfall מוסווה" שגרם
+        // לתחושת פתיחה איטית. useLists מגיב ל-initialLists באופן עצמאי
+        // (ראה useLists.ts, effect שתלוי רק ב-[initialLists]) אז ברגע
+        // שהרשימות מגיעות כאן הן מוצגות מיד, בלי לחכות להתראות.
+        const listsPromise = listsApi.getLists().catch(() => null);
+        const notificationsPromise = notificationsApi.getNotifications({ limit: 50 }).catch(() => null);
+
+        listsPromise.then(listsResult => {
+          if (listsResult) setInitialData(prev => ({ ...prev, lists: listsResult }));
+        });
+        notificationsPromise.then(notificationsResult => {
+          if (notificationsResult) {
+            setInitialData(prev => ({
+              ...prev,
+              notifications: {
+                notifications: notificationsResult.notifications,
+                unreadCount: notificationsResult.notifications.filter((n: { read: boolean }) => !n.read).length,
+              },
+            }));
+          }
+        });
+
+        // הפרופיל הוא היחיד שבאמת קובע את מצב האימות (מחובר/לא) - הוא היחיד
+        // שנשאר תחת ה-timeout/race של 10 שניות. רשימות/התראות לא צריכות
+        // "לחסום" את הקביעה הזו ולא נכשלות אם הן לוקחות יותר זמן.
+        const profile = await Promise.race([
+          authApi.getProfile(),
           timeout.then(() => { throw new Error('timeout'); }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ]) as any;
+        ]);
 
         clearTimeout(timeoutId!);
 
@@ -114,15 +137,6 @@ export function useAuth() {
             return prev;
           }
           return profile;
-        });
-
-        // שמירת נתונים שנטענו מראש לשימוש hooks
-        setInitialData({
-          lists: listsResult,
-          notifications: notificationsResult ? {
-            notifications: notificationsResult.notifications,
-            unreadCount: notificationsResult.notifications.filter((n: { read: boolean }) => !n.read).length,
-          } : null,
         });
 
         // חיבור socket אחרי אימות מוצלח
