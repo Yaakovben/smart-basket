@@ -155,14 +155,19 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {/* ברשימה פרטית - כפתור חיפוש בשורת הכותרת (אין שורת Members) */}
-          {!list.isGroup && searchButton}
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
           <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} sx={glassButtonSx} aria-label={t('groupSettings')}>
             <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
+          {/* ברשימה פרטית - כפתור חיפוש אחרון בשורה (אין שורת Members).
+              חייב להיות אחרון ב-DOM, לא ראשון: באפליקציית RTL האלמנט
+              האחרון הוא זה שנופל בקצה החיצוני של השורה - בדיוק כמו בשורת
+              הקבוצה, שבה searchButton גם הוא האחרון (אחרי ה-spacer). אם
+              הוא היה ראשון כאן, הוא היה נופל באמצע ליד שיתוף/תפריט במקום
+              בקצה, ונראה במיקום שונה מהקבוצה למרות שזו אותה כוונה. */}
+          {!list.isGroup && searchButton}
         </Box>
       </Box>
 
