@@ -30,8 +30,15 @@ const MIN_NAME_LENGTH = 2;
 
 // מחרוזות כשל ידועות שמנוע OCR.space מחזיר כשאין לו מה לקרוא
 const OCR_FAILURE_STRINGS = new Set(['NO PRODUCT', 'NO TEXT', 'NO TEXT FOUND']);
-// הודעות סטטוס של OCR.space בסוגריים מרובעים: [No text detected], [ERROR], וכו'
-const OCR_STATUS_MESSAGE = /^\[.{1,60}\]$/;
+// הודעות סטטוס ידועות של OCR.space לשורה בודדת שהוא לא הצליח לקרוא (בתוך
+// טקסט מרובה-שורות שאחרת נקרא תקין - ה-guard של "IsErroredOnProcessing" ב-
+// ocr.service.ts תופס רק כישלון מלא, לא שורה בודדת בתוך תוצאה שהצליחה).
+// בדיקת הכלה (לא regex עוגן מקצה-לקצה) בכוונה: LEADING_MARKERS אמור להסיר
+// כוכבית/תו-בולט מוביל לפני הבדיקה הזו, אבל אם OCR.space מחזיר תו לא-צפוי
+// שלא נתפס שם (למשל "* [No text detected]" עם רווח, או תו נסתר), עדיין
+// עדיף לזהות את הביטוי הידוע בכל מקום בשורה מאשר לדרוש שהיא תהיה *בדיוק*
+// "[הודעה]" מקצה לקצה ולפספס אותה.
+const OCR_STATUS_MESSAGE = /\[\s*(no text detected|no text found|no text|error|no product)\s*\]/i;
 // שורה ארוכה מזה כנראה רעש (OCR שחיבר בטעות כמה שורות פתק לאחת) ולא שם מוצר יחיד
 const MAX_NAME_LENGTH = 60;
 
