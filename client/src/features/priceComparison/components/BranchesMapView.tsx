@@ -34,23 +34,39 @@ function getMonogram(name: string): string {
   return (words[0] ?? name).slice(0, 2);
 }
 
+// צבע מותג לפי רשת - רק לרשתות שיש עליהן סימן מסחרי ציבורי ומוכר מאוד
+// (לא ניחוש). לכל השאר משאירים את צבע האפליקציה האחיד - עדיף גוון ניטרלי
+// על פני "צבע מומצא" שמוצג כאילו הוא המותג האמיתי. הזהות בכל מקרה עוברת
+// דרך המונוגרם (טקסט), לא דרך הצבע - כך גם רשת בלי צבע ייחודי מזוהה נכון.
+const DEFAULT_CHAIN_COLOR = { fill: '#14B8A6', stroke: '#0D9488' };
+const CHAIN_COLORS: Partial<Record<string, { fill: string; stroke: string }>> = {
+  shufersal: { fill: '#E3121B', stroke: '#A50E15' }, // שופרסל - אדום
+  rami_levy: { fill: '#F5821F', stroke: '#C2650F' }, // רמי לוי - כתום
+  carrefour: { fill: '#0055A4', stroke: '#003872' }, // קרפור - כחול (מותג בינלאומי מוכר)
+};
+function getChainColor(chainId: string): { fill: string; stroke: string } {
+  return CHAIN_COLORS[chainId] ?? DEFAULT_CHAIN_COLOR;
+}
+
 const iconCache = new Map<string, L.DivIcon>();
-function getBranchIcon(chainName: string): L.DivIcon {
-  if (iconCache.has(chainName)) return iconCache.get(chainName)!;
+function getBranchIcon(chainId: string, chainName: string): L.DivIcon {
+  const cacheKey = chainId;
+  if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
   const m = getMonogram(chainName);
+  const { fill, stroke } = getChainColor(chainId);
   const icon = L.divIcon({
     className: 'sb-pin',
     html: `<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg">
       <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter>
-      <path filter="url(#sh)" d="M16 1C7.7 1 1 7.7 1 16c0 11 15 27 15 27s15-16 15-27C31 7.7 24.3 1 16 1z" fill="#14B8A6" stroke="#0D9488" stroke-width="1.5"/>
+      <path filter="url(#sh)" d="M16 1C7.7 1 1 7.7 1 16c0 11 15 27 15 27s15-16 15-27C31 7.7 24.3 1 16 1z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
       <circle cx="16" cy="15" r="9" fill="white"/>
-      <text x="16" y="15.5" text-anchor="middle" dominant-baseline="central" font-size="${m.length === 1 ? 10 : 8}" font-weight="900" font-family="system-ui,sans-serif" fill="#0D9488">${m}</text>
+      <text x="16" y="15.5" text-anchor="middle" dominant-baseline="central" font-size="${m.length === 1 ? 10 : 8}" font-weight="900" font-family="system-ui,sans-serif" fill="${stroke}">${m}</text>
     </svg>`,
     iconSize: [32, 44],
     iconAnchor: [16, 44],
     popupAnchor: [0, -42],
   });
-  iconCache.set(chainName, icon);
+  iconCache.set(cacheKey, icon);
   return icon;
 }
 
@@ -211,25 +227,30 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           )}
 
           {validBranches.map((b, i) => (
-            <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
+            <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
               <Popup className="sb-popup" minWidth={210}>
                 <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-                    {/* תג עגול עם מונוגרם - מקום מוכן ללוגו אמיתי של הרשת
-                        ברגע שיהיה; כרגע הזהות עוברת דרך טקסט ולא גוון (ראו
-                        getBranchIcon - יותר מ-3 גוונים על מפה לא עומד בבדיקות
-                        נגישות לעיוורי צבעים). */}
-                    <Box sx={{
-                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                      bgcolor: '#0D9488', color: 'white',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
-                      boxShadow: '0 2px 6px rgba(13,148,136,0.4)',
-                    }}>
-                      {getMonogram(b.chainName)}
-                    </Box>
+                    {/* תג עגול עם מונוגרם - הזהות האמיתית עוברת דרך הטקסט, לא
+                        הצבע (ראו getChainColor: רק ל-3 רשתות עם מותג מוכר
+                        באמת יש צבע ספציפי, לכל השאר צבע אחיד - עדיף מגוון
+                        "מומצא" שמוצג כאילו הוא המותג האמיתי). */}
+                    {(() => {
+                      const { fill } = getChainColor(b.chainId);
+                      return (
+                        <Box sx={{
+                          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                          bgcolor: fill, color: 'white',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
+                          boxShadow: `0 2px 6px ${fill}66`,
+                        }}>
+                          {getMonogram(b.chainName)}
+                        </Box>
+                      );
+                    })()}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: '#0D9488', lineHeight: 1.25 }}>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
                         {b.chainName}
                       </Typography>
                       <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
