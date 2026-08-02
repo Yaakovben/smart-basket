@@ -1,4 +1,4 @@
-import { User, LoginActivity, type IUser } from '../models';
+import { User, type IUser } from '../models';
 import { createBaseDal } from './base.dal';
 
 export const UserDAL = {
@@ -86,35 +86,5 @@ export const UserDAL = {
 
   async findAllSorted(): Promise<IUser[]> {
     return User.find().sort({ createdAt: -1 }).lean() as unknown as IUser[];
-  },
-
-  // מועמדים לתזכורת "שבת בפתח": לא נשלחה להם תזכורת (או שהתאפסה אחרי חזרה
-  // לפעילות) + נרשמו מספיק מזמן, ובלי פעילות מ-LoginActivity מאז ה-cutoff.
-  // שתי שאילתות נפרדות (לא $lookup) - עקבי עם הדפוס הקיים ב-admin.controller.getUsers.
-  async findInactiveUnnotified(cutoff: Date): Promise<string[]> {
-    const candidates = await User.find(
-      { inactivityReminderSentAt: null, createdAt: { $lt: cutoff } },
-      '_id'
-    ).lean();
-    if (candidates.length === 0) return [];
-
-    const candidateIds = candidates.map(c => c._id);
-    const activeUserIds = await LoginActivity.distinct('user', {
-      user: { $in: candidateIds },
-      createdAt: { $gte: cutoff },
-    });
-    const activeSet = new Set(activeUserIds.map(id => id.toString()));
-
-    return candidateIds.map(id => id.toString()).filter(id => !activeSet.has(id));
-  },
-
-  async markInactivityReminderSent(userIds: string[]): Promise<void> {
-    await User.updateMany({ _id: { $in: userIds } }, { inactivityReminderSentAt: new Date() });
-  },
-
-  // מאפס את דגל "נשלחה תזכורת" - נקרא בכל התחברות/פתיחת אפליקציה, כך
-  // שהמשתמש חוזר להיות זכאי לתזכורת אם ייעדר שוב בעתיד.
-  async clearInactivityReminderFlag(userId: string): Promise<void> {
-    await User.findByIdAndUpdate(userId, { inactivityReminderSentAt: null });
   },
 };

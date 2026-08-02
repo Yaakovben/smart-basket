@@ -196,6 +196,28 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={18} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.75 }}>
+          {/* רשימה פרטית: אין Members Row לשתף איתה שורה, אז כפתור החיפוש
+              יושב כאן בשורת הכותרת עם שאר האייקונים - כמו שברשימה קבוצתית
+              הוא חולק שורה עם כפתורי חברים/הזמנה, במקום שורה נפרדת וריקה
+              שמרגישה מנותקת מהעיצוב הכללי. ברשימה קבוצתית החיפוש נשאר
+              ב-Members Row הקיים (בהמשך למטה) כדי לא לשכפל את הכפתור. */}
+          {!list.isGroup && (
+            <IconButton
+              onClick={handleToggleSearch}
+              sx={{
+                ...glassButtonSx,
+                bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+                transition: 'all 0.2s ease'
+              }}
+              aria-label={showSearch ? t('close') : t('search')}
+            >
+              {showSearch ? (
+                <SearchOffIcon sx={{ color: 'white', fontSize: 22 }} />
+              ) : (
+                <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
+              )}
+            </IconButton>
+          )}
           <IconButton
             onClick={onShareList}
             sx={glassButtonSx}
@@ -250,32 +272,6 @@ export const ListHeader = memo(({
             <PersonAddIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
           <Box sx={{ flex: 1 }} />
-          <IconButton
-            onClick={handleToggleSearch}
-            sx={{
-              ...glassButtonSx,
-              bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
-              transition: 'all 0.2s ease'
-            }}
-            aria-label={showSearch ? t('close') : t('search')}
-          >
-            {showSearch ? (
-              <SearchOffIcon sx={{ color: 'white', fontSize: 22 }} />
-            ) : (
-              <SearchIcon sx={{ color: 'white', fontSize: 22 }} />
-            )}
-          </IconButton>
-        </Box>
-      )}
-
-      {/* Search Button Row (Private Lists Only) - מוסתר ב-landscape */}
-      {!list.isGroup && (
-        <Box sx={{
-          display: 'flex', justifyContent: 'flex-end',
-          mb: { xs: 1, sm: 1.5 },
-          '@media (max-width: 360px)': { mb: 0.5 },
-          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
-        }}>
           <IconButton
             onClick={handleToggleSearch}
             sx={{

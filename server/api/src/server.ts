@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
 import { startPriceSyncJob } from './features/priceComparison';
-import { startInactivityReminderJob } from './jobs/inactivityReminder.job';
 
 // אתחול Sentry לניטור שגיאות (חייב להיות ראשון)
 if (env.SENTRY_DSN) {
@@ -31,10 +30,8 @@ const startServer = async () => {
     // ב-development מומלץ להריץ ידנית `npm run refresh-prices` או דרך פאנל האדמין.
     if (env.NODE_ENV !== 'development') {
       startPriceSyncJob();
-      startInactivityReminderJob();
     } else {
       logger.info('[price-sync-job] Skipped in local development environment');
-      logger.info('[inactivity-reminder] Skipped in local development environment');
     }
   } catch (error) {
     logger.error('Failed to start server:', error);
