@@ -21,32 +21,38 @@ export const PageSkeleton = () => {
     maxWidth: { xs: '100%', sm: 500, md: 600 },
     mx: 'auto',
   }}>
-    {/* Header skeleton */}
+    {/* Header skeleton - padding/מבנה זהים בכוונה ל-HomeHeader (כולל
+        env(safe-area-inset-top)), אחרת השלד נמוך מהעמוד האמיתי בטלפון עם
+        notch/Dynamic Island וגורם לקפיצת גובה ברגע שהנתונים מגיעים. */}
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-      p: '48px 16px 20px',
+      p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
     }}>
       {/* Top bar */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
-          <Skeleton variant="rounded" width={120} height={22} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '8px' }} />
+          <Skeleton variant="circular" width={44} height={44} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+          <Box>
+            <Skeleton variant="text" width={70} height={16} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '4px' }} />
+            <Skeleton variant="text" width={120} height={20} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '4px', mt: 0.3 }} />
+          </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
-          <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+          <Skeleton variant="circular" width={44} height={44} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+          <Skeleton variant="circular" width={44} height={44} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
         </Box>
       </Box>
 
       {/* Search bar skeleton */}
       <Skeleton variant="rounded" width="100%" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '12px', mb: 1.5 }} />
 
-      {/* Tabs skeleton */}
-      <Box sx={{ display: 'flex', gap: 1, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '10px', p: 0.5 }}>
-        <Skeleton variant="rounded" width="50%" height={36} sx={{ bgcolor: 'rgba(255,255,255,0.25)', borderRadius: '8px' }} />
-        <Skeleton variant="rounded" width="50%" height={36} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '8px' }} />
+      {/* Tabs skeleton - 3 טאבים (הכל/שלי/קבוצות), כמו בעמוד האמיתי */}
+      <Box sx={{ display: 'flex', gap: 1, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '12px', p: 0.6 }}>
+        <Skeleton variant="rounded" width="33.33%" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.25)', borderRadius: '10px' }} />
+        <Skeleton variant="rounded" width="33.33%" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '10px' }} />
+        <Skeleton variant="rounded" width="33.33%" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '10px' }} />
       </Box>
     </Box>
 
