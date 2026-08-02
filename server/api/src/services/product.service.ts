@@ -5,7 +5,6 @@ import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc } from '../models';
 import { checkListAccess } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
-import { invalidateUser as invalidateSpendingCacheForUser } from './spendingCache';
 
 // המרת מוצר Mongoose לאובייקט תגובת API - משטח refs מאוכלסים לשם בלבד
 const flattenPopulatedName = (json: Record<string, unknown>, field: string): void => {
@@ -42,7 +41,6 @@ export async function addProduct(
 
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  invalidateSpendingCacheForUser(userId);
 
   return toProductResponse(product);
 }
@@ -81,7 +79,6 @@ export async function updateProduct(
   await ProductDAL.updateProduct(productId, updates);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  invalidateSpendingCacheForUser(userId);
 }
 
 export async function deleteProduct(
@@ -99,7 +96,6 @@ export async function deleteProduct(
   await ProductDAL.deleteProduct(productId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  invalidateSpendingCacheForUser(userId);
 }
 
 export async function clearProducts(
@@ -119,7 +115,6 @@ export async function clearProducts(
   }
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  invalidateSpendingCacheForUser(userId);
   return deletedCount;
 }
 
@@ -132,7 +127,6 @@ export async function resetProducts(
   const count = await ProductDAL.resetAll(listId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  invalidateSpendingCacheForUser(userId);
   return count;
 }
 

@@ -4,7 +4,6 @@ import type { InsightsData } from './insights.types';
 import { emptyInsights, computeCategoryCycles, detectAnomalies, detectPersonality } from './insightsAnalytics';
 import { getGroupStats } from './insightsGroupStats';
 import { computeSpending } from './spending.service';
-import { getCachedSpending, setCachedSpending } from './spendingCache';
 
 export type { InsightsData } from './insights.types';
 
@@ -203,12 +202,15 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
 
     // groupStats ו-spending לא תלויים זה בזה (הראשון צריך lists, השני צריך
     // purchasedProducts - שניהם כבר בזיכרון) - מריצים במקביל במקום ברצף.
-    // spending גם עובר cache פר-משתמש (30 דק') כי הוא מתאים כל שם מוצר
-    // מול מאגר המחירים הממשלתי - יקר לחשב בכל טעינת תובנות.
-    const cachedSpending = getCachedSpending(userId);
+    // אין כאן cache פר-משתמש בכוונה: spending מצטבר על כל הרשימות שהמשתמש
+    // חבר בהן (כולל רשימות קבוצתיות), אז רכישה של חבר קבוצה אחר צריכה
+    // להשתקף מיד - cache לפי userId-של-הפועל בלבד היה משאיר את שאר החברים
+    // עם נתונים ישנים עד שה-TTL פג. getActiveChainsWithCounts כבר עטוף
+    // ב-cache גלובלי משלו (price.dal.ts) וזה סיפק את רוב שיפור הביצועים
+    // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
     const [groupStats, spending] = await Promise.all([
       getGroupStats(lists, userId),
-      cachedSpending ? Promise.resolve(cachedSpending) : computeSpending(purchasedProducts).then(data => setCachedSpending(userId, data)),
+      computeSpending(purchasedProducts),
     ]);
 
     return {
