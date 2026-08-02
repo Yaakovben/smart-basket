@@ -161,13 +161,6 @@ export const ListHeader = memo(({
           <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} sx={glassButtonSx} aria-label={t('groupSettings')}>
             <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
-          {/* ברשימה פרטית - כפתור חיפוש אחרון בשורה (אין שורת Members).
-              חייב להיות אחרון ב-DOM, לא ראשון: באפליקציית RTL האלמנט
-              האחרון הוא זה שנופל בקצה החיצוני של השורה - בדיוק כמו בשורת
-              הקבוצה, שבה searchButton גם הוא האחרון (אחרי ה-spacer). אם
-              הוא היה ראשון כאן, הוא היה נופל באמצע ליד שיתוף/תפריט במקום
-              בקצה, ונראה במיקום שונה מהקבוצה למרות שזו אותה כוונה. */}
-          {!list.isGroup && searchButton}
         </Box>
       </Box>
 
@@ -193,6 +186,21 @@ export const ListHeader = memo(({
             <PersonAddIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
           <Box sx={{ flex: 1 }} />
+          {searchButton}
+        </Box>
+      )}
+
+      {/* ===== שורה 2 (רשימה פרטית): חיפוש בלבד, מתחת לכפתור השיתוף -
+          לא בתוך שורת הכותרת עצמה. justifyContent:'flex-end' באפליקציית
+          RTL ממקם את הכפתור בקצה השמאלי, בדיוק מתחת לאשכול שיתוף/תפריט
+          שגם הוא בקצה השמאלי של שורה 1 - אותו מיקום אנכי-יחסי כמו בקבוצה. */}
+      {!list.isGroup && (
+        <Box sx={{
+          display: 'flex', justifyContent: 'flex-end',
+          mb: { xs: 0.75, sm: 1 },
+          '@media (max-width: 360px)': { mb: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
           {searchButton}
         </Box>
       )}
