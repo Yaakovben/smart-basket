@@ -1,9 +1,17 @@
 import { Box, Skeleton } from '@mui/material';
+import { useSettings } from '../context/SettingsContext';
 
 const SKELETON_ITEMS = [1, 2, 3, 4, 5] as const;
 
-/** שלד טעינה לדפים - מחליף גרדיאנט ריק בתצוגה שנראית כמו דף אמיתי */
-export const PageSkeleton = () => (
+/** שלד טעינה לדפים - מחליף גרדיאנט ריק בתצוגה שנראית כמו דף אמיתי.
+ * הגרדיאנט חייב להיות זהה בדיוק לזה של HomeHeader/ListHeader (כולל מצב
+ * כהה) - לפני התיקון היה כאן גוון ירוק-אמרלד (#10B981) שנשאר מלפני שהמותג
+ * עבר לטורקיז, ובנוסף לא היה מודע כלל למצב כהה. */
+export const PageSkeleton = () => {
+  const { settings } = useSettings();
+  const isDark = settings.theme === 'dark';
+
+  return (
   <Box sx={{
     height: { xs: '100dvh', sm: '100vh' },
     display: 'flex',
@@ -14,7 +22,7 @@ export const PageSkeleton = () => (
   }}>
     {/* Header skeleton */}
     <Box sx={{
-      background: 'linear-gradient(135deg, #14B8A6, #10B981)',
+      background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #0F766E, #0D9488, #14B8A6)',
       p: '48px 16px 20px',
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
@@ -70,4 +78,5 @@ export const PageSkeleton = () => (
       ))}
     </Box>
   </Box>
-);
+  );
+};

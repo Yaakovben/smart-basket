@@ -102,12 +102,23 @@ export const HomeHeader = ({
           </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <IconButton onClick={onNotificationsClick} sx={glassButtonSx}>
+          {/* onPointerUp + blur במקום onClick רגיל - אותו דפוס בדיוק כמו
+              ב-HomeBottomNav, שם onClick רגיל התגלה כלא אמין (לפעמים לא
+              מגיב) על חלק מהמכשירים: focus שנשאר תקוע אחרי לחיצה יכול לחסום
+              טאפ הבא, ו-touch-action:manipulation מבטל את עיכוב ה-300ms של
+              הדפדפן על טאפים. */}
+          <IconButton
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); onNotificationsClick(); }}
+            sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
+          >
             <Badge badgeContent={totalUnreadCount} color="error" invisible={totalUnreadCount === 0} sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
               <NotificationsIcon sx={{ color: 'white', fontSize: 22, opacity: notificationsLoading ? 0.5 : 1, transition: 'opacity 0.2s' }} />
             </Badge>
           </IconButton>
-          <IconButton onClick={onSettingsClick} sx={glassButtonSx}>
+          <IconButton
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); onSettingsClick(); }}
+            sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
+          >
             <SettingsIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
         </Box>
