@@ -191,7 +191,48 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
 
           {phase === 'error' && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2, pt: 4 }}>
-              <Typography sx={{ fontSize: 14, color: 'error.main' }}>{errorMsg}</Typography>
+              {/* דמות ידידותית - אותו דפוס בדיוק כמו EmptyState.tsx (עיגול
+                  גרדיאנט פועם + אייקון מרכזי צף + פריטים קטנים מרחפים
+                  מסביב), כדי שמצב "לא זוהה טקסט" ירגיש עקבי עם שאר
+                  ה-empty-states באפליקציה ולא כמו הודעת שגיאה יבשה. */}
+              <Box sx={{ position: 'relative', width: 120, height: 120, mb: 0.5 }}>
+                <Box sx={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+                  animation: 'ocrPulse 3s ease-in-out infinite',
+                  '@keyframes ocrPulse': {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.06)' },
+                  },
+                }} />
+                <Box sx={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 52,
+                  animation: 'ocrFloat 3s ease-in-out infinite',
+                  '@keyframes ocrFloat': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-6px)' },
+                  },
+                }} role="img" aria-label="לא זוהה טקסט בתמונה">
+                  🔍
+                </Box>
+                {['❓', '📝'].map((emoji, i) => (
+                  <Box key={emoji} sx={{
+                    position: 'absolute', fontSize: 20,
+                    top: i === 0 ? '6%' : '72%',
+                    left: i === 0 ? '74%' : '8%',
+                    animation: `ocrItem 2.6s ease-in-out ${i * 0.35}s infinite`,
+                    '@keyframes ocrItem': {
+                      '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+                      '50%': { transform: 'translateY(-8px) rotate(5deg)', opacity: 1 },
+                    },
+                  }}>
+                    {emoji}
+                  </Box>
+                ))}
+              </Box>
+              <Typography sx={{ fontSize: 14, color: 'text.secondary', maxWidth: 280 }}>{errorMsg}</Typography>
               <Button variant="outlined" onClick={() => { haptic('light'); reset(); }}>נסה שוב</Button>
             </Box>
           )}
