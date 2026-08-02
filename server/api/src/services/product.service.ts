@@ -5,13 +5,21 @@ import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc } from '../models';
 import { checkListAccess } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
+import { invalidateUser as invalidateSpendingCacheForUser } from './spendingCache';
 
-// המרת מוצר Mongoose לאובייקט תגובת API
+// המרת מוצר Mongoose לאובייקט תגובת API - משטח refs מאוכלסים לשם בלבד
+const flattenPopulatedName = (json: Record<string, unknown>, field: string): void => {
+  const value = json[field];
+  if (value && typeof value === 'object') {
+    json[field] = (value as { name?: string }).name || 'Unknown';
+  }
+};
+
 const toProductResponse = (product: IProductDoc) => {
   const json = product.toJSON() as Record<string, unknown>;
-  if (json.addedBy && typeof json.addedBy === 'object') {
-    json.addedBy = (json.addedBy as { name?: string }).name || 'Unknown';
-  }
+  flattenPopulatedName(json, 'addedBy');
+  flattenPopulatedName(json, 'updatedBy');
+  flattenPopulatedName(json, 'purchasedBy');
   return json;
 };
 
@@ -34,6 +42,7 @@ export async function addProduct(
 
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
+  invalidateSpendingCacheForUser(userId);
 
   return toProductResponse(product);
 }
@@ -56,12 +65,23 @@ export async function updateProduct(
   if (data.quantity !== undefined) updates.quantity = data.quantity;
   if (data.unit !== undefined) updates.unit = data.unit;
   if (data.category !== undefined) updates.category = data.category;
-  if (data.isPurchased !== undefined) updates.isPurchased = data.isPurchased;
   if (data.note !== undefined) updates.note = sanitizeText(data.note);
+  // עריכת תוכן (לא סימון קנייה) - מי ערך לאחרונה
+  if (data.name !== undefined || data.quantity !== undefined || data.unit !== undefined ||
+      data.category !== undefined || data.note !== undefined) {
+    updates.updatedBy = userId;
+  }
+  // סימון קנייה - ייחוס נפרד מעריכת תוכן. מתאפס ל-null כשמסמנים "לא נקנה",
+  // כי "מי קנה" לא רלוונטי למוצר שכרגע לא מסומן כנקנה.
+  if (data.isPurchased !== undefined) {
+    updates.isPurchased = data.isPurchased;
+    updates.purchasedBy = data.isPurchased ? userId : null;
+  }
 
   await ProductDAL.updateProduct(productId, updates);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
+  invalidateSpendingCacheForUser(userId);
 }
 
 export async function deleteProduct(
@@ -79,6 +99,7 @@ export async function deleteProduct(
   await ProductDAL.deleteProduct(productId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
+  invalidateSpendingCacheForUser(userId);
 }
 
 export async function clearProducts(
@@ -98,6 +119,7 @@ export async function clearProducts(
   }
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
+  invalidateSpendingCacheForUser(userId);
   return deletedCount;
 }
 
@@ -110,6 +132,7 @@ export async function resetProducts(
   const count = await ProductDAL.resetAll(listId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
+  invalidateSpendingCacheForUser(userId);
   return count;
 }
 

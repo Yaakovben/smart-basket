@@ -4,6 +4,7 @@ import type { InsightsData } from './insights.types';
 import { emptyInsights, computeCategoryCycles, detectAnomalies, detectPersonality } from './insightsAnalytics';
 import { getGroupStats } from './insightsGroupStats';
 import { computeSpending } from './spending.service';
+import { getCachedSpending, setCachedSpending } from './spendingCache';
 
 export type { InsightsData } from './insights.types';
 
@@ -200,6 +201,16 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
     if (productsGrowth > 20) smartTips.push(`📈 עלייה של ${productsGrowth}% לעומת חודש שעבר`);
     else if (productsGrowth < -20) smartTips.push(`📉 ירידה של ${Math.abs(productsGrowth)}% לעומת חודש שעבר`);
 
+    // groupStats ו-spending לא תלויים זה בזה (הראשון צריך lists, השני צריך
+    // purchasedProducts - שניהם כבר בזיכרון) - מריצים במקביל במקום ברצף.
+    // spending גם עובר cache פר-משתמש (30 דק') כי הוא מתאים כל שם מוצר
+    // מול מאגר המחירים הממשלתי - יקר לחשב בכל טעינת תובנות.
+    const cachedSpending = getCachedSpending(userId);
+    const [groupStats, spending] = await Promise.all([
+      getGroupStats(lists, userId),
+      cachedSpending ? Promise.resolve(cachedSpending) : computeSpending(purchasedProducts).then(data => setCachedSpending(userId, data)),
+    ]);
+
     return {
       topProducts, categoryBreakdown,
       stats: {
@@ -214,13 +225,13 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
       streaks: { currentWeeks, longestWeeks },
       monthComparison: { productsGrowth, completionGrowth: completionRate - prevCompletionRate, previousTotal: prevMonthProducts.length, hasBaseline },
       weeklyTrends,
-      groupStats: await getGroupStats(lists, userId),
+      groupStats,
       ...((() => {
         const { cycles, upcoming } = computeCategoryCycles(purchasedProducts);
         return { categoryCycles: cycles, upcomingNeeds: upcoming };
       })()),
       anomalies: detectAnomalies(allProducts),
-      spending: await computeSpending(purchasedProducts),
+      spending,
     };
   } catch (err) {
     // לוג מפורט - עוזר לאתר שגיאות DB / queries כשהן קורות. במקום
