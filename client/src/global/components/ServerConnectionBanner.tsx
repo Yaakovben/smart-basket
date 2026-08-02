@@ -75,6 +75,35 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
 
   if (!shouldShow) return null;
 
+  // ניתוק socket בלבד (ה-API עדיין עובד - אפשר להוסיף/לצפות ברשימות כרגיל,
+  // רק עדכוני זמן-אמת בין חברי קבוצה מושהים) הוא בעיה זמנית ולא-חוסמת.
+  // באנר מלא/כתום מרגיש כאילו "האפליקציה לא עובדת" - מטעה ומבהיל מדי ביחס
+  // לחומרה האמיתית. שרת לא זמין (fetchErrorConfirmed) כן חוסם ליבת האפליקציה,
+  // ומצדיק את הבאנר הבולט המקורי.
+  const socketOnlyIssue = socketDisconnected && !fetchErrorConfirmed;
+
+  if (socketOnlyIssue) {
+    return (
+      <Box sx={{
+        position: 'fixed',
+        top: 'max(env(safe-area-inset-top), 8px)',
+        insetInlineEnd: 10,
+        zIndex: 9999,
+        display: 'flex', alignItems: 'center', gap: 0.6,
+        bgcolor: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(6px)',
+        borderRadius: '999px',
+        py: 0.5, px: 1.25,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+      }}>
+        <CircularProgress size={10} sx={{ color: 'rgba(255,255,255,0.85)' }} />
+        <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 500, lineHeight: 1.3 }}>
+          {hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage')}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{
       position: 'fixed',
@@ -89,9 +118,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     }}>
       <CircularProgress size={12} sx={{ color: 'white' }} />
       <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
-        {socketDisconnected && !fetchErrorConfirmed
-          ? (hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage'))
-          : t('serverUnreachableMessage')}
+        {t('serverUnreachableMessage')}
       </Typography>
     </Box>
   );
