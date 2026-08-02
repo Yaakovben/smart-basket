@@ -1,7 +1,13 @@
 import { io, Socket } from 'socket.io-client';
 import { getAccessToken, refreshAccessToken, isTokenExpired } from '../api/client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+// ה-fallback ל-localhost רלוונטי רק בפיתוח מקומי (שם באמת רץ socket server
+// על הפורט הזה). בסביבה בנויה/פרוסה (non-prod/prod) בלי VITE_SOCKET_URL
+// מוגדר - זה סימן שהסביבה הזו בכוונה בלי שרת socket (למשל non-prod, כדי
+// לחסוך עלות שירות נפרד), לא "תקלה" שצריך לנסות שוב ושוב נגדה. ניסיון נגד
+// localhost מסביבה פרוסה היה נכשל תמיד וגורם לחיווי "מתחבר מחדש" שנשאר
+// תקוע לנצח - בדיוק ההתנהגות המציקה שדווחה.
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (import.meta.env.DEV ? 'http://localhost:5001' : '');
 
 // הגדרות התחברות מחדש מותאמות למובייל
 // reconnectionAttempts: Infinity - עם מגבלה (20 קודם), אחרי שהם מתמצים
@@ -43,6 +49,10 @@ class SocketService {
   private connectErrorStreak = 0;
 
   connect() {
+    // אין socket server מוגדר לסביבה הזו בכוונה - לא מנסים בכלל, כדי שלא
+    // ייווצר "מתחבר מחדש" שלא נגמר לעולם ולא יורים אירועי connect_error/
+    // disconnect ש-ServerConnectionBanner מקשיב להם.
+    if (!SOCKET_URL) return;
     const token = getAccessToken();
     if (!token) return;
     if (this.socket?.connected) return;
