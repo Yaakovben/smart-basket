@@ -9,7 +9,7 @@
  * אין טבלאות, אין modals. כל אינטראקציה inline.
  */
 
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
 import type { PriceComparisonData, NearestBranch } from '../types/priceComparison.types';
 import type { LocationStatus } from '../hooks/useUserLocation';
@@ -17,7 +17,10 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import { getRelativeTime } from '../../../global/helpers/dateFormatting';
 import { BetaBadge } from './BetaBadge';
 import { NavigationPicker } from './NavigationPicker';
-import { BranchesMapDialog } from './BranchesMapDialog';
+// טעינה עצלה: leaflet/react-leaflet הן ספריות כבדות שלא צריכות להיכנס
+// ל-chunk של השוואת המחירים לפני שמישהו בפועל פותח את המפה. prefetch
+// ב-useEffect למטה דואג שה-chunk כבר יהיה בקאש עד שהמשתמש בפועל ילחץ.
+const BranchesMapDialog = lazy(() => import('./BranchesMapDialog').then(m => ({ default: m.BranchesMapDialog })));
 import { ChainCard } from './ChainCard';
 import { ChainSortBar } from './ChainSortBar';
 import { LocationStatusBanner } from './LocationStatusBanner';
@@ -58,6 +61,13 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   const [mapOpen, setMapOpen] = useState(false);
   const toggleExpanded = useCallback((id: string) => {
     setExpandedId(prev => prev === id ? null : id);
+  }, []);
+
+  // חימום מקדים של ה-chunk של המפה ברגע שהכרטיס עולה - לא ממתינים ללחיצה
+  // על "הצג על מפה". עד שהמשתמש בפועל ילחץ, ה-JS כבר בקאש והמפה נפתחת
+  // כמעט מיידית במקום לחכות להורדת רשת (אותו דפוס כמו QRScanner).
+  useEffect(() => {
+    import('./BranchesMapDialog');
   }, []);
 
   if (loading || !data) return null;
@@ -143,7 +153,11 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
 
       {/* מפת סניפים במסך מלא - Leaflet + OpenStreetMap, חינמי לגמרי.
           מסך מלא ולא Modal-גיליון קטן, כדי שהמפה תקבל מספיק מקום אמיתי. */}
-      {mapOpen && <BranchesMapDialog isDark={isDark} onClose={() => setMapOpen(false)} />}
+      {mapOpen && (
+        <Suspense fallback={null}>
+          <BranchesMapDialog isDark={isDark} onClose={() => setMapOpen(false)} />
+        </Suspense>
+      )}
 
       {/* FOOTER - מטא קומפקטית */}
       <PriceComparisonFooter sourceUrl={data.sourceUrl} sourceName={data.sourceName} />

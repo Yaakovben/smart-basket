@@ -202,7 +202,11 @@ export interface NearbyBranch {
   lng: number;
 }
 
-const NEARBY_NO_LOCATION_LIMIT = 500;
+// 500 סניפים בלי סינון מרחק זה גם payload כבד ברשת וגם 500 markers של
+// Leaflet לרנדר בו-זמנית (איטי במיוחד במכשירים חלשים) - זו הסיבה המרכזית
+// ל"המפה לוקחת המון זמן להיטען" למשתמש שעדיין לא אישר מיקום. 100 מספיק
+// כדי לתת תמונה ארצית סבירה בלי לגרור עלות רנדור/רשת שלא נחוצה.
+const NEARBY_NO_LOCATION_LIMIT = 100;
 
 function toNearbyBranch(b: IBranchDoc): NearbyBranch {
   return {

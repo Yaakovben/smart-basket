@@ -120,10 +120,18 @@ interface Props {
 }
 
 export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) => {
-  const { location } = useUserLocation();
+  const { location, status: locationStatus, requestLocation } = useUserLocation();
   const [branches, setBranches] = useState<NearbyBranch[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+
+  // בקשת מיקום אוטומטית ברגע שהמפה נפתחת (רק אם עוד לא נשאל בכלל - 'idle').
+  // פתיחת מפה היא כוונה ברורה מספיק לבקש מיקום כאן, ובלי זה משתמש חדש רואה
+  // את הנתיב האיטי (עד 100 סניפים ארציים בלי סינון מרחק) בכל פתיחה, במקום
+  // את הנתיב המהיר (סניפים קרובים בלבד) שהיה מקבל ברגע שיאשר מיקום פעם אחת.
+  useEffect(() => {
+    if (locationStatus === 'idle') requestLocation();
+  }, [locationStatus, requestLocation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,24 +212,41 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
 
           {validBranches.map((b, i) => (
             <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainName)}>
-              <Popup className="sb-popup">
+              <Popup className="sb-popup" minWidth={210}>
                 <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488', mb: 0.25 }}>
-                    {b.chainName}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, mb: 0.25 }}>
-                    {b.storeName}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                    {/* תג עגול עם מונוגרם - מקום מוכן ללוגו אמיתי של הרשת
+                        ברגע שיהיה; כרגע הזהות עוברת דרך טקסט ולא גוון (ראו
+                        getBranchIcon - יותר מ-3 גוונים על מפה לא עומד בבדיקות
+                        נגישות לעיוורי צבעים). */}
+                    <Box sx={{
+                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: '#0D9488', color: 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
+                      boxShadow: '0 2px 6px rgba(13,148,136,0.4)',
+                    }}>
+                      {getMonogram(b.chainName)}
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: '#0D9488', lineHeight: 1.25 }}>
+                        {b.chainName}
+                      </Typography>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
+                        {b.storeName}
+                      </Typography>
+                    </Box>
+                  </Box>
                   {(b.address || b.city) && (
-                    <Typography sx={{ fontSize: 11, color: '#6B7280', mb: 0.75 }}>
-                      {[b.address, b.city].filter(Boolean).join(', ')}
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
+                      📍 {[b.address, b.city].filter(Boolean).join(', ')}
                     </Typography>
                   )}
                   <Button
-                    size="small" variant="contained"
+                    fullWidth size="small" variant="contained"
                     onClick={() => openNav(b)}
                     startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-                    sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 11.5, fontWeight: 800, textTransform: 'none', borderRadius: '8px' }}
+                    sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
                   >
                     ניווט
                   </Button>
