@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { isActiveToday, isActiveThisMonth } from '../../../global/helpers';
 import type { UserFilter, UserWithLastLogin } from '../types';
 
@@ -18,19 +18,15 @@ export const useAdminUserFilter = (
 ): UseAdminUserFilterReturn => {
   const [userSearch, setUserSearch] = useState('');
   const [userFilter, setUserFilter] = useState<UserFilter>('all');
-  const lastClickRef = useRef<{ filter: UserFilter; time: number }>({ filter: 'all', time: 0 });
 
-  // לחיצה על כרטיס סטטיסטיקה = מסנן/מבטל סינון
-  // לחיצה כפולה מהירה (תוך 500ms) על אותו כרטיס מתעלמת מהלחיצה השנייה,
-  // כדי שדאבל-קליק לא יבטל את הסינון מיד אחרי שנבחר
+  // לחיצה על כרטיס סטטיסטיקה = תמיד בוחרת את הסינון הזה, אף פעם לא מבטלת -
+  // יש כבר כרטיס ייעודי "סה״כ משתמשים" (onSelectAll) שממלא את תפקיד "נקה
+  // סינון". קודם זה היה טוגל (לחיצה שנייה על אותו כרטיס = 'all'), מה שגרם
+  // ל"לחיצה כפולה מבטלת את הסינון" - תוקן פעם עם debounce לפי תזמון, אבל
+  // התיקון האמיתי הוא להסיר את הטוגל לגמרי: אין יותר "לחיצה שנייה שמבטלת",
+  // כי כרטיס לא "מבטל" את עצמו בשום תזמון.
   const handleFilterClick = useCallback((filter: UserFilter) => {
-    const now = Date.now();
-    const last = lastClickRef.current;
-    lastClickRef.current = { filter, time: now };
-    if (last.filter === filter && now - last.time < 500) {
-      return;
-    }
-    setUserFilter(prev => prev === filter ? 'all' : filter);
+    setUserFilter(filter);
   }, []);
 
   const filteredUsers = useMemo(() => {
