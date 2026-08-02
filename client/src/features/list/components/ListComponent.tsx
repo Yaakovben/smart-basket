@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType } from '../../../global/types';
@@ -25,6 +25,9 @@ import { CategoryFilterChips } from './CategoryFilterChips';
 import { SelectionActionBar } from './SelectionActionBar';
 import { DuplicateProductModal } from './DuplicateProductModal';
 import { AddProductModal } from './product-modals/AddProductModal';
+// prefetch מיידי של QRScanner כשנכנסים לרשימה - כך כשהמשתמש לוחץ "סרוק ברקוד"
+// ב-AddProductModal ה-chunk כבר נטען ואין עיכוב
+import('../../../global/components/QRScanner').catch(() => {});
 // טעינה עצלה - נדרשת רק כשבאמת פותחים "סרוק רשימה" מהתפריט, לא בכל טעינת הרשימה
 const ScanListPhoto = lazy(() => import('./product-modals/ScanListPhoto').then(m => ({ default: m.ScanListPhoto })));
 import { EditProductModal } from './product-modals/EditProductModal';
@@ -95,20 +98,76 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(refreshList);
 
-  // עוטף פונקציה: אם במצב בחירה מרובה — יוצא ממנו ואז מפעיל את הפעולה
-  function withExitSelection<A extends unknown[]>(fn: (...args: A) => void): (...args: A) => void;
-  function withExitSelection<A extends unknown[]>(fn: ((...args: A) => void) | undefined): ((...args: A) => void) | undefined;
-  function withExitSelection<A extends unknown[]>(fn: ((...args: A) => void) | undefined): ((...args: A) => void) | undefined {
-    if (!fn) return undefined;
-    return (...args: A) => {
-      if (selectionMode) exitSelectionMode();
-      fn(...args);
-    };
-  }
+  // refs לגישה לערכים עדכניים מתוך useCallbacks יציבים - מונע יצירת closures
+  // חדשות בכל render שתשברנה את memo של ListHeader ויגרמנה לרינדור מחדש מיותר.
+  // הסנכרון קורה ב-effect (לא ישירות בגוף ה-render) - כתיבה ל-ref בזמן render
+  // אסורה לפי כללי React (react-hooks/refs); ה-effect רץ אחרי כל commit,
+  // ומכיוון שה-refs נקראים רק בתוך event handlers (לא בזמן render) הערך
+  // תמיד יהיה עדכני כשצריך.
+  const selectionModeRef = useRef(selectionMode);
+  const exitSelectionModeRef = useRef(exitSelectionMode);
+  useEffect(() => {
+    selectionModeRef.current = selectionMode;
+    exitSelectionModeRef.current = exitSelectionMode;
+  });
+
+  // callbacks יציבים לכותרת - לא משתנים בין renders אלא אם התלות האמיתית משתנה
+  const stableOnBack = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    onBack();
+  }, [onBack]);
+  const stableSetFilter = useCallback((f: Parameters<typeof setFilter>[0]) => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setFilter(f);
+  }, [setFilter]);
+  const stableEditList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    handleEditList();
+  }, [handleEditList]);
+  const stableDeleteList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setConfirmDeleteList(true);
+  }, [setConfirmDeleteList]);
+  const stableShareList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowShareList(true);
+  }, [setShowShareList]);
+  const stableShowMembers = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowMembers(true);
+  }, [setShowMembers]);
+  const stableShowInvite = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowInvite(true);
+  }, [setShowInvite]);
+  const stableQuickAdd = useCallback((name: string) => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    handleQuickAdd(name);
+  }, [handleQuickAdd]);
+  const stableClearList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowClearList(true);
+  }, [setShowClearList]);
+  const stableScanList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setScanListMounted(true);
+    setShowScanList(true);
+  }, []);
+  const stableLeaveList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    leaveList();
+  }, [leaveList]);
+  const stableToggleMute = useCallback(() => {
+    if (isMuteToggling.current) return;
+    isMuteToggling.current = true;
+    toggleGroupMute(list.id);
+    authApi.toggleMuteGroup(list.id)
+      .catch(() => { toggleGroupMute(list.id); showToast(t('errorOccurred'), 'error'); })
+      .finally(() => { isMuteToggling.current = false; });
+  }, [list.id, toggleGroupMute, showToast, t]);
 
   const handleCloseItem = useCallback((e?: React.MouseEvent) => {
     setOpenItemId(null);
-    // בבחירה מרובה - לחיצה על אזור ריק (לא על פריט) מבטלת את הבחירה
     if (selectedProducts.size > 0 && e && e.target === e.currentTarget) {
       exitSelectionMode();
     }
@@ -181,32 +240,25 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         purchasedCount={purchased.length}
         allMembers={allMembers}
         isOwner={isOwner}
-        onBack={withExitSelection(onBack)}
-        onFilterChange={withExitSelection(setFilter)!}
+        onBack={stableOnBack}
+        onFilterChange={stableSetFilter}
         onSearchChange={setSearch}
-        onEditList={withExitSelection(handleEditList)!}
-        onDeleteList={withExitSelection(() => setConfirmDeleteList(true))!}
-        onToggleMute={() => {
-          if (isMuteToggling.current) return;
-          isMuteToggling.current = true;
-          toggleGroupMute(list.id);
-          authApi.toggleMuteGroup(list.id)
-            .catch(() => { toggleGroupMute(list.id); showToast(t('errorOccurred'), 'error'); })
-            .finally(() => { isMuteToggling.current = false; });
-        }}
+        onEditList={stableEditList}
+        onDeleteList={stableDeleteList}
+        onToggleMute={stableToggleMute}
         isMuted={isGroupMuted(list.id)}
         mainNotificationsOff={!settings.notifications.enabled}
-        onShareList={withExitSelection(() => setShowShareList(true))!}
-        onShowMembers={withExitSelection(() => setShowMembers(true))!}
-        onShowInvite={withExitSelection(() => setShowInvite(true))!}
-        onQuickAdd={withExitSelection(handleQuickAdd)!}
+        onShareList={stableShareList}
+        onShowMembers={stableShowMembers}
+        onShowInvite={stableShowInvite}
+        onQuickAdd={stableQuickAdd}
         onlineUserIds={onlineUserIds}
         onRefresh={refreshList}
         refreshing={refreshing}
-        onClearList={withExitSelection(() => setShowClearList(true))!}
+        onClearList={stableClearList}
         hasProducts={pending.length + purchased.length > 0}
-        onLeave={!isOwner && list.isGroup ? withExitSelection(leaveList) : undefined}
-        onScanList={withExitSelection(() => { setScanListMounted(true); setShowScanList(true); })!}
+        onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
+        onScanList={stableScanList}
       />
 
       {scanListMounted && (

@@ -27,6 +27,11 @@ const DATE_OR_NUMBER_LINE = /^[\d./\-\s]+$/;
 const TITLE_HINT_WORDS = /רשימ|קניות|לקנות|פתק|shopping\s*list/i;
 
 const MIN_NAME_LENGTH = 2;
+
+// מחרוזות כשל ידועות שמנוע OCR.space מחזיר כשאין לו מה לקרוא
+const OCR_FAILURE_STRINGS = new Set(['NO PRODUCT', 'NO TEXT', 'NO TEXT FOUND']);
+// הודעות סטטוס של OCR.space בסוגריים מרובעים: [No text detected], [ERROR], וכו'
+const OCR_STATUS_MESSAGE = /^\[.{1,60}\]$/;
 // שורה ארוכה מזה כנראה רעש (OCR שחיבר בטעות כמה שורות פתק לאחת) ולא שם מוצר יחיד
 const MAX_NAME_LENGTH = 60;
 
@@ -51,6 +56,8 @@ export function parseOcrList(rawText: string): ParsedOcrList {
     const cleaned = rawLine.replace(LEADING_MARKERS, '').trim();
     if (cleaned.length < MIN_NAME_LENGTH || cleaned.length > MAX_NAME_LENGTH) continue;
     if (DATE_OR_NUMBER_LINE.test(cleaned)) continue;
+    if (OCR_FAILURE_STRINGS.has(cleaned.toUpperCase())) continue;
+    if (OCR_STATUS_MESSAGE.test(cleaned)) continue;
 
     // דה-דופליקציה - לפעמים אותה שורה מזוהה פעמיים (למשל עיצוב עם קו מתחת כל פריט)
     const key = cleaned.toLowerCase();

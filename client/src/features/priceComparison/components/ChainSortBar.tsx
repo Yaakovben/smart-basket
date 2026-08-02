@@ -24,24 +24,26 @@ const SortChip = ({ mode, emoji, label, requiresLoc, sortMode, hasAnyLocation, i
       onClick={() => { if (!disabled) { haptic('light'); onSelect(mode); } }}
       sx={{
         flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.4,
-        py: 0.7, px: 1, borderRadius: '10px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.3,
+        // גובה קטן במכוון: אלה מסנני-משנה, לא ניווט ראשי
+        py: 0.45, px: 0.75, borderRadius: '8px',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
+        opacity: disabled ? 0.4 : 1,
         userSelect: 'none', WebkitTapHighlightColor: 'transparent',
         bgcolor: active && !disabled
-          ? (isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.13)')
-          : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-        border: '1.5px solid',
-        borderColor: active && !disabled ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+          ? (isDark ? 'rgba(20,184,166,0.2)' : 'rgba(20,184,166,0.1)')
+          : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)'),
+        border: '1px solid',
+        borderColor: active && !disabled ? 'rgba(20,184,166,0.55)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)'),
         transition: 'all 0.12s',
-        '&:active': disabled ? {} : { transform: 'scale(0.98)' },
+        '&:active': disabled ? {} : { transform: 'scale(0.97)' },
       }}
     >
-      <Box sx={{ fontSize: 13 }}>{emoji}</Box>
+      <Box sx={{ fontSize: 11 }}>{emoji}</Box>
       <Typography sx={{
-        fontSize: 12, fontWeight: active && !disabled ? 800 : 700,
-        color: active && !disabled ? '#14B8A6' : 'text.primary',
+        fontSize: 11, fontWeight: active && !disabled ? 700 : 600,
+        color: active && !disabled ? '#0D9488' : 'text.secondary',
+        letterSpacing: 0.1,
       }}>
         {label}
       </Typography>
@@ -63,6 +65,13 @@ interface ChainSortBarProps {
 // במקום פעולה מנותקת שצפה בראש הכרטיס.
 export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark, onOpenMap }: ChainSortBarProps) => (
   <Box sx={{ mb: 1.25 }}>
+    {/* תווית "מיין לפי:" - מבהירה שאלה מסנני-משנה, לא ניווט ראשי */}
+    <Typography sx={{
+      fontSize: 10, fontWeight: 600, color: 'text.disabled',
+      letterSpacing: 0.5, mb: 0.5, px: 0.25,
+    }}>
+      מיין לפי:
+    </Typography>
     <Box sx={{ display: 'flex', gap: 0.5, px: 0.25 }}>
       <SortChip mode="distance" emoji="📍" label="קרוב" requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
       <SortChip mode="price" emoji="💰" label="זול" sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
@@ -73,13 +82,20 @@ export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark, on
             onClick={() => { haptic('light'); onOpenMap(); }}
             aria-label="הצג את כל הסניפים על מפה"
             sx={{
-              width: 40, height: 40, borderRadius: '10px',
-              bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
-              border: '1.5px solid', borderColor: isDark ? 'rgba(20,184,166,0.3)' : 'rgba(20,184,166,0.25)',
-              '&:hover': { bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
+              // ברירת מחדל: ghost ניטרלי - לא נראה לחוץ. רק hover נותן אינדיקציה.
+              // כך לא מתבלבל עם chip פעיל (שיש לו רקע turquoise).
+              width: 32, height: 32, borderRadius: '8px',
+              bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+              border: '1px solid',
+              borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.09)',
+              '&:hover': {
+                bgcolor: isDark ? 'rgba(20,184,166,0.16)' : 'rgba(20,184,166,0.10)',
+                borderColor: 'rgba(20,184,166,0.5)',
+              },
+              transition: 'all 0.12s',
             }}
           >
-            <MapOutlinedIcon sx={{ fontSize: 19, color: '#0D9488' }} />
+            <MapOutlinedIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
           </IconButton>
         </Tooltip>
       )}

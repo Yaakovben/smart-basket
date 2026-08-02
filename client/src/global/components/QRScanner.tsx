@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { Dialog, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { haptic } from '../helpers';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
 import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
 import {
-  dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, videoAreaSx,
+  dialogPaperSx, rootBoxSx, headerSx, headerTitleRowSx, dragHandleSx, videoAreaSx,
   videoStyle, frameOverlaySx, frameBoxSx, FRAME_CORNER_POSITIONS, frameCornerSx,
-  scanLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
+  scanLineSx, barcodeAimLineSx, bottomStatusSx, statusTextSx, galleryPillButtonSx,
   errorOverlaySx, errorTextSx, errorSubTextSx, errorGalleryButtonSx,
 } from '../styles/QRScanner.styles';
 
@@ -93,21 +94,55 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullScreen PaperProps={{ sx: dialogPaperSx }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      transitionDuration={180}
+      PaperProps={{ sx: dialogPaperSx }}
+      sx={{ '& .MuiDialog-container': { alignItems: { xs: 'flex-end', sm: 'center' } } }}
+    >
       <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
 
       <Box sx={rootBoxSx}>
-        <Box sx={headerSx}>
-          <IconButton onClick={onClose} aria-label="סגור" sx={{ color: 'white' }}>
-            <CloseIcon />
-          </IconButton>
-          <Box sx={headerTitleRowSx}>
-            <QrCodeScannerIcon />
-            <Typography sx={{ fontWeight: 700 }}>{mode === 'barcode' ? 'סרוק ברקוד' : 'סרוק QR'}</Typography>
-          </Box>
-          <Box sx={{ width: 40 }} />
+        {/* drag handle - מובייל בלבד */}
+        <Box sx={dragHandleSx}>
+          <Box sx={{ width: 44, height: 5, borderRadius: '3px', bgcolor: 'rgba(255,255,255,0.3)' }} />
         </Box>
 
+        {/* הדר שקוף מעל המצלמה - X תמיד גלוי */}
+        <Box sx={headerSx}>
+          <Box sx={headerTitleRowSx}>
+            {mode === 'barcode'
+              ? <BarcodeScannerIcon sx={{ fontSize: 22 }} />
+              : <QrCodeScannerIcon sx={{ fontSize: 22 }} />}
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: 15, lineHeight: 1.1 }}>
+                {mode === 'barcode' ? 'סריקת ברקוד מוצר' : 'סריקת קוד QR'}
+              </Typography>
+              {mode === 'barcode' && (
+                <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>
+                  EAN-13 · EAN-8 · UPC-A · UPC-E
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          <IconButton
+            onClick={onClose}
+            aria-label="סגור"
+            sx={{
+              color: '#111',
+              bgcolor: 'rgba(255,255,255,0.92)',
+              width: 36, height: 36,
+              flexShrink: 0,
+              '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+              '&:active': { opacity: 0.75 },
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Box>
+
+        {/* אזור מצלמה - flex:1, מרחב הסריקה */}
         <Box sx={videoAreaSx}>
           {!cameraConsent && (
             <QRScannerConsentOverlay
@@ -119,81 +154,55 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
             />
           )}
 
-          <video
-            ref={videoRef}
-            playsInline
-            muted
-            autoPlay
-            style={videoStyle}
-          />
+          <video ref={videoRef} playsInline muted autoPlay style={videoStyle} />
 
-          {/* מסגרת עזר מרובעת במרכז - עוזרת למשתמש ליישר את ה-QR. ZXing מחפש בכל הפריים
-              אבל QR שלא במרכז עם הטיה קלה לרוב לא מזוהה. */}
           {!error && !starting && (
             <Box aria-hidden="true" sx={frameOverlaySx}>
               <Box sx={frameBoxSx}>
-                {/* פינות מודגשות */}
                 {FRAME_CORNER_POSITIONS.map((pos, i) => (
                   <Box key={i} sx={frameCornerSx(pos)} />
                 ))}
-                {/* קו סריקה נע - מדגיש שהסריקה פעילה בזמן אמת */}
                 <Box sx={scanLineSx} />
+                {mode === 'barcode' && <Box sx={barcodeAimLineSx} />}
               </Box>
-            </Box>
-          )}
-
-          {!error && (
-            <Box sx={bottomStatusSx}>
-              <Typography sx={statusTextSx}>
-                {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'כוון את הברקוד למרכז המסך' : 'כוון את ה-QR למרכז המסך'}
-              </Typography>
-              {/* מוצג רק אחרי כמה שניות בלי זיהוי - כנראה בעיית איכות סריקה
-                  (תאורה/מיקוד/מרחק), שונה לגמרי מ"הברקוד לא נמצא במאגר"
-                  (זו שגיאה שמגיעה רק אחרי זיהוי מוצלח, מוצגת ב-AddProductModal). */}
-              {!starting && slowScan && !fileScanError && (
-                <Typography sx={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', textAlign: 'center', bgcolor: 'rgba(0,0,0,0.5)', px: 1.5, py: 0.75, borderRadius: '10px', lineHeight: 1.5 }}>
-                  {mode === 'barcode'
-                    ? 'לא מצליחים לזהות? ודאו תאורה טובה, קרבו את הברקוד ושהוא ישר ובפוקוס'
-                    : 'לא מצליחים לזהות? ודאו תאורה טובה והחזיקו את הקוד ישר ובפוקוס'}
-                </Typography>
-              )}
-              {fileScanError && (
-                <Typography sx={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', bgcolor: 'rgba(0,0,0,0.6)', px: 1.5, py: 0.75, borderRadius: '10px' }}>
-                  {fileScanError}
-                </Typography>
-              )}
-              <Button
-                onClick={() => { haptic('light'); fileInputRef.current?.click(); }}
-                startIcon={<PhotoLibraryIcon />}
-                sx={galleryPillButtonSx}
-              >
-                בחר תמונה מהגלריה
-              </Button>
             </Box>
           )}
 
           {error && (
             <Box sx={errorOverlaySx}>
-              <Typography sx={errorTextSx}>
-                {error}
-              </Typography>
-              {fileScanError && (
-                <Typography sx={errorSubTextSx}>
-                  {fileScanError}
-                </Typography>
-              )}
-              <Button
-                onClick={() => { haptic('light'); fileInputRef.current?.click(); }}
-                startIcon={<PhotoLibraryIcon />}
-                variant="contained"
-                sx={errorGalleryButtonSx}
-              >
+              <Typography sx={errorTextSx}>{error}</Typography>
+              {fileScanError && <Typography sx={errorSubTextSx}>{fileScanError}</Typography>}
+              <Button onClick={() => { haptic('light'); fileInputRef.current?.click(); }} startIcon={<PhotoLibraryIcon />} variant="contained" sx={errorGalleryButtonSx}>
                 בחר תמונה מהגלריה
               </Button>
               <Button onClick={onClose} sx={{ color: 'white' }}>סגור</Button>
             </Box>
           )}
         </Box>
+
+        {/* תחתית: סטטוס + כפתור גלריה - מחוץ ל-videoArea כדי שתמיד יהיה גלוי */}
+        {!error && (
+          <Box sx={bottomStatusSx}>
+            <Typography sx={statusTextSx}>
+              {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'סרוק ברקוד מוצר' : 'כוון את ה-QR למרכז המסך'}
+            </Typography>
+            {!starting && slowScan && !fileScanError && (
+              <Typography sx={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.5 }}>
+                {mode === 'barcode'
+                  ? 'לא מצליחים לזהות? ודאו תאורה טובה, קרבו את הברקוד ושהוא ישר'
+                  : 'לא מצליחים לזהות? ודאו תאורה טובה והחזיקו את הקוד ישר'}
+              </Typography>
+            )}
+            {fileScanError && (
+              <Typography sx={{ fontSize: 11.5, color: '#FCA5A5', textAlign: 'center' }}>
+                {fileScanError}
+              </Typography>
+            )}
+            <Button onClick={() => { haptic('light'); fileInputRef.current?.click(); }} startIcon={<PhotoLibraryIcon />} sx={galleryPillButtonSx}>
+              בחר תמונה מהגלריה
+            </Button>
+          </Box>
+        )}
       </Box>
     </Dialog>
   );

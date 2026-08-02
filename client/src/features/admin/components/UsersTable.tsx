@@ -21,9 +21,17 @@ export const UsersTable = ({ users, activities, language, onlineUserIds, isDark 
       const aOnline = onlineUserIds.has(a.id) ? 1 : 0;
       const bOnline = onlineUserIds.has(b.id) ? 1 : 0;
       if (aOnline !== bOnline) return bOnline - aOnline;
-      const aTime = a.lastAppOpenAt || a.lastLoginAt || a.createdAt;
-      const bTime = b.lastAppOpenAt || b.lastLoginAt || b.createdAt;
-      return new Date(bTime).getTime() - new Date(aTime).getTime();
+      const aTime = Math.max(
+        a.lastAppOpenAt ? new Date(a.lastAppOpenAt).getTime() : 0,
+        a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : 0,
+        new Date(a.createdAt).getTime(),
+      );
+      const bTime = Math.max(
+        b.lastAppOpenAt ? new Date(b.lastAppOpenAt).getTime() : 0,
+        b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : 0,
+        new Date(b.createdAt).getTime(),
+      );
+      return bTime - aTime;
     });
   }, [users, onlineUserIds]);
 

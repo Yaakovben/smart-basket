@@ -4,44 +4,21 @@ import { useSettings } from '../context/SettingsContext';
 import { socketService } from '../../services/socket/socket.service';
 
 interface Props {
-  // true כשיש כשל תקשורת אמיתי מול השרת (listsFetchError/notificationsFetchError) -
-  // בניגוד ל-OfflineBanner, המצב הזה נקבע ע"י ה-caller (יודע אם בקשות באמת נכשלות),
-  // לא מנוחש כאן. הבאנר נשאר גלוי כל עוד visible=true - עד שהבקשה הבאה מצליחה
-  // (חשוב: ה-caller חייב להעביר כאן רק דגלים שבאמת מתאפסים בהצלחה - ראה הערה
-  // ב-router/index.tsx לגבי initialData.connectionError שלא מתאפס).
-  //
-  // זה רק אחד משני האותות שמפעילים את הבאנר - ראה גם מעקב ה-socket למטה.
-  // האות הזה מבוסס על fetch-ים אקראיים (GET רשימות/התראות) שרצים רק
-  // בנקודות מסוימות (טעינה, visibilitychange, אירוע online) - לכן לבד הוא
-  // לא תמיד תופס ניתוק "חי" תוך כדי שימוש רגיל במסך. המעקב אחר ה-socket
-  // כן רציף בזמן אמת, ולכן הוא המקור האמין העיקרי.
   visible: boolean;
 }
 
-// באנר עליון קבוע - "אין חיבור לשרת" (בניגוד ל-OfflineBanner שהוא "אין חיבור לאינטרנט
-// בכלל"). מוצג כשה-caller מדווח על fetch שנכשל, או כשה-socket מנותק בזמן אמת
-// (ממזג את מה שהיה קודם ReconnectingBanner - שני האותות היו יכולים להציג שני
-// באנרים חופפים). מוצג רק כשהמכשיר כן מחובר לאינטרנט (navigator.onLine) - שם
-// OfflineBanner כבר מכסה את המקרה של ניתוק מלא.
-// דיליי גרייס לפני הצגת הבאנר - לכל אחד מהאותות. חוזר מרקע לחזית (יציאה
-// וחזרה לאפליקציה) גורם לפעמים לבקשה הראשונה להיכשל רגעית עד שהחיבור/טוקן
-// מתייצבים; בלי דיליי זה מהבהב באנר שגיאה מיידי גם כשהחיבור בסדר גמור
-// שנייה אחר כך.
 const GRACE_MS = 4000;
 
+// באנר עליון יחיד - "אין חיבור לשרת".
+// מוצג כשה-caller מדווח על fetch שנכשל, או כשה-socket מנותק בזמן אמת.
+// בסביבת DEV: רק שגיאות fetch אמיתיות - לא ספינר על המתנה לsocket.
 export const ServerConnectionBanner = ({ visible }: Props) => {
   const { t } = useSettings();
   const [deviceOnline, setDeviceOnline] = useState(navigator.onLine);
   const [socketDisconnected, setSocketDisconnected] = useState(false);
   const [fetchErrorConfirmed, setFetchErrorConfirmed] = useState(false);
-  // האם הצלחנו להתחבר לפחות פעם אחת בסשן הזה - קובע את הניסוח: "מתחבר..."
-  // (נייטרלי, מצופה - למשל שרת Render חינמי שמתעורר מ-sleep ולוקח 30-50ש')
-  // לעומת "מתחבר מחדש..." (מרמז שהיה חיבור תקין ונפל - זה המצב המבהיל באמת).
-  // בלי ההבחנה הזו, כל cold-start נראה כאילו "השרת קרס" גם כשהוא פשוט עדיין מתעורר.
   const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
-  // איפוס מיידי כש-visible חוזר ל-false - נעשה בזמן render (התבנית המתועדת
-  // ב-React ל"התאמת state לשינוי prop"), לא ב-effect, כדי לא לקרוא ל-setState
-  // באופן סינכרוני בתוך גוף ה-effect.
+
   const [prevVisible, setPrevVisible] = useState(visible);
   if (visible !== prevVisible) {
     setPrevVisible(visible);
@@ -59,19 +36,12 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     };
   }, []);
 
-  // דיליי על אות ה-fetch (visible) - בלי זה, בקשת GET שנכשלת פעם אחת מיד
-  // בחזרה מרקע מציגה שגיאה מיידית גם אם ה-retry האוטומטי מצליח שנייה אחר כך.
   useEffect(() => {
     if (!visible) return;
     const timer = setTimeout(() => setFetchErrorConfirmed(true), GRACE_MS);
     return () => clearTimeout(timer);
   }, [visible]);
 
-  // מעקב socket בזמן אמת - זהה למה שהיה ב-ReconnectingBanner. דיליי אחרי
-  // ניתוק מונע הבזקים על ניתוקים קצרים/רגילים (החלפת רשת וכו').
-  // 'connect_error' (לא-אימות) נצרך גם כן: זה האות היחיד כשהשרת לא נגיש
-  // עוד *לפני* חיבור ראשוני מוצלח - 'disconnect' לא נורה במקרה הזה כי הוא
-  // מניח שהיה חיבור פעיל שנפל.
   useEffect(() => {
     let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -99,34 +69,26 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     };
   }, []);
 
-  const shouldShow = (fetchErrorConfirmed || socketDisconnected) && deviceOnline;
+  // בסביבת לא-פרודקשן: לא מציגים ספינר על socket בלבד (השרת מאותחל לאט)
+  const isNonProd = !import.meta.env.PROD;
+  const shouldShow = deviceOnline && (fetchErrorConfirmed || (!isNonProd && socketDisconnected));
+
   if (!shouldShow) return null;
 
   return (
     <Box sx={{
       position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
+      top: 0, left: 0, right: 0,
       zIndex: 9999,
       bgcolor: '#F59E0B',
       pt: 'max(env(safe-area-inset-top), 6px)',
-      pb: '6px',
-      px: 2,
+      pb: '6px', px: 2,
       textAlign: 'center',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 1,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
       <CircularProgress size={12} sx={{ color: 'white' }} />
-      <Typography sx={{
-        color: 'white',
-        fontSize: 13,
-        fontWeight: 600,
-        lineHeight: 1.4,
-      }}>
+      <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
         {socketDisconnected && !fetchErrorConfirmed
           ? (hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage'))
           : t('serverUnreachableMessage')}

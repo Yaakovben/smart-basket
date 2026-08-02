@@ -30,6 +30,7 @@ import {
   getSavings,
   hasAnyChainLocation,
   getSortedChains,
+  buildCheapestPriceMap,
 } from '../helpers/priceComparisonCardHelpers';
 
 const fadeIn = keyframes`from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}`;
@@ -70,6 +71,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
   // האם יש מיקום לפחות לרשת אחת - מאפשר מיון "קרוב" / "משולב"
   const hasAnyLocation = hasAnyChainLocation(data.chainTotals);
   const sortedChains = getSortedChains(data.chainTotals, sortMode, hasAnyLocation);
+  const cheapestPriceMap = buildCheapestPriceMap(data.chainTotals);
 
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור פירוט. ההצגה
   // מתחילה במצב "סקירה" של כל הרשתות, וכל אחת נפתחת בלחיצה ידנית.
@@ -129,6 +131,7 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
                 onOpenNav={setNavBranch}
                 hasLocation={locationStatus === 'granted'}
                 winnerColor={winnerColor}
+                cheapestPriceMap={cheapestPriceMap}
               />
             ))}
           </Box>

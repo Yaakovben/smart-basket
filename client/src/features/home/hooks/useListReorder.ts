@@ -4,8 +4,16 @@ import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { authApi } from '../../../services/api';
 
-// לוגיקת גרירה-לסידור-מחדש של כרטיסי רשימה במסך הבית: מצב גרירה, חישוב
-// אינדקס יעד, גלילה אוטומטית בקצוות, ושמירת הסדר החדש לשרת.
+// כמה ms צריך להחזיק על handle לפני שמתחילה גרירה.
+// מאפשר גלילה טבעית ולא מפעיל drag בטעות בתנועה מהירה.
+const DRAG_ACTIVATION_DELAY_MS = 180;
+// טולרנס תנועה (px) - גלילה אנכית מעל סף זה מבטלת את ה-drag
+const DRAG_CANCEL_VERTICAL_PX = 8;
+// תנועה אופקית גדולה מזה = בוודאי גלילה אופקית (בפחות זמן)
+const DRAG_CANCEL_HORIZONTAL_PX = 12;
+
+// לוגיקת גרירה-לסידור-מחדש של כרטיסי רשימה במסך הבית.
+// גרסה משופרת: long-press (180ms) לפני הפעלת drag - מאפשר גלילה טבעית.
 export function useListReorder(
   contentRef: RefObject<HTMLDivElement | null>,
   display: List[],
@@ -22,6 +30,21 @@ export function useListReorder(
   const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
   const lastMoveTimeRef = useRef(0);
+
+  // long-press pending state - מאחסן את ה-timer ונקודת ההתחלה
+  const pendingDragRef = useRef<{
+    index: number;
+    startY: number;
+    startX: number;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
+  const cancelPending = useCallback(() => {
+    if (pendingDragRef.current) {
+      clearTimeout(pendingDragRef.current.timer);
+      pendingDragRef.current = null;
+    }
+  }, []);
 
   // חישוב סדר תצוגה עם סדר מותאם אישית
   const orderedDisplay = useMemo(() => {
@@ -44,27 +67,49 @@ export function useListReorder(
       const el = cardRefs.current[i];
       if (!el) continue;
       const rect = el.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (clientY < midY) return i;
+      if (clientY < rect.top + rect.height / 2) return i;
     }
     return cardRefs.current.length - 1;
   }, []);
 
-  // גרירה: התחלת גרירה (clientY מגיע מה-listener אך לא נדרש כאן)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDragStart = useCallback((index: number, _clientY: number) => {
+  // מפעיל את הגרירה בפועל (אחרי ה-delay)
+  const activateDrag = useCallback((index: number) => {
     dragIndexRef.current = index;
     setDragIndex(index);
     setDragOverIndex(index);
     haptic('medium');
   }, []);
 
-  // גרירה: תנועה - throttle למניעת עומס ברשימות ארוכות
-  const handleDragMove = useCallback((clientY: number) => {
+  // handleDragStart - מתחיל pending, מפעיל גרירה רק אחרי long-press
+  const handleDragStart = useCallback((index: number, clientY: number, clientX = 0) => {
+    cancelPending();
+    const timer = setTimeout(() => {
+      pendingDragRef.current = null;
+      activateDrag(index);
+    }, DRAG_ACTIVATION_DELAY_MS);
+    pendingDragRef.current = { index, startY: clientY, startX: clientX, timer };
+  }, [cancelPending, activateDrag]);
+
+  // handleDragMove - מטפל בתנועה בשני שלבים: pending או גרירה פעילה
+  const handleDragMove = useCallback((clientY: number, clientX = 0) => {
+    // שלב pending: בדוק אם מדובר בגלילה ולא בגרירה
+    if (pendingDragRef.current) {
+      const { startY, startX } = pendingDragRef.current;
+      const dy = Math.abs(clientY - startY);
+      const dx = Math.abs(clientX - startX);
+      // אם המשתמש זז אופקית בצורה ברורה - זוהי גלילה אופקית, בטל מיד
+      if (dx > DRAG_CANCEL_HORIZONTAL_PX) { cancelPending(); return; }
+      // אם המשתמש זז אנכית מעל הסף - זוהי גלילה אנכית, בטל מיד
+      if (dy > DRAG_CANCEL_VERTICAL_PX) { cancelPending(); return; }
+      // תנועה קטנה מאוד - ממשיכים לחכות לטיימר
+      return;
+    }
+
+    // שלב גרירה פעילה
     const currentIdx = dragIndexRef.current;
     if (currentIdx < 0) return;
 
-    // גלילה אוטומטית כשגוררים לקצוות המסך (תמיד, ללא throttle)
+    // גלילה אוטומטית כשגוררים לקצוות המסך
     const SCROLL_ZONE = 100;
     const SCROLL_SPEED = 5;
     const container = contentRef.current;
@@ -99,25 +144,31 @@ export function useListReorder(
       setDragOverIndex(targetIdx);
       haptic('light');
     }
-  }, [contentRef, getTargetIndex]);
+  }, [contentRef, getTargetIndex, cancelPending]);
 
-  // גרירה: סיום
+  // סיום גרירה
   const handleDragEnd = useCallback(() => {
+    cancelPending();
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     dragIndexRef.current = -1;
     setDragIndex(-1);
     setDragOverIndex(-1);
-  }, []);
+  }, [cancelPending]);
 
-  // touch/mouse event handlers
+  // touch/mouse event listeners
+  const isActive = dragIndex >= 0 || pendingDragRef.current !== null;
   useEffect(() => {
-    if (dragIndex < 0) return;
+    if (!isActive) return;
     const onTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      handleDragMove(e.touches[0].clientY);
+      const touch = e.touches[0];
+      if (dragIndex >= 0) {
+        // גרירה פעילה - מנע גלילה
+        e.preventDefault();
+      }
+      handleDragMove(touch.clientY, touch.clientX);
     };
     const onTouchEnd = () => handleDragEnd();
-    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY);
+    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY, e.clientX);
     const onMouseUp = () => handleDragEnd();
 
     document.addEventListener('touchmove', onTouchMove, { passive: false });
@@ -130,13 +181,12 @@ export function useListReorder(
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-  }, [dragIndex, handleDragMove, handleDragEnd]);
+  }, [dragIndex, isActive, handleDragMove, handleDragEnd]);
 
   const handleSaveOrder = useCallback(async () => {
     if (reorderedIds) {
       try {
         await authApi.updateListOrder(reorderedIds);
-        // עדכון מקומי מיידי כדי שהסדר החדש ישתקף בלי לחכות לרענון user מהשרת
         // eslint-disable-next-line react-hooks/immutability
         user.listOrder = reorderedIds;
         showToast(t('orderSaved'));
@@ -156,7 +206,6 @@ export function useListReorder(
     haptic('medium');
   }, [orderedDisplay]);
 
-  // בדיקה אם הסדר השתנה
   const hasOrderChanges = useMemo(() => {
     if (!reorderedIds) return false;
     const original = originalOrderRef.current;
@@ -164,7 +213,6 @@ export function useListReorder(
     return reorderedIds.some((id, i) => id !== original[i]);
   }, [reorderedIds]);
 
-  // ביטול מצב סידור
   const handleCancelReorder = useCallback(() => {
     setReorderMode(false);
     setReorderedIds(null);

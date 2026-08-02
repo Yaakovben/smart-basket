@@ -2,12 +2,21 @@ import type { SxProps, Theme } from '@mui/material';
 import type { CSSProperties } from 'react';
 import { keyframes } from '@mui/material';
 
-// גובה מפורש עם dvh (לא vh) - בדפדפני מובייל 100vh כולל את השטח שמתחת
-// לסרגל הכתובת שמתקפל/נפתח, ולכן גדול מהאזור הנראה בפועל וגורם לצורך בגלילה.
-// dvh מתעדכן דינמית לגובה ה-viewport הנראה בפועל.
-export const dialogPaperSx: SxProps<Theme> = { bgcolor: '#000', height: '100dvh', maxHeight: '100dvh' };
+// bottom-sheet מודאלי עם dvh - מותיר מרווח עליון משמעותי, dvh מכסה בדיוק את
+// האזור הנראה במובייל בלי לכלול את סרגל הכתובת שמתקפל/נפתח.
+// הגובה מוגבל ל-78dvh כדי שהדיאלוג לא ייראה כמו מסך מלא אלא כמו מודל.
+export const dialogPaperSx: SxProps<Theme> = {
+  bgcolor: '#000',
+  borderRadius: { xs: '20px 20px 0 0', sm: '20px' },
+  m: { xs: 0, sm: 2 },
+  maxHeight: { xs: '78dvh', sm: '82dvh' },
+  minHeight: { xs: '480px', sm: '480px' },
+  height: { xs: '78dvh', sm: 'auto' },
+  width: { xs: '100%', sm: 480 },
+  overflow: 'hidden',
+};
 
-export const rootBoxSx: SxProps<Theme> = { position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' };
+export const rootBoxSx: SxProps<Theme> = { position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' };
 
 export const headerSx: SxProps<Theme> = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -15,7 +24,15 @@ export const headerSx: SxProps<Theme> = {
 };
 export const headerTitleRowSx: SxProps<Theme> = { display: 'flex', alignItems: 'center', gap: 1 };
 
-export const videoAreaSx: SxProps<Theme> = { flex: 1, position: 'relative', bgcolor: '#000' };
+// drag handle למובייל
+export const dragHandleSx: SxProps<Theme> = {
+  display: { xs: 'flex', sm: 'none' },
+  justifyContent: 'center',
+  pt: 1, pb: 0.5, bgcolor: '#000',
+};
+
+// videoArea תופס את כל השטח הפנוי בין ה-header ל-bottomStatus
+export const videoAreaSx: SxProps<Theme> = { flex: 1, position: 'relative', bgcolor: '#000', minHeight: 0 };
 
 // מסך הסכמה ראשוני - לפני פתיחת מצלמה/גלריה
 export const consentOverlaySx: SxProps<Theme> = {
@@ -92,10 +109,24 @@ export const scanLineSx: SxProps<Theme> = {
   animation: `${scanLineSweep} 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite`,
 };
 
-// שורת סטטוס תחתונה ("כוון את ה-QR למרכז המסך")
+// קו עזר אופקי לברקוד - מרמז שיש ליישר את הברקוד אופקית בתוך המסגרת
+// קו כוון אופקי לברקוד - בצבע הברנד (טורקיז), לא צהוב
+export const barcodeAimLineSx: SxProps<Theme> = {
+  position: 'absolute', left: '4%', right: '4%', top: '50%',
+  transform: 'translateY(-50%)',
+  height: '1px',
+  background: 'linear-gradient(90deg, transparent, rgba(20,184,166,0.4) 15%, #14B8A6 40%, #5EEAD4 50%, #14B8A6 60%, rgba(20,184,166,0.4) 85%, transparent)',
+  boxShadow: '0 0 4px 1px rgba(20,184,166,0.4)',
+  pointerEvents: 'none',
+};
+
+// שורת סטטוס תחתונה - position relative כדי לא להיחתך כשהמודל קטן
 export const bottomStatusSx: SxProps<Theme> = {
-  position: 'absolute', bottom: 32, left: 0, right: 0,
+  position: 'relative',
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, px: 3,
+  py: 2,
+  bgcolor: 'rgba(0,0,0,0.65)',
+  flexShrink: 0,
 };
 export const statusTextSx: SxProps<Theme> = {
   fontSize: 15, fontWeight: 600, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.8)', textAlign: 'center',

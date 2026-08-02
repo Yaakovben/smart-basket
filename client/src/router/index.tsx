@@ -20,7 +20,9 @@ import { LoginPage } from "../features/auth/pages/LoginPage";
 const homeImport = () => import("../features/home/home").then(m => ({ default: m.HomePage }));
 homeImport(); // prefetch מיידי במקביל לאימות
 const HomePage = lazy(homeImport);
-const ListPage = lazy(() => import("../features/list/list").then(m => ({ default: m.ListPage })));
+const listImport = () => import("../features/list/list").then(m => ({ default: m.ListPage }));
+listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
+const ListPage = lazy(listImport);
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
 const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
@@ -84,9 +86,28 @@ const ListPageWrapper = ({
   const { t } = useSettings();
   const list = lists.find((l) => l.id === listId);
 
-  // קבוצה יציבה של משתמשים מקוונים ברשימה הנוכחית
   const onlineArr = listId ? onlineUsers[listId] : undefined;
   const onlineUserIds = useMemo(() => new Set(onlineArr || []), [onlineArr]);
+
+  const handleBack = useCallback(() => navigate("/"), [navigate]);
+  const handleLeaveList = useCallback(async (id: string) => {
+    try {
+      await leaveList(id);
+      showToast(t('left'));
+      navigate("/");
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [leaveList, showToast, t, navigate]);
+  const handleDeleteList = useCallback(async (id: string) => {
+    try {
+      await deleteList(id);
+      showToast(t('deleted'));
+      navigate("/");
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [deleteList, showToast, t, navigate]);
 
   if (!list) return <Navigate to="/" replace />;
 
@@ -94,28 +115,12 @@ const ListPageWrapper = ({
     <ListPage
       list={list}
       user={user}
-      onBack={() => navigate("/")}
+      onBack={handleBack}
       onUpdateList={updateList}
       onUpdateListLocal={updateListLocal}
       onUpdateProductsForList={updateProductsForList}
-      onLeaveList={async (id: string) => {
-        try {
-          await leaveList(id);
-          showToast(t('left'));
-          navigate("/");
-        } catch {
-          showToast(t('errorOccurred'), 'error');
-        }
-      }}
-      onDeleteList={async (id: string) => {
-        try {
-          await deleteList(id);
-          showToast(t('deleted'));
-          navigate("/");
-        } catch {
-          showToast(t('errorOccurred'), 'error');
-        }
-      }}
+      onLeaveList={handleLeaveList}
+      onDeleteList={handleDeleteList}
       showToast={showToast}
       onlineUserIds={onlineUserIds}
     />

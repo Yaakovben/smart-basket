@@ -87,7 +87,7 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
   return (
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
-      cursor: reorderMode ? (isDragging ? 'grabbing' : 'grab') : 'pointer',
+      cursor: reorderMode ? (isDragging ? 'grabbing' : 'default') : 'pointer',
       transition: isDragging ? 'box-shadow 0.15s' : 'all 0.2s ease',
       transform: isDragging ? 'scale(1.03)' : isDragOver ? 'translateY(4px)' : 'none',
       opacity: isDragging ? 0.95 : 1,
@@ -97,15 +97,37 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
       bgcolor: isDragging ? 'action.hover' : undefined,
       userSelect: reorderMode ? 'none' : 'auto',
       WebkitUserSelect: reorderMode ? 'none' : 'auto',
-      touchAction: reorderMode ? 'none' : 'auto',
+      // touchAction נשאר 'auto' גם במצב סידור - הגלילה מופסקת רק אחרי שה-drag
+      // מופעל בפועל (ב-useListReorder, דרך preventDefault). ככה גלילה טבעית
+      // ממשיכה לעבוד כל עוד המשתמש לא החזיק לחוץ מספיק זמן.
     }}
       onClick={handleClick}
-      onTouchStart={reorderMode ? onDragHandleTouch : undefined}
-      onMouseDown={reorderMode ? onDragHandleMouse : undefined}
     >
       {reorderMode && (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, p: 0.5, mx: -0.5 }}>
-          <DragIndicatorIcon sx={{ color: 'text.disabled', fontSize: 22 }} />
+        // ידית גרירה - מקבלת את אירועי המגע/עכבר כדי לא להפריע לגלילה
+        // בשאר הכרטיס. אנימציית "pulse" מסמנת למשתמש "לחץ ממושך לגרירה"
+        <Box
+          onTouchStart={onDragHandleTouch}
+          onMouseDown={onDragHandleMouse}
+          sx={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, p: 0.75, mx: -0.5, borderRadius: '8px',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
+            // אנימציית פעימה עדינה - מרמזת "לחץ ממושך"
+            animation: isDragging ? 'none' : 'dragHandlePulse 2.2s ease-in-out infinite',
+            '@keyframes dragHandlePulse': {
+              '0%, 100%': { opacity: 0.45, transform: 'scale(1)' },
+              '50%':      { opacity: 0.75, transform: 'scale(1.12)' },
+            },
+            '&:active': { animation: 'none', transform: 'scale(0.92)' },
+          }}
+        >
+          <DragIndicatorIcon sx={{
+            color: isDragging ? 'primary.main' : 'text.disabled',
+            fontSize: isDragging ? 24 : 22,
+            transition: 'color 0.15s, font-size 0.15s',
+          }} />
         </Box>
       )}
       <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
