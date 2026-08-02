@@ -88,7 +88,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
             // גודל קבוע בכל המכשירים — תואם לאייקון של ShareListModal (Avatar 64, fontSize 28)
             sx={{
               width: 64, height: 64,
-              background: COMMON_STYLES.gradients.header,
+              background: COMMON_STYLES.gradients.header.light,
               mx: 'auto', mb: 1.25,
               boxShadow: '0 8px 24px rgba(20,184,166,0.3)',
               '@media (max-width: 360px)': { mb: 0.5 },

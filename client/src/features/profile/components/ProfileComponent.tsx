@@ -22,7 +22,8 @@ interface ProfilePageProps {
 
 export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePageProps) => {
   const navigate = useNavigate();
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
 
   const {
     editProfile, confirmLogout, hasChanges, savingProfile,
@@ -33,7 +34,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
       {/* Header */}
-      <Box sx={headerSx(!!editProfile)}>
+      <Box sx={headerSx(!!editProfile, isDark)}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
           <IconButton onClick={() => { closeEdit(); navigate('/'); }} sx={glassButtonSx}>
             <ArrowForwardIcon sx={{ fontSize: 22 }} />

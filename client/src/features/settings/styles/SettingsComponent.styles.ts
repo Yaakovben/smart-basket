@@ -72,7 +72,7 @@ export const rowLabelSx: SxProps<Theme> = { flex: 1, fontWeight: 500, fontSize: 
 export const subRowLabelSx: SxProps<Theme> = { flex: 1, fontSize: 14 };
 
 export const headerSx = (isDark: boolean): SxProps<Theme> => ({
-  background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+  background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
   p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 24px', sm: '48px 20px 24px' },
   flexShrink: 0,
 });
@@ -112,7 +112,7 @@ export const installHintBodySx = (isDark: boolean): SxProps<Theme> => ({
 // כרטיס "עדכון זמין" - גרדיאנט תואם לכותרת העליונה
 export const updateCardSx = (isDark: boolean): SxProps<Theme> => ({
   borderRadius: '16px', overflow: 'hidden', mt: 2, cursor: 'pointer',
-  background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+  background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
   '&:active': { transform: 'scale(0.97)', opacity: 0.9 },
   transition: 'transform 0.15s, opacity 0.15s',
   boxShadow: '0 4px 16px rgba(20, 184, 166, 0.3)',

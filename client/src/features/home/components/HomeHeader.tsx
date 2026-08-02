@@ -5,6 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
+import { COMMON_STYLES } from '../../../global/helpers';
 import { glassButtonSx } from '../helpers/homeStyles';
 import type { HomeTab } from '../types/home-types';
 
@@ -35,7 +36,7 @@ export const HomeHeader = ({
 }: HomeHeaderProps) => {
   return (
     <Box sx={{
-      background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #0F766E, #0D9488, #14B8A6)',
+      background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
       p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,

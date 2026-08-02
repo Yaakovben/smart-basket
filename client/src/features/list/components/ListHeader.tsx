@@ -90,7 +90,7 @@ export const ListHeader = memo(({
 
   return (
     <Box sx={{
-      background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #14B8A6, #0D9488)',
+      background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
       p: { xs: 'max(40px, env(safe-area-inset-top) + 8px) 14px 10px', sm: '44px 20px 16px' },
       borderRadius: { xs: '0 0 20px 20px', sm: '0 0 24px 24px' },
       flexShrink: 0,

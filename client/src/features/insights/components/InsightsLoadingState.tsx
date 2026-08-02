@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import { ShimmerList, ShimmerBlock } from '../../../global/components';
+import { COMMON_STYLES } from '../../../global/helpers';
 
 interface InsightsLoadingStateProps {
   isDark: boolean;
@@ -13,9 +14,7 @@ export const InsightsLoadingState = ({ isDark }: InsightsLoadingStateProps) => {
       {/* הדר: באנר עליון - גרדיאנט תואם בדיוק לעמוד האמיתי, מונע קפיצה ויזואלית.
           הבלוקים בפנים משתמשים ב-ShimmerBlock לעקביות עם שאר האפליקציה. */}
       <Box sx={{
-        background: isDark
-          ? 'linear-gradient(160deg, #134E4A, #0F766E, #0D9488)'
-          : 'linear-gradient(160deg, #0D9488, #14B8A6, #5EEAD4)',
+        background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: '48px 16px 16px',
         borderRadius: '0 0 24px 24px',
       }}>

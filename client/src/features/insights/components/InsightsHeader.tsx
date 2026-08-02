@@ -1,6 +1,7 @@
 import { Box, Typography, IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BetaRibbon } from '../../priceComparison';
+import { COMMON_STYLES } from '../../../global/helpers';
 
 interface InsightsHeaderProps {
   isDark: boolean;
@@ -14,7 +15,7 @@ interface InsightsHeaderProps {
 export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHeaderProps) => {
   return (
     <Box sx={{
-      background: isDark ? 'linear-gradient(160deg, #134E4A, #0F766E)' : 'linear-gradient(160deg, #0F766E, #0D9488, #14B8A6)',
+      background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
       p: { xs: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px', sm: '54px 20px 18px' },
       borderRadius: '0 0 24px 24px',
       position: 'relative', overflow: 'hidden',

@@ -1,5 +1,6 @@
 import { Box, Skeleton } from '@mui/material';
 import { useSettings } from '../context/SettingsContext';
+import { COMMON_STYLES } from '../helpers';
 
 const SKELETON_ITEMS = [1, 2, 3, 4, 5] as const;
 
@@ -22,7 +23,7 @@ export const PageSkeleton = () => {
   }}>
     {/* Header skeleton */}
     <Box sx={{
-      background: isDark ? 'linear-gradient(135deg, #134E4A, #0F766E)' : 'linear-gradient(135deg, #0F766E, #0D9488, #14B8A6)',
+      background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
       p: '48px 16px 20px',
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,

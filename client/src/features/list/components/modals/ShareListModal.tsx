@@ -117,7 +117,7 @@ export const ShareListModal = memo(({
           <CloseIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
         </IconButton>
         <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-          <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
+          <Avatar sx={{ width: 64, height: 64, background: COMMON_STYLES.gradients.header.light, mx: 'auto', mb: 2, boxShadow: '0 8px 24px rgba(20,184,166,0.3)' }}>
             <ShareIcon sx={{ fontSize: 28 }} />
           </Avatar>
           <Typography id="share-title" sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>{t('shareList')}</Typography>

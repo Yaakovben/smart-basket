@@ -152,7 +152,11 @@ export const COMMON_STYLES = {
   // רקעים גרדיאנטיים
   gradients: {
     primary: 'linear-gradient(135deg, #14B8A6, #10B981)',
-    header: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+    // הדר עמוד אחיד - מקור אמת יחיד לכל הדרי האפליקציה (בית/רשימה/תובנות/
+    // הגדרות/פרופיל/מסכי מידע/שלד טעינה). לפני האיחוד כל קומפוננטה הגדירה
+    // את הגרדיאנט שלה בנפרד וזה סטה עם הזמן (זוויות/stops/גוונים שונים).
+    // dark הובהר בכוונה מ-teal-900 (#134E4A) ל-teal-800 (#115E59) - פחות כהה.
+    header: { light: 'linear-gradient(135deg, #14B8A6, #0D9488)', dark: 'linear-gradient(135deg, #115E59, #0F766E)' },
     error: 'linear-gradient(135deg, #EF4444, #DC2626)'
   },
   // תווית שדה במודאלים

@@ -4,6 +4,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { COMMON_STYLES } from '../../../global/helpers';
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'text.primary', mb: 0.75, mt: 2.5 }}>
@@ -25,12 +26,13 @@ export const PrivacyPolicy = memo(() => {
   const navigate = useNavigate();
   const { t, settings } = useSettings();
   const { language } = settings;
+  const isDark = settings.theme === 'dark';
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
       {/* Header */}
       <Box sx={{
-        background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+        background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
         borderRadius: '0 0 24px 24px'
       }}>

@@ -4,6 +4,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { forwardRef } from 'react';
 import { BranchesMapView } from './BranchesMapView';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { COMMON_STYLES } from '../../../global/helpers';
 
 const SlideUp = forwardRef(function SlideUp(
   props: TransitionProps & { children: React.ReactElement },
@@ -37,9 +38,7 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
     >
       {/* הדר זהה לסגנון InsightsHeader */}
       <Box sx={{
-        background: dark
-          ? 'linear-gradient(160deg, #134E4A, #0F766E)'
-          : 'linear-gradient(160deg, #0F766E, #0D9488, #14B8A6)',
+        background: dark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         pt: 'max(env(safe-area-inset-top) + 12px, 48px)',
         pb: '16px',
         px: 2,

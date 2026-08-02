@@ -9,8 +9,10 @@ export const labelSx: SxProps<Theme> = {
   mb: 0.75,
 };
 
-export const headerSx = (editing: boolean): SxProps<Theme> => ({
-  background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+// isDark חסר היה כאן לפני התיקון - ההדר תמיד הציג את גרדיאנט המצב הבהיר
+// גם במצב כהה, לא עקבי עם שאר האפליקציה.
+export const headerSx = (editing: boolean, isDark: boolean): SxProps<Theme> => ({
+  background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
   p: editing
     ? { xs: 'max(16px, env(safe-area-inset-top)) 16px', sm: '16px 20px' }
     : { xs: 'max(32px, env(safe-area-inset-top) + 12px) 16px 32px', sm: '32px 20px 32px' },
