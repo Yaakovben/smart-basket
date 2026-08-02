@@ -26,6 +26,12 @@ class SocketService {
   private joinedLists: Set<string> = new Set();
   private visibilityHandler: (() => void) | null = null;
   private onlineHandler: (() => void) | null = null;
+  // מתי הדף הפך ל-hidden לאחרונה - כדי לזהות "רקע ארוך" (ראו setupVisibilityHandler)
+  private hiddenAt: number | null = null;
+  // סף לזיהוי רקע "ארוך מספיק" שדפדפני מובייל עלולים להשעות בו את ה-JS
+  // runtime (וכתוצאה מכך את ה-WebSocket) בלי שאף event יורה - 30 שניות
+  // מבחין בין מעבר-טאב חטוף (לא צריך לגעת בחיבור) לרקע ממושך אמיתי.
+  private static readonly STALE_BACKGROUND_MS = 30_000;
   // מונה רענוני טוקן בסשן החיבור הנוכחי - גארד נגד לולאה אם השרת
   // ממשיך לדחות טוקנים אחרי refresh (clock skew, ENV mismatch וכו'). מאופס
   // אחרי חיבור מוצלח.
@@ -118,7 +124,21 @@ class SocketService {
     }
 
     this.visibilityHandler = () => {
+      if (document.visibilityState === 'hidden') {
+        this.hiddenAt = Date.now();
+        return;
+      }
       if (document.visibilityState === 'visible') {
+        // רקע ארוך (מובייל השעה את ה-JS runtime) - ה-socket עלול "לחשוב"
+        // שהוא עדיין מחובר (connected===true) כי אף event לא הספיק לירות
+        // כשהחיבור מת בפועל. בלי disconnect מפורש כאן, הבדיקה !connected
+        // למטה תהיה no-op על "zombie" connection כזה, וההחלמה תישאר תלויה
+        // רק ב-ping timeout של השרת (עד כ-85 שניות, ולפעמים גם זה תקוע).
+        const wasHiddenLong = this.hiddenAt !== null && (Date.now() - this.hiddenAt) > SocketService.STALE_BACKGROUND_MS;
+        this.hiddenAt = null;
+        if (wasHiddenLong && this.socket?.connected) {
+          this.socket.disconnect();
+        }
         if (!this.socket?.connected) {
           // איפוס מונה refresh - חזרה מרקע = הזדמנות חדשה לנסות
           this.authRefreshAttempts = 0;
@@ -261,12 +281,18 @@ class SocketService {
 
   // עדכון טוקן, נקרא בעת רענון על ידי HTTP client
   updateToken(newToken: string) {
-    if (this.socket) {
-      this.socket.auth = { token: newToken };
-      if (this.socket.connected) {
-        this.socket.emit('token:refresh', newToken);
-      }
+    if (!this.socket) return;
+    this.socket.auth = { token: newToken };
+    if (this.socket.connected) {
+      this.socket.emit('token:refresh', newToken);
+      return;
     }
+    // ה-socket כבר הפסיק לנסות (guard authRefreshAttempts) אבל עכשיו יש
+    // טוקן תקף בזכות רענון שקרה דרך קריאת HTTP רגילה - בלי connect() מפורש
+    // כאן ה-socket היה נשאר מת עד ה-visibilitychange/online הבא, למרות
+    // שהאימות בפועל כבר תקין. זו בדיוק תבנית "טוקן החלים, socket לא".
+    this.authRefreshAttempts = 0;
+    this.socket.connect();
   }
 
   emitProductAdded(listId: string, product: { id: string; name: string; quantity: number; unit: string; category: string }, userName: string) {
