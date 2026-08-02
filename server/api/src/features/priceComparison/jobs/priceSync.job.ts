@@ -79,7 +79,7 @@ async function reloadSeedBranches(trigger: 'cron' | 'startup'): Promise<void> {
       osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
       stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
       victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
-      shefa_birkat_hashem: 'שפע ברכת השם', super_sapir: 'סופר ספיר', netto: 'נטו',
+      shefa_birkat_hashem: 'שפע ברכת השם', super_sapir: 'סופר ספיר',
     };
     const inputs: UpsertBranchInput[] = KNOWN_BRANCHES.map(b => ({
       chainId: b.chainId,

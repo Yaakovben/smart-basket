@@ -9,7 +9,6 @@ import {
   politzerAdapter,
   doralonAdapter,
   victoryAdapter,
-  nettoAdapter,
   maayan2000Adapter,
   shefaBirkatHashemAdapter,
   superSapirAdapter,
@@ -37,7 +36,6 @@ const adapters: ChainAdapter[] = [
   politzerAdapter,
   doralonAdapter,
   victoryAdapter,
-  nettoAdapter,
   // פורטלים עצמאיים פתוחים (אין login):
   shufersalAdapter,    // prices.shufersal.co.il
   carrefourAdapter,    // prices.carrefour.co.il (יינות ביתן/Carrefour)

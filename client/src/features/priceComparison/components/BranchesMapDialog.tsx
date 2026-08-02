@@ -48,8 +48,6 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
         flexShrink: 0,
         boxShadow: '0 4px 16px rgba(13,148,136,0.2)',
       }}>
-        <Box sx={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
-
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative' }}>
           <IconButton
             onClick={onClose}

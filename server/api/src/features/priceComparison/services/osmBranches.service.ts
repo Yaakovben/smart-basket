@@ -73,17 +73,17 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
     brands: ['Shefa Birkat Hashem', 'Shefa Birkat HaShem', 'ShefaBirkatHashem', 'Shefa'],
     names: ['שפע ברכת השם', 'שפע ברכת ה׳', 'שפע ברכת ה׳ה', 'שפע'],
   },
+  // "נטו חיסכון" הוא מותג/זרוע דיסקאונט בבעלות קבוצת ספיר (אותה חברה,
+  // אין לה רישום עצמאי בפורטל שקיפות המחירים) - לכן זה alias כאן ולא
+  // chainId נפרד. ראו הסרת ה-adapter המדומה 'netto' - לא היה לו username
+  // אמיתי לנחש כי הרשת הזו לא קיימת כרשומה עצמאית בפורטל.
   super_sapir: {
-    brands: ['Super Sapir', 'SuperSapir', 'Sapir'],
-    names: ['סופר ספיר', 'ספיר', 'רשת ספיר'],
+    brands: ['Super Sapir', 'SuperSapir', 'Sapir', 'Netto Hisachon', 'Netto'],
+    names: ['סופר ספיר', 'ספיר', 'רשת ספיר', 'נטו חיסכון', 'נטו'],
   },
   carrefour: {
     brands: ['Carrefour', 'Yaynot Bitan', 'Yaynot Bitan Carrefour', 'Yenot Bitan', 'Mega', 'Mega Bool', "Mega Ba'Ir"],
     names: ['קרפור', 'יינות ביתן', 'יינות ביתן Carrefour', 'מגה', 'מגה בעיר', 'מגה בול'],
-  },
-  netto: {
-    brands: ['Netto', 'Netto Malinda', 'Super Netto'],
-    names: ['נטו', 'נטו מלינדה', 'סופר נטו'],
   },
 };
 

@@ -14,8 +14,7 @@ export type ChainId =
   | 'maayan_2000'
   | 'shefa_birkat_hashem'
   | 'super_sapir'
-  | 'carrefour'
-  | 'netto';
+  | 'carrefour';
 
 export interface IPriceDoc extends Document {
   _id: Types.ObjectId;
