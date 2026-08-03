@@ -7,7 +7,7 @@ import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { getDefaultNewProduct } from '../helpers/list-helpers';
 import type { NewProductForm } from '../types/list-types';
-import { isNetworkError, enqueueAdd } from '../../../services/offlineQueue';
+import { isNetworkError, enqueueAdd, enqueueUpdate } from '../../../services/offlineQueue';
 
 interface UseAddProductParams {
   list: List;
@@ -207,8 +207,11 @@ export const useAddProduct = ({
         unit: existing.unit,
         category: existing.category,
       }, user.name);
-    } catch {
-      // שחזור במקרה של שגיאה
+    } catch (error) {
+      if (isNetworkError(error)) {
+        void enqueueUpdate(list.id, existing.id, { quantity: newQuantity });
+        return;
+      }
       onUpdateProductsForList(list.id, (currentProducts) =>
         currentProducts.map((p: Product) =>
           p.id === existing.id ? { ...p, quantity: existing.quantity } : p

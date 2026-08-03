@@ -156,6 +156,8 @@ export const useProductMutations = ({
     } catch (error) {
       if (isNetworkError(error)) {
         void enqueueDelete(list.id, productId);
+        // ניקוי entry מתור ה-undo - לא ניתן לשחזר מוצר שנמחק בעת אופליין
+        deletedStackRef.current = deletedStackRef.current.filter(d => d.product.id !== productId);
         return;
       }
       if (import.meta.env.DEV) console.error('Failed to delete product:', error);
