@@ -1,11 +1,16 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// קריאה נדרשת, אך רשימת הקבצים ריקה ולכן שום דבר לא נשמר במטמון
+// שמירת כל נכסי ה-build במטמון (JS, CSS, HTML, תמונות)
 precacheAndRoute(self.__WB_MANIFEST);
+
+// SPA: כל בקשות ניווט (כתובות שאינן קבצים סטטיים) מוגשות מה-cache של index.html,
+// כך שהאפליקציה נטענת גם ללא רשת
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
 // טיפול בהתראות נכנסות, סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {

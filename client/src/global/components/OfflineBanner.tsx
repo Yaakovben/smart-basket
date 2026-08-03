@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useSettings } from '../context/SettingsContext';
+import { subscribeToQueueCount } from '../../services/offlineQueue';
 
 export const OfflineBanner = () => {
   const { t } = useSettings();
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     let offlineTimer: ReturnType<typeof setTimeout> | null = null;
@@ -27,6 +29,8 @@ export const OfflineBanner = () => {
     };
   }, []);
 
+  useEffect(() => subscribeToQueueCount(setPendingCount), []);
+
   if (!isOffline) return null;
 
   return (
@@ -43,13 +47,13 @@ export const OfflineBanner = () => {
       textAlign: 'center',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
-      <Typography sx={{
-        color: 'white',
-        fontSize: 13,
-        fontWeight: 600,
-        lineHeight: 1.4,
-      }}>
+      <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
         📡 {t('offlineMessage')}
+        {pendingCount > 0 && (
+          <Box component="span" sx={{ opacity: 0.85 }}>
+            {' '}· {pendingCount} {t('offlinePendingSync')}
+          </Box>
+        )}
       </Typography>
     </Box>
   );

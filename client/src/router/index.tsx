@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
-import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence } from "../global/hooks";
+import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
 import { ServerConnectionBanner } from "../global/components/ServerConnectionBanner";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
@@ -141,6 +141,7 @@ export const AppRouter = () => {
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
+  useOfflineSync(user?.id, updateProductsForList);
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה - בלי RAF כפול
   useEffect(() => {
@@ -265,6 +266,7 @@ export const AppRouter = () => {
     try {
       if (typeof indexedDB !== 'undefined') {
         indexedDB.deleteDatabase('sb_auth');
+        indexedDB.deleteDatabase('sb_offline_queue');
       }
     } catch { /* ignore */ }
     // replace (לא assign) כדי שלא ניתן יהיה לחזור עם 'אחורה' למצב המחוק.

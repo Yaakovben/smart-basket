@@ -76,14 +76,18 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     return () => window.clearInterval(id);
   }, [fetchError, user, authLoading, fetchLists]);
 
-  // Auto-retry על אירוע 'online' (חזרת רשת ב-WiFi/4G) - מיידי, לא ממתין
-  // ל-interval של 4ש'.
+  // רענון מיידי כשהרשת חוזרת (גם אחרי סנכרון תור אופליין)
   useEffect(() => {
     if (!user) return;
-    const onOnline = () => { if (fetchError) void fetchLists(); };
+    const onOnline = () => { void fetchLists(); };
+    const onSynced = () => { void fetchLists(); };
     window.addEventListener('online', onOnline);
-    return () => window.removeEventListener('online', onOnline);
-  }, [user, fetchError, fetchLists]);
+    window.addEventListener('sb:offline-synced', onSynced);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('sb:offline-synced', onSynced);
+    };
+  }, [user, fetchLists]);
 
   const actions = useListActions(user, lists, setLists);
 

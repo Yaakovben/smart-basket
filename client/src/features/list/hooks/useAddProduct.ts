@@ -7,6 +7,7 @@ import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { getDefaultNewProduct } from '../helpers/list-helpers';
 import type { NewProductForm } from '../types/list-types';
+import { isNetworkError, enqueueAdd } from '../../../services/offlineQueue';
 
 interface UseAddProductParams {
   list: List;
@@ -106,7 +107,11 @@ export const useAddProduct = ({
         }
       }
     } catch (error) {
-      // שחזור - הסרת המוצר הזמני
+      if (isNetworkError(error)) {
+        // שמירת המוצר הזמני ברשימה ותור הוספה לסנכרון כשחוזרת קליטה
+        void enqueueAdd(list.id, productData, tempId);
+        return;
+      }
       if (import.meta.env.DEV) console.error('Failed to add product:', error);
       pendingTempActions.current.delete(tempId);
       onUpdateProductsForList(list.id, (current) =>

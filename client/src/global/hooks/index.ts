@@ -9,3 +9,4 @@ export { useToast } from './useToast';
 export { useAuth } from './useAuth';
 export { useLists } from './useLists';
 export { convertApiProduct, convertApiList } from './converters';
+export { useOfflineSync } from './useOfflineSync';

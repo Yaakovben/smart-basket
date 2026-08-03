@@ -6,6 +6,7 @@ import { trackEvent } from '../../../global/services/analytics';
 import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
+import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete } from '../../../services/offlineQueue';
 
 interface UseProductMutationsParams {
   list: List;
@@ -75,7 +76,11 @@ export const useProductMutations = ({
       socketService.emitProductToggled(list.id, productId, product.name, newIsPurchased, user.name);
       if (!silent) showToast(t(newIsPurchased ? 'markedAsPurchased' : 'markedAsNotPurchased'));
     } catch (error) {
-      // שחזור במקרה של שגיאה
+      if (isNetworkError(error)) {
+        // שמירה בתור לסנכרון כשהקליטה חוזרת, הסטייט נשאר אופטימיסטי
+        void enqueueToggle(list.id, productId, newIsPurchased);
+        return;
+      }
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
       onUpdateProductsForList(list.id, (currentProducts) =>
         currentProducts.map((p: Product) =>
@@ -149,8 +154,11 @@ export const useProductMutations = ({
         );
       }, 5000);
     } catch (error) {
+      if (isNetworkError(error)) {
+        void enqueueDelete(list.id, productId);
+        return;
+      }
       if (import.meta.env.DEV) console.error('Failed to delete product:', error);
-      // שחזור למיקום המקורי
       onUpdateProductsForList(list.id, (current) => {
         const restored = [...current];
         restored.splice(Math.min(index, restored.length), 0, product);
@@ -232,7 +240,10 @@ export const useProductMutations = ({
         category: editData.category,
       }, user.name);
     } catch (error) {
-      // שחזור במקרה של שגיאה
+      if (isNetworkError(error)) {
+        void enqueueUpdate(list.id, editData.id, changes);
+        return;
+      }
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       onUpdateProductsForList(list.id, (current) =>
         current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note } : p)

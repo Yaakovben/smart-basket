@@ -335,6 +335,7 @@ export const he: Translations = {
   cacheError: 'יש בעיית חיבור. נסה לנקות מטמון:',
   noUserData: 'שגיאה: לא התקבל מידע משתמש מהשרת',
   offlineMessage: 'אין חיבור לאינטרנט',
+  offlinePendingSync: 'פעולות ממתינות לסנכרון',
   reconnectingMessage: 'מתחבר מחדש...',
   connectingMessage: 'מתחבר לשרת...',
   serverUnreachableMessage: 'אין חיבור לשרת - מנסים להתחבר מחדש...',

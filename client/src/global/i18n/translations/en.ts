@@ -335,6 +335,7 @@ export const en: Translations = {
   cacheError: 'Connection issue. Try clearing cache:',
   noUserData: 'Error: No user data received from server',
   offlineMessage: 'No internet connection',
+  offlinePendingSync: 'actions pending sync',
   reconnectingMessage: 'Reconnecting...',
   connectingMessage: 'Connecting to server...',
   serverUnreachableMessage: 'Can\'t reach the server - retrying...',

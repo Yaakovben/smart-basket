@@ -50,7 +50,8 @@ export default defineConfig({
         enabled: false
       },
       injectManifest: {
-        globPatterns: [], // No caching
+        // כל נכסי ה-build נשמרים במטמון כדי שהאפליקציה תיטען גם ללא רשת
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
       manifest: {
         name: 'Smart Basket',

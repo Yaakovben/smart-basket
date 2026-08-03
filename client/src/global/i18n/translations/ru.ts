@@ -335,6 +335,7 @@ export const ru: Translations = {
   cacheError: 'Проблема соединения. Очистите кэш:',
   noUserData: 'Ошибка: данные пользователя не получены от сервера',
   offlineMessage: 'Нет подключения к интернету',
+  offlinePendingSync: 'действий ожидают синхронизации',
   reconnectingMessage: 'Переподключение...',
   connectingMessage: 'Подключение к серверу...',
   serverUnreachableMessage: 'Нет связи с сервером - повторное подключение...',

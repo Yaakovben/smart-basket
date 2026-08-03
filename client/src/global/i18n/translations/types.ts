@@ -333,6 +333,7 @@ export type TranslationKeys =
   | 'cacheError'
   | 'noUserData'
   | 'offlineMessage'
+  | 'offlinePendingSync'
   | 'reconnectingMessage'
   | 'connectingMessage'
   | 'serverUnreachableMessage'
