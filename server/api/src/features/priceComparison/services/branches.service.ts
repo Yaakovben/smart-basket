@@ -6,7 +6,6 @@
  * יש cache בזיכרון (2 דקות) שנמנע מפגיעה במונגו בכל בקשת השוואת מחירים.
  */
 
-import { BranchDAL } from '../dal/branch.dal';
 import { Branch, type IBranchDoc } from '../models/Branch.model';
 import type { ChainId } from '../models/Price.model';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
@@ -72,26 +71,22 @@ async function ensureSeedLoaded(): Promise<void> {
     // לא יחליף נתונים שנערכו ידנית באדמין.
     const count = await Branch.countDocuments();
     logger.info(`[branches-seed] DB has ${count} branches, upserting ${KNOWN_BRANCHES.length} seeds...`);
-    let loaded = 0;
-    for (const b of KNOWN_BRANCHES) {
-      try {
-        await Branch.updateOne(
-          { chainId: b.chainId, storeId: b.storeId },
-          { $set: {
-            chainId: b.chainId, chainName: chainNames[b.chainId] || b.chainId,
-            storeId: b.storeId, storeName: b.storeName,
-            address: b.address, city: b.city,
-            lat: b.lat, lng: b.lng,
-            coordSource: 'portal', lastSyncedAt: new Date(),
-          } },
-          { upsert: true }
-        );
-        loaded++;
-      } catch (e) {
-        if (loaded === 0) logger.error('[branches-seed] first error:', e);
-      }
-    }
-    logger.info(`[branches-seed] upserted ${loaded}/${KNOWN_BRANCHES.length} branches`);
+    const now = new Date();
+    const ops = KNOWN_BRANCHES.map(b => ({
+      updateOne: {
+        filter: { chainId: b.chainId, storeId: b.storeId },
+        update: { $set: {
+          chainId: b.chainId, chainName: chainNames[b.chainId] || b.chainId,
+          storeId: b.storeId, storeName: b.storeName,
+          address: b.address, city: b.city,
+          lat: b.lat, lng: b.lng,
+          coordSource: 'portal' as const, lastSyncedAt: now,
+        } },
+        upsert: true,
+      },
+    }));
+    const result = await Branch.bulkWrite(ops, { ordered: false });
+    logger.info(`[branches-seed] upserted ${result.upsertedCount + result.modifiedCount}/${KNOWN_BRANCHES.length} branches`);
   } catch (err) {
     logger.error('[branches-seed] check failed:', err);
     seedLoadAttempted = false; // נסה שוב בבקשה הבאה
@@ -101,7 +96,11 @@ async function ensureSeedLoaded(): Promise<void> {
 async function getBranches(): Promise<IBranchDoc[]> {
   if (cache && Date.now() - cache.loadedAt < CACHE_TTL_MS) return cache.branches;
   await ensureSeedLoaded();
-  const all = await BranchDAL.findAll();
+  // שדות הכרחיים בלבד - מפחית payload מ-DB ומהירות טעינה לזיכרון
+  const all = await Branch.find(
+    {},
+    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1 }
+  ).lean();
   cache = { branches: all as unknown as IBranchDoc[], loadedAt: Date.now() };
   return cache.branches;
 }

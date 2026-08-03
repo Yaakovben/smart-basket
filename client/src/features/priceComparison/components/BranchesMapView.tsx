@@ -160,8 +160,11 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location?.lat, location?.lng]);
 
+  // מגבילים ל-150 markers - Leaflet מאט משמעותית מעל 200 (במיוחד במובייל)
   const validBranches = useMemo(
-    () => (branches ?? []).filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && b.lat !== 0 && b.lng !== 0),
+    () => (branches ?? [])
+      .filter(b => typeof b.lat === 'number' && typeof b.lng === 'number' && b.lat !== 0 && b.lng !== 0)
+      .slice(0, 150),
     [branches]
   );
 

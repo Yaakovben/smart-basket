@@ -12,8 +12,12 @@ function load(): void {
   import('posthog-js').then(({ default: posthog }) => {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
-      capture_pageview: false, // ניווט הוא SPA - נשלח track ידני, לא כל שינוי route
-      autocapture: false, // רק אירועים מפורשים - שליטה מלאה על מה שנשלח
+      capture_pageview: true,
+      autocapture: true,
+      session_recording: {
+        maskAllInputs: true, // מסתיר שדות קלט (פרטיות)
+        maskInputOptions: { password: true },
+      },
     });
     instance = posthog;
   });
