@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useSettings } from '../context/SettingsContext';
 import { socketService } from '../../services/socket/socket.service';
+import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
 interface Props {
   visible: boolean;
@@ -96,7 +97,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
         py: 0.5, px: 1.25,
         boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
       }}>
-        <CircularProgress size={10} sx={{ color: 'rgba(255,255,255,0.85)' }} />
+        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
         <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 500, lineHeight: 1.3 }}>
           {hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage')}
         </Typography>
@@ -116,7 +117,7 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
-      <CircularProgress size={12} sx={{ color: 'white' }} />
+      <WifiFadeIcon style={{ fontSize: 20, color: 'white', flexShrink: 0 }} />
       <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
         {t('serverUnreachableMessage')}
       </Typography>

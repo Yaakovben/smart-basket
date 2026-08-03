@@ -70,7 +70,11 @@ export async function refreshAccessToken(): Promise<string | null> {
       const status = axiosError.response?.status;
       // שגיאת אימות (401/403): ייתכן שטאב אחר כבר סיבב את הטוקן
       if (status === 401 || status === 403) {
-        // בדיקה אם הטוקן ב-localStorage השתנה (טאב אחר סיבב אותו)
+        // אם המכשיר אופליין - השרת לא זמין, לא מנקים טוקנים
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
+
+        // המתנה קצרה: race condition בין טאבים - הטאב השני אולי כבר שמר טוקן חדש
+        await new Promise<void>(r => setTimeout(r, 250));
         const currentRefreshToken = getRefreshToken();
         if (currentRefreshToken && currentRefreshToken !== refreshToken) {
           // טאב אחר כבר רענן, ננסה שוב עם הטוקן החדש
@@ -214,7 +218,8 @@ apiClient.interceptors.response.use(
       // בדיקה אם הטוקנים נוקו (שגיאת אימות) או לא (שגיאת רשת)
       if (!getRefreshToken()) {
         // שגיאת אימות אמיתית, טוקנים נוקו, מפנים ללוגין
-        if (!isAuthInProgress && !isRedirecting && window.location.pathname !== '/login') {
+        // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש
+        if (!isAuthInProgress && !isRedirecting && navigator.onLine && window.location.pathname !== '/login') {
           isRedirecting = true;
           localStorage.removeItem('cached_user');
           try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }

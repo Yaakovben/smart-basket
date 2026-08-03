@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { User, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, notificationsApi, type ApiList } from "../../services/api";
 import { socketService } from "../../services/socket";
-import { getAccessToken, clearTokens, rehydrateTokensFromIdb } from "../../services/api/client";
+import { getAccessToken, clearTokens, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 
 // זמן הרישום האחרון של פתיחת אפליקציה (מודולרי, שורד StrictMode re-mount).
@@ -69,6 +69,7 @@ export function useAuth() {
   // בדיקת סשן קיים בטעינה
   useEffect(() => {
     const checkAuth = async () => {
+      setAuthInProgress(true);
       let token = getAccessToken();
       if (!token) {
         // ייתכן ש-localStorage נמחק (iOS Safari ITP); ננסה לשחזר מ-IDB
@@ -159,6 +160,7 @@ export function useAuth() {
         // סימון שגיאת חיבור כדי להציג הודעה למשתמש
         setInitialData(prev => ({ ...prev, connectionError: true }));
       }
+      setAuthInProgress(false);
       setLoading(false);
     };
     checkAuth();
