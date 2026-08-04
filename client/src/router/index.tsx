@@ -47,6 +47,7 @@ const PageLoader = PageSkeleton;
 
 // זמן טעינת המודול - נקודת ייחוס ל"טעינה ראשונית" (ראו handler של SW_ACTIVATED למטה)
 const APP_LOAD_TIME = Date.now();
+const FIRST_INSTALL_GRACE_MS = 20000;
 
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
@@ -168,7 +169,6 @@ export const AppRouter = () => {
       // "החיבור פג תוקף" בלי שום סיבה אמיתית. מתעלמים מהודעות שמגיעות
       // בחלון הזמן הקצר שאחרי טעינת האפליקציה - שם זו כמעט תמיד התקנה
       // ראשונה, לא deploy אמיתי שקרה תוך כדי שימוש.
-      const FIRST_INSTALL_GRACE_MS = 20000;
       if (
         event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload' &&
         Date.now() - APP_LOAD_TIME > FIRST_INSTALL_GRACE_MS
