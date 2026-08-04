@@ -98,7 +98,19 @@ listSchema.index({ 'members.user': 1 });
 listSchema.index({ owner: 1, updatedAt: -1 });
 listSchema.index({ 'members.user': 1, updatedAt: -1 });
 
-// תומך גם בסיסמאות bcrypt ישנות וגם בטקסט פשוט חדש
+// הצפנת סיסמת קבוצה לפני שמירה - בלי זה כל דליפת DB/גיבוי הייתה חושפת את
+// כל סיסמאות ההצטרפות בטקסט גלוי (ה-timing-safe compare למטה מגן רק על
+// ההשוואה, לא על האחסון עצמו).
+listSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || !this.password) return next();
+  if (this.password.startsWith('$2b$')) return next(); // כבר מגובב (ישן)
+
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// תומך גם בסיסמאות bcrypt ישנות וגם בטקסט פשוט ישן (מלפני התיקון)
 listSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {

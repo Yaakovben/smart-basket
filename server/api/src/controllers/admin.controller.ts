@@ -25,10 +25,9 @@ import { deleteAccount } from '../services/user.service';
  * רשימת כל המשתמשים עם סטטיסטיקות התחברות (totalLogins, lastLogin, וכו׳).
  */
 export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const [users, loginStats] = await Promise.all([
-    UserDAL.findAllSorted(),
-    LoginActivityDAL.getStatsByUser(),
-  ]);
+  const users = await UserDAL.findAllSorted();
+  const userIds = users.map(u => String(u._id));
+  const loginStats = await LoginActivityDAL.getStatsByUser(userIds);
 
   const statsMap = new Map(loginStats.map(s => [s.userId, s]));
 

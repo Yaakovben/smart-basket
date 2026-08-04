@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { LoginActivity, type ILoginActivity, type LoginMethod } from '../models';
 import { createBaseDal } from './base.dal';
 
@@ -20,16 +21,21 @@ export const LoginActivityDAL = {
     return { activities, total };
   },
 
-  // סטטיסטיקות התחברות לכל משתמש
+  // סטטיסטיקות התחברות לכל משתמש (רק עבור userIds הנתונים - בלי הסינון הזה
+  // ה-$group רץ על כל היסטוריית ההתחברויות אי-פעם, שגדלה בכל login/app-open
+  // ולא רק בהרשמות; scan+group על אוסף שלם כזה זו עבודה מיותרת כשבפועל
+  // צריך רק את המשתמשים שמוצגים כרגע ברשימת האדמין).
   // משתמש ב-$max במקום $sort+$push - חוסך מיון כבד וצריכת זיכרון
-  async getStatsByUser(): Promise<Array<{
+  async getStatsByUser(userIds: string[]): Promise<Array<{
     userId: string;
     totalLogins: number;
     lastLoginAt: Date | null;
     lastLoginMethod: string | null;
     lastAppOpenAt: Date | null;
   }>> {
+    if (userIds.length === 0) return [];
     return LoginActivity.aggregate([
+      { $match: { user: { $in: userIds.map(id => new mongoose.Types.ObjectId(id)) } } },
       {
         $group: {
           _id: '$user',
