@@ -61,26 +61,27 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 // ===== מסך לבן בחזרה מ-background (PWA / iOS Safari) =====
 // כשהמשתמש עוזב ל-WhatsApp/Waze וחוזר, הדפדפן עלול להרוג את ה-JS
 // (לחץ זיכרון) ואז לטעון את המסמך מ-BFCache בלי React. התוצאה - מסך לבן.
-// פתרונות:
-//  1. event 'pageshow' עם persisted=true ⇒ ה-DOM שוחזר מ-BFCache. נטען מחדש.
-//  2. visibilitychange אחרי שהיינו מוסתרים יותר מ-30 דק' ⇒ נרענן ברקע
-//     (ה-JS עלול להיות שגוי בגלל זמן רב מדי במצב suspended).
 //
-// דפדפנים פנימיים (WhatsApp/Instagram in-app browser) יורים pageshow
-// עם persisted=true הרבה יותר אגרסיבית מדפדפן רגיל - כולל תוך כדי זרימת
-// Google Sign-In (מעבר ל-native chrome/intent וחזרה). רענון כפוי בדיוק
-// באותו רגע קוטע את תהליך ההתחברות באמצע ומציג "החיבור פג תוקף" בלי סיבה
-// אמיתית (אותה תופעה בדיוק שתועדה ותוקנה עבור SW_ACTIVATED ב-router/index.tsx -
-// כאן היה חסר guard מקביל). לכן מתעלמים מ-pageshow שמגיע בחלון זמן קצר
-// אחרי טעינת האפליקציה - שם כמעט תמיד זו התחברות בתהליך, לא bfcache restore
-// אמיתי אחרי זמן ארוך מחוץ לאפליקציה.
-const APP_LOAD_TIME = Date.now();
-const PAGESHOW_RELOAD_GRACE_MS = 20000;
+// בעבר זה רענן באופן בלתי-מותנה (מעבר לחלון-חסד של 20 שניות) בכל
+// pageshow עם persisted=true, או אחרי 30 דק' ברקע - בדיוק כמו שני המנגנונים
+// המקבילים (SW_ACTIVATED ב-router/index.tsx, handleNewVersion ב-App.tsx)
+// שהוסרו מאותה סיבה בדיוק: רענון כפוי יכול לקטוע בקשת רשת שרצה באותו רגע
+// (כולל רענון טוקן), וזו הייתה בפועל אחת הסיבות ל"נזרק ללוגין בלי סיבה" -
+// bfcache restore על מובייל (חזרה מרקע) הוא בדיוק התרחיש של "פתיחה שנייה
+// אחרי סגירה", וקורה בדיוק ברגע שה-auth-check הפרואקטיבי (client.ts,
+// visibilitychange) רץ.
+//
+// עכשיו בודקים אם המסך *באמת* לבן (ה-root ריק) לפני שמרעננים בכלל -
+// זה המקרה היחיד שבאמת דורש תיקון; bfcache restore רגיל משמר את מצב
+// React במלואו ולא צריך שום התערבות.
+function isRootEmpty(): boolean {
+  const root = document.getElementById('root');
+  return !root || root.childElementCount === 0;
+}
 if (typeof window !== 'undefined') {
   let hiddenAt = 0;
   window.addEventListener('pageshow', (e) => {
-    if ((e as PageTransitionEvent).persisted && Date.now() - APP_LOAD_TIME > PAGESHOW_RELOAD_GRACE_MS) {
-      // BFCache restore - נטען מחדש כדי שכל ה-JS ירוץ מההתחלה
+    if ((e as PageTransitionEvent).persisted && isRootEmpty()) {
       window.location.reload();
     }
   });
@@ -90,8 +91,8 @@ if (typeof window !== 'undefined') {
     } else if (document.visibilityState === 'visible' && hiddenAt > 0) {
       const awayMs = Date.now() - hiddenAt;
       hiddenAt = 0;
-      // אחרי 30 דק' מחוץ לאפליקציה - רענון רך כדי למנוע מצב לא תקין
-      if (awayMs > 30 * 60 * 1000) {
+      // אחרי 30 דק' מחוץ לאפליקציה, רק אם המסך באמת לבן - לא רענון גורף
+      if (awayMs > 30 * 60 * 1000 && isRootEmpty()) {
         window.location.reload();
       }
     }
