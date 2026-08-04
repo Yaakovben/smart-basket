@@ -80,9 +80,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     try {
       // שימוש ב axios ישיר (לא apiClient) למניעת interceptor רקורסיבי
+      // timeout ארוך כמו ב-apiClient (ראו שורה 34) - 10 שניות היה מספיק
+      // רק לרוב המקרים, אבל Render Free cold start יכול לקחת 30-50 שניות
+      // (ראו הערה למעלה). ניסיון רענון שנקטע ב-timeout כאן מוחזר כ-null
+      // בלי לנקות טוקנים (רואים למטה, timeout לא מזוהה כ-401/403/409),
+      // אבל זה מבזבז את "הניסיון הראשון" בלי סיכוי אמיתי להצליח כשהשרת
+      // עדיין מתעורר - בדיוק ברגע הכי קריטי, פתיחת אפליקציה אחרי שנסגרה.
       const response = await axios.post(`${API_URL}/auth/refresh`, {
         refreshToken,
-      }, { timeout: 10000 });
+      }, { timeout: 20000 });
 
       const { accessToken, refreshToken: newRefreshToken } = response.data.data;
       setTokens(accessToken, newRefreshToken);
@@ -112,7 +118,7 @@ export async function refreshAccessToken(): Promise<string | null> {
           try {
             const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {
               refreshToken: currentRefreshToken,
-            }, { timeout: 10000 });
+            }, { timeout: 20000 });
             const { accessToken, refreshToken: newRefreshToken } = retryResponse.data.data;
             setTokens(accessToken, newRefreshToken);
             return accessToken;
@@ -145,12 +151,17 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 // רענון פרואקטיבי כשהאפליקציה חוזרת מרקע (חזרה מ-sleep של מובייל)
+// אם הרענון נכשל סופית (הטוקנים נוקו) - מודיעים למשתמש מיד דרך
+// redirectToSessionExpiredLogin, במקום להשאיר סשן מת בשקט עד לבקשת API
+// הבאה. ראו ההערה ליד redirectToSessionExpiredLogin למטה לפרטים.
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && getAccessToken() && isTokenExpired()) {
       refreshAccessToken().then(newToken => {
         if (newToken) {
           socketService.updateToken(newToken);
+        } else if (!getRefreshToken()) {
+          redirectToSessionExpiredLogin('forced_login_redirect_background', { trigger: 'visibilitychange' });
         }
       });
     }
@@ -198,6 +209,24 @@ apiClient.interceptors.request.use(
 // ===== Response Interceptor =====
 // טיפול ב 401 כ fallback: אם הרענון הפרואקטיבי לא עזר
 let isRedirecting = false;
+
+// הפניה מרוכזת ל-login עם דגל "session expired". משמש גם את ה-response
+// interceptor למטה (401 אחרי רענון כושל) וגם את הרענון הפרואקטיבי ב-
+// visibilitychange למעלה. לפני התיקון, כשל ברענון הפרואקטיבי (שרץ ברקע,
+// בלי בקשת API נלווית שהמשתמש מחכה לה) היה מנקה טוקנים בשקט בלי להודיע -
+// הסשן כבר היה מת, אבל שום דבר לא הראה את זה. התופעה שהתגלתה: "האפליקציה
+// נפתחת ועובדת כמה שניות אחרי סגירה/פתיחה מחדש, ואז לחיצה על כפתור כלשהו
+// (הראשון ששולח בקשת API אמיתית) 'מוציאה' עם הודעת פג תוקף" - בעוד שבפועל
+// הסשן כבר נכשל קודם, בלי סימן. עכשיו שני המקומות מדווחים על הכשל מיד
+// כשהוא מתגלה, לא רק כשהמשתמש נתקל בו במקרה.
+function redirectToSessionExpiredLogin(reason: string, extra: Record<string, unknown> = {}) {
+  if (isAuthInProgress || isRedirecting || !navigator.onLine || window.location.pathname === '/login') return;
+  isRedirecting = true;
+  reportAuthDiagnostic(reason, extra);
+  localStorage.removeItem('cached_user');
+  try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
+  window.location.href = '/login';
+}
 
 apiClient.interceptors.response.use(
   (response) => {
@@ -256,16 +285,9 @@ apiClient.interceptors.response.use(
 
       // הרענון נכשל
       // בדיקה אם הטוקנים נוקו (שגיאת אימות) או לא (שגיאת רשת)
+      // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש (מטופל בתוך הפונקציה)
       if (!getRefreshToken()) {
-        // שגיאת אימות אמיתית, טוקנים נוקו, מפנים ללוגין
-        // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש
-        if (!isAuthInProgress && !isRedirecting && navigator.onLine && window.location.pathname !== '/login') {
-          isRedirecting = true;
-          reportAuthDiagnostic('forced_login_redirect', { url: originalRequest.url, status: error.response?.status });
-          localStorage.removeItem('cached_user');
-          try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
-          window.location.href = '/login';
-        }
+        redirectToSessionExpiredLogin('forced_login_redirect', { url: originalRequest.url, status: error.response?.status });
       }
       // שגיאת רשת: הטוקנים נשמרו, המשתמש יישאר מחובר ויוכל לנסות שוב
       return Promise.reject(error);
