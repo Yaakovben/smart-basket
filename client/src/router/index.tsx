@@ -45,10 +45,6 @@ const JoinRedirect = () => {
 
 const PageLoader = PageSkeleton;
 
-// זמן טעינת המודול - נקודת ייחוס ל"טעינה ראשונית" (ראו handler של SW_ACTIVATED למטה)
-const APP_LOAD_TIME = Date.now();
-const FIRST_INSTALL_GRACE_MS = 20000;
-
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -152,60 +148,25 @@ export const AppRouter = () => {
     if (!authLoading) hideInitialLoader();
   }, [authLoading]);
 
-  // הודעות מ-Service Worker: ניווט מהתראות, ורענון כשה-SW התעדכן.
+  // הודעות מ-Service Worker: ניווט מהתראות בלבד.
+  //
+  // בעבר היה כאן גם רענון כפוי (window.location.reload) כשגרסה חדשה של
+  // ה-SW השתלטה, כדי לסנכרן JS ישן מול SW חדש. הוסר לגמרי: כל ניסיון
+  // לתזמן את הרענון "בזמן בטוח" (רק ברקע) עדיין השאיר סיכון שהוא יקטע
+  // בקשת רשת שרצה באותו רגע בדיוק - כולל רענון טוקן - וזו הייתה הסיבה
+  // בפועל ל"נזרק ללוגין" בלי שום פעולה מצד המשתמש. אין דרך בטוחה ב-100%
+  // לדעת שאף בקשה לא באוויר, אז עדיף לוותר על הסנכרון האוטומטי לגמרי:
+  // ה-SW החדש כבר משתלט על כל ניווט/טעינה טבעית הבאה (headers של
+  // Cache-Control: no-cache על index.html/sw.js בvercel.json דואגים
+  // לכך), בלי שום reload יזום שעלול לקטוע session פעיל.
   useEffect(() => {
-    // מבצע את הרענון בפועל - רק כשבטוח (ראו למטה למה)
-    const doReload = () => {
-      if (sessionStorage.getItem('sb_sw_reloaded')) return;
-      sessionStorage.setItem('sb_sw_reloaded', '1');
-      window.location.reload();
-    };
-
-    // אם SW_ACTIVATED הגיע בזמן שהאפליקציה גלויה/פעילה, לא מרעננים מיד -
-    // ממתינים לרגע שהאפליקציה עוברת לרקע (המשתמש עזב/סוגר). רענון מיידי
-    // באמצע שימוש פעיל עלול לקטוע בקשת רשת שרצה באותו רגע בדיוק (כולל
-    // רענון טוקן) - זו הייתה הסיבה בפועל ל"נזרק ללוגין בפתיחה השנייה
-    // בלי לגעת בכלום": ה-SW התעדכן ברקע במהלך הפתיחה הראשונה, ורק
-    // בפתיחה השנייה בפועל השתלט - אבל הרענון הכפוי קרה תוך כדי checkAuth
-    // הרץ באותו רגע וקטע אותו.
-    let pendingReload = false;
-
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
         navigate(event.data.url);
       }
-      // אחרי deploy חדש ה-SW מפעיל SW_ACTIVATED — רענון (בזמן בטוח) מונע
-      // חוסר עקביות בין JS ישן שכבר רץ לבין SW חדש שתפס שליטה.
-      //
-      // ההתקנה הראשונה-אי-פעם (למשל מיד אחרי הוספה למסך הבית) גם מפעילה
-      // 'activate' ושולחת את אותה הודעה - אבל אין שם שום JS ישן שצריך
-      // "לסנכרן". מתעלמים מהודעות שמגיעות בחלון הזמן הקצר שאחרי טעינת
-      // האפליקציה - שם זו כמעט תמיד התקנה ראשונה, לא deploy אמיתי שקרה
-      // תוך כדי שימוש.
-      if (
-        event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload' &&
-        Date.now() - APP_LOAD_TIME > FIRST_INSTALL_GRACE_MS
-      ) {
-        if (document.visibilityState === 'hidden') {
-          doReload();
-        } else {
-          pendingReload = true;
-        }
-      }
-    };
-    // רענון דחוי - מתבצע ברגע שהאפליקציה עוברת לרקע, לא באמצע שימוש
-    const visibilityHandler = () => {
-      if (pendingReload && document.visibilityState === 'hidden') {
-        pendingReload = false;
-        doReload();
-      }
     };
     navigator.serviceWorker?.addEventListener('message', handler);
-    document.addEventListener('visibilitychange', visibilityHandler);
-    return () => {
-      navigator.serviceWorker?.removeEventListener('message', handler);
-      document.removeEventListener('visibilitychange', visibilityHandler);
-    };
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
   }, [navigate]);
 
   // התראות שמורות, נטענות מהשרת ומתעדכנות בזמן אמת
