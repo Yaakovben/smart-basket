@@ -57,15 +57,21 @@ export async function createTokens(userId: string, email: string, name: string, 
 // המשתמש. ראה RefreshToken.model.ts + findByPreviousToken.
 const ROTATION_GRACE_MS = 60 * 1000;
 
+// תוצאת רענון: מבחינה בין "הטוקן באמת לא תקף" (המשתמש חייב להתחבר מחדש)
+// לבין "בקשה מקבילה כבר סובבה את הטוקן" (race זמני - הלקוח צריך לנסות שוב,
+// לא להתנתק). לפני התיקון שתי הסיבות חזרו כ-null זהה, וה-controller המיר
+// את שתיהן לאותה שגיאת 401 גנרית - לקוח שממצה את תקציב ה-retry שלו (למשל
+// כמה טאבים/מופעי PWA שמרעננים כמעט בו-זמנית, או שרת איטי אחרי cold-start)
+// היה מנקה טוקנים ומתנתק על race שהיה נפתר תוך שניות אם היה עוד ניסיון.
+export type RefreshResult =
+  | { status: 'ok'; tokens: AuthTokens }
+  | { status: 'race' } // בקשה מקבילה כבר החליפה את הטוקן - ננסה שוב, לא מנתקים
+  | { status: 'invalid' }; // הטוקן לא קיים/פג תוקף/יתום - התנתקות אמיתית
+
 /**
  * מחליף refresh token בזוג טוקנים חדש (rotation אטומי).
- *
- * מחזיר null אם:
- *  - הטוקן לא קיים / פג תוקפו, ולא נמצא גם כטוקן-קודם בתוך חלון החסד
- *  - המשתמש נמחק בינתיים
- *  - race condition (בקשה מקבילה כבר החליפה את הטוקן, ואין עדיין חלון חסד)
  */
-export async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
+export async function refreshAccessToken(refreshToken: string): Promise<RefreshResult> {
   let tokenDoc = await TokenDAL.findByTokenPopulated(refreshToken);
   let isReplay = false;
 
@@ -76,19 +82,19 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
     tokenDoc = await TokenDAL.findByPreviousToken(refreshToken);
     isReplay = true;
   } else if (tokenDoc.expiresAt < new Date()) {
-    // טוקן פג תוקף לגמרי - מנקים ומחזירים null
+    // טוקן פג תוקף לגמרי - מנקים ומחזירים invalid
     await tokenDoc.deleteOne();
-    return null;
+    return { status: 'invalid' };
   }
 
-  if (!tokenDoc) return null;
+  if (!tokenDoc) return { status: 'invalid' };
 
   const user = tokenDoc.user as unknown as { _id: string; email: string; name: string; tokenVersion: number } | null;
 
   // המשתמש נמחק — ניקוי טוקן יתום
   if (!user) {
     await tokenDoc.deleteOne();
-    return null;
+    return { status: 'invalid' };
   }
 
   const userId = user._id.toString();
@@ -98,7 +104,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
   // ומחדש את שרשרת ה-replay) - רק מנפיקים access token טרי לאותו refresh
   // token הנוכחי, שכבר פעיל.
   if (isReplay) {
-    return { accessToken: newAccessToken, refreshToken: tokenDoc.token };
+    return { status: 'ok', tokens: { accessToken: newAccessToken, refreshToken: tokenDoc.token } };
   }
 
   const newRefreshToken = generateRefreshToken();
@@ -113,10 +119,10 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
     ROTATION_GRACE_MS
   );
 
-  // בקשה מקבילה כבר הספיקה להחליף את הטוקן
-  if (!updated) return null;
+  // בקשה מקבילה כבר הספיקה להחליף את הטוקן - race זמני, לא כשל אימות אמיתי
+  if (!updated) return { status: 'race' };
 
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  return { status: 'ok', tokens: { accessToken: newAccessToken, refreshToken: newRefreshToken } };
 }
 
 // ============== ביטול ==============

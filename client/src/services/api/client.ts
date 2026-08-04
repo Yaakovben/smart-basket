@@ -14,6 +14,17 @@ if (!API_URL) {
 let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
+// דיווח אבחוני best-effort ל-Sentry (אם מוגדר) ברגע שבו טוקנים מנוקים בפועל
+// עקב כשל אימות - לא ידוע מראש אם/למה זה קורה בפרודקשן, אז ברגע שזה כן
+// קורה רוצים תיעוד עם ההקשר (סטטוסים שראינו) במקום לנחש שוב על קוד בלבד.
+// import דינמי (לא top-level) כי Sentry עצמו נטען lazy ב-main.tsx.
+function reportAuthDiagnostic(reason: string, context: Record<string, unknown>) {
+  if (!import.meta.env.PROD) return;
+  import('@sentry/react').then(Sentry => {
+    Sentry.captureMessage(`[auth] ${reason}`, { level: 'warning', extra: context });
+  }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+}
+
 // timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -79,16 +90,21 @@ export async function refreshAccessToken(): Promise<string | null> {
     } catch (error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-      // שגיאת אימות (401/403): ייתכן שטאב/הקשר אחר כבר סיבב את הטוקן
-      if (status === 401 || status === 403) {
+      // 401/403: הטוקן לא תקף (או ייתכן שטאב/הקשר אחר כבר סיבב אותו).
+      // 409: השרת מבחין מפורשות בין "לא תקף" ל"race מול רענון מקביל שכבר
+      // סובב את הטוקן" (ראו auth.controller.ts + token.service.ts,
+      // RefreshResult) - חובה לנסות שוב, ואסור לנקות טוקנים על 409 בלבד
+      // אפילו אם כל הניסיונות נכשלים, כי זה לא מוכיח שהטוקן לא תקף.
+      if (status === 401 || status === 403 || status === 409) {
         // אם המכשיר אופליין - השרת לא זמין, לא מנקים טוקנים
         if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
 
         // race condition בין טאבים/הקשרים (למשל PWA מותקן + טאב Safari רגיל
         // באותו origin, שניהם עם אותו refresh token): אחד מסובב, השני מקבל
-        // 401 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
+        // 401/409 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
         // תקוע מאחורי cold-start של Render (יכול לקחת 30-50 שניות) - ננסה
         // כמה פעמים עם backoff לפני שמסיקים שהטוקן באמת לא תקף ומנקים.
+        let lastStatus: number | undefined = status;
         for (let attempt = 0; attempt < 3; attempt++) {
           await new Promise<void>(r => setTimeout(r, 500 * (attempt + 1)));
           const currentRefreshToken = getRefreshToken();
@@ -102,12 +118,19 @@ export async function refreshAccessToken(): Promise<string | null> {
             return accessToken;
           } catch (retryError) {
             const retryStatus = (retryError as AxiosError).response?.status;
-            // שגיאת רשת/שרת (לא 401/403) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
-            if (retryStatus !== 401 && retryStatus !== 403) return null;
+            lastStatus = retryStatus;
+            // שגיאת רשת/שרת (לא 401/403/409) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
+            if (retryStatus !== 401 && retryStatus !== 403 && retryStatus !== 409) return null;
             // עדיין נדחה - ייתכן שהצד המנצח עדיין לא סיים, ננסה שוב
           }
         }
-        clearTokens();
+        // מנקים רק אם הסטטוס האחרון שראינו הוא כשל אימות אמיתי (401/403).
+        // 409 שממשיך לחזור אחרי כל הניסיונות נשאר race לא-פתור - משאירים
+        // את המשתמש מחובר, הרענון הבא (בקשת API הבאה) ינסה שוב.
+        if (lastStatus === 401 || lastStatus === 403) {
+          reportAuthDiagnostic('refresh_exhausted', { initialStatus: status, finalStatus: lastStatus });
+          clearTokens();
+        }
       }
       // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
@@ -238,6 +261,7 @@ apiClient.interceptors.response.use(
         // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש
         if (!isAuthInProgress && !isRedirecting && navigator.onLine && window.location.pathname !== '/login') {
           isRedirecting = true;
+          reportAuthDiagnostic('forced_login_redirect', { url: originalRequest.url, status: error.response?.status });
           localStorage.removeItem('cached_user');
           try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
           window.location.href = '/login';

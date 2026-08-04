@@ -151,6 +151,11 @@ export function useAuth() {
         // בשגיאות רשת שומרים את המשתמש השמור למניעת התנתקות מיותרת
         const status = (error as { response?: { status?: number } })?.response?.status;
         if (status === 401) {
+          if (import.meta.env.PROD) {
+            import('@sentry/react').then(Sentry => {
+              Sentry.captureMessage('[auth] checkAuth_401_on_launch', { level: 'warning' });
+            }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+          }
           socketService.disconnect();
           clearTokens();
           localStorage.removeItem('cached_user');
