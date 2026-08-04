@@ -8,7 +8,7 @@ import { ErrorBoundary } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 
-// עדכון גרסה: רק רישום, בלי רענון כפוי.
+// עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
 //
 // בעבר, כשה-build version (הזרקה ע"י Vite, hash-content) השתנה מאז
 // הביקור הקודם, הפונקציה הזו עשתה window.location.reload() מיידי ובלתי-
@@ -17,12 +17,34 @@ import { useServiceWorker } from './global/hooks';
 // למשתמשים שנזרקים ללוגין בלי סיבה נראית לעין אחרי כל deploy: הרענון
 // קטע בקשות שרצו באותו רגע בדיוק. אין רגע "בטוח" לרענון כפוי שרץ כל כך
 // מוקדם בטעינת הדף - אז ויתרנו עליו לגמרי, כמו שנעשה גם למנגנון המקביל
-// ב-router/index.tsx. Cache-Control: no-cache על index.html/sw.js
-// (vercel.json) כבר דואג שהטעינה הבאה (סגירה-פתיחה טבעית) תביא קוד טרי,
-// בלי צורך ברענון יזום.
+// ב-router/index.tsx.
+//
+// עדיין רוצים לוודא שמכשירים עם SW/cache ישנים "יתנקו" בפועל ולא ייתקעו -
+// אז מנקים caches + מבטלים רישום SW ברקע (לא חוסם, לא מרענן). ה-JS שכבר
+// רץ בזיכרון ממשיך בלי הפרעה; הטעינה הבאה (סגירה-פתיחה טבעית, שלא עוברת
+// דרך שום cache ישן יותר) מקבלת קוד טרי לגמרי.
 const handleNewVersion = () => {
   if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) return;
-  localStorage.setItem('app_build_version', __BUILD_VERSION__);
+  const buildVersion = __BUILD_VERSION__;
+  const storedVersion = localStorage.getItem('app_build_version');
+  localStorage.setItem('app_build_version', buildVersion);
+
+  if (!storedVersion || storedVersion === buildVersion) return;
+
+  (async () => {
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+      }
+    } catch (err) {
+      console.warn('[version] background cache/SW cleanup failed (non-fatal):', err);
+    }
+  })();
 };
 
 handleNewVersion();
