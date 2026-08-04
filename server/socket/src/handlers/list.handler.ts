@@ -159,3 +159,42 @@ export const registerListHandlers = (
 export const cleanupListSockets = (listId: string): void => {
   listUserSockets.delete(listId);
 };
+
+// התאמה תקופתית מול ה-API: סוגר את הפער שבו הודעת Redis על הסרה/מחיקה
+// (ראו redis.service.ts) אבדה כי ה-subscriber היה מנותק/מתחבר-מחדש בדיוק
+// באותו רגע - socket שכבר מחובר היה נשאר בחדר הרשימה לצמיתות עד שיתנתק
+// בעצמו. כאן בודקים מחדש כל זוג (רשימה, משתמש) מול ה-API בפועל ומוציאים
+// אם החברות כבר לא תקפה. ה-REST API תמיד היה מוגן (בודק DB בכל בקשה) -
+// זה סוגר את אותו הפער בערוץ הריל-טיים בלבד.
+export const revalidateListMemberships = async (
+  io: Server<ClientToServerEvents, ServerToClientEvents>
+): Promise<void> => {
+  // Snapshot לפני התחלת העבודה האסינכרונית - המפות עצמן עלולות להשתנות
+  // (הצטרפות/עזיבה) תוך כדי הבדיקות.
+  const pairs: Array<{ listId: string; userId: string }> = [];
+  for (const [listId, userMap] of listUserSockets) {
+    for (const memberUserId of userMap.keys()) {
+      pairs.push({ listId, userId: memberUserId });
+    }
+  }
+
+  for (const { listId, userId: memberUserId } of pairs) {
+    const socketIds = listUserSockets.get(listId)?.get(memberUserId);
+    if (!socketIds || socketIds.size === 0) continue;
+
+    // כל socket מחובר של המשתמש נושא access token תקף לשימוש בבדיקה
+    const firstSocketId = socketIds.values().next().value;
+    const activeSocket = firstSocketId ? (io.sockets.sockets.get(firstSocketId) as AuthenticatedSocket | undefined) : undefined;
+    const accessToken = activeSocket?.accessToken;
+    if (!accessToken) continue;
+
+    const isMember = await ApiService.verifyMembership(listId, accessToken);
+    if (isMember) continue;
+
+    io.in(`user:${memberUserId}`).socketsLeave(`list:${listId}`);
+    for (const socketId of Array.from(socketIds)) {
+      removeUserSocket(listId, memberUserId, socketId);
+    }
+    logger.info(`Periodic revalidation evicted user ${memberUserId} from list ${listId} (no longer a member)`);
+  }
+};

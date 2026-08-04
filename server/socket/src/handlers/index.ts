@@ -1,4 +1,4 @@
-export { registerListHandlers } from './list.handler';
+export { registerListHandlers, revalidateListMemberships } from './list.handler';
 export { registerNotificationHandlers } from './notification.handler';
 export {
   registerProductHandlers,

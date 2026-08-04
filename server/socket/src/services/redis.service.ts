@@ -8,6 +8,15 @@ import { broadcastProductAdded, broadcastProductToggled, broadcastProductDeleted
 let subscriber: Redis | null = null;
 let isRedisHealthy = false;
 
+// isRedisHealthy נכתב כבר בכל מקום שמעדכן חיבור/ניתוק, אבל עד עכשיו לא
+// נקרא משום מקום - אין שום דרך חיצונית (health check, alert) לדעת שהתהליך
+// כרגע "עיוור" לאירועי user:deleted/member:kicked (ראה revalidateListMemberships
+// ב-list.handler.ts, שמפצה תקופתית בדיוק על החלון הזה).
+export const getRedisStatus = (): 'disabled' | 'healthy' | 'unhealthy' => {
+  if (!env.REDIS_URL) return 'disabled';
+  return isRedisHealthy ? 'healthy' : 'unhealthy';
+};
+
 interface RedisEvent {
   type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted' | 'member:kicked';
   listId: string;

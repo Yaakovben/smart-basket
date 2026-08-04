@@ -9,8 +9,9 @@ import {
   registerListHandlers,
   registerNotificationHandlers,
   registerProductHandlers,
+  revalidateListMemberships,
 } from './handlers';
-import { initRedis, closeRedis } from './services/redis.service';
+import { initRedis, closeRedis, getRedisStatus } from './services/redis.service';
 import type { AuthenticatedSocket, ClientToServerEvents, ServerToClientEvents } from './types';
 
 // מעקב משתמשים מחוברים: userId → Set<socketId>
@@ -32,7 +33,7 @@ if (env.SENTRY_DSN) {
 const httpServer = createServer((req, res) => {
   if (req.url === '/health' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
+    res.end(JSON.stringify({ status: 'ok', redis: getRedisStatus(), timestamp: new Date().toISOString() }));
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -144,6 +145,14 @@ io.on('connection', (socket) => {
 
 initRedis(io);
 
+// גיבוי תקופתי ל-Redis pub/sub: אם הודעת user:deleted/member:kicked אבדה
+// כי ה-subscriber היה מנותק בדיוק אז (ראה redis.service.ts), זה מתקן את
+// זה תוך כמה דקות במקום שהחור יישאר פתוח עד שהמשתמש יתנתק בעצמו.
+const REVALIDATION_INTERVAL_MS = 5 * 60 * 1000;
+const revalidationIntervalId = setInterval(() => {
+  revalidateListMemberships(io).catch((err) => logger.error('revalidateListMemberships failed:', err));
+}, REVALIDATION_INTERVAL_MS);
+
 httpServer.listen(env.PORT, () => {
   logger.info(`Socket.io server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
 });
@@ -151,6 +160,7 @@ httpServer.listen(env.PORT, () => {
 // כיבוי מסודר
 const shutdown = () => {
   logger.info('Shutting down socket server...');
+  clearInterval(revalidationIntervalId);
   closeRedis();
   io.disconnectSockets(true);
   io.close(() => {
