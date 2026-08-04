@@ -110,6 +110,20 @@ export async function googleAuth(
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
+  // אימות audience - בלי זה, userinfo מקבל כל access token תקף של Google
+  // בלי קשר לאיזו אפליקציה הוא הונפק. תוקף שמשיג access token של הקורבן
+  // שהונפק לאפליקציית Google-login *אחרת* (פישינג, אינטגרציה פרוצה וכו')
+  // היה יכול לשלוח אותו לכאן ולהתחזות לקורבן - "confused deputy" קלאסי.
+  const tokenInfoResponse = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
+    { signal: AbortSignal.timeout(10000) }
+  );
+  if (!tokenInfoResponse.ok) throw AuthError.googleAuthFailed();
+  const tokenInfo = (await tokenInfoResponse.json()) as { aud?: string; azp?: string };
+  if (tokenInfo.aud !== env.GOOGLE_CLIENT_ID && tokenInfo.azp !== env.GOOGLE_CLIENT_ID) {
+    throw AuthError.googleAuthFailed();
+  }
+
   // שליפת פרטי משתמש מ-Google
   const response = await fetch(
     'https://www.googleapis.com/oauth2/v3/userinfo',

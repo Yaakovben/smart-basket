@@ -109,8 +109,11 @@ listSchema.methods.comparePassword = async function (
 ): Promise<boolean> {
   if (!this.password) return true; // אין סיסמה = אין הגנה
 
-  // ישן: סיסמאות מוצפנות מתחילות ב-$2b$
-  if (this.password.startsWith('$2b$')) {
+  // ישן: סיסמאות מוצפנות מתחילות ב-$2b$ ובאורך 60 תווים קבוע. בדיקת האורך
+  // חשובה כי סיסמת קבוצה תקנית היא 4 תווים בלי הגבלת charset - מישהו
+  // שבוחר את הסיסמה "$2b$" (4 תווים, startsWith('$2b$') לבד היה true)
+  // היה גורם ל-bcrypt.compare להיכשל על ערך לא-תקין וחוסם הצטרפות לתמיד.
+  if (this.password.startsWith('$2b$') && this.password.length === 60) {
     return bcrypt.compare(candidatePassword, this.password);
   }
 
