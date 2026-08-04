@@ -12,6 +12,10 @@ export interface IUser extends Document {
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
   listOrder: string[];
+  // מוגדל בכל שינוי סיסמה / מחיקת חשבון כדי לבטל access tokens שכבר הונפקו
+  // (JWT הוא stateless - זו הדרך היחידה לבטל טוקן לפני שפג תוקפו).
+  // מוטמע ב-payload של ה-JWT ונבדק מול הערך ב-DB בכל בקשה מאומתת.
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -63,6 +67,10 @@ const userSchema = new Schema<IUser>(
     listOrder: [{
       type: String,
     }],
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

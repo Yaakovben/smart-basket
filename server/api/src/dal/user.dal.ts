@@ -5,8 +5,8 @@ export const UserDAL = {
   ...createBaseDal<IUser>(User),
 
   // שליפה קלה לאימות - רק שדות הכרחיים, בלי hydration של Mongoose
-  async findForAuth(id: string): Promise<{ name: string; email: string; isAdmin: boolean } | null> {
-    return User.findById(id).select('name email isAdmin').lean();
+  async findForAuth(id: string): Promise<{ name: string; email: string; isAdmin: boolean; tokenVersion: number } | null> {
+    return User.findById(id).select('name email isAdmin tokenVersion').lean();
   },
 
   async findByEmail(email: string): Promise<IUser | null> {
@@ -84,7 +84,10 @@ export const UserDAL = {
     return (user as { listOrder?: string[] })?.listOrder || [];
   },
 
+  // מוגבל ל-5000 - טבלת האדמין טוענת את כל המשתמשים בבת אחת (אין UI
+  // pagination כרגע). התקרה מונעת שאילתה/תגובה לא-חסומה אם בסיס המשתמשים
+  // יגדל משמעותית; אם זה יקרה בפועל צריך UI pagination אמיתי, לא רק תקרה.
   async findAllSorted(): Promise<IUser[]> {
-    return User.find().sort({ createdAt: -1 }).lean() as unknown as IUser[];
+    return User.find().sort({ createdAt: -1 }).limit(5000).lean() as unknown as IUser[];
   },
 };

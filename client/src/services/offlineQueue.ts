@@ -7,7 +7,7 @@ export type QueuedMutation =
   | { id: string; type: 'toggle'; listId: string; productId: string; isPurchased: boolean; timestamp: number }
   | { id: string; type: 'update'; listId: string; productId: string; changes: Record<string, unknown>; timestamp: number }
   | { id: string; type: 'delete'; listId: string; productId: string; timestamp: number }
-  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; timestamp: number };
+  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number };
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -46,7 +46,7 @@ type QueueInput =
   | { type: 'toggle'; listId: string; productId: string; isPurchased: boolean }
   | { type: 'update'; listId: string; productId: string; changes: Record<string, unknown> }
   | { type: 'delete'; listId: string; productId: string }
-  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string };
+  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean };
 
 async function enqueue(mutation: QueueInput): Promise<void> {
   const db = await openDB();
@@ -105,7 +105,8 @@ export const enqueueAdd = (
   listId: string,
   productData: { name: string; quantity: number; unit: string; category: string; note?: string },
   tempId: string,
-) => enqueue({ type: 'add', listId, productData, tempId });
+  pendingIsPurchased?: boolean,
+) => enqueue({ type: 'add', listId, productData, tempId, pendingIsPurchased });
 
 // בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם
 export function isNetworkError(error: unknown): boolean {

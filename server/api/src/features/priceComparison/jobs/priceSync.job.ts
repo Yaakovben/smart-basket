@@ -8,8 +8,10 @@ import { geocodeAddress } from '../services/geocoder.service';
 import { KNOWN_BRANCHES } from '../data/known-branches.data';
 import { logger } from '../../../config/logger';
 
-// NODE_TLS_REJECT_UNAUTHORIZED=0 חיוני לתהליך כדי שהגישה לפורטל השקיפות תעבוד.
-// מוגדר רק בזמן הריצה של הסנכרון, משוחזר אחרי.
+// כל chain adapter מזריק httpsAgent ייעודי (rejectUnauthorized: false) לבקשות
+// שצריכות זאת - ראו chains/insecureAgent.ts. אין יותר ביטול TLS גלובלי על
+// process.env כאן, כדי לא להשפיע על בקשות HTTPS אחרות (Google OAuth, Sentry,
+// LocationIQ וכו') שרצות באותו תהליך בזמן שהסנכרון פועל.
 
 let scheduled = false;
 let syncInProgress = false;
@@ -27,15 +29,13 @@ const TIMEZONE = 'Asia/Jerusalem';
 const STARTUP_STALENESS_MS = 72 * 60 * 60 * 1000;
 const STARTUP_DELAY_MS = 30 * 60 * 1000;
 
-// פונקציית עזר לרענון עם טיפול ב-TLS env var - משותפת ל-cron ול-startup
+// פונקציית עזר לרענון - משותפת ל-cron ול-startup
 async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
   if (syncInProgress) {
     logger.warn(`[price-sync-job] ${trigger}: sync already in progress, skipping`);
     return;
   }
   syncInProgress = true;
-  const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   try {
     logger.info(`[price-sync-job] ${trigger}: starting sync of all chains`);
     const results = await syncAllChains();
@@ -44,8 +44,6 @@ async function runSync(trigger: 'cron' | 'startup' | 'manual'): Promise<void> {
   } catch (err) {
     logger.error(`[price-sync-job] ${trigger}: unhandled error:`, err);
   } finally {
-    if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
     syncInProgress = false;
   }
 }

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export interface IMember {
   user: Types.ObjectId;
@@ -108,8 +109,11 @@ listSchema.methods.comparePassword = async function (
     return bcrypt.compare(candidatePassword, this.password);
   }
 
-  // חדש: השוואה פשוטה
-  return this.password === candidatePassword;
+  // חדש: השוואה בזמן קבוע (מונע timing attack על סיסמה קצרה)
+  const candidateBuf = Buffer.from(candidatePassword);
+  const storedBuf = Buffer.from(this.password);
+  if (candidateBuf.length !== storedBuf.length) return false;
+  return crypto.timingSafeEqual(candidateBuf, storedBuf);
 };
 
 export const List = mongoose.model<IList>('List', listSchema);

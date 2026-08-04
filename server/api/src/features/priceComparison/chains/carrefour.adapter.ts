@@ -17,6 +17,7 @@
 
 import axios from 'axios';
 import { logger } from '../../../config/logger';
+import { insecureHttpsAgent } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -25,6 +26,8 @@ import type {
 const PORTAL_BASE = 'https://prices.carrefour.co.il';
 const FETCH_TIMEOUT_MS = 30_000;
 const DOWNLOAD_TIMEOUT_MS = 60_000;
+// הגנה מפני קובץ דחוס ענק - ראו הסבר ב-portalFiles.ts
+const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
 
 interface CarrefourFile {
   name: string;
@@ -36,6 +39,7 @@ interface CarrefourFile {
 async function fetchIndex(): Promise<{ path: string; files: CarrefourFile[] }> {
   const res = await axios.get<string>(`${PORTAL_BASE}/`, {
     timeout: FETCH_TIMEOUT_MS,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'text/html' },
     responseType: 'text',
   });
@@ -113,6 +117,9 @@ async function downloadFile(path: string, filename: string): Promise<Buffer> {
   const res = await axios.get<ArrayBuffer>(url, {
     timeout: DOWNLOAD_TIMEOUT_MS,
     responseType: 'arraybuffer',
+    httpsAgent: insecureHttpsAgent,
+    maxContentLength: MAX_COMPRESSED_BYTES,
+    maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },
     validateStatus: s => s < 500,
   });

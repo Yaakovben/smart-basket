@@ -80,6 +80,11 @@ const envSchema = Joi.object({
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
+
+  // Redis - אופציונלי. אם מוגדר, שרת ה-API מפרסם אירועי ניתוק/הוצאה בזמן
+  // אמת (משתמש נמחק, חבר הוסר מקבוצה) לשרת ה-Socket. אם חסר - הפעולות
+  // עדיין מצליחות ב-DB, פשוט בלי אפקט מיידי על sockets פעילים.
+  REDIS_URL: Joi.string().optional(),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -117,6 +122,7 @@ export interface Environment {
   VAPID_EMAIL: string;
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
+  REDIS_URL?: string;
 }
 
 export const env = parseEnv();

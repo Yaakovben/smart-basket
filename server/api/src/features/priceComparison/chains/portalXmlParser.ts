@@ -11,17 +11,31 @@ import { gunzipSync } from 'zlib';
 import AdmZip from 'adm-zip';
 import type { ChainPriceItem, ChainStoreItem } from './types';
 
+// תקרת בטיחות לגודל הפלט המפוענח - מגנה מפני zip/gzip bomb (קובץ קטן
+// שמתנפח לגיגהבייטים בזיכרון) מפורטל חיצוני שאין לנו שליטה עליו.
+// קובצי PriceFull הגדולים ביותר בפועל הם עשרות MB - 300MB תקרה בטוחה
+// שלא אמורה להיפגע בשימוש לגיטימי.
+const MAX_DECOMPRESSED_BYTES = 300 * 1024 * 1024;
+
 // פורטל Bina מתייג קבצים בסיומת .gz אך הם בעצם ZIP (חתימה PK).
 // פורטל publishedprices מספק קבצי gzip אמיתיים. הפונקציה מזהה את הפורמט
 // לפי מאגיק-בייטס ופותחת בהתאם.
 function decompressBuffer(buf: Buffer): string {
   if (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
-    return gunzipSync(buf).toString('utf-8');
+    try {
+      return gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }).toString('utf-8');
+    } catch (err) {
+      throw new Error(`gzip_decompress_failed_or_too_large: ${err instanceof Error ? err.message : 'unknown'}`);
+    }
   }
   if (buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b) {
     const zip = new AdmZip(buf);
     const entries = zip.getEntries();
     if (entries.length === 0) throw new Error('zip_empty');
+    const uncompressedSize = entries[0].header.size;
+    if (uncompressedSize > MAX_DECOMPRESSED_BYTES) {
+      throw new Error(`zip_decompressed_too_large: ${uncompressedSize} bytes`);
+    }
     return entries[0].getData().toString('utf-8');
   }
   return buf.toString('utf-8');

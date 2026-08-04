@@ -108,8 +108,14 @@ export const useAddProduct = ({
       }
     } catch (error) {
       if (isNetworkError(error)) {
-        // שמירת המוצר הזמני ברשימה ותור הוספה לסנכרון כשחוזרת קליטה
-        void enqueueAdd(list.id, productData, tempId);
+        // שמירת המוצר הזמני ברשימה ותור הוספה לסנכרון כשחוזרת קליטה.
+        // אם המשתמש הספיק לסמן את המוצר הזמני כ"נקנה" לפני שהתברר שההוספה
+        // נכשלה (race בין toggle לתשובת השרת) - משמרים את זה בתוך רשומת
+        // התור עצמה (לא ב-pendingTempActions, שהוא ref בזיכרון בלבד ולא
+        // שורד רענון דף) כדי ש-useOfflineSync יוכל להחיל אותו אחרי הסנכרון.
+        const pendingAction = pendingTempActions.current.get(tempId);
+        pendingTempActions.current.delete(tempId);
+        void enqueueAdd(list.id, productData, tempId, pendingAction === 'toggle');
         return;
       }
       if (import.meta.env.DEV) console.error('Failed to add product:', error);

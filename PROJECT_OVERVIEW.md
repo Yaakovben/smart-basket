@@ -2,6 +2,7 @@
 
 > מסמך זה נכתב למטרת הכנה לראיון עבודה / שיתוף עם כלי AI ליצירת תצוגות נוספות.
 > המידע נאסף ישירות מהקוד ב-2026-05-12 וכל פרט נבדק מול הקבצים האמיתיים.
+> **עודכן ב-2026-08-04** — תוקנו מספר פערים שנוצרו מול הקוד הנוכחי (ראו הערות מסומנות בהמשך).
 
 ---
 
@@ -19,7 +20,7 @@
 - **חיזוקי אמונה יומיים** — מודול של ציטוטים יומיים
 - **פאנל מנהל** — ניטור DB, סטטוס סנכרון מחירים, ניהול משתמשים
 - **התקנה כ-PWA** + תמיכה אופליין חלקית
-- **דו-לשוני** — עברית ואנגלית, RTL מלא
+- **תלת-לשוני** — עברית, אנגלית ורוסית, RTL מלא
 - **מצב כהה / בהיר**
 - **התחברות עם Google OAuth** + מערכת רגילה (email/password)
 
@@ -162,7 +163,8 @@ routes/                     # endpoints REST
 ├── push.routes.ts
 ├── user.routes.ts
 ├── admin.routes.ts
-└── insights.routes.ts
+├── insights.routes.ts
+└── ocr.routes.ts             # + priceComparison/routes ו-daily-faith/*.routes.ts תחת features/
 
 controllers/                # HTTP layer - parsing + responses
 services/                   # Business logic
@@ -192,16 +194,16 @@ config/                     # env loader, mongo connection, winston
 | Model | קולקציה | תיאור |
 |-------|---------|-------|
 | User | users | אימייל, סיסמה (hashed), שם, פרופיל |
-| List | lists | רשימה + מוצרים מוטמעים + חברים + הגדרות התראה |
-| Product | products | מוצרי מאסטר (לא של רשימה ספציפית) — אוטוקומפליט |
+| List | lists | מטא-דאטה של רשימה + חברים + הגדרות התראה (**ללא** מוצרים מוטמעים) |
+| Product | products | מוצרי רשימה בפועל — קולקציה נפרדת, referenced דרך `listId` |
 | Notification | notifications | התראות עצמאיות |
-| RefreshToken | refreshtokens | טוקני רענון לאימות מסביב |
+| RefreshToken | refreshtokens | טוקני רענון לאימות מסביב (90 יום, rotation + grace period) |
 | LoginActivity | loginactivities | log התחברויות לאדמין |
 | PushSubscription | pushsubscriptions | VAPID subscriptions |
 | Branch | branches (priceComparison) | סניפי הרשתות + קואורדינטות |
 | Price | prices | מחיר מוצר בסניף + תאריך עדכון |
 
-**החלטה מעניינת:** מוצרים בתוך רשימה הם **embedded subdocuments** של List, לא reference. נימוק: רוב הקריאות הן "תן לי רשימה עם המוצרים שלה" → מבטל joins. החיסרון - חיפוש cross-list יותר יקר.
+> **תיקון (2026-08-04):** בניגוד למה שנכתב כאן בעבר — מוצרים **אינם** embedded subdocuments של List. `Product` היא קולקציה נפרדת עם `listId` (ref List) ואינדקסים על `{listId,position}` ו-`{listId,isPurchased}`. הבחירה במודל referenced (ולא embedded) מאפשרת עדכון/מיקום של מוצר בודד בלי לשכתב את כל מסמך הרשימה, במחיר שאילתת DB נוספת בכל טעינת רשימה (ממותנת ע"י האינדקסים לעיל).
 
 ---
 
@@ -248,9 +250,10 @@ throw ConflictError.emailExists();
 `errorHandler` middleware ממפה לפי instance ל-HTTP status code נכון, ושומר על traceability ל-Sentry.
 
 **(ג) JWT עם refresh tokens (rotation)**
-- Access token קצר (15 דק'), Refresh ארוך (30 יום)
-- Rotation — כל שימוש ב-refresh מפיק טוקן חדש ומבטל את הישן
-- מאוחסן ב-IndexedDB גיבוי לעמידות מפני clear localStorage
+- Access token 24 שעות, Refresh 90 יום
+- Rotation — כל שימוש ב-refresh מפיק טוקן חדש; הישן נשמר כ-`previousToken` עם grace period של 60 שניות כדי לא לשבור בקשות מקבילות
+- מאוחסן ב-localStorage + גיבוי ב-IndexedDB לעמידות מפני clear localStorage (iOS Safari ITP) — **אין** HTTPOnly cookie, כך שגניבת XSS חושפת את שני הטוקנים
+- Revocation: כל user מחזיק `tokenVersion` ב-DB, מוטמע ב-payload של ה-JWT. שינוי סיסמה/מחיקת חשבון מגדילים אותו, ו-`authenticate` (REST) + אימות ה-socket (מול `/api/users/me`) דוחים טוקן עם `tokenVersion` לא תואם - כולל access tokens שכבר הונפקו, לא רק refresh
 
 **(ד) Rate limiting פר IP + פר user**
 `express-rate-limit` עם middleware עוטף שמגביל אנדפויינטים רגישים (login, register, refresh) קשה יותר.
@@ -299,8 +302,8 @@ Structured JSON logs, רמות logger, שליחה ל-Logtail בענן ל-search 
 | XSS | sanitize-html + React escape default |
 | NoSQL injection | express-mongo-sanitize |
 | CSRF | SameSite cookies + Origin check |
-| Brute force | express-rate-limit על login (5 ניסיונות / דקה) |
-| Password storage | bcrypt עם salt rounds 10 |
+| Brute force | express-rate-limit על login (5 ניסיונות / 15 דקות) |
+| Password storage | bcrypt עם salt rounds 12 |
 | JWT theft | short access token + refresh rotation + revoke ב-logout |
 | HTTPS | enforced ב-Vercel + Render |
 | Headers | helmet (HSTS, X-Frame-Options, CSP) |
@@ -414,9 +417,9 @@ Structured JSON logs, רמות logger, שליחה ל-Logtail בענן ל-search 
 - **בדיקות יחידה / E2E** — חסר. מתוכנן: Vitest לקליינט, Jest + supertest לשרת.
 - **CI/CD מלא** — כרגע auto-deploy בלבד. נדרש: pipeline עם lint + typecheck + tests.
 - **Monitoring metrics** — Sentry טוב לשגיאות, חסר APM (Datadog/New Relic) לתובנות ביצועים.
-- **i18n מלא** — כרגע 2 שפות hardcoded. ספרייה אמיתית (i18next) תאפשר הוספה קלה.
+- **i18n מלא** — כרגע 3 שפות (עברית/אנגלית/רוסית) hardcoded ב-key-value פשוט, לא ספרייה. ספרייה אמיתית (i18next) תאפשר pluralization/ICU ותהיה קלה יותר להרחבה.
 - **Bundle splitting אגרסיבי יותר** — MUI לוקח 96KB gzipped, יש מקום לטרים.
-- **Real-time scaling** — Redis adapter ל-socket.io לרבוי instances.
+- **Real-time scaling** — יש כעת publisher בשרת ה-API (`redisPublisher.service.ts`) שמפעיל את ה-subscriber הקיים בשרת ה-Socket (`user:deleted`, `member:kicked`), אבל זה עדיין side-channel אירועים בלבד; scale-out אמיתי ל-Socket.io מרובה instances ידרוש Redis adapter ייעודי (`@socket.io/redis-adapter`) לשיתוף חדרים/presence בין instances.
 
 ---
 

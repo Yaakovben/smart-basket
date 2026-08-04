@@ -9,7 +9,7 @@ let subscriber: Redis | null = null;
 let isRedisHealthy = false;
 
 interface RedisEvent {
-  type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted';
+  type: 'product:added' | 'product:toggled' | 'product:deleted' | 'notification' | 'user:deleted' | 'member:kicked';
   listId: string;
   userId: string;
   userName: string;
@@ -108,6 +108,14 @@ const handleRedisEvent = (
       // ניתוק כפוי של כל ה-sockets של המשתמש שנמחק
       const room = `user:${userId}`;
       io.in(room).disconnectSockets(true);
+      break;
+    }
+
+    case 'member:kicked': {
+      // מוציא בכפייה את כל ה-sockets של המשתמש שהוסר מחדר הרשימה הספציפי -
+      // לא מנתק את המשתמש לגמרי (עדיין מחובר לרשימות אחרות שלו), רק עוצר
+      // ממנו לקבל/לשדר אירועי מוצרים בזמן אמת לרשימה שהוא כבר לא חבר בה.
+      io.in(`user:${userId}`).socketsLeave(`list:${listId}`);
       break;
     }
   }

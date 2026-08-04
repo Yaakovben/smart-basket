@@ -277,6 +277,8 @@ export const en: Translations = {
   noProductsInCategory: 'No products in this category',
   showAll: 'Show all',
   errorOccurred: 'An error occurred',
+  syncItemFailed: 'One or more offline changes failed to sync to the server',
+  stillSyncingProduct: 'This item is still saving, try again in a moment',
   connectionErrorTitle: 'Connection error',
   connectionErrorDesc: 'Unable to connect to the server right now',
   noNotifications: 'No new notifications',

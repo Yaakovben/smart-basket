@@ -16,6 +16,7 @@
 
 import axios from 'axios';
 import { logger } from '../../../config/logger';
+import { insecureHttpsAgent } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -25,6 +26,8 @@ const PORTAL_BASE = 'https://laibcatalog.co.il';
 const VICTORY_CHAIN_ID = '7290696200003';
 const FETCH_TIMEOUT_MS = 30_000;
 const DOWNLOAD_TIMEOUT_MS = 90_000;
+// הגנה מפני קובץ דחוס ענק - ראו הסבר ב-portalFiles.ts
+const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
 
 interface VictoryBranch {
   number: number;
@@ -43,6 +46,7 @@ async function listFiles(): Promise<VictoryFile[]> {
   const url = `${PORTAL_BASE}/webapi/api/getfiles?edi=${VICTORY_CHAIN_ID}`;
   const r = await axios.get<VictoryFile[]>(url, {
     timeout: FETCH_TIMEOUT_MS,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', Accept: 'application/json' },
   });
   if (!Array.isArray(r.data)) throw new Error('victory_files_not_array');
@@ -53,6 +57,7 @@ async function listBranches(): Promise<VictoryBranch[]> {
   const url = `${PORTAL_BASE}/webapi/api/getbranches?edi=${VICTORY_CHAIN_ID}`;
   const r = await axios.get<VictoryBranch[]>(url, {
     timeout: FETCH_TIMEOUT_MS,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', Accept: 'application/json' },
   });
   if (!Array.isArray(r.data)) throw new Error('victory_branches_not_array');
@@ -64,6 +69,9 @@ async function downloadFile(fileName: string): Promise<Buffer> {
   const r = await axios.get<ArrayBuffer>(url, {
     timeout: DOWNLOAD_TIMEOUT_MS,
     responseType: 'arraybuffer',
+    httpsAgent: insecureHttpsAgent,
+    maxContentLength: MAX_COMPRESSED_BYTES,
+    maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },
     validateStatus: s => s < 500,
   });

@@ -67,13 +67,33 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
     // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה מחדש רק כשמזהה המשתמש משתנה או האימות מסתיים
   }, [authLoading, user?.id, fetchLists]);
 
-  // Auto-retry: כשיש שגיאת רשת (אין רשת/השרת לא עונה), מנסים שוב כל 4 שניות
-  // עד שמצליחים. מפסיקים אם המשתמש נותק. ככה הלקוח לא תקוע במסך 'אין חיבור' -
-  // האפליקציה ממשיכה לנסות ברקע ומופיעה ברגע שהחיבור חוזר.
+  // Auto-retry: כשיש שגיאת רשת (אין רשת/השרת לא עונה), מנסים שוב עד שמצליחים.
+  // מפסיקים אם המשתמש נותק. ככה הלקוח לא תקוע במסך 'אין חיבור' - האפליקציה
+  // ממשיכה לנסות ברקע ומופיעה ברגע שהחיבור חוזר.
+  // Backoff מעריכי (4s → 8s → 16s → ... עד תקרה של 60s) במקום קצב קבוע -
+  // מונע הצפת השרת מכל הטאבים/מכשירים הפתוחים בזמן תקלה ממושכת, בלי
+  // לפגוע בזמן התגובה לתקלות קצרות.
   useEffect(() => {
     if (!fetchError || !user || authLoading) return;
-    const id = window.setInterval(() => { void fetchLists(); }, 4000);
-    return () => window.clearInterval(id);
+    let cancelled = false;
+    let attempt = 0;
+    let timeoutId: ReturnType<typeof window.setTimeout>;
+
+    const tick = () => {
+      attempt += 1;
+      const delay = Math.min(4000 * 2 ** (attempt - 1), 60000);
+      timeoutId = window.setTimeout(async () => {
+        if (cancelled) return;
+        await fetchLists();
+        if (!cancelled) tick();
+      }, delay);
+    };
+    tick();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, [fetchError, user, authLoading, fetchLists]);
 
   // רענון מיידי כשהרשת חוזרת (גם אחרי סנכרון תור אופליין)

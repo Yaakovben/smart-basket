@@ -46,8 +46,6 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
   }
 
   adminSyncInProgress = true;
-  const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
   // החזר מיידית תשובה — מריצים ברקע כדי לא לחסום את הבקשה
   // (הסנכרון יכול לקחת 2-5 דקות)
@@ -97,8 +95,6 @@ export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response
   } catch (err) {
     logger.error('[admin-refresh] Unhandled error:', err);
   } finally {
-    if (prev === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-    else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prev;
     adminSyncInProgress = false;
   }
 });

@@ -116,7 +116,15 @@ export async function listLatestPriceFullFile(client: AxiosInstance, csrftoken: 
   return null;
 }
 
+// תקרת 150MB לקובץ דחוס בודד - הגנה נוספת לפני decompression (ראו MAX_DECOMPRESSED_BYTES
+// ב-portalXmlParser.ts). קבצים דחוסים אמיתיים הם עד כמה עשרות MB.
+const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
+
 export async function downloadFile(client: AxiosInstance, filename: string): Promise<Buffer> {
-  const res = await client.get(`/file/d/${filename}`, { responseType: 'arraybuffer' });
+  const res = await client.get(`/file/d/${filename}`, {
+    responseType: 'arraybuffer',
+    maxContentLength: MAX_COMPRESSED_BYTES,
+    maxBodyLength: MAX_COMPRESSED_BYTES,
+  });
   return Buffer.from(res.data);
 }

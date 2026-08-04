@@ -37,8 +37,8 @@ function generateRefreshToken(): string {
  * יוצר זוג טוקנים (access + refresh) עבור login/register.
  * ה-refresh נשמר ב-DB עם תפוגה של 90 יום.
  */
-export async function createTokens(userId: string, email: string, name: string): Promise<AuthTokens> {
-  const payload: TokenPayload = { userId, email, name };
+export async function createTokens(userId: string, email: string, name: string, tokenVersion: number): Promise<AuthTokens> {
+  const payload: TokenPayload = { userId, email, name, tokenVersion };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken();
 
@@ -83,7 +83,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
 
   if (!tokenDoc) return null;
 
-  const user = tokenDoc.user as unknown as { _id: string; email: string; name: string } | null;
+  const user = tokenDoc.user as unknown as { _id: string; email: string; name: string; tokenVersion: number } | null;
 
   // המשתמש נמחק — ניקוי טוקן יתום
   if (!user) {
@@ -92,7 +92,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
   }
 
   const userId = user._id.toString();
-  const newAccessToken = generateAccessToken({ userId, email: user.email, name: user.name });
+  const newAccessToken = generateAccessToken({ userId, email: user.email, name: user.name, tokenVersion: user.tokenVersion ?? 0 });
 
   // replay בתוך חלון החסד: לא מסובבים שוב (זה יכתוב-דריסה על סיבוב אמיתי
   // ומחדש את שרשרת ה-replay) - רק מנפיקים access token טרי לאותו refresh

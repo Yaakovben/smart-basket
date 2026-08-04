@@ -112,6 +112,37 @@ async function broadcastNotification(
 }
 
 /**
+ * אימות טוקן + שליפת פרטי משתמש עדכניים מה-API (לא סומכים על claims של
+ * ה-JWT בלבד). סוגר שני פערים: (1) שם/isAdmin שהשתנו אחרי שהטוקן הונפק,
+ * (2) טוקן שבוטל ע"י שינוי סיסמה/מחיקת חשבון - authenticate middleware
+ * של ה-API בודק tokenVersion ומחזיר 401 אם לא תואם.
+ */
+async function verifyUser(
+  accessToken: string
+): Promise<{ id: string; name: string; email: string; isAdmin: boolean } | null> {
+  try {
+    const response = await fetch(`${baseUrl}/users/me`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) return null;
+
+    const body = (await response.json()) as { data?: { id?: string; name?: string; email?: string; isAdmin?: boolean } };
+    if (!body.data?.id) return null;
+    return {
+      id: body.data.id,
+      name: body.data.name || '',
+      email: body.data.email || '',
+      isAdmin: !!body.data.isAdmin,
+    };
+  } catch (error) {
+    logger.error('verifyUser failed:', error);
+    return null;
+  }
+}
+
+/**
  * שירות לקריאות API מול שרת ה-API הראשי.
  * משמש בעיקר לשמירת התראות ובדיקות הרשאה.
  */
@@ -119,4 +150,5 @@ export const ApiService = {
   verifyMembership,
   checkRole,
   broadcastNotification,
+  verifyUser,
 };

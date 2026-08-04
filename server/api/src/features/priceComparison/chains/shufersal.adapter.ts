@@ -13,7 +13,7 @@
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { gunzipSync } from 'zlib';
-import { Agent as HttpsAgent } from 'https';
+import { insecureHttpsAgent } from './insecureAgent';
 import type {
   ChainAdapter, ChainFetchResult, ChainPriceItem,
   ChainStoreItem, ChainStoresFetchResult,
@@ -22,10 +22,12 @@ import type {
 const SHUFERSAL_PORTAL = 'https://prices.shufersal.co.il';
 const FETCH_TIMEOUT_MS = 60_000;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
-// סוכן HTTPS שמדלג על אימות תעודה - הפורטל של שופרסל ולעיתים גם
-// pricesprodpublic.blob.core.windows.net מחזירים שרשרת תעודות שלא
-// תמיד תקפה. דורש httpsAgent מותאם כדי לא ליפול ב-UNABLE_TO_VERIFY.
-const insecureHttpsAgent = new HttpsAgent({ rejectUnauthorized: false });
+// הגנה מפני קובץ ענק (בדחיסה ואחריה) - ראו הסבר ב-portalFiles.ts / portalXmlParser.ts
+const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
+const MAX_DECOMPRESSED_BYTES = 300 * 1024 * 1024;
+// הפורטל של שופרסל ולעיתים גם pricesprodpublic.blob.core.windows.net
+// מחזירים שרשרת תעודות שלא תמיד תקפה - דורש httpsAgent מותאם כדי לא
+// ליפול ב-UNABLE_TO_VERIFY (ראו insecureAgent.ts).
 
 interface PriceFullXml {
   Root?: { Items?: { Item?: RawItem[] | RawItem } };
@@ -88,6 +90,8 @@ async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: bo
     responseType: 'arraybuffer',
     timeout: DOWNLOAD_TIMEOUT_MS,
     httpsAgent: insecureHttpsAgent,
+    maxContentLength: MAX_COMPRESSED_BYTES,
+    maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'Mozilla/5.0 (smart-basket price-sync)' },
   });
   const buf = Buffer.from(res.data);
@@ -96,7 +100,7 @@ async function downloadBuffer(url: string): Promise<{ buf: Buffer; isGzipped: bo
 }
 
 function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
-  const xml = isGzipped ? gunzipSync(buf).toString('utf-8') : buf.toString('utf-8');
+  const xml = isGzipped ? gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }).toString('utf-8') : buf.toString('utf-8');
   const parser = new XMLParser({
     ignoreAttributes: true,
     parseTagValue: false,
@@ -159,7 +163,7 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
 
 // פרסור של קובץ Stores (Asx/STORE) של שופרסל
 function parseStoresXmlShufersal(buf: Buffer, isGzipped: boolean): ChainStoreItem[] {
-  const xml = isGzipped ? gunzipSync(buf).toString('utf-8') : buf.toString('utf-8');
+  const xml = isGzipped ? gunzipSync(buf, { maxOutputLength: MAX_DECOMPRESSED_BYTES }).toString('utf-8') : buf.toString('utf-8');
   const parser = new XMLParser({ ignoreAttributes: true, parseTagValue: false, trimValues: true });
   const parsed = parser.parse(xml) as Record<string, unknown>;
 

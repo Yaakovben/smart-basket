@@ -49,8 +49,14 @@ export const ProductDAL = {
   },
 
   async createProduct(data: CreateProductInput): Promise<IProductDoc> {
-    // מיקום לפי countDocuments - חלון race קטן מקובל, ממוין גם לפי createdAt
-    const position = data.position ?? await Product.countDocuments({ listId: data.listId });
+    // מיקום אוטומטי: Date.now() במקום countDocuments. countDocuments יכול
+    // להחזיר את אותו מספר לשתי בקשות מקבילות (שני חברי קבוצה מוסיפים
+    // מוצר באותו רגע) ולגרום להתנגשות positions. timestamp תמיד גדול
+    // מה-positions הקטנים והרציפים שנוצרים ע"י reorderProducts, כך שמוצר
+    // חדש תמיד מתווסף לסוף הרשימה, וההסתברות להתנגשות בין שתי הוספות
+    // מקבילות מוגבלת לאותה מילישנייה בדיוק (במקום כל חלון race של round-trip
+    // ל-DB) - ובכל מקרה עדיין קיים tie-break לפי createdAt במיון.
+    const position = data.position ?? Date.now();
 
     const product = await Product.create({
       ...data,

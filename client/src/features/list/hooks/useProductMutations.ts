@@ -92,7 +92,12 @@ export const useProductMutations = ({
   }, [list.id, user.name, onUpdateProductsForList, showToast, t, dismissHint, markPurchased, productsRef, pendingTempActions]);
 
   const deleteProduct = useCallback(async (productId: string) => {
-    if (isTempId(productId)) return;
+    if (isTempId(productId)) {
+      // מוצר שנוסף כרגע ועדיין לא קיבל מזהה אמיתי מהשרת - אי אפשר למחוק
+      // עדיין (אין productId אמיתי). מודיעים למשתמש במקום no-op שקט.
+      showToast(t('stillSyncingProduct'), 'info');
+      return;
+    }
     const currentProducts = productsRef.current;
     const index = currentProducts.findIndex((p: Product) => p.id === productId);
     if (index === -1) return;
@@ -127,16 +132,27 @@ export const useProductMutations = ({
               const tempId = `temp-undo-${Date.now()}-${Math.random()}`;
               const pos = Math.min(item.index, restored.length);
               restored.splice(pos, 0, { ...item.product, id: tempId });
-              // שחזור בשרת
+              // שחזור בשרת - כולל הערה (note נתמך ביצירה). isPurchased לא נתמך
+              // ב-create, אז אם המוצר היה מסומן כ"נקנה" משלימים את זה בעדכון נפרד.
+              const wasPurchased = item.product.isPurchased;
               productsApi.addProduct(list.id, {
                 name: item.product.name,
                 quantity: item.product.quantity,
                 unit: item.product.unit,
                 category: item.product.category,
-              }).then((serverProduct) => {
+                note: item.product.note,
+              }).then(async (serverProduct) => {
                 onUpdateProductsForList(list.id, (c) =>
                   c.map(p => p.id === tempId ? { ...p, id: serverProduct.id } : p)
                 );
+                if (wasPurchased) {
+                  try {
+                    await productsApi.updateProduct(list.id, serverProduct.id, { isPurchased: true });
+                    onUpdateProductsForList(list.id, (c) =>
+                      c.map(p => p.id === serverProduct.id ? { ...p, isPurchased: true } : p)
+                    );
+                  } catch { /* לא קריטי - המוצר עצמו שוחזר בהצלחה */ }
+                }
               }).catch(() => {
                 onUpdateProductsForList(list.id, (c) => c.filter(p => p.id !== tempId));
               });
@@ -210,7 +226,11 @@ export const useProductMutations = ({
 
   const saveEditedProduct = useCallback(async () => {
     if (!showEdit || !originalEditProduct || !hasProductChanges) return;
-    if (isTempId(showEdit.id)) return; // מוצר עדיין לא אושר מהשרת
+    if (isTempId(showEdit.id)) {
+      // מוצר עדיין לא אושר מהשרת - אי אפשר לשמור עריכה עדיין
+      showToast(t('stillSyncingProduct'), 'info');
+      return;
+    }
     haptic('medium');
 
     const editData = { ...showEdit };

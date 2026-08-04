@@ -17,6 +17,7 @@ import {
   createNotificationsForListMembers,
 } from './notification.service';
 import { transformList } from './list-transform.helper';
+import { publishMemberKicked } from './redisPublisher.service';
 import type { JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 
@@ -143,6 +144,11 @@ export async function removeMember(
     createNotificationsForListMembers(listId, 'removed', memberId, { excludeUserId: userId })
       .catch((err: unknown) => logger.warn('Failed to create removed notifications:', err));
   }
+
+  // מוציא את ה-sockets הפעילים של החבר שהוסר מחדר הרשימה, כדי שלא ימשיך
+  // לקבל/לשדר אירועי מוצרים בזמן אמת לרשימה שהוא כבר לא חבר בה.
+  // no-op אם Redis לא מוגדר (single-instance mode).
+  publishMemberKicked(listId, memberId).catch((err: unknown) => logger.warn('Failed to publish member:kicked:', err));
 
   return transformList(updatedList);
 }

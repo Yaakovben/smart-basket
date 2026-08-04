@@ -143,17 +143,11 @@ smart-basket/
 │           ├── services/      # redis, api service
 │           └── types/         # טיפוסי socket events
 │
-├── shared/                    # טיפוסים משותפים (client + server)
-│   └── types/
-│
-├── deploy/                    # קבצי deploy (Docker + Caddy)
-│   ├── Caddyfile              # Reverse proxy + auto-SSL
-│   ├── docker-compose.yml     # (לא בשימוש - משתמשים ב-PM2)
-│   └── .env.example
-│
 └── .github/workflows/
-    └── deploy.yml             # GitHub Actions - deploy אוטומטי
+    └── ci.yml                 # בדיקת build+typecheck (client + server/api). אין deploy step - Render/Vercel עושים auto-deploy מ-git ישירות
 ```
+
+> אין תיקיית `deploy/` ואין `shared/types/` בפרויקט בפועל - client ו-server מחזיקים כל אחד עץ טיפוסים עצמאי (`client/src/global/types/`, `server/api/src/types/`).
 
 ---
 
@@ -172,6 +166,10 @@ smart-basket/
 | Zod | runtime validation |
 | Sentry | error monitoring |
 | Vite PWA | service worker, offline |
+| PostHog | product analytics |
+| Leaflet / react-leaflet | מפת סניפים |
+| html2canvas + jsPDF | ייצוא רשימה כתמונה/PDF |
+| qrcode.react + @zxing/browser | הצגה/סריקה של QR והזמנות |
 
 ### שרת API
 | טכנולוגיה | שימוש |
@@ -215,9 +213,10 @@ smart-basket/
   googleId:       String    (unique sparse - למשתמשי Google)
   isAdmin:        Boolean   (ברירת מחדל: false)
   mutedGroupIds:  ObjectId[] (רשימות מושתקות)
+  listOrder:      String[]  (סדר תצוגה מותאם אישית של רשימות)
   createdAt, updatedAt
 }
-אינדקסים: email (unique), googleId (unique sparse)
+אינדקסים: email (unique), googleId (unique sparse), mutedGroupIds, createdAt (desc)
 ```
 
 ### List
@@ -234,7 +233,7 @@ smart-basket/
     joinedAt: Date
   }]
   inviteCode: String     (6 תווים, unique sparse - רק לקבוצות)
-  password:   String     (4 תווים plaintext - קוד גישה לקבוצה, מוצג למשתמשים)
+  password:   String     (4 תווים - קוד גישה לקבוצה, בכוונה מוצג בגלוי לחברים כדי שיוכלו לשתף אותו הלאה; לא ברירת מחדל אקראית של חשבון משתמש ולכן לא מוצפן חד-כיוונית. תומך גם בהשוואה מול hash ישן של bcrypt לצורך תאימות לאחור. השוואה בזמן קבוע (`crypto.timingSafeEqual`) למניעת timing attack)
   createdAt, updatedAt
 }
 אינדקסים: owner+isGroup, members.user, owner+updatedAt, members.user+updatedAt, inviteCode (unique sparse)
@@ -250,10 +249,13 @@ smart-basket/
   category:    Enum      ('מוצרי חלב' | 'מאפים' | 'ירקות' | 'פירות' | 'בשר' | 'משקאות' | 'ממתקים' | 'ניקיון' | 'אחר')
   isPurchased: Boolean   (ברירת מחדל: false)
   addedBy:     ObjectId  (ref: User, חובה)
+  updatedBy:   ObjectId  (ref: User, אופציונלי)
+  purchasedBy: ObjectId  (ref: User, אופציונלי)
+  note:        String    (אופציונלי)
   position:    Number    (ברירת מחדל: 0)
   createdAt, updatedAt
 }
-אינדקסים: listId+position, listId+isPurchased
+אינדקסים: listId+position, listId+isPurchased, addedBy
 ```
 
 ### Notification
@@ -261,7 +263,7 @@ smart-basket/
 {
   type:         Enum     ('join' | 'leave' | 'removed' | 'product_add' | 'product_update' |
                           'product_delete' | 'product_purchase' | 'product_unpurchase' |
-                          'member_removed' | 'list_deleted' | 'list_update')
+                          'member_removed' | 'list_deleted' | 'list_update' | 'list_clear')
   listId:       ObjectId
   listName:     String
   targetUserId: ObjectId  (מי מקבל את ההתראה)
@@ -279,9 +281,11 @@ TTL: נמחק אוטומטית אחרי 30 יום
 ### RefreshToken
 ```
 {
-  user:      ObjectId  (ref: User)
-  token:     String    (crypto.randomBytes(64) - unique)
-  expiresAt: Date
+  user:                     ObjectId  (ref: User)
+  token:                    String    (crypto.randomBytes(64) - unique)
+  previousToken:            String    (הטוקן הקודם - מאפשר grace period ברוטציה)
+  previousTokenGraceUntil:  Date      (60 שניות אחרי rotation - מונע race condition בבקשות מקבילות)
+  expiresAt:                Date      (90 יום מיצירה)
 }
 TTL: נמחק אוטומטית כשפג תוקף
 ```
@@ -295,13 +299,21 @@ TTL: נמחק אוטומטית כשפג תוקף
 }
 ```
 
+### Branch / Price (features/priceComparison)
+```
+Branch: סניפי הרשתות + קואורדינטות (geocoded דרך Nominatim/LocationIQ)
+Price:  מחיר מוצר בסניף + ברקוד, שם מוצר, רשת, ותאריך עדכון (~20 שדות כולל שדות העשרה)
+```
+
 ### LoginActivity
 ```
 {
-  user:      ObjectId (ref: User)
-  method:    'email' | 'google'
-  ip:        String
-  userAgent: String
+  user:        ObjectId (ref: User)
+  userName:    String
+  userEmail:   String
+  loginMethod: 'email' | 'google' | 'app_open'
+  ipAddress:   String
+  userAgent:   String
   createdAt
 }
 TTL: נמחק אוטומטית אחרי 90 יום
@@ -320,8 +332,10 @@ TTL: נמחק אוטומטית אחרי 90 יום
 2ב. משתמש קיים → POST /api/auth/login { email, password }
    ← { accessToken, refreshToken, user }
 
-3. accessToken נשמר ב-localStorage (תפוגה: 15 דקות)
-4. refreshToken נשמר ב-localStorage (תפוגה: 7 ימים)
+3. accessToken נשמר ב-localStorage + גיבוי ב-IndexedDB (תפוגה: 24 שעות)
+4. refreshToken נשמר ב-localStorage + גיבוי ב-IndexedDB (תפוגה: 90 יום)
+
+> אין HTTPOnly cookies בזרימה הזו - שני הטוקנים נגישים ל-JavaScript בצד קליינט (סיכון ידוע במקרה של XSS).
 ```
 
 ### התחברות עם Google
@@ -339,7 +353,7 @@ TTL: נמחק אוטומטית אחרי 90 יום
 3. שרת מבצע Token Rotation:
    - מאמת refresh token ב-DB
    - יוצר access + refresh חדשים
-   - מעדכן את ה-refresh ב-DB (אטומי - מניעת race condition)
+   - מעדכן את ה-refresh ב-DB, ושומר את הישן כ-`previousToken` עם grace period של 60 שניות (מונע race condition בין בקשות מקבילות עם הטוקן הישן)
    ← { accessToken, refreshToken }
 4. כל בקשות שנכשלו ממתינות בתור ומתבצעות עם הטוקן החדש
 ```
@@ -364,6 +378,7 @@ TTL: נמחק אוטומטית אחרי 90 יום
 | POST | `/google` | התחברות Google | 5/15min |
 | POST | `/refresh` | רענון טוקן | 20/15min |
 | POST | `/logout` | התנתקות | 20/15min |
+| POST | `/app-open` | רישום פתיחת אפליקציה (ל-LoginActivity) | 20/15min |
 
 ### רשימות (Lists) - `/api/lists` (דורש אימות)
 | Method | Path | תיאור |
@@ -382,9 +397,10 @@ TTL: נמחק אוטומטית אחרי 90 יום
 | Method | Path | תיאור |
 |--------|------|--------|
 | POST | `/` | הוספת מוצר |
-| PUT | `/:productId` | עדכון מוצר |
-| PATCH | `/:productId/toggle` | סימון/ביטול "נקנה" |
+| PUT | `/:productId` | עדכון מוצר (כולל טוגל "נקנה" - אין endpoint נפרד ל-toggle, מתבצע כ-update מלא) |
 | DELETE | `/:productId` | מחיקת מוצר |
+| DELETE | `/clear?filter=all\|purchased\|pending` | מחיקת מוצרים לפי סינון (ברירת מחדל: all) |
+| POST | `/reset` | איפוס סטטוס "נקנה" לכל המוצרים ברשימה |
 | PUT | `/reorder` | שינוי סדר מוצרים |
 
 ### משתמש (User) - `/api/users` (דורש אימות)
@@ -394,6 +410,7 @@ TTL: נמחק אוטומטית אחרי 90 יום
 | PUT | `/me` | עדכון פרופיל |
 | POST | `/me/change-password` | שינוי סיסמה |
 | POST | `/me/muted-groups/toggle` | השתקת/ביטול השתקת קבוצה |
+| PUT | `/me/list-order` | עדכון סדר תצוגה מותאם אישית של רשימות |
 | DELETE | `/me` | מחיקת חשבון |
 
 ### התראות (Notifications) - `/api/notifications` (דורש אימות)
@@ -409,10 +426,49 @@ TTL: נמחק אוטומטית אחרי 90 יום
 ### ניהול (Admin) - `/api/admin` (דורש אימות + isAdmin)
 | Method | Path | תיאור |
 |--------|------|--------|
-| GET | `/users` | כל המשתמשים |
-| GET | `/activity` | לוג פעילות כניסה |
+| GET | `/users` | כל המשתמשים (ללא pagination כרגע) |
+| GET | `/users/:userId/details` | פרטים מורחבים על משתמש בודד |
+| GET | `/activity` | לוג פעילות כניסה (עם pagination) |
 | GET | `/stats` | סטטיסטיקות |
+| GET | `/db-health` | סטטוס בריאות ה-DB |
 | DELETE | `/users/:userId` | מחיקת משתמש |
+
+### Push Notifications - `/api/push`
+| Method | Path | תיאור | דורש אימות |
+|--------|------|--------|------------|
+| GET | `/vapid-public-key` | מפתח VAPID ציבורי (הקליינט שולף אותו מהשרת ולא מ-env) | לא |
+| POST | `/subscribe` | רישום subscription | כן |
+| POST | `/unsubscribe` | ביטול רישום | כן |
+| GET | `/status` | סטטוס מנוי הדחיפה | כן |
+
+### תובנות (Insights) - `/api/insights` (דורש אימות)
+| Method | Path | תיאור |
+|--------|------|--------|
+| GET | `/` | תובנות אישיות - דפוסי קנייה, מוצרים מובילים |
+
+### OCR - `/api/ocr` (דורש אימות)
+| Method | Path | תיאור |
+|--------|------|--------|
+| POST | `/scan-list` | סריקת רשימת קניות מתמונה (OCR.space, quota חודשי מוגבל) |
+
+### השוואת מחירים (Price Comparison) - `/api/price-comparison` (דורש אימות)
+| Method | Path | תיאור | הרשאה |
+|--------|------|--------|--------|
+| GET | `/` | השוואת מחירי רשימה בין רשתות | משתמש |
+| GET | `/barcode/:barcode` | חיפוש מוצר לפי ברקוד | משתמש |
+| GET | `/branches-nearby` | סניפים קרובים למיקום | משתמש |
+| POST | `/refresh` | הפעלת סנכרון מחירים ידני | admin |
+| POST | `/refresh-branches` | סנכרון סניפים ידני | admin |
+| GET | `/status` | סטטוס הסנכרון האחרון | admin |
+| ועוד | ניהול סניפים (`/branches*`) | CRUD סניפים, seed, ניקוי | admin |
+
+### חיזוקי אמונה (Daily Faith) - `/api/daily-faith` (דורש אימות)
+| Method | Path | תיאור | הרשאה |
+|--------|------|--------|--------|
+| GET | `/random` | ציטוט אקראי | משתמש |
+| GET | `/` | כל הציטוטים | admin |
+| POST | `/` | הוספת ציטוט | admin |
+| DELETE | `/:id` | מחיקת ציטוט | admin |
 
 ### Health Check
 | Method | Path | תיאור |
@@ -436,6 +492,7 @@ TTL: נמחק אוטומטית אחרי 90 יום
 |-------|------|--------|
 | `join:list` | `listId` | כניסה לחדר רשימה (עם בדיקת הרשאה מול API) |
 | `leave:list` | `listId` | יציאה מחדר רשימה |
+| `get:presence` | `listId` | בקשה מפורשת לרשימת המחוברים לרשימה |
 
 ### אירועי מוצרים (Client → Server → Broadcast)
 | Event In | Event Out | תיאור |
@@ -444,20 +501,21 @@ TTL: נמחק אוטומטית אחרי 90 יום
 | `product:update` | `product:updated` | עדכון מוצר |
 | `product:toggle` | `product:toggled` | סימון נקנה/לא |
 | `product:delete` | `product:deleted` | מחיקת מוצר |
+| `products:clear` | `products:cleared` | מחיקה קבוצתית של מוצרים |
 
 ### אירועי התראות (Client → Server → Broadcast)
 | Event In | Event Out | תיאור |
 |----------|-----------|--------|
 | `member:join` | `notification:new` | חבר הצטרף |
 | `member:leave` | `notification:new` | חבר עזב |
-| `member:remove` | `notification:new` | חבר הוסר |
+| `member:remove` | `notification:new` (לשאר החברים) + `member:removed` (ישירות לחדר `user:{removedId}`) | חבר הוסר |
 | `list:update` | `notification:new` | רשימה עודכנה |
-| `list:delete` | `notification:new` | רשימה נמחקה |
+| `list:delete` | `list:deleted` (ישירות לחדר `user:{id}` של כל חבר, **לא** דרך `notification:new`) | רשימה נמחקה |
 
 ### אירועי נוכחות (Server → Client)
 | Event | Data | תיאור |
 |-------|------|--------|
-| `presence:update` | `{ listId, userIds }` | רשימת מחוברים לרשימה |
+| `presence:online` | `{ listId, userIds }` | רשימת מחוברים לרשימה |
 | `user:joined` | `{ listId, userId, userName }` | משתמש נכנס |
 | `user:left` | `{ listId, userId }` | משתמש יצא |
 
@@ -477,16 +535,15 @@ TTL: נמחק אוטומטית אחרי 90 יום
 שרת API ────publish───▶ Redis channel: "smart-basket:events" ────subscribe───▶ שרת Socket
 ```
 
-### אירועים שעוברים ב-Redis
+### אירועים שעוברים ב-Redis בפועל
+מוצרים והתראות **לא** עוברים ב-Redis - הקליינט משדר אותם ישירות לשרת ה-Socket (`socketService.emitProduct*`), שמשדר לחדר הרשימה ומתריע לחברים דרך `ApiService.broadcastNotification`. ה-subscriber בצד ה-Socket כן מוכן לקבל גם `product:added/toggled/deleted`/`notification` (`redis.service.ts`), אבל שרת ה-API לא מפרסם אותם כרגע - ערוץ Redis משמש רק לשני אירועי מנהל-מערכת:
+
 | type | מתי | מה קורה |
 |------|-----|---------|
-| `product:added` | מוצר נוסף דרך API | Socket משדר לחדר הרשימה |
-| `product:toggled` | מוצר סומן/בוטל | Socket משדר לחדר הרשימה |
-| `product:deleted` | מוצר נמחק | Socket משדר לחדר הרשימה |
-| `notification` | התראה נוצרה | Socket משדר לחדר הרשימה |
-| `user:deleted` | משתמש נמחק (admin) | Socket מנתק את כל ה-sockets של המשתמש |
+| `user:deleted` | משתמש נמחק (admin/מחיקה עצמית) | Socket מנתק את כל ה-sockets של המשתמש (`io.in('user:{id}').disconnectSockets()`) |
+| `member:kicked` | חבר הוסר מקבוצה | Socket מוציא את ה-sockets של החבר מחדר הרשימה הספציפי (`io.in('user:{id}').socketsLeave('list:{id}')`) - לא מנתק אותו לגמרי, רק עוצר שידור/קבלה בזמן אמת לרשימה שהוא כבר לא חבר בה |
 
-**ללא Redis:** השרת עובד במצב single-instance. אירועי Socket רצים ישירות ב-handlers.
+**ללא Redis:** שני האירועים האלה הם no-op שקט אם `REDIS_URL` לא מוגדר (single-instance mode) - הפעולה עצמה תמיד מצליחה ב-DB, רק האפקט המיידי על sockets פעילים לא קורה (מתעדכן בפעם הבאה שהלקוח פונה ל-REST/מתחבר מחדש). פורסם דרך `server/api/src/services/redisPublisher.service.ts`.
 
 ---
 
@@ -495,8 +552,8 @@ TTL: נמחק אוטומטית אחרי 90 יום
 ### הזרימה
 ```
 1. קליינט → מבקש הרשאת Notification מהדפדפן
-2. קליינט → נרשם ל-push subscription (VAPID key)
-3. קליינט → POST /api/notifications/push/subscribe { subscription }
+2. קליינט → שולף VAPID public key מ-`GET /api/push/vapid-public-key` (אין `VITE_VAPID_PUBLIC_KEY` בקליינט - נשלף מהשרת ולא מ-env), ונרשם ל-push subscription
+3. קליינט → POST /api/push/subscribe { subscription }
 4. כשמתרחש אירוע (מוצר נוסף, חבר הצטרף וכו'):
    שרת → web-push.sendNotification() → Push Service → דפדפן המשתמש
 ```
@@ -565,16 +622,19 @@ cd client && npm run build         # → dist/
 | `MONGODB_URI` | כן | - | חיבור ל-MongoDB |
 | `JWT_ACCESS_SECRET` | כן | - | סוד JWT (מינימום 32 תווים) |
 | `JWT_REFRESH_SECRET` | כן | - | סוד Refresh Token (מינימום 32 תווים) |
-| `JWT_ACCESS_EXPIRES_IN` | לא | `15m` | תפוגת Access Token |
-| `JWT_REFRESH_EXPIRES_IN` | לא | `7d` | תפוגת Refresh Token |
-| `GOOGLE_CLIENT_ID` | לא | - | Google OAuth Client ID |
-| `CORS_ORIGIN` | כן | `http://localhost:5173` | Origins מותרים (מופרדים בפסיק) |
-| `ADMIN_EMAIL` | כן | - | אימייל Admin (מקבל הרשאות אוטומטית) |
+| `JWT_ACCESS_EXPIRES_IN` | לא | `24h` | תפוגת Access Token |
+| `JWT_REFRESH_EXPIRES_IN` | לא | `90d` | תפוגת ברירת מחדל (בפועל הערך מחושב hardcoded ל-90 יום ב-`token.service.ts`, לא נקרא מה-env) |
+| `GOOGLE_CLIENT_ID` | **כן** | - | Google OAuth Client ID |
+| `CORS_ORIGIN` | לא (יש default בקוד) | `http://localhost:5173` | Origins מותרים (מופרדים בפסיק) |
+| `ADMIN_EMAIL` | לא (יש default בקוד) | - | אימייל Admin (מקבל הרשאות אוטומטית) |
 | `VAPID_PUBLIC_KEY` | לא | - | מפתח VAPID ציבורי (push) |
 | `VAPID_PRIVATE_KEY` | לא | - | מפתח VAPID פרטי |
 | `VAPID_EMAIL` | לא | - | אימייל VAPID |
+| `LOCATIONIQ_API_KEY` | לא | - | Fallback geocoding כש-Nominatim נכשל/מוגבל |
+| `OCR_API_KEY` | לא | - | מפתח OCR.space לסריקת רשימות מתמונה |
 | `SENTRY_DSN` | לא | - | Sentry DSN (פעיל רק בproduction) |
 | `LOGTAIL_TOKEN` | לא | - | BetterStack Logtail token |
+| `REDIS_URL` | לא | - | פרסום אירועי `user:deleted`/`member:kicked` לשרת ה-Socket (ראו סעיף Redis) |
 
 ### שרת Socket (`server/socket/.env`)
 | משתנה | חובה | ברירת מחדל | תיאור |
@@ -596,7 +656,6 @@ cd client && npm run build         # → dist/
 | `VITE_SOCKET_URL` | כן | `http://localhost:5001` | כתובת ה-Socket |
 | `VITE_GOOGLE_CLIENT_ID` | לא | - | Google OAuth Client ID |
 | `VITE_SENTRY_DSN` | לא | - | Sentry DSN |
-| `VITE_VAPID_PUBLIC_KEY` | לא | - | מפתח VAPID ציבורי |
 
 ---
 
@@ -658,16 +717,17 @@ curl https://api-domain.com/health
 | Headers | Helmet.js | X-Frame-Options, CSP, HSTS |
 | HTTPS | Caddy auto-SSL | Let's Encrypt |
 | CORS | express cors | origins מוגדרים, credentials |
-| Rate Limiting | express-rate-limit | 5 רמות (כללי, auth, login, register, join) |
+| Rate Limiting | express-rate-limit | 7 limiters (כללי, auth, login, register, join, שינוי סיסמה, יצירת התראה) |
 | NoSQL Injection | express-mongo-sanitize | middleware גלובלי |
 | XSS | sanitize-html | כל input טקסטואלי |
-| Auth | JWT + bcrypt | access 15min, refresh 7d, salt 12 |
-| Token Rotation | atomic update | מניעת שימוש חוזר ב-refresh token |
+| Auth | JWT + bcrypt | access 24h, refresh 90d (rotation + 60s grace period), salt 12 |
+| Token Rotation | atomic update + grace period | מניעת שימוש חוזר ב-refresh token |
+| Token Revocation | tokenVersion ב-JWT payload | שינוי סיסמה/מחיקת חשבון מגדילים `tokenVersion` ב-DB; `authenticate` משווה מול הערך ב-JWT ודוחה טוקנים ישנים - כולל access tokens שכבר הונפקו, לא רק refresh |
 | Password | select: false | סיסמה לא חוזרת ב-API responses |
 | Input Validation | Joi schemas | כל endpoint מאומת |
-| Admin | isAdmin middleware | בדיקת תפקיד בכל בקשת admin |
-| Socket Auth | JWT verify | כל חיבור socket חייב טוקן תקף |
-| Socket Rate Limit | in-memory window | 50 אירועים ל-10 שניות |
+| Admin | isAdmin middleware | בדיקת תפקיד בכל בקשת admin (מול DB, לא רק JWT claim) |
+| Socket Auth | JWT verify + אימות מול ה-API | כל חיבור socket מאמת JWT מקומית ואז שולף משתמש עדכני מ-`GET /api/users/me` (כולל בדיקת tokenVersion) - לא סומך על claims של הטוקן בלבד |
+| Socket Rate Limit | in-memory window (per-instance) | 50 אירועים ל-10 שניות |
 
 ### Rate Limits
 | Endpoint | הגבלה |
@@ -675,8 +735,10 @@ curl https://api-domain.com/health
 | כללי API | 100 בקשות / 15 דקות |
 | Auth | 20 בקשות / 15 דקות |
 | Login | 5 ניסיונות / 15 דקות |
-| Register | 3 ניסיונות / שעה |
+| Register | 30 ניסיונות / שעה |
 | Join Group | 10 ניסיונות / 15 דקות |
+| שינוי סיסמה | 5 ניסיונות / שעה |
+| יצירת התראה | 60 / דקה |
 | Socket Events | 50 אירועים / 10 שניות |
 
 ---

@@ -88,6 +88,22 @@ export const joinGroupLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// הגבלת OCR - 10 סריקות לשעה למשתמש (fallback ל-IP אם משום מה אין req.user).
+// OCR.space free tier מוגבל ל-2,500 בקשות/חודש לכל האפליקציה (engine 3,
+// ראו ocr.service.ts) - בלי הגבלה פר-משתמש, משתמש בודד יכול לרוקן את כל
+// המכסה החודשית תוך דקות.
+export const ocrLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: 'Too many OCR requests, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
+});
+
 // הגבלת התראות - מניעת spam של push notifications מצד לקוח זדוני.
 // 60 התראות לדקה זה הרבה יותר ממקסימום שימוש לגיטימי (סוקט מפעיל ~10/דקה בעומס גבוה).
 export const notificationCreateLimiter = rateLimit({

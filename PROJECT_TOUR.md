@@ -9,10 +9,9 @@
 ```
 smart-basket/
 ├── client/              ← React + Vite + MUI + TypeScript (PWA)
-├── server/
-│   ├── api/            ← Express + MongoDB + JWT
-│   └── socket/         ← WebSocket server (Socket.io)
-└── ultrareview/        ← review agent (ignore)
+└── server/
+    ├── api/            ← Express + MongoDB + JWT
+    └── socket/         ← WebSocket server (Socket.io)
 ```
 
 **3 סביבות**:
@@ -115,10 +114,10 @@ HTTP request
 
 ### 1. Price Comparison (גדול ומורכב)
 **שרת**: `server/api/src/features/priceComparison/`
-- `chains/` — 10 adapters, אחד לכל רשת (osher-ad, rami-levy, shufersal...)
+- `chains/` — 14 adapters, אחד לכל רשת (osher-ad, rami-levy, shufersal, carrefour, victory...)
 - `services/priceSync.service.ts` — קורא לכל ה-adapters, שומר ב-DB
 - `services/priceComparison.service.ts` — matching של שמות מוצרים למאגר
-- `jobs/priceSync.job.ts` — cron פעמיים ביום (04:00 ו-16:00)
+- `jobs/priceSync.job.ts` — cron פעם ביום (04:00), כולל seed סניפים + סנכרון OSM + ניקוי מחירים ישנים + geocoding ברקע
 
 **לקוח**: `client/src/features/priceComparison/`
 - `PriceComparisonCard` — המסך הראשי
@@ -143,7 +142,7 @@ HTTP request
 מבוסס JWT עם access + refresh tokens:
 - `routes/auth.routes.ts` — register/login/google/refresh
 - `middleware/auth.middleware.ts` — `authenticate` + `isAdmin`
-- שמור ב-HTTPOnly cookie + localStorage
+- שמור ב-localStorage + גיבוי ב-IndexedDB (אין HTTPOnly cookie — הטוקנים נגישים ל-JS, סיכון XSS ידוע)
 
 ---
 
@@ -174,7 +173,7 @@ HTTP request
 
 ראה `global/constants/index.ts` → `STORAGE_KEYS`. העיקריים:
 - `sb_settings` — כל ההגדרות (theme, language, notifications)
-- `cached_user` — user data (30 ימים)
+- `cached_user` — user data (90 ימים, תואם ל-refresh token TTL)
 - `sb_daily_faith_last_shown` — תאריך החיזוק האחרון
 - `sb_session_count` — מונה סשנים (לחוקי PopupCoordinator)
 - `pwa_install_seen` — האם המשתמש ביטל PWA prompt
@@ -183,7 +182,7 @@ HTTP request
 
 ## 🚦 Cron Jobs שרצים
 
-1. **Price Sync** — פעמיים ביום ב-04:00 וב-16:00 (`priceSync.job.ts`)
+1. **Price Sync** — פעם ביום ב-04:00 (`priceSync.job.ts`)
 2. **Notification cleanup** — TTL index של Mongo מוחק notifications ישנים מ-30 יום אוטומטית
 
 ---

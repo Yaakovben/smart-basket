@@ -275,6 +275,8 @@ export type TranslationKeys =
   | 'noProductsInCategory'
   | 'showAll'
   | 'errorOccurred'
+  | 'syncItemFailed'
+  | 'stillSyncingProduct'
   | 'connectionErrorTitle'
   | 'connectionErrorDesc'
   | 'noNotifications'

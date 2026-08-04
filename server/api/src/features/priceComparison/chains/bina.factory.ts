@@ -21,6 +21,7 @@
 
 import axios from 'axios';
 import { logger } from '../../../config/logger';
+import { insecureHttpsAgent } from './insecureAgent';
 import { parseXmlBuffer, parseStoresXml } from './portalXmlParser';
 import type {
   ChainAdapter, ChainFetchResult, ChainStoresFetchResult,
@@ -40,6 +41,8 @@ interface BinaSPathEntry {
 
 const FILE_TYPE_PRICE_FULL = 4;
 const FILE_TYPE_STORES = 1;
+// הגנה מפני קובץ דחוס ענק - ראו הסבר ב-portalFiles.ts
+const MAX_COMPRESSED_BYTES = 150 * 1024 * 1024;
 
 export interface BinaOptions {
   chainId: ChainId;
@@ -71,6 +74,7 @@ async function listFiles(
   const url = `${baseUrl}/MainIO_Hok.aspx?${params.toString()}`;
   const res = await axios.get(url, {
     timeout: 30_000,
+    httpsAgent: insecureHttpsAgent,
     // Bina לא מצריך Cookie אבל לפעמים בודק User-Agent
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'application/json,text/plain,*/*' },
     // קצת רשתות מחזירות תעודות חלקיות - תואם להגדרת publishedPrices
@@ -92,6 +96,7 @@ async function resolveAndDownload(
   const resolveUrl = `${baseUrl}/Download.aspx?FileNm=${encodeURIComponent(fileName)}`;
   const resolveRes = await axios.get<BinaSPathEntry[]>(resolveUrl, {
     timeout: 30_000,
+    httpsAgent: insecureHttpsAgent,
     headers: { 'User-Agent': 'smart-basket/1.0', 'Accept': 'application/json' },
     validateStatus: s => s < 500,
   });
@@ -104,6 +109,9 @@ async function resolveAndDownload(
   const fileRes = await axios.get<ArrayBuffer>(sPath, {
     timeout: 60_000,
     responseType: 'arraybuffer',
+    httpsAgent: insecureHttpsAgent,
+    maxContentLength: MAX_COMPRESSED_BYTES,
+    maxBodyLength: MAX_COMPRESSED_BYTES,
     headers: { 'User-Agent': 'smart-basket/1.0' },
     maxRedirects: 5,
     validateStatus: s => s < 500,

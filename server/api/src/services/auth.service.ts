@@ -26,10 +26,10 @@ interface GoogleUserInfo {
 
 // יצירת טוקנים + רישום פעילות כניסה ב-log
 async function createTokensAndLog(
-  userId: string, email: string, name: string,
+  userId: string, email: string, name: string, tokenVersion: number,
   loginMethod: 'email' | 'google', ipAddress?: string, userAgent?: string
 ): Promise<AuthTokens> {
-  const tokens = await createTokens(userId, email, name);
+  const tokens = await createTokens(userId, email, name, tokenVersion);
   await LoginActivityDAL.logActivity({ userId, userName: name, userEmail: email, loginMethod, ipAddress, userAgent });
   return tokens;
 }
@@ -71,7 +71,7 @@ export async function register(
     isAdmin,
   });
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'email', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }
 
@@ -90,7 +90,7 @@ export async function login(
   const isMatch = await user.comparePassword(data.password);
   if (!isMatch) throw AuthError.invalidCredentials();
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'email', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }
 
@@ -149,6 +149,6 @@ export async function googleAuth(
     user.googleId = googleUser.sub;
   }
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, 'google', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'google', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }

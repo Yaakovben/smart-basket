@@ -145,7 +145,7 @@ export const AppRouter = () => {
   const { isSubscribed: isPushSubscribed } = usePushNotifications();
   const listIdsForPresence = useMemo(() => lists.map(l => l.id), [lists]);
   const onlineUsers = usePresence(listIdsForPresence);
-  useOfflineSync(user?.id, updateProductsForList);
+  useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה - בלי RAF כפול
   useEffect(() => {

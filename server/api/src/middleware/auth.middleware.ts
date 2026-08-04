@@ -26,6 +26,11 @@ export const authenticate = asyncHandler(
         throw NotFoundError.user();
       }
 
+      // tokenVersion שונה = הטוקן בוטל (שינוי סיסמה/מחיקת חשבון) אחרי שהונפק
+      if ((user.tokenVersion ?? 0) !== (decoded.tokenVersion ?? 0)) {
+        throw AuthError.tokenExpired();
+      }
+
       req.user = {
         id: decoded.userId,
         name: user.name,

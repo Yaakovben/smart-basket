@@ -277,6 +277,8 @@ export const ru: Translations = {
   noProductsInCategory: 'Нет товаров в этой категории',
   showAll: 'Показать все',
   errorOccurred: 'Произошла ошибка',
+  syncItemFailed: 'Одно или несколько офлайн-изменений не удалось синхронизировать с сервером',
+  stillSyncingProduct: 'Товар еще сохраняется, попробуйте через мгновение',
   connectionErrorTitle: 'Ошибка подключения',
   connectionErrorDesc: 'Не удалось подключиться к серверу',
   noNotifications: 'Нет новых уведомлений',

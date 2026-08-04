@@ -9,6 +9,8 @@ import { UserDAL, ListDAL, ProductDAL, NotificationDAL, PushSubscriptionDAL } fr
 import { NotFoundError, ConflictError, AuthError, ValidationError } from '../errors';
 import { sanitizeText } from '../utils';
 import { invalidateAllUserTokens } from './token.service';
+import { publishUserDeleted } from './redisPublisher.service';
+import { logger } from '../config';
 import type { UpdateProfileInput } from '../validators';
 import type { IUserResponse } from '../types';
 
@@ -69,9 +71,12 @@ export async function changePassword(
 
   // הסיסמה תוצפן ע"י pre-save hook של המודל
   user.password = newPassword;
+  // מבטל מיידית גם access tokens שכבר הונפקו (לא רק refresh tokens) -
+  // ראו auth.middleware.ts שבודק tokenVersion בכל בקשה.
+  user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   await user.save();
 
-  // ביטול כל הטוקנים - מאלץ התחברות מחדש בכל המכשירים
+  // ביטול כל ה-refresh tokens - מאלץ התחברות מחדש בכל המכשירים
   await invalidateAllUserTokens(userId);
 }
 
@@ -140,4 +145,7 @@ export async function deleteAccount(userId: string): Promise<void> {
 
   // רץ אחרי הטרנזקציה — לא דורש rollback אם נכשל
   await invalidateAllUserTokens(userId);
+
+  // ניתוק כפוי של sockets פעילים של המשתמש שנמחק (no-op אם Redis לא מוגדר)
+  publishUserDeleted(userId).catch((err: unknown) => logger.warn('Failed to publish user:deleted:', err));
 }

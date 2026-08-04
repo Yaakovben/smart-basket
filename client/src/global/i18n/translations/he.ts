@@ -277,6 +277,8 @@ export const he: Translations = {
   noProductsInCategory: 'אין מוצרים בקטגוריה זו',
   showAll: 'הצג הכל',
   errorOccurred: 'אירעה שגיאה',
+  syncItemFailed: 'שינוי אחד או יותר שנשמרו במצב אופליין לא הצליחו להתעדכן בשרת',
+  stillSyncingProduct: 'המוצר עדיין נשמר, נסו שוב בעוד רגע',
   connectionErrorTitle: 'בעיית חיבור',
   connectionErrorDesc: 'לא ניתן להתחבר לשרת כרגע',
   noNotifications: 'אין התראות חדשות',
