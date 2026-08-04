@@ -272,6 +272,18 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // הגנה מפני race עם בקשות "יתומות": Promise.race עם timeout מקומי
+      // (כמו ב-checkAuth, useAuth.ts) לא מבטל בפועל את הבקשה שמפסידה -
+      // ה-fetch/axios הבסיסי ממשיך לרוץ ברקע, ויכול להגיע לכאן עם 401
+      // אמיתי אחרי שניות ארוכות (Render cold start וכו'), גם אחרי שהצד
+      // שקרא לו כבר "ויתר". אם בינתיים כבר קרה login/register/refresh טרי
+      // עם טוקן חדש, ה-401 הזה שייך לבקשה ישנה ולא-רלוונטית עוד - מתעלמים
+      // במקום לנקות סשן טרי ותקף.
+      const requestToken = (originalRequest.headers.Authorization as string | undefined)?.replace('Bearer ', '');
+      if (requestToken && requestToken !== getAccessToken()) {
+        return Promise.reject(error);
+      }
+
       // רענון משותף עם dedup, מונע race condition עם socket
       const newAccessToken = await refreshAccessToken();
 
