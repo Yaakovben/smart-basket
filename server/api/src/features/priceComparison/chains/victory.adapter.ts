@@ -143,8 +143,22 @@ export const victoryAdapter: ChainAdapter = {
   },
 
   async fetchLatestStores(): Promise<ChainStoresFetchResult> {
+    let files: VictoryFile[];
+    let branches: VictoryBranch[];
     try {
-      const [files, branches] = await Promise.all([listFiles(), listBranches()]);
+      [files, branches] = await Promise.all([listFiles(), listBranches()]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'unknown';
+      logger.warn(`[chain:victory] fetchLatestStores failed: ${msg}`);
+      return { chainId: 'victory', chainName: 'ויקטורי', stores: [], fetchedFiles: 0, error: msg };
+    }
+
+    // ניסיון קובץ הסניפים המלא (כתובת+קואורדינטות) - מבודד בטרייקאץ' משלו
+    // כדי שכשל הורדה/פרסינג (טיימאאוט, 404 חד-פעמי) לא יבטל את הבקשה
+    // כולה, אלא ייפול ל-fallback של שמות-בלבד למטה. לפני התיקון, חריגה
+    // כאן הייתה קופצת ל-catch החיצוני ומזניחה את branches שכבר הצליחו
+    // להיטען - "0 סניפים" במקום "סניפים בלי קואורדינטות".
+    try {
       const storesFile = pickLatestStoresFile(files);
       if (storesFile) {
         const buf = await downloadFile(storesFile.fileName);
@@ -153,16 +167,16 @@ export const victoryAdapter: ChainAdapter = {
           return { chainId: 'victory', chainName: 'ויקטורי', stores, fetchedFiles: 1 };
         }
       }
-      // Fallback: רשימת סניפים מ-getbranches (שם בלבד, ללא כתובת/מיקום).
-      const stores = branches.map(b => ({
-        storeId: String(b.number),
-        storeName: b.name,
-      }));
-      return { chainId: 'victory', chainName: 'ויקטורי', stores, fetchedFiles: 0 };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'unknown';
-      logger.warn(`[chain:victory] fetchLatestStores failed: ${msg}`);
-      return { chainId: 'victory', chainName: 'ויקטורי', stores: [], fetchedFiles: 0, error: msg };
+      logger.warn(`[chain:victory] stores file download/parse failed, falling back to branch names only: ${msg}`);
     }
+
+    // Fallback: רשימת סניפים מ-getbranches (שם בלבד, ללא כתובת/מיקום).
+    const stores = branches.map(b => ({
+      storeId: String(b.number),
+      storeName: b.name,
+    }));
+    return { chainId: 'victory', chainName: 'ויקטורי', stores, fetchedFiles: 0 };
   },
 };

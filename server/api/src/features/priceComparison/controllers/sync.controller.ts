@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { getComparisonForUser, invalidateAllUsers } from '../services/priceComparison.service';
-import { syncAllChains, syncBranchesFromOsm } from '../services/priceSync.service';
+import { syncAllChains, syncBranchesFromOsm, getSyncProgress } from '../services/priceSync.service';
 import { geocodeAddress } from '../services/geocoder.service';
 import { parseUserLocation, invalidateBranchCache } from '../services/branches.service';
 import { Branch } from '../models/Branch.model';
@@ -9,9 +9,9 @@ import { asyncHandler } from '../../../utils';
 import { logger } from '../../../config/logger';
 import type { AuthRequest } from '../../../types';
 
-// מצב סנכרון מחירים - מונע ריצות חופפות
+// מצב סנכרון מחירים - בדיקה מקומית מהירה, בנוסף למנעול המשותף האמיתי
+// ב-syncAllChains (getSyncProgress().active), שמכסה גם ריצות cron.
 let adminSyncInProgress = false;
-export const isAdminSyncInProgress = (): boolean => adminSyncInProgress;
 
 // Lazy auto-sync הוסר: גרם לסנכרון מלא ברקע בזמן בקשות לקוחות → עומס יתר על
 // Render Free → לקוחות לא יכלו להיכנס. הקרון של 04:00/16:00 + סנכרון ידני
@@ -37,7 +37,10 @@ export const getComparison = asyncHandler(async (req: AuthRequest, res: Response
 // POST /api/price-comparison/refresh (admin only)
 // מריץ סנכרון מיידי של כל הרשתות - שימוש בעת טעינה ראשונית או כשצריך ריענון דחוף
 export const refreshPrices = asyncHandler(async (req: AuthRequest, res: Response) => {
-  if (adminSyncInProgress) {
+  // getSyncProgress().active הוא המנעול המשותף האמיתי (גם cron וגם אדמין
+  // עוברים דרך syncAllChains) - לא רק adminSyncInProgress המקומי, שלא היה
+  // יודע אם ה-cron של 04:00 כבר רץ ברקע.
+  if (adminSyncInProgress || getSyncProgress().active) {
     res.status(409).json({
       success: false,
       message: 'סנכרון כבר פעיל, נסה שוב בעוד דקה',

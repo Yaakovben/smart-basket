@@ -212,6 +212,17 @@ const DELAY_BETWEEN_CHAINS_MS = 3000;
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 export async function syncAllChains(): Promise<SyncResult[]> {
+  // מנעול יחיד ומשותף - קודם זה נבדק בנפרד ע"י sync.controller.ts (טריגר
+  // אדמין) ו-priceSync.job.ts (cron), כל אחד עם boolean משלו שלא ידע על
+  // השני. סנכרון-אדמין יכול היה להתחיל בדיוק כשה-cron של 04:00 כבר רץ -
+  // שתי לולאות שמכפילות עומס על אותם פורטלים ודורסות זו את syncProgress
+  // המשותף של זו. syncAllChains עצמו הוא הנקודה היחידה שדרכה עוברות שתי
+  // הדרכים, אז זו הנקודה הנכונה לנעילה אחת ובלתי-מותנית.
+  if (syncProgress.active) {
+    logger.warn('[price-sync] syncAllChains called while a sync is already active - skipping');
+    return [];
+  }
+
   const results: SyncResult[] = [];
 
   syncProgress = {

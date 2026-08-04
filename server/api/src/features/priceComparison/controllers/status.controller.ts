@@ -5,7 +5,7 @@ import { BranchDAL } from '../dal/branch.dal';
 import { asyncHandler } from '../../../utils';
 import type { AuthRequest } from '../../../types';
 import type { ChainId } from '../models/Price.model';
-import { isAdminSyncInProgress, getBranchSyncState } from './sync.controller';
+import { getBranchSyncState } from './sync.controller';
 
 // Cache קצר-טווח לתוצאת getStatus - האגרגציות כבדות, 20s מספיקות לטריות
 let statusCache: { data: Record<string, unknown>; expiresAt: number } | null = null;
@@ -79,7 +79,9 @@ export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) =
   const branchSourceBreakdown = await BranchDAL.countsBySource();
 
   const responseData = {
-    syncInProgress: isAdminSyncInProgress(),
+    // getSyncProgress().active הוא המנעול המשותף האמיתי (syncAllChains
+    // עצמו נועל) - משקף גם ריצת cron, לא רק סנכרון שהתחיל מהאדמין.
+    syncInProgress: getSyncProgress().active,
     syncProgress: getSyncProgress(),
     branchSync: getBranchSyncState(),
     lastUpdatedISO,

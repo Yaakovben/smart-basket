@@ -288,7 +288,6 @@ export const shufersalAdapter: ChainAdapter = {
       const MAX_STORES = 30;
       const BATCH = 6;
       const subset = urls.slice(0, MAX_STORES);
-      const seenBarcodes = new Set<string>();
       const allItems: ChainPriceItem[] = [];
       let fetched = 0;
       let lastError: string | undefined;
@@ -305,10 +304,12 @@ export const shufersalAdapter: ChainAdapter = {
             continue;
           }
           fetched++;
+          // בלי dedup לפי ברקוד כאן: processChainItems (priceSync.service.ts)
+          // מצפה לשורה אחת לכל (סניף, ברקוד) כדי לחשב מחיר-מינימום/סניף-זול
+          // אמיתי בין הסניפים שנדגמו. dedup פר-ברקוד כאן היה משאיר רק את
+          // הסניף הראשון שנטען לכל מוצר - "המחיר הזול ביותר" היה בפועל
+          // "מחיר הסניף הראשון", בלי שגיאה גלויה לאף אחד.
           for (const item of r.value) {
-            // dedup לפי ברקוד - מוצר זהה בסניפים שונים = רשומה אחת
-            if (seenBarcodes.has(item.barcode)) continue;
-            seenBarcodes.add(item.barcode);
             allItems.push(item);
           }
         }
