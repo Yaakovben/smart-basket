@@ -111,34 +111,54 @@ async function broadcastNotification(
   }
 }
 
+export type VerifyUserResult =
+  | { ok: true; user: { id: string; name: string; email: string; isAdmin: boolean } }
+  // ה-API ענה במפורש שהטוקן לא תקף/בוטל - יש לדחות את החיבור
+  | { ok: false; reason: 'unauthorized' }
+  // לא הצלחנו להשלים את הבדיקה בכלל (timeout/רשת/5xx, למשל Render cold
+  // start) - לא ידוע אם הטוקן תקף או לא, לכן לא נכשיל את המשתמש על בסיס
+  // תקלת תשתית חולפת.
+  | { ok: false; reason: 'unreachable' };
+
 /**
  * אימות טוקן + שליפת פרטי משתמש עדכניים מה-API (לא סומכים על claims של
  * ה-JWT בלבד). סוגר שני פערים: (1) שם/isAdmin שהשתנו אחרי שהטוקן הונפק,
  * (2) טוקן שבוטל ע"י שינוי סיסמה/מחיקת חשבון - authenticate middleware
  * של ה-API בודק tokenVersion ומחזיר 401 אם לא תואם.
+ *
+ * מבחין בין "השרת אמר בפירוש לא מורשה" (unauthorized - דוחים) לבין
+ * "לא הצלחנו להגיע לשרת בכלל" (unreachable - לא דוחים, נופלים חזרה
+ * לאימות JWT מקומי בקריאה - ראו auth.middleware.ts). בלי ההבחנה הזו,
+ * תקלת רשת/cold-start חולפת הייתה מנתקת משתמשים לגיטימיים.
  */
-async function verifyUser(
-  accessToken: string
-): Promise<{ id: string; name: string; email: string; isAdmin: boolean } | null> {
+async function verifyUser(accessToken: string): Promise<VerifyUserResult> {
   try {
     const response = await fetch(`${baseUrl}/users/me`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${accessToken}` },
       signal: AbortSignal.timeout(10000),
     });
-    if (!response.ok) return null;
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, reason: 'unauthorized' };
+    }
+    if (!response.ok) {
+      return { ok: false, reason: 'unreachable' };
+    }
 
     const body = (await response.json()) as { data?: { id?: string; name?: string; email?: string; isAdmin?: boolean } };
-    if (!body.data?.id) return null;
+    if (!body.data?.id) return { ok: false, reason: 'unreachable' };
     return {
-      id: body.data.id,
-      name: body.data.name || '',
-      email: body.data.email || '',
-      isAdmin: !!body.data.isAdmin,
+      ok: true,
+      user: {
+        id: body.data.id,
+        name: body.data.name || '',
+        email: body.data.email || '',
+        isAdmin: !!body.data.isAdmin,
+      },
     };
   } catch (error) {
     logger.error('verifyUser failed:', error);
-    return null;
+    return { ok: false, reason: 'unreachable' };
   }
 }
 
