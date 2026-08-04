@@ -38,10 +38,17 @@ export function useOfflineSync(
             await productsApi.updateProduct(mutation.listId, mutation.productId, mutation.changes);
           } else if (mutation.type === 'delete') {
             await productsApi.deleteProduct(mutation.listId, mutation.productId);
+          } else if (mutation.type === 'clear') {
+            await productsApi.clearProducts(mutation.listId, mutation.filter);
+          } else if (mutation.type === 'reset') {
+            await productsApi.resetProducts(mutation.listId);
           } else if (mutation.type === 'add') {
+            // clientId=tempId - idempotency: אם ניסיון קודם (לפני שהתור נשמר,
+            // או ריצת סנכרון קודמת שנקטעה) כבר יצר את המוצר בפועל, השרת
+            // מחזיר אותו הקיים במקום ליצור כפילות.
             const real = await productsApi.addProduct(
               mutation.listId,
-              mutation.productData as Parameters<typeof productsApi.addProduct>[1],
+              { ...mutation.productData, clientId: mutation.tempId } as Parameters<typeof productsApi.addProduct>[1],
             );
             // החלפת מזהה זמני במזהה אמיתי מהשרת
             updateProductsForList(mutation.listId, products =>

@@ -7,7 +7,9 @@ export type QueuedMutation =
   | { id: string; type: 'toggle'; listId: string; productId: string; isPurchased: boolean; timestamp: number }
   | { id: string; type: 'update'; listId: string; productId: string; changes: Record<string, unknown>; timestamp: number }
   | { id: string; type: 'delete'; listId: string; productId: string; timestamp: number }
-  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number };
+  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number }
+  | { id: string; type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending'; timestamp: number }
+  | { id: string; type: 'reset'; listId: string; timestamp: number };
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -46,7 +48,9 @@ type QueueInput =
   | { type: 'toggle'; listId: string; productId: string; isPurchased: boolean }
   | { type: 'update'; listId: string; productId: string; changes: Record<string, unknown> }
   | { type: 'delete'; listId: string; productId: string }
-  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean };
+  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean }
+  | { type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending' }
+  | { type: 'reset'; listId: string };
 
 async function enqueue(mutation: QueueInput): Promise<void> {
   const db = await openDB();
@@ -107,6 +111,32 @@ export const enqueueAdd = (
   tempId: string,
   pendingIsPurchased?: boolean,
 ) => enqueue({ type: 'add', listId, productData, tempId, pendingIsPurchased });
+
+export const enqueueClear = (listId: string, filter: 'all' | 'purchased' | 'pending') =>
+  enqueue({ type: 'clear', listId, filter });
+
+export const enqueueReset = (listId: string) =>
+  enqueue({ type: 'reset', listId });
+
+// מעדכן pendingIsPurchased על רשומת 'add' שכבר בתור (ולא רק ב-pendingTempActions
+// שבזיכרון) - מכסה טאפ על "נקנה" שקרה *אחרי* שההוספה כבר נכשלה ונשמרה בתור,
+// לא רק במרוץ הקצר שלפני זה. מחזיר false אם לא נמצאה רשומה כזו (למשל
+// ההוספה עדיין לא נכשלה/לא נשמרה בתור - הטיפול הרגיל ב-pendingTempActions
+// עדיין יתפוס את זה).
+export async function updateQueuedAddPendingPurchase(tempId: string, isPurchased: boolean): Promise<boolean> {
+  const all = await getAllQueued();
+  const match = all.find((m): m is Extract<QueuedMutation, { type: 'add' }> => m.type === 'add' && m.tempId === tempId);
+  if (!match) return false;
+
+  const db = await openDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({ ...match, pendingIsPurchased: isPurchased });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  return true;
+}
 
 // בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם
 export function isNetworkError(error: unknown): boolean {

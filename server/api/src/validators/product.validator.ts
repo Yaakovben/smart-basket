@@ -22,6 +22,8 @@ export const productValidator = {
     note: Joi.string().allow('').max(200).messages({
       'string.max': 'Note cannot exceed 200 characters',
     }),
+    // מזהה זמני מהלקוח (idempotency) - ראה product.service.ts:addProduct
+    clientId: Joi.string().max(100).optional(),
   }),
 
   update: Joi.object({
@@ -73,6 +75,7 @@ export type CreateProductInput = {
   unit?: ProductUnit;
   category?: ProductCategory;
   note?: string;
+  clientId?: string;
 };
 
 export type UpdateProductInput = {

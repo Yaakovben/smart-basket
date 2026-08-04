@@ -70,7 +70,10 @@ export const useAddProduct = ({
     onUpdateProductsForList(list.id, (current) => [...current, tempProduct]);
 
     try {
-      const addedProduct = await productsApi.addProduct(list.id, productData);
+      // clientId=tempId: אם התשובה הזו אובדת ברשת וה-catch למטה שולח את אותה
+      // בקשה שוב (דרך offlineQueue), השרת יזהה שזו אותה הוספה בדיוק ויחזיר
+      // את המוצר הקיים במקום ליצור כפילות.
+      const addedProduct = await productsApi.addProduct(list.id, { ...productData, clientId: tempId });
       const realId = addedProduct.id;
 
       // החלפת מזהה זמני במזהה אמיתי מהשרת

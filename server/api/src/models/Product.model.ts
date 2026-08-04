@@ -19,6 +19,9 @@ export interface IProductDoc extends Document {
   purchasedBy?: Types.ObjectId | null;
   position: number;
   note?: string;
+  // מזהה זמני מהלקוח (temp id) - idempotency key להוספת מוצר. אופציונלי כי
+  // רק בקשות דרך תור ה-offline sync שולחות אותו; שאר הנתיבים (undo וכו') לא.
+  clientId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -83,6 +86,10 @@ const productSchema = new Schema<IProductDoc>(
       maxlength: 200,
       default: '',
     },
+    clientId: {
+      type: String,
+      maxlength: 100,
+    },
   },
   {
     timestamps: true,
@@ -99,5 +106,11 @@ const productSchema = new Schema<IProductDoc>(
 productSchema.index({ listId: 1, position: 1 });
 productSchema.index({ listId: 1, isPurchased: 1 });
 productSchema.index({ addedBy: 1 });
+
+// idempotency: ייחודי רק בין מסמכים שבהם clientId קיים בפועל (sparse) - כך
+// שהוספות בלי clientId (רוב הנתיבים) לא מתנגשות. תופס race אמיתי (שני
+// טאבים/ניסיונות חוזרים בו-זמנית עם אותו clientId) שבדיקת "קיים?" לפני
+// היצירה בקוד השירות לבדה לא הייתה תופסת.
+productSchema.index({ listId: 1, clientId: 1 }, { unique: true, sparse: true });
 
 export const Product = mongoose.model<IProductDoc>('Product', productSchema);

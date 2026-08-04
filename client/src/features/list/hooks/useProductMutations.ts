@@ -6,7 +6,7 @@ import { trackEvent } from '../../../global/services/analytics';
 import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
-import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete } from '../../../services/offlineQueue';
+import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete, enqueueClear, enqueueReset, updateQueuedAddPendingPurchase } from '../../../services/offlineQueue';
 
 interface UseProductMutationsParams {
   list: List;
@@ -65,9 +65,14 @@ export const useProductMutations = ({
       )
     );
 
-    // מוצר עם מזהה זמני: שמירת הפעולה בתור, תישלח לשרת אחרי קבלת מזהה אמיתי
+    // מוצר עם מזהה זמני: שמירת הפעולה בתור, תישלח לשרת אחרי קבלת מזהה אמיתי.
+    // אם ההוספה כבר נכשלה ונשמרה ב-IndexedDB (offline) - pendingTempActions
+    // (בזיכרון בלבד) לא ייקרא שוב אף פעם, אז מעדכנים גם את הרשומה בתור עצמה
+    // כדי שהסנכרון יחיל את הסימון. אם ההוספה עוד לא נכשלה, זה no-op בטוח -
+    // הטיפול הקיים ב-pendingTempActions עדיין יתפוס את המקרה הזה.
     if (isTempId(productId)) {
       pendingTempActions.current.set(productId, 'toggle');
+      void updateQueuedAddPendingPurchase(productId, newIsPurchased);
       return;
     }
 
@@ -217,6 +222,11 @@ export const useProductMutations = ({
       socketService.emitProductsCleared(list.id, affectedItems.map(p => p.id), filter, user.name);
       showToast(t('listCleared'), 'success');
     } catch (error) {
+      if (isNetworkError(error)) {
+        // הסטייט האופטימיסטי (הניקוי) כבר הוחל - נשאר ככה, מסתנכרן בחזרה לרשת
+        void enqueueClear(list.id, filter);
+        return;
+      }
       if (import.meta.env.DEV) console.error('Failed to clear list:', error);
       // שחזור
       onUpdateProductsForList(list.id, (current) => [...current, ...affectedItems]);
@@ -288,7 +298,12 @@ export const useProductMutations = ({
       await productsApi.resetProducts(list.id);
       trackEvent('list_reset'); // רשימה חוזרת - אינדיקציה חזקה ל-retention
       showToast(t('listReset'), 'success');
-    } catch {
+    } catch (error) {
+      if (isNetworkError(error)) {
+        // הסטייט האופטימיסטי (האיפוס) כבר הוחל - נשאר ככה, מסתנכרן בחזרה לרשת
+        void enqueueReset(list.id);
+        return;
+      }
       onUpdateProductsForList(list.id, (current) =>
         current.map(p => purchasedIds.has(p.id) ? { ...p, isPurchased: true } : p)
       );

@@ -11,6 +11,7 @@ export interface CreateProductInput {
   addedBy: string;
   position?: number;
   note?: string;
+  clientId?: string;
 }
 
 export const ProductDAL = {
@@ -24,6 +25,12 @@ export const ProductDAL = {
       .populate('purchasedBy', 'name')
       .sort({ position: 1, createdAt: 1 })
       .lean();
+  },
+
+  // לצורך idempotency בהוספת מוצר (ראה product.service.ts:addProduct) -
+  // מוצא מוצר שכבר נוצר עבור אותו clientId (temp id מהלקוח) ברשימה הזו.
+  async findByClientId(listId: string, clientId: string): Promise<IProductDoc | null> {
+    return Product.findOne({ listId, clientId }).populate('addedBy', 'name');
   },
 
   async findByListIds(listIds: string[]) {

@@ -6,6 +6,10 @@ export interface CreateProductData {
   unit?: Product['unit'];
   category?: Product['category'];
   note?: string;
+  // מזהה שנוצר בצד לקוח (temp id) - מאפשר לשרת לזהות ניסיון חוזר של אותה
+  // הוספה (למשל אחרי שתשובת השרת אבדה ברשת) ולהחזיר את המוצר הקיים במקום
+  // ליצור כפילות. ראו product.service.ts:addProduct.
+  clientId?: string;
 }
 
 export interface UpdateProductData {

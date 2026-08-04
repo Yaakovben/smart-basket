@@ -22,6 +22,10 @@ const toProductResponse = (product: IProductDoc) => {
   return json;
 };
 
+// שגיאת מפתח כפול של Mongo (E11000) - אותו בדיקה בדיוק כמו error.middleware.ts
+const isDuplicateKeyError = (err: unknown): boolean =>
+  err instanceof Error && err.name === 'MongoServerError' && (err as { code?: number }).code === 11000;
+
 export async function addProduct(
   listId: string,
   userId: string,
@@ -29,15 +33,37 @@ export async function addProduct(
 ) {
   await checkListAccess(listId, userId);
 
-  const product = await ProductDAL.createProduct({
-    listId,
-    name: sanitizeText(data.name),
-    quantity: data.quantity ?? 1,
-    unit: data.unit ?? 'יח׳',
-    category: data.category ?? 'אחר',
-    addedBy: userId,
-    ...(data.note !== undefined ? { note: sanitizeText(data.note) } : {}),
-  });
+  // idempotency: אם זו הוספה חוזרת עם אותו clientId (למשל תשובת השרת
+  // אבדה ברשת בניסיון קודם, offlineQueue שולח שוב) - מחזירים את המוצר
+  // שכבר נוצר במקום ליצור כפילות.
+  if (data.clientId) {
+    const existing = await ProductDAL.findByClientId(listId, data.clientId);
+    if (existing) return toProductResponse(existing);
+  }
+
+  let product: IProductDoc;
+  try {
+    product = await ProductDAL.createProduct({
+      listId,
+      name: sanitizeText(data.name),
+      quantity: data.quantity ?? 1,
+      unit: data.unit ?? 'יח׳',
+      category: data.category ?? 'אחר',
+      addedBy: userId,
+      ...(data.note !== undefined ? { note: sanitizeText(data.note) } : {}),
+      ...(data.clientId ? { clientId: data.clientId } : {}),
+    });
+  } catch (err) {
+    // race אמיתי: בקשה מקבילה עם אותו clientId כבר יצרה את המוצר בין
+    // בדיקת ה-findByClientId למעלה לבין ה-create הזה (למשל שני טאבים
+    // מסנכרנים את אותה רשומת תור בו-זמנית) - האינדקס הייחודי תפס את זה.
+    // מחזירים את הרשומה הקיימת במקום שגיאת 500 ללקוח.
+    if (data.clientId && isDuplicateKeyError(err)) {
+      const existing = await ProductDAL.findByClientId(listId, data.clientId);
+      if (existing) return toProductResponse(existing);
+    }
+    throw err;
+  }
 
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
