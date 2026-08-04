@@ -65,10 +65,21 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 //  1. event 'pageshow' עם persisted=true ⇒ ה-DOM שוחזר מ-BFCache. נטען מחדש.
 //  2. visibilitychange אחרי שהיינו מוסתרים יותר מ-30 דק' ⇒ נרענן ברקע
 //     (ה-JS עלול להיות שגוי בגלל זמן רב מדי במצב suspended).
+//
+// דפדפנים פנימיים (WhatsApp/Instagram in-app browser) יורים pageshow
+// עם persisted=true הרבה יותר אגרסיבית מדפדפן רגיל - כולל תוך כדי זרימת
+// Google Sign-In (מעבר ל-native chrome/intent וחזרה). רענון כפוי בדיוק
+// באותו רגע קוטע את תהליך ההתחברות באמצע ומציג "החיבור פג תוקף" בלי סיבה
+// אמיתית (אותה תופעה בדיוק שתועדה ותוקנה עבור SW_ACTIVATED ב-router/index.tsx -
+// כאן היה חסר guard מקביל). לכן מתעלמים מ-pageshow שמגיע בחלון זמן קצר
+// אחרי טעינת האפליקציה - שם כמעט תמיד זו התחברות בתהליך, לא bfcache restore
+// אמיתי אחרי זמן ארוך מחוץ לאפליקציה.
+const APP_LOAD_TIME = Date.now();
+const PAGESHOW_RELOAD_GRACE_MS = 20000;
 if (typeof window !== 'undefined') {
   let hiddenAt = 0;
   window.addEventListener('pageshow', (e) => {
-    if ((e as PageTransitionEvent).persisted) {
+    if ((e as PageTransitionEvent).persisted && Date.now() - APP_LOAD_TIME > PAGESHOW_RELOAD_GRACE_MS) {
       // BFCache restore - נטען מחדש כדי שכל ה-JS ירוץ מההתחלה
       window.location.reload();
     }
