@@ -93,7 +93,12 @@ export const NotificationsSettingsSection = ({
                     if (!e.target.checked) setPushExpanded(false);
                   }}
                   disabled={!pushSupported || !isPwaInstalled}
-                  sx={smallSwitchSx}
+                  // disabled על MUI Switch מתרגם ל-<input disabled> - דפדפנים
+                  // לא יורים click בכלל על אלמנט disabled, אז זה אף פעם לא
+                  // הגיע ל-onClick של ה-Box העוטף (למעלה) שאמור להציג את
+                  // הסבר ההתקנה. pointerEvents:none מעביר את הקליק "מבעד"
+                  // ל-Switch ישירות ל-Box העוטף שכן מגיב.
+                  sx={!pushSupported || !isPwaInstalled ? { ...smallSwitchSx, pointerEvents: 'none' } : smallSwitchSx}
                 />
               )}
             </Box>
