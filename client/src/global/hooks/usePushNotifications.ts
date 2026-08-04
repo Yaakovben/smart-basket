@@ -150,7 +150,19 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return false;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      // timeout - אם ה-SW תקוע (למשל באמצע התקנת גרסה חדשה) navigator.serviceWorker.ready
+      // נשאר pending לנצח, והספינר לא נעצר לעולם. אותו timeout כמו ב-checkSupport למעלה.
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 10000)),
+        ]);
+      } catch {
+        setError('SUBSCRIBE_FAILED');
+        setLoading(false);
+        return false;
+      }
 
       // ביטול subscription קיים (אם יש) למניעת conflict עם VAPID key ישן
       const existingSub = await registration.pushManager.getSubscription();
@@ -198,7 +210,10 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setError(null);
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 10000)),
+      ]);
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
