@@ -41,11 +41,39 @@ const handleNewVersion = () => {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(r => r.unregister()));
       }
+      showUpdateToast();
     } catch (err) {
       console.warn('[version] background cache/SW cleanup failed (non-fatal):', err);
     }
   })();
 };
+
+// הודעת "עודכן" קצרה ולא-חוסמת - לעומת מסך העדכון הישן, לא מונעת אינטראקציה
+// ולא קשורה לשום reload. רק אישור ויזואלי שהניקוי ברקע קרה בפועל.
+function showUpdateToast() {
+  if (typeof document === 'undefined') return;
+  const toast = document.createElement('div');
+  toast.setAttribute('dir', 'rtl');
+  toast.textContent = 'עודכן לגרסה חדשה ✓';
+  toast.style.cssText = `
+    position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0D9488; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 99999; opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none;
+  `;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(-20px)';
+    setTimeout(() => toast.remove(), 350);
+  }, 3500);
+}
 
 handleNewVersion();
 
