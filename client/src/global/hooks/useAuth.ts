@@ -83,6 +83,9 @@ export function useAuth() {
         setLoading(false);
         return;
       }
+      // הטוקן שאיתו checkAuth יוצא לדרך - נשמר כדי לזהות בהמשך (בקאץ') אם
+      // בינתיים כבר קרה login/register/googleAuth טרי (ראו הערה בקאץ').
+      const tokenAtStart = token;
 
       // הגבלת זמן, לא להיתקע אם השרת לא מגיב
       let timeoutId: ReturnType<typeof setTimeout>;
@@ -150,7 +153,15 @@ export function useAuth() {
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
         // בשגיאות רשת שומרים את המשתמש השמור למניעת התנתקות מיותרת
         const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 401) {
+        // הגנה קריטית מפני race: checkAuth רץ ברקע (יכול לקחת עד 10 שניות
+        // עם הטוקן הישן/שבור שהיה בזמן טעינת האפליקציה - למשל משאריות
+        // מבדיקה קודמת). אם המשתמש בינתיים הספיק להתחבר בפועל (login/
+        // register/googleAuth) עם טוקן חדש ותקף לגמרי, ה-401 המאוחר הזה
+        // שייך לניסיון הישן ולא רלוונטי יותר - בלעדי הבדיקה הזו, ה-catch
+        // היה מוחק בשקט את הסשן הטרי-לגמרי כמה שניות אחרי שהמשתמש כבר
+        // ראה את מסך הבית, ומחזיר אותו ללוגין בלי שום סיבה אמיתית.
+        const tokenStillCurrent = getAccessToken() === tokenAtStart;
+        if (status === 401 && tokenStillCurrent) {
           if (import.meta.env.PROD) {
             import('@sentry/react').then(Sentry => {
               Sentry.captureMessage('[auth] checkAuth_401_on_launch', { level: 'warning' });
