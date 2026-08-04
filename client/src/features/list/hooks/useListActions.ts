@@ -112,11 +112,16 @@ export const useListActions = ({
       title: t('leaveGroup'),
       message: t('leaveGroupConfirm'),
       onConfirm: async () => {
-        await onLeaveList(list.id);
+        try {
+          await onLeaveList(list.id);
+        } catch (error) {
+          if (import.meta.env.DEV) console.error('Failed to leave group:', error);
+          showToast(t('errorOccurred'), 'error');
+        }
         setConfirm(null);
       }
     });
-  }, [list.id, onLeaveList, t, setConfirm]);
+  }, [list.id, onLeaveList, showToast, t, setConfirm]);
 
   const refreshList = useCallback(async () => {
     setRefreshing(true);

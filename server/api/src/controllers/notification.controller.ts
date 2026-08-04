@@ -75,12 +75,20 @@ export const markAllAsRead = asyncHandler(async (req: AuthRequest, res: Response
 /**
  * POST /api/notifications
  * יצירת התראה יחידה למשתמש ספציפי (נתיב פנימי לשרת Socket).
- * מניעת התחזות: actorId חייב להתאים ל-req.user.id.
+ * מניעת התחזות: actorId חייב להתאים ל-req.user.id + הפועל וגם היעד חייבים
+ * להיות חברים ברשימה - בלי זה כל משתמש מאומת יכול היה ליצור התראת push
+ * מזויפת (עם תוכן חופשי) לכל משתמש אחר בלי שום קשר לרשימה בכלל.
  */
 export const createNotification = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { type, listId, listName, actorId, actorName, targetUserId, productId, productName } = req.body;
 
   if (String(actorId) !== req.user!.id) throw ForbiddenError.impersonation();
+
+  const [actorIsMember, targetIsMember] = await Promise.all([
+    ListDAL.isMember(listId, req.user!.id),
+    ListDAL.isMember(listId, String(targetUserId)),
+  ]);
+  if (!actorIsMember || !targetIsMember) throw ForbiddenError.notMember();
 
   const notification = await notificationService.createNotification({
     type,

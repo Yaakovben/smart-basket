@@ -93,5 +93,9 @@ userSchema.methods.comparePassword = async function (
 
 // אינדקסים ל-email ו-googleId נוצרים ע"י unique: true
 userSchema.index({ mutedGroupIds: 1 });
+// findAllSorted (admin.controller.getUsers) ממיין לפי createdAt בכל טעינה
+// של דשבורד האדמין - בלי אינדקס זה COLLSCAN מלא + מיון בזיכרון על כל
+// טבלת המשתמשים, בכל בקשה.
+userSchema.index({ createdAt: -1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);
