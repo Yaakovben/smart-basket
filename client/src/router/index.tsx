@@ -45,6 +45,9 @@ const JoinRedirect = () => {
 
 const PageLoader = PageSkeleton;
 
+// זמן טעינת המודול - נקודת ייחוס ל"טעינה ראשונית" (ראו handler של SW_ACTIVATED למטה)
+const APP_LOAD_TIME = Date.now();
+
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -156,7 +159,20 @@ export const AppRouter = () => {
       }
       // אחרי deploy חדש ה-SW מפעיל SW_ACTIVATED — רענון כפוי מונע חוסר עקביות
       // בין JS ישן שכבר רץ לבין SW חדש שתפס שליטה. בלי זה, ה-PWA "נתקע".
-      if (event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload') {
+      //
+      // ההתקנה הראשונה-אי-פעם (למשל מיד אחרי הוספה למסך הבית) גם מפעילה
+      // 'activate' ושולחת את אותה הודעה - אבל אין שם שום JS ישן שצריך
+      // "לסנכרן", ה-JS שכבר רץ הוא הגרסה העדכנית ביותר. רענון כפוי בדיוק
+      // בחלון הזה (יכול לקחת כמה שניות על התקנה ראשונה עם רשת איטית) קטע
+      // בפועל תהליכי login/register באמצע - המשתמש רואה מסך login עם
+      // "החיבור פג תוקף" בלי שום סיבה אמיתית. מתעלמים מהודעות שמגיעות
+      // בחלון הזמן הקצר שאחרי טעינת האפליקציה - שם זו כמעט תמיד התקנה
+      // ראשונה, לא deploy אמיתי שקרה תוך כדי שימוש.
+      const FIRST_INSTALL_GRACE_MS = 20000;
+      if (
+        event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload' &&
+        Date.now() - APP_LOAD_TIME > FIRST_INSTALL_GRACE_MS
+      ) {
         // sessionStorage מונע לולאת רענון אינסופית — מרעננים פעם אחת בלבד לכל סשן
         if (!sessionStorage.getItem('sb_sw_reloaded')) {
           sessionStorage.setItem('sb_sw_reloaded', '1');

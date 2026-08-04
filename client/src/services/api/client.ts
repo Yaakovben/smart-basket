@@ -28,6 +28,17 @@ const apiClient = axios.create({
 // מונעת race condition כשגם ה HTTP וגם הsocket מנסים לרענן במקביל
 let sharedRefreshPromise: Promise<string | null> | null = null;
 
+// JWT מקודד ב-base64url (RFC 7519) - שונה מ-base64 הרגיל שאותו atob() מצפה
+// לו (מחליף +/ ב-/_ ומשמיט padding). בלי ההמרה, atob() זורק חריגה על כל
+// טוקן שבו מקרה הבייטים בפועל מייצר '-' או '_' - כלומר רוב הטוקנים בפועל -
+// ונתפס ע"י ה-catch כ"פג תוקף" גם כשהוא תקף לגמרי, מה שגרם לרענון מיותר
+// (ולפעמים מיותם) בכמעט כל בקשה.
+function base64UrlDecode(str: string): string {
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+  return atob(padded);
+}
+
 /** בדיקה אם הטוקן פג תוקף או עומד לפוג (מרווח 30 שניות) */
 export function isTokenExpired(): boolean {
   const token = getAccessToken();
@@ -35,7 +46,7 @@ export function isTokenExpired(): boolean {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return true;
-    const payload = JSON.parse(atob(parts[1]));
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
     // מרווח ביטחון של 30 שניות לפני תפוגה בפועל
     return !payload.exp || payload.exp * 1000 < Date.now() + 30000;
   } catch {
@@ -68,16 +79,20 @@ export async function refreshAccessToken(): Promise<string | null> {
     } catch (error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-      // שגיאת אימות (401/403): ייתכן שטאב אחר כבר סיבב את הטוקן
+      // שגיאת אימות (401/403): ייתכן שטאב/הקשר אחר כבר סיבב את הטוקן
       if (status === 401 || status === 403) {
         // אם המכשיר אופליין - השרת לא זמין, לא מנקים טוקנים
         if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
 
-        // המתנה קצרה: race condition בין טאבים - הטאב השני אולי כבר שמר טוקן חדש
-        await new Promise<void>(r => setTimeout(r, 250));
-        const currentRefreshToken = getRefreshToken();
-        if (currentRefreshToken && currentRefreshToken !== refreshToken) {
-          // טאב אחר כבר רענן, ננסה שוב עם הטוקן החדש
+        // race condition בין טאבים/הקשרים (למשל PWA מותקן + טאב Safari רגיל
+        // באותו origin, שניהם עם אותו refresh token): אחד מסובב, השני מקבל
+        // 401 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
+        // תקוע מאחורי cold-start של Render (יכול לקחת 30-50 שניות) - ננסה
+        // כמה פעמים עם backoff לפני שמסיקים שהטוקן באמת לא תקף ומנקים.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          await new Promise<void>(r => setTimeout(r, 500 * (attempt + 1)));
+          const currentRefreshToken = getRefreshToken();
+          if (!currentRefreshToken) break;
           try {
             const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {
               refreshToken: currentRefreshToken,
@@ -85,12 +100,14 @@ export async function refreshAccessToken(): Promise<string | null> {
             const { accessToken, refreshToken: newRefreshToken } = retryResponse.data.data;
             setTokens(accessToken, newRefreshToken);
             return accessToken;
-          } catch {
-            clearTokens();
+          } catch (retryError) {
+            const retryStatus = (retryError as AxiosError).response?.status;
+            // שגיאת רשת/שרת (לא 401/403) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
+            if (retryStatus !== 401 && retryStatus !== 403) return null;
+            // עדיין נדחה - ייתכן שהצד המנצח עדיין לא סיים, ננסה שוב
           }
-        } else {
-          clearTokens();
         }
+        clearTokens();
       }
       // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
