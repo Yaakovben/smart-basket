@@ -5,6 +5,7 @@ export interface CreateProductData {
   quantity?: number;
   unit?: Product['unit'];
   category?: Product['category'];
+  note?: string;
 }
 
 export interface UpdateProductData {
