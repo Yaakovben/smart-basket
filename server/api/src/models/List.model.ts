@@ -98,19 +98,12 @@ listSchema.index({ 'members.user': 1 });
 listSchema.index({ owner: 1, updatedAt: -1 });
 listSchema.index({ 'members.user': 1, updatedAt: -1 });
 
-// הצפנת סיסמת קבוצה לפני שמירה - בלי זה כל דליפת DB/גיבוי הייתה חושפת את
-// כל סיסמאות ההצטרפות בטקסט גלוי (ה-timing-safe compare למטה מגן רק על
-// ההשוואה, לא על האחסון עצמו).
-listSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || !this.password) return next();
-  if (this.password.startsWith('$2b$')) return next(); // כבר מגובב (ישן)
-
-  const salt = await bcrypt.genSalt(12);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// תומך גם בסיסמאות bcrypt ישנות וגם בטקסט פשוט ישן (מלפני התיקון)
+// סיסמת קבוצה נשמרת בטקסט פשוט בכוונה - זהו קוד גישה משותף שחייב להיות
+// ניתן להצגה/שיתוף לכל חברי הקבוצה (transformList מחזיר אותו ב-API,
+// ראו list-transform.helper.ts), לא סוד אישי כמו סיסמת חשבון. לכן אי אפשר
+// להצפין אותו בהצפנה חד-כיוונית (bcrypt) - זה היה מונע מהאפליקציה להציג
+// אותו בחזרה למשתמשים. ה-timing-safe compare למטה מגן על ההשוואה מפני
+// timing attack; עדיין נתמכות סיסמאות bcrypt ישנות מגרסה קודמת של הקוד.
 listSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
