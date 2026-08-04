@@ -6,6 +6,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
 import { ConfirmModal, ClearableTextField } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useReliableTap } from '../../../global/hooks';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 import {
@@ -31,16 +32,19 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
     openEditProfile, handleSave, handleLogout, updateEditField, closeEdit
   } = useProfile({ user, onUpdateUser, onLogout });
 
+  const backTap = useReliableTap(() => { closeEdit(); navigate('/'); });
+  const editTap = useReliableTap(openEditProfile);
+
   return (
     <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={headerSx(!!editProfile, isDark)}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
-          {/* onPointerUp + blur - אותו דפוס בדיוק כמו HomeHeader (glassButtonSx
-              IconButton בהדר צבעוני) שם onClick רגיל התגלה כלא אמין על חלק
-              מהמכשירים. */}
+          {/* useReliableTap: onPointerUp אמין למגע/עכבר (אותו דפוס כמו
+              HomeHeader), עם onClick כ-fallback כדי שהפעלה במקלדת
+              (Enter/Space) לא תישאר מתה - pointerup לא יורה בהפעלה כזו. */}
           <IconButton
-            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); closeEdit(); navigate('/'); }}
+            {...backTap}
             sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
           >
             <ArrowForwardIcon sx={{ fontSize: 22 }} />
@@ -50,7 +54,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           </Typography>
           {!editProfile && (
             <IconButton
-              onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); openEditProfile(); }}
+              {...editTap}
               sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
             >
               <EditIcon sx={{ fontSize: 22 }} />

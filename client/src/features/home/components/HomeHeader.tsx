@@ -6,6 +6,7 @@ import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
+import { useReliableTap } from '../../../global/hooks';
 import { glassButtonSx } from '../helpers/homeStyles';
 import type { HomeTab } from '../types/home-types';
 
@@ -34,6 +35,9 @@ export const HomeHeader = ({
   allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading,
   onAvatarClick, onNotificationsClick, onSettingsClick, t,
 }: HomeHeaderProps) => {
+  const notificationsTap = useReliableTap(onNotificationsClick);
+  const settingsTap = useReliableTap(onSettingsClick);
+
   return (
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
@@ -103,13 +107,14 @@ export const HomeHeader = ({
           </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          {/* onPointerUp + blur במקום onClick רגיל - אותו דפוס בדיוק כמו
-              ב-HomeBottomNav, שם onClick רגיל התגלה כלא אמין (לפעמים לא
-              מגיב) על חלק מהמכשירים: focus שנשאר תקוע אחרי לחיצה יכול לחסום
-              טאפ הבא, ו-touch-action:manipulation מבטל את עיכוב ה-300ms של
-              הדפדפן על טאפים. */}
+          {/* useReliableTap: onPointerUp + blur במקום onClick רגיל - אותו
+              דפוס בדיוק כמו ב-HomeBottomNav, שם onClick רגיל התגלה כלא אמין
+              (לפעמים לא מגיב) על חלק מהמכשירים: focus שנשאר תקוע אחרי לחיצה
+              יכול לחסום טאפ הבא, ו-touch-action:manipulation מבטל את עיכוב
+              ה-300ms של הדפדפן על טאפים. onClick נשאר כ-fallback להפעלה
+              במקלדת (Enter/Space לא יורים pointerup). */}
           <IconButton
-            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); onNotificationsClick(); }}
+            {...notificationsTap}
             sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
           >
             <Badge badgeContent={totalUnreadCount} color="error" invisible={totalUnreadCount === 0} sx={{ '& .MuiBadge-badge': { fontSize: 10, fontWeight: 700, minWidth: 16, height: 16 } }}>
@@ -117,7 +122,7 @@ export const HomeHeader = ({
             </Badge>
           </IconButton>
           <IconButton
-            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); onSettingsClick(); }}
+            {...settingsTap}
             sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
           >
             <SettingsIcon sx={{ color: 'white', fontSize: 22 }} />

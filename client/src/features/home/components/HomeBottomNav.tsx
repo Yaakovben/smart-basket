@@ -74,12 +74,22 @@ export const HomeBottomNav = ({ contentRef, onOpenMenu, t }: HomeBottomNavProps)
         >
           {/* ימין (RTL = ראשון ב-DOM) - בית. onPointerUp במקום onClick + blur אחרי
               לחיצה כדי שלא ישאר focus שתוקע את ה-UX עד טאפ נוסף. touch-action
-              manipulation מבטל delay של 300ms וכפתור-כפול ב-iOS. */}
+              manipulation מבטל delay של 300ms וכפתור-כפול ב-iOS. role+tabIndex+
+              onKeyDown - בלעדיהם האלמנט לא נגיש בכלל למקלדת/screen reader
+              (onPointerUp לא יורה על Enter/Space). */}
           <Box
             onPointerUp={(e) => {
               (e.currentTarget as HTMLElement).blur();
               contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            role="button"
+            tabIndex={0}
             aria-label={t('home')}
             sx={{
               position: 'relative',
@@ -122,13 +132,23 @@ export const HomeBottomNav = ({ contentRef, onOpenMenu, t }: HomeBottomNavProps)
 
           {/* שמאל (RTL = אחרון ב-DOM) - תובנות. ניווט מתבצע ב-onPointerDown
               (מיידי - לא מחכה ל-up) לתגובה מהירה כמו אפליקציות נייטיב. ה-:active
-              צובע ברקע טורקיז עם האייקון והטקסט בולטים - פידבק ויזואלי ברור. */}
+              צובע ברקע טורקיז עם האייקון והטקסט בולטים - פידבק ויזואלי ברור.
+              role+tabIndex+onKeyDown - נגישות מקלדת (ראו הערה בטאב "בית" למעלה). */}
           <Box
             onPointerDown={(e) => {
               (e.currentTarget as HTMLElement).blur();
               haptic('light');
               navigate('/insights');
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                haptic('light');
+                navigate('/insights');
+              }
+            }}
+            role="button"
+            tabIndex={0}
             aria-label={t('insights')}
             sx={{
               flex: 1, maxWidth: 110,
