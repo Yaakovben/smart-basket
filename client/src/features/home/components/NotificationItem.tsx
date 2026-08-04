@@ -175,7 +175,7 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
         onClick={(e) => { e.stopPropagation(); onDismiss(n.listId, n.id); }}
         disabled={isDismissing}
         disableRipple
-        tabIndex={-1}
+        aria-label={t('close')}
         sx={{
           color: 'text.disabled',
           flexShrink: 0,

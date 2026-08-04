@@ -65,8 +65,12 @@ export const emojiSwatchSx = (isSelected: boolean): SxProps<Theme> => ({
   '&:hover': { borderColor: 'primary.main' },
 });
 
-export const logoutButtonSx: SxProps<Theme> = {
+// isDark חסר היה גם כאן (אותו באג כמו headerSx) - כתום כהה על טקסט אדום
+// כהה על רקע כהה כללי של האפליקציה היה בניגודיות גרועה/כמעט בלתי קריא.
+export const logoutButtonSx = (isDark: boolean): SxProps<Theme> => ({
   mt: 2.5, py: 1.5, borderRadius: '12px',
-  bgcolor: '#FEE2E2', color: '#DC2626', fontWeight: 600, fontSize: 15, gap: 1,
-  '&:hover': { bgcolor: '#FECACA' },
-};
+  bgcolor: isDark ? 'rgba(220,38,38,0.15)' : '#FEE2E2',
+  color: isDark ? '#FCA5A5' : '#DC2626',
+  fontWeight: 600, fontSize: 15, gap: 1,
+  '&:hover': { bgcolor: isDark ? 'rgba(220,38,38,0.22)' : '#FECACA' },
+});

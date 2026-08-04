@@ -38,10 +38,11 @@ export function useHomePushPrompt() {
     if (success) {
       setShowPushPrompt(false);
     } else {
-      // הצגת שגיאה בהצעה - סגירת הפרומפט וניווט להגדרות לפרטים
-      handleDismissPushPrompt();
+      // נשאר פתוח - HomeComponent מציג מצב שגיאה (pushPromptError) עם
+      // כפתור 'הבנתי' במקום לסגור בשקט בלי שהמשתמש יבין שזה נכשל.
+      setPushPromptError(true);
     }
-  }, [subscribePush, handleDismissPushPrompt]);
+  }, [subscribePush]);
 
   return {
     showPushPrompt,

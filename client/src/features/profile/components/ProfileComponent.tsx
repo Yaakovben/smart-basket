@@ -36,14 +36,23 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
       {/* Header */}
       <Box sx={headerSx(!!editProfile, isDark)}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: editProfile ? 0 : 2 }}>
-          <IconButton onClick={() => { closeEdit(); navigate('/'); }} sx={glassButtonSx}>
+          {/* onPointerUp + blur - אותו דפוס בדיוק כמו HomeHeader (glassButtonSx
+              IconButton בהדר צבעוני) שם onClick רגיל התגלה כלא אמין על חלק
+              מהמכשירים. */}
+          <IconButton
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); closeEdit(); navigate('/'); }}
+            sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
+          >
             <ArrowForwardIcon sx={{ fontSize: 22 }} />
           </IconButton>
           <Typography sx={{ flex: 1, color: 'white', fontSize: 18, fontWeight: 700 }}>
             {editProfile ? t('editProfile') : t('profile')}
           </Typography>
           {!editProfile && (
-            <IconButton onClick={openEditProfile} sx={glassButtonSx}>
+            <IconButton
+              onPointerUp={(e) => { (e.currentTarget as HTMLElement).blur(); openEditProfile(); }}
+              sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
+            >
               <EditIcon sx={{ fontSize: 22 }} />
             </IconButton>
           )}
@@ -145,7 +154,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
               fullWidth
               onClick={() => setConfirmLogout(true)}
               startIcon={<LogoutIcon sx={{ fontSize: 20 }} />}
-              sx={logoutButtonSx}
+              sx={logoutButtonSx(isDark)}
             >
               {t('logout')}
             </Button>
