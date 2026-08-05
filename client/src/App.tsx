@@ -4,7 +4,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
-import { ErrorBoundary, CrashLogViewer } from "./global/components";
+import { ErrorBoundary } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 import { diagLog } from './global/helpers/crashLog';
@@ -47,7 +47,7 @@ const handleNewVersion = () => {
         await Promise.all(registrations.map(r => r.unregister()));
       }
       diagLog('version', 'background cleanup done');
-      showUpdateToast();
+      showUpdateOverlay();
     } catch (err) {
       console.warn('[version] background cache/SW cleanup failed (non-fatal):', err);
       diagLog('version', `cleanup failed: ${String(err)}`);
@@ -55,31 +55,71 @@ const handleNewVersion = () => {
   })();
 };
 
-// הודעת "עודכן" קצרה ולא-חוסמת - לעומת מסך העדכון הישן, לא מונעת אינטראקציה
-// ולא קשורה לשום reload. רק אישור ויזואלי שהניקוי ברקע קרה בפועל.
-function showUpdateToast() {
+// מסך עדכון עם רקטה + halo - הצורה הוויזואלית המקורית, אבל בלי הסכנה
+// שהייתה בגרסה הישנה: כאן זה נעלם לבד אחרי כמה שניות ולא מבצע שום
+// window.location.reload() - הניקוי כבר קרה ברקע (caches/SW) בזמן שהמסך
+// הזה מוצג, בלי לקטוע שום בקשת רשת פעילה.
+function showUpdateOverlay() {
   if (typeof document === 'undefined') return;
-  const toast = document.createElement('div');
-  toast.setAttribute('dir', 'rtl');
-  toast.textContent = 'עודכן לגרסה חדשה ✓';
-  toast.style.cssText = `
-    position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%;
-    transform: translateX(-50%) translateY(-20px);
-    background: #0D9488; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 999px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 99999; opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none;
+  if (document.getElementById('app-version-update')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'app-version-update';
+  overlay.setAttribute('dir', 'rtl');
+  overlay.innerHTML = `
+    <style>
+      #app-version-update {
+        position: fixed; inset: 0; z-index: 99999;
+        background: radial-gradient(ellipse at top, #2DD4BF 0%, #14B8A6 55%, #0D9488 100%);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        animation: vuFadeIn 0.25s ease-out, vuFadeOut 0.35s ease-in 2.65s forwards;
+        pointer-events: none;
+      }
+      @keyframes vuFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes vuFadeOut { from { opacity: 1; } to { opacity: 0; } }
+      #app-version-update .vu-halo {
+        position: absolute;
+        width: 260px; height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
+        animation: vuHalo 2.6s ease-in-out infinite;
+      }
+      @keyframes vuHalo {
+        0%,100% { transform: scale(0.95); opacity: 0.7; }
+        50%     { transform: scale(1.1);  opacity: 1; }
+      }
+      #app-version-update .vu-rocket {
+        font-size: 64px; line-height: 1;
+        animation: vuFloat 2.2s ease-in-out infinite;
+        filter: drop-shadow(0 10px 24px rgba(0,0,0,0.25));
+      }
+      @keyframes vuFloat {
+        0%,100% { transform: translateY(0) rotate(-6deg); }
+        50%     { transform: translateY(-10px) rotate(-12deg); }
+      }
+      #app-version-update .vu-title {
+        margin-top: 36px;
+        color: #fff;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      }
+      #app-version-update .vu-sub {
+        margin-top: 8px;
+        color: rgba(255,255,255,0.85);
+        font-size: 13px;
+        font-weight: 500;
+      }
+    </style>
+    <div class="vu-halo"></div>
+    <div class="vu-rocket">🚀</div>
+    <div class="vu-title">עודכן לגרסה חדשה</div>
+    <div class="vu-sub">גרסה חדשה זמינה — ההתקנה הושלמה</div>
   `;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-  });
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(-20px)';
-    setTimeout(() => toast.remove(), 350);
-  }, 3500);
+  (document.body || document.documentElement).appendChild(overlay);
+  setTimeout(() => overlay.remove(), 3200);
 }
 
 handleNewVersion();
@@ -122,15 +162,11 @@ const ThemedApp = () => {
 };
 
 const App = () => (
-  <>
-    {/* מחוץ ל-ErrorBoundary/Providers בכוונה - חייב לרנדר גם אם משהו אחר קורס */}
-    <CrashLogViewer />
-    <ErrorBoundary>
-      <SettingsProvider>
-        <ThemedApp />
-      </SettingsProvider>
-    </ErrorBoundary>
-  </>
+  <ErrorBoundary>
+    <SettingsProvider>
+      <ThemedApp />
+    </SettingsProvider>
+  </ErrorBoundary>
 );
 
 export default App;
