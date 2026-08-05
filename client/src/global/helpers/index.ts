@@ -50,5 +50,7 @@ export {
 // localStorage בטוח — try/catch פנימי, API קריא יותר (גם עם JSON)
 export { safeStorage } from './safeStorage';
 
-// יומן אבחון ששורד קריסה - לחקירת "האפליקציה נסגרת לבד" ב-iOS PWA
-export { diagLog, rotateCrashLog, startHeartbeat, getPreviousSessionLog, clearPreviousSessionLog } from './crashLog';
+// יומן אבחון ששורד קריסה - לחקירת "האפליקציה נסגרת לבד" ב-iOS PWA.
+// rotateCrashLog/startHeartbeat רצים אוטומטית ב-import של המודול (ראו
+// crashLog.ts) ולכן לא מיוצאים - רק ה-API שצריך שימוש חיצוני.
+export { diagLog, getPreviousSessionLog, clearPreviousSessionLog } from './crashLog';

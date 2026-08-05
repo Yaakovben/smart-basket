@@ -65,51 +65,63 @@
       background: var(--app-bg, transparent);
     }
   </style>
-  <!-- Force unregister old service workers (v2.0 migration) -->
-  <script>
-    (function() {
-      var forceReset = location.search.indexOf('force-reset') > -1;
-      var migrated = localStorage.getItem('sw_migrated_v2');
-      if ((forceReset || !migrated) && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(regs) {
-          if (regs.length > 0 || forceReset) {
-            var unregisterAll = regs.length > 0
-              ? Promise.all(regs.map(function(r) { return r.unregister(); }))
-              : Promise.resolve();
-            unregisterAll.then(function() {
-              if ('caches' in window) {
-                caches.keys().then(function(names) {
-                  Promise.all(names.map(function(n) { return caches.delete(n); })).then(function() {
-                    localStorage.clear();
-                    localStorage.setItem('sw_migrated_v2', '1');
-                    if (forceReset) {
-                      location.href = '/';
-                    } else {
-                      location.reload();
-                    }
-                  });
-                });
-              } else {
-                localStorage.clear();
-                localStorage.setItem('sw_migrated_v2', '1');
-                if (forceReset) {
-                  location.href = '/';
-                } else {
-                  location.reload();
-                }
-              }
-            });
-          }
-        });
-      }
-    })();
-  </script>
-  <!-- Listen for SW activation to reload with fresh content -->
+  <!--
+    הוסר (היה כאן "v2.0 migration": ביטול רישום SW ישנים + ניקוי caches +
+    localStorage.clear() + reload בלתי-מותנה, מ-158e1ce1, פברואר, בשביל
+    תקלה חד-פעמית וארוכת-זמן-פתורה של אותה תקופה - "only runs on first
+    visit after deploy" לפי הודעת ה-commit המקורית).
+
+    זה בדיוק אותה משפחת באג שכל התיקונים האחרונים (App.tsx, router/index.tsx,
+    main.tsx, ErrorBoundary.tsx, useServiceWorker.ts) הוסרו/תוקנו בגללה:
+    location.reload()/localStorage.clear() בלתי-מותנים, מוקדם מאוד בטעינת
+    הדף, בלי שום בדיקה אם יש בקשת רשת פעילה. localStorage.clear() כאן
+    בפרט היה יכול למחוק טוקנים תקפים לגמרי אם הסקריפט הזה (שרץ בכל טעינת
+    דף כל עוד sw_migrated_v2 לא הוגדר) קרה תוך כדי/אחרי login מוצלח -
+    התהליך כולו (getRegistrations → unregister → caches.keys → caches.delete)
+    הוא שרשרת אסינכרונית שיכולה לקחת כמה שניות בפועל, בדיוק תואם לדיווח
+    "כמה שניות אחרי הפתיחה השנייה". רישום SW מנוהל היום לגמרי אחרת
+    (useServiceWorker.ts, רישום ידני + injectRegister:false) - המיגרציה
+    הזו לא רלוונטית יותר לאף משתמש שרץ על גרסה עדכנית - useServiceWorker.ts
+    כבר קורא ל-register() עם ה-scriptURL הנוכחי בכל טעינה, וזה מספיק כדי
+    שרישום ישן/לא-תואם יוחלף דרך מחזור החיים הרגיל של Service Worker
+    (installing → waiting → activate), בלי שום קוד נוסף כאן.
+  -->
+
+  <!--
+    לוג בלבד, בלי reload - זה היה כנראה השורש האמיתי של "ה-PWA נסגר וחוזר
+    למסך הבית של iOS כמה שניות אחרי הפתיחה השנייה".
+
+    הקובץ הזה (index.html) לא נכלל באף grep/audit קודם של reload/href/replace
+    שנעשה תחת client/src/** - כי הוא סטטי, מחוץ ל-bundle. השדרוג הזה נשאר
+    כאן מגרסה ישנה, לפני שכל לוגיקת ה-reload-על-SW_ACTIVATED "עברה" ל-React
+    (router/index.tsx) - אבל אף אחד לא הסיר את הגרסה המקורית כאן. בזמן
+    שכל שאר הקוד (App.tsx, router/index.tsx, main.tsx, ErrorBoundary.tsx,
+    ה-vite-plugin-pwa עצמו) עבר תיקון יסודי כדי לא לרענן אף פעם באופן
+    בלתי-מותנה, הסקריפט הגולמי הזה המשיך להאזין לאותה הודעה בדיוק
+    (SW_ACTIVATED, שנשלחת מ-sw.ts:activate) ולעשות location.reload() מיידי
+    ובלתי-מותנה - בדיוק ברגע שכל שאר הקוד תוכנן להימנע ממנו.
+
+    location.reload() לא-מבוקר בהקשר standalone PWA ב-iOS, בדיוק ברגע
+    שה-WKWebView עדיין באמצע restore אחרי פתיחה שנייה, הוא ההסבר הסביר
+    ביותר ל"האפליקציה נסגרת וחוזרת למסך הבית" (לא סתם מסך login) - לא
+    reload רגיל בתוך ה-PWA אלא קריסה/סגירה של ה-WKWebView עצמו.
+
+    במקום להסיר את המאזין לגמרי (ואיבוד יכולת אבחון), משאירים אותו כ-log
+    בלבד - אם ההודעה עדיין מגיעה, נדע דרך sb_crash_log (ראו crashLog.ts)
+    בלי לגרום לשום reload.
+  -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', function(e) {
         if (e.data && e.data.type === 'SW_ACTIVATED') {
-          location.reload();
+          try {
+            var raw = localStorage.getItem('sb_crash_log');
+            var log = raw ? JSON.parse(raw) : { start: Date.now(), entries: [] };
+            log.entries.push({ t: Date.now() - log.start, msg: '[index.html] SW_ACTIVATED received (no reload - fixed)' });
+            if (log.entries.length > 150) log.entries.shift();
+            localStorage.setItem('sb_crash_log', JSON.stringify(log));
+          } catch (err) { /* לא קריטי */ }
+          console.log('[index.html] SW_ACTIVATED received - no longer reloading (see comment above)');
         }
       });
     }
