@@ -29,11 +29,16 @@ export const InsightsPage = memo(() => {
   // הטאב נשמר ב-URL (?tab=lists) כדי ש"חזור" מדף הרשימה יחזיר אותנו לטאב הנכון.
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
-  const tab: InsightTab = VALID_TABS.includes(tabFromUrl as InsightTab) ? (tabFromUrl as InsightTab) : 'price';
+  // ברירת מחדל: 'activity' ולא 'price' - נתוני activity כבר נטענים תמיד
+  // (fetchInsights ב-useInsightsData רץ ללא תלות בטאב), בעוד price דורש
+  // בקשת השוואת-מחירים נפרדת (מול נתוני שרשרות מסונכרנים/מקורות חיצוניים)
+  // שאיטית משמעותית - ברירת מחדל אליה גרמה למסך הראשון שרואים תמיד להיות
+  // הכי איטי שיש, בכל כניסה לתובנות.
+  const tab: InsightTab = VALID_TABS.includes(tabFromUrl as InsightTab) ? (tabFromUrl as InsightTab) : 'activity';
   const setTab = (v: InsightTab) => {
     if (v !== tab) haptic('light'); // פידבק מישוש בכל שינוי טאב - תחושה מעודנת
     // replace (ולא push) - מעבר טאבים לא יוצר היסטוריה מצטברת
-    setSearchParams(v === 'price' ? {} : { tab: v }, { replace: true });
+    setSearchParams(v === 'activity' ? {} : { tab: v }, { replace: true });
   };
 
   const {
