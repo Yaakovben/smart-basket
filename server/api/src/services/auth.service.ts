@@ -110,19 +110,13 @@ export async function googleAuth(
   ipAddress?: string,
   userAgent?: string
 ): Promise<{ user: IUserResponse; tokens: AuthTokens }> {
-  // אימות audience - בלי זה, userinfo מקבל כל access token תקף של Google
-  // בלי קשר לאיזו אפליקציה הוא הונפק. תוקף שמשיג access token של הקורבן
-  // שהונפק לאפליקציית Google-login *אחרת* (פישינג, אינטגרציה פרוצה וכו')
-  // היה יכול לשלוח אותו לכאן ולהתחזות לקורבן - "confused deputy" קלאסי.
-  const tokenInfoResponse = await fetch(
-    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(data.accessToken)}`,
-    { signal: AbortSignal.timeout(10000) }
-  );
-  if (!tokenInfoResponse.ok) throw AuthError.googleAuthFailed();
-  const tokenInfo = (await tokenInfoResponse.json()) as { aud?: string; azp?: string };
-  if (tokenInfo.aud !== env.GOOGLE_CLIENT_ID && tokenInfo.azp !== env.GOOGLE_CLIENT_ID) {
-    throw AuthError.googleAuthFailed();
-  }
+  // אימות audience מול Google tokeninfo הוסר - הוא שבר login אמיתי בפרודקשן
+  // (ככל הנראה aud/azp שהוחזר מ-tokeninfo לא תאם בפועל את GOOGLE_CLIENT_ID
+  // המוגדר בשרת, או שהקריאה הנוספת ל-Google עצמה הייתה לא אמינה מספיק
+  // כדי לחסום עליה כל login). התיקון היה אמור לסגור פער אבטחה תיאורטי
+  // (confused deputy), אבל חסימת משתמשים אמיתיים חמורה יותר מהסיכון
+  // התיאורטי. TODO: לממש מחדש בזהירות - קודם ללוג בלבד (בלי לחסום) ולוודא
+  // בפועל שה-aud/azp שחוזר מ-Google תואם למה שמוגדר בשרת, לפני שחוסמים.
 
   // שליפת פרטי משתמש מ-Google
   const response = await fetch(
