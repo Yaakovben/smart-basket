@@ -14,6 +14,17 @@ if (!API_URL) {
 let isAuthInProgress = false;
 export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
 
+// דיווח אבחוני best-effort ל-Sentry (אם מוגדר) ברגע שבו טוקנים מנוקים בפועל
+// עקב כשל אימות - לא ידוע מראש אם/למה זה קורה בפרודקשן, אז ברגע שזה כן
+// קורה רוצים תיעוד עם ההקשר (סטטוסים שראינו) במקום לנחש שוב על קוד בלבד.
+// import דינמי (לא top-level) כי Sentry עצמו נטען lazy ב-main.tsx.
+function reportAuthDiagnostic(reason: string, context: Record<string, unknown>) {
+  if (!import.meta.env.PROD) return;
+  import('@sentry/react').then(Sentry => {
+    Sentry.captureMessage(`[auth] ${reason}`, { level: 'warning', extra: context });
+  }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+}
+
 // timeout ארוך - 60 שניות מתאים גם ל-Render Free cold start (יכול לקחת 30-50ש').
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -69,9 +80,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     try {
       // שימוש ב axios ישיר (לא apiClient) למניעת interceptor רקורסיבי
+      // timeout ארוך כמו ב-apiClient (ראו שורה 34) - 10 שניות היה מספיק
+      // רק לרוב המקרים, אבל Render Free cold start יכול לקחת 30-50 שניות
+      // (ראו הערה למעלה). ניסיון רענון שנקטע ב-timeout כאן מוחזר כ-null
+      // בלי לנקות טוקנים (רואים למטה, timeout לא מזוהה כ-401/403/409),
+      // אבל זה מבזבז את "הניסיון הראשון" בלי סיכוי אמיתי להצליח כשהשרת
+      // עדיין מתעורר - בדיוק ברגע הכי קריטי, פתיחת אפליקציה אחרי שנסגרה.
       const response = await axios.post(`${API_URL}/auth/refresh`, {
         refreshToken,
-      }, { timeout: 10000 });
+      }, { timeout: 20000 });
 
       const { accessToken, refreshToken: newRefreshToken } = response.data.data;
       setTokens(accessToken, newRefreshToken);
@@ -79,16 +96,21 @@ export async function refreshAccessToken(): Promise<string | null> {
     } catch (error) {
       const axiosError = error as AxiosError;
       const status = axiosError.response?.status;
-      // שגיאת אימות (401/403): ייתכן שטאב/הקשר אחר כבר סיבב את הטוקן
-      if (status === 401 || status === 403) {
+      // 401/403: הטוקן לא תקף (או ייתכן שטאב/הקשר אחר כבר סיבב אותו).
+      // 409: השרת מבחין מפורשות בין "לא תקף" ל"race מול רענון מקביל שכבר
+      // סובב את הטוקן" (ראו auth.controller.ts + token.service.ts,
+      // RefreshResult) - חובה לנסות שוב, ואסור לנקות טוקנים על 409 בלבד
+      // אפילו אם כל הניסיונות נכשלים, כי זה לא מוכיח שהטוקן לא תקף.
+      if (status === 401 || status === 403 || status === 409) {
         // אם המכשיר אופליין - השרת לא זמין, לא מנקים טוקנים
         if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
 
         // race condition בין טאבים/הקשרים (למשל PWA מותקן + טאב Safari רגיל
         // באותו origin, שניהם עם אותו refresh token): אחד מסובב, השני מקבל
-        // 401 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
+        // 401/409 על הטוקן הישן. המתנה בודדת של 250ms לא מספיקה אם הצד המנצח
         // תקוע מאחורי cold-start של Render (יכול לקחת 30-50 שניות) - ננסה
         // כמה פעמים עם backoff לפני שמסיקים שהטוקן באמת לא תקף ומנקים.
+        let lastStatus: number | undefined = status;
         for (let attempt = 0; attempt < 3; attempt++) {
           await new Promise<void>(r => setTimeout(r, 500 * (attempt + 1)));
           const currentRefreshToken = getRefreshToken();
@@ -96,18 +118,25 @@ export async function refreshAccessToken(): Promise<string | null> {
           try {
             const retryResponse = await axios.post(`${API_URL}/auth/refresh`, {
               refreshToken: currentRefreshToken,
-            }, { timeout: 10000 });
+            }, { timeout: 20000 });
             const { accessToken, refreshToken: newRefreshToken } = retryResponse.data.data;
             setTokens(accessToken, newRefreshToken);
             return accessToken;
           } catch (retryError) {
             const retryStatus = (retryError as AxiosError).response?.status;
-            // שגיאת רשת/שרת (לא 401/403) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
-            if (retryStatus !== 401 && retryStatus !== 403) return null;
+            lastStatus = retryStatus;
+            // שגיאת רשת/שרת (לא 401/403/409) - לא מסיקים כשל אימות, מפסיקים בלי לנקות
+            if (retryStatus !== 401 && retryStatus !== 403 && retryStatus !== 409) return null;
             // עדיין נדחה - ייתכן שהצד המנצח עדיין לא סיים, ננסה שוב
           }
         }
-        clearTokens();
+        // מנקים רק אם הסטטוס האחרון שראינו הוא כשל אימות אמיתי (401/403).
+        // 409 שממשיך לחזור אחרי כל הניסיונות נשאר race לא-פתור - משאירים
+        // את המשתמש מחובר, הרענון הבא (בקשת API הבאה) ינסה שוב.
+        if (lastStatus === 401 || lastStatus === 403) {
+          reportAuthDiagnostic('refresh_exhausted', { initialStatus: status, finalStatus: lastStatus });
+          clearTokens();
+        }
       }
       // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
       return null;
@@ -122,12 +151,17 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 // רענון פרואקטיבי כשהאפליקציה חוזרת מרקע (חזרה מ-sleep של מובייל)
+// אם הרענון נכשל סופית (הטוקנים נוקו) - מודיעים למשתמש מיד דרך
+// redirectToSessionExpiredLogin, במקום להשאיר סשן מת בשקט עד לבקשת API
+// הבאה. ראו ההערה ליד redirectToSessionExpiredLogin למטה לפרטים.
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && getAccessToken() && isTokenExpired()) {
       refreshAccessToken().then(newToken => {
         if (newToken) {
           socketService.updateToken(newToken);
+        } else if (!getRefreshToken()) {
+          redirectToSessionExpiredLogin('forced_login_redirect_background', { trigger: 'visibilitychange' });
         }
       });
     }
@@ -176,6 +210,24 @@ apiClient.interceptors.request.use(
 // טיפול ב 401 כ fallback: אם הרענון הפרואקטיבי לא עזר
 let isRedirecting = false;
 
+// הפניה מרוכזת ל-login עם דגל "session expired". משמש גם את ה-response
+// interceptor למטה (401 אחרי רענון כושל) וגם את הרענון הפרואקטיבי ב-
+// visibilitychange למעלה. לפני התיקון, כשל ברענון הפרואקטיבי (שרץ ברקע,
+// בלי בקשת API נלווית שהמשתמש מחכה לה) היה מנקה טוקנים בשקט בלי להודיע -
+// הסשן כבר היה מת, אבל שום דבר לא הראה את זה. התופעה שהתגלתה: "האפליקציה
+// נפתחת ועובדת כמה שניות אחרי סגירה/פתיחה מחדש, ואז לחיצה על כפתור כלשהו
+// (הראשון ששולח בקשת API אמיתית) 'מוציאה' עם הודעת פג תוקף" - בעוד שבפועל
+// הסשן כבר נכשל קודם, בלי סימן. עכשיו שני המקומות מדווחים על הכשל מיד
+// כשהוא מתגלה, לא רק כשהמשתמש נתקל בו במקרה.
+function redirectToSessionExpiredLogin(reason: string, extra: Record<string, unknown> = {}) {
+  if (isAuthInProgress || isRedirecting || !navigator.onLine || window.location.pathname === '/login') return;
+  isRedirecting = true;
+  reportAuthDiagnostic(reason, extra);
+  localStorage.removeItem('cached_user');
+  try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
+  window.location.href = '/login';
+}
+
 apiClient.interceptors.response.use(
   (response) => {
     debugLog(`Response OK: ${response.status}`, { url: response.config.url }, false);
@@ -220,6 +272,18 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // הגנה מפני race עם בקשות "יתומות": Promise.race עם timeout מקומי
+      // (כמו ב-checkAuth, useAuth.ts) לא מבטל בפועל את הבקשה שמפסידה -
+      // ה-fetch/axios הבסיסי ממשיך לרוץ ברקע, ויכול להגיע לכאן עם 401
+      // אמיתי אחרי שניות ארוכות (Render cold start וכו'), גם אחרי שהצד
+      // שקרא לו כבר "ויתר". אם בינתיים כבר קרה login/register/refresh טרי
+      // עם טוקן חדש, ה-401 הזה שייך לבקשה ישנה ולא-רלוונטית עוד - מתעלמים
+      // במקום לנקות סשן טרי ותקף.
+      const requestToken = (originalRequest.headers.Authorization as string | undefined)?.replace('Bearer ', '');
+      if (requestToken && requestToken !== getAccessToken()) {
+        return Promise.reject(error);
+      }
+
       // רענון משותף עם dedup, מונע race condition עם socket
       const newAccessToken = await refreshAccessToken();
 
@@ -233,15 +297,9 @@ apiClient.interceptors.response.use(
 
       // הרענון נכשל
       // בדיקה אם הטוקנים נוקו (שגיאת אימות) או לא (שגיאת רשת)
+      // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש (מטופל בתוך הפונקציה)
       if (!getRefreshToken()) {
-        // שגיאת אימות אמיתית, טוקנים נוקו, מפנים ללוגין
-        // אם המכשיר אופליין - לא מפנים, המשתמש יחזור לאוויר ויתחדש
-        if (!isAuthInProgress && !isRedirecting && navigator.onLine && window.location.pathname !== '/login') {
-          isRedirecting = true;
-          localStorage.removeItem('cached_user');
-          try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
-          window.location.href = '/login';
-        }
+        redirectToSessionExpiredLogin('forced_login_redirect', { url: originalRequest.url, status: error.response?.status });
       }
       // שגיאת רשת: הטוקנים נשמרו, המשתמש יישאר מחובר ויוכל לנסות שוב
       return Promise.reject(error);

@@ -71,7 +71,7 @@ export async function register(
     isAdmin,
   });
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }
 
@@ -90,7 +90,7 @@ export async function login(
   const isMatch = await user.comparePassword(data.password);
   if (!isMatch) throw AuthError.invalidCredentials();
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'email', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'email', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }
 
@@ -157,6 +157,6 @@ export async function googleAuth(
     user.googleId = googleUser.sub;
   }
 
-  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion, 'google', ipAddress, userAgent);
+  const tokens = await createTokensAndLog(user._id.toString(), user.email, user.name, user.tokenVersion ?? 0, 'google', ipAddress, userAgent);
   return { user: user.toJSON() as IUserResponse, tokens };
 }

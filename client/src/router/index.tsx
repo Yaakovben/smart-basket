@@ -45,10 +45,6 @@ const JoinRedirect = () => {
 
 const PageLoader = PageSkeleton;
 
-// זמן טעינת המודול - נקודת ייחוס ל"טעינה ראשונית" (ראו handler של SW_ACTIVATED למטה)
-const APP_LOAD_TIME = Date.now();
-const FIRST_INSTALL_GRACE_MS = 20000;
-
 // עטיפת נתיב מוגן
 const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -152,32 +148,21 @@ export const AppRouter = () => {
     if (!authLoading) hideInitialLoader();
   }, [authLoading]);
 
-  // הודעות מ-Service Worker: ניווט מהתראות, ורענון כשה-SW התעדכן.
+  // הודעות מ-Service Worker: ניווט מהתראות בלבד.
+  //
+  // בעבר היה כאן גם רענון כפוי (window.location.reload) כשגרסה חדשה של
+  // ה-SW השתלטה, כדי לסנכרן JS ישן מול SW חדש. הוסר לגמרי: כל ניסיון
+  // לתזמן את הרענון "בזמן בטוח" (רק ברקע) עדיין השאיר סיכון שהוא יקטע
+  // בקשת רשת שרצה באותו רגע בדיוק - כולל רענון טוקן - וזו הייתה הסיבה
+  // בפועל ל"נזרק ללוגין" בלי שום פעולה מצד המשתמש. אין דרך בטוחה ב-100%
+  // לדעת שאף בקשה לא באוויר, אז עדיף לוותר על הסנכרון האוטומטי לגמרי:
+  // ה-SW החדש כבר משתלט על כל ניווט/טעינה טבעית הבאה (headers של
+  // Cache-Control: no-cache על index.html/sw.js בvercel.json דואגים
+  // לכך), בלי שום reload יזום שעלול לקטוע session פעיל.
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
         navigate(event.data.url);
-      }
-      // אחרי deploy חדש ה-SW מפעיל SW_ACTIVATED — רענון כפוי מונע חוסר עקביות
-      // בין JS ישן שכבר רץ לבין SW חדש שתפס שליטה. בלי זה, ה-PWA "נתקע".
-      //
-      // ההתקנה הראשונה-אי-פעם (למשל מיד אחרי הוספה למסך הבית) גם מפעילה
-      // 'activate' ושולחת את אותה הודעה - אבל אין שם שום JS ישן שצריך
-      // "לסנכרן", ה-JS שכבר רץ הוא הגרסה העדכנית ביותר. רענון כפוי בדיוק
-      // בחלון הזה (יכול לקחת כמה שניות על התקנה ראשונה עם רשת איטית) קטע
-      // בפועל תהליכי login/register באמצע - המשתמש רואה מסך login עם
-      // "החיבור פג תוקף" בלי שום סיבה אמיתית. מתעלמים מהודעות שמגיעות
-      // בחלון הזמן הקצר שאחרי טעינת האפליקציה - שם זו כמעט תמיד התקנה
-      // ראשונה, לא deploy אמיתי שקרה תוך כדי שימוש.
-      if (
-        event.data?.type === 'SW_ACTIVATED' && event.data.action === 'reload' &&
-        Date.now() - APP_LOAD_TIME > FIRST_INSTALL_GRACE_MS
-      ) {
-        // sessionStorage מונע לולאת רענון אינסופית — מרעננים פעם אחת בלבד לכל סשן
-        if (!sessionStorage.getItem('sb_sw_reloaded')) {
-          sessionStorage.setItem('sb_sw_reloaded', '1');
-          window.location.reload();
-        }
       }
     };
     navigator.serviceWorker?.addEventListener('message', handler);

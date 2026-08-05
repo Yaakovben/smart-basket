@@ -4,7 +4,7 @@
  * ב-Leaflet כי היא לא תלויה בהתנהגות flex/100% של ה-parent.
  */
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -54,11 +54,13 @@ function getBranchIcon(chainId: string, chainName: string): L.DivIcon {
   if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
   const m = getMonogram(chainName);
   const { fill, stroke } = getChainColor(chainId);
+  // בלי SVG feDropShadow פנימי - הצל כבר מגיע מ-.sb-pin (CSS filter על
+  // האלמנט העוטף). כפל פילטרים (CSS + SVG) על עד 150 markers הוא יקר
+  // במיוחד ב-composite בזמן pan/zoom ופוגע בתגובתיות המפה.
   const icon = L.divIcon({
     className: 'sb-pin',
     html: `<svg width="32" height="44" viewBox="0 0 32 44" xmlns="http://www.w3.org/2000/svg">
-      <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter>
-      <path filter="url(#sh)" d="M16 1C7.7 1 1 7.7 1 16c0 11 15 27 15 27s15-16 15-27C31 7.7 24.3 1 16 1z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+      <path d="M16 1C7.7 1 1 7.7 1 16c0 11 15 27 15 27s15-16 15-27C31 7.7 24.3 1 16 1z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
       <circle cx="16" cy="15" r="9" fill="white"/>
       <text x="16" y="15.5" text-anchor="middle" dominant-baseline="central" font-size="${m.length === 1 ? 10 : 8}" font-weight="900" font-family="system-ui,sans-serif" fill="${stroke}">${m}</text>
     </svg>`,
@@ -168,13 +170,62 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
     [branches]
   );
 
-  const openNav = (b: NearbyBranch) => {
+  const openNav = useCallback((b: NearbyBranch) => {
     setNavBranch({
       branchName: `${b.chainName} - ${b.storeName}`,
       city: b.city, address: b.address, lat: b.lat, lng: b.lng,
       distanceKm: location ? Math.round(haversineKm(location, b) * 10) / 10 : (undefined as unknown as number),
     });
-  };
+  }, [location]);
+
+  // ה-JSX של עד 150 markers+popups ממורמז בנפרד מה-state של הדיאלוג
+  // (navBranch/loading) - בלי זה, כל טאפ על "ניווט" בפופאפ מפעיל re-render
+  // שבונה מחדש את כל עצי ה-Marker/Popup, וזה מה שגורם לתחושת "לא מגיב".
+  const branchMarkers = useMemo(() => validBranches.map((b, i) => (
+    <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
+      <Popup className="sb-popup" minWidth={210}>
+        <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+            {(() => {
+              const { fill } = getChainColor(b.chainId);
+              return (
+                <Box sx={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  bgcolor: fill, color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
+                  boxShadow: `0 2px 6px ${fill}66`,
+                }}>
+                  {getMonogram(b.chainName)}
+                </Box>
+              );
+            })()}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
+                {b.chainName}
+              </Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
+                {b.storeName}
+              </Typography>
+            </Box>
+          </Box>
+          {(b.address || b.city) && (
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
+              📍 {[b.address, b.city].filter(Boolean).join(', ')}
+            </Typography>
+          )}
+          <Button
+            fullWidth size="small" variant="contained"
+            onClick={() => openNav(b)}
+            startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
+            sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
+          >
+            ניווט
+          </Button>
+        </Box>
+      </Popup>
+    </Marker>
+  )), [validBranches, openNav]);
 
   return (
     <Box sx={{
@@ -229,55 +280,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
             </Marker>
           )}
 
-          {validBranches.map((b, i) => (
-            <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
-              <Popup className="sb-popup" minWidth={210}>
-                <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-                    {/* תג עגול עם מונוגרם - הזהות האמיתית עוברת דרך הטקסט, לא
-                        הצבע (ראו getChainColor: רק ל-3 רשתות עם מותג מוכר
-                        באמת יש צבע ספציפי, לכל השאר צבע אחיד - עדיף מגוון
-                        "מומצא" שמוצג כאילו הוא המותג האמיתי). */}
-                    {(() => {
-                      const { fill } = getChainColor(b.chainId);
-                      return (
-                        <Box sx={{
-                          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                          bgcolor: fill, color: 'white',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
-                          boxShadow: `0 2px 6px ${fill}66`,
-                        }}>
-                          {getMonogram(b.chainName)}
-                        </Box>
-                      );
-                    })()}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
-                        {b.chainName}
-                      </Typography>
-                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
-                        {b.storeName}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  {(b.address || b.city) && (
-                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-                      📍 {[b.address, b.city].filter(Boolean).join(', ')}
-                    </Typography>
-                  )}
-                  <Button
-                    fullWidth size="small" variant="contained"
-                    onClick={() => openNav(b)}
-                    startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-                    sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
-                  >
-                    ניווט
-                  </Button>
-                </Box>
-              </Popup>
-            </Marker>
-          ))}
+          {branchMarkers}
         </MapContainer>
       </Box>
 

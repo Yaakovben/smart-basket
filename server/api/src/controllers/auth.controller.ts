@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import type { AuthRequest } from '../types';
 import type { RegisterInput, LoginInput, CheckEmailInput, GoogleAuthInput } from '../validators';
 import { asyncHandler } from '../utils';
-import { AuthError } from '../errors';
+import { AuthError, ConflictError } from '../errors';
 import { logger } from '../config';
 import { LoginActivityDAL } from '../dal';
 import * as authService from '../services/auth.service';
@@ -72,13 +72,17 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
 
 /**
  * POST /api/auth/refresh
- * רענון access token באמצעות refresh token. אם פג - זורק InvalidToken.
+ * רענון access token באמצעות refresh token.
+ * - טוקן לא תקף/פג תוקף → 401 (הלקוח מתנתק)
+ * - race מול בקשת רענון מקבילה שכבר סובבה את הטוקן → 409 (הלקוח מנסה שוב,
+ *   לא מתנתק - ראו ההערה על RefreshResult ב-token.service.ts)
  */
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken: refreshTokenValue } = req.body as { refreshToken: string };
   const result = await refreshAccessToken(refreshTokenValue);
-  if (!result) throw AuthError.invalidToken();
-  res.json({ success: true, data: result });
+  if (result.status === 'invalid') throw AuthError.invalidToken();
+  if (result.status === 'race') throw new ConflictError('Refresh already in progress, retry');
+  res.json({ success: true, data: result.tokens });
 });
 
 /**

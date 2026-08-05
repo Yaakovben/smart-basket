@@ -8,123 +8,71 @@ import { ErrorBoundary } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
 
-// ניקוי cache אוטומטי בפריסות חדשות (לא חוסם את הטעינה).
-// גרסה ייחודית לכל build, מוזרקת ע"י Vite. הגנה: אם ההזרקה נכשלה
-// (typeof === 'undefined') מדלגים על הלוגיקה כולה כדי למנוע סיכון
-// ללולאת רענון אינסופית.
+// עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
+//
+// בעבר, כשה-build version (הזרקה ע"י Vite, hash-content) השתנה מאז
+// הביקור הקודם, הפונקציה הזו עשתה window.location.reload() מיידי ובלתי-
+// מותנה - לפני שה-React בכלל התרכב, בלי שום בדיקה אם יש בקשת רשת
+// שרצה (checkAuth/רענון טוקן/סנכרון אופליין). זו הייתה הסיבה המרכזית
+// למשתמשים שנזרקים ללוגין בלי סיבה נראית לעין אחרי כל deploy: הרענון
+// קטע בקשות שרצו באותו רגע בדיוק. אין רגע "בטוח" לרענון כפוי שרץ כל כך
+// מוקדם בטעינת הדף - אז ויתרנו עליו לגמרי, כמו שנעשה גם למנגנון המקביל
+// ב-router/index.tsx.
+//
+// עדיין רוצים לוודא שמכשירים עם SW/cache ישנים "יתנקו" בפועל ולא ייתקעו -
+// אז מנקים caches + מבטלים רישום SW ברקע (לא חוסם, לא מרענן). ה-JS שכבר
+// רץ בזיכרון ממשיך בלי הפרעה; הטעינה הבאה (סגירה-פתיחה טבעית, שלא עוברת
+// דרך שום cache ישן יותר) מקבלת קוד טרי לגמרי.
 const handleNewVersion = () => {
-  // הגנה: אם __BUILD_VERSION__ לא הוזרק (build בעייתי או runtime ישן),
-  // לא מבצעים השוואה - הגרסה תיכתב ב-build הבא.
-  if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) {
-    console.warn('[version] __BUILD_VERSION__ not injected - skipping cache cleanup');
-    return;
-  }
+  if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) return;
   const buildVersion = __BUILD_VERSION__;
   const storedVersion = localStorage.getItem('app_build_version');
-
-  if (storedVersion === buildVersion) return;
-
-  // מניעת לולאת רענון: אם כבר רעננו את הדף לגרסה הזו
-  if (sessionStorage.getItem('version_reload_done') === buildVersion) {
-    localStorage.setItem('app_build_version', buildVersion);
-    return;
-  }
-
-  // רענון מיידי לגרסה חדשה אם הייתה גרסה קודמת
-  if (storedVersion) {
-    localStorage.setItem('app_build_version', buildVersion);
-    sessionStorage.setItem('version_reload_done', buildVersion);
-    // מסמן שכבר רעננו הפעם - מונע רענון כפול: אחרי שה-SW נרשם מחדש (בוטל
-    // כאן ולמטה) הוא יפעיל activate ויבקש עוד רענון (ראו sw.ts + router/index.tsx),
-    // אבל הרענון הזה כבר מכסה את אותו עדכון, אז אין צורך בשני.
-    try { sessionStorage.setItem('sb_sw_reloaded', '1'); } catch { /* storage חסום */ }
-    // מסך עדכון: רקטה + halo, מסביר למשתמש שמתבצע עדכון לפני הרענון.
-    // מוזרק כ-HTML גולמי כי זה רץ לפני שה-React מורכב.
-    showUpdateOverlay();
-    // ניקוי cache ברקע לפני רענון
-    const cleanup = async () => {
-      try {
-        if ('caches' in window) {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-        }
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(r => r.unregister()));
-        }
-      } catch (err) {
-        console.warn('[version] cache/SW cleanup failed (non-fatal):', err);
-      }
-      window.location.reload();
-    };
-    cleanup();
-    return;
-  }
-
-  // התקנה ראשונה: שמירת גרסה בלי חסימה
   localStorage.setItem('app_build_version', buildVersion);
+
+  if (!storedVersion || storedVersion === buildVersion) return;
+
+  (async () => {
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+      }
+      showUpdateToast();
+    } catch (err) {
+      console.warn('[version] background cache/SW cleanup failed (non-fatal):', err);
+    }
+  })();
 };
 
-// מסך עדכון גרסה: רקטה + halo פועם + טקסט "מעדכן גרסה..."
-// מוזרק כ-DOM ישיר כי רץ לפני שה-React מורכב.
-function showUpdateOverlay() {
+// הודעת "עודכן" קצרה ולא-חוסמת - לעומת מסך העדכון הישן, לא מונעת אינטראקציה
+// ולא קשורה לשום reload. רק אישור ויזואלי שהניקוי ברקע קרה בפועל.
+function showUpdateToast() {
   if (typeof document === 'undefined') return;
-  if (document.getElementById('app-version-update')) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'app-version-update';
-  overlay.setAttribute('dir', 'rtl');
-  overlay.innerHTML = `
-    <style>
-      #app-version-update {
-        position: fixed; inset: 0; z-index: 99999;
-        background: radial-gradient(ellipse at top, #2DD4BF 0%, #14B8A6 55%, #0D9488 100%);
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        animation: vuFadeIn 0.25s ease-out;
-      }
-      @keyframes vuFadeIn { from { opacity: 0; } to { opacity: 1; } }
-      #app-version-update .vu-halo {
-        position: absolute;
-        width: 260px; height: 260px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
-        animation: vuHalo 2.6s ease-in-out infinite;
-      }
-      @keyframes vuHalo {
-        0%,100% { transform: scale(0.95); opacity: 0.7; }
-        50%     { transform: scale(1.1);  opacity: 1; }
-      }
-      #app-version-update .vu-rocket {
-        font-size: 64px; line-height: 1;
-        animation: vuFloat 2.2s ease-in-out infinite;
-        filter: drop-shadow(0 10px 24px rgba(0,0,0,0.25));
-      }
-      @keyframes vuFloat {
-        0%,100% { transform: translateY(0) rotate(-6deg); }
-        50%     { transform: translateY(-10px) rotate(-12deg); }
-      }
-      #app-version-update .vu-title {
-        margin-top: 36px;
-        color: #fff;
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 0.3px;
-        text-shadow: 0 2px 12px rgba(0,0,0,0.18);
-      }
-      #app-version-update .vu-sub {
-        margin-top: 8px;
-        color: rgba(255,255,255,0.85);
-        font-size: 13px;
-        font-weight: 500;
-      }
-    </style>
-    <div class="vu-halo"></div>
-    <div class="vu-rocket">🚀</div>
-    <div class="vu-title">מעדכן גרסה...</div>
-    <div class="vu-sub">גרסה חדשה זמינה — טוען עדכון</div>
+  const toast = document.createElement('div');
+  toast.setAttribute('dir', 'rtl');
+  toast.textContent = 'עודכן לגרסה חדשה ✓';
+  toast.style.cssText = `
+    position: fixed; top: max(16px, env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #0D9488; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 99999; opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none;
   `;
-  (document.body || document.documentElement).appendChild(overlay);
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(-20px)';
+    setTimeout(() => toast.remove(), 350);
+  }, 3500);
 }
 
 handleNewVersion();

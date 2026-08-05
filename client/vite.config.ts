@@ -45,6 +45,10 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
+      // רישום נעשה ידנית ב-useServiceWorker.ts (לא דרך registerSW/virtual:pwa-register) -
+      // ראו הערה שם. injectRegister: false מונע מ-vite-plugin-pwa להזריק סקריפט רישום
+      // אוטומטי משלו ל-index.html, שהיה מכיל את אותה לוגיקת reload כפוי שעקפנו.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icon-192x192.png', 'icon-512x512.png'],
       devOptions: {
         enabled: false

@@ -83,12 +83,26 @@ export function useAuth() {
         setLoading(false);
         return;
       }
+      // הטוקן שאיתו checkAuth יוצא לדרך - נשמר כדי לזהות בהמשך (בקאץ') אם
+      // בינתיים כבר קרה login/register/googleAuth טרי (ראו הערה בקאץ').
+      const tokenAtStart = token;
 
-      // הגבלת זמן, לא להיתקע אם השרת לא מגיב
+      // הגבלת זמן, לא להיתקע אם השרת לא מגיב - אבל זו הגבלה על ה-UI (ספינר
+      // הטעינה) בלבד. isAuthInProgress, שמגן ב-client.ts מפני redirect
+      // מוקדם מדי ל-login, חייב להישאר דלוק עד שבקשת ה-getProfile()
+      // האמיתית *באמת* מסתיימת - לא רק עד שה-timeout המלאכותי הזה מוותר
+      // (ראו profilePromise.finally למטה). אחרת, בדיוק 10 שניות אחרי
+      // הפתיחה המגן כובה מוקדם מדי, ואם הבקשה האמיתית (שממשיכה לרוץ ברקע,
+      // כולל רענון טוקן פנימי שיכול לקחת עוד עשרות שניות ב-cold start) מגיעה
+      // בסוף ל-401 סופי - ה-response interceptor כבר לא חסום ומפנה
+      // ללוגין עם "הסשן פג", גם כשההתחברות טרייה לגמרי והשרת פשוט היה איטי.
       let timeoutId: ReturnType<typeof setTimeout>;
       const timeout = new Promise((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('timeout')), 10000);
       });
+
+      const profilePromise = authApi.getProfile();
+      profilePromise.finally(() => setAuthInProgress(false));
 
       try {
         // רשימות/התראות נורות בנפרד מהפרופיל ולא ממתינות זו לזו - כל אחת
@@ -121,7 +135,7 @@ export function useAuth() {
         // שנשאר תחת ה-timeout/race של 10 שניות. רשימות/התראות לא צריכות
         // "לחסום" את הקביעה הזו ולא נכשלות אם הן לוקחות יותר זמן.
         const profile = await Promise.race([
-          authApi.getProfile(),
+          profilePromise,
           timeout.then(() => { throw new Error('timeout'); }),
         ]);
 
@@ -150,7 +164,20 @@ export function useAuth() {
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
         // בשגיאות רשת שומרים את המשתמש השמור למניעת התנתקות מיותרת
         const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 401) {
+        // הגנה קריטית מפני race: checkAuth רץ ברקע (יכול לקחת עד 10 שניות
+        // עם הטוקן הישן/שבור שהיה בזמן טעינת האפליקציה - למשל משאריות
+        // מבדיקה קודמת). אם המשתמש בינתיים הספיק להתחבר בפועל (login/
+        // register/googleAuth) עם טוקן חדש ותקף לגמרי, ה-401 המאוחר הזה
+        // שייך לניסיון הישן ולא רלוונטי יותר - בלעדי הבדיקה הזו, ה-catch
+        // היה מוחק בשקט את הסשן הטרי-לגמרי כמה שניות אחרי שהמשתמש כבר
+        // ראה את מסך הבית, ומחזיר אותו ללוגין בלי שום סיבה אמיתית.
+        const tokenStillCurrent = getAccessToken() === tokenAtStart;
+        if (status === 401 && tokenStillCurrent) {
+          if (import.meta.env.PROD) {
+            import('@sentry/react').then(Sentry => {
+              Sentry.captureMessage('[auth] checkAuth_401_on_launch', { level: 'warning' });
+            }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+          }
           socketService.disconnect();
           clearTokens();
           localStorage.removeItem('cached_user');
@@ -160,7 +187,6 @@ export function useAuth() {
         // סימון שגיאת חיבור כדי להציג הודעה למשתמש
         setInitialData(prev => ({ ...prev, connectionError: true }));
       }
-      setAuthInProgress(false);
       setLoading(false);
     };
     checkAuth();
