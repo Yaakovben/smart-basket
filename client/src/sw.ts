@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
-declare let self: ServiceWorkerGlobalScope;
+// __WB_MANIFEST: הטיפוס הגיע בעבר דרך ה-import מ-workbox-precaching (הוסר
+// יחד עם ה-precaching עצמו). injectManifest עדיין דורש שהמזהה הזה יופיע
+// בקוד כדי להזריק לתוכו את הרשימה (ריקה, ראו globPatterns: [] ב-vite.config.ts) -
+// מצהירים עליו ידנית כדי ש-tsc לא ייכשל.
+declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: unknown };
 
 // אין שום caching בכוונה - לא assets, לא index.html, כלום. כל בקשה (כולל
 // ניווט) עוברת ישר לרשת, בדיוק כמו בלי Service Worker בכלל מבחינת caching.
@@ -18,7 +22,11 @@ declare let self: ServiceWorkerGlobalScope;
 // למטה) - זו הסיבה היחידה שהוא עדיין קיים. self.__WB_MANIFEST מוזרק כאן
 // ריק (globPatterns: [] ב-vite.config.ts) - injectManifest (הכלי שבונה את
 // הקובץ הזה) מחייב שה-placeholder הזה יופיע בקוד, גם אם לא עושים איתו כלום.
-void self.__WB_MANIFEST;
+// console.log (לא void) - חייב side effect אמיתי, אחרת esbuild/rollup
+// מזהים את הביטוי כ"מת" (אין לו תוצאה בשום מקום) ומסלקים אותו לגמרי
+// מה-bundle לפני ש-injectManifest סורק את הפלט המבונה ומחפש את המחרוזת
+// המילולית self.__WB_MANIFEST - ואז ה-build כולו נכשל.
+console.log('[sw] manifest entries:', self.__WB_MANIFEST);
 
 // טיפול בהתראות נכנסות, סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {
