@@ -24,7 +24,9 @@ const listImport = () => import("../features/list/list").then(m => ({ default: m
 listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
 const ListPage = lazy(listImport);
 const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
-const SettingsPage = lazy(() => import("../features/settings/settings").then(m => ({ default: m.SettingsPage })));
+const settingsImport = () => import("../features/settings/settings").then(m => ({ default: m.SettingsPage }));
+settingsImport(); // prefetch מיידי - מונע עיכוב בלחיצה על הגדרות (כמו Home/List)
+const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));

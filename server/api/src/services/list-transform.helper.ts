@@ -1,6 +1,15 @@
-import { ProductDAL } from '../dal';
+import { ProductDAL, ListDAL } from '../dal';
 import type { IListResponse } from '../types';
 import type { IList, IProductDoc } from '../models';
+
+// המרת יוזר לא-populated (lean) לפורמט תגובה - שכפול ידני של User.toJSON
+// (_id -> id) שלא קורה אוטומטית על אובייקט lean.
+const toLeanUserResponse = <T extends { _id: { toString(): string } }>(
+  user: T,
+): Record<string, unknown> => {
+  const { _id, ...rest } = user;
+  return { ...rest, id: _id.toString() };
+};
 
 const transformProduct = (p: IProductDoc | Record<string, unknown>): Record<string, unknown> => {
   // תמיכה גם ב-Mongoose docs וגם ב-lean POJOs
@@ -51,32 +60,35 @@ export const transformList = async (
 /**
  * המרת מספר רשימות לפורמט API.
  * שאילתה אחת לכל המוצרים (פותר N+1).
- * מדלג על populate אם הרשימות כבר מאוכלסות (מגיעות מ-findUserListsPopulated).
+ * מקבל רשימות lean מ-findUserListsPopulated (כבר populated ב-query עצמה,
+ * ר' list.dal.ts) - בונה ידנית את אותה צורת JSON שהייתה מתקבלת מ-
+ * Document.toJSON() (id במקום _id, ברמת הרשימה וגם ברמת owner/members.user).
  */
-export const transformListsWithProducts = async (lists: IList[]): Promise<IListResponse[]> => {
+export const transformListsWithProducts = async (
+  lists: Awaited<ReturnType<typeof ListDAL.findUserListsPopulated>>,
+): Promise<IListResponse[]> => {
   if (lists.length === 0) return [];
-
-  // populate רק אם לא כבר מאוכלס (בדיקה: owner הוא אובייקט עם name = כבר populated)
-  const needsPopulate = lists.length > 0 && !lists[0].populated('owner');
-  if (needsPopulate) {
-    await Promise.all(
-      lists.map((list) =>
-        Promise.all([
-          list.populate('owner', 'name email avatarColor avatarEmoji isAdmin'),
-          list.populate('members.user', 'name email avatarColor avatarEmoji'),
-        ]),
-      ),
-    );
-  }
 
   const listIds = lists.map(l => l._id.toString());
   const productsMap = await ProductDAL.findByListIds(listIds);
 
   return lists.map((list) => {
     const products = productsMap.get(list._id.toString()) || [];
-    const json = list.toJSON() as Record<string, unknown>;
-    json.products = products.map(transformProduct);
-    json.password = list.password || null;
+    const { _id, __v, password, owner, members, ...rest } = list;
+
+    const json: Record<string, unknown> = {
+      ...rest,
+      id: _id.toString(),
+      hasPassword: !!password,
+      password: password || null,
+      owner: toLeanUserResponse(owner),
+      members: members.map((m) => ({
+        user: toLeanUserResponse(m.user),
+        isAdmin: m.isAdmin,
+        joinedAt: m.joinedAt,
+      })),
+      products: products.map(transformProduct),
+    };
 
     return json as unknown as IListResponse;
   });

@@ -14,13 +14,19 @@ export const ListDAL = {
     }).sort({ updatedAt: -1 });
   },
 
-  async findUserListsPopulated(userId: string): Promise<IList[]> {
+  // .lean() - הדשבורד הראשי (GET /lists) לא צריך מסמכי Mongoose מלאים
+  // (change tracking, getters, save()) אלא רק קריאה; הידרציה מלאה של כל
+  // הרשימות+חברים בכל טעינה הייתה overhead מיותר. transformListsWithProducts
+  // (list-transform.helper.ts) משחזר ידנית את שינויי ה-toJSON (_id->id וכו')
+  // שהיו קורים אוטומטית על Document.
+  async findUserListsPopulated(userId: string) {
     const uid = new mongoose.Types.ObjectId(userId);
     return List
       .find({ $or: [{ owner: uid }, { 'members.user': uid }] })
       .populate('owner', 'name email avatarColor avatarEmoji isAdmin')
       .populate('members.user', 'name email avatarColor avatarEmoji')
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
   },
 
   async findByIdPopulated(listId: string): Promise<IList | null> {
