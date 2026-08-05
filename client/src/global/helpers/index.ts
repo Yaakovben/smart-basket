@@ -53,4 +53,4 @@ export { safeStorage } from './safeStorage';
 // יומן אבחון ששורד קריסה - לחקירת "האפליקציה נסגרת לבד" ב-iOS PWA.
 // rotateCrashLog/startHeartbeat רצים אוטומטית ב-import של המודול (ראו
 // crashLog.ts) ולכן לא מיוצאים - רק ה-API שצריך שימוש חיצוני.
-export { diagLog, getPreviousSessionLog, clearPreviousSessionLog } from './crashLog';
+export { diagLog, getSessionHistory, clearSessionHistory } from './crashLog';

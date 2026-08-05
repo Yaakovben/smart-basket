@@ -6,48 +6,62 @@
 // כבר על הדיסק. ב-Boot הבא (בדיוק התרחיש של "פתיחה שנייה" שדווח) קוראים
 // את היומן מהפעם הקודמת ומציגים אותו ישירות על המסך - בלי צורך ב-Mac/
 // Web Inspector, כי לפעמים אין גישה לזה.
-const LOG_KEY = 'sb_crash_log';
-const PREV_LOG_KEY = 'sb_crash_log_prev';
+// היסטוריה של כמה סשנים אחרונים (לא רק "הקודם") - כי פתיחה נוספת בין
+// קריסה לבין שליחת הלוג הייתה מוחקת את הראיה האמיתית (זה בדיוק מה שקרה).
+// עכשיו כל סשן נשמר בנפרד; אין תלות בתזמון מדויק של המשתמש.
+const HISTORY_KEY = 'sb_crash_log_history';
+const MAX_SESSIONS = 8;
 const MAX_ENTRIES = 150;
 
 interface LogEntry {
-  t: number; // מילישניות מתחילת הסשן הנוכחי
+  t: number; // מילישניות מתחילת הסשן
   msg: string;
+}
+
+interface SessionLog {
+  start: number;
+  entries: LogEntry[];
 }
 
 let entries: LogEntry[] = [];
 let sessionStart = Date.now();
 
+function readHistory(): SessionLog[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 function persist() {
   try {
-    localStorage.setItem(LOG_KEY, JSON.stringify({ start: sessionStart, entries }));
+    // מעדכנים את הסשן הנוכחי בתוך ההיסטוריה (לא דורסים סשנים קודמים)
+    const history = readHistory();
+    const idx = history.findIndex(s => s.start === sessionStart);
+    const current: SessionLog = { start: sessionStart, entries };
+    if (idx >= 0) history[idx] = current;
+    else history.push(current);
+    const trimmed = history.slice(-MAX_SESSIONS);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
   } catch { /* quota/blocked - לא קריטי, עדיין יש console.log */ }
 }
 
-/** מעביר את היומן של הסשן הקודם לפני שמתחילים לכתוב חדש */
+/** מתחיל סשן חדש בהיסטוריה (לא מוחק סשנים קודמים) */
 function rotateCrashLog(): void {
-  try {
-    const prev = localStorage.getItem(LOG_KEY);
-    if (prev) localStorage.setItem(PREV_LOG_KEY, prev);
-  } catch { /* ignore */ }
   entries = [];
   sessionStart = Date.now();
   diagLog('boot', 'new session started');
 }
 
-/** מחזיר את יומן הסשן הקודם (אם יש), לתצוגה/דיבוג. null אם אין. */
-export function getPreviousSessionLog(): { start: number; entries: LogEntry[] } | null {
-  try {
-    const raw = localStorage.getItem(PREV_LOG_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+/** מחזיר את כל הסשנים השמורים (מהישן לחדש), לתצוגה/דיבוג. */
+export function getSessionHistory(): SessionLog[] {
+  return readHistory();
 }
 
-export function clearPreviousSessionLog(): void {
-  try { localStorage.removeItem(PREV_LOG_KEY); } catch { /* ignore */ }
+export function clearSessionHistory(): void {
+  try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
 }
 
 /** רישום אבחון - console.log רגיל + שמירה סינכרונית ל-localStorage */

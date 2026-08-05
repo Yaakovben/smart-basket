@@ -1,16 +1,38 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
+import { precacheAndRoute, matchPrecache } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// שמירת כל נכסי ה-build במטמון (JS, CSS, HTML, תמונות)
+// שמירת כל נכסי ה-build במטמון (JS, CSS, HTML, תמונות). לקבצים עם content-hash
+// בשם (JS/CSS - index-XXXXX.js) cache-first תמיד נכון: build חדש = שם קובץ חדש,
+// אין סיכון staleness.
 precacheAndRoute(self.__WB_MANIFEST);
 
-// SPA: כל בקשות ניווט (כתובות שאינן קבצים סטטיים) מוגשות מה-cache של index.html,
-// כך שהאפליקציה נטענת גם ללא רשת
-registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
+// SPA: ניווט (פתיחת/סגירת-ופתיחת-מחדש האפליקציה) מנסה תמיד רשת טרייה קודם.
+//
+// לפני התיקון, createHandlerBoundToURL('/index.html') הגיש cache-only -
+// ה-SW *הזה* (כל עוד הוא ה-SW הפעיל במכשיר) המשיך להגיש את ה-index.html
+// שהוא שמר בזמן ההתקנה שלו, לנצח, בלי שום קשר למה שבאמת פרוס בשרת - וזה
+// ביטל לגמרי את ה-Cache-Control: no-cache על index.html (vercel.json):
+// הדפדפן אף פעם לא הגיע ל-HTTP fetch אמיתי, כי ה-navigation route ענה
+// ישירות מה-cache. זה ההסבר לכך שתיקוני קוד שכבר פרוסים בשרת "לא הגיעו"
+// למכשיר - ה-SW הישן על המכשיר פשוט המשיך להגיש גרסה ישנה של index.html
+// (כולל bundle JS ישן) עד שה-SW עצמו יוחלף - תהליך שדבר לא היה מכריח.
+//
+// עכשיו: תמיד fetch מהרשת קודם (מקבל index.html עדכני שמצביע ל-bundle
+// העדכני בפועל), ורק אם באמת אין רשת נופלים לגרסה ששמורה ב-precache
+// מבנייה זו - עדיין תומך בפתיחה אופליין.
+registerRoute(new NavigationRoute(async ({ event }) => {
+  try {
+    return await fetch(event.request);
+  } catch {
+    const cached = await matchPrecache('/index.html');
+    if (cached) return cached;
+    throw new Error('offline and no precached index.html available');
+  }
+}));
 
 // טיפול בהתראות נכנסות, סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {

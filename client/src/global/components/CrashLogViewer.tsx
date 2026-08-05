@@ -1,30 +1,56 @@
 import { useEffect, useState } from 'react';
-import { getPreviousSessionLog, clearPreviousSessionLog } from '../helpers/crashLog';
+import { getSessionHistory, clearSessionHistory } from '../helpers/crashLog';
 
-// מציג את יומן האבחון של הסשן הקודם (ראו crashLog.ts) ישירות על המסך,
+interface SessionLog {
+  start: number;
+  entries: { t: number; msg: string }[];
+}
+
+// מציג את היסטוריית הסשנים האחרונים (ראו crashLog.ts) ישירות על המסך,
 // בפתיחה הבאה של האפליקציה - כדי לחקור "האפליקציה נסגרת לבד" ב-iOS PWA
-// בלי צורך במחשב/Web Inspector. משתמש יכול להעתיק את הטקסט ולשלוח אותו.
+// בלי צורך במחשב/Web Inspector. שומר כמה סשנים (לא רק "הקודם") כי פתיחה
+// נוספת בין קריסה לבין קריאת הלוג הייתה מוחקת את הראיה האמיתית.
 //
+// סשן "נראה כמו קריסה" אם הוא לא מסתיים באחד מהאירועים שמעידים על סגירה
+// מבוקרת (pagehide/beforeunload/visibilitychange->hidden) - כלומר היומן
+// פשוט נעצר באמצע, בלי שום סימן ליציאה יזומה.
+const CLEAN_EXIT_MARKERS = ['pagehide fired', 'beforeunload fired', 'visibilitychange -> hidden'];
+
+function looksLikeCrash(session: SessionLog): boolean {
+  if (session.entries.length === 0) return false;
+  const last = session.entries[session.entries.length - 1];
+  return !CLEAN_EXIT_MARKERS.some(marker => last.msg.includes(marker));
+}
+
+function formatSession(session: SessionLog, index: number): string {
+  const last = session.entries[session.entries.length - 1];
+  const crash = looksLikeCrash(session);
+  const header = `--- Session #${index + 1} (${new Date(session.start).toISOString()}) - lasted ${(last.t / 1000).toFixed(1)}s - ${crash ? '⚠️ LOOKS LIKE A CRASH (no clean exit)' : 'clean exit'} ---`;
+  const body = session.entries.map(e => `+${(e.t / 1000).toFixed(2)}s  ${e.msg}`).join('\n');
+  return `${header}\n${body}`;
+}
+
 // זמני בכוונה - להסיר אחרי שהבאג נפתר ומאומת.
 export function CrashLogViewer() {
-  const [log, setLog] = useState<{ start: number; entries: { t: number; msg: string }[] } | null>(null);
+  const [sessions, setSessions] = useState<SessionLog[]>([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setLog(getPreviousSessionLog());
+    // הסשן האחרון בהיסטוריה הוא הנוכחי (עדיין רץ) - לא מציגים אותו,
+    // רק סשנים שכבר הסתיימו (כל מה שלפניו).
+    const all = getSessionHistory();
+    setSessions(all.slice(0, -1));
   }, []);
 
-  if (!log || log.entries.length === 0) return null;
+  if (sessions.length === 0) return null;
 
-  const lastEntry = log.entries[log.entries.length - 1];
-  const durationSec = Math.round(lastEntry.t / 1000);
+  const crashCount = sessions.filter(looksLikeCrash).length;
   const text = [
-    `Smart Basket - previous session log`,
-    `session started: ${new Date(log.start).toISOString()}`,
-    `session lasted at least ${durationSec}s before this log was captured`,
-    ``,
-    ...log.entries.map(e => `+${(e.t / 1000).toFixed(2)}s  ${e.msg}`),
-  ].join('\n');
+    `Smart Basket - last ${sessions.length} session(s)`,
+    `${crashCount} of them look like a crash (no clean exit event)`,
+    '',
+    ...sessions.map((s, i) => formatSession(s, i)),
+  ].join('\n\n');
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(text).then(() => {
@@ -34,8 +60,8 @@ export function CrashLogViewer() {
   };
 
   const handleDismiss = () => {
-    clearPreviousSessionLog();
-    setLog(null);
+    clearSessionHistory();
+    setSessions([]);
   };
 
   return (
@@ -57,7 +83,7 @@ export function CrashLogViewer() {
       }}
     >
       <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
-        Previous session log (lasted ~{durationSec}s)
+        {sessions.length} recent session(s) - {crashCount > 0 ? `⚠️ ${crashCount} look like crashes` : 'all clean exits'}
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         <button
