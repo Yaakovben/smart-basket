@@ -16,15 +16,24 @@ export function useServiceWorker(): void {
     if (!('serviceWorker' in navigator)) return;
     let registration: ServiceWorkerRegistration | undefined;
 
+    console.log('[sw] manual register() starting');
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { type: 'module' })
       .then((reg) => {
         registration = reg;
+        console.log('[sw] registered, scope=', reg.scope, 'active=', !!reg.active, 'installing=', !!reg.installing, 'waiting=', !!reg.waiting);
       })
       .catch((error) => {
-        if (import.meta.env.DEV) {
-          console.error('SW registration error:', error);
-        }
+        console.error('[sw] registration error:', error);
       });
+
+    // לוג של כל controllerchange - זה בדיוק האירוע שה-registerSW האוטומטי
+    // (workbox-window) היה מגיב אליו עם reload כפוי לפני שעברנו לרישום ידני
+    // (ראו ההערה למעלה). אם עדיין קורה כאן reload כלשהו מיד אחרי זה, זה
+    // הראיה שמשהו אחר גורם לו - לא הספרייה.
+    const handleControllerChange = () => {
+      console.log('[sw] controllerchange fired (SW took control of this page)');
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
     // בדיקת עדכון יזומה כשחוזרים לטאב - הבדיקה התקופתית המובנית של
     // vite-plugin-pwa לא בהכרח מספיק תכופה למשתמש שמשאיר את האפליקציה
@@ -32,10 +41,16 @@ export function useServiceWorker(): void {
     // לחכות שעה+ עד שהטאב הפתוח בכלל שם לב שיש עדכון.
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        registration?.update().catch(() => { /* לא קריטי - ינסה שוב בפעם הבאה */ });
+        console.log('[sw] tab visible, checking for update');
+        registration?.update()
+          .then(() => console.log('[sw] update() check completed'))
+          .catch((err) => console.log('[sw] update() check failed (non-fatal):', err));
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
   }, []);
 }

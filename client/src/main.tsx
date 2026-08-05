@@ -81,7 +81,11 @@ function isRootEmpty(): boolean {
 if (typeof window !== 'undefined') {
   let hiddenAt = 0;
   window.addEventListener('pageshow', (e) => {
-    if ((e as PageTransitionEvent).persisted && isRootEmpty()) {
+    const persisted = (e as PageTransitionEvent).persisted;
+    const empty = isRootEmpty();
+    console.log(`[boot] pageshow persisted=${persisted} rootEmpty=${empty}`);
+    if (persisted && empty) {
+      console.log('[boot] pageshow: reloading (bfcache restore + empty root)');
       window.location.reload();
     }
   });
@@ -91,8 +95,10 @@ if (typeof window !== 'undefined') {
     } else if (document.visibilityState === 'visible' && hiddenAt > 0) {
       const awayMs = Date.now() - hiddenAt;
       hiddenAt = 0;
+      console.log(`[boot] visible again after ${Math.round(awayMs / 1000)}s away, rootEmpty=${isRootEmpty()}`);
       // אחרי 30 דק' מחוץ לאפליקציה, רק אם המסך באמת לבן - לא רענון גורף
       if (awayMs > 30 * 60 * 1000 && isRootEmpty()) {
+        console.log('[boot] visibilitychange: reloading (long background + empty root)');
         window.location.reload();
       }
     }

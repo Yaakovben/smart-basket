@@ -62,13 +62,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
 
-    // שגיאת טעינת chunk = גרסה חדשה נפרסה → ניקוי cache וריענון אוטומטי
+    // שגיאת טעינת chunk = גרסה חדשה נפרסה → ניקוי cache וריענון אוטומטי.
+    // localStorage ולא sessionStorage: ב-PWA מותקן ב-iOS, sessionStorage
+    // מתאפס בכל סגירה-פתיחה מלאה של האפליקציה (WKWebView standalone חדש) -
+    // guard שמבוסס עליו לא מגן על התרחיש המדויק הזה (סגור-פתח שוב תוך
+    // כמה שניות, בדיוק כשיש race מול ניקוי cache/SW ברקע של handleNewVersion).
     if (isChunkLoadError(error)) {
-      // מניעת לולאת reload אינסופית
-      const lastReload = sessionStorage.getItem(CHUNK_RELOAD_KEY);
-      if (lastReload && Date.now() - Number(lastReload) < 10_000) return;
+      console.log('[error-boundary] chunk load error caught:', error.message);
+      let lastReload = 0;
+      try { lastReload = Number(localStorage.getItem(CHUNK_RELOAD_KEY) || 0); } catch { /* ignore */ }
+      if (lastReload && Date.now() - lastReload < 10_000) {
+        console.log('[error-boundary] chunk error cooldown active - not reloading again');
+        return;
+      }
 
-      sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+      try { localStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now())); } catch { /* ignore */ }
+      console.log('[error-boundary] reloading to recover from chunk load error');
       this.setState({ isReloading: true });
       this.handleClearCacheAndReload();
     }

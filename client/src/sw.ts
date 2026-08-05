@@ -91,17 +91,21 @@ self.addEventListener('notificationclose', () => {});
 
 // התקנה, דילוג על המתנה להפעלה מיידית
 self.addEventListener('install', () => {
+  console.log('[sw] install event, calling skipWaiting()');
   self.skipWaiting();
 });
 
-// הפעלה - תופס שליטה על הטאבים הפתוחים ומודיע ללקוחות לרענן.
+// הפעלה - תופס שליטה על הטאבים הפתוחים ומודיע ללקוחות (לא מרענן יותר -
+// ה-listener ב-router/index.tsx רק מתעד, ראה הערה שם).
 // לא מוחק caches בקפדנות: עם injectManifest + globPatterns ריק אין cache של אפליקציה,
 // רק של workbox. מחיקה אגרסיבית בזמן activate שולחת את ה-PWA למצב לא עקבי אחרי deploy.
 self.addEventListener('activate', (event) => {
+  console.log('[sw] activate event, calling clients.claim()');
   event.waitUntil(
     self.clients.claim().then(() =>
       self.clients.matchAll({ type: 'window', includeUncontrolled: true })
     ).then((clients) => {
+      console.log(`[sw] claimed, notifying ${clients.length} client(s)`);
       clients.forEach((client) => {
         client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
       });
