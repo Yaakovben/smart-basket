@@ -24,9 +24,9 @@ precacheAndRoute(self.__WB_MANIFEST);
 // עכשיו: תמיד fetch מהרשת קודם (מקבל index.html עדכני שמצביע ל-bundle
 // העדכני בפועל), ורק אם באמת אין רשת נופלים לגרסה ששמורה ב-precache
 // מבנייה זו - עדיין תומך בפתיחה אופליין.
-registerRoute(new NavigationRoute(async ({ event }) => {
+registerRoute(new NavigationRoute(async ({ request }) => {
   try {
-    return await fetch(event.request);
+    return await fetch(request);
   } catch {
     const cached = await matchPrecache('/index.html');
     if (cached) return cached;
