@@ -11,6 +11,7 @@ client/dist/
 
 # Claude
 .claude/
+settings.json
 
 # IDE
 .vscode/
