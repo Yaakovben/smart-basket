@@ -4,15 +4,11 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
 import { initAnalytics } from './global/services/analytics'
-import { rotateCrashLog, startHeartbeat, diagLog } from './global/helpers/crashLog'
+import { diagLog } from './global/helpers/crashLog'
 
-// חייב לרוץ ממש ראשון, לפני כל שאר הקוד - כדי לתפוס את כל השאר ביומן.
-// ראו crashLog.ts - הפתרון ל"אין גישה ל-Mac/Web Inspector כדי לראות מה
-// קורה רגע לפני שהאפליקציה נסגרת ב-iOS": כל אירוע נכתב סינכרונית
-// ל-localStorage, וב-Boot הבא (בדיוק הפתיחה השנייה שבה קורה הבאג) היומן
-// של הסשן הקודם מוצג ישירות על המסך (ראו CrashLogViewer ב-App.tsx).
-rotateCrashLog();
-startHeartbeat();
+// שימו לב: הרוטציה של היומן + ה-heartbeat רצים אוטומטית ברמת המודול
+// של crashLog.ts עצמו (לא כאן) - ראו הערה שם למה זה קריטי שזה ירוץ שם
+// ולא בקריאה מפורשת מכאן.
 diagLog('boot', 'main.tsx module evaluating');
 
 // חיבור מוקדם לשרת ה-API: הדפדפן מתחיל DNS/TCP/TLS ברקע, מקביל לטעינת הקוד,

@@ -24,8 +24,8 @@ function persist() {
   } catch { /* quota/blocked - לא קריטי, עדיין יש console.log */ }
 }
 
-/** קורא בתחילת main.tsx - מעביר את היומן של הסשן הקודם לפני שמתחילים לכתוב חדש */
-export function rotateCrashLog(): void {
+/** מעביר את היומן של הסשן הקודם לפני שמתחילים לכתוב חדש */
+function rotateCrashLog(): void {
   try {
     const prev = localStorage.getItem(LOG_KEY);
     if (prev) localStorage.setItem(PREV_LOG_KEY, prev);
@@ -62,7 +62,7 @@ export function diagLog(tag: string, msg: string): void {
 // heartbeat - כל 1.5 שניות, כדי שכשנקרא את היומן נדע בדיוק כמה זמן
 // האפליקציה "הייתה בחיים" לפני שהיא נעלמה, לא רק אילו אירועים קרו.
 let heartbeatId: ReturnType<typeof setInterval> | null = null;
-export function startHeartbeat(): void {
+function startHeartbeat(): void {
   if (heartbeatId) return;
   heartbeatId = setInterval(() => {
     entries.push({ t: Date.now() - sessionStart, msg: '[heartbeat] alive' });
@@ -70,3 +70,13 @@ export function startHeartbeat(): void {
     persist();
   }, 1500);
 }
+
+// חייבים לרוץ כאן, ברמת המודול, לא כקריאה מפורשת מ-main.tsx - כי סדר
+// evaluation של ES modules טוען את App.tsx (וקורא ל-handleNewVersion,
+// שכבר קורא ל-diagLog) *לפני* שגוף main.tsx עצמו מתחיל לרוץ. אם rotateCrashLog
+// הייתה נקראת משם, היא הייתה רצה אחרי שכבר נכתבה שורה אחת מהסשן הנוכחי,
+// ומוחקת בטעות את היומן העשיר האמיתי של הסשן הקודם (בדיוק מה שקרה בפועל -
+// זה מה שגרם ליומן להיראות עם שורה בודדת בלבד). מודול נטען פעם אחת בלבד
+// לכל הרצה, כך שזה בטוח שירוץ מוקדם ורק פעם אחת.
+rotateCrashLog();
+startHeartbeat();
