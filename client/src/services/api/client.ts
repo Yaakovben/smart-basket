@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { socketService } from '../socket/socket.service';
 import { debugLog } from './debug-log';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './token-storage';
+import { getAccessToken, getRefreshToken, setTokens } from './token-storage';
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens, rehydrateTokensFromIdb } from './token-storage';
 
@@ -10,9 +10,11 @@ if (!API_URL) {
   console.error('CRITICAL: VITE_API_URL is not configured for production!');
 }
 
-// דגל למניעת הפניה אוטומטית בזמן תהליך אימות פעיל
-let isAuthInProgress = false;
-export const setAuthInProgress = (value: boolean) => { isAuthInProgress = value; };
+// no-op: היה דגל למניעת redirect אוטומטי בזמן תהליך אימות פעיל, אבל אותו
+// redirect הוסר לגמרי (ראו redirectToSessionExpiredLogin למטה) - אין יותר
+// שום דבר שקורא את הדגל הזה. נשאר כפונקציה ריקה כדי לא לשבור את כל נקודות
+// הקריאה הקיימות (useAuth.ts, auth.api.ts).
+export const setAuthInProgress = (_value: boolean) => {};
 
 // דיווח אבחוני best-effort ל-Sentry (אם מוגדר) ברגע שבו טוקנים מנוקים בפועל
 // עקב כשל אימות - לא ידוע מראש אם/למה זה קורה בפרודקשן, אז ברגע שזה כן
