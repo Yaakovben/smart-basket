@@ -7,6 +7,7 @@ import type { UserWithLastLogin } from '../types';
 import { UsersTable } from './UsersTable';
 import { RecentActivityFeed } from './RecentActivityFeed';
 import { AdminDashboardLoadingSkeleton } from './AdminDashboardLoadingSkeleton';
+import { PushBroadcastCard } from './PushBroadcastCard';
 
 interface AdminDashboardContentProps {
   error: string | null;
@@ -28,6 +29,8 @@ export const AdminDashboardContent = ({
   userSearch, setUserSearch, filteredUsers, activities, language, onlineUserIds,
 }: AdminDashboardContentProps) => (
   <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
+    {!loading && <PushBroadcastCard isDark={isDark} />}
+
     {/* שגיאה */}
     {error && !loading && (
       <Paper sx={{

@@ -62,3 +62,13 @@ export const getStatus = asyncHandler(async (req: AuthRequest, res: Response): P
   const subscribed = await pushService.hasSubscription(userId);
   res.json({ success: true, data: { subscribed } });
 });
+
+/**
+ * POST /api/push/broadcast
+ * שליחת הודעת push לכל המשתמשים הרשומים. אדמין בלבד (isAdmin ב-route).
+ */
+export const broadcast = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { title, body, url } = req.body as { title: string; body: string; url?: string };
+  const sentCount = await pushService.sendToAll({ title, body, data: url ? { url } : undefined });
+  res.json({ success: true, data: { sentCount } });
+});

@@ -118,3 +118,18 @@ export async function sendToUsers(userIds: string[], payload: PushPayload): Prom
   const payloadStr = JSON.stringify(payload);
   await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
 }
+
+/**
+ * שליחת push לכל המנויים הרשומים במערכת (broadcast גלובלי - הודעות מנהל בלבד).
+ * מחזיר את מספר המנויים שנשלחה אליהם השליחה (לא מבטיח מסירה בפועל).
+ */
+export async function sendToAll(payload: PushPayload): Promise<number> {
+  if (!isEnabled()) return 0;
+
+  const subscriptions = await PushSubscriptionDAL.find({});
+  if (subscriptions.length === 0) return 0;
+
+  const payloadStr = JSON.stringify(payload);
+  await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  return subscriptions.length;
+}

@@ -55,9 +55,16 @@ const unsubscribeAllPush = async (): Promise<void> => {
   }
 };
 
+/** שליחת הודעת push לכל המשתמשים - אדמין בלבד. מחזיר כמה מנויים נשלחה אליהם. */
+const broadcastPush = async (title: string, body: string, url?: string): Promise<number> => {
+  const response = await apiClient.post<{ data: { sentCount: number } }>('/push/broadcast', { title, body, url });
+  return response.data.data.sentCount;
+};
+
 export const pushApi = {
   getVapidPublicKey,
   subscribeToPush,
   unsubscribeFromPush,
   unsubscribeAllPush,
+  broadcastPush,
 };
