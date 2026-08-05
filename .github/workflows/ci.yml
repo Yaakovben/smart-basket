@@ -31,8 +31,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # tsc -b (composite build via project references), not tsc --noEmit:
+      # --noEmit alone doesn't necessarily follow references the same way,
+      # and in practice missed a noUnusedLocals (TS6133) error that failed
+      # the real Vercel build (npm run build = "tsc -b && vite build") while
+      # CI stayed green. tsc -b here is the exact same type-check the build
+      # script runs, before spending time on the full vite build.
       - name: TypeScript check
-        run: npx tsc --noEmit
+        run: npx tsc -b
 
       - name: Lint (informational - does not fail the build)
         run: npm run lint

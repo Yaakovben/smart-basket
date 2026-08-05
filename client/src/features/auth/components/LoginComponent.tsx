@@ -1,11 +1,10 @@
 import { memo } from 'react';
-import { Box, Typography, Alert, Paper, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 import { useGoogleLogin } from '@react-oauth/google';
 import type { User } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useClearCache } from '../hooks/useClearCache';
-import { useSessionExpiredAlert } from '../hooks/useSessionExpiredAlert';
 import { AppLogo } from './LoginLogos';
 import { GoogleSignInButton } from './GoogleSignInButton';
 import { LoginErrorAlert } from './LoginErrorAlert';
@@ -24,7 +23,6 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const { clearing, handleClearCache } = useClearCache();
-  const { sessionExpired, dismissSessionExpired } = useSessionExpiredAlert();
 
   const auth = useAuth({ onLogin });
   const { error, googleLoading, showEmailForm, handleGoogleSuccess, handleGoogleError, toggleEmailForm } = auth;
@@ -91,38 +89,6 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
 
         {/* Content */}
         <Box sx={{ px: { xs: 3, sm: 4 }, pb: { xs: 4, sm: 5 } }}>
-          {/* Session expired alert - כולל כפתור "נקה מטמון" - מסך ראשון שמשתמש
-              רואה אחרי ניתוק לא-רצוני (טוקנים תקועים/מטמון ישן), נותן דרך
-              עצמאית להתאושש בלי לפנות לתמיכה */}
-          {sessionExpired && (
-            <Box sx={{ mb: 2 }}>
-              <Alert severity="info" sx={{ borderRadius: '12px', fontSize: 13, alignItems: 'center', '& .MuiAlert-action': { alignSelf: 'center', alignItems: 'center', pt: 0, mt: 0, mr: -1 } }}
-                onClose={dismissSessionExpired}>
-                {t('sessionExpired')}
-              </Alert>
-              <Button
-                onClick={handleClearCache}
-                disabled={clearing}
-                variant="outlined"
-                fullWidth
-                sx={{
-                  mt: 1,
-                  fontWeight: 600,
-                  fontSize: 13,
-                  textTransform: 'none',
-                  borderRadius: '12px',
-                  py: 1,
-                }}
-              >
-                {clearing ? (
-                  <><CircularProgress size={16} sx={{ mr: 1 }} /> {t('clearCacheSubtitle')}</>
-                ) : (
-                  t('clearCacheAndReload')
-                )}
-              </Button>
-            </Box>
-          )}
-
           {/* Google Login Button */}
           <GoogleSignInButton loading={googleLoading} onClick={() => googleLogin()} t={t} />
 
