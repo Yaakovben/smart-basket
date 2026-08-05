@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SettingsProvider, useSettings } from './global/context/SettingsContext';
 import { createAppTheme } from './global/theme/theme';
 import { AppRouter } from "./router";
-import { ErrorBoundary } from "./global/components";
+import { ErrorBoundary, CrashLogViewer } from "./global/components";
 import { OfflineBanner } from "./global/components/OfflineBanner";
 import { useServiceWorker } from './global/hooks';
+import { diagLog } from './global/helpers/crashLog';
 
 // עדכון גרסה: ניקוי SW/caches ברקע, בלי רענון כפוי.
 //
@@ -27,23 +28,29 @@ const handleNewVersion = () => {
   if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) return;
   const buildVersion = __BUILD_VERSION__;
   const storedVersion = localStorage.getItem('app_build_version');
+  diagLog('version', `stored=${storedVersion} current=${buildVersion}`);
   localStorage.setItem('app_build_version', buildVersion);
 
   if (!storedVersion || storedVersion === buildVersion) return;
 
+  diagLog('version', 'new version detected, starting background cache/SW cleanup');
   (async () => {
     try {
       if ('caches' in window) {
         const cacheNames = await caches.keys();
+        diagLog('version', `deleting ${cacheNames.length} caches`);
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
+        diagLog('version', `unregistering ${registrations.length} service worker(s)`);
         await Promise.all(registrations.map(r => r.unregister()));
       }
+      diagLog('version', 'background cleanup done');
       showUpdateToast();
     } catch (err) {
       console.warn('[version] background cache/SW cleanup failed (non-fatal):', err);
+      diagLog('version', `cleanup failed: ${String(err)}`);
     }
   })();
 };
@@ -101,6 +108,8 @@ const ThemedApp = () => {
     [settings.theme, settings.language]
   );
 
+  useEffect(() => { diagLog('boot', 'ThemedApp mounted'); }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -113,11 +122,15 @@ const ThemedApp = () => {
 };
 
 const App = () => (
-  <ErrorBoundary>
-    <SettingsProvider>
-      <ThemedApp />
-    </SettingsProvider>
-  </ErrorBoundary>
+  <>
+    {/* מחוץ ל-ErrorBoundary/Providers בכוונה - חייב לרנדר גם אם משהו אחר קורס */}
+    <CrashLogViewer />
+    <ErrorBoundary>
+      <SettingsProvider>
+        <ThemedApp />
+      </SettingsProvider>
+    </ErrorBoundary>
+  </>
 );
 
 export default App;

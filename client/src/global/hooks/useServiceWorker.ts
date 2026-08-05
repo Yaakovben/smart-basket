@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { diagLog } from '../helpers/crashLog';
 
 // רישום ידני - לא דרך registerSW/virtual:pwa-register של vite-plugin-pwa.
 // ל-registerType: 'autoUpdate' (vite.config.ts) יש התנהגות מקודדת-קשיח
@@ -16,14 +17,14 @@ export function useServiceWorker(): void {
     if (!('serviceWorker' in navigator)) return;
     let registration: ServiceWorkerRegistration | undefined;
 
-    console.log('[sw] manual register() starting');
+    diagLog('sw', 'manual register() starting');
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { type: 'module' })
       .then((reg) => {
         registration = reg;
-        console.log('[sw] registered, scope=', reg.scope, 'active=', !!reg.active, 'installing=', !!reg.installing, 'waiting=', !!reg.waiting);
+        diagLog('sw', `registered scope=${reg.scope} active=${!!reg.active} installing=${!!reg.installing} waiting=${!!reg.waiting}`);
       })
       .catch((error) => {
-        console.error('[sw] registration error:', error);
+        diagLog('sw', `registration error: ${String(error)}`);
       });
 
     // לוג של כל controllerchange - זה בדיוק האירוע שה-registerSW האוטומטי
@@ -31,7 +32,7 @@ export function useServiceWorker(): void {
     // (ראו ההערה למעלה). אם עדיין קורה כאן reload כלשהו מיד אחרי זה, זה
     // הראיה שמשהו אחר גורם לו - לא הספרייה.
     const handleControllerChange = () => {
-      console.log('[sw] controllerchange fired (SW took control of this page)');
+      diagLog('sw', 'controllerchange fired (SW took control of this page)');
     };
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
@@ -41,10 +42,10 @@ export function useServiceWorker(): void {
     // לחכות שעה+ עד שהטאב הפתוח בכלל שם לב שיש עדכון.
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[sw] tab visible, checking for update');
+        diagLog('sw', 'tab visible, checking for update');
         registration?.update()
-          .then(() => console.log('[sw] update() check completed'))
-          .catch((err) => console.log('[sw] update() check failed (non-fatal):', err));
+          .then(() => diagLog('sw', 'update() check completed'))
+          .catch((err) => diagLog('sw', `update() check failed (non-fatal): ${String(err)}`));
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);

@@ -4,6 +4,7 @@ import { authApi, listsApi, pushApi, notificationsApi, type ApiList } from "../.
 import { socketService } from "../../services/socket";
 import { getAccessToken, clearTokens, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
+import { diagLog } from "../helpers/crashLog";
 
 // זמן הרישום האחרון של פתיחת אפליקציה (מודולרי, שורד StrictMode re-mount).
 // לא רק "פעם אחת לכל טעינה": מתעדכן גם כשה-PWA/טאב חוזר לחזית אחרי שהיה
@@ -69,15 +70,18 @@ export function useAuth() {
   // בדיקת סשן קיים בטעינה
   useEffect(() => {
     const checkAuth = async () => {
+      diagLog('auth', 'checkAuth starting');
       setAuthInProgress(true);
       let token = getAccessToken();
       if (!token) {
         // ייתכן ש-localStorage נמחק (iOS Safari ITP); ננסה לשחזר מ-IDB
         const restored = await rehydrateTokensFromIdb();
         if (restored) token = getAccessToken();
+        diagLog('auth', `no token in localStorage, IDB restore=${restored}`);
       }
       if (!token) {
         // אין טוקן, ניקוי משתמש שמור ועצירת טעינה
+        diagLog('auth', 'no token at all - user is logged out');
         localStorage.removeItem('cached_user');
         setUser(null);
         setLoading(false);
@@ -154,12 +158,15 @@ export function useAuth() {
           return profile;
         });
 
+        diagLog('auth', `checkAuth success, user=${profile.id}`);
+
         // חיבור socket אחרי אימות מוצלח
         socketService.connect();
 
         // רישום פתיחת אפליקציה לאדמין (throttled)
         logAppOpenThrottled();
       } catch (error) {
+        diagLog('auth', `checkAuth failed: ${String(error)}`);
         clearTimeout(timeoutId!);
         // התנתקות רק בשגיאות אימות (401, טוקן לא תקף אחרי ניסיון רענון)
         // בשגיאות רשת שומרים את המשתמש השמור למניעת התנתקות מיותרת
@@ -172,7 +179,9 @@ export function useAuth() {
         // היה מוחק בשקט את הסשן הטרי-לגמרי כמה שניות אחרי שהמשתמש כבר
         // ראה את מסך הבית, ומחזיר אותו ללוגין בלי שום סיבה אמיתית.
         const tokenStillCurrent = getAccessToken() === tokenAtStart;
+        diagLog('auth', `checkAuth error status=${status} tokenStillCurrent=${tokenStillCurrent}`);
         if (status === 401 && tokenStillCurrent) {
+          diagLog('auth', 'clearing session due to confirmed 401 on launch');
           if (import.meta.env.PROD) {
             import('@sentry/react').then(Sentry => {
               Sentry.captureMessage('[auth] checkAuth_401_on_launch', { level: 'warning' });

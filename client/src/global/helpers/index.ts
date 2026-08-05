@@ -49,3 +49,6 @@ export {
 
 // localStorage בטוח — try/catch פנימי, API קריא יותר (גם עם JSON)
 export { safeStorage } from './safeStorage';
+
+// יומן אבחון ששורד קריסה - לחקירת "האפליקציה נסגרת לבד" ב-iOS PWA
+export { diagLog, rotateCrashLog, startHeartbeat, getPreviousSessionLog, clearPreviousSessionLog } from './crashLog';

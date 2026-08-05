@@ -4,6 +4,16 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
 import { initAnalytics } from './global/services/analytics'
+import { rotateCrashLog, startHeartbeat, diagLog } from './global/helpers/crashLog'
+
+// חייב לרוץ ממש ראשון, לפני כל שאר הקוד - כדי לתפוס את כל השאר ביומן.
+// ראו crashLog.ts - הפתרון ל"אין גישה ל-Mac/Web Inspector כדי לראות מה
+// קורה רגע לפני שהאפליקציה נסגרת ב-iOS": כל אירוע נכתב סינכרונית
+// ל-localStorage, וב-Boot הבא (בדיוק הפתיחה השנייה שבה קורה הבאג) היומן
+// של הסשן הקודם מוצג ישירות על המסך (ראו CrashLogViewer ב-App.tsx).
+rotateCrashLog();
+startHeartbeat();
+diagLog('boot', 'main.tsx module evaluating');
 
 // חיבור מוקדם לשרת ה-API: הדפדפן מתחיל DNS/TCP/TLS ברקע, מקביל לטעינת הקוד,
 // כך שהבקשה הראשונה יוצאת מיד בלי לחכות ל-handshake. רמז בלבד - אם לא נצליח, אין נזק.
@@ -83,27 +93,34 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pageshow', (e) => {
     const persisted = (e as PageTransitionEvent).persisted;
     const empty = isRootEmpty();
-    console.log(`[boot] pageshow persisted=${persisted} rootEmpty=${empty}`);
+    diagLog('boot', `pageshow persisted=${persisted} rootEmpty=${empty}`);
     if (persisted && empty) {
-      console.log('[boot] pageshow: reloading (bfcache restore + empty root)');
+      diagLog('boot', 'pageshow: reloading (bfcache restore + empty root)');
       window.location.reload();
     }
   });
   document.addEventListener('visibilitychange', () => {
+    diagLog('boot', `visibilitychange -> ${document.visibilityState}`);
     if (document.visibilityState === 'hidden') {
       hiddenAt = Date.now();
     } else if (document.visibilityState === 'visible' && hiddenAt > 0) {
       const awayMs = Date.now() - hiddenAt;
       hiddenAt = 0;
-      console.log(`[boot] visible again after ${Math.round(awayMs / 1000)}s away, rootEmpty=${isRootEmpty()}`);
+      diagLog('boot', `visible again after ${Math.round(awayMs / 1000)}s away, rootEmpty=${isRootEmpty()}`);
       // אחרי 30 דק' מחוץ לאפליקציה, רק אם המסך באמת לבן - לא רענון גורף
       if (awayMs > 30 * 60 * 1000 && isRootEmpty()) {
-        console.log('[boot] visibilitychange: reloading (long background + empty root)');
+        diagLog('boot', 'visibilitychange: reloading (long background + empty root)');
         window.location.reload();
       }
     }
   });
+  window.addEventListener('pagehide', () => diagLog('boot', 'pagehide fired'));
+  window.addEventListener('beforeunload', () => diagLog('boot', 'beforeunload fired'));
+  window.addEventListener('unhandledrejection', (e) => diagLog('error', `unhandled promise rejection: ${String(e.reason)}`));
+  window.addEventListener('error', (e) => diagLog('error', `window error: ${e.message} at ${e.filename}:${e.lineno}`));
 }
+
+diagLog('boot', 'about to render React app');
 
 // רינדור האפליקציה
 createRoot(document.getElementById('root')!).render(
@@ -113,3 +130,5 @@ createRoot(document.getElementById('root')!).render(
     </GoogleOAuthProvider>
   </StrictMode>,
 )
+
+diagLog('boot', 'render() call returned');
