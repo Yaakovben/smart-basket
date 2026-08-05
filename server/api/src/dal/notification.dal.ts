@@ -23,7 +23,7 @@ export interface PaginationOptions {
 export const NotificationDAL = {
   ...createBaseDal<INotificationDoc>(Notification),
 
-  async findByUser(userId: string, options: PaginationOptions = {}): Promise<{ notifications: INotificationDoc[]; total: number; pages: number }> {
+  async findByUser(userId: string, options: PaginationOptions = {}) {
     const page = options.page || 1;
     const limit = options.limit || 20;
     const skip = (page - 1) * limit;
@@ -37,7 +37,8 @@ export const NotificationDAL = {
         .find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       Notification.countDocuments(filter),
     ]);
 

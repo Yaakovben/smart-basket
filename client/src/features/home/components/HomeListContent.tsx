@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import { useMemo, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -43,6 +43,24 @@ export const HomeListContent = ({
   reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
+  // ידיות גרירה יציבות לפי אינדקס - נמנע מיצירת פונקציה חדשה בכל רינדור
+  // (שהייתה מבטלת את ה-React.memo של ListCard לכל הכרטיסים בכל תזוזת גרירה,
+  // לא רק לכרטיס שבאמת זז).
+  const dragHandlers = useMemo(() => {
+    if (!reorderMode) return [];
+    return orderedDisplay.map((_, idx) => ({
+      touch: (e: React.TouchEvent) => {
+        e.stopPropagation();
+        onDragHandleStart(idx, e.touches[0].clientY, e.touches[0].clientX);
+      },
+      mouse: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onDragHandleStart(idx, e.clientY, e.clientX);
+      },
+    }));
+  }, [reorderMode, orderedDisplay, onDragHandleStart]);
+
   return (
     <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
       {/* מצב שגיאת חיבור: השרת למטה ואין רשימות. הקוד מנסה שוב אוטומטית
@@ -237,15 +255,8 @@ export const HomeListContent = ({
             reorderMode={reorderMode}
             isDragging={reorderMode && dragIndex === idx}
             isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
-            onDragHandleTouch={reorderMode ? (e: React.TouchEvent) => {
-              e.stopPropagation();
-              onDragHandleStart(idx, e.touches[0].clientY, e.touches[0].clientX);
-            } : undefined}
-            onDragHandleMouse={reorderMode ? (e: React.MouseEvent) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onDragHandleStart(idx, e.clientY, e.clientX);
-            } : undefined}
+            onDragHandleTouch={dragHandlers[idx]?.touch}
+            onDragHandleMouse={dragHandlers[idx]?.mouse}
           />
         </Box>
       ))}

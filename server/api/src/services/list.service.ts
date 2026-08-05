@@ -9,12 +9,11 @@
  */
 
 import mongoose from 'mongoose';
-import { ListDAL, UserDAL, ProductDAL } from '../dal';
+import { ListDAL, ProductDAL } from '../dal';
 import { ForbiddenError } from '../errors';
 import { logger } from '../config';
 import { sanitizeText } from '../utils';
 import {
-  createNotification,
   createNotificationsForListMembers,
   deleteNotificationsForList,
 } from './notification.service';
@@ -142,23 +141,10 @@ export async function deleteList(listId: string, userId: string): Promise<{ memb
   await ProductDAL.deleteByListId(listId);
   await deleteNotificationsForList(listId);
 
-  // התראות list_deleted לחברים - אחרי הניקוי כדי שלא יימחקו
+  // התראות list_deleted לחברים - אחרי הניקוי כדי שלא יימחקו.
+  // batch אחד (insertMany) במקום יצירה בודדת לכל חבר.
   if (list.isGroup && memberIds.length > 0) {
-    const owner = await UserDAL.findById(userId);
-    if (owner) {
-      await Promise.all(
-        memberIds.map(memberId =>
-          createNotification({
-            type: 'list_deleted',
-            listId,
-            listName,
-            actorId: userId,
-            actorName: owner.name,
-            targetUserId: memberId,
-          })
-        )
-      );
-    }
+    await createNotificationsForListMembers(listId, 'list_deleted', userId);
   }
 
   await ListDAL.deleteById(listId);

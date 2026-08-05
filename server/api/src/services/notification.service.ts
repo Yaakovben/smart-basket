@@ -97,22 +97,28 @@ const generatePushMessage = (
   };
 };
 
-// המרת Document ל-response לצד הלקוח (חושף רק את השדות הרלוונטיים).
-const transformNotification = (notification: INotificationDoc): NotificationResponse => {
-  const json = notification.toJSON() as Record<string, unknown>;
-  return {
-    id: json.id as string,
-    type: json.type as NotificationType,
-    listId: (json.listId as { toString: () => string }).toString(),
-    listName: json.listName as string,
-    actorId: (json.actorId as { toString: () => string }).toString(),
-    actorName: json.actorName as string,
-    productId: json.productId ? (json.productId as { toString: () => string }).toString() : undefined,
-    productName: json.productName as string | undefined,
-    read: json.read as boolean,
-    createdAt: json.createdAt as Date,
-  };
-};
+// המרת התראה (Document מלא או POJO lean מ-findByUser) ל-response לצד הלקוח.
+// אין populate בסכמה הזו (listId/actorId/productId הם ObjectId שטוחים), אז
+// גישה ישירה לשדות עובדת זהה בשני המקרים - בלי צורך ב-toJSON().
+const transformNotification = (
+  notification: Pick<INotificationDoc, 'type' | 'listName' | 'actorName' | 'productName' | 'read' | 'createdAt'> & {
+    _id: { toString(): string };
+    listId: { toString(): string };
+    actorId: { toString(): string };
+    productId?: { toString(): string };
+  },
+): NotificationResponse => ({
+  id: notification._id.toString(),
+  type: notification.type,
+  listId: notification.listId.toString(),
+  listName: notification.listName,
+  actorId: notification.actorId.toString(),
+  actorName: notification.actorName,
+  productId: notification.productId ? notification.productId.toString() : undefined,
+  productName: notification.productName,
+  read: notification.read,
+  createdAt: notification.createdAt,
+});
 
 // ==================== יצירה ====================
 

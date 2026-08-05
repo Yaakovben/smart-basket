@@ -23,7 +23,9 @@ const HomePage = lazy(homeImport);
 const listImport = () => import("../features/list/list").then(m => ({ default: m.ListPage }));
 listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
 const ListPage = lazy(listImport);
-const ProfilePage = lazy(() => import("../features/profile/profile").then(m => ({ default: m.ProfilePage })));
+const profileImport = () => import("../features/profile/profile").then(m => ({ default: m.ProfilePage }));
+profileImport(); // prefetch מיידי - מונע עיכוב בלחיצה על פרופיל (כמו Home/List)
+const ProfilePage = lazy(profileImport);
 const settingsImport = () => import("../features/settings/settings").then(m => ({ default: m.SettingsPage }));
 settingsImport(); // prefetch מיידי - מונע עיכוב בלחיצה על הגדרות (כמו Home/List)
 const SettingsPage = lazy(settingsImport);
