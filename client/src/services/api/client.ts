@@ -130,12 +130,15 @@ export async function refreshAccessToken(): Promise<string | null> {
             // עדיין נדחה - ייתכן שהצד המנצח עדיין לא סיים, ננסה שוב
           }
         }
-        // מנקים רק אם הסטטוס האחרון שראינו הוא כשל אימות אמיתי (401/403).
-        // 409 שממשיך לחזור אחרי כל הניסיונות נשאר race לא-פתור - משאירים
-        // את המשתמש מחובר, הרענון הבא (בקשת API הבאה) ינסה שוב.
+        // לא מנקים טוקנים אף פעם באופן אוטומטי כאן - רק מדווחים לאבחון.
+        // אחרי סבב ארוך של false positives (race conditions, cold-start,
+        // reload-ים לא-מבוקרים) שהוציאו משתמשים מחוברים לגמרי מהמערכת,
+        // ההחלטה המפורשת היא: היחיד שיכול "להוציא" משתמש הוא logout
+        // מפורש (authApi.logout / deleteAccount). כשל רענון אמיתי פשוט
+        // ישאיר את המשתמש עם טוקן ישן - בקשות ה-API הבאות ימשיכו לנסות
+        // לרענן, ולא יקרה איפוס סשן בשקט.
         if (lastStatus === 401 || lastStatus === 403) {
-          reportAuthDiagnostic('refresh_exhausted', { initialStatus: status, finalStatus: lastStatus });
-          clearTokens();
+          reportAuthDiagnostic('refresh_exhausted_not_clearing', { initialStatus: status, finalStatus: lastStatus });
         }
       }
       // שגיאת שרת (500/502/503) או רשת (ללא תגובה): לא מנקים, ננסה שוב אחר כך
@@ -208,24 +211,19 @@ apiClient.interceptors.request.use(
 
 // ===== Response Interceptor =====
 // טיפול ב 401 כ fallback: אם הרענון הפרואקטיבי לא עזר
-let isRedirecting = false;
 
-// הפניה מרוכזת ל-login עם דגל "session expired". משמש גם את ה-response
-// interceptor למטה (401 אחרי רענון כושל) וגם את הרענון הפרואקטיבי ב-
-// visibilitychange למעלה. לפני התיקון, כשל ברענון הפרואקטיבי (שרץ ברקע,
-// בלי בקשת API נלווית שהמשתמש מחכה לה) היה מנקה טוקנים בשקט בלי להודיע -
-// הסשן כבר היה מת, אבל שום דבר לא הראה את זה. התופעה שהתגלתה: "האפליקציה
-// נפתחת ועובדת כמה שניות אחרי סגירה/פתיחה מחדש, ואז לחיצה על כפתור כלשהו
-// (הראשון ששולח בקשת API אמיתית) 'מוציאה' עם הודעת פג תוקף" - בעוד שבפועל
-// הסשן כבר נכשל קודם, בלי סימן. עכשיו שני המקומות מדווחים על הכשל מיד
-// כשהוא מתגלה, לא רק כשהמשתמש נתקל בו במקרה.
+// לוג בלבד - לא מוציא אף פעם את המשתמש אוטומטית.
+//
+// זה היה קודם הפניה בפועל ל-/login עם דגל "session expired", אחרי סבב
+// ארוך (ראה היסטוריית git) של תיקוני race condition שכל אחד מהם התברר
+// כלא-מספיק ומשתמשים המשיכו להיזרק החוצה מסשנים תקפים לגמרי. ההחלטה
+// המפורשת עכשיו: שום מנגנון אוטומטי לא מוציא משתמש מהמערכת - הדרך היחידה
+// היא logout מפורש ביוזמת המשתמש (authApi.logout/deleteAccount). אם טוקן
+// באמת לא תקף, בקשות ה-API פשוט ימשיכו להיכשל/לנסות לרענן - חוויה גרועה
+// יותר מ"תקוע מחובר" מאשר "נזרק החוצה בטעות", אבל בלתי-הפיכה הרבה פחות.
+// עדיין מדווחים ל-Sentry כדי לדעת בפועל כמה פעמים זה היה קורה.
 function redirectToSessionExpiredLogin(reason: string, extra: Record<string, unknown> = {}) {
-  if (isAuthInProgress || isRedirecting || !navigator.onLine || window.location.pathname === '/login') return;
-  isRedirecting = true;
-  reportAuthDiagnostic(reason, extra);
-  localStorage.removeItem('cached_user');
-  try { sessionStorage.setItem('session_expired', 'true'); } catch { /* ignore */ }
-  window.location.href = '/login';
+  reportAuthDiagnostic(`${reason}_suppressed`, extra);
 }
 
 apiClient.interceptors.response.use(

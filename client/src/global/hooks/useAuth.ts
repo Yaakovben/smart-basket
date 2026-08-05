@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { User, LoginMethod } from "../types";
 import { authApi, listsApi, pushApi, notificationsApi, type ApiList } from "../../services/api";
 import { socketService } from "../../services/socket";
-import { getAccessToken, clearTokens, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
+import { getAccessToken, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
 import { identifyUser, resetAnalyticsUser } from "../services/analytics";
 import { diagLog } from "../helpers/crashLog";
 
@@ -180,17 +180,19 @@ export function useAuth() {
         // ראה את מסך הבית, ומחזיר אותו ללוגין בלי שום סיבה אמיתית.
         const tokenStillCurrent = getAccessToken() === tokenAtStart;
         diagLog('auth', `checkAuth error status=${status} tokenStillCurrent=${tokenStillCurrent}`);
+        // לא מנתקים אוטומטית אף פעם, גם על 401 מאומת - רק מדווחים. אחרי
+        // סבב ארוך של תיקוני race condition (reload-ים לא-מבוקרים,
+        // בקשות יתומות וכו') שכל אחד מהם עדיין הצליח להוציא משתמשים
+        // מחוברים בטעות, ההחלטה המפורשת: היחיד שמוציא משתמש הוא logout
+        // מפורש. אם הטוקן באמת לא תקף, בקשות ה-API הבאות ימשיכו לנסות
+        // לרענן/להיכשל בלי לאפס את הסשן בשקט.
         if (status === 401 && tokenStillCurrent) {
-          diagLog('auth', 'clearing session due to confirmed 401 on launch');
+          diagLog('auth', 'confirmed 401 on launch - NOT clearing session (see comment)');
           if (import.meta.env.PROD) {
             import('@sentry/react').then(Sentry => {
-              Sentry.captureMessage('[auth] checkAuth_401_on_launch', { level: 'warning' });
+              Sentry.captureMessage('[auth] checkAuth_401_on_launch_suppressed', { level: 'warning' });
             }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
           }
-          socketService.disconnect();
-          clearTokens();
-          localStorage.removeItem('cached_user');
-          setUser(null);
         }
         // בשגיאת רשת, המשתמש השמור נשאר (ישן אבל פונקציונלי)
         // סימון שגיאת חיבור כדי להציג הודעה למשתמש
