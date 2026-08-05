@@ -54,8 +54,12 @@ export default defineConfig({
         enabled: false
       },
       injectManifest: {
-        // כל נכסי ה-build נשמרים במטמון כדי שהאפליקציה תיטען גם ללא רשת
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // ריק בכוונה - אין יותר שום precaching. גרם לבאג חמור וממושך: SW
+        // שכבר מותקן במכשיר המשיך להגיש index.html/JS ישנים מהמטמון שלו
+        // *לנצח*, בלי שום קשר למה שבאמת פרוס בשרת - Cache-Control: no-cache
+        // בכלל לא נבדק כי הדפדפן לא הגיע ל-HTTP fetch (ה-SW ענה מקומית).
+        // ראו sw.ts - כל בקשה, כולל ניווט, הולכת תמיד לרשת.
+        globPatterns: [],
       },
       manifest: {
         name: 'Smart Basket',

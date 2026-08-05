@@ -1,38 +1,24 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, matchPrecache } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { getNotifSettingsFromIDB, getSettingsKeyForType } from './settingsIDB';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// שמירת כל נכסי ה-build במטמון (JS, CSS, HTML, תמונות). לקבצים עם content-hash
-// בשם (JS/CSS - index-XXXXX.js) cache-first תמיד נכון: build חדש = שם קובץ חדש,
-// אין סיכון staleness.
-precacheAndRoute(self.__WB_MANIFEST);
-
-// SPA: ניווט (פתיחת/סגירת-ופתיחת-מחדש האפליקציה) מנסה תמיד רשת טרייה קודם.
+// אין שום caching בכוונה - לא assets, לא index.html, כלום. כל בקשה (כולל
+// ניווט) עוברת ישר לרשת, בדיוק כמו בלי Service Worker בכלל מבחינת caching.
 //
-// לפני התיקון, createHandlerBoundToURL('/index.html') הגיש cache-only -
-// ה-SW *הזה* (כל עוד הוא ה-SW הפעיל במכשיר) המשיך להגיש את ה-index.html
-// שהוא שמר בזמן ההתקנה שלו, לנצח, בלי שום קשר למה שבאמת פרוס בשרת - וזה
-// ביטל לגמרי את ה-Cache-Control: no-cache על index.html (vercel.json):
-// הדפדפן אף פעם לא הגיע ל-HTTP fetch אמיתי, כי ה-navigation route ענה
-// ישירות מה-cache. זה ההסבר לכך שתיקוני קוד שכבר פרוסים בשרת "לא הגיעו"
-// למכשיר - ה-SW הישן על המכשיר פשוט המשיך להגיש גרסה ישנה של index.html
-// (כולל bundle JS ישן) עד שה-SW עצמו יוחלף - תהליך שדבר לא היה מכריח.
+// זה היה מקור לבאג חמור וממושך: SW שכבר מותקן במכשיר המשיך להגיש
+// index.html/JS ישנים מה-precache הפנימי שלו *לנצח*, בלי שום קשר למה שבאמת
+// פרוס בשרת - Cache-Control: no-cache (vercel.json) לא נבדק בכלל כי הדפדפן
+// לא הגיע ל-HTTP fetch אמיתי (ה-navigation route ענה ישירות מה-cache).
+// משתמשים שראו תיקונים "לא מגיעים" בפועל היו תקועים על SW ישן שהתקין
+// עצמו פעם אחת ולא היה שום דבר שמכריח אותו להתעדכן.
 //
-// עכשיו: תמיד fetch מהרשת קודם (מקבל index.html עדכני שמצביע ל-bundle
-// העדכני בפועל), ורק אם באמת אין רשת נופלים לגרסה ששמורה ב-precache
-// מבנייה זו - עדיין תומך בפתיחה אופליין.
-registerRoute(new NavigationRoute(async ({ request }) => {
-  try {
-    return await fetch(request);
-  } catch {
-    const cached = await matchPrecache('/index.html');
-    if (cached) return cached;
-    throw new Error('offline and no precached index.html available');
-  }
-}));
+// ה-SW הזה עדיין רשום ופעיל *רק* כי iOS/Android דורשים Service Worker
+// פעיל כדי לקבל Push notifications בכלל (ראו self.addEventListener('push')
+// למטה) - זו הסיבה היחידה שהוא עדיין קיים. self.__WB_MANIFEST מוזרק כאן
+// ריק (globPatterns: [] ב-vite.config.ts) - injectManifest (הכלי שבונה את
+// הקובץ הזה) מחייב שה-placeholder הזה יופיע בקוד, גם אם לא עושים איתו כלום.
+void self.__WB_MANIFEST;
 
 // טיפול בהתראות נכנסות, סינון לפי העדפות המשתמש
 self.addEventListener('push', (event) => {
@@ -117,20 +103,25 @@ self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// הפעלה - תופס שליטה על הטאבים הפתוחים ומודיע ללקוחות (לא מרענן יותר -
+// הפעלה - מנקה caches שנשארו מגרסה קודמת (זו שכן עשתה precaching - המקור
+// לבאג), תופס שליטה על הטאבים הפתוחים, ומודיע ללקוחות (לא מרענן יותר -
 // ה-listener ב-router/index.tsx רק מתעד, ראה הערה שם).
-// לא מוחק caches בקפדנות: עם injectManifest + globPatterns ריק אין cache של אפליקציה,
-// רק של workbox. מחיקה אגרסיבית בזמן activate שולחת את ה-PWA למצב לא עקבי אחרי deploy.
 self.addEventListener('activate', (event) => {
-  console.log('[sw] activate event, calling clients.claim()');
   event.waitUntil(
-    self.clients.claim().then(() =>
-      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-    ).then((clients) => {
+    (async () => {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        console.log(`[sw] activate: deleted ${cacheNames.length} leftover cache(s) from older SW`);
+      } catch (err) {
+        console.warn('[sw] activate: cache cleanup failed (non-fatal):', err);
+      }
+      await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       console.log(`[sw] claimed, notifying ${clients.length} client(s)`);
       clients.forEach((client) => {
         client.postMessage({ type: 'SW_ACTIVATED', action: 'reload' });
       });
-    })
+    })()
   );
 });
