@@ -72,3 +72,13 @@ export const broadcast = asyncHandler(async (req: AuthRequest, res: Response): P
   const sentCount = await pushService.sendToAll({ title, body, data: url ? { url } : undefined });
   res.json({ success: true, data: { sentCount } });
 });
+
+/**
+ * POST /api/push/send-to-user
+ * שליחת הודעת push למשתמש ספציפי אחד. אדמין בלבד (isAdmin ב-route).
+ */
+export const sendToUser = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { userId, title, body, url } = req.body as { userId: string; title: string; body: string; url?: string };
+  await pushService.sendToUser(userId, { title, body, data: url ? { url } : undefined });
+  res.json({ success: true });
+});

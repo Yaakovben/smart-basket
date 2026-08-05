@@ -1,24 +1,32 @@
 import { useState } from 'react';
-import { Box, Paper, Typography, TextField, Button, CircularProgress, Collapse } from '@mui/material';
+import { Box, Paper, Typography, TextField, Button, CircularProgress, Collapse, ToggleButtonGroup, ToggleButton, Autocomplete } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { pushApi } from '../../../services/api';
+import type { UserWithLastLogin } from '../types';
 
 interface PushBroadcastCardProps {
   isDark: boolean;
+  users: UserWithLastLogin[];
 }
 
-// שליחת הודעת push לכל המשתמשים הרשומים - פעולה חד-פעמית/נדירה (הודעות מערכת),
-// לכן טופס פשוט ומתקפל ולא state מורם להורה כמו שאר המודלים באדמין.
-export const PushBroadcastCard = ({ isDark }: PushBroadcastCardProps) => {
+type Mode = 'all' | 'user';
+
+// שליחת הודעת push - לכל המשתמשים או למשתמש בודד. פעולה נדירה (הודעות מערכת/
+// תמיכה פרטנית), לכן טופס פשוט ומתקפל ולא state מורם להורה כמו שאר המודלים באדמין.
+export const PushBroadcastCard = ({ isDark, users }: PushBroadcastCardProps) => {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>('all');
+  const [selectedUser, setSelectedUser] = useState<UserWithLastLogin | null>(null);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
 
+  const canSend = title.trim() && body.trim() && (mode === 'all' || selectedUser);
+
   const handleSendClick = () => {
-    if (!title.trim() || !body.trim()) return;
+    if (!canSend) return;
     setConfirming(true);
   };
 
@@ -27,10 +35,16 @@ export const PushBroadcastCard = ({ isDark }: PushBroadcastCardProps) => {
     setSending(true);
     setResult(null);
     try {
-      const sentCount = await pushApi.broadcastPush(title.trim(), body.trim());
-      setResult(`נשלח בהצלחה ל-${sentCount} מכשירים`);
+      if (mode === 'all') {
+        const sentCount = await pushApi.broadcastPush(title.trim(), body.trim());
+        setResult(`נשלח בהצלחה ל-${sentCount} מכשירים`);
+      } else if (selectedUser) {
+        await pushApi.sendPushToUser(selectedUser.id, title.trim(), body.trim());
+        setResult(`נשלח בהצלחה ל-${selectedUser.name}`);
+      }
       setTitle('');
       setBody('');
+      setSelectedUser(null);
     } catch {
       setResult('השליחה נכשלה - נסה שוב');
     } finally {
@@ -55,12 +69,35 @@ export const PushBroadcastCard = ({ isDark }: PushBroadcastCardProps) => {
       >
         <CampaignIcon sx={{ color: 'primary.main' }} />
         <Typography sx={{ fontWeight: 700, fontSize: 15, color: isDark ? '#E5E7EB' : 'text.primary' }}>
-          שליחת הודעה לכל המשתמשים
+          שליחת הודעת push
         </Typography>
       </Box>
 
       <Collapse in={open}>
         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <ToggleButtonGroup
+            value={mode}
+            exclusive
+            size="small"
+            onChange={(_, v: Mode | null) => { if (v) { setMode(v); setResult(null); } }}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            <ToggleButton value="all" sx={{ borderRadius: 2, textTransform: 'none', px: 2 }}>כל המשתמשים</ToggleButton>
+            <ToggleButton value="user" sx={{ borderRadius: 2, textTransform: 'none', px: 2 }}>משתמש ספציפי</ToggleButton>
+          </ToggleButtonGroup>
+
+          {mode === 'user' && (
+            <Autocomplete
+              size="small"
+              options={users}
+              value={selectedUser}
+              onChange={(_, v) => setSelectedUser(v)}
+              getOptionLabel={(u) => `${u.name} (${u.email})`}
+              isOptionEqualToValue={(a, b) => a.id === b.id}
+              renderInput={(params) => <TextField {...params} label="חיפוש משתמש" />}
+            />
+          )}
+
           <TextField
             size="small"
             label="כותרת"
@@ -83,16 +120,18 @@ export const PushBroadcastCard = ({ isDark }: PushBroadcastCardProps) => {
           {!confirming ? (
             <Button
               variant="contained"
-              disabled={!title.trim() || !body.trim() || sending}
+              disabled={!canSend || sending}
               onClick={handleSendClick}
               sx={{ borderRadius: 2, alignSelf: 'flex-start' }}
             >
-              {sending ? <CircularProgress size={18} sx={{ color: 'white' }} /> : 'שלח לכולם'}
+              {sending ? <CircularProgress size={18} sx={{ color: 'white' }} /> : (mode === 'all' ? 'שלח לכולם' : 'שלח')}
             </Button>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
               <Typography sx={{ fontSize: 13, color: 'warning.main', fontWeight: 600 }}>
-                בטוח? זה נשלח לכל המשתמשים שיש להם התראות פעילות, אי אפשר לבטל.
+                {mode === 'all'
+                  ? 'בטוח? זה נשלח לכל המשתמשים שיש להם התראות פעילות, אי אפשר לבטל.'
+                  : `בטוח שלשלוח ל-${selectedUser?.name}?`}
               </Typography>
               <Button variant="contained" color="warning" size="small" onClick={handleConfirmSend} sx={{ borderRadius: 2 }}>
                 כן, שלח

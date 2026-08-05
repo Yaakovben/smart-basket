@@ -61,10 +61,16 @@ const broadcastPush = async (title: string, body: string, url?: string): Promise
   return response.data.data.sentCount;
 };
 
+/** שליחת הודעת push למשתמש ספציפי אחד - אדמין בלבד. */
+const sendPushToUser = async (userId: string, title: string, body: string, url?: string): Promise<void> => {
+  await apiClient.post('/push/send-to-user', { userId, title, body, url });
+};
+
 export const pushApi = {
   getVapidPublicKey,
   subscribeToPush,
   unsubscribeFromPush,
   unsubscribeAllPush,
   broadcastPush,
+  sendPushToUser,
 };
