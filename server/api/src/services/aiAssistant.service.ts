@@ -35,14 +35,18 @@ function isConfigured(): boolean {
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
 // ה-InsightsData הגולמי (ענק, ברובו לא רלוונטי לשיחה, מכביד על ה-context).
 function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>): string {
-  const { stats, topProducts, categoryBreakdown, spending, shoppingFrequency, forgotten, upcomingNeeds } = insights;
+  const {
+    stats, topProducts, categoryBreakdown, spending, shoppingFrequency, forgotten, upcomingNeeds,
+    shoppingScore, shoppingPersonality, streaks, monthComparison, anomalies, groupStats,
+  } = insights;
 
   if (stats.totalProducts === 0) {
     return 'למשתמש הזה אין עדיין נתוני קנייה (רשימות ריקות או חדש באפליקציה).';
   }
 
   const lines: string[] = [];
-  lines.push(`סה"כ ${stats.totalProducts} מוצרים ב-${stats.totalLists} רשימות, ${stats.completionRate}% הושלמו.`);
+  lines.push(`סה"כ ${stats.totalProducts} מוצרים ב-${stats.totalLists} רשימות, ${stats.completionRate}% הושלמו. היום הכי פעיל: ${stats.mostActiveDay}.`);
+  lines.push(`ציון קנייה: ${shoppingScore}/100. פרופיל קונה: ${shoppingPersonality.description}.`);
 
   if (topProducts.length > 0) {
     lines.push(`המוצרים הנפוצים ביותר: ${topProducts.slice(0, 8).map(p => `${p.name} (${p.count} פעמים)`).join(', ')}.`);
@@ -61,6 +65,18 @@ function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>)
   }
   if (upcomingNeeds.length > 0) {
     lines.push(`קטגוריות שכנראה צריך לחדש עכשיו: ${upcomingNeeds.slice(0, 5).map(u => u.category).join(', ')}.`);
+  }
+  if (streaks.currentWeeks >= 2) {
+    lines.push(`סטריק קנייה נוכחי: ${streaks.currentWeeks} שבועות רצופים (השיא שלו: ${streaks.longestWeeks}).`);
+  }
+  if (monthComparison.hasBaseline && monthComparison.productsGrowth !== 0) {
+    lines.push(`מגמה לעומת החודש הקודם: ${monthComparison.productsGrowth > 0 ? 'עלייה' : 'ירידה'} של ${Math.abs(monthComparison.productsGrowth)}% בכמות המוצרים.`);
+  }
+  if (anomalies.length > 0) {
+    lines.push(`שינויים בהרגלי הקנייה: ${anomalies.slice(0, 3).map(a => a.description).join(', ')}.`);
+  }
+  if (groupStats.length > 0) {
+    lines.push(`חבר ב-${groupStats.length} רשימות קבוצתיות: ${groupStats.slice(0, 3).map(g => `"${g.name}" (${g.membersCount} חברים)`).join(', ')}.`);
   }
 
   return lines.join('\n');
