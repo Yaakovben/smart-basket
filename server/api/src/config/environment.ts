@@ -90,7 +90,12 @@ const envSchema = Joi.object({
   // הוצאות. אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   // המפתח הוא סוד אמיתי - רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
   NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  NVIDIA_NIM_MODEL: Joi.string().default('zai-org/glm-5.2'),
+  // ברירת המחדל הקודמת ('zai-org/glm-5.2') לא הייתה מזהה מודל תקף ב-NIM
+  // (namespace שגוי - ה-API משתמש ב-'z-ai', לא ב-'zai-org' של ה-NGC catalog),
+  // מה שגרם ל-NVIDIA להחזיר שגיאה על כל בקשה. llama-3.1-8b-instruct הוא
+  // מודל קטן/מהיר/בטוח על הטייר החינמי - מתאים יותר גם למקרה השימוש (צ'אט
+  // עוזר קניות קליל, לא reasoning כבד).
+  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.1-8b-instruct'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
