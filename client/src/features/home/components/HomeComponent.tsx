@@ -20,6 +20,7 @@ import { CreateListModal } from './CreateListModal';
 import { JoinGroupModal } from './JoinGroupModal';
 import { NotificationsModal } from './NotificationsModal';
 import { HomeBottomNav } from './HomeBottomNav';
+import { AiAssistantFab } from './AiAssistantFab';
 import type { HomePageProps } from '../types/home-types';
 
 export const HomeComponent = memo(({
@@ -141,7 +142,6 @@ export const HomeComponent = memo(({
         onAvatarClick={() => navigate('/profile')}
         onNotificationsClick={() => setShowNotifications(true)}
         onSettingsClick={() => navigate('/settings')}
-        onAssistantClick={() => navigate('/assistant')}
         t={t}
       />
 
@@ -396,7 +396,10 @@ export const HomeComponent = memo(({
 
       {/* Bottom Navigation + FAB - ב-portal ל-document.body, ראה HomeBottomNav */}
       {!showMenu && !showJoin && !showCreate && !showCreateGroup && (
-        <HomeBottomNav contentRef={contentRef} onOpenMenu={() => setShowMenu(true)} t={t} />
+        <>
+          <HomeBottomNav contentRef={contentRef} onOpenMenu={() => setShowMenu(true)} t={t} />
+          <AiAssistantFab />
+        </>
       )}
     </>
   );
