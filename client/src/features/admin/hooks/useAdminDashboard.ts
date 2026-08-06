@@ -82,6 +82,7 @@ export const useAdminDashboard = (): UseAdminDashboardReturn & { loading: boolea
       lastAppOpenAt: user.lastAppOpenAt || undefined,
       registrationMethod: (user.googleId ? 'google' : 'email') as 'google' | 'email',
       createdAt: user.createdAt,
+      hasPushSubscription: user.hasPushSubscription,
     }));
   }, [allUsers]);
 

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
 import { socketService } from '../../services/socket/socket.service';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
@@ -72,48 +71,10 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
 
   if (!shouldShow) return null;
 
-  // ניתוק socket בלבד (ה-API עדיין עובד - אפשר להוסיף/לצפות ברשימות כרגיל,
-  // רק עדכוני זמן-אמת בין חברי קבוצה מושהים) הוא בעיה זמנית ולא-חוסמת.
-  // באנר מלא/כתום מרגיש כאילו "האפליקציה לא עובדת" - מטעה ומבהיל מדי ביחס
-  // לחומרה האמיתית. שרת לא זמין (fetchErrorConfirmed) כן חוסם ליבת האפליקציה,
-  // ומצדיק את הבאנר הבולט המקורי.
-  const socketOnlyIssue = socketDisconnected && !fetchErrorConfirmed;
-
-  // אייקון בלבד (בקשה מפורשת, בלי טקסט) - אבל שומרים על שתי הצורות/מיקומים
-  // המקוריים: pill קטן בפינה עליונה לבעיה חלקית (socket), פס מלא-רוחב למעלה
-  // לשרת לא נגיש. גרסה קודמת שהפכה גם את הפס המלא ל-badge צף באותה פינה
-  // חפפה אלמנטים קיימים בכותרות - חוזרים לפריסה שכבר הייתה שם.
-  if (socketOnlyIssue) {
-    return (
-      <Box sx={{
-        position: 'fixed',
-        top: 'max(env(safe-area-inset-top), 8px)',
-        insetInlineEnd: 10,
-        zIndex: 9999,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 26, height: 26,
-        bgcolor: 'rgba(0,0,0,0.55)',
-        backdropFilter: 'blur(6px)',
-        borderRadius: '999px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-      }}>
-        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
-      </Box>
-    );
-  }
-
+  // אייקון בלבד, בלי מיקום קבוע/רקע - מוצג inline ליד פעמון ההתראות
+  // (HomeHeader), לא כ-overlay צף על המסך. לבן ובגודל התואם את שאר אייקוני
+  // הכותרת (בקשה מפורשת - לא רקע שחור/כתום, לא floating position:fixed).
   return (
-    <Box sx={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0,
-      zIndex: 9999,
-      bgcolor: '#F59E0B',
-      pt: 'max(env(safe-area-inset-top), 6px)',
-      pb: '6px', px: 2,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-    }}>
-      <WifiFadeIcon style={{ fontSize: 18, color: 'white', flexShrink: 0 }} />
-    </Box>
+    <WifiFadeIcon style={{ fontSize: 24, color: 'white', flexShrink: 0 }} />
   );
 };

@@ -13,6 +13,7 @@ export interface AdminUser {
   lastLoginAt: string | null;
   lastLoginMethod: 'email' | 'google' | 'app_open' | null;
   lastAppOpenAt: string | null;
+  hasPushSubscription: boolean;
 }
 
 export interface AdminLoginActivity {

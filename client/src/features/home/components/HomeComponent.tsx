@@ -23,7 +23,7 @@ import { HomeBottomNav } from './HomeBottomNav';
 import type { HomePageProps } from '../types/home-types';
 
 export const HomeComponent = memo(({
-  lists, listsLoading = false, listsFetchError = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
+  lists, listsLoading = false, listsFetchError = false, serverConnectionVisible = false, onSelectList, onCreateList, onDeleteList, onLeaveList, onEditList, onJoinGroup, onLogout, user, showToast,
   persistedNotifications = [], notificationsLoading = false, onMarkPersistedNotificationRead, onClearAllPersistedNotifications
 }: HomePageProps) => {
   const navigate = useNavigate();
@@ -137,6 +137,7 @@ export const HomeComponent = memo(({
         groupsCount={groups.length}
         totalUnreadCount={totalUnreadCount}
         notificationsLoading={notificationsLoading}
+        serverConnectionVisible={serverConnectionVisible}
         onAvatarClick={() => navigate('/profile')}
         onNotificationsClick={() => setShowNotifications(true)}
         onSettingsClick={() => navigate('/settings')}

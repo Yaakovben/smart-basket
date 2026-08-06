@@ -29,4 +29,10 @@ export const PushSubscriptionDAL = {
   async countByUserId(userId: string): Promise<number> {
     return PushSubscription.countDocuments({ userId });
   },
+
+  /** מזהי כל המשתמשים עם מנוי push פעיל לפחות אחד - שאילתה יחידה, לשימוש בסימון גורף (למשל טבלת אדמין) במקום N+1. */
+  async distinctUserIds(): Promise<string[]> {
+    const ids = await PushSubscription.distinct('userId');
+    return ids.map(String);
+  },
 };

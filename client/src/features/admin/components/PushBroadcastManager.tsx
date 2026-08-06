@@ -142,6 +142,26 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
           />
         )}
 
+        {/* חיווי מיידי אם יש לו/ה בכלל push פעיל - לפני שליחה, לא רק אחריה */}
+        {mode === 'user' && selectedUser && (
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1,
+            px: 1.5, py: 1, borderRadius: '12px',
+            bgcolor: selectedUser.hasPushSubscription
+              ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5')
+              : (isDark ? 'rgba(245,158,11,0.12)' : '#FFFBEB'),
+          }}>
+            {selectedUser.hasPushSubscription
+              ? <CheckCircleIcon sx={{ color: '#10B981', fontSize: 18, flexShrink: 0 }} />
+              : <WarningAmberIcon sx={{ color: '#D97706', fontSize: 18, flexShrink: 0 }} />}
+            <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: selectedUser.hasPushSubscription ? '#0F766E' : '#92400E' }}>
+              {selectedUser.hasPushSubscription
+                ? `ל-${selectedUser.name} יש התראות push פעילות`
+                : `ל-${selectedUser.name} אין התראות push פעילות - השליחה לא תגיע`}
+            </Typography>
+          </Box>
+        )}
+
         <TextField
           label="כותרת"
           value={title}

@@ -17,7 +17,7 @@ import mongoose from 'mongoose';
 import type { AuthRequest } from '../types';
 import { asyncHandler } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
-import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL } from '../dal';
+import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 
 /**
@@ -27,9 +27,15 @@ import { deleteAccount } from '../services/user.service';
 export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const users = await UserDAL.findAllSorted();
   const userIds = users.map(u => String(u._id));
-  const loginStats = await LoginActivityDAL.getStatsByUser(userIds);
+  // שאילתה יחידה בשביל כל המשתמשים (לא N+1) - מזהה מי יש לו מנוי push פעיל,
+  // כדי שפאנל השליחה יוכל להראות את זה מיד עם בחירת משתמש, לפני שליחה בפועל.
+  const [loginStats, pushSubscribedIds] = await Promise.all([
+    LoginActivityDAL.getStatsByUser(userIds),
+    PushSubscriptionDAL.distinctUserIds(),
+  ]);
 
   const statsMap = new Map(loginStats.map(s => [s.userId, s]));
+  const pushSubscribedSet = new Set(pushSubscribedIds.map(String));
 
   // מיזוג סטטיסטיקות + הסרת שדות פנימיים (_id, __v, password)
   const usersWithStats = users.map(user => {
@@ -44,6 +50,7 @@ export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) =>
       lastLoginAt: stats?.lastLoginAt || null,
       lastLoginMethod: stats?.lastLoginMethod || null,
       lastAppOpenAt: stats?.lastAppOpenAt || null,
+      hasPushSubscription: pushSubscribedSet.has(userId),
     };
   });
 

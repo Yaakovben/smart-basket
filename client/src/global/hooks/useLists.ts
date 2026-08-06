@@ -20,12 +20,25 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   // מעקב איזה משתמש כבר אותחל עם נתונים מראש
   const initializedForRef = useRef<string | null>(initialLists ? '__initial__' : null);
 
+  // רפרנס לתוכן ה-lists הנוכחי (לא רק ל-state) - כדי להשוות מול תשובת fetch
+  // טרייה בלי לתלות את fetchLists ב-lists עצמו (שהיה הופך אותו ללא-יציב
+  // ומפעיל מחדש את כל ה-effects שתלויים בו, כולל ה-auto-retry/visibilitychange).
+  const listsRef = useRef(lists);
+  listsRef.current = lists;
+
   const fetchLists = useCallback(async () => {
     setLoading(true);
     setFetchError(false);
     try {
       const apiLists = await listsApi.getLists();
-      setLists(apiLists.map(l => convertApiList(l)));
+      const converted = apiLists.map(l => convertApiList(l));
+      // דילוג על setLists אם התוכן זהה בפועל - fetchLists רץ אוטומטית בכל
+      // visibilitychange (למטה), ובלי ההשוואה הזו כל חזרה לאפליקציה הייתה
+      // יוצרת מערך חדש (רפרנס שונה, תוכן זהה) ומפילה re-render על כל רשת
+      // כרטיסי הרשימות בדף הבית - בדיוק אותה בעיה שתוקנה ב-useInsightsData.
+      if (JSON.stringify(converted) !== JSON.stringify(listsRef.current)) {
+        setLists(converted);
+      }
       writeListsCache(apiLists);
     } catch {
       setFetchError(true);

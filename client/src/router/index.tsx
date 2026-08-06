@@ -5,7 +5,6 @@ import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
-import { ServerConnectionBanner } from "../global/components/ServerConnectionBanner";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
@@ -367,6 +366,7 @@ export const AppRouter = () => {
                 lists={lists}
                 listsLoading={listsLoading}
                 listsFetchError={listsFetchError || initialData.connectionError}
+                serverConnectionVisible={!authLoading && !!(listsFetchError || notificationsFetchError)}
                 user={user!}
                 onSelectList={handleSelectList}
                 onCreateList={handleCreateList}
@@ -449,13 +449,11 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      {/* באנר קבוע - נשאר כל עוד יש כשל תקשורת אמיתי מול השרת, בניגוד ל-toast
-          החולף למעלה. כך המצב "אין חיבור" משתקף גם אחרי שה-toast נעלם.
-          לא כוללים את initialData.connectionError - זה דגל חד-פעמי מ-useAuth
-          שלא מתאפס לעולם ברגע שהחיבור חוזר (בדיקה חד-פעמית ב-mount), ולכן
-          גרם לבאנר להישאר תקוע "דלוק" גם כשהיה חיבור תקין. listsFetchError/
-          notificationsFetchError כן מתאפסים בכל retry מוצלח - אלה המקור האמין. */}
-      <ServerConnectionBanner visible={!authLoading && !!(listsFetchError || notificationsFetchError)} />
+      {/* ServerConnectionBanner עבר להיות מוצג inline ליד פעמון ההתראות
+          ב-HomeHeader (דרך serverConnectionVisible שמועבר ל-HomePage למעלה),
+          לא כ-overlay צף גלובלי - הוסר מכאן. אותה לוגיקה בדיוק
+          (listsFetchError/notificationsFetchError, לא initialData.connectionError
+          שהוא דגל חד-פעמי שלא מתאפס - ראו הערה קודמת שהייתה כאן). */}
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

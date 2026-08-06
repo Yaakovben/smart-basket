@@ -9,6 +9,7 @@ export interface UserWithLastLogin extends User {
   registrationMethod: 'google' | 'email';
   createdAt: string;
   totalLogins: number;
+  hasPushSubscription: boolean;
 }
 
 export interface DashboardStats {
