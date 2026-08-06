@@ -1,6 +1,7 @@
 import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SearchIcon from '@mui/icons-material/Search';
 import { ClearableTextField } from '../../../global/components';
 import { ServerConnectionBanner } from '../../../global/components/ServerConnectionBanner';
@@ -28,6 +29,7 @@ interface HomeHeaderProps {
   onAvatarClick: () => void;
   onNotificationsClick: () => void;
   onSettingsClick: () => void;
+  onAssistantClick: () => void;
   t: (key: TranslationKeys) => string;
 }
 
@@ -35,10 +37,11 @@ interface HomeHeaderProps {
 export const HomeHeader = ({
   user, greeting, isDark, search, onSearchChange, tab, onTabChange,
   allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading, serverConnectionVisible = false,
-  onAvatarClick, onNotificationsClick, onSettingsClick, t,
+  onAvatarClick, onNotificationsClick, onSettingsClick, onAssistantClick, t,
 }: HomeHeaderProps) => {
   const notificationsTap = useReliableTap(onNotificationsClick);
   const settingsTap = useReliableTap(onSettingsClick);
+  const assistantTap = useReliableTap(onAssistantClick);
 
   return (
     <Box sx={{
@@ -131,6 +134,13 @@ export const HomeHeader = ({
             sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
           >
             <SettingsIcon sx={{ color: 'white', fontSize: 22 }} />
+          </IconButton>
+          <IconButton
+            {...assistantTap}
+            aria-label="עוזר קניות חכם"
+            sx={{ ...glassButtonSx, touchAction: 'manipulation' }}
+          >
+            <AutoAwesomeIcon sx={{ color: 'white', fontSize: 22 }} />
           </IconButton>
         </Box>
       </Box>

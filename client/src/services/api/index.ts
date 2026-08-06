@@ -19,5 +19,6 @@ export type { Notification as PersistedNotification } from './types/notification
 export { pushApi } from './push.api';
 
 export { insightsApi } from './insights.api';
+export { aiAssistantApi, type AiChatMessage } from './aiAssistant.api';
 export type { InsightsData } from './types/insights.types';
 // PriceComparisonData ו-PriceMatch זמינים מ-features/priceComparison

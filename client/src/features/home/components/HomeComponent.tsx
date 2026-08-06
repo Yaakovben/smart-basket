@@ -141,6 +141,7 @@ export const HomeComponent = memo(({
         onAvatarClick={() => navigate('/profile')}
         onNotificationsClick={() => setShowNotifications(true)}
         onSettingsClick={() => navigate('/settings')}
+        onAssistantClick={() => navigate('/assistant')}
         t={t}
       />
 

@@ -1,0 +1,137 @@
+import { useState, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Box, Typography, IconButton, TextField, CircularProgress } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SendIcon from '@mui/icons-material/Send';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { COMMON_STYLES } from '../../../global/helpers';
+import { useAiAssistantChat } from '../hooks/useAiAssistantChat';
+import { ChatBubble } from './ChatBubble';
+
+const SUGGESTIONS = [
+  'מה כדאי לי לקנות החודש על סמך ההיסטוריה שלי?',
+  'איך חוסכים בקניות בסופר?',
+  'מתי הכי כדאי לעשות קניות גדולות?',
+];
+
+export const AiAssistantPage = memo(() => {
+  const navigate = useNavigate();
+  const { settings } = useSettings();
+  const isDark = settings.theme === 'dark';
+  const { messages, sending, sendMessage, listEndRef } = useAiAssistantChat();
+  const [input, setInput] = useState('');
+
+  const handleSend = () => {
+    if (!input.trim() || sending) return;
+    sendMessage(input);
+    setInput('');
+  };
+
+  return (
+    <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+      {/* כותרת */}
+      <Box sx={{
+        background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
+        p: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px',
+        borderRadius: '0 0 24px 24px',
+        flexShrink: 0,
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
+            <ArrowForwardIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
+            <AutoAwesomeIcon sx={{ color: 'white', fontSize: 20 }} />
+            <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
+              עוזר קניות חכם
+            </Typography>
+          </Box>
+          <Box sx={{ width: 36, flexShrink: 0 }} />
+        </Box>
+      </Box>
+
+      {/* גוף הצ'אט */}
+      <Box sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 2 }}>
+        {messages.length === 0 ? (
+          <Box sx={{ textAlign: 'center', mt: 4, px: 2 }}>
+            <Typography sx={{ fontSize: 40, mb: 1.5 }}>💬</Typography>
+            <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.7 }}>
+              שאל אותי על סופרים, מחירים, טיפים לחיסכון - או בקש המלצות מבוססות על הקניות האמיתיות שלך
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {SUGGESTIONS.map(s => (
+                <Box
+                  key={s}
+                  onClick={() => sendMessage(s)}
+                  sx={{
+                    px: 2, py: 1.25, borderRadius: '14px', cursor: 'pointer',
+                    bgcolor: isDark ? 'rgba(20,184,166,0.1)' : '#F0FDFA',
+                    border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
+                    fontSize: 13, fontWeight: 600, color: isDark ? '#5EEAD4' : '#0F766E',
+                    '&:active': { transform: 'scale(0.98)' },
+                  }}
+                >
+                  {s}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        ) : (
+          <>
+            {messages.map(entry => (
+              <ChatBubble key={entry.id} entry={entry} isDark={isDark} />
+            ))}
+            {sending && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.25 }}>
+                <Box sx={{ px: 2, py: 1.25, borderRadius: '16px 16px 4px 16px', background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }}>
+                  <CircularProgress size={16} sx={{ color: 'white' }} />
+                </Box>
+              </Box>
+            )}
+          </>
+        )}
+        <div ref={listEndRef} />
+      </Box>
+
+      {/* שורת קלט */}
+      <Box sx={{
+        display: 'flex', gap: 1, alignItems: 'flex-end',
+        p: 1.5, pb: 'max(12px, env(safe-area-inset-bottom))',
+        borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        flexShrink: 0,
+      }}>
+        <TextField
+          fullWidth
+          multiline
+          maxRows={4}
+          placeholder="שאל משהו..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          disabled={sending}
+          size="small"
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: '18px', bgcolor: isDark ? 'rgba(30,41,59,0.6)' : '#F8FAFB' } }}
+        />
+        <IconButton
+          onClick={handleSend}
+          disabled={!input.trim() || sending}
+          sx={{
+            bgcolor: 'primary.main', color: 'white', width: 42, height: 42, flexShrink: 0,
+            '&:hover': { bgcolor: 'primary.dark' },
+            '&.Mui-disabled': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+          }}
+        >
+          <SendIcon sx={{ fontSize: 19 }} />
+        </IconButton>
+      </Box>
+    </Box>
+  );
+});
+
+AiAssistantPage.displayName = 'AiAssistantPage';

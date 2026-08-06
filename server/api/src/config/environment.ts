@@ -85,6 +85,12 @@ const envSchema = Joi.object({
   // אמת (משתמש נמחק, חבר הוסר מקבוצה) לשרת ה-Socket. אם חסר - הפעולות
   // עדיין מצליחות ב-DB, פשוט בלי אפקט מיידי על sockets פעילים.
   REDIS_URL: Joi.string().optional(),
+
+  // NVIDIA NIM (build.nvidia.com) - endpoint תואם OpenAI, לעוזר ה-AI לניתוח
+  // הוצאות. אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
+  // המפתח הוא סוד אמיתי - רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
+  NVIDIA_NIM_API_KEY: Joi.string().optional(),
+  NVIDIA_NIM_MODEL: Joi.string().default('zai-org/glm-5.2'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -123,6 +129,8 @@ export interface Environment {
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   REDIS_URL?: string;
+  NVIDIA_NIM_API_KEY?: string;
+  NVIDIA_NIM_MODEL: string;
 }
 
 export const env = parseEnv();

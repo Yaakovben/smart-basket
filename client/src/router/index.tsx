@@ -34,6 +34,7 @@ const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").the
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
 insightsImport(); // prefetch מיידי - יעד ניווט מרכזי מהבית (כמו Home/List/Profile/Settings)
 const InsightsPage = lazy(insightsImport);
+const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
 // ניתוב QR - שומר code+password ומפנה לדף הבית
 const JoinRedirect = () => {
@@ -440,6 +441,14 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute user={user}>
               <ErrorBoundary><InsightsPage /></ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute user={user}>
+              <ErrorBoundary><AiAssistantPage /></ErrorBoundary>
             </ProtectedRoute>
           }
         />

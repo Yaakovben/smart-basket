@@ -104,6 +104,21 @@ export const ocrLimiter = rateLimit({
   keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
 });
 
+// הגבלת עוזר ה-AI - 20 הודעות לשעה למשתמש (fallback ל-IP). קריאה ל-NVIDIA
+// NIM (מפתח חיצוני, מכסה משותפת לכל האפליקציה) - בלי הגבלה פר-משתמש,
+// משתמש בודד יכול לרוקן את כל המכסה, אותו עיקרון כמו ocrLimiter.
+export const aiAssistantLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: {
+    success: false,
+    message: 'Too many AI assistant requests, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
+});
+
 // הגבלת התראות - מניעת spam של push notifications מצד לקוח זדוני.
 // 60 התראות לדקה זה הרבה יותר ממקסימום שימוש לגיטימי (סוקט מפעיל ~10/דקה בעומס גבוה).
 export const notificationCreateLimiter = rateLimit({
