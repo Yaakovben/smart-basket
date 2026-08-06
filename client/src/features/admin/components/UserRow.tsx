@@ -18,9 +18,10 @@ interface UserRowProps {
   isOnline: boolean;
   userActivities: LoginActivity[];
   isDark: boolean;
+  onUserDeleted: () => void;
 }
 
-export const UserRow = memo(({ user, language, isOnline, userActivities, isDark }: UserRowProps) => {
+export const UserRow = memo(({ user, language, isOnline, userActivities, isDark, onUserDeleted }: UserRowProps) => {
   const { t, settings } = useSettings();
   const [isExpanded, setIsExpanded] = useState(false);
   const { showDetails, userLists, detailsLoading, listsSummary, handleShowDetails } = useUserRowDetails(user.id);
@@ -91,6 +92,7 @@ export const UserRow = memo(({ user, language, isOnline, userActivities, isDark 
           detailsLoading={detailsLoading}
           listsSummary={listsSummary}
           onShowDetails={handleShowDetails}
+          onUserDeleted={onUserDeleted}
         />
       </Collapse>
     </Paper>

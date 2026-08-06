@@ -82,6 +82,7 @@ export const AdminDashboard = () => {
         activities={activities}
         language={settings.language}
         onlineUserIds={onlineUserIds}
+        onUserDeleted={refreshData}
       />
 
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}

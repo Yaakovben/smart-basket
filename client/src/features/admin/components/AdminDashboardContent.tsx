@@ -20,12 +20,13 @@ interface AdminDashboardContentProps {
   activities: LoginActivity[];
   language: Language;
   onlineUserIds: Set<string>;
+  onUserDeleted: () => void;
 }
 
 // אזור התוכן הראשי מתחת לכותרת: שגיאה, חיפוש, טבלת משתמשים ופיד פעילות
 export const AdminDashboardContent = ({
   error, loading, isDark, onRetry, t,
-  userSearch, setUserSearch, filteredUsers, activities, language, onlineUserIds,
+  userSearch, setUserSearch, filteredUsers, activities, language, onlineUserIds, onUserDeleted,
 }: AdminDashboardContentProps) => (
   <Box sx={{ px: 2, mt: -4, position: 'relative', zIndex: 2 }}>
     {/* שגיאה */}
@@ -92,6 +93,7 @@ export const AdminDashboardContent = ({
         language={language}
         onlineUserIds={onlineUserIds}
         isDark={isDark}
+        onUserDeleted={onUserDeleted}
       />
     )}
 

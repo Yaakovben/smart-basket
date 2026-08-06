@@ -1,4 +1,5 @@
-import { Box, Typography, CircularProgress, Collapse, Skeleton } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, CircularProgress, Collapse, Skeleton, TextField, Button } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -10,7 +11,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { formatDateShort, formatTimeShort, getRelativeTime } from '../../../global/helpers';
-import type { AdminUserList } from '../../../services/api';
+import { adminApi, type AdminUserList } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 import type { LoginActivity, Language } from '../../../global/types';
 import { EVENT_COLORS } from '../helpers/usersTableHelpers';
@@ -34,14 +35,35 @@ interface UserRowExpandedContentProps {
   detailsLoading: boolean;
   listsSummary: { total: number; totalProducts: number; groups: number } | null;
   onShowDetails: () => void;
+  onUserDeleted: () => void;
 }
 
 // תוכן האזור המורחב בשורת משתמש: אירועי רישום/כניסה אחרונה, רשימות המשתמש וציר זמן פעילות
 export const UserRowExpandedContent = ({
   user, language, isDark, isRtl, isGoogle, userActivities,
-  showDetails, userLists, detailsLoading, listsSummary, onShowDetails,
+  showDetails, userLists, detailsLoading, listsSummary, onShowDetails, onUserDeleted,
 }: UserRowExpandedContentProps) => {
   const { t } = useSettings();
+  // מחיקת משתמש - בכוונה לא-נגיש: קישור מוצנע בתחתית האזור המורחב (לא כפתור
+  // בשורה הראשית), פותח אישור שדורש הקלדת השם המדויק לפני שהכפתור בכלל נהיה
+  // פעיל. פעולה בלתי הפיכה (מוחקת רשימות פרטיות, קבוצות בבעלות, וכו') -
+  // ראו deleteAccount ב-user.service.ts בצד השרת.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(false);
+    try {
+      await adminApi.deleteUser(user.id);
+      onUserDeleted();
+    } catch {
+      setDeleteError(true);
+      setDeleting(false);
+    }
+  };
 
   return (
     <Box sx={{ px: 1.5, pb: 2, pt: 0.5 }}>
@@ -199,6 +221,58 @@ export const UserRowExpandedContent = ({
           </Box>
         </Box>
       )}
+
+      {/* מחיקת משתמש - קישור מוצנע, לא כפתור בולט. פעולה נדירה ומכוונת בלבד. */}
+      <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+        {!confirmingDelete ? (
+          <Typography
+            onClick={(e) => { e.stopPropagation(); setConfirmingDelete(true); }}
+            sx={{ fontSize: 10.5, color: isDark ? '#4B5563' : '#D1D5DB', cursor: 'pointer', textAlign: 'center', '&:hover': { color: '#EF4444' } }}
+          >
+            מחיקת משתמש
+          </Typography>
+        ) : (
+          <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontSize: 11.5, color: '#EF4444', fontWeight: 600, lineHeight: 1.5 }}>
+              פעולה בלתי הפיכה - מוחקת לצמיתות את כל הרשימות הפרטיות, הקבוצות בבעלות {user.name} (או מעבירה בעלות לחבר אחר אם יש), ואת כל הנתונים שלו/ה. כדי לאשר, הקלד/י את השם המדויק: {user.name}
+            </Typography>
+            <TextField
+              size="small"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={user.name}
+              disabled={deleting}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: 13 } }}
+            />
+            {deleteError && (
+              <Typography sx={{ fontSize: 11, color: '#EF4444' }}>המחיקה נכשלה - נסה שוב</Typography>
+            )}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                fullWidth
+                size="small"
+                variant="contained"
+                color="error"
+                disabled={confirmText !== user.name || deleting}
+                onClick={handleDelete}
+                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}
+              >
+                {deleting ? <CircularProgress size={16} sx={{ color: 'white' }} /> : 'מחק לצמיתות'}
+              </Button>
+              <Button
+                fullWidth
+                size="small"
+                variant="text"
+                disabled={deleting}
+                onClick={() => { setConfirmingDelete(false); setConfirmText(''); setDeleteError(false); }}
+                sx={{ borderRadius: '10px', textTransform: 'none' }}
+              >
+                ביטול
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

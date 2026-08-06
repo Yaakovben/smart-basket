@@ -11,9 +11,10 @@ interface UsersTableProps {
   language: Language;
   onlineUserIds: Set<string>;
   isDark: boolean;
+  onUserDeleted: () => void;
 }
 
-export const UsersTable = ({ users, activities, language, onlineUserIds, isDark }: UsersTableProps) => {
+export const UsersTable = ({ users, activities, language, onlineUserIds, isDark, onUserDeleted }: UsersTableProps) => {
   const { t } = useSettings();
 
   const sortedUsers = useMemo(() => {
@@ -64,6 +65,7 @@ export const UsersTable = ({ users, activities, language, onlineUserIds, isDark 
           isOnline={onlineUserIds.has(user.id)}
           userActivities={activitiesByUser.get(user.id) || []}
           isDark={isDark}
+          onUserDeleted={onUserDeleted}
         />
       ))}
     </Box>
