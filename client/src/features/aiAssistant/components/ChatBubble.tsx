@@ -14,7 +14,10 @@ export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
       <Box sx={{
         maxWidth: '80%',
         px: 1.75, py: 1.1,
-        borderRadius: isUser ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
+        // isUser יושב מימין (flex-start ב-RTL) אז הזנב (הפינה החדה) צריך
+        // להצביע ימינה-למטה, לא שמאלה - היה הפוך ונראה כאילו ההודעה
+        // "שייכת" לצד השני.
+        borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
         bgcolor: entry.error
           ? (isDark ? 'rgba(239,68,68,0.15)' : '#FEF2F2')
           : isUser
