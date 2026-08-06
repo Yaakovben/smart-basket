@@ -129,7 +129,7 @@ export const AiAssistantPage = memo(() => {
           onClick={handleSend}
           disabled={!input.trim() || sending}
           sx={{
-            width: 54, height: 54, flexShrink: 0, color: 'white',
+            width: 40, height: 40, flexShrink: 0, color: 'white',
             background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
             boxShadow: '0 4px 14px rgba(20,184,166,0.4)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease',
@@ -144,7 +144,7 @@ export const AiAssistantPage = memo(() => {
         >
           {/* SendIcon מוצמד אופקית (scaleX) - חץ שמצביע ימינה כברירת מחדל
               הופך לשמאלה, תואם לכיוון RTL ולמיקום הכפתור בקצה השורה. */}
-          <SendIcon sx={{ fontSize: 24, transform: 'scaleX(-1)' }} />
+          <SendIcon sx={{ fontSize: 18, transform: 'scaleX(-1)' }} />
         </IconButton>
       </Box>
     </Box>
