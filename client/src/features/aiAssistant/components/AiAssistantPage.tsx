@@ -122,12 +122,22 @@ export const AiAssistantPage = memo(() => {
           onClick={handleSend}
           disabled={!input.trim() || sending}
           sx={{
-            bgcolor: 'primary.main', color: 'white', width: 42, height: 42, flexShrink: 0,
-            '&:hover': { bgcolor: 'primary.dark' },
-            '&.Mui-disabled': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+            width: 44, height: 44, flexShrink: 0, color: 'white',
+            background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+            boxShadow: '0 4px 14px rgba(20,184,166,0.4)',
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease',
+            '&:hover': { boxShadow: '0 6px 18px rgba(20,184,166,0.5)' },
+            '&:active': { transform: 'scale(0.92)' },
+            '&.Mui-disabled': {
+              background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+              color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.26)',
+              boxShadow: 'none',
+            },
           }}
         >
-          <SendIcon sx={{ fontSize: 19 }} />
+          {/* SendIcon מוצמד אופקית (scaleX) - חץ שמצביע ימינה כברירת מחדל
+              הופך לשמאלה, תואם לכיוון RTL ולמיקום הכפתור בקצה השורה. */}
+          <SendIcon sx={{ fontSize: 20, transform: 'scaleX(-1)' }} />
         </IconButton>
       </Box>
     </Box>
