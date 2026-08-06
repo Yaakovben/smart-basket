@@ -93,7 +93,7 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
           <GoogleSignInButton loading={googleLoading} onClick={() => googleLogin()} t={t} />
 
           {error && !showEmailForm && (
-            <LoginErrorAlert error={error} clearing={clearing} onClearCache={handleClearCache} t={t} fontSize={13} />
+            <LoginErrorAlert error={error} clearing={clearing} onClearCache={handleClearCache} onDismiss={() => auth.setError('')} t={t} fontSize={13} />
           )}
 
           {/* Email Login Toggle */}

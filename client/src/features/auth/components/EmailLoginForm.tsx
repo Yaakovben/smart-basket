@@ -18,7 +18,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
   const {
     name, email, password, error, emailLoading, slowSubmit, isNewUser, emailSuggestion,
     emailChecked, isGoogleAccount, checkingEmail,
-    setName, handleEmailChange, handlePasswordChange, handleSubmit, applySuggestion
+    setName, setError, handleEmailChange, handlePasswordChange, handleSubmit, applySuggestion
   } = auth;
 
   return (
@@ -143,7 +143,7 @@ export const EmailLoginForm = ({ open, auth, clearing, onClearCache, t }: EmailL
           </Collapse>
 
           {error && open && (
-            <LoginErrorAlert error={error} clearing={clearing} onClearCache={onClearCache} t={t} fontSize={12} />
+            <LoginErrorAlert error={error} clearing={clearing} onClearCache={onClearCache} onDismiss={() => setError('')} t={t} fontSize={12} />
           )}
 
           {/* Status text for existing users - between password and button */}
