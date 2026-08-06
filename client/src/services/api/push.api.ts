@@ -61,9 +61,16 @@ const broadcastPush = async (title: string, body: string, url?: string): Promise
   return response.data.data.sentCount;
 };
 
-/** שליחת הודעת push למשתמש ספציפי אחד - אדמין בלבד. */
-const sendPushToUser = async (userId: string, title: string, body: string, url?: string): Promise<void> => {
-  await apiClient.post('/push/send-to-user', { userId, title, body, url });
+export interface SendPushResult {
+  hasSubscription: boolean;
+  delivered: number;
+  failed: number;
+}
+
+/** שליחת הודעת push למשתמש ספציפי אחד - אדמין בלבד. מחזיר סטטוס מסירה מפורט. */
+const sendPushToUser = async (userId: string, title: string, body: string, url?: string): Promise<SendPushResult> => {
+  const response = await apiClient.post<{ data: SendPushResult }>('/push/send-to-user', { userId, title, body, url });
+  return response.data.data;
 };
 
 export const pushApi = {

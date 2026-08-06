@@ -48,8 +48,16 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
         const sentCount = await pushApi.broadcastPush(title.trim(), body.trim());
         setResult({ success: true, msg: `נשלח בהצלחה ל-${sentCount} מכשירים` });
       } else if (selectedUser) {
-        await pushApi.sendPushToUser(selectedUser.id, title.trim(), body.trim());
-        setResult({ success: true, msg: `נשלח בהצלחה ל-${selectedUser.name}` });
+        const r = await pushApi.sendPushToUser(selectedUser.id, title.trim(), body.trim());
+        if (!r.hasSubscription) {
+          // אין למשתמש הזה שום מנוי push פעיל - שום ניסיון שליחה לא קרה
+          // בכלל (למשל: לא אישר התראות בדפדפן, או לא התקין את ה-PWA).
+          setResult({ success: false, msg: `${selectedUser.name} לא הפעיל/ה התראות push - ההודעה לא נשלחה` });
+        } else if (r.delivered > 0) {
+          setResult({ success: true, msg: `נשלח בהצלחה ל-${selectedUser.name} (${r.delivered} מכשיר${r.delivered > 1 ? 'ים' : ''})` });
+        } else {
+          setResult({ success: false, msg: `השליחה ל-${selectedUser.name} נכשלה בכל המכשירים שלו/ה` });
+        }
       }
       setTitle('');
       setBody('');
@@ -122,6 +130,14 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
             onChange={(_, v) => setSelectedUser(v)}
             getOptionLabel={(u) => `${u.name} (${u.email})`}
             isOptionEqualToValue={(a, b) => a.id === b.id}
+            // MUI ממקם את חץ הפתיחה/ה-X עם right קבוע (הנחת LTR) - באפליקציה
+            // RTL בלי stylis-plugin-rtl (לא מותקן, שינוי גלובלי מסוכן מדי כאן)
+            // זה נשאר קבוע מימין, שזה בדיוק הצד שבו טקסט RTL *מתחיל* - חופף
+            // על השם שנבחר. מזיזים ידנית לצד השני, ספציפית לרכיב הזה בלבד.
+            sx={{
+              '& .MuiAutocomplete-endAdornment': { right: 'auto', left: 9 },
+              '& .MuiOutlinedInput-root': { pr: 1.5, pl: 4.5 },
+            }}
             renderInput={(params) => <TextField {...params} label="חיפוש משתמש" sx={textFieldSx} />}
           />
         )}

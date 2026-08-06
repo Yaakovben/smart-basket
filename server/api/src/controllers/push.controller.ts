@@ -79,6 +79,6 @@ export const broadcast = asyncHandler(async (req: AuthRequest, res: Response): P
  */
 export const sendToUser = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { userId, title, body, url } = req.body as { userId: string; title: string; body: string; url?: string };
-  await pushService.sendToUser(userId, { title, body, data: url ? { url } : undefined });
-  res.json({ success: true });
+  const result = await pushService.sendToUser(userId, { title, body, data: url ? { url } : undefined });
+  res.json({ success: true, data: result });
 });

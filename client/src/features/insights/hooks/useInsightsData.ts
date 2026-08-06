@@ -57,9 +57,19 @@ export function useInsightsData(tab: InsightTab) {
   const { location: userLocation, status: locationStatus, requestLocation, resetDenied: resetLocationDenied } = useUserLocation();
 
   // רענון insights - מעדכן cache מקומי לפעם הבאה.
+  //
+  // setData מדלג על עדכון אם התוכן זהה בפועל לקודם (JSON.stringify - הכל כאן
+  // JSON טהור, בלי Date/פונקציות). קריטי כי fetchInsights רץ אוטומטית בכל
+  // visibilitychange (למטה) - בלי ההשוואה, כל חזרה לטאב הייתה יוצרת אובייקט
+  // data חדש (רפרנס שונה) גם כשהתוכן זהה לחלוטין, ומפילה re-render מלא על כל
+  // עץ הקומפוננטות הכבד של טאב הפעילות (גרפים כולל) - בדיוק תחושת "הכל מגיב
+  // לאט" שדווחה, בלי שום שינוי אמיתי בנתונים שמצדיק אותה.
   const fetchInsights = useCallback(() => {
     insightsApi.getInsights()
-      .then(res => { setData(res); writeCache(INSIGHTS_CACHE_KEY, res); })
+      .then(res => {
+        setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
+        writeCache(INSIGHTS_CACHE_KEY, res);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);

@@ -76,16 +76,20 @@ export async function hasSubscription(userId: string): Promise<boolean> {
 // ============== שליחה ==============
 
 // פונקציית עזר: שליחת payload לרשומת מנוי בודדת, עם ניקוי אוטומטי של endpoint פג.
+// מחזיר true/false בהצלחה טכנית (השרת של הדפדפן/פלטפורמת ה-push קיבל את
+// הבקשה) - לא ערובה שהמכשיר בפועל הציג את ההתראה (web push הוא fire-and-
+// forget, אין אישור מסירה אמיתי בפרוטוקול עצמו).
 async function sendToSubscription(
   sub: { _id: { toString: () => string }; endpoint: string; keys: { p256dh: string; auth: string } },
   payloadStr: string
-): Promise<void> {
+): Promise<boolean> {
   try {
     await webPush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
       payloadStr,
       { urgency: 'high', TTL: 60 * 60 } // שעה
     );
+    return true;
   } catch (error: unknown) {
     const pushError = error as { statusCode?: number };
     // 410/404 = endpoint לא קיים יותר. מוחקים את המנוי.
@@ -96,16 +100,28 @@ async function sendToSubscription(
     } else {
       logger.warn('Push notification failed for endpoint %s: %s', sub.endpoint, (error as Error).message);
     }
+    return false;
   }
 }
 
-/** שליחת push לכל המכשירים של משתמש יחיד. */
-export async function sendToUser(userId: string, payload: PushPayload): Promise<void> {
-  if (!isEnabled()) return;
+export interface SendResult {
+  // false = למשתמש אין אף מנוי push פעיל בכלל - לא בוצע שום ניסיון שליחה
+  // (זה בדיוק המקרה של "לא דלוק לו התראות פוש" שהמנהל צריך לדעת עליו).
+  hasSubscription: boolean;
+  delivered: number;
+  failed: number;
+}
 
+/** שליחת push לכל המכשירים של משתמש יחיד. מחזיר סטטוס מסירה מפורט. */
+export async function sendToUser(userId: string, payload: PushPayload): Promise<SendResult> {
   const subscriptions = await PushSubscriptionDAL.findByUserId(userId);
+  if (subscriptions.length === 0) return { hasSubscription: false, delivered: 0, failed: 0 };
+  if (!isEnabled()) return { hasSubscription: true, delivered: 0, failed: subscriptions.length };
+
   const payloadStr = JSON.stringify(payload);
-  await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  const results = await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  const delivered = results.filter(Boolean).length;
+  return { hasSubscription: true, delivered, failed: results.length - delivered };
 }
 
 /** שליחת push לכמה משתמשים במקביל (שאילתה אחת למנויים + שליחה מקבילה). */

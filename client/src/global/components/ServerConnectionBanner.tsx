@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
-import { useSettings } from '../context/SettingsContext';
+import { Box } from '@mui/material';
 import { socketService } from '../../services/socket/socket.service';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
@@ -14,11 +13,9 @@ const GRACE_MS = 4000;
 // מוצג כשה-caller מדווח על fetch שנכשל, או כשה-socket מנותק בזמן אמת.
 // בסביבת DEV: רק שגיאות fetch אמיתיות - לא ספינר על המתנה לsocket.
 export const ServerConnectionBanner = ({ visible }: Props) => {
-  const { t } = useSettings();
   const [deviceOnline, setDeviceOnline] = useState(navigator.onLine);
   const [socketDisconnected, setSocketDisconnected] = useState(false);
   const [fetchErrorConfirmed, setFetchErrorConfirmed] = useState(false);
-  const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
 
   const [prevVisible, setPrevVisible] = useState(visible);
   if (visible !== prevVisible) {
@@ -59,7 +56,6 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
     const unsubConnect = socketService.on('connect', () => {
       if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null; }
       setSocketDisconnected(false);
-      setHasConnectedOnce(true);
     });
 
     return () => {
@@ -83,6 +79,9 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
   // ומצדיק את הבאנר הבולט המקורי.
   const socketOnlyIssue = socketDisconnected && !fetchErrorConfirmed;
 
+  // אייקון בלבד בשני המצבים (בקשה מפורשת) - הבאנר עדיין מבחין ויזואלית בין
+  // "בעיה חלקית" (socket בלבד, pill שקוף על הרקע) ל"שרת לא נגיש" (עיגול
+  // כתום בולט יותר) גם בלי טקסט, דרך צבע/גודל/מיקום.
   if (socketOnlyIssue) {
     return (
       <Box sx={{
@@ -90,17 +89,14 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
         top: 'max(env(safe-area-inset-top), 8px)',
         insetInlineEnd: 10,
         zIndex: 9999,
-        display: 'flex', alignItems: 'center', gap: 0.6,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 30, height: 30,
         bgcolor: 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(6px)',
         borderRadius: '999px',
-        py: 0.5, px: 1.25,
         boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
       }}>
-        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
-        <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 500, lineHeight: 1.3 }}>
-          {hasConnectedOnce ? t('reconnectingMessage') : t('connectingMessage')}
-        </Typography>
+        <WifiFadeIcon style={{ fontSize: 15, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
       </Box>
     );
   }
@@ -108,19 +104,16 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
   return (
     <Box sx={{
       position: 'fixed',
-      top: 0, left: 0, right: 0,
+      top: 'max(env(safe-area-inset-top), 8px)',
+      insetInlineEnd: 10,
       zIndex: 9999,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      width: 34, height: 34,
       bgcolor: '#F59E0B',
-      pt: 'max(env(safe-area-inset-top), 6px)',
-      pb: '6px', px: 2,
-      textAlign: 'center',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+      borderRadius: '999px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
-      <WifiFadeIcon style={{ fontSize: 20, color: 'white', flexShrink: 0 }} />
-      <Typography sx={{ color: 'white', fontSize: 13, fontWeight: 600, lineHeight: 1.4 }}>
-        {t('serverUnreachableMessage')}
-      </Typography>
+      <WifiFadeIcon style={{ fontSize: 18, color: 'white', flexShrink: 0 }} />
     </Box>
   );
 };
