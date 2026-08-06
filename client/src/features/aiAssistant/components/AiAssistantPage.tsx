@@ -97,7 +97,7 @@ export const AiAssistantPage = memo(() => {
             ))}
             {sending && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.25 }}>
-                <Box sx={{ px: 2, py: 1.25, borderRadius: '16px 16px 4px 16px', background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }}>
+                <Box sx={{ px: 2, py: 1.25, borderRadius: '16px 16px 16px 4px', background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' }}>
                   <CircularProgress size={16} sx={{ color: 'white' }} />
                 </Box>
               </Box>
