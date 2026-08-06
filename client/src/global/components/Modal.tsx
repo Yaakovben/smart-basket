@@ -4,6 +4,7 @@ import type { TransitionProps } from '@mui/material/transitions';
 import { forwardRef, useCallback } from 'react';
 import type { ReactElement, Ref } from 'react';
 import { haptic } from '../helpers';
+import { useReliableTap } from '../hooks/useReliableTap';
 
 interface ModalProps {
   title: string;
@@ -25,6 +26,11 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
     haptic('light');
     onClose();
   }, [onClose]);
+  // onPointerUp+onClick-fallback (useReliableTap) - אותו דפוס שכבר תוקן ב-
+  // HomeHeader/ProfileComponent/HomeBottomNav: onClick רגיל התגלה כלא אמין
+  // על חלק מהמכשירים ודורש הקשה כפולה. ה-X של המודל המשותף הזה לא קיבל
+  // את התיקון הזה - כל מודל שמשתמש בו (כולל התראות) ירש את אותה בעיה.
+  const closeTap = useReliableTap(handleClose);
 
   return (
     <Dialog
@@ -77,8 +83,8 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           {title}
         </DialogTitle>
         <IconButton
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={handleClose}
+          onPointerUp={closeTap.onPointerUp}
+          onClick={closeTap.onClick}
           aria-label="Close"
           disableRipple
           disableFocusRipple
