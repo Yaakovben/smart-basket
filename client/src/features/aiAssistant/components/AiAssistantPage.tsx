@@ -45,8 +45,7 @@ export const AiAssistantPage = memo(() => {
             <Box sx={{
               width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, #A78BFA 0%, #2DD4BF 100%)',
-              boxShadow: '0 0 10px rgba(167,139,250,0.5), 0 0 14px rgba(45,212,191,0.35)',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
             }}>
               <AiAssistantIcon sx={{ color: 'white', fontSize: 16 }} />
             </Box>
@@ -65,8 +64,8 @@ export const AiAssistantPage = memo(() => {
             <Box sx={{
               width: 64, height: 64, borderRadius: '20px', mx: 'auto', mb: 1.5,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, #A78BFA 0%, #2DD4BF 100%)',
-              boxShadow: '0 0 20px rgba(167,139,250,0.5), 0 0 30px rgba(45,212,191,0.35)',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              boxShadow: '0 8px 22px rgba(139,92,246,0.3), 0 4px 14px rgba(20,184,166,0.3)',
             }}>
               <AiAssistantIcon sx={{ color: 'white', fontSize: 32 }} />
             </Box>
