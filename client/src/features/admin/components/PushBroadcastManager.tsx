@@ -1,0 +1,231 @@
+import { useState } from 'react';
+import { Box, Typography, TextField, Button, CircularProgress, Autocomplete } from '@mui/material';
+import GroupsIcon from '@mui/icons-material/Groups';
+import PersonIcon from '@mui/icons-material/Person';
+import SendIcon from '@mui/icons-material/Send';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Modal } from '../../../global/components';
+import { pushApi } from '../../../services/api';
+import type { UserWithLastLogin } from '../types';
+
+interface PushBroadcastManagerProps {
+  isDark: boolean;
+  users: UserWithLastLogin[];
+  onClose: () => void;
+}
+
+type Mode = 'all' | 'user';
+type Result = { success: boolean; msg: string } | null;
+
+const ACCENT = '#0D9488';
+
+// טופס שליחת הודעת push - נפתח כמודל דרך אייקון בכותרת האדמין (לא תופס
+// מקום קבוע בדף), לכל המשתמשים או למשתמש בודד.
+export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastManagerProps) => {
+  const [mode, setMode] = useState<Mode>('all');
+  const [selectedUser, setSelectedUser] = useState<UserWithLastLogin | null>(null);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<Result>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  const canSend = title.trim() && body.trim() && (mode === 'all' || selectedUser);
+
+  const handleSendClick = () => {
+    if (!canSend) return;
+    setConfirming(true);
+  };
+
+  const handleConfirmSend = async () => {
+    setConfirming(false);
+    setSending(true);
+    setResult(null);
+    try {
+      if (mode === 'all') {
+        const sentCount = await pushApi.broadcastPush(title.trim(), body.trim());
+        setResult({ success: true, msg: `נשלח בהצלחה ל-${sentCount} מכשירים` });
+      } else if (selectedUser) {
+        await pushApi.sendPushToUser(selectedUser.id, title.trim(), body.trim());
+        setResult({ success: true, msg: `נשלח בהצלחה ל-${selectedUser.name}` });
+      }
+      setTitle('');
+      setBody('');
+      setSelectedUser(null);
+    } catch {
+      setResult({ success: false, msg: 'השליחה נכשלה - נסה שוב' });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const textFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '14px',
+      bgcolor: isDark ? 'rgba(30, 41, 59, 0.6)' : '#F8FAFB',
+      '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' },
+      '&:hover fieldset': { borderColor: ACCENT },
+      '&.Mui-focused fieldset': { borderColor: ACCENT, borderWidth: 1.5 },
+    },
+  };
+
+  const modeCard = (value: Mode, label: string, icon: React.ReactNode) => {
+    const selected = mode === value;
+    return (
+      <Box
+        onClick={() => { setMode(value); setResult(null); }}
+        role="button"
+        tabIndex={0}
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0.5,
+          py: 1.5,
+          borderRadius: '14px',
+          cursor: 'pointer',
+          border: '1.5px solid',
+          borderColor: selected ? ACCENT : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'),
+          bgcolor: selected ? (isDark ? 'rgba(13,148,136,0.16)' : '#F0FDFA') : (isDark ? 'rgba(30,41,59,0.6)' : '#F8FAFB'),
+          transition: 'all 0.15s',
+          '&:active': { transform: 'scale(0.97)' },
+        }}
+      >
+        {icon}
+        <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: selected ? ACCENT : (isDark ? '#9CA3AF' : 'text.secondary') }}>
+          {label}
+        </Typography>
+      </Box>
+    );
+  };
+
+  return (
+    <Modal title="שליחת הודעת push" onClose={onClose}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Typography sx={{ fontSize: 12.5, color: 'text.secondary', textAlign: 'center', mt: -1 }}>
+          ההודעה תישלח כהתראת push למכשירים עם התראות פעילות
+        </Typography>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {modeCard('all', 'כל המשתמשים', <GroupsIcon sx={{ color: mode === 'all' ? ACCENT : (isDark ? '#6B7280' : '#9CA3AF'), fontSize: 22 }} />)}
+          {modeCard('user', 'משתמש ספציפי', <PersonIcon sx={{ color: mode === 'user' ? ACCENT : (isDark ? '#6B7280' : '#9CA3AF'), fontSize: 22 }} />)}
+        </Box>
+
+        {mode === 'user' && (
+          <Autocomplete
+            size="small"
+            options={users}
+            value={selectedUser}
+            onChange={(_, v) => setSelectedUser(v)}
+            getOptionLabel={(u) => `${u.name} (${u.email})`}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            renderInput={(params) => <TextField {...params} label="חיפוש משתמש" sx={textFieldSx} />}
+          />
+        )}
+
+        <TextField
+          label="כותרת"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          inputProps={{ maxLength: 100 }}
+          helperText={`${title.length}/100`}
+          fullWidth
+          sx={textFieldSx}
+        />
+        <TextField
+          label="תוכן ההודעה"
+          value={body}
+          onChange={e => setBody(e.target.value)}
+          inputProps={{ maxLength: 300 }}
+          helperText={`${body.length}/300`}
+          multiline
+          minRows={3}
+          fullWidth
+          sx={textFieldSx}
+        />
+
+        {!confirming ? (
+          <Button
+            fullWidth
+            variant="contained"
+            disabled={!canSend || sending}
+            onClick={handleSendClick}
+            startIcon={!sending && <SendIcon />}
+            sx={{
+              borderRadius: '14px',
+              py: 1.3,
+              fontWeight: 700,
+              fontSize: 15,
+              textTransform: 'none',
+              background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+              boxShadow: '0 4px 14px rgba(13,148,136,0.35)',
+              '&:hover': { background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' },
+              '&.Mui-disabled': { background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+            }}
+          >
+            {sending ? <CircularProgress size={20} sx={{ color: 'white' }} /> : (mode === 'all' ? 'שלח לכולם' : 'שלח הודעה')}
+          </Button>
+        ) : (
+          <Box sx={{
+            p: 1.5,
+            borderRadius: '14px',
+            bgcolor: isDark ? 'rgba(245,158,11,0.12)' : '#FFFBEB',
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(245,158,11,0.35)' : '#FDE68A',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.25,
+          }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <WarningAmberIcon sx={{ color: '#D97706', fontSize: 20, mt: '1px', flexShrink: 0 }} />
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 1.5 }}>
+                {mode === 'all'
+                  ? 'בטוח? זה נשלח לכל המשתמשים שיש להם התראות פעילות, אי אפשר לבטל.'
+                  : `בטוח שלשלוח ל-${selectedUser?.name}?`}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="warning"
+                onClick={handleConfirmSend}
+                sx={{ borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}
+              >
+                כן, שלח
+              </Button>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => setConfirming(false)}
+                sx={{ borderRadius: '10px', textTransform: 'none' }}
+              >
+                ביטול
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {result && (
+          <Box sx={{
+            px: 1.5, py: 1.1, borderRadius: '12px',
+            bgcolor: result.success ? (isDark ? 'rgba(16,185,129,0.12)' : '#ECFDF5') : (isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2'),
+            border: '1px solid',
+            borderColor: result.success ? (isDark ? 'rgba(16,185,129,0.35)' : '#A7F3D0') : (isDark ? 'rgba(239,68,68,0.35)' : '#FCA5A5'),
+            display: 'flex', alignItems: 'center', gap: 1,
+          }}>
+            {result.success
+              ? <CheckCircleIcon sx={{ color: '#10B981', fontSize: 18, flexShrink: 0 }} />
+              : <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 18, flexShrink: 0 }} />}
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: result.success ? '#0F766E' : '#B91C1C' }}>
+              {result.msg}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Modal>
+  );
+};
