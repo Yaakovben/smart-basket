@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField, CircularProgress } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SendIcon from '@mui/icons-material/Send';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/helpers';
 import { useAiAssistantChat } from '../hooks/useAiAssistantChat';
@@ -42,7 +42,7 @@ export const AiAssistantPage = memo(() => {
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
-            <AutoAwesomeIcon sx={{ color: 'white', fontSize: 20 }} />
+            <AiAssistantIcon sx={{ color: 'white', fontSize: 20 }} />
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
               עוזר קניות חכם
             </Typography>
@@ -55,7 +55,14 @@ export const AiAssistantPage = memo(() => {
       <Box sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 2 }}>
         {messages.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 4, px: 2 }}>
-            <Typography sx={{ fontSize: 40, mb: 1.5 }}>💬</Typography>
+            <Box sx={{
+              width: 64, height: 64, borderRadius: '20px', mx: 'auto', mb: 1.5,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
+              boxShadow: '0 8px 22px rgba(20,184,166,0.35)',
+            }}>
+              <AiAssistantIcon sx={{ color: 'white', fontSize: 32 }} />
+            </Box>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.7 }}>
               שאל אותי על סופרים, מחירים, טיפים לחיסכון - או בקש המלצות מבוססות על הקניות האמיתיות שלך
             </Typography>

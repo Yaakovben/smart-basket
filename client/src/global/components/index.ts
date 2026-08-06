@@ -1,3 +1,4 @@
+export { AiAssistantIcon } from './AiAssistantIcon';
 export { ClearableTextField } from './ClearableTextField';
 export { ConfirmModal } from './ConfirmModal';
 export { ErrorBoundary } from './ErrorBoundary';

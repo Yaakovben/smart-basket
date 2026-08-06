@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { AiAssistantIcon } from '../../../global/components';
 import { haptic } from '../../../global/helpers';
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
@@ -46,7 +46,7 @@ export const AiAssistantFab = () => {
         '@media (max-width: 360px)': { width: 44, height: 44 },
       }}
     >
-      <AutoAwesomeIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
+      <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
     </Box>,
     document.body
   );
