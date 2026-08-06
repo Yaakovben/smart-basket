@@ -97,14 +97,19 @@ export const AiAssistantFab = () => {
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation',
           outline: 'none',
-          background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
-          boxShadow: '0 8px 22px rgba(139,92,246,0.3), 0 4px 14px rgba(20,184,166,0.3), 0 3px 8px rgba(0,0,0,0.18)',
+          background: 'linear-gradient(135deg, #A78BFA 0%, #2DD4BF 100%)',
+          boxShadow: '0 0 18px rgba(167,139,250,0.55), 0 0 26px rgba(45,212,191,0.4), 0 4px 14px rgba(0,0,0,0.18)',
           transition: 'box-shadow 0.18s, transform 0.12s',
+          animation: 'aiFabGlow 2.4s ease-in-out infinite',
+          '@keyframes aiFabGlow': {
+            '0%, 100%': { boxShadow: '0 0 18px rgba(167,139,250,0.55), 0 0 26px rgba(45,212,191,0.4), 0 4px 14px rgba(0,0,0,0.18)' },
+            '50%': { boxShadow: '0 0 24px rgba(167,139,250,0.75), 0 0 36px rgba(45,212,191,0.55), 0 4px 14px rgba(0,0,0,0.18)' },
+          },
           '&:active': { transform: 'scale(0.92)' },
           '@media (max-width: 360px)': { width: 44, height: 44 },
         }}
       >
-        <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
+        <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.25))' }} />
       </Box>
     </>,
     document.body
