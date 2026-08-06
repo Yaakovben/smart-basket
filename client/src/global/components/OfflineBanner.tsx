@@ -57,7 +57,7 @@ export const OfflineBanner = () => {
         insetInlineEnd: 10,
         zIndex: 9999,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 30, height: 30,
+        width: 26, height: 26,
         bgcolor: 'rgba(0,0,0,0.52)',
         backdropFilter: 'blur(6px)',
         borderRadius: '999px',
@@ -65,7 +65,7 @@ export const OfflineBanner = () => {
         animation: 'sbFadeIn 0.3s ease',
         '@keyframes sbFadeIn': { from: { opacity: 0, transform: 'translateY(-6px)' }, to: { opacity: 1, transform: 'none' } },
       }}>
-        <WifiFadeIcon style={{ fontSize: 15, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
       </Box>
     );
   }

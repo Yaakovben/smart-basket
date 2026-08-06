@@ -79,9 +79,10 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
   // ומצדיק את הבאנר הבולט המקורי.
   const socketOnlyIssue = socketDisconnected && !fetchErrorConfirmed;
 
-  // אייקון בלבד בשני המצבים (בקשה מפורשת) - הבאנר עדיין מבחין ויזואלית בין
-  // "בעיה חלקית" (socket בלבד, pill שקוף על הרקע) ל"שרת לא נגיש" (עיגול
-  // כתום בולט יותר) גם בלי טקסט, דרך צבע/גודל/מיקום.
+  // אייקון בלבד (בקשה מפורשת, בלי טקסט) - אבל שומרים על שתי הצורות/מיקומים
+  // המקוריים: pill קטן בפינה עליונה לבעיה חלקית (socket), פס מלא-רוחב למעלה
+  // לשרת לא נגיש. גרסה קודמת שהפכה גם את הפס המלא ל-badge צף באותה פינה
+  // חפפה אלמנטים קיימים בכותרות - חוזרים לפריסה שכבר הייתה שם.
   if (socketOnlyIssue) {
     return (
       <Box sx={{
@@ -90,13 +91,13 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
         insetInlineEnd: 10,
         zIndex: 9999,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 30, height: 30,
+        width: 26, height: 26,
         bgcolor: 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(6px)',
         borderRadius: '999px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
       }}>
-        <WifiFadeIcon style={{ fontSize: 15, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
+        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', flexShrink: 0 }} />
       </Box>
     );
   }
@@ -104,13 +105,12 @@ export const ServerConnectionBanner = ({ visible }: Props) => {
   return (
     <Box sx={{
       position: 'fixed',
-      top: 'max(env(safe-area-inset-top), 8px)',
-      insetInlineEnd: 10,
+      top: 0, left: 0, right: 0,
       zIndex: 9999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      width: 34, height: 34,
       bgcolor: '#F59E0B',
-      borderRadius: '999px',
+      pt: 'max(env(safe-area-inset-top), 6px)',
+      pb: '6px', px: 2,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     }}>
       <WifiFadeIcon style={{ fontSize: 18, color: 'white', flexShrink: 0 }} />

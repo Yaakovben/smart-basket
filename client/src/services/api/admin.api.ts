@@ -32,4 +32,9 @@ export const adminApi = {
     const response = await apiClient.get<{ data: DbHealth }>('/admin/db-health');
     return response.data.data;
   },
+
+  /** מחיקת משתמש לצמיתות (רשימות פרטיות, קבוצות בבעלותו, מנויי push, התראות...). בלתי הפיך. */
+  async deleteUser(userId: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${userId}`);
+  },
 };
