@@ -29,6 +29,12 @@ export const ListDAL = {
       .lean();
   },
 
+  // שדות owner+members בלבד, ללא הידרציה מלאה - לנתיבי בדיקת הרשאות
+  // חמים (מוצרים) שלא שומרים (.save()) את מסמך הרשימה עצמו.
+  async findAccessFields(listId: string): Promise<Pick<IList, 'owner' | 'members'> | null> {
+    return List.findById(listId, 'owner members').lean();
+  },
+
   async findByIdPopulated(listId: string): Promise<IList | null> {
     return List
       .findById(listId)

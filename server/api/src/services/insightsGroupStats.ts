@@ -1,29 +1,53 @@
-import { Product } from '../models';
+import mongoose from 'mongoose';
+import { User } from '../models';
 import type { InsightsData } from './insights.types';
 
-// סטטיסטיקות ברמת קבוצה: מי הכי תורם, מי הכי קונה, פירוט חברים
-export async function getGroupStats(lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[], userId: string): Promise<InsightsData['groupStats']> {
-  const groupLists = lists.filter(l => l.isGroup && l.members.length > 0);
+interface GroupStatsProduct {
+  listId: mongoose.Types.ObjectId;
+  addedBy: mongoose.Types.ObjectId;
+  isPurchased: boolean;
+}
+
+// סטטיסטיקות ברמת קבוצה: מי הכי תורם, מי הכי קונה, פירוט חברים.
+// מקבל את allProducts שכבר נשלף פעם אחת ב-insights.service.ts (ולא שולף
+// מחדש per-list) - כך שאין כאן שאילתת Product כפולה על אותם נתונים.
+export async function getGroupStats(
+  lists: { _id: any; name: string; icon: string; isGroup: boolean; owner: any; members: { user: any }[] }[],
+  userId: string,
+  allProducts: GroupStatsProduct[]
+): Promise<InsightsData['groupStats']> {
+  const groupLists = lists.filter(l => l.isGroup && l.members.length > 0).slice(0, 5);
   if (groupLists.length === 0) return [];
 
-  // שאילתה נפרדת (עצמאית לגמרי) לכל קבוצה - היה רץ ברצף (עד 5 round-trips
-  // ל-DB בזה אחר זה), עכשיו במקביל. משפיע ישירות על זמן תגובה של עמוד
-  // התובנות עבור כל משתמש עם יותר מקבוצה אחת.
-  const perListResults = await Promise.all(groupLists.slice(0, 5).map(async (list): Promise<InsightsData['groupStats'][number] | null> => {
-    const products = await Product.find({ listId: list._id })
-      .populate('addedBy', 'name')
-      .lean();
+  const groupListIds = new Set(groupLists.map(l => l._id.toString()));
+  const relevantProducts = allProducts.filter(p => groupListIds.has(p.listId.toString()));
 
+  // שמות משתמשים לכל התורמים הרלוונטיים - שאילתה בודדת אחת במקום
+  // populate נפרד לכל קבוצה (עד 5 שאילתות Product+populate בעבר).
+  const addedByIds = Array.from(new Set(relevantProducts.map(p => p.addedBy?.toString()).filter(Boolean)));
+  const users = addedByIds.length > 0
+    ? await User.find({ _id: { $in: addedByIds } }, 'name').lean()
+    : [];
+  const nameById = new Map(users.map(u => [u._id.toString(), u.name]));
+
+  const productsByList = new Map<string, GroupStatsProduct[]>();
+  for (const p of relevantProducts) {
+    const key = p.listId.toString();
+    const arr = productsByList.get(key);
+    if (arr) arr.push(p);
+    else productsByList.set(key, [p]);
+  }
+
+  const perListResults = groupLists.map((list): InsightsData['groupStats'][number] | null => {
+    const products = productsByList.get(list._id.toString()) || [];
     if (products.length === 0) return null;
 
     // ספירה לפי משתמש: מי הוסיף ומי קנה. שומר גם userId כדי לזהות את המשתמש הנוכחי.
     const memberStats = new Map<string, { id: string; name: string; added: number; purchased: number }>();
 
     for (const p of products) {
-      const addedByName = (p.addedBy && typeof p.addedBy === 'object' && 'name' in p.addedBy)
-        ? (p.addedBy as { name: string }).name : 'Unknown';
-      const addedById = (p.addedBy && typeof p.addedBy === 'object' && '_id' in p.addedBy)
-        ? (p.addedBy as { _id: any })._id.toString() : '';
+      const addedById = p.addedBy ? p.addedBy.toString() : '';
+      const addedByName = nameById.get(addedById) || 'Unknown';
 
       if (!memberStats.has(addedById)) {
         memberStats.set(addedById, { id: addedById, name: addedByName, added: 0, purchased: 0 });
@@ -67,7 +91,7 @@ export async function getGroupStats(lists: { _id: any; name: string; icon: strin
       memberBreakdown: breakdown,
       userContribution,
     };
-  }));
+  });
 
   return perListResults.filter((r): r is InsightsData['groupStats'][number] => r !== null);
 }

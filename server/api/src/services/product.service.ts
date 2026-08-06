@@ -3,7 +3,7 @@ import { NotFoundError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc } from '../models';
-import { checkListAccess } from './list-access.helper';
+import { checkListAccessLean } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
 
 // המרת מוצר Mongoose לאובייקט תגובת API - משטח refs מאוכלסים לשם בלבד
@@ -31,7 +31,7 @@ export async function addProduct(
   userId: string,
   data: CreateProductInput
 ) {
-  await checkListAccess(listId, userId);
+  await checkListAccessLean(listId, userId);
 
   // idempotency: אם זו הוספה חוזרת עם אותו clientId (למשל תשובת השרת
   // אבדה ברשת בניסיון קודם, offlineQueue שולח שוב) - מחזירים את המוצר
@@ -77,12 +77,7 @@ export async function updateProduct(
   userId: string,
   data: UpdateProductInput
 ): Promise<void> {
-  await checkListAccess(listId, userId);
-
-  const product = await ProductDAL.findById(productId);
-  if (!product || product.listId.toString() !== listId) {
-    throw NotFoundError.product();
-  }
+  await checkListAccessLean(listId, userId);
 
   const updates: Record<string, unknown> = {};
   if (data.name !== undefined) updates.name = sanitizeText(data.name);
@@ -102,7 +97,10 @@ export async function updateProduct(
     updates.purchasedBy = data.isPurchased ? userId : null;
   }
 
-  await ProductDAL.updateProduct(productId, updates);
+  const product = await ProductDAL.updateProductInList(productId, listId, updates);
+  if (!product) {
+    throw NotFoundError.product();
+  }
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
 }
@@ -112,14 +110,13 @@ export async function deleteProduct(
   productId: string,
   userId: string
 ): Promise<void> {
-  await checkListAccess(listId, userId);
+  await checkListAccessLean(listId, userId);
 
-  const product = await ProductDAL.findById(productId);
-  if (!product || product.listId.toString() !== listId) {
+  const product = await ProductDAL.deleteProductInList(productId, listId);
+  if (!product) {
     throw NotFoundError.product();
   }
 
-  await ProductDAL.deleteProduct(productId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
 }
@@ -129,7 +126,7 @@ export async function clearProducts(
   userId: string,
   filter: 'all' | 'purchased' | 'pending'
 ): Promise<number> {
-  await checkListAccess(listId, userId);
+  await checkListAccessLean(listId, userId);
 
   let deletedCount: number;
   if (filter === 'purchased') {
@@ -149,7 +146,7 @@ export async function resetProducts(
   listId: string,
   userId: string
 ): Promise<number> {
-  await checkListAccess(listId, userId);
+  await checkListAccessLean(listId, userId);
   const count = await ProductDAL.resetAll(listId);
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
@@ -161,6 +158,6 @@ export async function reorderProducts(
   userId: string,
   productIds: string[]
 ): Promise<void> {
-  await checkListAccess(listId, userId);
+  await checkListAccessLean(listId, userId);
   await ProductDAL.reorderProducts(listId, productIds);
 }

@@ -32,7 +32,9 @@ const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
-const InsightsPage = lazy(() => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage })));
+const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
+insightsImport(); // prefetch מיידי - יעד ניווט מרכזי מהבית (כמו Home/List/Profile/Settings)
+const InsightsPage = lazy(insightsImport);
 
 // ניתוב QR - שומר code+password ומפנה לדף הבית
 const JoinRedirect = () => {
@@ -304,21 +306,25 @@ export const AppRouter = () => {
     await updateList(list);
   }, [updateList]);
 
+  const handleSelectList = useCallback((list: List) => {
+    navigate(`/list/${list.id}`);
+  }, [navigate]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    navigate("/login");
+  }, [logout, navigate]);
+
+  const handleJoinGroup = useCallback(async (code: string, password: string) => {
+    const result = await joinGroup(code, password);
+    if (result.success) showToast(t('joinedGroup'));
+    return result;
+  }, [joinGroup, showToast, t]);
+
   // בזמן טעינת אימות לא מציגים כלום (מסך loader מוצג)
   if (authLoading) {
     return null;
   }
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const handleJoinGroup = async (code: string, password: string) => {
-    const result = await joinGroup(code, password);
-    if (result.success) showToast(t('joinedGroup'));
-    return result;
-  };
 
   const handleUpdateUser = async (updates: Partial<User>) => {
     try {
@@ -362,7 +368,7 @@ export const AppRouter = () => {
                 listsLoading={listsLoading}
                 listsFetchError={listsFetchError || initialData.connectionError}
                 user={user!}
-                onSelectList={(list: List) => navigate(`/list/${list.id}`)}
+                onSelectList={handleSelectList}
                 onCreateList={handleCreateList}
                 onDeleteList={handleDeleteList}
                 onLeaveList={leaveList}

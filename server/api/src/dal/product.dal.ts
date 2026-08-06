@@ -83,8 +83,24 @@ export const ProductDAL = {
       .populate('purchasedBy', 'name');
   },
 
+  // עדכון עם התאמת listId בפילטר - חוסך round-trip נפרד של findById
+  // לאימות שהמוצר שייך לרשימה (ראה product.service.ts:updateProduct).
+  async updateProductInList(productId: string, listId: string, updates: Partial<IProductDoc>): Promise<IProductDoc | null> {
+    return Product
+      .findOneAndUpdate({ _id: productId, listId }, updates, { new: true })
+      .populate('addedBy', 'name')
+      .populate('updatedBy', 'name')
+      .populate('purchasedBy', 'name');
+  },
+
   async deleteProduct(productId: string): Promise<IProductDoc | null> {
     return Product.findByIdAndDelete(productId);
+  },
+
+  // מחיקה עם התאמת listId בפילטר - חוסך round-trip נפרד של findById
+  // לאימות שהמוצר שייך לרשימה (ראה product.service.ts:deleteProduct).
+  async deleteProductInList(productId: string, listId: string): Promise<IProductDoc | null> {
+    return Product.findOneAndDelete({ _id: productId, listId });
   },
 
   async deleteByListId(listId: string): Promise<number> {

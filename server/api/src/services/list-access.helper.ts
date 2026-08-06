@@ -26,6 +26,31 @@ export const checkListAccess = async (
 };
 
 /**
+ * גרסת lean של checkListAccess - טוענת רק owner+members במקום מסמך
+ * Mongoose מלא. לשימוש בנתיבי מוצרים (add/update/delete/clear/reset/reorder)
+ * שרק בודקים הרשאה ולעולם לא שומרים (.save()) את מסמך הרשימה עצמו.
+ */
+export const checkListAccessLean = async (
+  listId: string,
+  userId: string
+): Promise<Pick<IList, 'owner' | 'members'>> => {
+  const list = await ListDAL.findAccessFields(listId);
+
+  if (!list) {
+    throw NotFoundError.list();
+  }
+
+  const isOwner = list.owner.toString() === userId;
+  const isMember = list.members.some((m) => m.user.toString() === userId);
+
+  if (!isOwner && !isMember) {
+    throw ForbiddenError.noAccess();
+  }
+
+  return list;
+};
+
+/**
  * בדיקה שהרשימה קיימת והמשתמש הוא הבעלים
  */
 export const checkListOwner = async (

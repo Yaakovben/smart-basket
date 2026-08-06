@@ -209,7 +209,7 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
     // ב-cache גלובלי משלו (price.dal.ts) וזה סיפק את רוב שיפור הביצועים
     // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
     const [groupStats, spending] = await Promise.all([
-      getGroupStats(lists, userId),
+      getGroupStats(lists, userId, allProducts),
       computeSpending(purchasedProducts),
     ]);
 
