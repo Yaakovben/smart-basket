@@ -42,7 +42,13 @@ export const AiAssistantPage = memo(() => {
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
-            <AiAssistantIcon sx={{ color: 'white', fontSize: 20 }} />
+            <Box sx={{
+              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+            }}>
+              <AiAssistantIcon sx={{ color: 'white', fontSize: 16 }} />
+            </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
               עוזר קניות חכם
             </Typography>
@@ -58,8 +64,8 @@ export const AiAssistantPage = memo(() => {
             <Box sx={{
               width: 64, height: 64, borderRadius: '20px', mx: 'auto', mb: 1.5,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)',
-              boxShadow: '0 8px 22px rgba(20,184,166,0.35)',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              boxShadow: '0 8px 22px rgba(139,92,246,0.3), 0 4px 14px rgba(20,184,166,0.3)',
             }}>
               <AiAssistantIcon sx={{ color: 'white', fontSize: 32 }} />
             </Box>

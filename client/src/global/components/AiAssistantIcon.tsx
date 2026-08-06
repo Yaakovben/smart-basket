@@ -1,8 +1,9 @@
 import { SvgIcon, type SvgIconProps } from '@mui/material';
 
 // אייקון "כוכבי AI" - צביר של שלושה כוכבי-נצנוץ ארבע-קרניים בגדלים שונים,
-// השפה הוויזואלית המוכרת ביותר ל"עוזר AI" (Gemini/Copilot/וכו').
-// fill="currentColor" כמו כל אייקון MUI רגיל, מקבל sx/color/fontSize כרגיל.
+// fill="currentColor" כמו כל אייקון MUI רגיל - כך שהוא תמיד לבן/בהיר על
+// גבי הרקע הגרדיאנטי (סגול->תורכיז) של הבאדג'/כפתור שמכיל אותו, בכל
+// מקום שבו הוא מופיע (כפתור צף, כותרת הצ'אט, באדג' פתיחה).
 export const AiAssistantIcon = (props: SvgIconProps) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
     {/* כוכב מרכזי גדול */}
