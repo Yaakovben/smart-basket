@@ -180,8 +180,10 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
           )}
         </Box>
 
-        {/* תחתית: סטטוס + כפתור גלריה - מחוץ ל-videoArea כדי שתמיד יהיה גלוי */}
-        {!error && (
+        {/* תחתית: סטטוס + כפתור גלריה - רק אחרי שהמצלמה בפועל פעילה (cameraConsent).
+            לפני זה, QRScannerConsentOverlay כבר מציג את שתי האפשרויות - הצגת
+            הבר הזה גם כן יצרה כפילות (כותרת+כפתורים פעמיים על המסך). */}
+        {!error && cameraConsent && (
           <Box sx={bottomStatusSx}>
             <Typography sx={statusTextSx}>
               {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'סרוק ברקוד מוצר' : 'כוון את ה-QR למרכז המסך'}
