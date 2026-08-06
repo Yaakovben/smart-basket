@@ -28,6 +28,13 @@ export interface ChatMessage {
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY_MESSAGES = 20;
 
+// getUserInsights מריץ אגרגציה כבדה (כל המוצרים של המשתמש + group stats +
+// spending) - יקר מדי להריץ מחדש על כל הודעה בודדת בשיחה. cache קצר בזיכרון
+// (לא Redis - תהליך יחיד, TTL קצר מספיק) מוריד את זה לפעם אחת לכמה דקות
+// במקום לכל הודעה, בלי לפגוע משמעותית בטריות הנתונים לצורך שיחת צ'אט.
+const CONTEXT_CACHE_TTL_MS = 3 * 60 * 1000;
+const contextCache = new Map<string, { context: string; expiresAt: number }>();
+
 function isConfigured(): boolean {
   return !!env.NVIDIA_NIM_API_KEY;
 }
@@ -111,16 +118,22 @@ export async function chatWithAssistant(userId: string, messages: ChatMessage[])
     }
   }
 
-  // נתוני המשתמש נשלפים בכל קריאה (לא cache) - תמיד עדכניים לרגע השאלה.
-  // אם השליפה נכשלת מסיבה כלשהי, השיחה ממשיכה בלי הקשר אישי במקום ליפול
-  // לגמרי - עדיין אפשר לענות על שאלות כלליות (סופרים/מחירים).
-  let userContext = '';
-  try {
-    const insights = await getUserInsights(userId);
-    userContext = buildUserContext(insights);
-  } catch (err) {
-    logger.warn('aiAssistant: failed to fetch user insights for context, continuing without it: %s', (err as Error).message);
-    userContext = 'לא ניתן היה לטעון את נתוני המשתמש כרגע.';
+  // נתוני המשתמש: cache קצר (ראו CONTEXT_CACHE_TTL_MS) כדי לא להריץ אגרגציה
+  // כבדה על כל הודעה בשיחה. אם השליפה נכשלת מסיבה כלשהי, השיחה ממשיכה בלי
+  // הקשר אישי במקום ליפול לגמרי - עדיין אפשר לענות על שאלות כלליות.
+  const cached = contextCache.get(userId);
+  let userContext: string;
+  if (cached && cached.expiresAt > Date.now()) {
+    userContext = cached.context;
+  } else {
+    try {
+      const insights = await getUserInsights(userId);
+      userContext = buildUserContext(insights);
+    } catch (err) {
+      logger.warn('aiAssistant: failed to fetch user insights for context, continuing without it: %s', (err as Error).message);
+      userContext = 'לא ניתן היה לטעון את נתוני המשתמש כרגע.';
+    }
+    contextCache.set(userId, { context: userContext, expiresAt: Date.now() + CONTEXT_CACHE_TTL_MS });
   }
 
   const systemMessage = { role: 'system' as const, content: `${SYSTEM_PROMPT_HEADER}\n${userContext}` };
