@@ -3,12 +3,22 @@ import { ListDAL } from '../dal';
 import type { InsightsData } from './insights.types';
 import { emptyInsights, computeCategoryCycles, detectAnomalies, detectPersonality } from './insightsAnalytics';
 import { getGroupStats } from './insightsGroupStats';
-import { computeSpending } from './spending.service';
+import { computeSpending, emptySpending } from './spending.service';
 
 export type { InsightsData } from './insights.types';
 
+export interface GetUserInsightsOptions {
+  // computeSpending מריץ regex-search לא-מעוגן (unanchored, לא יכול להשתמש
+  // באינדקס) על כל שם מוצר ייחודי שהמשתמש קנה, מול קולקציית prices (מאות
+  // אלפי מסמכים) - החלק היקר ביותר בחישוב. עבור עוזר ה-AI זה רק שורה אחת
+  // "nice to have" בהקשר, לא קריטי - מדלגים עליו כדי לזרז משמעותית את
+  // התשובה. דף התובנות ממשיך לקבל את החישוב המלא (ברירת המחדל).
+  includeSpending?: boolean;
+}
+
 // הפונקציה הראשית - מחזירה את כל התובנות של המשתמש
-export async function getUserInsights(userId: string): Promise<InsightsData> {
+export async function getUserInsights(userId: string, options: GetUserInsightsOptions = {}): Promise<InsightsData> {
+  const { includeSpending = true } = options;
   try {
     const lists = await ListDAL.findUserLists(userId);
     const listIds = lists.map(l => l._id);
@@ -210,7 +220,7 @@ export async function getUserInsights(userId: string): Promise<InsightsData> {
     // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
     const [groupStats, spending] = await Promise.all([
       getGroupStats(lists, userId, allProducts),
-      computeSpending(purchasedProducts),
+      includeSpending ? computeSpending(purchasedProducts) : Promise.resolve(emptySpending(false)),
     ]);
 
     return {

@@ -127,7 +127,7 @@ export async function chatWithAssistant(userId: string, messages: ChatMessage[])
     userContext = cached.context;
   } else {
     try {
-      const insights = await getUserInsights(userId);
+      const insights = await getUserInsights(userId, { includeSpending: false });
       userContext = buildUserContext(insights);
     } catch (err) {
       logger.warn('aiAssistant: failed to fetch user insights for context, continuing without it: %s', (err as Error).message);
