@@ -145,9 +145,12 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
             // RTL בלי stylis-plugin-rtl (לא מותקן, שינוי גלובלי מסוכן מדי כאן)
             // זה נשאר קבוע מימין, שזה בדיוק הצד שבו טקסט RTL *מתחיל* - חופף
             // על השם שנבחר. מזיזים ידנית לצד השני, ספציפית לרכיב הזה בלבד.
+            // כשיש ערך נבחר, ה-endAdornment מכיל גם X (ניקוי) וגם חץ - שני
+            // אייקונים, לא אחד - pl היה מספיק רק לאייקון בודד וגם ככה חפף
+            // בשמות ארוכים. הוגדל כדי לפנות מקום אמיתי לשניהם.
             sx={{
-              '& .MuiAutocomplete-endAdornment': { right: 'auto', left: 9 },
-              '& .MuiOutlinedInput-root': { pr: 1.5, pl: 4.5 },
+              '& .MuiAutocomplete-endAdornment': { right: 'auto', left: 4 },
+              '& .MuiOutlinedInput-root': { pr: 1.5, pl: 8 },
             }}
             renderInput={(params) => <TextField {...params} label="חיפוש משתמש" sx={textFieldSx} />}
           />
