@@ -145,12 +145,15 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
             // RTL בלי stylis-plugin-rtl (לא מותקן, שינוי גלובלי מסוכן מדי כאן)
             // זה נשאר קבוע מימין, שזה בדיוק הצד שבו טקסט RTL *מתחיל* - חופף
             // על השם שנבחר. מזיזים ידנית לצד השני, ספציפית לרכיב הזה בלבד.
-            // כשיש ערך נבחר, ה-endAdornment מכיל גם X (ניקוי) וגם חץ - שני
-            // אייקונים, לא אחד - pl היה מספיק רק לאייקון בודד וגם ככה חפף
-            // בשמות ארוכים. הוגדל כדי לפנות מקום אמיתי לשניהם.
+            // הריווח השמור בפועל הוא לא על ה-root אלא על ה-input עצמו
+            // (.MuiAutocomplete-input) - MUI מוסיף לו paddingRight מחושב לפי
+            // מספר האייקונים (hasPopupIcon/hasClearIcon), עם specificity שגובר
+            // על עקיפת ה-root. כיוון שהעברנו את האייקונים לשמאל, צריך לאפס את
+            // ה-paddingRight המובנה ולהוסיף paddingLeft במקומו, עם !important
+            // כי כלל ה-source של MUI ספציפי יותר מ-selector רגיל של sx.
             sx={{
               '& .MuiAutocomplete-endAdornment': { right: 'auto', left: 4 },
-              '& .MuiOutlinedInput-root': { pr: 1.5, pl: 8 },
+              '& .MuiAutocomplete-input': { paddingRight: '6px !important', paddingLeft: '64px !important' },
             }}
             renderInput={(params) => <TextField {...params} label="חיפוש משתמש" sx={textFieldSx} />}
           />
