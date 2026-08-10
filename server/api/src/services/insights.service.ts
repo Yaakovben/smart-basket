@@ -220,7 +220,7 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
     // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
     const [groupStats, spending] = await Promise.all([
       getGroupStats(lists, userId, allProducts),
-      includeSpending ? computeSpending(purchasedProducts) : Promise.resolve(emptySpending(false)),
+      includeSpending ? computeSpending(userId, purchasedProducts) : Promise.resolve(emptySpending(false)),
     ]);
 
     return {

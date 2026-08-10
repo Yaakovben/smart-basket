@@ -30,6 +30,19 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const DISCLAIMER = 'ההוצאה מבוססת על התאמת שמות המוצרים שסימנת כנקנו למאגר המחירים הממשלתי האמיתי (פורטל השקיפות). ההתאמה עשויה להחמיץ פריטים או להיות לא מדויקת - זו הערכה, לא המחיר שבאמת שילמת.';
 
+// שמות ייחודיים מתאימים דרך findByAnyToken - regex לא-מעוגן על קולקציית
+// prices (מאות אלפי מסמכים), לא יכול להשתמש באינדקס (ראו הערה על
+// GetUserInsightsOptions.includeSpending בinsights.service.ts). זה החלק
+// היקר ביותר בטעינת דף התובנות - כל פתיחה/רענון (כולל visibilitychange,
+// ראו useInsightsData.ts) הריץ את זה מחדש מאפס. cache קצר בזיכרון פר-משתמש,
+// באותו דפוס בדיוק כמו CONTEXT_CACHE_TTL_MS ב-aiAssistant.service.ts,
+// הופך פתיחות חוזרות/מעברי-טאב לכמעט מיידיות. TTL ארוך יותר מזה של ה-AI
+// (5 דק' לעומת 3) כי הוצאה חודשית משוערת רגישה הרבה פחות לרעננות
+// שנייה-שנייה מאשר תוכן שיחה - שווה ויתור קטן על טריות תמורת שיפור עצום
+// בזמן טעינה.
+const SPENDING_CACHE_TTL_MS = 5 * 60 * 1000;
+const spendingCache = new Map<string, { data: SpendingData; expiresAt: number }>();
+
 export function emptySpending(enabled = false): SpendingData {
   const now = new Date();
   return {
@@ -73,6 +86,18 @@ function summarizeMonth(
 }
 
 export async function computeSpending(
+  userId: string,
+  purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date }[]
+): Promise<SpendingData> {
+  const cached = spendingCache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  const result = await computeSpendingUncached(purchasedProducts);
+  spendingCache.set(userId, { data: result, expiresAt: Date.now() + SPENDING_CACHE_TTL_MS });
+  return result;
+}
+
+async function computeSpendingUncached(
   purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date }[]
 ): Promise<SpendingData> {
   const activeChains = await PriceDAL.getActiveChainsWithCounts();
