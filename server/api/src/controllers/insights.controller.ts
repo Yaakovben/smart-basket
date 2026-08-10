@@ -20,12 +20,6 @@ import { getUserInsights } from '../services/insights.service';
 // ==============================================================
 export const getInsights = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  // _timing: אבחון זמני (ראו GetUserInsightsOptions.timings) - breakdown של
-  // זמני ריצה בפועל לכל שלב, לאיתור צוואר הבקבוק האמיתי בפרודקשן. להסיר
-  // אחרי איתור הבעיה.
-  const timings: Record<string, number> = {};
-  const totalStart = Date.now();
-  const insights = await getUserInsights(userId, { timings });
-  timings.total = Date.now() - totalStart;
-  res.json({ success: true, data: insights, _timing: timings });
+  const insights = await getUserInsights(userId);
+  res.json({ success: true, data: insights });
 });
