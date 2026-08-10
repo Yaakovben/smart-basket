@@ -151,9 +151,12 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
             // על עקיפת ה-root. כיוון שהעברנו את האייקונים לשמאל, צריך לאפס את
             // ה-paddingRight המובנה ולהוסיף paddingLeft במקומו, עם !important
             // כי כלל ה-source של MUI ספציפי יותר מ-selector רגיל של sx.
+            // 64px היה קרוב מדי לרוחב האמיתי של שני האייקונים (clear+popup,
+            // כ-28px כל אחד) + היסט ה-left - שם ארוך עדיין חפף בכמה פיקסלים
+            // בדיוק מתחת לחץ. הוגדל עם מרווח ביטחון אמיתי במקום מספר צמוד.
             sx={{
               '& .MuiAutocomplete-endAdornment': { right: 'auto', left: 4 },
-              '& .MuiAutocomplete-input': { paddingRight: '6px !important', paddingLeft: '64px !important' },
+              '& .MuiAutocomplete-input': { paddingRight: '6px !important', paddingLeft: '84px !important' },
             }}
             renderInput={(params) => <TextField {...params} label="חיפוש משתמש" sx={textFieldSx} />}
           />
@@ -217,6 +220,13 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
               boxShadow: '0 4px 14px rgba(13,148,136,0.35)',
               '&:hover': { background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' },
               '&.Mui-disabled': { background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' },
+              // MUI-startIcon משתמש ב-marginRight/marginLeft פיזיים (8px/-4px-),
+              // בהנחת LTR: ב-flex row רגיל זה משאיר רווח בין האייקון לטקסט.
+              // כאן ה-flex מתהפך ויזואלית בגלל dir="rtl" של הדף (בלי stylis-rtl,
+              // ראו הערה זהה ב-Autocomplete למעלה) - אז ה-marginLeft השלילי
+              // נופל בדיוק בין האייקון לטקסט ומדביק אותם, במקום על הצד החיצוני.
+              // הופכים את שני הצדדים כדי לקבל את אותו מרווח ויזואלי שהתכוון אליו MUI.
+              '& .MuiButton-startIcon': { marginRight: '-4px', marginLeft: '8px' },
             }}
           >
             {sending ? <CircularProgress size={20} sx={{ color: 'white' }} /> : (mode === 'all' ? 'שלח לכולם' : 'שלח הודעה')}
