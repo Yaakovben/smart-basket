@@ -95,6 +95,7 @@ const SYSTEM_PROMPT_HEADER = `אתה העוזר החכם של SmartBasket - אפ
 
 כללים:
 - ענה תמיד בעברית, בטון ידידותי וממוקד. תשובות קצרות-בינוניות, לא חיבורים.
+- כשמתאים (רשימת טיפים/המלצות/כמה אפשרויות) - נסח כנקודות קצרות (•), לא פסקה ארוכה ומשורשרת. שאלה פשוטה - תשובה של משפט-שניים, בלי מבנה מיותר.
 - כשאתה נותן המלצה שמבוססת על הנתונים האמיתיים של המשתמש - ציין את זה במפורש ("על סמך ההיסטוריה שלך...").
 - אם שאלה כללית ולא קשורה לנתוני המשתמש - אין צורך להזכיר את הנתונים, פשוט תענה על השאלה.
 - אתה לא יודע מחירים עדכניים בזמן אמת של רשתות ספציפיות - אם נשאלת על מחיר מדויק עכשווי, אמור זאת בכנות והצע להסתכל בטאב "השוואת מחירים" באפליקציה.
@@ -102,8 +103,18 @@ const SYSTEM_PROMPT_HEADER = `אתה העוזר החכם של SmartBasket - אפ
 
 נתוני הקנייה האמיתיים של המשתמש הנוכחי:`;
 
-/** שיחה עם עוזר ה-AI - מצרף את נתוני המשתמש האמיתיים כהקשר, שולח ל-NVIDIA NIM ומחזיר תשובה. */
-export async function chatWithAssistant(userId: string, messages: ChatMessage[]): Promise<string> {
+export interface AssistantStreamHandle {
+  reader: ReadableStreamDefaultReader<Uint8Array>;
+  cleanup: () => void;
+}
+
+/**
+ * פותח חיבור streaming לעוזר ה-AI - מצרף את נתוני המשתמש האמיתיים כהקשר,
+ * שולח ל-NVIDIA NIM עם stream:true ומחזיר reader לצריכת ה-SSE chunk-אחר-chunk.
+ * כל שגיאות ה-setup/config/validation נזרקות כאן (לפני שנשלח דבר ללקוח) -
+ * הצרכן (controller) אחראי רק על קריאת ה-stream והעברתו הלאה.
+ */
+export async function openAssistantStream(userId: string, messages: ChatMessage[]): Promise<AssistantStreamHandle> {
   if (!isConfigured()) {
     throw new AppError('AI assistant is not configured on this server', 503, 'AI_ASSISTANT_NOT_CONFIGURED');
   }
@@ -138,11 +149,12 @@ export async function chatWithAssistant(userId: string, messages: ChatMessage[])
 
   const systemMessage = { role: 'system' as const, content: `${SYSTEM_PROMPT_HEADER}\n${userContext}` };
 
-  let content: string | undefined;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+  let response: Response;
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
-    const response = await fetch(NIM_CHAT_URL, {
+    response = await fetch(NIM_CHAT_URL, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${env.NVIDIA_NIM_API_KEY}`,
@@ -153,29 +165,26 @@ export async function chatWithAssistant(userId: string, messages: ChatMessage[])
         messages: [systemMessage, ...trimmedHistory],
         temperature: 0.6,
         max_tokens: 700,
-        stream: false,
+        stream: true,
       }),
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      logger.warn(`aiAssistant: NVIDIA NIM returned ${response.status}: ${errText}`);
-      throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
-    }
-
-    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    content = data.choices?.[0]?.message?.content;
   } catch (err) {
-    if (err instanceof AppError) throw err;
+    clearTimeout(timeoutId);
     logger.warn('aiAssistant: request to NVIDIA NIM failed: %s', (err as Error).message);
     throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
   }
 
-  if (!content) {
+  if (!response.ok) {
+    clearTimeout(timeoutId);
+    const errText = await response.text().catch(() => '');
+    logger.warn(`aiAssistant: NVIDIA NIM returned ${response.status}: ${errText}`);
+    throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+  }
+  if (!response.body) {
+    clearTimeout(timeoutId);
     throw new AppError('AI assistant returned an empty response', 502, 'AI_ASSISTANT_EMPTY_RESPONSE');
   }
 
-  return content;
+  return { reader: response.body.getReader(), cleanup: () => clearTimeout(timeoutId) };
 }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { aiAssistantApi, type AiChatMessage } from '../../../services/api';
+import { aiAssistantApi, AiAssistantStreamError, type AiChatMessage } from '../../../services/api';
 
 export interface ChatEntry extends AiChatMessage {
   id: string;
@@ -28,18 +28,36 @@ export function useAiAssistantChat() {
     setMessages(prev => [...prev, userEntry]);
     setSending(true);
 
+    // מזהה קבוע מראש לבועת התשובה - נוצרת רק כשמגיע ה-delta הראשון (started),
+    // ואז ממשיכה להתעדכן delta-אחר-delta באותה בועה עד שה-stream מסתיים.
+    const assistantId = makeId();
+    let started = false;
+
     try {
       // ההיסטוריה שנשלחת לשרת - כולל ההודעה החדשה, בלי שדות פנימיים (id/error)
       const history: AiChatMessage[] = [...messages, userEntry].map(({ role, content }) => ({ role, content }));
-      const reply = await aiAssistantApi.chat(history);
-      setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: reply }]);
+      await aiAssistantApi.chatStream(history, (delta) => {
+        if (!started) {
+          started = true;
+          // ברגע שמגיע טקסט אמיתי - מפסיקים להראות את אינדיקטור "חושב"
+          setSending(false);
+          setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: delta }]);
+        } else {
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + delta } : m));
+        }
+      });
+      if (!started) {
+        setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: 'לא התקבלה תשובה, נסה שוב.', error: true }]);
+      }
     } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
+      const status = err instanceof AiAssistantStreamError ? err.status : undefined;
       const errorText = status === 503
         ? 'עוזר ה-AI לא מוגדר כרגע בשרת.'
         : status === 429
         ? 'יותר מדי הודעות בשעה האחרונה - נסה שוב מאוחר יותר.'
         : 'משהו השתבש, נסה שוב.';
+      // אם כבר התחיל להגיע טקסט לפני שהחיבור נקטע - משאירים אותו ומוסיפים
+      // הודעת שגיאה נפרדת, במקום למחוק תשובה חלקית שכבר הוצגה למשתמש.
       setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: errorText, error: true }]);
     } finally {
       setSending(false);
