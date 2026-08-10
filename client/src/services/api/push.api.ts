@@ -55,12 +55,21 @@ const unsubscribeAllPush = async (): Promise<void> => {
   }
 };
 
+export interface UserDeliveryStatus {
+  userId: string;
+  name: string;
+  status: 'delivered' | 'failed' | 'no_subscription';
+  delivered: number;
+  failed: number;
+}
+
 export interface BroadcastPushResult {
   totalUsers: number;
   usersWithPush: number;
   usersWithoutPush: number;
   delivered: number;
   failed: number;
+  perUser: UserDeliveryStatus[];
 }
 
 /** שליחת הודעת push לכל המשתמשים - אדמין בלבד. מחזיר פירוט מסירה מלא (כולל כמה משתמשים בלי פוש בכלל). */

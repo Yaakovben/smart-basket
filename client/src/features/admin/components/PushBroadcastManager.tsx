@@ -7,7 +7,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Modal } from '../../../global/components';
-import { pushApi } from '../../../services/api';
+import { pushApi, type UserDeliveryStatus } from '../../../services/api';
 import type { UserWithLastLogin } from '../types';
 
 interface PushBroadcastManagerProps {
@@ -17,7 +17,7 @@ interface PushBroadcastManagerProps {
 }
 
 type Mode = 'all' | 'user';
-type Result = { success: boolean; msg: string } | null;
+type Result = { success: boolean; msg: string; perUser?: UserDeliveryStatus[] } | null;
 
 const ACCENT = '#0D9488';
 
@@ -48,13 +48,14 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
         const r = await pushApi.broadcastPush(title.trim(), body.trim());
         if (r.usersWithPush === 0) {
           // אף משתמש לא הפעיל פוש בכלל - שום ניסיון שליחה לא בוצע
-          setResult({ success: false, msg: `אף משתמש (מתוך ${r.totalUsers}) לא הפעיל התראות push - ההודעה לא נשלחה לאף אחד` });
+          setResult({ success: false, msg: `אף משתמש (מתוך ${r.totalUsers}) לא הפעיל התראות push - ההודעה לא נשלחה לאף אחד`, perUser: r.perUser });
         } else {
           setResult({
             success: r.delivered > 0,
             msg: `נשלח ל-${r.delivered} מכשירים אצל ${r.usersWithPush} מתוך ${r.totalUsers} משתמשים. `
               + `${r.usersWithoutPush} משתמשים לא הפעילו push ולא קיבלו את ההודעה`
               + (r.failed > 0 ? `, ${r.failed} שליחות נכשלו בפועל` : '') + '.',
+            perUser: r.perUser,
           });
         }
       } else if (selectedUser) {
@@ -269,6 +270,47 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: result.success ? '#0F766E' : '#B91C1C' }}>
               {result.msg}
             </Typography>
+          </Box>
+        )}
+
+        {/* פירוט per-user מסודר - למי נשלח ולמי לא, ולמי אין push בכלל.
+            perUser כבר ממוין בשרת: no_subscription קודם, אחר-כך failed, אחר-כך delivered. */}
+        {result?.perUser && result.perUser.length > 0 && (
+          <Box sx={{
+            borderRadius: '12px',
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            maxHeight: 220,
+            overflowY: 'auto',
+          }}>
+            {result.perUser.map((u, i) => {
+              const cfg = u.status === 'delivered'
+                ? { icon: <CheckCircleIcon sx={{ color: '#10B981', fontSize: 16 }} />, color: '#0F766E', label: `נשלח (${u.delivered} מכשיר${u.delivered > 1 ? 'ים' : ''})` }
+                : u.status === 'failed'
+                ? { icon: <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 16 }} />, color: '#B91C1C', label: 'נכשל' }
+                : { icon: <WarningAmberIcon sx={{ color: '#D97706', fontSize: 16 }} />, color: '#92400E', label: 'אין push' };
+              return (
+                <Box
+                  key={u.userId}
+                  sx={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
+                    px: 1.5, py: 0.9,
+                    borderTop: i === 0 ? 'none' : '1px solid',
+                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                    {cfg.icon}
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {u.name}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: cfg.color, flexShrink: 0 }}>
+                    {cfg.label}
+                  </Typography>
+                </Box>
+              );
+            })}
           </Box>
         )}
       </Box>

@@ -16,7 +16,7 @@ export type { AdminUser, AdminLoginActivity, AdminStats, AdminUserList } from '.
 export { notificationsApi } from './notifications.api';
 export type { Notification as PersistedNotification } from './types/notifications.types';
 
-export { pushApi } from './push.api';
+export { pushApi, type UserDeliveryStatus, type BroadcastPushResult, type SendPushResult } from './push.api';
 
 export { insightsApi } from './insights.api';
 export { aiAssistantApi, AiAssistantStreamError, type AiChatMessage } from './aiAssistant.api';

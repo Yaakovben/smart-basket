@@ -8,7 +8,8 @@
  */
 
 import webPush from 'web-push';
-import { PushSubscriptionDAL, UserDAL } from '../dal';
+import { PushSubscriptionDAL } from '../dal';
+import { User } from '../models';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
@@ -135,38 +136,72 @@ export async function sendToUsers(userIds: string[], payload: PushPayload): Prom
   await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
 }
 
-export interface BroadcastResult {
-  totalUsers: number;
-  // משתמשים עם מנוי push פעיל לפחות אחד - אלה שהניסיון שליחה בכלל בוצע אליהם.
-  usersWithPush: number;
-  // totalUsers - usersWithPush: משתמשים שלא הפעילו התראות פוש בכלל - לא
-  // בוצע שום ניסיון שליחה אליהם, וזה בדיוק מה שמנהל צריך לדעת עליהם.
-  usersWithoutPush: number;
+export interface UserDeliveryStatus {
+  userId: string;
+  name: string;
+  // no_subscription = לא הפעיל/ה push בכלל, לא בוצע שום ניסיון שליחה.
+  status: 'delivered' | 'failed' | 'no_subscription';
   delivered: number;
   failed: number;
 }
 
+export interface BroadcastResult {
+  totalUsers: number;
+  usersWithPush: number;
+  usersWithoutPush: number;
+  delivered: number;
+  failed: number;
+  // פירוט מלא למי נשלח ולמי לא - למסך המנהל, ממוין: קודם מי שנכשל/אין לו
+  // מנוי (הכי רלוונטי לבדוק), אחר-כך מי שקיבל בהצלחה.
+  perUser: UserDeliveryStatus[];
+}
+
 /**
  * שליחת push לכל המנויים הרשומים במערכת (broadcast גלובלי - הודעות מנהל בלבד).
- * מחזיר פירוט מסירה מלא: כמה משתמשים בכלל לא דלוק להם פוש (לא ניתן היה
- * לשלוח אליהם כלל) לעומת כמה נשלח בהצלחה/נכשל מבין מי שכן היה לו מנוי.
+ * מחזיר פירוט מסירה מלא כולל רשימה per-user - מי קיבל, מי נכשל, ומי בכלל
+ * לא הפעיל push (לא ניתן היה לשלוח אליו כלל).
  */
 export async function sendToAll(payload: PushPayload): Promise<BroadcastResult> {
-  const totalUsers = await UserDAL.count({});
-
-  if (!isEnabled()) {
-    const usersWithPush = (await PushSubscriptionDAL.distinctUserIds()).length;
-    return { totalUsers, usersWithPush, usersWithoutPush: totalUsers - usersWithPush, delivered: 0, failed: usersWithPush };
-  }
-
+  const users = await User.find({}, 'name').lean();
   const subscriptions = await PushSubscriptionDAL.find({});
-  const usersWithPush = new Set(subscriptions.map(s => s.userId.toString())).size;
-  if (subscriptions.length === 0) {
-    return { totalUsers, usersWithPush: 0, usersWithoutPush: totalUsers, delivered: 0, failed: 0 };
+
+  const subsByUser = new Map<string, typeof subscriptions>();
+  for (const sub of subscriptions) {
+    const key = sub.userId.toString();
+    const arr = subsByUser.get(key);
+    if (arr) arr.push(sub); else subsByUser.set(key, [sub]);
   }
 
-  const payloadStr = JSON.stringify(payload);
-  const results = await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
-  const delivered = results.filter(Boolean).length;
-  return { totalUsers, usersWithPush, usersWithoutPush: totalUsers - usersWithPush, delivered, failed: results.length - delivered };
+  const enabled = isEnabled();
+  const payloadStr = enabled ? JSON.stringify(payload) : null;
+
+  const perUser: UserDeliveryStatus[] = await Promise.all(users.map(async (u): Promise<UserDeliveryStatus> => {
+    const userId = u._id.toString();
+    const subs = subsByUser.get(userId) || [];
+    if (subs.length === 0) {
+      return { userId, name: u.name, status: 'no_subscription', delivered: 0, failed: 0 };
+    }
+    if (!payloadStr) {
+      return { userId, name: u.name, status: 'failed', delivered: 0, failed: subs.length };
+    }
+    const results = await Promise.all(subs.map(sub => sendToSubscription(sub, payloadStr)));
+    const delivered = results.filter(Boolean).length;
+    return { userId, name: u.name, status: delivered > 0 ? 'delivered' : 'failed', delivered, failed: results.length - delivered };
+  }));
+
+  perUser.sort((a, b) => {
+    const rank = { no_subscription: 0, failed: 1, delivered: 2 };
+    return rank[a.status] - rank[b.status];
+  });
+
+  const usersWithPush = perUser.filter(p => p.status !== 'no_subscription').length;
+
+  return {
+    totalUsers: users.length,
+    usersWithPush,
+    usersWithoutPush: users.length - usersWithPush,
+    delivered: perUser.reduce((s, p) => s + p.delivered, 0),
+    failed: perUser.reduce((s, p) => s + p.failed, 0),
+    perUser,
+  };
 }
