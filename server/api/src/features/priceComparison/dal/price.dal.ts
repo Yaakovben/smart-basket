@@ -80,16 +80,24 @@ export const PriceDAL = {
     return Price.find(filter).limit(limit).lean();
   },
 
-  // חיפוש fuzzy אחד המאחד מספר טוקנים דרך $or — חוסך round-trips לעומת N שאילתות מקבילות.
+  // חיפוש fuzzy מועמדים - היה $or של $regex לא-מעוגן (case-insensitive),
+  // שלא יכול להשתמש באף אינדקס ומריץ full collection scan על כל הקולקציה
+  // (מאות אלפי מסמכים) בכל קריאה - הצוואר-בקבוק העיקרי בהתאמת מחירים.
+  // הוחלף ל-$text, שמשתמש באינדקס ה-text הקיים (itemNameNormalized: 'text',
+  // Price.model.ts) שהיה מוגדר אבל בפועל לא בשימוש. $text מפרק למילים שלמות
+  // (בלי substring באמצע מילה) - matchNormalizedName כבר עושה בכל מקרה
+  // התאמה מדויקת/שורש (stemHebrew) ברמת מילה שלמה על תוצאות המועמדים, כך
+  // שזה כמעט תמיד מספיק; המקרה הנדיר שנפגע הוא מילה מחוברת (למשל substring
+  // באמצע מילה בודדת בלי רווח) שלא הייתה תלויה ב-stemming ממילא.
   // chainId אופציונלי: אם מועבר — מסנן לרשת ספציפית; אם undefined — חוצה את כל הרשתות.
   async findByAnyToken(tokens: string[], chainId?: ChainId, limit = 60) {
     if (tokens.length === 0) return [];
-    // מילוט תווים מיוחדים של regex
-    const escape = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const or = tokens.map(t => ({ itemNameNormalized: { $regex: escape(t), $options: 'i' } }));
-    const filter: Record<string, unknown> = { $or: or };
+    const filter: Record<string, unknown> = { $text: { $search: tokens.join(' ') } };
     if (chainId) filter.chainId = chainId;
-    return Price.find(filter).limit(limit).lean();
+    return Price.find(filter, { score: { $meta: 'textScore' } })
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(limit)
+      .lean();
   },
 
   async countByChain(chainId: ChainId) {
