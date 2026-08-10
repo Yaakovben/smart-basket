@@ -55,10 +55,18 @@ const unsubscribeAllPush = async (): Promise<void> => {
   }
 };
 
-/** שליחת הודעת push לכל המשתמשים - אדמין בלבד. מחזיר כמה מנויים נשלחה אליהם. */
-const broadcastPush = async (title: string, body: string, url?: string): Promise<number> => {
-  const response = await apiClient.post<{ data: { sentCount: number } }>('/push/broadcast', { title, body, url });
-  return response.data.data.sentCount;
+export interface BroadcastPushResult {
+  totalUsers: number;
+  usersWithPush: number;
+  usersWithoutPush: number;
+  delivered: number;
+  failed: number;
+}
+
+/** שליחת הודעת push לכל המשתמשים - אדמין בלבד. מחזיר פירוט מסירה מלא (כולל כמה משתמשים בלי פוש בכלל). */
+const broadcastPush = async (title: string, body: string, url?: string): Promise<BroadcastPushResult> => {
+  const response = await apiClient.post<{ data: BroadcastPushResult }>('/push/broadcast', { title, body, url });
+  return response.data.data;
 };
 
 export interface SendPushResult {

@@ -8,7 +8,7 @@
  */
 
 import webPush from 'web-push';
-import { PushSubscriptionDAL } from '../dal';
+import { PushSubscriptionDAL, UserDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
@@ -135,17 +135,38 @@ export async function sendToUsers(userIds: string[], payload: PushPayload): Prom
   await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
 }
 
+export interface BroadcastResult {
+  totalUsers: number;
+  // משתמשים עם מנוי push פעיל לפחות אחד - אלה שהניסיון שליחה בכלל בוצע אליהם.
+  usersWithPush: number;
+  // totalUsers - usersWithPush: משתמשים שלא הפעילו התראות פוש בכלל - לא
+  // בוצע שום ניסיון שליחה אליהם, וזה בדיוק מה שמנהל צריך לדעת עליהם.
+  usersWithoutPush: number;
+  delivered: number;
+  failed: number;
+}
+
 /**
  * שליחת push לכל המנויים הרשומים במערכת (broadcast גלובלי - הודעות מנהל בלבד).
- * מחזיר את מספר המנויים שנשלחה אליהם השליחה (לא מבטיח מסירה בפועל).
+ * מחזיר פירוט מסירה מלא: כמה משתמשים בכלל לא דלוק להם פוש (לא ניתן היה
+ * לשלוח אליהם כלל) לעומת כמה נשלח בהצלחה/נכשל מבין מי שכן היה לו מנוי.
  */
-export async function sendToAll(payload: PushPayload): Promise<number> {
-  if (!isEnabled()) return 0;
+export async function sendToAll(payload: PushPayload): Promise<BroadcastResult> {
+  const totalUsers = await UserDAL.count({});
+
+  if (!isEnabled()) {
+    const usersWithPush = (await PushSubscriptionDAL.distinctUserIds()).length;
+    return { totalUsers, usersWithPush, usersWithoutPush: totalUsers - usersWithPush, delivered: 0, failed: usersWithPush };
+  }
 
   const subscriptions = await PushSubscriptionDAL.find({});
-  if (subscriptions.length === 0) return 0;
+  const usersWithPush = new Set(subscriptions.map(s => s.userId.toString())).size;
+  if (subscriptions.length === 0) {
+    return { totalUsers, usersWithPush: 0, usersWithoutPush: totalUsers, delivered: 0, failed: 0 };
+  }
 
   const payloadStr = JSON.stringify(payload);
-  await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
-  return subscriptions.length;
+  const results = await Promise.all(subscriptions.map(sub => sendToSubscription(sub, payloadStr)));
+  const delivered = results.filter(Boolean).length;
+  return { totalUsers, usersWithPush, usersWithoutPush: totalUsers - usersWithPush, delivered, failed: results.length - delivered };
 }

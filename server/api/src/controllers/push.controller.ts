@@ -69,8 +69,8 @@ export const getStatus = asyncHandler(async (req: AuthRequest, res: Response): P
  */
 export const broadcast = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { title, body, url } = req.body as { title: string; body: string; url?: string };
-  const sentCount = await pushService.sendToAll({ title, body, data: url ? { url } : undefined });
-  res.json({ success: true, data: { sentCount } });
+  const result = await pushService.sendToAll({ title, body, data: url ? { url } : undefined });
+  res.json({ success: true, data: result });
 });
 
 /**

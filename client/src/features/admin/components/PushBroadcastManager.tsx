@@ -45,8 +45,18 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
     setResult(null);
     try {
       if (mode === 'all') {
-        const sentCount = await pushApi.broadcastPush(title.trim(), body.trim());
-        setResult({ success: true, msg: `נשלח בהצלחה ל-${sentCount} מכשירים` });
+        const r = await pushApi.broadcastPush(title.trim(), body.trim());
+        if (r.usersWithPush === 0) {
+          // אף משתמש לא הפעיל פוש בכלל - שום ניסיון שליחה לא בוצע
+          setResult({ success: false, msg: `אף משתמש (מתוך ${r.totalUsers}) לא הפעיל התראות push - ההודעה לא נשלחה לאף אחד` });
+        } else {
+          setResult({
+            success: r.delivered > 0,
+            msg: `נשלח ל-${r.delivered} מכשירים אצל ${r.usersWithPush} מתוך ${r.totalUsers} משתמשים. `
+              + `${r.usersWithoutPush} משתמשים לא הפעילו push ולא קיבלו את ההודעה`
+              + (r.failed > 0 ? `, ${r.failed} שליחות נכשלו בפועל` : '') + '.',
+          });
+        }
       } else if (selectedUser) {
         const r = await pushApi.sendPushToUser(selectedUser.id, title.trim(), body.trim());
         if (!r.hasSubscription) {
