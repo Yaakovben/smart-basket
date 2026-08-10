@@ -25,14 +25,24 @@ import { deleteAccount } from '../services/user.service';
  * רשימת כל המשתמשים עם סטטיסטיקות התחברות (totalLogins, lastLogin, וכו׳).
  */
 export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  // _timing: אבחון זמני - breakdown של זמני ריצה בפועל, לאיתור צוואר הבקבוק
+  // האמיתי בפרודקשן בלי גישה ללוגים של Render. להסיר אחרי איתור הבעיה.
+  const timing: Record<string, number> = {};
+  const totalStart = Date.now();
+
+  let t0 = Date.now();
   const users = await UserDAL.findAllSorted();
+  timing.findAllSorted = Date.now() - t0;
+
   const userIds = users.map(u => String(u._id));
   // שאילתה יחידה בשביל כל המשתמשים (לא N+1) - מזהה מי יש לו מנוי push פעיל,
   // כדי שפאנל השליחה יוכל להראות את זה מיד עם בחירת משתמש, לפני שליחה בפועל.
+  t0 = Date.now();
   const [loginStats, pushSubscribedIds] = await Promise.all([
     LoginActivityDAL.getStatsByUser(userIds),
     PushSubscriptionDAL.distinctUserIds(),
   ]);
+  timing.loginStatsAndPush = Date.now() - t0;
 
   const statsMap = new Map(loginStats.map(s => [s.userId, s]));
   const pushSubscribedSet = new Set(pushSubscribedIds.map(String));
@@ -54,7 +64,8 @@ export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) =>
     };
   });
 
-  res.json({ success: true, data: usersWithStats });
+  timing.total = Date.now() - totalStart;
+  res.json({ success: true, data: usersWithStats, _timing: timing });
 });
 
 /**
