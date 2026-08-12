@@ -5,16 +5,16 @@ import { fadeIn } from './animations';
 // ===== Smart Tips Carousel - תובנות חכמות מתחלפות =====
 // מציג תובנה אחת בכל פעם, מתחלף אוטומטית כל 5 שניות. אפשר ללחוץ
 // על נקודות ההתקדמות כדי לדלג. רכיב ויזואלי שמרגיש "חי" ומעודד הסתכלות.
-export const SmartTipsCarousel = ({ tips, isDark }: {
-  tips: string[]; isDark: boolean;
+export const SmartTipsCarousel = ({ tips, isDark, t }: {
+  tips: string[]; isDark: boolean; t: (key: string) => string;
 }) => {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (tips.length <= 1) return;
-    const t = window.setInterval(() => {
+    const intervalId = window.setInterval(() => {
       setIdx(i => (i + 1) % tips.length);
     }, 5000);
-    return () => window.clearInterval(t);
+    return () => window.clearInterval(intervalId);
   }, [tips.length]);
 
   if (!tips || tips.length === 0) return null;
@@ -33,7 +33,7 @@ export const SmartTipsCarousel = ({ tips, isDark }: {
         <Typography sx={{ fontSize: 18, lineHeight: 1, mt: 0.15 }}>💡</Typography>
         <Box sx={{ flex: 1, minHeight: 36 }}>
           <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: 'text.disabled', letterSpacing: 0.5, mb: 0.35 }}>
-            תובנה חכמה
+            {t('smartTipLabel')}
           </Typography>
           <Typography
             key={idx}
@@ -54,7 +54,7 @@ export const SmartTipsCarousel = ({ tips, isDark }: {
             <Box
               key={i}
               role="button"
-              aria-label={`תובנה ${i + 1}`}
+              aria-label={t('tipNumberAria').replace('{num}', String(i + 1))}
               onClick={() => setIdx(i)}
               sx={{
                 width: i === idx ? 18 : 6, height: 6, borderRadius: '3px',
