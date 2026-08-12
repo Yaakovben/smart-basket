@@ -10,7 +10,7 @@ interface PulsePredictionCardProps {
 
 // כרטיס "קנייה אחרונה" / "הבאה צפויה" - תחזית לפי תדירות הקנייה של המשתמש.
 export const PulsePredictionCard = ({ shoppingFrequency, isDark }: PulsePredictionCardProps) => {
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   if (!shoppingFrequency || !(shoppingFrequency.lastShoppingDate || shoppingFrequency.predictedNextDate)) return null;
   return (
     <Paper elevation={0} sx={{
@@ -22,11 +22,11 @@ export const PulsePredictionCard = ({ shoppingFrequency, isDark }: PulsePredicti
       <Typography sx={{ fontSize: 22 }}>🛒</Typography>
       <Box sx={{ flex: 1 }}>
         <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-          קנייה אחרונה: <b>{shoppingFrequency.lastShoppingDate ? getRelativeTime(shoppingFrequency.lastShoppingDate, settings.language) : '—'}</b>
+          {t('lastShoppingLabel').split('{time}')[0]}<b>{shoppingFrequency.lastShoppingDate ? getRelativeTime(shoppingFrequency.lastShoppingDate, settings.language) : '—'}</b>
         </Typography>
         {shoppingFrequency.predictedNextDate && (
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#0D9488', mt: 0.15 }}>
-            הבאה צפויה: {getRelativeTime(shoppingFrequency.predictedNextDate, settings.language)}
+            {t('nextShoppingExpected').replace('{time}', getRelativeTime(shoppingFrequency.predictedNextDate, settings.language))}
           </Typography>
         )}
       </Box>

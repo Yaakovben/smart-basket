@@ -70,10 +70,10 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
         accent="#14B8A6"
         mainEmoji="📊"
         floatingItems={['🔥', '🏆', '🎯', '📈']}
-        title="עוד אין נתוני פעילות"
-        description="הוסף מוצרים לרשימות וסמן כנקנו - כאן יופיעו ציון הקנייה שלך, המוצרים והקטגוריות המובילים, מגמות וגרפים, ותחזית הקנייה הבאה."
-        tips={['ציון קנייה', 'מגמות וקטגוריות', 'תחזיות']}
-        ctaLabel="לרשימות שלי"
+        title={t('noActivityDataYet')}
+        description={t('noActivityDataDesc')}
+        tips={[t('tipShoppingScore'), t('tipTrendsCategories'), t('tipPredictions')]}
+        ctaLabel={t('toMyLists')}
         ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
         onCtaClick={() => { haptic('medium'); onNavigateHome(); }}
       />
@@ -84,19 +84,19 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
   const hasStreak = streaks && streaks.currentWeeks > 0;
   const hasPrediction = shoppingFrequency?.predictedNextDate;
   let heroIcon = '💪';
-  let heroText: React.ReactNode = <>ממשיכים לעקוב אחרי ההתקדמות שלך</>;
+  let heroText: React.ReactNode = <>{t('heroKeepTrackingProgress')}</>;
   if (hasStreak) {
     heroIcon = '🔥';
-    heroText = <>אתה <b>{streaks.currentWeeks} שבועות</b> ברצף — המשך כך!</>;
+    heroText = <>{t('heroStreakPrefix')} <b>{t('heroStreakWeeksBold').replace('{weeks}', String(streaks.currentWeeks))}</b> {t('heroStreakSuffix')}</>;
   } else if (hasPrediction) {
     // eslint-disable-next-line react-hooks/purity -- טקסט "בעוד X ימים" תצוגתי בלבד, לא זקוק לדיוק/עקביות בין renders
     const days = Math.max(0, Math.floor((new Date(shoppingFrequency.predictedNextDate!).getTime() - Date.now()) / 86_400_000));
     heroIcon = '🛒';
     heroText = days === 0
-      ? <>הקנייה הבאה צפויה <b>היום</b></>
+      ? <>{t('nextShopPrefix')} <b>{t('today')}</b></>
       : days === 1
-      ? <>הקנייה הבאה צפויה <b>מחר</b></>
-      : <>הקנייה הבאה צפויה <b>בעוד {days} ימים</b></>;
+      ? <>{t('nextShopPrefix')} <b>{t('tomorrowWord')}</b></>
+      : <>{t('nextShopPrefix')} <b>{t('nextShopInDaysBold').replace('{days}', String(days))}</b></>;
   }
 
   const heroProduct = topProducts[0];
@@ -109,7 +109,7 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
       {/* ===== זהות: מי אתה כקונה, וציון הפעילות שלך ===== */}
       <HeroInsight icon={heroIcon} text={heroText} accent="#14B8A6" isDark={isDark} />
 
-      <ActivitySection title="הזהות שלך" icon="🎯" isDark={isDark}>
+      <ActivitySection title={t('sectionIdentity')} icon="🎯" isDark={isDark}>
         {shoppingPersonality && stats.totalProducts >= 5 && (
           <PersonalityCard personality={shoppingPersonality} isDark={isDark} />
         )}
@@ -117,30 +117,30 @@ export const ActivityTab = memo(({ data, isDark, onNavigateHome, t }: Props) => 
         <PulseStatsRow streaks={streaks} monthComparison={monthComparison} shoppingFrequency={shoppingFrequency} isDark={isDark} />
       </ActivitySection>
 
-      <ActivitySection title="מוצרים וקטגוריות" icon="📦" isDark={isDark}>
+      <ActivitySection title={t('sectionProductsCategories')} icon="📦" isDark={isDark}>
         {heroProduct && heroProduct.count >= 3 && heroProductIcon && (
-          <SpotlightProduct name={heroProduct.name} count={heroProduct.count} icon={heroProductIcon} isDark={isDark} />
+          <SpotlightProduct name={heroProduct.name} count={heroProduct.count} icon={heroProductIcon} isDark={isDark} t={t} />
         )}
         <HabitsTopProducts topProducts={topProducts} isDark={isDark} t={t} />
         <HabitsCategoryBreakdown categoryBreakdown={categoryBreakdown} isDark={isDark} t={t} />
-        <ForgottenProductsCard items={forgotten || []} isDark={isDark} />
+        <ForgottenProductsCard items={forgotten || []} isDark={isDark} t={t} />
       </ActivitySection>
 
-      <ActivitySection title="מגמות ודפוסים" icon="📈" isDark={isDark} defaultExpanded={false}>
-        <ActivityDotCalendar weeklyTrends={weeklyTrends || []} isDark={isDark} />
-        <PulseMomentumCard weeklyTrends={weeklyTrends} />
-        <PulseWeeklyTrend weeklyTrends={weeklyTrends} isDark={isDark} />
-        <PulseWeekdayHeatmap weekdayActivity={weekdayActivity} isDark={isDark} />
-        <PulseHourlyActivity hourlyActivity={hourlyActivity} isDark={isDark} />
+      <ActivitySection title={t('sectionTrendsPatterns')} icon="📈" isDark={isDark} defaultExpanded={false}>
+        <ActivityDotCalendar weeklyTrends={weeklyTrends || []} isDark={isDark} t={t} />
+        <PulseMomentumCard weeklyTrends={weeklyTrends} t={t} />
+        <PulseWeeklyTrend weeklyTrends={weeklyTrends} isDark={isDark} t={t} />
+        <PulseWeekdayHeatmap weekdayActivity={weekdayActivity} isDark={isDark} t={t} />
+        <PulseHourlyActivity hourlyActivity={hourlyActivity} isDark={isDark} t={t} />
       </ActivitySection>
 
-      <ActivitySection title="תחזיות והתראות" icon="🔮" isDark={isDark} defaultExpanded={false}>
+      <ActivitySection title={t('sectionPredictionsAlerts')} icon="🔮" isDark={isDark} defaultExpanded={false}>
         <PulsePredictionCard shoppingFrequency={shoppingFrequency} isDark={isDark} />
         <PulseUpcomingNeeds upcomingNeeds={upcomingNeeds} isDark={isDark} t={t} />
         <HabitsCategoryCycles categoryCycles={categoryCycles} isDark={isDark} t={t} />
-        <PulseAnomalies anomalies={anomalies} isDark={isDark} />
+        <PulseAnomalies anomalies={anomalies} isDark={isDark} t={t} />
         {smartTips && smartTips.length > 0 && (
-          <SmartTipsCarousel tips={smartTips} isDark={isDark} />
+          <SmartTipsCarousel tips={smartTips} isDark={isDark} t={t} />
         )}
       </ActivitySection>
     </>

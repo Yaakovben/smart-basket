@@ -35,7 +35,7 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
           <Typography sx={{ fontSize: 14 }}>🔑</Typography>
           <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: 'text.primary' }}>
-            שנה סיסמה
+            {t('changePassword')}
           </Typography>
         </Box>
         <Typography sx={{

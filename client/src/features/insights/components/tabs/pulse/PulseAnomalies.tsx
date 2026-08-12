@@ -5,10 +5,11 @@ import { fadeIn } from '../../insightsShared';
 interface PulseAnomaliesProps {
   anomalies: InsightsData['anomalies'];
   isDark: boolean;
+  t: (key: string) => string;
 }
 
 // כרטיס "שינויים בהרגלים שלך" - מוצרים/קטגוריות שחוזרים, דועכים, או קופצים.
-export const PulseAnomalies = ({ anomalies, isDark }: PulseAnomaliesProps) => {
+export const PulseAnomalies = ({ anomalies, isDark, t }: PulseAnomaliesProps) => {
   if (!anomalies || anomalies.length === 0) return null;
   return (
     <Box sx={{
@@ -20,7 +21,7 @@ export const PulseAnomalies = ({ anomalies, isDark }: PulseAnomaliesProps) => {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
         <Typography sx={{ fontSize: 16 }}>👀</Typography>
         <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary' }}>
-          שינויים בהרגלים שלך
+          {t('habitsChangesTitle')}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

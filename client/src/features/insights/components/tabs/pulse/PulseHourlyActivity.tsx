@@ -4,18 +4,19 @@ import { SectionCard, RadialHourClock } from '../../insightsShared';
 interface PulseHourlyActivityProps {
   hourlyActivity: number[];
   isDark: boolean;
+  t: (key: string) => string;
 }
 
-const BUCKETS = [
-  { label: 'בוקר', from: 5, to: 11, emoji: '🌅' },
-  { label: 'צהריים', from: 12, to: 16, emoji: '☀️' },
-  { label: 'ערב', from: 17, to: 22, emoji: '🌆' },
-  { label: 'לילה', from: 23, to: 4, emoji: '🌙' },
-];
-
 // "פעילות לפי שעות" - שעון רדיאלי 24 שעות + פילוח לבוקר/צהריים/ערב/לילה.
-export const PulseHourlyActivity = ({ hourlyActivity, isDark }: PulseHourlyActivityProps) => {
+export const PulseHourlyActivity = ({ hourlyActivity, isDark, t }: PulseHourlyActivityProps) => {
   if (!hourlyActivity || !hourlyActivity.some(v => v > 0)) return null;
+
+  const BUCKETS = [
+    { label: t('hourlyBucketMorning'), from: 5, to: 11, emoji: '🌅' },
+    { label: t('hourlyBucketNoon'), from: 12, to: 16, emoji: '☀️' },
+    { label: t('hourlyBucketEvening'), from: 17, to: 22, emoji: '🌆' },
+    { label: t('hourlyBucketNight'), from: 23, to: 4, emoji: '🌙' },
+  ];
 
   const maxHour = Math.max(...hourlyActivity, 1);
   const peakHour = hourlyActivity.indexOf(maxHour);
@@ -32,7 +33,7 @@ export const PulseHourlyActivity = ({ hourlyActivity, isDark }: PulseHourlyActiv
   const peakBucketIdx = bucketTotals.indexOf(Math.max(...bucketTotals));
 
   return (
-    <SectionCard title={`🕐 פעילות לפי שעות · שיא ב-${peakHour}:00`} isDark={isDark}>
+    <SectionCard title={t('activityByHourTitle').replace('{peak}', String(peakHour))} isDark={isDark}>
       {/* שעון רדיאלי - 24 קרניים. ויזואליזציה אסטטית במקום grid שטוח. */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
         <RadialHourClock hourlyActivity={hourlyActivity} isDark={isDark} />

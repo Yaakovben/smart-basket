@@ -84,7 +84,7 @@ export const CategoryGrid = memo(({ selected, onSelect }: {
             '&:hover': { bgcolor: 'rgba(20,184,166,0.12)' },
           }}
         >
-          {showAll ? '▴ הצג פחות' : `▾ הצג עוד (${hidden})`}
+          {showAll ? t('showLess') : t('showMoreCount').replace('{count}', String(hidden))}
         </Box>
       )}
     </>

@@ -4,10 +4,11 @@ import { fadeIn } from '../../insightsShared';
 
 interface PulseMomentumCardProps {
   weeklyTrends: InsightsData['weeklyTrends'];
+  t: (key: string) => string;
 }
 
 // כרטיס "מומנטום שבועי" - השוואת הפריטים שנקנו השבוע מול השבוע הקודם.
-export const PulseMomentumCard = ({ weeklyTrends }: PulseMomentumCardProps) => {
+export const PulseMomentumCard = ({ weeklyTrends, t }: PulseMomentumCardProps) => {
   const wt = weeklyTrends || [];
   const lastWeek = wt[wt.length - 1];
   const prevWeek = wt[wt.length - 2];
@@ -37,10 +38,10 @@ export const PulseMomentumCard = ({ weeklyTrends }: PulseMomentumCardProps) => {
       </Typography>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
-          מומנטום השבוע
+          {t('weeklyMomentumLabel')}
         </Typography>
         <Typography sx={{ fontSize: 19, fontWeight: 900, lineHeight: 1.1, mt: 0.15, fontVariantNumeric: 'tabular-nums' }}>
-          {lastWeek.purchased} פריטים{' '}
+          {t('itemsCountLabel').replace('{count}', String(lastWeek.purchased))}{' '}
           {momentumPct !== null && (
             <Typography component="span" sx={{ fontSize: 13, fontWeight: 800, opacity: 0.95 }}>
               ({momentumUp ? '+' : ''}{momentumPct}%)
@@ -49,10 +50,10 @@ export const PulseMomentumCard = ({ weeklyTrends }: PulseMomentumCardProps) => {
         </Typography>
         <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
           {momentumUp
-            ? `עלייה של ${purchasedDelta} מהשבוע הקודם`
+            ? t('upFromLastWeek').replace('{count}', String(purchasedDelta))
             : momentumDown
-            ? `ירידה של ${Math.abs(purchasedDelta)} מהשבוע הקודם`
-            : 'יציבות מול השבוע הקודם'}
+            ? t('downFromLastWeek').replace('{count}', String(Math.abs(purchasedDelta)))
+            : t('stableFromLastWeek')}
         </Typography>
       </Box>
     </Box>

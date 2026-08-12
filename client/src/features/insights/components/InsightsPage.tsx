@@ -77,9 +77,9 @@ export const InsightsPage = memo(() => {
       accent="#F59E0B"
       mainEmoji="😕"
       floatingItems={['⚠️', '🔧', '💤']}
-      title="הטאב הזה לא נטען כרגע"
-      description="נסה טאב אחר למעלה, או חזור מאוחר יותר."
-      ctaLabel="לדף הבית"
+      title={tStr('tabFailedToLoad')}
+      description={tStr('tabFailedToLoadDesc')}
+      ctaLabel={tStr('toHomePage')}
       onCtaClick={() => navigate('/')}
     />
   );
@@ -91,13 +91,13 @@ export const InsightsPage = memo(() => {
       <SlowLoadIndicator
         active={tab === 'price' && priceLoading && !priceData}
         variant="toast"
-        message="מאחזר השוואת מחירים…"
+        message={tStr('fetchingPriceComparison')}
         delayMs={5000}
       />
 
       <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
-      <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} />
+      <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} t={tStr} />
 
       {/* ===== תוכן לפי טאב - כל טאב עטוף ב-ErrorBoundary נפרד ===== */}
       <Box sx={{ px: 2, animation: `${tabEnter} 0.32s cubic-bezier(0.25, 0.8, 0.25, 1) both` }} key={tab}>

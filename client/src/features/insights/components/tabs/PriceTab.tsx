@@ -6,6 +6,7 @@ import { ShimmerList, TopProgressBar } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
 import { InsightsLoader } from '../InsightsLoader';
 import type { InsightsListMeta } from '../../types/insights-types';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 interface PriceTabProps {
   isDark: boolean;
@@ -28,20 +29,21 @@ export const PriceTab = memo(({
   locationStatus, onRequestLocation, onResetLocationDenied,
   selectedListId, onSelectListId, allUserLists,
 }: PriceTabProps) => {
+  const { t } = useSettings();
   if (!priceData) {
     // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
     if (priceError) {
       return (
         <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
           <Box sx={{ fontSize: 48, mb: 1.5 }}>⚠️</Box>
-          <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 0.5 }}>שגיאה בטעינת נתוני מחירים</Typography>
-          <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2 }}>בדוק חיבור לאינטרנט ונסה שוב</Typography>
+          <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 0.5 }}>{t('priceLoadErrorTitle')}</Typography>
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 2 }}>{t('priceLoadErrorDesc')}</Typography>
           <Button
             variant="contained"
             onClick={onRetry}
             sx={{ borderRadius: '12px', px: 3, py: 1, textTransform: 'none', fontWeight: 700 }}
           >
-            נסה שוב
+            {t('tryAgain')}
           </Button>
         </Box>
       );
@@ -54,7 +56,7 @@ export const PriceTab = memo(({
         </Box>
       );
     }
-    return <InsightsLoader text="אין נתוני מחירים כרגע" size="md" />;
+    return <InsightsLoader text={t('noPriceDataNow')} size="md" />;
   }
 
   return (
@@ -71,7 +73,7 @@ export const PriceTab = memo(({
           <Box sx={{ fontSize: 16, lineHeight: 1 }}>{allUserLists[0].icon}</Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, lineHeight: 1, mb: 0.2 }}>
-              ניתוח מחירים על
+              {t('priceAnalysisOn')}
             </Typography>
             <Typography sx={{
               fontSize: 12.5, fontWeight: 800, color: '#0D9488', lineHeight: 1.2,
@@ -87,7 +89,7 @@ export const PriceTab = memo(({
       {allUserLists.length > 1 && (
         <Box sx={{ mb: 1.25 }}>
           <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
-            איזו רשימה להשוות?
+            {t('whichListToCompare')}
           </Typography>
           <Box sx={{
             display: 'flex', flexWrap: 'nowrap', gap: 0.75,
@@ -118,7 +120,7 @@ export const PriceTab = memo(({
                 '&:active': { transform: 'scale(0.96)' },
               }}
             >
-              🛒 כל הרשימות
+              {t('allListsChip')}
             </Box>
             {allUserLists.map(l => (
               <Box
@@ -167,7 +169,7 @@ export const PriceTab = memo(({
         }}>
           <Box sx={{ fontSize: 14 }}>⚠️</Box>
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#FCD34D' : '#92400E', flex: 1 }}>
-            לא התקבלו נתונים חדשים - מוצגים נתונים מה-cache
+            {t('staleDataWarning')}
           </Typography>
         </Box>
       )}

@@ -16,9 +16,9 @@ export const HabitsCategoryCycles = ({ categoryCycles, isDark, t }: HabitsCatego
   const maxCycle = Math.max(...categoryCycles.map(x => x.avgDays), 30);
 
   return (
-    <SectionCard title="🔄 מחזורי הקנייה שלך" isDark={isDark}>
+    <SectionCard title={t('categoryCyclesTitle')} isDark={isDark}>
       <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1.25, lineHeight: 1.5 }}>
-        כל כמה ימים אתה קונה כל קטגוריה (מבוסס על ההיסטוריה שלך)
+        {t('categoryCyclesDesc')}
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
         {categoryCycles.slice(0, 6).map((c) => {
@@ -42,7 +42,7 @@ export const HabitsCategoryCycles = ({ categoryCycles, isDark, t }: HabitsCatego
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.4 }}>
                   <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.primary' }}>{label}</Typography>
                   <Typography sx={{ fontSize: 11, fontWeight: 800, color: catColor, fontVariantNumeric: 'tabular-nums' }}>
-                    כל {c.avgDays} {c.avgDays === 1 ? 'יום' : 'ימים'}
+                    {t('everyDaysCount').replace('{days}', String(c.avgDays)).replace('{dayWord}', c.avgDays === 1 ? t('dayWordSingle') : t('dayWordPlural'))}
                   </Typography>
                 </Box>
                 <Box sx={{

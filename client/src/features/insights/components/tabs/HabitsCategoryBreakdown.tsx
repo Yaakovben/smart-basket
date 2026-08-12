@@ -29,7 +29,7 @@ export const HabitsCategoryBreakdown = ({ categoryBreakdown, isDark, t }: Habits
   });
 
   return (
-    <SectionCard title="📊 פילוח קטגוריות" isDark={isDark}>
+    <SectionCard title={t('categoryBreakdownTitle')} isDark={isDark}>
       {/* דונאט עם תווית מרכזית מתחלפת + legend מינימליסטי */}
       {donutItems.length > 0 && (
         <Box sx={{ mb: 2 }}>

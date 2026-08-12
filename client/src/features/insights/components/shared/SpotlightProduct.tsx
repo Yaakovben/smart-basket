@@ -4,8 +4,8 @@ import { fadeIn } from './animations';
 // ===== Spotlight Product - המוצר הנקנה ביותר כ-hero ראווה =====
 // אמוג'י-קטגוריה ענק על רקע גרדיאנט, שם המוצר, ספירה גדולה.
 // משתמש בנתונים הקיימים של topProducts אבל נותן להם זוהר.
-export const SpotlightProduct = ({ name, count, icon, isDark }: {
-  name: string; count: number; icon: string; isDark: boolean;
+export const SpotlightProduct = ({ name, count, icon, isDark, t }: {
+  name: string; count: number; icon: string; isDark: boolean; t: (key: string) => string;
 }) => (
   <Box sx={{
     position: 'relative', mb: 2, p: 2, borderRadius: '20px',
@@ -47,7 +47,7 @@ export const SpotlightProduct = ({ name, count, icon, isDark }: {
           fontSize: 10.5, fontWeight: 800, letterSpacing: 0.6,
           opacity: 0.92, textTransform: 'uppercase',
         }}>
-          ⭐ המוצר המוביל שלך
+          {t('topProductLabel')}
         </Typography>
         <Typography sx={{
           fontSize: 22, fontWeight: 900, lineHeight: 1.15, mt: 0.2,
@@ -60,7 +60,10 @@ export const SpotlightProduct = ({ name, count, icon, isDark }: {
         <Typography sx={{
           fontSize: 12, opacity: 0.95, mt: 0.4, lineHeight: 1.4, fontWeight: 600,
         }}>
-          קנית <Typography component="span" sx={{ fontWeight: 900, fontSize: 14 }}>{count}</Typography> פעמים — האהוב שלך 💚
+          {(() => {
+            const [before, after] = t('boughtTimesFavorite').split('{count}');
+            return <>{before}<Typography component="span" sx={{ fontWeight: 900, fontSize: 14 }}>{count}</Typography>{after}</>;
+          })()}
         </Typography>
       </Box>
     </Box>

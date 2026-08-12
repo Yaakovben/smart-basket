@@ -3,6 +3,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import type { InsightsData } from '../../../../../services/api';
+import { useSettings } from '../../../../../global/context/SettingsContext';
 
 interface PulseStatsRowProps {
   streaks: InsightsData['streaks'];
@@ -13,6 +14,7 @@ interface PulseStatsRowProps {
 
 // שורת 3 סטטיסטיקות: סטריק שבועות, צמיחה מול חודש קודם, תדירות קנייה ממוצעת.
 export const PulseStatsRow = ({ streaks, monthComparison, shoppingFrequency, isDark }: PulseStatsRowProps) => {
+  const { t } = useSettings();
   const hasGrowthBaseline = monthComparison?.hasBaseline ?? false;
   const growth = monthComparison?.productsGrowth ?? 0;
   const growthPositive = hasGrowthBaseline && growth > 0;
@@ -31,7 +33,7 @@ export const PulseStatsRow = ({ streaks, monthComparison, shoppingFrequency, isD
           🔥{streaks?.currentWeeks || 0}
         </Typography>
         <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
-          סטריק · שיא {streaks?.longestWeeks || 0}
+          {t('streakLabel').replace('{best}', String(streaks?.longestWeeks || 0))}
         </Typography>
       </Paper>
       <Paper elevation={0} sx={{
@@ -46,7 +48,7 @@ export const PulseStatsRow = ({ streaks, monthComparison, shoppingFrequency, isD
           </Typography>
         </Box>
         <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
-          {hasGrowthBaseline ? 'לעומת חודש שעבר' : 'אין עדיין חודש להשוואה'}
+          {hasGrowthBaseline ? t('vsLastMonth') : t('noBaselineMonth')}
         </Typography>
       </Paper>
       <Paper elevation={0} sx={{
@@ -56,11 +58,11 @@ export const PulseStatsRow = ({ streaks, monthComparison, shoppingFrequency, isD
       }}>
         <Typography sx={{ fontSize: 20, fontWeight: 800, color: '#14B8A6', lineHeight: 1 }}>
           {shoppingFrequency?.avgDaysBetween
-            ? (shoppingFrequency.avgDaysBetween === 1 ? 'יום' : `${shoppingFrequency.avgDaysBetween} ימים`)
+            ? (shoppingFrequency.avgDaysBetween === 1 ? t('dayWordSingle') : t('daysBetweenValue').replace('{days}', String(shoppingFrequency.avgDaysBetween)))
             : '—'}
         </Typography>
         <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, mt: 0.35 }}>
-          בין קניות בממוצע
+          {t('avgBetweenPurchases')}
         </Typography>
       </Paper>
     </Box>

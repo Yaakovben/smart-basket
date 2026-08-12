@@ -39,8 +39,8 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
         accent="#14B8A6"
         mainEmoji="🧾"
         floatingItems={['💰', '📊', '🛒', '📈']}
-        title="מאגר המחירים עדיין לא נטען"
-        description="ניתוח ההוצאות מבוסס על מאגר המחירים הממשלתי האמיתי. ברגע שהוא ייטען, כאן תראה כמה הוצאת החודש, על מה הכי הרבה, וכמה אתה צפוי להוציא."
+        title={t('priceDbNotLoadedTitle')}
+        description={t('priceDbNotLoadedDesc')}
       />
     );
   }
@@ -52,8 +52,8 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
         accent="#14B8A6"
         mainEmoji="🧾"
         floatingItems={['💰', '📊', '🛒', '📈']}
-        title="עדיין לא סימנת קניות החודש"
-        description="ברגע שתסמן ✅ מוצרים שקנית, כאן יופיע ניתוח ההוצאות שלך - כמה הוצאת, על מה הכי הרבה, וכמה אתה צפוי להוציא עד סוף החודש."
+        title={t('noPurchasesThisMonthTitle')}
+        description={t('noPurchasesThisMonthDesc')}
       />
     );
   }
@@ -100,23 +100,26 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
     <>
       <HeroInsight
         icon="🧾"
-        text={<>הוצאת כ-<b>{formatILS(spending.monthTotal)}</b> החודש</>}
+        text={(() => {
+          const [p1, p2] = t('spentThisMonth').split('{amount}');
+          return <>{p1}<b>{formatILS(spending.monthTotal)}</b>{p2}</>;
+        })()}
         accent="#14B8A6"
         isDark={isDark}
       />
 
-      <SectionCard title="📊 סיכום החודש" isDark={isDark}>
+      <SectionCard title={t('monthSummaryTitle')} isDark={isDark}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
           <StatCard
             value={<MoneyValue amount={spending.monthTotal} />}
-            label="הוצאה החודש"
+            label={t('spentThisMonthLabel')}
             color="#14B8A6"
             bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
             border="rgba(20,184,166,0.15)"
           />
           <StatCard
             value={spending.projectedMonthTotal !== null ? <MoneyValue amount={spending.projectedMonthTotal} /> : '—'}
-            label="צפי לסוף החודש"
+            label={t('projectedMonthEndLabel')}
             color="#0D9488"
             bg={isDark ? 'rgba(13,148,136,0.08)' : 'rgba(13,148,136,0.05)'}
             border="rgba(13,148,136,0.15)"
@@ -133,13 +136,17 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
               </Typography>
             </Box>
             <Typography sx={{ fontSize: 9.5, color: 'text.secondary', fontWeight: 700, mt: 0.5, letterSpacing: 0.3 }}>
-              לעומת חודש שעבר
+              {t('vsLastMonth')}
             </Typography>
           </Paper>
         </Box>
         {spending.projectedMonthTotal !== null && daysLeft > 0 && (
           <Typography sx={{ fontSize: 10.5, color: 'text.secondary', textAlign: 'center', mt: 1.25 }}>
-            הצפי מבוסס על קצב של <b>{formatILS(dailyRate)}</b> ליום · נשארו <b>{daysLeft}</b> ימים בחודש
+            {(() => {
+              const [p1, rest] = t('projectionRateHint').split('{rate}');
+              const [p2, p3] = rest.split('{days}');
+              return <>{p1}<b>{formatILS(dailyRate)}</b>{p2}<b>{daysLeft}</b>{p3}</>;
+            })()}
           </Typography>
         )}
       </SectionCard>
@@ -156,20 +163,20 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
           <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>{topCategoryIcon}</Typography>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
-              הכי הרבה הוצאת על
+              {t('topSpendingCategoryLabel')}
             </Typography>
             <Typography sx={{ fontSize: 16, fontWeight: 800, lineHeight: 1.2, mt: 0.15 }}>
               {topCategoryLabel}
             </Typography>
             <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
-              {formatILS(spending.topCategory.amount)} · {spending.topCategory.percentage}% מההוצאה החודשית
+              {t('spendingCategoryPctLine').replace('{amount}', formatILS(spending.topCategory.amount)).replace('{pct}', String(spending.topCategory.percentage))}
             </Typography>
           </Box>
         </Box>
       )}
 
       {donutItems.length > 0 && (
-        <SectionCard title="💸 פילוח הוצאה לפי קטגוריה" isDark={isDark}>
+        <SectionCard title={t('categorySpendingBreakdownTitle')} isDark={isDark}>
           <Box sx={{ mb: 2 }}>
             <CategoryDonut
               items={donutItems}
@@ -228,7 +235,7 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
 
       {/* פילוח לפי רשימה - מוצג רק כשיש יותר מרשימה אחת עם הוצאות */}
       {spending.listBreakdown && spending.listBreakdown.length > 1 && (
-        <SectionCard title="🗂️ פילוח הוצאה לפי רשימה" isDark={isDark}>
+        <SectionCard title={t('listSpendingBreakdownTitle')} isDark={isDark}>
           {/* בר אופקי מחולק לפי רשימות */}
           <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
             {spending.listBreakdown.map((list, idx) => {
@@ -278,7 +285,7 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
         <Typography sx={{ fontSize: 12, flexShrink: 0, lineHeight: 1.4 }}>ℹ️</Typography>
         <Typography sx={{ fontSize: 10.5, color: 'text.disabled', lineHeight: 1.6 }}>
           {spending.disclaimer}
-          {totalSeen > 0 && ` (זוהו ${spending.monthMatchedCount} מתוך ${totalSeen} פריטים)`}
+          {totalSeen > 0 && t('seenItemsSuffix').replace('{matched}', String(spending.monthMatchedCount)).replace('{total}', String(totalSeen))}
         </Typography>
       </Box>
     </>

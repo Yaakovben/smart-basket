@@ -129,7 +129,7 @@ export const ProductDetailsModal = memo(({
               fontSize: 10, fontWeight: 800, color: '#0F766E',
               letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
-              הערה
+              {t('note')}
             </Typography>
           </Box>
           <Typography sx={{

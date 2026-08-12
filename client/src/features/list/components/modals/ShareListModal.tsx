@@ -71,7 +71,7 @@ export const ShareListModal = memo(({
     if (isIOS) {
       setMoreMenuAnchor(null);
       trackEvent('list_shared', { channel: 'pdf_ios' });
-      generateListPdf(list.name)
+      generateListPdf(list.name, t('preparingPdf'))
         .then(async (pdfFile) => {
           if (pdfFile && navigator.share && navigator.canShare?.({ files: [pdfFile] })) {
             try {
@@ -177,7 +177,7 @@ export const ShareListModal = memo(({
           <Button
             variant="outlined"
             onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
-            aria-label="אפשרויות נוספות"
+            aria-label={t('moreOptionsAria')}
             sx={{ flex: '0 0 auto', minWidth: 0, width: 52, py: 1.5, px: 0 }}
           >
             <MoreVertIcon />
