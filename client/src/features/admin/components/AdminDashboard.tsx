@@ -65,6 +65,7 @@ export const AdminDashboard = () => {
         userFilter={userFilter}
         onlineCount={onlineUserIds.size}
         stats={stats}
+        loading={loading}
         onFilterClick={handleFilterClick}
         onSelectAll={() => setUserFilter('all')}
         t={t}

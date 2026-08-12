@@ -13,7 +13,9 @@ export const RadialHourClock = ({ hourlyActivity, isDark }: {
   const max = Math.max(...hourlyActivity, 1);
   const peak = hourlyActivity.indexOf(max);
 
-  const size = 220;
+  // size גדל ל-260 כדי שה-labels של 0/6/12/18 (ברדיוס 114 מהמרכז)
+  // יישארו בתוך גבולות ה-SVG ולא ייחתכו על ידי overflow
+  const size = 260;
   const center = size / 2;
   const innerR = 40;
   const outerR = 96;
