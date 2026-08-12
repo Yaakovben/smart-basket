@@ -218,9 +218,15 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
     // עם נתונים ישנים עד שה-TTL פג. getActiveChainsWithCounts כבר עטוף
     // ב-cache גלובלי משלו (price.dal.ts) וזה סיפק את רוב שיפור הביצועים
     // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
+    // מפה מ-listId (string) לשם ואייקון - עבור פילוח הוצאות לפי רשימה
+    const listMeta = new Map(lists.map(l => [l._id.toString(), { name: l.name, icon: l.icon }]));
+
+    // העשרת purchasedProducts ב-listId (string) כדי לאפשר פילוח לפי רשימה בspending
+    const purchasedWithListId = purchasedProducts.map(p => ({ ...p, listId: p.listId.toString() }));
+
     const [groupStats, spending] = await Promise.all([
       getGroupStats(lists, userId, allProducts),
-      includeSpending ? computeSpending(userId, purchasedProducts) : Promise.resolve(emptySpending(false)),
+      includeSpending ? computeSpending(userId, purchasedWithListId, listMeta) : Promise.resolve(emptySpending(false)),
     ]);
 
     return {

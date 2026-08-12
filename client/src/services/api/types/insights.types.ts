@@ -53,6 +53,8 @@ export interface InsightsData {
     daysInMonth: number;
     topCategory: { category: string; amount: number; percentage: number } | null;
     categoryBreakdown: { category: string; amount: number; percentage: number }[];
+    // פילוח הוצאה לפי רשימה - כמה הוצאת מכל רשימה החודש
+    listBreakdown: { listId: string; name: string; icon: string; amount: number; percentage: number }[];
     previousMonthTotal: number | null;
     monthGrowthPct: number | null;
     hasBaseline: boolean;

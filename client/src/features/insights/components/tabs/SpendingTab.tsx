@@ -226,6 +226,49 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
         </SectionCard>
       )}
 
+      {/* פילוח לפי רשימה - מוצג רק כשיש יותר מרשימה אחת עם הוצאות */}
+      {spending.listBreakdown && spending.listBreakdown.length > 1 && (
+        <SectionCard title="🗂️ פילוח הוצאה לפי רשימה" isDark={isDark}>
+          {/* בר אופקי מחולק לפי רשימות */}
+          <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
+            {spending.listBreakdown.map((list, idx) => {
+              // צבעים קבועים ממותג התובנות - ירקרק ראשי + גוונים
+              const PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
+              const color = PALETTE[idx % PALETTE.length];
+              return (
+                <Box key={list.listId} sx={{ width: `${list.percentage}%`, bgcolor: color, transition: 'width 0.8s ease' }} />
+              );
+            })}
+          </Box>
+          {/* שורות רשימות */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+            {spending.listBreakdown.map((list, idx) => {
+              const PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
+              const color = PALETTE[idx % PALETTE.length];
+              return (
+                <Box
+                  key={list.listId}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 0.75,
+                    px: 0.75, py: 0.6, borderRadius: '8px',
+                  }}
+                >
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                  <Typography sx={{ fontSize: 14 }}>{list.icon}</Typography>
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {list.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', fontVariantNumeric: 'tabular-nums' }}>
+                    {formatILS(list.amount)}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color, minWidth: 32, textAlign: 'left' }}>{list.percentage}%</Typography>
+                </Box>
+              );
+            })}
+          </Box>
+        </SectionCard>
+      )}
+
       <Box sx={{
         display: 'flex', alignItems: 'flex-start', gap: 0.75,
         px: 1.25, py: 1, borderRadius: '10px',
