@@ -21,7 +21,10 @@ const RECONNECTION_CONFIG = {
   reconnectionDelay: 1000,
   reconnectionDelayMax: 10000,
   randomizationFactor: 0.5,
-  timeout: 20000,
+  // 10 שניות — תואם ל-timeout של checkAuth ב-useAuth. 20 שניות גרמו לחיווי
+  // "מתחבר" ארוך מדי בפתיחה ראשונית. ה-socket מתחבר רק אחרי getProfile,
+  // כך שאם השרת מגיב תוך 10ש' — החיבור מספיק בהחלט גם כאן.
+  timeout: 10000,
 };
 
 type SocketEventHandler<T> = (data: T) => void;
