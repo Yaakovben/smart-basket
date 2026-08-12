@@ -221,7 +221,9 @@
   </head>
   <body>
     <!-- מסך טעינה ראשוני - מינימליסטי ונקי -->
-    <div id="initial-loader">
+    <!-- style inline כגיבוי מוחלט: מבטיח תצוגה מיידית גם לפני שהדפדפן
+         הספיק להחיל את ה-<style> שב-<head> (edge case בחלק מהדפדפנים). -->
+    <div id="initial-loader" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#14B8A6;z-index:9999;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
       <!-- Halo עדין מאחורי הלוגו - vibe של "פועם" בלי עומס ויזואלי -->
       <div class="splash-halo"></div>
 

@@ -149,9 +149,14 @@ export const AppRouter = () => {
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
-  // הסתרת loader ראשוני כשבדיקת האימות הושלמה - בלי RAF כפול
+  // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
+  // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
+  // צויר בפועל לפני שמסירים את ה-loader — מונע הבהוב לבן של שבריר שנייה.
   useEffect(() => {
-    if (!authLoading) hideInitialLoader();
+    if (!authLoading) {
+      const raf = requestAnimationFrame(() => hideInitialLoader());
+      return () => cancelAnimationFrame(raf);
+    }
   }, [authLoading]);
 
   // הודעות מ-Service Worker: ניווט מהתראות בלבד.
