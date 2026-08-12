@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { insightsApi, authApi, type InsightsData } from '../../../services/api';
+import { insightsApi, type InsightsData } from '../../../services/api';
 import { priceComparisonApi, useUserLocation, type PriceComparisonData } from '../../priceComparison';
 import { safeStorage } from '../../../global/helpers';
 import { INSIGHTS_CACHE_KEY, PRICE_CACHE_KEY, ALL_LISTS_PRICE_CACHE_KEY, readCache, writeCache } from '../helpers/insightsCache';
@@ -23,14 +23,28 @@ const readCachedListsFallback = (): InsightsListMeta[] => {
   } catch { return []; }
 };
 
+// קריאת שם המשתמש מ-localStorage (נשמר ע"י SettingsContext בעת טעינת הפרופיל).
+// מונע קריאת API כפולה ל-/users/me שמתבצעת ממילא ב-SettingsContext בכל mount.
+const readCachedUserName = (): string | null => {
+  try { return localStorage.getItem('sb_user_name') ?? null; } catch { return null; }
+};
+
 // טעינה/רענון של insights + השוואת מחירים, כולל cache מקומי לפתיחה מיידית
 // ובחירת רשימה נשמרת. כל ה-state של מסך התובנות מרוכז כאן.
 export function useInsightsData(tab: InsightTab) {
-  const [data, setData] = useState<InsightsData | null>(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY));
+  // initialInsightsCache נשמר ב-ref כדי לקרוא localStorage פעם אחת בלבד
+  // (לא בכל רינדור) ובכל זאת לשתף את הערך בין אתחול data ל-loading.
+  const initCacheRef = useRef<InsightsData | null | undefined>(undefined);
+  if (initCacheRef.current === undefined) {
+    initCacheRef.current = readCache<InsightsData>(INSIGHTS_CACHE_KEY);
+  }
+  const [data, setData] = useState<InsightsData | null>(initCacheRef.current);
   const [priceData, setPriceData] = useState<PriceComparisonData | null>(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY));
-  const [loading, setLoading] = useState(() => readCache<InsightsData>(INSIGHTS_CACHE_KEY) === null);
+  const [loading, setLoading] = useState(initCacheRef.current === null);
   const [error, setError] = useState(false);
-  const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  // שם המשתמש נקרא מ-localStorage שמולא ע"י SettingsContext - ללא קריאת API.
+  // אין צורך ב-state כי הערך אינו משתנה במהלך החיים של הקומפוננטה.
+  const currentUserName = readCachedUserName();
   const [priceLoading, setPriceLoading] = useState(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY) === null);
   const [priceLoadingLabel, setPriceLoadingLabel] = useState<string>('משווה מחירים...');
   const [priceError, setPriceError] = useState(false);
@@ -76,8 +90,6 @@ export function useInsightsData(tab: InsightTab) {
 
   useEffect(() => {
     fetchInsights();
-    // שליפת שם המשתמש - לא חוסם שום דבר, נכשל בשקט
-    authApi.getProfile().then(u => setCurrentUserName(u?.name ?? null)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps -- טעינה ראשונית בלבד, ראו fetchInsights לרענון חוזר
   }, []);
 

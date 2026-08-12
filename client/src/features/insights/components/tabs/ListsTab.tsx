@@ -4,6 +4,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import type { InsightsData } from '../../../../services/api';
 import type { PriceComparisonData } from '../../../priceComparison';
 import { haptic } from '../../../../global/helpers';
+import { useSettings } from '../../../../global/context/SettingsContext';
 import {
   AnimatedNumber, StatCard, HeroInsight, InsightsEmptyState, GroupLeadershipHero, fadeIn,
 } from '../insightsShared';
@@ -27,6 +28,7 @@ interface ListsTabProps {
 // "מחירים". שימוש בגרסה המסוננת גרם לטאב הזה (שאמור להראות הכל) להציג
 // רשימה/קבוצה אחת בלבד כשהייתה רשימה ספציפית נבחרת בטאב האחר.
 export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUserName, onNavigateHome, onNavigateToList }: ListsTabProps) => {
+  const { t } = useSettings();
   // רשימות שפתוחות להצגת כל החברים (כשיש מעל 4)
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
 
@@ -44,10 +46,10 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
       accent="#14B8A6"
       mainEmoji="📋"
       floatingItems={['📝', '✨', '✅', '🎯']}
-      title="אין רשימות פעילות"
-      description="צור רשימה ראשונה ותתחיל להוסיף מוצרים. כאן תראה את הפעילות בכל הרשימות, חלוקת חברים בקבוצות, וסטטיסטיקות מלאות."
-      tips={['רשימות פרטיות', 'קבוצות משותפות', 'התראות בזמן אמת']}
-      ctaLabel="לרשימות שלי"
+      title={t('noActiveLists')}
+      description={t('noActiveListsDesc')}
+      tips={[t('tipPrivateLists'), t('tipSharedGroups'), t('tipRealtimeNotifications')]}
+      ctaLabel={t('toMyLists')}
       ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
       onCtaClick={() => { haptic('medium'); onNavigateHome(); }}
     />
@@ -56,8 +58,19 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
   // כותרת אישית — מנוסחת אנושית, לא רשימת מספרים
   const groupsCount = groupStats.length;
   const heroText = groupsCount > 0
-    ? <><b>{stats.totalLists}</b> רשימות · <b>{stats.totalProducts}</b> פריטים · פעיל ב-<b>{groupsCount}</b> {groupsCount === 1 ? 'קבוצה' : 'קבוצות'}</>
-    : <>יש לך <b>{stats.totalLists}</b> רשימות עם <b>{stats.totalProducts}</b> פריטים</>;
+    ? (() => {
+        const groupWord = groupsCount === 1 ? t('groupWordSingle') : t('groupWordPlural');
+        const [p1, rest] = t('heroListsProductsGroups').split('{lists}');
+        const [p2, rest2] = rest.split('{products}');
+        const [p3, rest3] = rest2.split('{count}');
+        const [p4, p5] = rest3.split('{groupWord}');
+        return <>{p1}<b>{stats.totalLists}</b>{p2}<b>{stats.totalProducts}</b>{p3}<b>{groupsCount}</b>{p4}{groupWord}{p5}</>;
+      })()
+    : (() => {
+        const [p1, rest] = t('heroListsWithProducts').split('{lists}');
+        const [p2, p3] = rest.split('{products}');
+        return <>{p1}<b>{stats.totalLists}</b>{p2}<b>{stats.totalProducts}</b>{p3}</>;
+      })();
 
   // מציאת המוסיף החזק ביותר בכל הקבוצות יחד - ייחודי לטאב רשימות
   const allMembers = groupStats.flatMap(g => g.memberBreakdown.map(m => ({ ...m, group: g.name })));
@@ -109,13 +122,17 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
           <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🏆</Typography>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
-              שיא תרומה
+              {t('topContributionTitle')}
             </Typography>
             <Typography sx={{ fontSize: 16, fontWeight: 800, lineHeight: 1.2, mt: 0.15 }}>
               {topContributor.name}
             </Typography>
             <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
-              הוסיף <b>{topContributor.added}</b> פריטים · {topContributor.group}
+              {(() => {
+                const [p1, rest] = t('addedItemsGroupLine').split('{count}');
+                const [p2, p3] = rest.split('{group}');
+                return <>{p1}<b>{topContributor.added}</b>{p2}{topContributor.group}{p3}</>;
+              })()}
             </Typography>
           </Box>
         </Box>
@@ -135,13 +152,17 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
           <Typography sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🛍️</Typography>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: 11, fontWeight: 700, opacity: 0.9, letterSpacing: 0.4 }}>
-              אבל מי שבאמת קונה
+              {t('actualBuyerTitle')}
             </Typography>
             <Typography sx={{ fontSize: 16, fontWeight: 800, lineHeight: 1.2, mt: 0.15 }}>
               {topBuyer.name}
             </Typography>
             <Typography sx={{ fontSize: 11.5, opacity: 0.85, mt: 0.15 }}>
-              קנה <b>{topBuyer.purchased}</b> פריטים · {topBuyer.group}
+              {(() => {
+                const [p1, rest] = t('boughtItemsGroupLine').split('{count}');
+                const [p2, p3] = rest.split('{group}');
+                return <>{p1}<b>{topBuyer.purchased}</b>{p2}{topBuyer.group}{p3}</>;
+              })()}
             </Typography>
           </Box>
         </Box>
@@ -151,21 +172,21 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1.75 }}>
         <StatCard
           value={<AnimatedNumber value={stats.totalLists} />}
-          label="רשימות"
+          label={t('lists')}
           color="#14B8A6"
           bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
           border="rgba(20,184,166,0.15)"
         />
         <StatCard
           value={<AnimatedNumber value={stats.totalProducts} />}
-          label={'פריטים בסה"כ'}
+          label={t('itemsTotalLabel')}
           color="#14B8A6"
           bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
           border="rgba(20,184,166,0.15)"
         />
         <StatCard
           value={uniqueMembers.size > 0 ? <AnimatedNumber value={uniqueMembers.size} /> : '—'}
-          label="חברים פעילים"
+          label={t('activeMembersLabel')}
           color="#14B8A6"
           bg={isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)'}
           border="rgba(20,184,166,0.15)"
@@ -187,9 +208,9 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
           const isFirstPrivate = !L.isGroup && (idx === 0 || prevList?.isGroup);
           const isFirstGroup = L.isGroup && (idx === 0 || !prevList?.isGroup);
           const sectionHeader = isFirstPrivate
-            ? { emoji: '🔒', label: 'רשימות פרטיות', count: arr.filter(x => !x.isGroup).length }
+            ? { emoji: '🔒', label: t('tipPrivateLists'), count: arr.filter(x => !x.isGroup).length }
             : isFirstGroup
-              ? { emoji: '👥', label: 'קבוצות', count: arr.filter(x => x.isGroup).length }
+              ? { emoji: '👥', label: t('groups'), count: arr.filter(x => x.isGroup).length }
               : null;
           return (
             <ListsTabItem
@@ -226,7 +247,7 @@ export const ListsTab = memo(({ isDark, stats, groupStats, priceData, currentUse
                 <Box sx={{ flex: 1 }}>
                   <Typography sx={{ fontSize: 14.5, fontWeight: 800 }}>{g.name}</Typography>
                   <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
-                    {g.membersCount} חברים
+                    {t('membersCountLabel').replace('{count}', String(g.membersCount))}
                   </Typography>
                 </Box>
               </Box>

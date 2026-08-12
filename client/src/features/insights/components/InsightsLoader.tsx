@@ -5,6 +5,7 @@
 import { memo } from 'react';
 import { Box } from '@mui/material';
 import { ShimmerList } from '../../../global/components';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface Props {
   text?: string;
@@ -12,10 +13,13 @@ interface Props {
   accent?: string;
 }
 
-export const InsightsLoader = memo(({ text, size = 'md' }: Props) => (
-  <Box sx={{ py: size === 'sm' ? 1.5 : 2.5 }} role="status" aria-live="polite" aria-label={text || 'טוען'}>
-    <ShimmerList count={size === 'sm' ? 3 : 5} rowHeight={size === 'sm' ? 44 : 64} gap={8} />
-  </Box>
-));
+export const InsightsLoader = memo(({ text, size = 'md' }: Props) => {
+  const { t } = useSettings();
+  return (
+    <Box sx={{ py: size === 'sm' ? 1.5 : 2.5 }} role="status" aria-live="polite" aria-label={text || t('loadingLabel')}>
+      <ShimmerList count={size === 'sm' ? 3 : 5} rowHeight={size === 'sm' ? 44 : 64} gap={8} />
+    </Box>
+  );
+});
 
 InsightsLoader.displayName = 'InsightsLoader';
