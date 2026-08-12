@@ -4,8 +4,8 @@
  * מבוסס על spending שכבר מחושב בשרת (server/api/src/services/spending.service.ts).
  */
 
-import { memo, useState } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { memo, useState, useMemo } from 'react';
+import { Box, Typography, Paper, Chip } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
@@ -28,6 +28,47 @@ const MoneyValue = ({ amount }: { amount: number }) => <>₪<AnimatedNumber valu
 export const SpendingTab = memo(({ data, isDark, t }: Props) => {
   const { spending } = data;
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+
+  // null = כל הרשימות נבחרות; Set = רק הרשימות שבסט
+  const [selectedListIds, setSelectedListIds] = useState<Set<string> | null>(null);
+
+  // הפלטה של צבעים לרשימות (עקבית בכל הקומפוננטה)
+  const LIST_PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
+
+  // הרשימות המסוננות לפי הבחירה
+  const filteredListBreakdown = useMemo(() => {
+    if (!spending.listBreakdown) return [];
+    if (selectedListIds === null) return spending.listBreakdown;
+    return spending.listBreakdown.filter(l => selectedListIds.has(l.listId));
+  }, [spending.listBreakdown, selectedListIds]);
+
+  // סכום כולל של הרשימות המסוננות (לחישוב אחוזים יחסיים)
+  const filteredTotal = useMemo(
+    () => filteredListBreakdown.reduce((sum, l) => sum + l.amount, 0),
+    [filteredListBreakdown],
+  );
+
+  const toggleList = (listId: string) => {
+    haptic('light');
+    setSelectedListIds(prev => {
+      const allIds = spending.listBreakdown!.map(l => l.listId);
+      // אם "הכל נבחר" - עוברים למצב שבו רק הנוכחי מוסר
+      const current = prev === null ? new Set(allIds) : new Set(prev);
+      if (current.has(listId)) {
+        current.delete(listId);
+        // אם לא נשארה אף רשימה - מחזירים לברירת מחדל (הכל)
+        if (current.size === 0) return null;
+      } else {
+        current.add(listId);
+        // אם כל הרשימות נבחרות שוב - מחזירים null (הכל)
+        if (current.size === allIds.length) return null;
+      }
+      return current;
+    });
+  };
+
+  const isListSelected = (listId: string) =>
+    selectedListIds === null || selectedListIds.has(listId);
 
   // הגנה: אם data הגיע מ-cache מקומי ישן (מלפני שהתווסף שדה spending), הוא
   // עלול להיות undefined לרגע עד שהנתונים הטריים מהשרת דורסים אותו - בלי
@@ -236,43 +277,120 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
       {/* פילוח לפי רשימה - מוצג רק כשיש יותר מרשימה אחת עם הוצאות */}
       {spending.listBreakdown && spending.listBreakdown.length > 1 && (
         <SectionCard title={t('listSpendingBreakdownTitle')} isDark={isDark}>
-          {/* בר אופקי מחולק לפי רשימות */}
-          <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
+
+          {/* chips לסינון רשימות */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5, alignItems: 'center' }}>
+            {/* כפתורי בחר הכל / נקה הכל */}
+            <Chip
+              label={selectedListIds === null ? 'הכל נבחר' : 'בחר הכל'}
+              size="small"
+              onClick={() => { haptic('light'); setSelectedListIds(null); }}
+              sx={{
+                fontSize: 11, fontWeight: 700, height: 26,
+                bgcolor: selectedListIds === null ? '#0D9488' : (isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.1)'),
+                color: selectedListIds === null ? '#fff' : '#0D9488',
+                border: '1.5px solid',
+                borderColor: '#0D9488',
+                '&:hover': { bgcolor: selectedListIds === null ? '#0b7a70' : 'rgba(13,148,136,0.22)' },
+                cursor: 'pointer',
+              }}
+            />
+            {/* chip לכל רשימה */}
             {spending.listBreakdown.map((list, idx) => {
-              // צבעים קבועים ממותג התובנות - ירקרק ראשי + גוונים
-              const PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
-              const color = PALETTE[idx % PALETTE.length];
+              const color = LIST_PALETTE[idx % LIST_PALETTE.length];
+              const selected = isListSelected(list.listId);
               return (
-                <Box key={list.listId} sx={{ width: `${list.percentage}%`, bgcolor: color, transition: 'width 0.8s ease' }} />
-              );
-            })}
-          </Box>
-          {/* שורות רשימות */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-            {spending.listBreakdown.map((list, idx) => {
-              const PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
-              const color = PALETTE[idx % PALETTE.length];
-              return (
-                <Box
+                <Chip
                   key={list.listId}
+                  label={`${list.icon} ${list.name}`}
+                  size="small"
+                  onClick={() => toggleList(list.listId)}
                   sx={{
-                    display: 'flex', alignItems: 'center', gap: 0.75,
-                    px: 0.75, py: 0.6, borderRadius: '8px',
+                    fontSize: 11, fontWeight: selected ? 700 : 500, height: 26,
+                    maxWidth: 140,
+                    bgcolor: selected ? `${color}22` : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+                    color: selected ? color : 'text.secondary',
+                    border: '1.5px solid',
+                    borderColor: selected ? `${color}60` : 'transparent',
+                    opacity: selected ? 1 : 0.55,
+                    transition: 'all 0.2s',
+                    '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+                    '&:hover': { opacity: 1, bgcolor: `${color}22` },
+                    cursor: 'pointer',
                   }}
-                >
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
-                  <Typography sx={{ fontSize: 14 }}>{list.icon}</Typography>
-                  <Typography sx={{ fontSize: 12.5, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {list.name}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', fontVariantNumeric: 'tabular-nums' }}>
-                    {formatILS(list.amount)}
-                  </Typography>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, color, minWidth: 32, textAlign: 'left' }}>{list.percentage}%</Typography>
-                </Box>
+                />
               );
             })}
           </Box>
+
+          {/* בר אופקי מחולק לפי הרשימות המסוננות */}
+          {filteredListBreakdown.length > 0 ? (
+            <>
+              <Box sx={{ display: 'flex', height: 8, borderRadius: 2, overflow: 'hidden', mb: 1.5 }}>
+                {filteredListBreakdown.map((list) => {
+                  // מציאת האינדקס המקורי לצורך שמירה על צבע עקבי
+                  const origIdx = spending.listBreakdown!.findIndex(l => l.listId === list.listId);
+                  const color = LIST_PALETTE[origIdx % LIST_PALETTE.length];
+                  // אחוז יחסי מתוך הסכום המסונן
+                  const pct = filteredTotal > 0 ? (list.amount / filteredTotal) * 100 : 0;
+                  return (
+                    <Box key={list.listId} sx={{ width: `${pct}%`, bgcolor: color, transition: 'width 0.6s ease' }} />
+                  );
+                })}
+              </Box>
+              {/* שורות רשימות */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                {filteredListBreakdown.map((list) => {
+                  const origIdx = spending.listBreakdown!.findIndex(l => l.listId === list.listId);
+                  const color = LIST_PALETTE[origIdx % LIST_PALETTE.length];
+                  const relativePct = filteredTotal > 0 ? Math.round((list.amount / filteredTotal) * 100) : 0;
+                  return (
+                    <Box
+                      key={list.listId}
+                      sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.75,
+                        px: 0.75, py: 0.6, borderRadius: '8px',
+                      }}
+                    >
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: 14 }}>{list.icon}</Typography>
+                      <Typography sx={{ fontSize: 12.5, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {list.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatILS(list.amount)}
+                      </Typography>
+                      <Typography sx={{ fontSize: 11, fontWeight: 700, color, minWidth: 32, textAlign: 'left' }}>
+                        {/* כשמסונן - מציג אחוז יחסי לסכום המסונן; כשהכל נבחר - האחוז המקורי */}
+                        {selectedListIds === null ? list.percentage : relativePct}%
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+              {/* סכום כולל מסונן - מוצג רק כשמסוננים */}
+              {selectedListIds !== null && filteredListBreakdown.length > 0 && (
+                <Box sx={{
+                  mt: 1, pt: 1,
+                  borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  px: 0.75,
+                }}>
+                  <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 600 }}>
+                    סה"כ מסונן
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0D9488', fontVariantNumeric: 'tabular-nums' }}>
+                    {formatILS(filteredTotal)}
+                  </Typography>
+                </Box>
+              )}
+            </>
+          ) : (
+            /* מצב שבו לא נבחרה אף רשימה */
+            <Typography sx={{ fontSize: 12.5, color: 'text.secondary', textAlign: 'center', py: 2 }}>
+              בחר לפחות רשימה אחת להצגה
+            </Typography>
+          )}
         </SectionCard>
       )}
 
