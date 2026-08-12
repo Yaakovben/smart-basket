@@ -27,8 +27,11 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
       return emptyInsights();
     }
 
-    // שליפה ישירה עם lean לביצועים (analytics בלבד, לא צריך populate)
-    const allProducts = await Product.find({ listId: { $in: listIds } }).lean();
+    // projection על שדות הדרושים בלבד - חוסך העברת name/note/unit/quantity מה-DB
+    const allProducts = await Product.find(
+      { listId: { $in: listIds } },
+      { listId: 1, name: 1, category: 1, isPurchased: 1, createdAt: 1, updatedAt: 1, addedBy: 1 }
+    ).lean();
 
     if (allProducts.length === 0) {
       return emptyInsights();

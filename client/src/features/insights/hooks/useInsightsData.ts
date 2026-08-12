@@ -83,8 +83,20 @@ export function useInsightsData(tab: InsightTab) {
       .then(res => {
         setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
         writeCache(INSIGHTS_CACHE_KEY, res);
+        setError(false);
       })
-      .catch(() => setError(true))
+      .catch(() => {
+        // retry אחד אחרי 3 שניות - מכסה CursorKilled (MongoDB 134) ו-cold start
+        setTimeout(() => {
+          insightsApi.getInsights()
+            .then(res => {
+              setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
+              writeCache(INSIGHTS_CACHE_KEY, res);
+              setError(false);
+            })
+            .catch(() => setError(true));
+        }, 3000);
+      })
       .finally(() => setLoading(false));
   }, []);
 
