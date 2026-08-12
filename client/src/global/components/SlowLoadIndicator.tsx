@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, keyframes } from '@mui/material';
+import { useSettings } from '../context/SettingsContext';
 
 interface Props {
   active: boolean;
@@ -60,10 +61,13 @@ const fly = keyframes`
 export const SlowLoadIndicator = ({
   active,
   delayMs = 600,
-  message = 'אוסף מחירים מכל הסניפים',
-  subMessage = 'רגע, מאחזר נתונים טריים מהשרת',
+  message,
+  subMessage,
   variant = 'modal',
 }: Props) => {
+  const { t } = useSettings();
+  const resolvedMessage = message ?? t('slowLoadDefaultMessage');
+  const resolvedSubMessage = subMessage ?? t('slowLoadDefaultSubMessage');
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -227,7 +231,7 @@ export const SlowLoadIndicator = ({
               lineHeight: 1.3,
               mb: isToast ? 0.25 : 0.5,
             }}>
-              {message}
+              {resolvedMessage}
             </Typography>
             {!isToast && (
               <Typography sx={{
@@ -235,7 +239,7 @@ export const SlowLoadIndicator = ({
                 color: 'rgba(15,118,110,0.65)',
                 lineHeight: 1.4,
               }}>
-                {subMessage}
+                {resolvedSubMessage}
               </Typography>
             )}
 

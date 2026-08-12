@@ -15,7 +15,7 @@ const HINT_AUTOHIDE_MS = 5000;
 // ancestor עם transform/filter שהיה הופך position:fixed ליחסי לאב.
 export const AiAssistantFab = () => {
   const navigate = useNavigate();
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   const [showHint, setShowHint] = useState(false);
 
@@ -68,11 +68,11 @@ export const AiAssistantFab = () => {
             },
           }}
         >
-          שאל את ה-AI ✨
+          {t('aiAssistantHint')}
         </Box>
       )}
       <Box
-        aria-label="עוזר קניות חכם"
+        aria-label={t('aiAssistantTitle')}
         role="button"
         tabIndex={0}
         onClick={(e) => {

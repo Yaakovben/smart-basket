@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { aiAssistantApi, AiAssistantStreamError, type AiChatMessage } from '../../../services/api';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 export interface ChatEntry extends AiChatMessage {
   id: string;
@@ -12,6 +13,7 @@ const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 // לשרת בכל פנייה (לא session בצד שרת) - כך אין state לנהל בין בקשות,
 // והשרת נשאר stateless כמו שאר ה-API.
 export function useAiAssistantChat() {
+  const { t } = useSettings();
   const [messages, setMessages] = useState<ChatEntry[]>([]);
   const [sending, setSending] = useState(false);
   const listEndRef = useRef<HTMLDivElement>(null);
@@ -47,22 +49,22 @@ export function useAiAssistantChat() {
         }
       });
       if (!started) {
-        setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: 'לא התקבלה תשובה, נסה שוב.', error: true }]);
+        setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: t('aiNoResponse'), error: true }]);
       }
     } catch (err) {
       const status = err instanceof AiAssistantStreamError ? err.status : undefined;
       const errorText = status === 503
-        ? 'עוזר ה-AI לא מוגדר כרגע בשרת.'
+        ? t('aiNotConfigured')
         : status === 429
-        ? 'יותר מדי הודעות בשעה האחרונה - נסה שוב מאוחר יותר.'
-        : 'משהו השתבש, נסה שוב.';
+        ? t('aiTooManyMessages')
+        : t('aiGenericError');
       // אם כבר התחיל להגיע טקסט לפני שהחיבור נקטע - משאירים אותו ומוסיפים
       // הודעת שגיאה נפרדת, במקום למחוק תשובה חלקית שכבר הוצגה למשתמש.
       setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: errorText, error: true }]);
     } finally {
       setSending(false);
     }
-  }, [messages, sending]);
+  }, [messages, sending, t]);
 
   return { messages, sending, sendMessage, listEndRef };
 }

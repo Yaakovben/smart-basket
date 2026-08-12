@@ -10,16 +10,11 @@ import { useAiAssistantChat } from '../hooks/useAiAssistantChat';
 import { ChatBubble } from './ChatBubble';
 import { AiThinkingIndicator } from './AiThinkingIndicator';
 
-const SUGGESTIONS = [
-  'מה כדאי לי לקנות החודש על סמך ההיסטוריה שלי?',
-  'איך חוסכים בקניות בסופר?',
-  'מתי הכי כדאי לעשות קניות גדולות?',
-];
-
 export const AiAssistantPage = memo(() => {
   const navigate = useNavigate();
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
+  const SUGGESTIONS = [t('aiSuggestion1'), t('aiSuggestion2'), t('aiSuggestion3')];
   const { messages, sending, sendMessage, listEndRef } = useAiAssistantChat();
   const [input, setInput] = useState('');
 
@@ -51,7 +46,7 @@ export const AiAssistantPage = memo(() => {
               <AiAssistantIcon sx={{ color: 'white', fontSize: 16 }} />
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
-              עוזר קניות חכם
+              {t('aiAssistantTitle')}
             </Typography>
           </Box>
           <Box sx={{ width: 36, flexShrink: 0 }} />
@@ -71,7 +66,7 @@ export const AiAssistantPage = memo(() => {
               <AiAssistantIcon sx={{ color: 'white', fontSize: 32 }} />
             </Box>
             <Typography sx={{ fontSize: 14, color: 'text.secondary', mb: 2.5, lineHeight: 1.7 }}>
-              שאל אותי על סופרים, מחירים, טיפים לחיסכון - או בקש המלצות מבוססות על הקניות האמיתיות שלך
+              {t('aiAssistantIntro')}
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {SUGGESTIONS.map(s => (
@@ -117,7 +112,7 @@ export const AiAssistantPage = memo(() => {
           fullWidth
           multiline
           maxRows={4}
-          placeholder="שאל משהו..."
+          placeholder={t('aiAssistantPlaceholder')}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => {

@@ -645,6 +645,46 @@ export type TranslationKeys =
   | 'weekDetailLine'
   | 'purchasedLegend'
   | 'pendingLegend'
-  | 'listSpendingBreakdownTitle';
+  | 'listSpendingBreakdownTitle'
+  // Clear cache confirm popup
+  | 'clearCacheConfirmMessage'
+  | 'clearCacheConfirmButton'
+  // Join group via QR
+  | 'joinViaQr'
+  // AI Assistant
+  | 'aiAssistantTitle'
+  | 'aiAssistantIntro'
+  | 'aiAssistantPlaceholder'
+  | 'aiAssistantHint'
+  | 'aiSuggestion1'
+  | 'aiSuggestion2'
+  | 'aiSuggestion3'
+  | 'aiNoResponse'
+  | 'aiNotConfigured'
+  | 'aiTooManyMessages'
+  | 'aiGenericError'
+  // Slow load indicator defaults
+  | 'slowLoadDefaultMessage'
+  | 'slowLoadDefaultSubMessage'
+  // QR / Barcode scanner
+  | 'scanBarcodeTitle'
+  | 'scanQrTitle'
+  | 'scanBarcodeConsentDesc'
+  | 'scanQrConsentDesc'
+  | 'scanNoImagesSaved'
+  | 'scanOpenCamera'
+  | 'scanPickFromGallery'
+  | 'scanPickFromGalleryAgain'
+  | 'scanCloseAria'
+  | 'scanOpeningCamera'
+  | 'scanBarcodeStatus'
+  | 'scanQrStatus'
+  | 'scanBarcodeTroubleHint'
+  | 'scanQrTroubleHint'
+  | 'scanBarcodeNotDetected'
+  | 'scanQrNotDetected'
+  | 'scanCloseButton'
+  | 'scanLocalOnlyDesc'
+  | 'scanGalleryConsentHint';
 
 export type Translations = Record<TranslationKeys, string>;
