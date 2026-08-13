@@ -1,6 +1,7 @@
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import { haptic } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 import type { SortMode } from '../helpers/priceComparisonCardHelpers';
 
 interface SortChipProps {
@@ -63,24 +64,26 @@ interface ChainSortBarProps {
 // כפתור המפה יושב כאן בכוונה - זו בדיוק השורה שבה המשתמש כבר חושב על
 // מרחק/מיקום (מיון "קרוב"), אז "הצג על מפה" הוא המשך טבעי של אותה כוונה
 // במקום פעולה מנותקת שצפה בראש הכרטיס.
-export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark, onOpenMap }: ChainSortBarProps) => (
+export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark, onOpenMap }: ChainSortBarProps) => {
+  const { t } = useSettings();
+  return (
   <Box sx={{ mb: 1.25 }}>
     {/* תווית "מיין לפי:" - מבהירה שאלה מסנני-משנה, לא ניווט ראשי */}
     <Typography sx={{
       fontSize: 10, fontWeight: 600, color: 'text.disabled',
       letterSpacing: 0.5, mb: 0.5, px: 0.25,
     }}>
-      מיין לפי:
+      {t('sortByLabel')}
     </Typography>
     <Box sx={{ display: 'flex', gap: 0.5, px: 0.25 }}>
-      <SortChip mode="distance" emoji="📍" label="קרוב" requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
-      <SortChip mode="price" emoji="💰" label="זול" sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
-      <SortChip mode="combined" emoji="⚖️" label="משולב" requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
+      <SortChip mode="distance" emoji="📍" label={t('sortNear')} requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
+      <SortChip mode="price" emoji="💰" label={t('sortCheap')} sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
+      <SortChip mode="combined" emoji="⚖️" label={t('sortCombined')} requiresLoc sortMode={sortMode} hasAnyLocation={hasAnyLocation} isDark={isDark} onSelect={setSortMode} />
       {onOpenMap && (
-        <Tooltip title="הצג את כל הסניפים על מפה">
+        <Tooltip title={t('showAllBranchesOnMap')}>
           <IconButton
             onClick={() => { haptic('light'); onOpenMap(); }}
-            aria-label="הצג את כל הסניפים על מפה"
+            aria-label={t('showAllBranchesOnMap')}
             sx={{
               // ברירת מחדל: ghost ניטרלי - לא נראה לחוץ. רק hover נותן אינדיקציה.
               // כך לא מתבלבל עם chip פעיל (שיש לו רקע turquoise).
@@ -102,8 +105,9 @@ export const ChainSortBar = ({ sortMode, setSortMode, hasAnyLocation, isDark, on
     </Box>
     {!hasAnyLocation && (
       <Typography sx={{ fontSize: 9.5, color: 'text.disabled', mt: 0.4, textAlign: 'center', fontStyle: 'italic' }}>
-        שתף מיקום כדי למיין לפי קרבה
+        {t('shareLocationToSortByDistance')}
       </Typography>
     )}
   </Box>
-);
+  );
+};

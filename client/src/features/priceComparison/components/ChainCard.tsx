@@ -6,6 +6,7 @@ import type { PriceChainTotal, NearestBranch } from '../types/priceComparison.ty
 import { RankBadge } from './RankBadge';
 import { ChainCardDetails } from './ChainCardDetails';
 import { haptic } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 // אנימציה עדינה לכרטיס הראשון - בצבע טורקיז ניטרלי שמתאים לכל סוג מיון
 // (זול/קרוב/משולב). נמנע מירוק שיוצר רושם "זול" כששורת הרצועה אומרת משהו אחר.
@@ -34,6 +35,7 @@ interface ChainCardProps {
 }
 
 export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, expanded, onToggle, onOpenNav, hasLocation, winnerColor, cheapestPriceMap }: ChainCardProps) => {
+  const { t } = useSettings();
   const delta = chain.total - cheapestTotal;
   const hasMatches = chain.matchedCount > 0;
 
@@ -110,23 +112,23 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
               const total = chain.matchedCount + chain.unmatchedCount;
               return (
                 <Typography className="chain-meta" sx={{ fontSize: 11, color: 'text.secondary' }}>
-                  זוהו{' '}
+                  {t('matchedLabelPrefix')}{' '}
                   <Typography component="span" sx={{
                     fontSize: 11, fontWeight: 800,
                     color: chain.isComplete ? '#059669' : '#D97706',
                   }}>
                     {chain.matchedCount}
                   </Typography>
-                  {' '}מתוך{' '}
+                  {' '}{t('matchedLabelMiddle')}{' '}
                   <Typography component="span" sx={{ fontSize: 11, fontWeight: 700 }}>
                     {total}
                   </Typography>
-                  {' '}מוצרים
+                  {' '}{t('matchedLabelSuffix')}
                 </Typography>
               );
             })() : (
               <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>
-                {chain.hasData ? 'אין התאמות' : 'לא פורסם'}
+                {chain.hasData ? t('noMatches') : t('notPublished')}
               </Typography>
             )}
             {chain.nearestBranch ? (
@@ -147,15 +149,15 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
                     }}
                     title={
                       typeof chain.nearestBranch.distanceKm !== 'number'
-                        ? 'אין לנו מיקום מדויק - המרחק לא ידוע. ניתן לנווט לפי הכתובת'
+                        ? t('noExactLocationHint')
                         : chain.nearestBranch.isApproximate
-                          ? 'מרחק משוער לפי מרכז העיר - הכתובת לא נמצאה במפה'
+                          ? t('approxDistanceHint')
                           : undefined
                     }
                   >
                     {typeof chain.nearestBranch.distanceKm === 'number'
-                      ? `${chain.nearestBranch.isApproximate ? '~' : ''}${chain.nearestBranch.distanceKm.toFixed(1)} ק"מ`
-                      : 'מיקום לא מדויק'}
+                      ? t('chainDistanceKm').replace('{km}', `${chain.nearestBranch.isApproximate ? '~' : ''}${chain.nearestBranch.distanceKm.toFixed(1)}`)
+                      : t('locationInaccurate')}
                   </Typography>
                 </Box>
               </>
@@ -165,7 +167,7 @@ export const ChainCard = memo(({ chain, rank, isWinner, cheapestTotal, isDark, e
               <>
                 <Typography sx={{ fontSize: 10.5, color: 'text.disabled' }}>·</Typography>
                 <Typography sx={{ fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>
-                  אין סניף במאגר
+                  {t('noBranchInDatabase')}
                 </Typography>
               </>
             )}

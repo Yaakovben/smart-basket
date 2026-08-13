@@ -1,12 +1,15 @@
 import { Box, Typography, Paper } from '@mui/material';
 import type { PriceChainTotal } from '../types/priceComparison.types';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SavingsHeroProps {
   cheapest: PriceChainTotal;
   savings: number;
 }
 
-export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => (
+export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => {
+  const { t } = useSettings();
+  return (
   <Paper elevation={0} sx={{
     mb: 1.5,
     borderRadius: '20px',
@@ -22,7 +25,7 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => (
     <Box sx={{ position: 'relative', px: 2, pt: 1.5, pb: 1.5 }}>
       {/* שורה עליונה: תווית */}
       <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', mb: 0.5, letterSpacing: 0.3 }}>
-        🛒 הסל הזול ביותר
+        {t('savingsHeroLabel')}
       </Typography>
 
       {/* שם הרשת - הדגשה ראשית */}
@@ -39,13 +42,13 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => (
         {/* מחיר הסל */}
         <Box>
           <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.7)', fontWeight: 600, mb: 0.1 }}>
-            מחיר הסל
+            {t('savingsHeroPriceLabel')}
           </Typography>
           <Typography sx={{ fontSize: 20, fontWeight: 800, color: 'white', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
             ₪{cheapest.total.toFixed(0)}
           </Typography>
           <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', mt: 0.1 }}>
-            {cheapest.matchedCount} מוצרים
+            {t('savingsHeroProductsCount').replace('{count}', String(cheapest.matchedCount))}
           </Typography>
         </Box>
 
@@ -61,7 +64,7 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => (
             flexShrink: 0,
           }}>
             <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.8)', fontWeight: 700, mb: 0.1 }}>
-              תחסוך עד
+              {t('savingsHeroSaveUpTo')}
             </Typography>
             <Typography sx={{
               fontSize: 24, fontWeight: 900, color: 'white',
@@ -75,4 +78,5 @@ export const SavingsHero = ({ cheapest, savings }: SavingsHeroProps) => (
       </Box>
     </Box>
   </Paper>
-);
+  );
+};

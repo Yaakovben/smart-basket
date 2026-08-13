@@ -2,6 +2,7 @@ import { Box, Typography } from '@mui/material';
 import type { PriceChainTotal } from '../types/priceComparison.types';
 import { ProductRow } from './ProductRow';
 import { ChainBranchInfo } from './ChainBranchInfo';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface ChainCardDetailsProps {
   chain: PriceChainTotal;
@@ -13,7 +14,9 @@ interface ChainCardDetailsProps {
 }
 
 // תוכן מורחב - רשימת מוצרים + סניף קרוב. מוצג בתוך ה-Collapse של כרטיס רשת.
-export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheapestPriceMap }: ChainCardDetailsProps) => (
+export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheapestPriceMap }: ChainCardDetailsProps) => {
+  const { t } = useSettings();
+  return (
   <Box sx={{
     px: 1.5, pb: 1.5,
     borderTop: '1px dashed',
@@ -43,7 +46,7 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheape
           fontSize: 9.5, color: 'text.disabled', textAlign: 'center',
           mt: 1, lineHeight: 1.45, fontStyle: 'italic', px: 1,
         }}>
-          ℹ️ ההתאמה למוצרים ברשת מבוססת על מילים בשם המוצר. הצגנו את ההתאמה הקרובה ביותר; בדקו את שם המוצר המלא בסניף.
+          {t('matchDisclaimer')}
         </Typography>
       </Box>
     ) : (
@@ -54,10 +57,11 @@ export const ChainCardDetails = ({ chain, isDark, hasMatches, onNavigate, cheape
       }}>
         <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
           {chain.hasData
-            ? 'לא הצלחנו לזהות מוצרים מהרשימה ברשת זו'
-            : 'הרשת לא פרסמה מחירים היום - ננסה שוב בקרוב'}
+            ? t('noProductsIdentifiedInChain')
+            : t('chainNoPricesToday')}
         </Typography>
       </Box>
     )}
   </Box>
-);
+  );
+};
