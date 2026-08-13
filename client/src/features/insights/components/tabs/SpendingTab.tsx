@@ -5,7 +5,7 @@
  */
 
 import { memo, useState, useMemo } from 'react';
-import { Box, Typography, Paper, Chip, keyframes } from '@mui/material';
+import { Box, Typography, Paper, keyframes } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -51,7 +51,7 @@ interface ListBreakdownSectionProps {
   LIST_PALETTE: string[];
 }
 
-/* קומפוננטת פילוח לפי רשימה - Chips + כרטיסים עם progress bar */
+/* קומפוננטת פילוח לפי רשימה - עיצוב נקי וברור */
 const ListBreakdownSection = memo(({
   listBreakdown,
   filteredListBreakdown,
@@ -65,197 +65,151 @@ const ListBreakdownSection = memo(({
   LIST_PALETTE,
 }: ListBreakdownSectionProps) => {
   const allSelected = selectedListIds === null;
+  const grandTotal = listBreakdown.reduce((s, l) => s + l.amount, 0);
 
   return (
     <Paper
       elevation={0}
       sx={{
-        mb: 2, p: 2, borderRadius: '18px',
+        mb: 2, borderRadius: '18px', overflow: 'hidden',
         bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#fff',
         border: '1.5px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
       }}
     >
-      {/* כותרת הסקציה */}
-      <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', mb: 1.5, letterSpacing: 0.2 }}>
-        {t('listSpendingBreakdownTitle')}
-      </Typography>
+      {/* כותרת + סכום כולל */}
+      <Box sx={{
+        px: 2, pt: 1.75, pb: 1.5,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+      }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary' }}>
+          {t('listSpendingBreakdownTitle')}
+        </Typography>
+        <Box sx={{ textAlign: 'left' }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 900, color: '#0D9488', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+            {formatILS(allSelected ? grandTotal : filteredTotal)}
+          </Typography>
+          {!allSelected && (
+            <Typography sx={{ fontSize: 10, color: 'text.disabled', textAlign: 'center', mt: 0.2 }}>
+              מסונן
+            </Typography>
+          )}
+        </Box>
+      </Box>
 
-      {/* שורת Chips לסינון */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2, alignItems: 'center' }}>
-        {/* כפתור "הכל" */}
-        <Chip
-          label={allSelected ? '✓ הכל' : 'הכל'}
-          size="small"
+      {/* כפתורי סינון - ברורים ומובנים */}
+      <Box sx={{ px: 2, py: 1.25, display: 'flex', flexWrap: 'wrap', gap: 0.6, borderBottom: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
+        <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'text.disabled', alignSelf: 'center', mr: 0.25 }}>
+          סנן:
+        </Typography>
+        {/* כפתור הכל */}
+        <Box
+          component="button"
           onClick={() => { haptic('light'); setSelectedListIds(null); }}
-          icon={allSelected ? undefined : undefined}
           sx={{
-            fontSize: 11.5, fontWeight: 800, height: 28, px: 0.5,
-            bgcolor: allSelected ? '#0D9488' : (isDark ? 'rgba(13,148,136,0.12)' : 'rgba(13,148,136,0.08)'),
+            display: 'inline-flex', alignItems: 'center', gap: 0.4,
+            px: 1.1, py: 0.45,
+            borderRadius: '20px', border: '1.5px solid',
+            cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+            transition: 'all 0.18s ease',
+            bgcolor: allSelected ? '#0D9488' : 'transparent',
+            borderColor: '#0D9488',
             color: allSelected ? '#fff' : '#0D9488',
-            border: '1.5px solid #0D9488',
-            borderRadius: '14px',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              bgcolor: allSelected ? '#0b7a70' : 'rgba(13,148,136,0.18)',
-            },
-            '& .MuiChip-label': { px: 1 },
           }}
-        />
+        >
+          {allSelected && <CheckIcon sx={{ fontSize: 12 }} />}
+          הכל
+        </Box>
 
-        {/* chip לכל רשימה */}
+        {/* כפתור לכל רשימה */}
         {listBreakdown.map((list, idx) => {
           const color = LIST_PALETTE[idx % LIST_PALETTE.length];
           const selected = isListSelected(list.listId);
           return (
-            <Chip
+            <Box
               key={list.listId}
-              size="small"
+              component="button"
               onClick={() => toggleList(list.listId)}
-              icon={
-                selected
-                  ? <CheckIcon sx={{ fontSize: '13px !important', color: `${color} !important`, ml: '6px !important' }} />
-                  : undefined
-              }
-              label={`${list.icon} ${list.name}`}
               sx={{
-                fontSize: 11.5, fontWeight: selected ? 700 : 500, height: 28,
-                maxWidth: 160, borderRadius: '14px',
-                bgcolor: selected
-                  ? (isDark ? `${color}28` : `${color}18`)
-                  : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
-                color: selected ? color : 'text.disabled',
-                border: '1.5px solid',
-                borderColor: selected ? `${color}70` : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
-                transition: 'all 0.22s ease',
-                '& .MuiChip-label': {
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  pr: 1,
-                },
-                '&:hover': {
-                  bgcolor: isDark ? `${color}30` : `${color}22`,
-                  borderColor: `${color}80`,
-                  color: color,
-                },
+                display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                px: 1.1, py: 0.45, maxWidth: 150,
+                borderRadius: '20px', border: '1.5px solid',
+                cursor: 'pointer', fontSize: 11.5, fontWeight: selected ? 700 : 500,
+                transition: 'all 0.18s ease',
+                bgcolor: selected ? color : 'transparent',
+                borderColor: color,
+                color: selected ? '#fff' : color,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
-            />
+            >
+              {selected && <CheckIcon sx={{ fontSize: 12, flexShrink: 0 }} />}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{list.icon} {list.name}</span>
+            </Box>
           );
         })}
       </Box>
 
-      {/* כרטיסי הרשימות */}
+      {/* שורות הרשימות */}
       {filteredListBreakdown.length > 0 ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+        <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
           {filteredListBreakdown.map((list, i) => {
-            /* צבע עקבי לפי האינדקס המקורי */
             const origIdx = listBreakdown.findIndex(l => l.listId === list.listId);
             const color = LIST_PALETTE[origIdx % LIST_PALETTE.length];
-            /* אחוז יחסי מהסכום המסונן */
-            const relativePct = filteredTotal > 0 ? Math.round((list.amount / filteredTotal) * 100) : 0;
-            const displayPct = selectedListIds === null ? list.percentage : relativePct;
+            const base = allSelected ? grandTotal : filteredTotal;
+            const pct = base > 0 ? Math.round((list.amount / base) * 100) : 0;
 
             return (
               <Box
                 key={list.listId}
                 sx={{
-                  p: '12px 14px',
-                  borderRadius: '14px',
-                  bgcolor: isDark ? `${color}12` : `${color}0C`,
-                  border: '1.5px solid',
-                  borderColor: isDark ? `${color}30` : `${color}22`,
-                  animation: `${slideIn} 0.3s ease ${i * 0.06}s both`,
-                  transition: 'box-shadow 0.2s',
-                  '&:hover': {
-                    boxShadow: `0 4px 16px ${color}28`,
-                  },
+                  py: 1.4,
+                  borderBottom: i < filteredListBreakdown.length - 1 ? '1px solid' : 'none',
+                  borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                  animation: `${slideIn} 0.3s ease ${i * 0.05}s both`,
                 }}
               >
-                {/* שורה עליונה: אייקון + שם + סכום */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.25 }}>
-                  {/* אייקון הרשימה בעיגול צבעוני */}
-                  <Box sx={{
-                    width: 36, height: 36, borderRadius: '10px',
-                    bgcolor: isDark ? `${color}28` : `${color}1A`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, fontSize: 18, lineHeight: 1,
-                  }}>
-                    {list.icon}
-                  </Box>
-
-                  {/* שם הרשימה */}
+                {/* שורה עליונה: נקודת צבע + אייקון + שם + סכום */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.85 }}>
+                  {/* נקודת זיהוי צבעונית */}
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+                  <Typography sx={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{list.icon}</Typography>
                   <Typography sx={{
-                    flex: 1, fontSize: 13.5, fontWeight: 700,
+                    flex: 1, fontSize: 14, fontWeight: 700, color: 'text.primary',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    color: 'text.primary',
                   }}>
                     {list.name}
                   </Typography>
-
-                  {/* סכום בולט */}
-                  <Typography sx={{
-                    fontSize: 17, fontWeight: 900, color,
-                    fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px',
-                    flexShrink: 0,
-                  }}>
-                    {formatILS(list.amount)}
-                  </Typography>
+                  <Box sx={{ textAlign: 'left', flexShrink: 0 }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 900, color: 'text.primary', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                      {formatILS(list.amount)}
+                    </Typography>
+                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color, textAlign: 'center', mt: 0.1 }}>
+                      {pct}%
+                    </Typography>
+                  </Box>
                 </Box>
 
-                {/* Progress bar + אחוז */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                  {/* הבר האופקי */}
+                {/* בר אופקי */}
+                <Box sx={{
+                  height: 6, borderRadius: 3,
+                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                  overflow: 'hidden', ml: 2.75,
+                }}>
                   <Box sx={{
-                    flex: 1, height: 7, borderRadius: 4,
-                    bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)',
-                    overflow: 'hidden',
-                  }}>
-                    <Box sx={{
-                      height: '100%', borderRadius: 4,
-                      bgcolor: color,
-                      width: `${displayPct}%`,
-                      transition: 'width 0.7s cubic-bezier(0.4,0,0.2,1)',
-                      backgroundImage: `linear-gradient(90deg, ${color}CC, ${color})`,
-                    }} />
-                  </Box>
-
-                  {/* אחוז */}
-                  <Typography sx={{
-                    fontSize: 12, fontWeight: 800, color,
-                    minWidth: 34, textAlign: 'left',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}>
-                    {displayPct}%
-                  </Typography>
+                    height: '100%', borderRadius: 3, bgcolor: color,
+                    width: `${pct}%`,
+                    transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+                  }} />
                 </Box>
               </Box>
             );
           })}
-
-          {/* שורת סכום כולל - מוצגת רק כשמסוננים */}
-          {selectedListIds !== null && (
-            <Box sx={{
-              mt: 0.25, pt: 1.25,
-              borderTop: '1.5px solid',
-              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              px: 0.5,
-            }}>
-              <Typography sx={{ fontSize: 12.5, color: 'text.secondary', fontWeight: 600 }}>
-                סה"כ מסונן
-              </Typography>
-              <Typography sx={{
-                fontSize: 15, fontWeight: 900, color: '#0D9488',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {formatILS(filteredTotal)}
-              </Typography>
-            </Box>
-          )}
         </Box>
       ) : (
-        /* לא נבחרה אף רשימה */
-        <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 2.5 }}>
-          בחר לפחות רשימה אחת להצגה
+        <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center', py: 3 }}>
+          בחר לפחות רשימה אחת
         </Typography>
       )}
     </Paper>
@@ -273,8 +227,8 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
   // null = כל הרשימות נבחרות; Set = רק הרשימות שבסט
   const [selectedListIds, setSelectedListIds] = useState<Set<string> | null>(null);
 
-  // הפלטה של צבעים לרשימות (עקבית בכל הקומפוננטה)
-  const LIST_PALETTE = ['#0D9488', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4', '#CCFBF1'];
+    // הפלטה של צבעים לרשימות - צבעים שונים וברורים זה מזה
+  const LIST_PALETTE = ['#0D9488', '#7C3AED', '#EA580C', '#0284C7', '#16A34A', '#DC2626'];
 
   // הרשימות המסוננות לפי הבחירה
   const filteredListBreakdown = useMemo(() => {
