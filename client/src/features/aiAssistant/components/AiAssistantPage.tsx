@@ -1,5 +1,5 @@
-import { useState, memo, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, memo, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SendIcon from '@mui/icons-material/Send';
@@ -12,6 +12,7 @@ import { AiThinkingIndicator } from './AiThinkingIndicator';
 
 export const AiAssistantPage = memo(() => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   // בחירה אקראית של 3 שאלות מוצעות מתוך 9 - שונות בכל פתיחה
@@ -30,6 +31,20 @@ export const AiAssistantPage = memo(() => {
   }, []);
   const { messages, sending, sendMessage, listEndRef } = useAiAssistantChat();
   const [input, setInput] = useState('');
+
+  // הגעה עם הקשר מוכן (למשל "נתח לי את הרשימה X" מכפתור בעמוד רשימה) -
+  // שולחים אוטומטית פעם אחת בלבד. מנקים את ה-state מההיסטוריה מיד כדי
+  // שרענון/back-forward לא ישלחו שוב את אותה הודעה.
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    const initialPrompt = (location.state as { initialPrompt?: string } | null)?.initialPrompt;
+    if (initialPrompt && !autoSentRef.current) {
+      autoSentRef.current = true;
+      sendMessage(initialPrompt);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSend = () => {
     if (!input.trim() || sending) return;

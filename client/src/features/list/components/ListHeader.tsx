@@ -12,8 +12,10 @@ import { COMMON_STYLES } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
+import type { ListCostEstimate } from '../hooks/useListCostEstimate';
 import { QuickAddBar } from './header/QuickAddBar';
 import { ListProgressBar } from './header/ListProgressBar';
+import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
 const glassButtonSx = COMMON_STYLES.glassIconButton;
 
@@ -46,6 +48,7 @@ interface ListHeaderProps {
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
+  costEstimate?: ListCostEstimate | null;
 }
 
 export const ListHeader = memo(({
@@ -54,6 +57,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
+  costEstimate,
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -284,6 +288,15 @@ export const ListHeader = memo(({
       </Tabs>
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />
+
+      {costEstimate && (
+        <Box sx={{
+          display: 'flex', justifyContent: 'center', mt: 0.75,
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
+          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} />
+        </Box>
+      )}
     </Box>
   );
 });

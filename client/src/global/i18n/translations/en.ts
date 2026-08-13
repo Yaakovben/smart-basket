@@ -762,4 +762,10 @@ export const en: Translations = {
   locationDeniedHint: 'If you want, allow location in browser settings or click "Try again"',
   locationErrorHint: 'Try again or refresh the page',
   kmUnit: 'km',
+  // List cost estimate badge
+  estimatedCostBadge: '~₪{amount} approx.',
+  estimatedCostDisclaimer: 'Estimate based on government price data, not exact',
+  fullDetailsInInsights: 'Full details in Insights',
+  askAiAboutList: 'Analyze this list with AI',
+  aiAnalyzeListPrompt: 'Analyze my shopping list "{name}" - roughly how much will it cost, and where can I save?',
 };

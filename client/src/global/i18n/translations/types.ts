@@ -765,6 +765,12 @@ export type TranslationKeys =
   | 'locationBlockedDesktopHint'
   | 'locationDeniedHint'
   | 'locationErrorHint'
-  | 'kmUnit';
+  | 'kmUnit'
+  // List cost estimate badge
+  | 'estimatedCostBadge'
+  | 'estimatedCostDisclaimer'
+  | 'fullDetailsInInsights'
+  | 'askAiAboutList'
+  | 'aiAnalyzeListPrompt';
 
 export type Translations = Record<TranslationKeys, string>;

@@ -8,6 +8,7 @@ import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import { useListCostEstimate } from '../hooks/useListCostEstimate';
 import { PULL_MAX } from '../helpers/list-helpers';
 import { CATEGORY_ICONS } from '../../../global/constants';
 
@@ -101,6 +102,9 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
   }, [handleQuickAdd]);
 
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(refreshList);
+
+  // אומדן עלות עדין לרשימה - נטען ברקע, לא חוסם שום דבר
+  const { estimate: costEstimate } = useListCostEstimate(list.id, pending.length);
 
   // refs לגישה לערכים עדכניים מתוך useCallbacks יציבים - מונע יצירת closures
   // חדשות בכל render שתשברנה את memo של ListHeader ויגרמנה לרינדור מחדש מיותר.
@@ -263,6 +267,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
         onScanList={stableScanList}
+        costEstimate={costEstimate}
       />
 
       {scanListMounted && (

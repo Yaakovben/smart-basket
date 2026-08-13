@@ -763,4 +763,10 @@ export const he: Translations = {
   locationDeniedHint: 'אם רוצים, אפשרו מיקום בהגדרות הדפדפן או לחצו "נסה שוב"',
   locationErrorHint: 'נסה שוב או רענן את הדף',
   kmUnit: 'ק״מ',
+  // List cost estimate badge
+  estimatedCostBadge: '~₪{amount} בערך',
+  estimatedCostDisclaimer: 'הערכה על סמך מחירי מאגר ממשלתי, לא מדויקת',
+  fullDetailsInInsights: 'פירוט מלא בתובנות',
+  askAiAboutList: 'נתח לי את הרשימה עם AI',
+  aiAnalyzeListPrompt: 'נתח לי את רשימת הקניות "{name}" - כמה זה בערך יעלה, ואיפה אפשר לחסוך?',
 };

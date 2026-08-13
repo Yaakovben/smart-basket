@@ -762,4 +762,10 @@ export const ru: Translations = {
   locationDeniedHint: 'При желании разрешите геолокацию в настройках браузера или нажмите «Попробовать снова»',
   locationErrorHint: 'Попробуйте снова или обновите страницу',
   kmUnit: 'км',
+  // List cost estimate badge
+  estimatedCostBadge: '~₪{amount} примерно',
+  estimatedCostDisclaimer: 'Оценка на основе государственных данных о ценах, не точная',
+  fullDetailsInInsights: 'Подробнее в аналитике',
+  askAiAboutList: 'Проанализировать список с ИИ',
+  aiAnalyzeListPrompt: 'Проанализируй мой список покупок "{name}" - сколько это примерно будет стоить и где можно сэкономить?',
 };
