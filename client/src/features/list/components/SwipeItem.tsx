@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
@@ -88,10 +85,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   // אם קרתה; אחרת רק ההוספה המקורית.
   const displayName = (name: string) => name === currentUserName ? t('you') : name;
   const lastAction = isPurchased && product.purchasedBy
-    ? { Icon: ShoppingCartRoundedIcon, label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
+    ? { label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
     : product.updatedBy && product.updatedBy !== product.addedBy
-    ? { Icon: EditRoundedIcon, label: t('updatedByLabel'), name: displayName(product.updatedBy) }
-    : { Icon: AddCircleRoundedIcon, label: t('addedBy'), name: displayName(product.addedBy) };
+    ? { label: t('updatedByLabel'), name: displayName(product.updatedBy) }
+    : { label: t('addedBy'), name: displayName(product.addedBy) };
 
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
@@ -451,15 +448,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             )}
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, minWidth: 0 }}>
-            <Typography sx={{ fontSize: '13px', color: 'text.secondary', flexShrink: 0 }}>
-              {product.quantity} {product.unit} •
-            </Typography>
-            <lastAction.Icon sx={{ fontSize: 12.5, color: 'text.disabled', flexShrink: 0 }} />
             <Typography sx={{
               fontSize: '13px', color: 'text.secondary',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
             }}>
-              {lastAction.label} {lastAction.name}
+              {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
             </Typography>
             {/* חץ עדין - רמז שיש עוד פרטים (היסטוריה מלאה) בלחיצה על הכרטיס */}
             <ChevronLeftRoundedIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0, opacity: 0.6 }} />
