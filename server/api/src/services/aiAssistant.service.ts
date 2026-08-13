@@ -16,6 +16,7 @@ import { logger } from '../config';
 import { env } from '../config/environment';
 import { AppError } from '../errors';
 import { getUserInsights } from './insights.service';
+import { ListDAL } from '../dal/list.dal';
 
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -42,7 +43,7 @@ function isConfigured(): boolean {
 
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
 // ה-InsightsData הגולמי (ענק, ברובו לא רלוונטי לשיחה, מכביד על ה-context).
-function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>): string {
+function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>, listNames: string[]): string {
   const {
     stats, topProducts, categoryBreakdown, spending, shoppingFrequency, forgotten, upcomingNeeds,
     shoppingScore, shoppingPersonality, streaks, monthComparison, anomalies, groupStats,
@@ -53,6 +54,9 @@ function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>)
   }
 
   const lines: string[] = [];
+  if (listNames.length > 0) {
+    lines.push(`הרשימות של המשתמש: ${listNames.join(', ')}.`);
+  }
   lines.push(`סה"כ ${stats.totalProducts} מוצרים ב-${stats.totalLists} רשימות, ${stats.completionRate}% הושלמו. היום הכי פעיל: ${stats.mostActiveDay}.`);
   lines.push(`ציון קנייה: ${shoppingScore}/100. פרופיל קונה: ${shoppingPersonality.description}.`);
 
@@ -90,20 +94,26 @@ function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>)
   return lines.join('\n');
 }
 
-const SYSTEM_PROMPT_HEADER = `אתה העוזר החכם של SmartBasket - אפליקציית רשימות קניות. תפקידך:
-1. לענות על שאלות כלליות בנושא קניות וסופרמרקטים - השוואת מחירים, טיפים לחיסכון, מתי כדאי לקנות מה, הבדלים בין רשתות בישראל וכו'.
-2. לתת המלצות אישיות מבוססות על נתוני הקנייה האמיתיים של המשתמש (מצורפים למטה).
+const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של אפליקציית SmartBasket לניהול רשימות קניות חכמות.
 
-כללים:
-- ענה תמיד בעברית, בטון ידידותי וממוקד. תשובות קצרות ותכליתיות - מקסימום 3-4 משפטים או 4-5 נקודות, לעולם לא חיבור ארוך.
-- כשמתאים (רשימת טיפים/המלצות/כמה אפשרויות) - נסח כנקודות קצרות (•), לא פסקה ארוכה ומשורשרת. שאלה פשוטה - תשובה של משפט-שניים, בלי מבנה מיותר.
-- אל תחזור על השאלה או תפתח במבוא מיותר ("שאלה מצוינת!" וכו') - עבור ישר לתשובה.
-- כשאתה נותן המלצה שמבוססת על הנתונים האמיתיים של המשתמש - ציין את זה במפורש ("על סמך ההיסטוריה שלך...").
-- אם שאלה כללית ולא קשורה לנתוני המשתמש - אין צורך להזכיר את הנתונים, פשוט תענה על השאלה.
-- אתה לא יודע מחירים עדכניים בזמן אמת של רשתות ספציפיות - אם נשאלת על מחיר מדויק עכשווי, אמור זאת בכנות והצע להסתכל בטאב "השוואת מחירים" באפליקציה.
+תפקידך הבלעדי הוא לעזור למשתמשים בנושאים הקשורים ישירות לקניות, אוכל וניהול הרשימות שלהם:
+• שאלות על רשימות הקניות, מוצרים, קטגוריות, הרגלי קנייה
+• השוואת מחירים, טיפים לחיסכון, מתי כדאי לקנות מה
+• הבדלים בין רשתות סופרמרקט בישראל (שופרסל, רמי לוי, יינות ביתן, קרפור, טיב טעם וכו')
+• ניתוח ההוצאות וההרגלים האישיים של המשתמש על סמך הנתונים שלו
+
+כשנשאלת על נושא שאינו קשור לקניות, אוכל, סופרים, או ניהול רשימות - ענה בנימוס:
+"אני כאן רק לענות על שאלות הקשורות לקניות ולרשימות שלך. נסה לשאול אותי על מוצרים, מחירים, או דרכי חיסכון בסופר 🛒"
+
+כללי תגובה:
+- ענה תמיד בעברית, בטון ידידותי וממוקד. מקסימום 3-4 משפטים, או 4-5 נקודות - לא יותר.
+- כשמתאים - נסח כנקודות קצרות (•). שאלה פשוטה = תשובה של משפט-שניים.
+- אל תפתח במבוא ("שאלה מצוינת!" וכו') - עבור ישר לתשובה.
+- כשאתה מסתמך על נתוני המשתמש - ציין זאת ("על סמך הרשימות שלך...").
+- אין לך גישה למחירים בזמן אמת - אם נשאלת על מחיר ספציפי עכשווי, הפנה לטאב "השוואת מחירים" באפליקציה.
 - אל תמציא נתונים שלא סופקו לך.
 
-נתוני הקנייה האמיתיים של המשתמש הנוכחי:`;
+נתוני הרשימות וההרגלים האמיתיים של המשתמש הנוכחי:`;
 
 export interface AssistantStreamHandle {
   reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -140,8 +150,12 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     userContext = cached.context;
   } else {
     try {
-      const insights = await getUserInsights(userId, { includeSpending: false });
-      userContext = buildUserContext(insights);
+      const [insights, lists] = await Promise.all([
+        getUserInsights(userId, { includeSpending: true }),
+        ListDAL.findUserLists(userId),
+      ]);
+      const listNames = lists.map(l => `${l.icon || ''} ${l.name}`.trim());
+      userContext = buildUserContext(insights, listNames);
     } catch (err) {
       logger.warn('aiAssistant: failed to fetch user insights for context, continuing without it: %s', (err as Error).message);
       userContext = 'לא ניתן היה לטעון את נתוני המשתמש כרגע.';

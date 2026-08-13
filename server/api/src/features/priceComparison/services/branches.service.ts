@@ -61,7 +61,7 @@ async function ensureSeedLoaded(): Promise<void> {
   try {
     const chainNames: Record<string, string> = {
       shufersal: 'שופרסל', rami_levy: 'רמי לוי', yohananof: 'יוחננוף',
-      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת',
+      osher_ad: 'אושר עד', tiv_taam: 'טיב טעם', keshet: 'קשת', netto_hisachon: 'נטו חיסכון',
       stop_market: 'סטופ מרקט', politzer: 'פוליצר', doralon: 'דור אלון',
       victory: 'ויקטורי', maayan_2000: 'מעיין 2000',
     };

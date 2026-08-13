@@ -78,8 +78,12 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
   // chainId נפרד. ראו הסרת ה-adapter המדומה 'netto' - לא היה לו username
   // אמיתי לנחש כי הרשת הזו לא קיימת כרשומה עצמאית בפורטל.
   super_sapir: {
-    brands: ['Super Sapir', 'SuperSapir', 'Sapir', 'Netto Hisachon', 'Netto'],
-    names: ['סופר ספיר', 'ספיר', 'רשת ספיר', 'נטו חיסכון', 'נטו'],
+    brands: ['Super Sapir', 'SuperSapir', 'Sapir'],
+    names: ['סופר ספיר', 'ספיר', 'רשת ספיר'],
+  },
+  netto_hisachon: {
+    brands: ['Netto Hisachon', 'Netto', 'Netto Hisachon Sapir'],
+    names: ['נטו חיסכון', 'נטו', 'נטו-חיסכון'],
   },
   carrefour: {
     brands: ['Carrefour', 'Yaynot Bitan', 'Yaynot Bitan Carrefour', 'Yenot Bitan', 'Mega', 'Mega Bool', "Mega Ba'Ir"],
