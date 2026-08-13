@@ -9,6 +9,7 @@ import { EditListBasicFields } from './EditListBasicFields';
 import { ChangePasswordSection } from './ChangePasswordSection';
 import { ConvertToGroupSection } from './ConvertToGroupSection';
 import { ConvertToPrivateSection } from './ConvertToPrivateSection';
+import { SaveAsTemplateSection } from './SaveAsTemplateSection';
 
 // ===== מודאל עריכת רשימה =====
 interface EditListModalProps {
@@ -23,6 +24,7 @@ interface EditListModalProps {
   onConvertToGroup?: (password: string) => void | Promise<void>;
   onConvertToPrivate?: () => void | Promise<void>;
   onChangePassword?: (password: string) => void | Promise<void>;
+  onToggleTemplate?: (value: boolean) => Promise<void>;
 }
 
 export const EditListModal = memo(({
@@ -36,7 +38,8 @@ export const EditListModal = memo(({
   onUpdateData,
   onConvertToGroup,
   onConvertToPrivate,
-  onChangePassword
+  onChangePassword,
+  onToggleTemplate,
 }: EditListModalProps) => {
   const { t } = useSettings();
 
@@ -62,6 +65,13 @@ export const EditListModal = memo(({
 
       {list.isGroup && onConvertToPrivate && list.members.length === 0 && (
         <ConvertToPrivateSection onConvertToPrivate={onConvertToPrivate} />
+      )}
+
+      {onToggleTemplate && (
+        <SaveAsTemplateSection
+          isTemplate={!!list.isTemplate}
+          onToggle={onToggleTemplate}
+        />
       )}
     </Modal>
   );

@@ -26,6 +26,8 @@ export interface SpendingData {
   monthGrowthPct: number | null;
   hasBaseline: boolean;
   disclaimer: string;
+  // מגמת הוצאות 6 חודשים אחרונים - ממוין ישן לחדש
+  monthlyTrend: { label: string; total: number; monthNum: number; year: number }[];
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -62,6 +64,7 @@ export function emptySpending(enabled = false): SpendingData {
     monthGrowthPct: null,
     hasBaseline: false,
     disclaimer: DISCLAIMER,
+    monthlyTrend: [],
   };
 }
 
@@ -113,10 +116,20 @@ async function computeSpendingUncached(
   if (activeChains.length === 0) return emptySpending(false);
 
   const now = new Date();
+  const HEBREW_MONTHS = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יוני', 'יולי', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const daysElapsed = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // בניית גבולות 6 חודשים אחרונים (כולל חודש נוכחי)
+  const monthBounds: { start: Date; end: Date; monthNum: number; year: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    monthBounds.push({ start, end, monthNum: start.getMonth(), year: start.getFullYear() });
+  }
 
   const thisMonthPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= thisMonthStart);
   const prevMonthPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= prevMonthStart && new Date(p.updatedAt) < thisMonthStart);
@@ -131,7 +144,10 @@ async function computeSpendingUncached(
   // איפה המשתמש קנה בפועל, ורשת בודדת (osher_ad) מכסה רק חלק קטן מהמוצרים.
   // אותו דפוס בדיוק כמו chainComparison.ts: candidates רב-רשתיים פעם אחת,
   // ואז ניקוד per-chain בזיכרון בלי שאילתות DB נוספות.
-  const uniqueNames = Array.from(new Set([...thisMonthPurchases, ...prevMonthPurchases].map(p => p.name)));
+  // שמות ייחודיים מכל 6 החודשים - ה-matchCache יכסה את כולם
+  const sixMonthsStart = monthBounds[0].start;
+  const allSixMonthsPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= sixMonthsStart);
+  const uniqueNames = Array.from(new Set(allSixMonthsPurchases.map(p => p.name)));
 
   const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
   await Promise.all(
@@ -165,6 +181,21 @@ async function computeSpendingUncached(
 
   const thisMonth = summarizeMonth(thisMonthPurchases, matchCache);
   const prevMonth = summarizeMonth(prevMonthPurchases, matchCache);
+
+  // מגמת 6 חודשים - פילטור לכל חודש בנפרד ושימוש ב-matchCache שכבר בנוי
+  const monthlyTrend = monthBounds.map(({ start, end, monthNum, year }) => {
+    const monthPurchases = purchasedProducts.filter(p => {
+      const d = new Date(p.updatedAt);
+      return d >= start && d < end;
+    });
+    const summary = summarizeMonth(monthPurchases, matchCache);
+    return {
+      label: HEBREW_MONTHS[monthNum],
+      total: summary.total,
+      monthNum,
+      year,
+    };
+  });
 
   const hasBaseline = prevMonthPurchases.length > 0 && prevMonth.matchedCount > 0;
   const previousMonthTotal = hasBaseline ? prevMonth.total : null;
@@ -217,5 +248,6 @@ async function computeSpendingUncached(
     monthGrowthPct,
     hasBaseline,
     disclaimer: DISCLAIMER,
+    monthlyTrend,
   };
 }

@@ -6,6 +6,9 @@
 
 import { memo, useState, useMemo } from 'react';
 import { Box, Typography, Paper, keyframes } from '@mui/material';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts';
 import CheckIcon from '@mui/icons-material/Check';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -50,6 +53,125 @@ interface ListBreakdownSectionProps {
   t: (key: string) => string;
   LIST_PALETTE: string[];
 }
+
+/* טולטיפ מותאם לתרשים המגמה */
+interface TrendTooltipProps {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: string;
+  isDark: boolean;
+}
+const TrendTooltip = memo(({ active, payload, label, isDark }: TrendTooltipProps) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <Box sx={{
+      px: 1.5, py: 1,
+      borderRadius: '10px',
+      bgcolor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.97)',
+      border: '1px solid',
+      borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+      boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.12)',
+      pointerEvents: 'none',
+    }}>
+      <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.25 }}>{label}</Typography>
+      <Typography sx={{ fontSize: 14, fontWeight: 900, color: '#0D9488', fontVariantNumeric: 'tabular-nums' }}>
+        {formatILS(payload[0].value)}
+      </Typography>
+    </Box>
+  );
+});
+TrendTooltip.displayName = 'TrendTooltip';
+
+/* תרשים מגמת הוצאות חודשית */
+interface MonthlyTrendChartProps {
+  trend: { label: string; total: number; monthNum: number; year: number }[];
+  currentMonthNum: number;
+  currentYear: number;
+  isDark: boolean;
+  growthPct: number | null;
+  hasBaseline: boolean;
+}
+const MonthlyTrendChart = memo(({ trend, currentMonthNum, currentYear, isDark, growthPct, hasBaseline }: MonthlyTrendChartProps) => {
+  // הצגה רק אם יש לפחות 2 חודשים עם נתונים
+  const monthsWithData = trend.filter(m => m.total > 0).length;
+  if (monthsWithData < 2) return null;
+
+  const BAR_COLOR = '#0D9488';
+  const BAR_COLOR_CURRENT = '#14B8A6';
+  const BAR_BG = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)';
+
+  const growthUp = hasBaseline && growthPct !== null && growthPct > 0;
+  const growthDown = hasBaseline && growthPct !== null && growthPct < 0;
+  const growthColor = !hasBaseline || growthPct === null ? '#94A3B8'
+    : growthUp ? '#EF4444'
+    : growthDown ? '#22C55E'
+    : '#94A3B8';
+
+  return (
+    <Box sx={{ mb: 2, animation: `${fadeIn} 0.4s ease both` }}>
+      <Box sx={{
+        borderRadius: '18px', overflow: 'hidden',
+        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#fff',
+        border: '1.5px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+        p: 2,
+      }}>
+        {/* כותרת */}
+        <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', mb: 1.5 }}>
+          📈 מגמת הוצאות חודשית
+        </Typography>
+
+        {/* תרשים */}
+        <Box sx={{ bgcolor: BAR_BG, borderRadius: '12px', p: 1, pb: 0 }}>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={trend} margin={{ top: 8, right: 4, left: -28, bottom: 0 }} barCategoryGap="28%">
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fontWeight: 600, fill: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 10, fill: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)' }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => v === 0 ? '' : `₪${Math.round(v / 1000)}K`}
+                width={44}
+              />
+              <Tooltip
+                content={<TrendTooltip isDark={isDark} />}
+                cursor={{ fill: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', radius: 6 }}
+              />
+              <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                {trend.map((entry) => {
+                  const isCurrent = entry.monthNum === currentMonthNum && entry.year === currentYear;
+                  return (
+                    <Cell
+                      key={`${entry.year}-${entry.monthNum}`}
+                      fill={isCurrent ? BAR_COLOR_CURRENT : BAR_COLOR}
+                      opacity={isCurrent ? 1 : 0.55}
+                    />
+                  );
+                })}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Box>
+
+        {/* שינוי מול חודש קודם */}
+        {hasBaseline && growthPct !== null && (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 1.25 }}>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>שינוי לעומת חודש קודם:</Typography>
+            <Typography sx={{ fontSize: 12, fontWeight: 800, color: growthColor, fontVariantNumeric: 'tabular-nums' }}>
+              {growthPct > 0 ? '+' : ''}{growthPct}%
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+});
+MonthlyTrendChart.displayName = 'MonthlyTrendChart';
 
 /* קומפוננטת פילוח לפי רשימה - עיצוב נקי וברור */
 const ListBreakdownSection = memo(({
@@ -386,6 +508,18 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
           </Typography>
         )}
       </SectionCard>
+
+      {/* תרשים מגמת הוצאות 6 חודשים */}
+      {spending.monthlyTrend && (
+        <MonthlyTrendChart
+          trend={spending.monthlyTrend}
+          currentMonthNum={new Date().getMonth()}
+          currentYear={new Date().getFullYear()}
+          isDark={isDark}
+          growthPct={spending.monthGrowthPct}
+          hasBaseline={spending.hasBaseline}
+        />
+      )}
 
       {spending.topCategory && topCategoryLabel && (
         <Box sx={{

@@ -59,5 +59,7 @@ export interface InsightsData {
     monthGrowthPct: number | null;
     hasBaseline: boolean;
     disclaimer: string;
+    // מגמת הוצאות 6 חודשים אחרונים - ממוין ישן לחדש
+    monthlyTrend: { label: string; total: number; monthNum: number; year: number }[];
   };
 }

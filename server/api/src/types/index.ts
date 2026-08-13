@@ -68,6 +68,7 @@ export interface IListResponse {
   icon: string;
   color: string;
   isGroup: boolean;
+  isTemplate: boolean;
   owner: IUserResponse;
   members: IMemberResponse[];
   products: IProductResponse[];

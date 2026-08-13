@@ -30,6 +30,7 @@ export interface List {
   icon: string;
   color: string;
   isGroup: boolean;
+  isTemplate?: boolean;
   owner: {
     id: string;
     name: string;

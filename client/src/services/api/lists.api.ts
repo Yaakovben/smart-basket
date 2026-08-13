@@ -47,4 +47,28 @@ export const listsApi = {
     const response = await apiClient.delete<{ data: List }>(`/lists/${listId}/members/${memberId}`);
     return response.data.data;
   },
+
+  // === תבניות ===
+
+  async getTemplates(): Promise<List[]> {
+    const response = await apiClient.get<{ data: List[] }>('/lists/templates');
+    return response.data.data;
+  },
+
+  async saveAsTemplate(listId: string, isTemplate: boolean): Promise<List> {
+    validateId(listId, 'listId');
+    const response = await apiClient.post<{ data: List }>(`/lists/${listId}/save-as-template`, { isTemplate });
+    return response.data.data;
+  },
+
+  async applyTemplate(templateId: string): Promise<List> {
+    validateId(templateId, 'templateId');
+    const response = await apiClient.post<{ data: List }>(`/lists/templates/${templateId}/apply`);
+    return response.data.data;
+  },
+
+  async deleteTemplate(templateId: string): Promise<void> {
+    validateId(templateId, 'templateId');
+    await apiClient.delete(`/lists/templates/${templateId}`);
+  },
 };

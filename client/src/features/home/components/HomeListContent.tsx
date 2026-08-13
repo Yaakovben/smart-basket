@@ -3,11 +3,12 @@ import { Box, Typography, Button, IconButton } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import DoneIcon from '@mui/icons-material/Done';
-import type { List, User } from '../../../global/types';
+import type { List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { ShimmerBlock } from '../../../global/components';
 import type { HomeTab } from '../types/home-types';
 import { ListCard } from './ListCard';
+import { TemplatesSection } from './TemplatesSection';
 
 interface HomeListContentProps {
   contentRef: RefObject<HTMLDivElement | null>;
@@ -34,6 +35,11 @@ interface HomeListContentProps {
   onEnterReorder: () => void;
   onDragHandleStart: (index: number, clientY: number, clientX?: number) => void;
   t: (key: TranslationKeys) => string;
+  // תבניות - אופציונלי, מוצג רק אם יש
+  templates?: List[];
+  onTemplateApply?: (newList: List) => void;
+  onTemplateDelete?: (templateId: string) => void;
+  showToast?: (message: string, type?: ToastType) => void;
 }
 
 // אזור התוכן של מסך הבית: מצב שגיאת חיבור / סקלטון טעינה / ריק / רשימת כרטיסים עם סידור-מחדש.
@@ -42,6 +48,7 @@ export const HomeListContent = ({
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
   reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
+  templates, onTemplateApply, onTemplateDelete, showToast,
 }: HomeListContentProps) => {
   // ידיות גרירה יציבות לפי אינדקס - נמנע מיצירת פונקציה חדשה בכל רינדור
   // (שהייתה מבטלת את ה-React.memo של ListCard לכל הכרטיסים בכל תזוזת גרירה,
@@ -196,6 +203,16 @@ export const HomeListContent = ({
           {/* כפתור CTA הוסר - ה-FAB+ בתחתית מבצע את אותה פעולה. */}
         </Box>
       ) : (<>
+        {/* תבניות שמורות - מעל הרשימות, רק בטאב "הכל" ו"שלי" */}
+        {tab !== 'groups' && templates && templates.length > 0 && onTemplateApply && onTemplateDelete && showToast && (
+          <TemplatesSection
+            templates={templates}
+            isDark={isDark}
+            onApply={onTemplateApply}
+            onDelete={onTemplateDelete}
+            showToast={showToast}
+          />
+        )}
         <Box sx={{ mb: 1, px: 0.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography sx={{ fontSize: 12.5, fontWeight: 500, color: reorderMode ? 'primary.main' : 'text.secondary' }}>
