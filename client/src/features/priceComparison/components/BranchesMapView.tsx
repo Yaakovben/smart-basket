@@ -14,6 +14,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { priceComparisonApi } from '../services/priceComparison.api';
 import { NavigationPicker } from './NavigationPicker';
+import { useSettings } from '../../../global/context/SettingsContext';
 import type { NearestBranch } from '../types/priceComparison.types';
 
 const ISRAEL_CENTER: [number, number] = [31.7683, 35.2137];
@@ -97,12 +98,13 @@ function MapFlyTo({ location }: { location: { lat: number; lng: number } | null 
 
 // כפתור חזרה למיקום
 function RecenterBtn({ location }: { location: { lat: number; lng: number } | null }) {
+  const { t } = useSettings();
   const map = useMap();
   if (!location) return null;
   return (
     <IconButton
       onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_ZOOM), { duration: 0.6 })}
-      aria-label="מרכז למיקום שלי"
+      aria-label={t('mapRecenterAria')}
       sx={{
         position: 'absolute', bottom: 28, right: 10, zIndex: 1000,
         bgcolor: 'white', width: 40, height: 40, borderRadius: '10px',
@@ -138,6 +140,7 @@ interface Props {
 }
 
 export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) => {
+  const { t } = useSettings();
   const { location, status: locationStatus, requestLocation } = useUserLocation();
   const [branches, setBranches] = useState<NearbyBranch[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,51 +184,63 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
   // ה-JSX של עד 150 markers+popups ממורמז בנפרד מה-state של הדיאלוג
   // (navBranch/loading) - בלי זה, כל טאפ על "ניווט" בפופאפ מפעיל re-render
   // שבונה מחדש את כל עצי ה-Marker/Popup, וזה מה שגורם לתחושת "לא מגיב".
-  const branchMarkers = useMemo(() => validBranches.map((b, i) => (
-    <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
-      <Popup className="sb-popup" minWidth={210}>
-        <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-            {(() => {
-              const { fill } = getChainColor(b.chainId);
-              return (
+  const branchMarkers = useMemo(() => validBranches.map((b, i) => {
+    const distanceKm = location ? Math.round(haversineKm(location, b) * 10) / 10 : null;
+    return (
+      <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
+        <Popup className="sb-popup" minWidth={210}>
+          <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+              {(() => {
+                const { fill } = getChainColor(b.chainId);
+                return (
+                  <Box sx={{
+                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                    bgcolor: fill, color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
+                    boxShadow: `0 2px 6px ${fill}66`,
+                  }}>
+                    {getMonogram(b.chainName)}
+                  </Box>
+                );
+              })()}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
+                  {b.chainName}
+                </Typography>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
+                  {b.storeName}
+                </Typography>
+              </Box>
+              {distanceKm !== null && (
                 <Box sx={{
-                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  bgcolor: fill, color: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
-                  boxShadow: `0 2px 6px ${fill}66`,
+                  flexShrink: 0, bgcolor: 'rgba(13,148,136,0.1)', color: '#0D9488',
+                  fontSize: 10.5, fontWeight: 800, borderRadius: '999px',
+                  px: 1, py: 0.4, whiteSpace: 'nowrap',
                 }}>
-                  {getMonogram(b.chainName)}
+                  {t('mapDistanceKm').replace('{km}', String(distanceKm))}
                 </Box>
-              );
-            })()}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
-                {b.chainName}
-              </Typography>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
-                {b.storeName}
-              </Typography>
+              )}
             </Box>
+            {(b.address || b.city) && (
+              <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
+                📍 {[b.address, b.city].filter(Boolean).join(', ')}
+              </Typography>
+            )}
+            <Button
+              fullWidth size="small" variant="contained"
+              onClick={() => openNav(b)}
+              startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
+              sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
+            >
+              {t('mapPopupNavigate')}
+            </Button>
           </Box>
-          {(b.address || b.city) && (
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-              📍 {[b.address, b.city].filter(Boolean).join(', ')}
-            </Typography>
-          )}
-          <Button
-            fullWidth size="small" variant="contained"
-            onClick={() => openNav(b)}
-            startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-            sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
-          >
-            ניווט
-          </Button>
-        </Box>
-      </Popup>
-    </Marker>
-  )), [validBranches, openNav]);
+        </Popup>
+      </Marker>
+    );
+  }), [validBranches, openNav, location, t]);
 
   return (
     <Box sx={{
@@ -276,7 +291,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
 
           {location && (
             <Marker position={[location.lat, location.lng]} icon={userIcon}>
-              <Popup className="sb-popup"><b>המיקום שלי</b></Popup>
+              <Popup className="sb-popup"><b>{t('mapMyLocation')}</b></Popup>
             </Marker>
           )}
 
@@ -296,7 +311,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         }}>
           <CircularProgress size={32} sx={{ color: '#14B8A6' }} />
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
-            טוען סניפים...
+            {t('mapLoadingBranches')}
           </Typography>
         </Box>
       )}
@@ -311,7 +326,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           maxWidth: '80%', textAlign: 'center',
         }}>
           <Typography sx={{ fontSize: 13, color: 'text.secondary', fontWeight: 600 }}>
-            לא נמצאו סניפים באזור
+            {t('mapNoBranchesFound')}
           </Typography>
         </Box>
       )}
@@ -324,7 +339,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           maxWidth: '85%', textAlign: 'center',
         }}>
           <Typography sx={{ fontSize: 12, color: 'white', fontWeight: 700 }}>
-            📍 שתף מיקום לראות סניפים קרובים
+            {t('mapShareLocationHint')}
           </Typography>
         </Box>
       )}

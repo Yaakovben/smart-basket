@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   const dark = settings.theme === 'dark';
 
   return (
@@ -51,7 +51,7 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative' }}>
           <IconButton
             onClick={onClose}
-            aria-label="חזור"
+            aria-label={t('back')}
             sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', width: 38, height: 38, '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' } }}
           >
             <ArrowForwardIcon sx={{ fontSize: 21 }} />
@@ -59,7 +59,7 @@ export const BranchesMapDialog = ({ isDark, onClose }: Props) => {
 
           <Box sx={{ flex: 1, textAlign: 'center' }}>
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
-              🗺️ מפת סניפים
+              {t('branchesMapDialogTitle')}
             </Typography>
           </Box>
 

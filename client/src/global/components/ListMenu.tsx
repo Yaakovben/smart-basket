@@ -96,7 +96,7 @@ export const ListMenu = memo(({
         <MenuItem onClick={() => { onClose(); onScanList(); }} sx={menuItemSx}>
           <DocumentScannerIcon sx={{ color: 'primary.main', fontSize: 22 }} />
           <Typography sx={menuLabelSx}>
-            סרוק רשימת קניות
+            {t('scanShoppingListMenuItem')}
           </Typography>
         </MenuItem>
       )}
