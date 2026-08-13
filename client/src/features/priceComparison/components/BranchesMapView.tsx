@@ -299,16 +299,20 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
                   </Box>
                 )}
 
-                {/* כפתור ניווט */}
+                {/* קו מפריד עדין לפני הכפתור */}
+                <Box sx={{ height: '1px', bgcolor: 'divider', opacity: 0.6, mb: 0.75 }} />
+
+                {/* כפתור ניווט - תמיד ירוק, בלי קשר לצבע הרשת */}
                 <Button
-                  fullWidth size="small" variant="outlined"
+                  fullWidth size="small" variant="contained"
                   onClick={() => openNav(b)}
-                  startIcon={<NearMeIcon sx={{ fontSize: 13 }} />}
+                  startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
                   sx={{
-                    borderColor: `${fill}60`, color: stroke,
-                    '&:hover': { bgcolor: `${fill}0D`, borderColor: fill },
+                    bgcolor: '#22C55E', color: 'white',
+                    boxShadow: '0 2px 8px rgba(34,197,94,0.35)',
+                    '&:hover': { bgcolor: '#16A34A', boxShadow: '0 2px 10px rgba(34,197,94,0.45)' },
                     fontSize: 11.5, fontWeight: 700, textTransform: 'none',
-                    borderRadius: '8px', py: 0.5, mb: 0.5,
+                    borderRadius: '8px', py: 0.6, mb: 0.5,
                     '& .MuiButton-startIcon': { mr: 1, ml: -0.25 },
                   }}
                 >
