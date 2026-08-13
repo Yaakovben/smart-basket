@@ -110,12 +110,17 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. שימוש ושיתוף</SectionTitle>
               <SectionText>
-                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google (Google OAuth), שירות ניתוח שימוש אנונימי לשיפור השירות (PostHog) ושירות דיווח על תקלות (Sentry). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
+                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google (Google OAuth), שירות ניתוח שימוש אנונימי לשיפור השירות (PostHog), שירות דיווח על תקלות (Sentry) ושירות זיהוי טקסט בתמונות (OCR.space, רק בעת שימוש בסריקת רשימה מתמונה). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
               </SectionText>
 
               <SectionTitle>9. מיקום</SectionTitle>
               <SectionText>
                 בתכונת השוואת המחירים בין סניפים, האפליקציה עשויה לבקש גישה למיקום המכשיר לצורך איתור סניפים קרובים. המיקום נעשה בו שימוש בזמן אמת בלבד ואינו נשמר בשרת. ניתן לסרב לבקשת המיקום ולהמשיך להשתמש בשאר תכונות האפליקציה.
+              </SectionText>
+
+              <SectionTitle>9א. מצלמה ותמונות</SectionTitle>
+              <SectionText>
+                האפליקציה עשויה לבקש גישה למצלמה או לספריית התמונות לצורך סריקת ברקוד, קוד QR או תמונת רשימת קניות לזיהוי מוצרים. תמונת רשימת קניות שהמשתמש מעלה נשלחת לשירות זיהוי טקסט חיצוני (OCR.space) לצורך חילוץ הטקסט בלבד, ואינה נשמרת על ידינו לאחר סיום העיבוד.
               </SectionText>
 
               <SectionTitle>10. עוגיות ואחסון מקומי</SectionTitle>
@@ -197,12 +202,17 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Использование и передача</SectionTitle>
               <SectionText>
-                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google (Google OAuth), анонимную аналитику использования (PostHog) и сервис отчётов об ошибках (Sentry). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
+                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google (Google OAuth), анонимную аналитику использования (PostHog), сервис отчётов об ошибках (Sentry) и сервис распознавания текста на изображениях (OCR.space, только при сканировании списка по фото). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
               </SectionText>
 
               <SectionTitle>9. Геолокация</SectionTitle>
               <SectionText>
                 Функция сравнения цен между филиалами может запрашивать доступ к геолокации устройства для поиска ближайших филиалов. Местоположение используется только в реальном времени и не сохраняется на сервере. Вы можете отказать в доступе к геолокации и продолжать пользоваться остальными функциями приложения.
+              </SectionText>
+
+              <SectionTitle>9а. Камера и фото</SectionTitle>
+              <SectionText>
+                Приложение может запрашивать доступ к камере или фототеке для сканирования штрихкода, QR-кода или фото списка покупок для распознавания товаров. Загруженное фото списка покупок отправляется во внешний сервис распознавания текста (OCR.space) исключительно для извлечения текста и не сохраняется нами после завершения обработки.
               </SectionText>
 
               <SectionTitle>10. Cookies и локальное хранилище</SectionTitle>
@@ -284,12 +294,17 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Use & Sharing</SectionTitle>
               <SectionText>
-                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via Google account (Google OAuth), anonymized usage analytics (PostHog), and error-reporting (Sentry). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
+                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via Google account (Google OAuth), anonymized usage analytics (PostHog), error-reporting (Sentry), and image text-recognition (OCR.space, only when scanning a list from a photo). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
               </SectionText>
 
               <SectionTitle>9. Location</SectionTitle>
               <SectionText>
                 The price-comparison feature may request access to device location to find nearby store branches. Location is used in real time only and is not stored on our servers. You may decline the location request and continue using the rest of the app.
+              </SectionText>
+
+              <SectionTitle>9a. Camera & Photos</SectionTitle>
+              <SectionText>
+                The app may request access to the camera or photo library to scan a barcode, QR code, or a photo of a shopping list to identify products. An uploaded shopping-list photo is sent to a third-party text-recognition service (OCR.space) solely to extract text, and is not retained by us after processing.
               </SectionText>
 
               <SectionTitle>10. Cookies & Local Storage</SectionTitle>
