@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -78,6 +82,16 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   const velocity = useRef(0);
 
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
+
+  // הפעולה האחרונה שבוצעה על המוצר - זו היחידה שמוצגת בכרטיס (לא כל ההיסטוריה,
+  // ראו את זה בפרטי המוצר). קנייה תמיד אחרונה כרונולוגית אם קרתה; אחרת עריכה
+  // אם קרתה; אחרת רק ההוספה המקורית.
+  const displayName = (name: string) => name === currentUserName ? t('you') : name;
+  const lastAction = isPurchased && product.purchasedBy
+    ? { Icon: ShoppingCartRoundedIcon, label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
+    : product.updatedBy && product.updatedBy !== product.addedBy
+    ? { Icon: EditRoundedIcon, label: t('updatedByLabel'), name: displayName(product.updatedBy) }
+    : { Icon: AddCircleRoundedIcon, label: t('addedBy'), name: displayName(product.addedBy) };
 
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
@@ -436,18 +450,20 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               </Box>
             )}
           </Box>
-          <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
-            {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
-            {/* "נקנה ע״י" עדיף על "עודכן ע״י" כשהמוצר נקנה - זו הפעולה הכי
-                רלוונטית כרגע. שתיהן מוצגות רק כשהעושה שונה מהמוסיף המקורי -
-                אחרת זה רק חוזר על אותו מידע. */}
-            {isPurchased && product.purchasedBy && product.purchasedBy !== product.addedBy && (
-              <> • {t('purchasedByLabel')} {product.purchasedBy === currentUserName ? t('you') : product.purchasedBy}</>
-            )}
-            {!isPurchased && product.updatedBy && product.updatedBy !== product.addedBy && (
-              <> • {t('updatedByLabel')} {product.updatedBy === currentUserName ? t('you') : product.updatedBy}</>
-            )}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '13px', color: 'text.secondary', flexShrink: 0 }}>
+              {product.quantity} {product.unit} •
+            </Typography>
+            <lastAction.Icon sx={{ fontSize: 12.5, color: 'text.disabled', flexShrink: 0 }} />
+            <Typography sx={{
+              fontSize: '13px', color: 'text.secondary',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
+            }}>
+              {lastAction.label} {lastAction.name}
+            </Typography>
+            {/* חץ עדין - רמז שיש עוד פרטים (היסטוריה מלאה) בלחיצה על הכרטיס */}
+            <ChevronLeftRoundedIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0, opacity: 0.6 }} />
+          </Box>
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>
