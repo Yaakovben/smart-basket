@@ -29,12 +29,13 @@ export const PrivacyPolicy = memo(() => {
   const isDark = settings.theme === 'dark';
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
+    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
-        borderRadius: '0 0 24px 24px'
+        borderRadius: '0 0 24px 24px',
+        flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton
@@ -51,7 +52,7 @@ export const PrivacyPolicy = memo(() => {
       </Box>
 
       {/* Content */}
-      <Box sx={{ p: 2, maxWidth: 600, mx: 'auto' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 'calc(32px + env(safe-area-inset-bottom))', maxWidth: 600, mx: 'auto', width: '100%' }}>
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
           {language === 'he' ? (
             <>
