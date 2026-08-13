@@ -86,16 +86,14 @@ const envSchema = Joi.object({
   // עדיין מצליחות ב-DB, פשוט בלי אפקט מיידי על sockets פעילים.
   REDIS_URL: Joi.string().optional(),
 
-  // NVIDIA NIM (build.nvidia.com) - endpoint תואם OpenAI, לעוזר ה-AI לניתוח
-  // הוצאות. אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
-  // המפתח הוא סוד אמיתי - רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
-  NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  // חזרה ל-llama-3.3-70b-instruct אחרי ניסיון כושל עם
-  // mistralai/mistral-nemo-12b-instruct-2407 - זה לא ה-model ID הנכון בקטלוג
-  // NIM (רשום שם תחת nv-mistralai/, לא mistralai/) וגם deprecated שם.
-  // שימו לב: גם llama-3.3-70b-instruct מתוכנן ל-deprecation ב-25/8/2026 -
-  // יש להחליף מודל לפני התאריך הזה כדי לא לשבור את העוזר שוב.
-  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.3-70b-instruct'),
+  // Groq (console.groq.com) - endpoint תואם OpenAI, לעוזר ה-AI לניתוח הוצאות.
+  // הוחלף מ-NVIDIA NIM: אותה איכות מודל (Llama 3.3 70B) אבל רץ על חומרת LPU
+  // ייעודית של Groq - מהיר משמעותית (~320 טוקן/שנייה), בלי תפוגת קרדיטים
+  // ובלי בעיית deprecation פתאומית של מודלים שהייתה ב-NIM. אם המפתח חסר -
+  // ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח. המפתח הוא סוד אמיתי -
+  // רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
+  GROQ_API_KEY: Joi.string().optional(),
+  GROQ_MODEL: Joi.string().default('llama-3.3-70b-versatile'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -134,8 +132,8 @@ export interface Environment {
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   REDIS_URL?: string;
-  NVIDIA_NIM_API_KEY?: string;
-  NVIDIA_NIM_MODEL: string;
+  GROQ_API_KEY?: string;
+  GROQ_MODEL: string;
 }
 
 export const env = parseEnv();

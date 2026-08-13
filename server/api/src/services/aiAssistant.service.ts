@@ -3,11 +3,12 @@
  *
  * צ'אט עוזר AI: עונה על שאלות כלליות (סופרים, מחירים, טיפים לקנייה חכמה)
  * וגם נותן המלצות מבוססות-נתונים על סמך התובנות/ההוצאות האמיתיות של המשתמש.
- * מבוסס על NVIDIA NIM - endpoint תואם OpenAI (build.nvidia.com), preview
- * חינמי. מפתח ה-API הוא סוד אמיתי - נשמר רק כמשתנה סביבה בשרת, אף פעם לא
+ * מבוסס על Groq - endpoint תואם OpenAI (console.groq.com), טייר חינמי עם
+ * חומרת LPU ייעודית שמריצה מודלים כמו Llama 3.3 70B מהר משמעותית מ-GPU
+ * רגיל. מפתח ה-API הוא סוד אמיתי - נשמר רק כמשתנה סביבה בשרת, אף פעם לא
  * נשלח ללקוח.
  *
- * קובץ מבודד בכוונה: אם NVIDIA NIM יוחלף בספק אחר (OpenAI/Anthropic/וכו'),
+ * קובץ מבודד בכוונה: אם Groq יוחלף בספק אחר (OpenAI/Anthropic/וכו'),
  * זה שינוי מקומי כאן בלבד - שום קוד אחר לא תלוי בספק הספציפי.
  */
 
@@ -16,7 +17,7 @@ import { env } from '../config/environment';
 import { AppError } from '../errors';
 import { getUserInsights } from './insights.service';
 
-const NIM_CHAT_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -36,7 +37,7 @@ const CONTEXT_CACHE_TTL_MS = 3 * 60 * 1000;
 const contextCache = new Map<string, { context: string; expiresAt: number }>();
 
 function isConfigured(): boolean {
-  return !!env.NVIDIA_NIM_API_KEY;
+  return !!env.GROQ_API_KEY;
 }
 
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
@@ -155,14 +156,14 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
 
   let response: Response;
   try {
-    response = await fetch(NIM_CHAT_URL, {
+    response = await fetch(GROQ_CHAT_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.NVIDIA_NIM_API_KEY}`,
+        Authorization: `Bearer ${env.GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: env.NVIDIA_NIM_MODEL,
+        model: env.GROQ_MODEL,
         messages: [systemMessage, ...trimmedHistory],
         temperature: 0.6,
         max_tokens: 400,
@@ -172,14 +173,14 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     });
   } catch (err) {
     clearTimeout(timeoutId);
-    logger.warn('aiAssistant: request to NVIDIA NIM failed: %s', (err as Error).message);
+    logger.warn('aiAssistant: request to Groq failed: %s', (err as Error).message);
     throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
   }
 
   if (!response.ok) {
     clearTimeout(timeoutId);
     const errText = await response.text().catch(() => '');
-    logger.warn(`aiAssistant: NVIDIA NIM returned ${response.status}: ${errText}`);
+    logger.warn(`aiAssistant: Groq returned ${response.status}: ${errText}`);
     throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
   }
   if (!response.body) {
