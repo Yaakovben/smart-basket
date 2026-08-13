@@ -3,26 +3,25 @@ import { Box, Typography } from '@mui/material';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';
 import { useSettings } from '../context/SettingsContext';
-import { haptic } from '../helpers';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
-// ארבעה שלבים: online (כלום) → trying (גלולה עדינה עד 8ש') → offline
-// (באנר מלא, אין אינטרנט למכשיר) → reconnecting (גלולה כתומה - יש אינטרנט
-// למכשיר אבל ה-socket לשרת מנותק, קורה בכל מסך באפליקציה, לא רק ברשימות).
+// ארבעה שלבים: online (כלום) → trying (עד 8ש', עדיין ייתכן שזה זמני) →
+// offline (אין אינטרנט למכשיר) → reconnecting (יש אינטרנט למכשיר אבל
+// ה-socket לשרת מנותק, קורה בכל מסך באפליקציה, לא רק ברשימות).
+// שלושתם (trying/offline/reconnecting) מוצגים באותו פס עליון קבוע במידות
+// ובמיקום זהים בכל עמוד - רק הצבע/טקסט משתנים - כדי שהחיווי לא "יקפוץ"
+// בין מקומות שונים בכותרות שונות בכל עמוד.
 type Phase = 'online' | 'trying' | 'offline' | 'reconnecting';
 
 const OFFLINE_CONFIRM_MS = 8000;
 const SOCKET_GRACE_MS = 4000;
-const TAP_LABEL_MS = 3000;
 
 export const OfflineBanner = () => {
   const { t } = useSettings();
   const [phase, setPhase] = useState<Phase>(() => navigator.onLine ? 'online' : 'offline');
   const [pendingCount, setPendingCount] = useState(0);
-  const [showLabel, setShowLabel] = useState(false);
   const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const labelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketDownRef = useRef(false);
 
   useEffect(() => {
@@ -95,87 +94,39 @@ export const OfflineBanner = () => {
 
   useEffect(() => subscribeToQueueCount(setPendingCount), []);
 
-  useEffect(() => () => { if (labelTimerRef.current) clearTimeout(labelTimerRef.current); }, []);
-
-  const handleTap = () => {
-    haptic('light');
-    setShowLabel(true);
-    if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
-    labelTimerRef.current = setTimeout(() => setShowLabel(false), TAP_LABEL_MS);
-  };
-
   if (phase === 'online') return null;
 
-  if (phase === 'trying' || phase === 'reconnecting') {
-    const isReconnecting = phase === 'reconnecting';
-    const label = isReconnecting ? t('reconnectingMessage') : t('serverUnreachableMessage');
-    return (
-      <Box
-        onClick={handleTap}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); } }}
-        sx={{
-          position: 'fixed',
-          // ברצועת ה-status bar, מעל כרטיס הכותרת עצמו - מיקום קבוע וזהה בכל
-          // עמוד (גם בעמודים בלי פעמון בפועל, כמו רשימה/תובנות), קרוב אופקית
-          // לאשכול הפעמון/הגדרות בלי לשבת ממש עליהם ולחסום טאפ על האייקונים
-          // האמיתיים של הכותרת.
-          top: 'max(env(safe-area-inset-top), 8px)',
-          insetInlineEnd: 54,
-          zIndex: 9999,
-          display: 'flex', alignItems: 'center', gap: 0.75,
-          height: 26,
-          minWidth: 26,
-          px: showLabel ? 1.25 : 0,
-          justifyContent: 'center',
-          bgcolor: isReconnecting ? 'rgba(217,119,6,0.92)' : 'rgba(0,0,0,0.52)',
-          backdropFilter: 'blur(6px)',
-          borderRadius: '999px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-          cursor: 'pointer',
-          animation: 'sbFadeIn 0.3s ease',
-          transition: 'padding 0.18s ease, background-color 0.18s ease',
-          WebkitTapHighlightColor: 'transparent',
-          '@keyframes sbFadeIn': { from: { opacity: 0, transform: 'translateY(-6px)' }, to: { opacity: 1, transform: 'none' } },
-        }}
-      >
-        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.95)', flexShrink: 0 }} />
-        {showLabel && (
-          <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'white', whiteSpace: 'nowrap' }}>
-            {label}
-          </Typography>
-        )}
-      </Box>
-    );
-  }
+  const config = {
+    trying: { bgcolor: '#475569', label: t('serverUnreachableMessage') },
+    offline: {
+      bgcolor: '#EF4444',
+      label: pendingCount > 0 ? `${t('offlineMessage')} · ${t('offlinePendingSync')}` : t('offlineMessage'),
+    },
+    reconnecting: { bgcolor: '#D97706', label: t('reconnectingMessage') },
+  }[phase];
 
-  // שלב offline מלא - יש אפשרות ללחוץ כדי לראות טקסט הסבר. ספירת הפעולות
-  // הממתינות (מידע שימושי, לא רק דקורטיבי) נשמרת כתג מספרי קטן על האייקון.
+  // פס עליון קבוע, רוחב מלא, מיקום וגובה זהים תמיד - מציג את שלושת
+  // השלבים באותה צורה בדיוק (רק צבע/טקסט משתנים) כדי שהחיווי לא "יקפוץ"
+  // בין מקומות שונים בכותרות שונות של כל עמוד.
   return (
     <Box
-      onClick={handleTap}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); } }}
       sx={{
         position: 'fixed',
         top: 0, left: 0, right: 0,
         zIndex: 9999,
-        bgcolor: '#EF4444',
+        bgcolor: config.bgcolor,
         pt: 'max(env(safe-area-inset-top), 6px)',
         pb: '6px', px: 2,
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        cursor: 'pointer',
         animation: 'sbSlideDown 0.35s ease',
-        WebkitTapHighlightColor: 'transparent',
+        transition: 'background-color 0.2s ease',
         '@keyframes sbSlideDown': { from: { transform: 'translateY(-100%)' }, to: { transform: 'none' } },
       }}
     >
       <Box sx={{ position: 'relative', display: 'flex' }}>
-        <WifiFadeIcon style={{ fontSize: 20, flexShrink: 0, color: 'white' }} />
-        {pendingCount > 0 && (
+        <WifiFadeIcon style={{ fontSize: 16, flexShrink: 0, color: 'white' }} />
+        {phase === 'offline' && pendingCount > 0 && (
           <Box sx={{
             position: 'absolute', top: -6, insetInlineEnd: -8,
             minWidth: 14, height: 14, px: '3px',
@@ -189,11 +140,9 @@ export const OfflineBanner = () => {
           </Box>
         )}
       </Box>
-      {showLabel && (
-        <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'white', whiteSpace: 'nowrap' }}>
-          {pendingCount > 0 ? `${t('offlineMessage')} · ${t('offlinePendingSync')}` : t('offlineMessage')}
-        </Typography>
-      )}
+      <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: 'white', whiteSpace: 'nowrap' }}>
+        {config.label}
+      </Typography>
     </Box>
   );
 };
