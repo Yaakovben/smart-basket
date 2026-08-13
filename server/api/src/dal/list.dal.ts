@@ -151,14 +151,4 @@ export const ListDAL = {
     );
   },
 
-  // ===== תבניות =====
-
-  async findTemplates(userId: string): Promise<IList[]> {
-    const uid = new mongoose.Types.ObjectId(userId);
-    return List.find({ owner: uid, isTemplate: true }).sort({ updatedAt: -1 });
-  },
-
-  async setIsTemplate(listId: string, value: boolean): Promise<IList | null> {
-    return List.findByIdAndUpdate(listId, { $set: { isTemplate: value } }, { new: true });
-  },
 };

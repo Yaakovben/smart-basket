@@ -4,8 +4,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { authApi, listsApi } from '../../../services/api';
-import { convertApiList } from '../../../global/hooks/converters';
+import { authApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
@@ -478,16 +477,6 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           try {
             await onUpdateList({ ...list, password });
             showToast(t('saved'));
-          } catch {
-            showToast(t('errorOccurred'), 'error');
-          }
-        } : undefined}
-        onToggleTemplate={isOwner ? async (value: boolean) => {
-          try {
-            const apiUpdated = await listsApi.saveAsTemplate(list.id, value);
-            const updated = convertApiList(apiUpdated);
-            onUpdateListLocal({ ...list, isTemplate: updated.isTemplate });
-            showToast(value ? 'נשמר כתבנית ⭐' : 'הוסר מהתבניות', 'success');
           } catch {
             showToast(t('errorOccurred'), 'error');
           }

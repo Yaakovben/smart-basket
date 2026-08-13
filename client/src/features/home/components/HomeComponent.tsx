@@ -7,13 +7,10 @@ import { ConfirmModal } from '../../../global/components';
 const QRScanner = lazy(() => import('../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 import { EditListModal } from '../../list/components/ListModals';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { listsApi } from '../../../services/api';
-import { convertApiList } from '../../../global/hooks/converters';
 import { useHome } from '../hooks/useHome';
 import { useListReorder } from '../hooks/useListReorder';
 import { useHomeNotifications } from '../hooks/useHomeNotifications';
 import { useHomePushPrompt } from '../hooks/useHomePushPrompt';
-import { useTemplates } from '../hooks/useTemplates';
 import { getTimeGreeting, getTimeEmoji, getWeekdayMessage } from '../helpers/greeting';
 import { HomeHeader } from './HomeHeader';
 import { HomeMenuSheet } from './HomeMenuSheet';
@@ -44,7 +41,6 @@ export const HomeComponent = memo(({
   }), []);
 
   const { showPushPrompt, pushPromptError, pushLoading, handleEnablePush, handleDismissPushPrompt } = useHomePushPrompt();
-  const { templates, removeTemplate, updateTemplateFlag } = useTemplates();
 
   // סורק QR להצטרפות — נפתח מתוך JoinModal
   const [showQRScanner, setShowQRScanner] = useState(false);
@@ -174,10 +170,6 @@ export const HomeComponent = memo(({
         onEnterReorder={handleEnterReorder}
         onDragHandleStart={handleDragStart}
         t={t}
-        templates={templates}
-        onTemplateApply={(newList) => { navigate(`/list/${newList.id}`); }}
-        onTemplateDelete={removeTemplate}
-        showToast={showToast}
       />
 
       {/* Menu Bottom Sheet */}
@@ -259,18 +251,6 @@ export const HomeComponent = memo(({
         onChangePassword={editList.isGroup ? (password: string) => {
           onEditList({ ...editList, password });
           setEditList(null);
-        } : undefined}
-        onToggleTemplate={editList.owner.id === user.id ? async (value: boolean) => {
-          try {
-            const apiUpdated = await listsApi.saveAsTemplate(editList.id, value);
-            const updated = convertApiList(apiUpdated);
-            onEditList({ ...editList, isTemplate: updated.isTemplate });
-            setEditList({ ...editList, isTemplate: updated.isTemplate });
-            updateTemplateFlag(editList.id, value);
-            showToast(value ? 'נשמר כתבנית ⭐' : 'הוסר מהתבניות', 'success');
-          } catch {
-            showToast(t('errorOccurred'), 'error');
-          }
         } : undefined}
       />}
 

@@ -15,7 +15,6 @@ export interface IList extends Document {
   icon: string;
   color: string;
   isGroup: boolean;
-  isTemplate: boolean;
   owner: Types.ObjectId;
   members: IMember[];
   inviteCode?: string;
@@ -65,10 +64,6 @@ const listSchema = new Schema<IList>(
       type: Boolean,
       default: false,
     },
-    isTemplate: {
-      type: Boolean,
-      default: false,
-    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -99,7 +94,6 @@ const listSchema = new Schema<IList>(
 
 // אינדקסים (inviteCode נוצר ע"י unique: true)
 listSchema.index({ owner: 1, isGroup: 1 });
-listSchema.index({ owner: 1, isTemplate: 1 });
 listSchema.index({ 'members.user': 1 });
 listSchema.index({ owner: 1, updatedAt: -1 });
 listSchema.index({ 'members.user': 1, updatedAt: -1 });

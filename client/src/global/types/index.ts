@@ -58,7 +58,6 @@ export interface List {
   icon: string;
   color: string;
   isGroup: boolean;
-  isTemplate?: boolean;
   owner: User;
   members: Member[];
   products: Product[];
