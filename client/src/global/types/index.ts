@@ -38,6 +38,7 @@ export interface Product {
   updatedBy?: string | null;
   purchasedBy?: string | null;
   createdAt: string;
+  updatedAt?: string;
   note?: string;
 }
 

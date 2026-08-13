@@ -1,7 +1,10 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import type { Product } from '../../../../global/types';
-import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort } from '../../../../global/helpers';
+import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
@@ -10,6 +13,17 @@ interface ProductDetailsModalProps {
   product: Product | null;
   currentUserName: string;
   onClose: () => void;
+}
+
+interface HistoryEntry {
+  key: string;
+  icon: typeof AddCircleRoundedIcon;
+  color: string;
+  bgColor: string;
+  label: string;
+  person: string;
+  highlight: boolean;
+  timestamp?: string;
 }
 
 export const ProductDetailsModal = memo(({
@@ -21,19 +35,47 @@ export const ProductDetailsModal = memo(({
 
   if (!product) return null;
 
-  // "עודכן ע״י" מוצג רק אם יש עורך שונה מהמוסיף (עריכה בפועל קרתה, לא
-  // רק הוספה). "נקנה ע״י" מוצג רק אם המוצר כרגע מסומן כנקנה ויש לו קונה.
-  const detailRows = [
-    { label: t('category'), value: t(CATEGORY_TRANSLATION_KEYS[product.category]) },
-    { label: t('addedBy'), value: product.addedBy === currentUserName ? t('you') : product.addedBy, highlight: product.addedBy === currentUserName },
-    ...(product.updatedBy && product.updatedBy !== product.addedBy
-      ? [{ label: t('updatedByLabel'), value: product.updatedBy === currentUserName ? t('you') : product.updatedBy, highlight: product.updatedBy === currentUserName }]
-      : []),
-    ...(product.isPurchased && product.purchasedBy
-      ? [{ label: t('purchasedByLabel'), value: product.purchasedBy === currentUserName ? t('you') : product.purchasedBy, highlight: product.purchasedBy === currentUserName }]
-      : []),
-    { label: t('date'), value: product.createdAt ? formatDateShort(product.createdAt, settings.language) : '-' },
-    { label: t('time'), value: product.createdAt ? formatTimeShort(product.createdAt, settings.language) : '-' }
+  const displayName = (name: string) => name === currentUserName ? t('you') : name;
+
+  // ציר זמן: "נוסף" תמיד קיים (createdAt מדויק). "עודכן" מוצג רק אם יש
+  // עורך שונה מהמוסיף. "נקנה" מוצג רק אם המוצר כרגע מסומן כנקנה ויש קונה.
+  // ל-updatedAt יש ערך אחד בלבד למסמך (לא נפרד לכל פעולה) - לכן מציגים
+  // אותו רק על השלב האחרון שבאמת קרה (נקנה אם קנייה, אחרת עדכון), כדי לא
+  // לייחס זמן שגוי לפעולה הלא-נכונה.
+  const hasUpdate = !!(product.updatedBy && product.updatedBy !== product.addedBy);
+  const hasPurchase = !!(product.isPurchased && product.purchasedBy);
+
+  const history: HistoryEntry[] = [
+    {
+      key: 'added',
+      icon: AddCircleRoundedIcon,
+      color: '#0D9488',
+      bgColor: 'rgba(20,184,166,0.12)',
+      label: t('addedBy'),
+      person: displayName(product.addedBy),
+      highlight: product.addedBy === currentUserName,
+      timestamp: product.createdAt,
+    },
+    ...(hasUpdate ? [{
+      key: 'updated',
+      icon: EditRoundedIcon,
+      color: '#D97706',
+      bgColor: 'rgba(217,119,6,0.12)',
+      label: t('updatedByLabel'),
+      person: displayName(product.updatedBy!),
+      highlight: product.updatedBy === currentUserName,
+      timestamp: hasPurchase ? undefined : product.updatedAt,
+    }] : []),
+    ...(hasPurchase ? [{
+      key: 'purchased',
+      icon: ShoppingCartRoundedIcon,
+      color: '#16A34A',
+      bgColor: 'rgba(34,197,94,0.12)',
+      label: t('purchasedByLabel'),
+      person: displayName(product.purchasedBy!),
+      highlight: product.purchasedBy === currentUserName,
+      timestamp: product.updatedAt,
+    }] : []),
   ];
 
   return (
@@ -62,25 +104,60 @@ export const ProductDetailsModal = memo(({
           {product.quantity} {product.unit}
         </Typography>
       </Box>
-      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider' }}>
-        {detailRows.map((row, index) => (
-          <Box
-            key={row.label}
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: '12px 16px',
-              borderBottom: index < detailRows.length - 1 ? '1px solid' : 'none',
-              borderColor: 'divider'
-            }}
-          >
-            <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{row.label}</Typography>
-            <Typography sx={{ fontWeight: 600, fontSize: 14, color: row.highlight ? 'primary.main' : 'text.primary' }}>
-              {row.value}
-            </Typography>
-          </Box>
-        ))}
+      <Box sx={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider',
+        p: '12px 16px', mb: 1.5,
+      }}>
+        <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{t('category')}</Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: 14, color: 'text.primary' }}>
+          {t(CATEGORY_TRANSLATION_KEYS[product.category])}
+        </Typography>
+      </Box>
+
+      {/* ציר זמן - היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) */}
+      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', p: '14px 16px' }}>
+        {history.map((entry, index) => {
+          const Icon = entry.icon;
+          const isLast = index === history.length - 1;
+          return (
+            <Box key={entry.key} sx={{ display: 'flex', gap: 1.5, pb: isLast ? 0 : 1.5 }}>
+              {/* עמודת נקודה + קו מחבר */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <Box sx={{
+                  width: 30, height: 30, borderRadius: '50%',
+                  bgcolor: entry.bgColor, color: entry.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <Icon sx={{ fontSize: 17 }} />
+                </Box>
+                {!isLast && (
+                  <Box sx={{ width: 2, flex: 1, bgcolor: 'divider', borderRadius: 1, my: 0.5, minHeight: 14 }} />
+                )}
+              </Box>
+              {/* תוכן הפעולה */}
+              <Box sx={{ flex: 1, minWidth: 0, pt: 0.25, pb: isLast ? 0 : 0.5 }}>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 0.15 }}>
+                  {entry.label}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: entry.highlight ? 'primary.main' : 'text.primary' }}>
+                    {entry.person}
+                  </Typography>
+                  {entry.timestamp && (
+                    <Typography
+                      sx={{ fontSize: 11, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
+                    >
+                      {getRelativeTime(entry.timestamp, settings.language)}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          );
+        })}
       </Box>
       {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
           טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
