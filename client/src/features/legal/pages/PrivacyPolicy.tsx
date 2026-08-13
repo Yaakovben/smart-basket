@@ -136,7 +136,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>12. זכויות ומחיקה</SectionTitle>
               <SectionText>
-                המשתמש רשאי לצפות, לעדכן ולמחוק את כל המידע שלו בכל עת דרך הגדרות החשבון. מחיקת החשבון היא בלתי הפיכה ומוחקת את הרשימות הפרטיות, הפריטים, ההתראות ומנויי ההתראות של המשתמש. ניתן לפנות אלינו בכל שאלה או בקשה הנוגעת למידע האישי בכתובת: yaakovbenyizchak1@gmail.com.
+                המשתמש רשאי לצפות, לעדכן ולמחוק את כל המידע שלו בכל עת דרך הגדרות החשבון. מחיקת החשבון היא בלתי הפיכה ומוחקת את הרשימות הפרטיות, הפריטים, ההתראות ומנויי ההתראות של המשתמש. ניתן לפנות אלינו בכל שאלה או בקשה הנוגעת למידע האישי בכתובת: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
@@ -228,7 +228,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>12. Права и удаление</SectionTitle>
               <SectionText>
-                Пользователь может просматривать, обновлять и удалять все свои данные в любое время через настройки аккаунта. Удаление аккаунта необратимо и удаляет личные списки, товары, уведомления и подписки пользователя. По любым вопросам о персональных данных: yaakovbenyizchak1@gmail.com.
+                Пользователь может просматривать, обновлять и удалять все свои данные в любое время через настройки аккаунта. Удаление аккаунта необратимо и удаляет личные списки, товары, уведомления и подписки пользователя. По любым вопросам о персональных данных: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
@@ -320,7 +320,7 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>12. Rights & Deletion</SectionTitle>
               <SectionText>
-                Users may view, update, and delete all their data at any time via account settings. Account deletion is irreversible and removes the user's private lists, items, notifications, and notification subscriptions. For any question or request regarding personal data, contact: yaakovbenyizchak1@gmail.com.
+                Users may view, update, and delete all their data at any time via account settings. Account deletion is irreversible and removes the user's private lists, items, notifications, and notification subscriptions. For any question or request regarding personal data, contact: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
