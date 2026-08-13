@@ -10,7 +10,7 @@ import type { ListCostEstimate } from '../../hooks/useListCostEstimate';
 interface ListCostEstimateBadgeProps {
   listId: string;
   listName: string;
-  estimate: ListCostEstimate;
+  estimate: ListCostEstimate | null;
   sx?: object;
 }
 

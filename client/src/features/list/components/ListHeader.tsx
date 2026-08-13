@@ -288,9 +288,7 @@ export const ListHeader = memo(({
           <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
           <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
         </Tabs>
-        {costEstimate && (
-          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} sx={glassButtonSx} />
-        )}
+        <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate ?? null} sx={glassButtonSx} />
       </Box>
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />
