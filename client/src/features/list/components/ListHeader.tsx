@@ -49,6 +49,7 @@ interface ListHeaderProps {
   onLeave?: () => void;
   onScanList?: () => void;
   costEstimate?: ListCostEstimate | null;
+  productNames?: string[];
 }
 
 export const ListHeader = memo(({
@@ -57,7 +58,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  costEstimate,
+  costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -288,7 +289,9 @@ export const ListHeader = memo(({
           <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
           <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
         </Tabs>
-        <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate ?? null} sx={glassButtonSx} />
+        {hasProducts && (
+          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate ?? null} productNames={productNames} sx={glassButtonSx} />
+        )}
       </Box>
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />

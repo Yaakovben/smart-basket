@@ -11,10 +11,11 @@ interface ListCostEstimateBadgeProps {
   listId: string;
   listName: string;
   estimate: ListCostEstimate | null;
+  productNames?: string[];
   sx?: object;
 }
 
-export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, sx }: ListCostEstimateBadgeProps) => {
+export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, productNames = [], sx }: ListCostEstimateBadgeProps) => {
   const { t } = useSettings();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -33,8 +34,11 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, sx }
 
   const askAi = () => {
     handleClose();
+    const itemsText = productNames.length > 0
+      ? `\nמוצרים ברשימה: ${productNames.slice(0, 30).join(', ')}.`
+      : '';
     navigate('/assistant', {
-      state: { initialPrompt: t('aiAnalyzeListPrompt').replace('{name}', listName) },
+      state: { initialPrompt: `${t('aiAnalyzeListPrompt').replace('{name}', listName)}${itemsText}` },
     });
   };
 

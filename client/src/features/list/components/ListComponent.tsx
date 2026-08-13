@@ -268,6 +268,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
         onScanList={stableScanList}
         costEstimate={costEstimate}
+        productNames={[...pending, ...purchased].map(p => p.name)}
       />
 
       {scanListMounted && (
