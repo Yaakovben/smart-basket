@@ -16,6 +16,7 @@ export interface UpsertBranchInput {
   subChainId?: string;
   subChainName?: string;
   storeType?: string;
+  openingHours?: string;
 }
 
 export const BranchDAL = {
@@ -53,6 +54,7 @@ export const BranchDAL = {
       if (item.subChainId) $set.subChainId = item.subChainId;
       if (item.subChainName) $set.subChainName = item.subChainName;
       if (item.storeType) $set.storeType = item.storeType;
+      if (item.openingHours) $set.openingHours = item.openingHours;
       // קואורדינטות: רק אם 'portal' או יש ערכים. 'unknown' לא דורס מצב קודם טוב.
       if (item.lat !== undefined && item.lng !== undefined && item.coordSource !== 'unknown') {
         $set.lat = item.lat;

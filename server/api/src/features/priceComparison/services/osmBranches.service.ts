@@ -94,6 +94,7 @@ export interface OsmBranch {
   address?: string;
   lat: number;
   lng: number;
+  openingHours?: string;
 }
 
 interface OverpassElement {
@@ -154,13 +155,16 @@ function parseElement(el: OverpassElement, chainId: ChainId): OsmBranch | null {
   const address = addrParts.length > 0 ? addrParts.join(' ') : undefined;
   const city = tags['addr:city'] || tags['addr:suburb'] || tags.city;
 
+  const openingHours = tags['opening_hours'] || undefined;
+
   return {
-    storeId: `osm-${el.type}-${el.id}`, // מזהה ייחודי מ-OSM
+    storeId: `osm-${el.type}-${el.id}`,
     storeName: name,
     city,
     address,
     lat,
     lng,
+    openingHours,
   };
 }
 

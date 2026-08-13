@@ -49,6 +49,66 @@ function getChainColor(chainId: string): { fill: string; stroke: string } {
   return CHAIN_COLORS[chainId] ?? DEFAULT_CHAIN_COLOR;
 }
 
+// ---- פרסור שעות פתיחה מפורמט OSM ----
+const OSM_DAY_MAP: Record<string, number> = { Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5, Sa: 6, Su: 0 };
+const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function parseTimeMin(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function dayRangeIncludes(rangeStr: string, dayNum: number): boolean {
+  // rangeStr can be "Mo-Fr", "Sa", "Mo,We,Fr", etc.
+  for (const part of rangeStr.split(',')) {
+    const dash = part.indexOf('-');
+    if (dash > 0) {
+      const from = OSM_DAY_MAP[part.slice(0, dash).trim()];
+      const to = OSM_DAY_MAP[part.slice(dash + 1).trim()];
+      if (from === undefined || to === undefined) continue;
+      // handle wrap-around (e.g. Sa-Su for Sunday=0, Saturday=6)
+      if (from <= to) {
+        if (dayNum >= from && dayNum <= to) return true;
+      } else {
+        if (dayNum >= from || dayNum <= to) return true;
+      }
+    } else {
+      if (OSM_DAY_MAP[part.trim()] === dayNum) return true;
+    }
+  }
+  return false;
+}
+
+interface ParsedHours { isOpen: boolean | null; todayLabel: string | null; todayHours: string | null }
+
+function parseOpeningHours(raw: string | undefined): ParsedHours {
+  if (!raw) return { isOpen: null, todayLabel: null, todayHours: null };
+  const trimmed = raw.trim();
+  if (trimmed === '24/7' || trimmed === '24/7;') {
+    return { isOpen: true, todayLabel: '24/7', todayHours: '00:00–24:00' };
+  }
+
+  const now = new Date();
+  const todayNum = now.getDay(); // 0=Sun
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  for (const rule of trimmed.split(';')) {
+    const r = rule.trim();
+    if (!r || r === 'off' || r === 'closed') continue;
+    const timeMatch = r.match(/(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+    if (!timeMatch) continue;
+    const startMin = parseTimeMin(timeMatch[1]);
+    const endMin = parseTimeMin(timeMatch[2]);
+    const daysPart = r.slice(0, r.indexOf(timeMatch[0])).trim().replace(/,$/, '');
+    if (!daysPart || dayRangeIncludes(daysPart, todayNum)) {
+      const label = `${timeMatch[1]}–${timeMatch[2]}`;
+      const isOpen = nowMin >= startMin && nowMin < (endMin === 0 ? 24 * 60 : endMin);
+      return { isOpen, todayLabel: HE_DAYS[todayNum], todayHours: label };
+    }
+  }
+  return { isOpen: null, todayLabel: null, todayHours: null };
+}
+
 const iconCache = new Map<string, L.DivIcon>();
 function getBranchIcon(chainId: string, chainName: string): L.DivIcon {
   const cacheKey = chainId;
@@ -132,6 +192,7 @@ function MapSizer() {
 interface NearbyBranch {
   chainId: string; chainName: string; storeName: string;
   address: string; city: string; lat: number; lng: number;
+  openingHours?: string;
 }
 
 interface Props {
@@ -188,55 +249,89 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
     const distanceKm = location ? Math.round(haversineKm(location, b) * 10) / 10 : null;
     return (
       <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
-        <Popup className="sb-popup" minWidth={210}>
-          <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-              {(() => {
-                const { fill } = getChainColor(b.chainId);
-                return (
+        <Popup className="sb-popup" minWidth={230}>
+          {(() => {
+            const { fill, stroke } = getChainColor(b.chainId);
+            const { isOpen, todayHours } = parseOpeningHours(b.openingHours);
+            return (
+              <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
+                {/* כותרת: לוגו + שם + מרחק */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <Box sx={{
-                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                    width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
                     bgcolor: fill, color: 'white',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
-                    boxShadow: `0 2px 6px ${fill}66`,
+                    fontSize: 14, fontWeight: 900,
+                    boxShadow: `0 3px 8px ${fill}55`,
                   }}>
                     {getMonogram(b.chainName)}
                   </Box>
-                );
-              })()}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
-                  {b.chainName}
-                </Typography>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
-                  {b.storeName}
-                </Typography>
-              </Box>
-              {distanceKm !== null && (
-                <Box sx={{
-                  flexShrink: 0, bgcolor: 'rgba(13,148,136,0.1)', color: '#0D9488',
-                  fontSize: 10.5, fontWeight: 800, borderRadius: '999px',
-                  px: 1, py: 0.4, whiteSpace: 'nowrap',
-                }}>
-                  {t('mapDistanceKm').replace('{km}', String(distanceKm))}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 900, color: stroke, lineHeight: 1.2 }}>
+                      {b.chainName}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', lineHeight: 1.3 }}>
+                      {b.storeName}
+                    </Typography>
+                  </Box>
+                  {distanceKm !== null && (
+                    <Box sx={{
+                      flexShrink: 0, bgcolor: `${fill}18`, color: stroke,
+                      fontSize: 11, fontWeight: 800, borderRadius: '8px',
+                      px: 0.9, py: 0.5, whiteSpace: 'nowrap',
+                    }}>
+                      {distanceKm} ק"מ
+                    </Box>
+                  )}
                 </Box>
-              )}
-            </Box>
-            {(b.address || b.city) && (
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-                📍 {[b.address, b.city].filter(Boolean).join(', ')}
-              </Typography>
-            )}
-            <Button
-              fullWidth size="small" variant="contained"
-              onClick={() => openNav(b)}
-              startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-              sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
-            >
-              {t('mapPopupNavigate')}
-            </Button>
-          </Box>
+
+                {/* קו מפריד */}
+                <Box sx={{ height: '1px', bgcolor: '#F1F5F9', mb: 0.9 }} />
+
+                {/* כתובת */}
+                {(b.address || b.city) && (
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.6, mb: 0.75 }}>
+                    <Typography sx={{ fontSize: 13, lineHeight: 1, mt: '1px', flexShrink: 0 }}>📍</Typography>
+                    <Typography sx={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>
+                      {[b.address, b.city].filter(Boolean).join(', ')}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* שעות פתיחה */}
+                {todayHours && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.9 }}>
+                    <Box sx={{
+                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: isOpen === true ? '#22C55E' : isOpen === false ? '#EF4444' : '#94A3B8',
+                      boxShadow: isOpen === true ? '0 0 0 2px rgba(34,197,94,0.25)' : isOpen === false ? '0 0 0 2px rgba(239,68,68,0.2)' : 'none',
+                    }} />
+                    <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isOpen === true ? '#16A34A' : isOpen === false ? '#DC2626' : '#64748B' }}>
+                      {isOpen === true ? 'פתוח עכשיו' : isOpen === false ? 'סגור עכשיו' : 'שעות פתיחה'}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: '#64748B', mr: 0.25 }}>
+                      {todayHours}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* כפתור ניווט */}
+                <Button
+                  fullWidth size="small" variant="contained"
+                  onClick={() => openNav(b)}
+                  startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    bgcolor: fill, '&:hover': { bgcolor: stroke },
+                    fontSize: 12, fontWeight: 800, textTransform: 'none',
+                    borderRadius: '10px', py: 0.75, mt: 0.25,
+                    boxShadow: `0 3px 10px ${fill}44`,
+                  }}
+                >
+                  {t('mapPopupNavigate')}
+                </Button>
+              </Box>
+            );
+          })()}
         </Popup>
       </Marker>
     );

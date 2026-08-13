@@ -99,7 +99,7 @@ async function getBranches(): Promise<IBranchDoc[]> {
   // שדות הכרחיים בלבד - מפחית payload מ-DB ומהירות טעינה לזיכרון
   const all = await Branch.find(
     {},
-    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1 }
+    { chainId: 1, chainName: 1, storeId: 1, storeName: 1, address: 1, city: 1, lat: 1, lng: 1, coordSource: 1, openingHours: 1 }
   ).lean();
   cache = { branches: all as unknown as IBranchDoc[], loadedAt: Date.now() };
   return cache.branches;
@@ -189,8 +189,6 @@ export function parseUserLocation(
   return { lat, lng };
 }
 
-// שדה קליל של סניף למפה ציבורית - בלי storeId/coordSource/lastSyncedAt וכו'
-// (שדות פנימיים שלא רלוונטיים/בטוחים ללקוח).
 export interface NearbyBranch {
   chainId: ChainId;
   chainName: string;
@@ -199,6 +197,7 @@ export interface NearbyBranch {
   city: string;
   lat: number;
   lng: number;
+  openingHours?: string;
 }
 
 // 500 סניפים בלי סינון מרחק זה גם payload כבד ברשת וגם 500 markers של
@@ -216,6 +215,7 @@ function toNearbyBranch(b: IBranchDoc): NearbyBranch {
     city: b.city || '',
     lat: b.lat!,
     lng: b.lng!,
+    openingHours: b.openingHours,
   };
 }
 

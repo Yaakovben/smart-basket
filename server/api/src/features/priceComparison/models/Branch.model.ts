@@ -28,6 +28,8 @@ export interface IBranchDoc extends Document {
   subChainId?: string;
   subChainName?: string;
   storeType?: string;
+  // שעות פתיחה בפורמט OSM (opening_hours tag), לדוגמה: "Mo-Fr 07:00-22:00; Sa 08:00-20:00"
+  openingHours?: string;
   // מתי עודכן מה-portal לאחרונה
   lastSyncedAt: Date;
   updatedAt: Date;
@@ -49,6 +51,7 @@ const branchSchema = new Schema<IBranchDoc>(
     subChainId: { type: String },
     subChainName: { type: String },
     storeType: { type: String },
+    openingHours: { type: String },
     lastSyncedAt: { type: Date, default: () => new Date() },
   },
   {
