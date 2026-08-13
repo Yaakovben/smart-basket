@@ -159,6 +159,9 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {costEstimate && (
+            <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} sx={glassButtonSx} />
+          )}
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
@@ -289,14 +292,6 @@ export const ListHeader = memo(({
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />
 
-      {costEstimate && (
-        <Box sx={{
-          display: 'flex', justifyContent: 'center', mt: 0.75,
-          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
-        }}>
-          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} />
-        </Box>
-      )}
     </Box>
   );
 });

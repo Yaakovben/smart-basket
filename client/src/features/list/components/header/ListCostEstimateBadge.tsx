@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -11,9 +11,10 @@ interface ListCostEstimateBadgeProps {
   listId: string;
   listName: string;
   estimate: ListCostEstimate;
+  sx?: object;
 }
 
-export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _ }: ListCostEstimateBadgeProps) => {
+export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, sx }: ListCostEstimateBadgeProps) => {
   const { t } = useSettings();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -39,24 +40,9 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _ }: Li
 
   return (
     <>
-      <Box
-        component="button"
-        type="button"
-        onClick={handleOpen}
-        sx={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 32, height: 32,
-          bgcolor: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer',
-          borderRadius: '50%',
-          color: 'rgba(255,255,255,0.9)',
-          WebkitTapHighlightColor: 'transparent',
-          transition: 'background-color 0.15s, transform 0.15s',
-          '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-          '&:active': { transform: 'scale(0.88)' },
-        }}
-      >
-        <AutoAwesomeRoundedIcon sx={{ fontSize: 17 }} />
-      </Box>
+      <IconButton onClick={handleOpen} aria-label="AI ותובנות" sx={sx}>
+        <AutoAwesomeRoundedIcon sx={{ color: 'white', fontSize: 20 }} />
+      </IconButton>
 
       <Menu
         anchorEl={anchorEl}
