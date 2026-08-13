@@ -90,11 +90,12 @@ const envSchema = Joi.object({
   // הוצאות. אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   // המפתח הוא סוד אמיתי - רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
   NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  // mistral-nemo-12b-instruct - נקודת איזון בין llama-3.3-70b (איכותי אבל
-  // איטי, ראה היסטוריה למטה) לבין llama-3.1-8b (מהיר אבל איכות תשובות
-  // נמוכה מדי לשיחות ניתוח/טיפים). 12B מספיק חזק לשיחה הזו ומשמעותית מהיר
-  // מ-70B על NIM. זמין בטייר החינמי.
-  NVIDIA_NIM_MODEL: Joi.string().default('mistralai/mistral-nemo-12b-instruct-2407'),
+  // חזרה ל-llama-3.3-70b-instruct אחרי ניסיון כושל עם
+  // mistralai/mistral-nemo-12b-instruct-2407 - זה לא ה-model ID הנכון בקטלוג
+  // NIM (רשום שם תחת nv-mistralai/, לא mistralai/) וגם deprecated שם.
+  // שימו לב: גם llama-3.3-70b-instruct מתוכנן ל-deprecation ב-25/8/2026 -
+  // יש להחליף מודל לפני התאריך הזה כדי לא לשבור את העוזר שוב.
+  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.3-70b-instruct'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
