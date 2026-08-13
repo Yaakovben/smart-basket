@@ -6,9 +6,8 @@ import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
 
-const HINT_SEEN_KEY = 'sb_ai_assistant_hint_seen';
 const HINT_SHOW_DELAY_MS = 700;
-const HINT_AUTOHIDE_MS = 5000;
+const HINT_AUTOHIDE_MS = 7000;
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
 // בר הניווט התחתון. Portal ל-document.body כמו HomeBottomNav, כדי לעקוף
@@ -19,11 +18,8 @@ export const AiAssistantFab = () => {
   const isDark = settings.theme === 'dark';
   const [showHint, setShowHint] = useState(false);
 
-  // רמז טקסט "שאל את ה-AI" - מוצג פעם אחת בלבד בחיי המשתמש (localStorage),
-  // עם עיכוב קטן כדי לא להבהב מיד עם טעינת הדף, ונעלם אוטומטית אחרי כמה שניות.
+  // רמז טקסט "שאל את ה-AI" - מוצג בכל פתיחת דף הבית, נעלם אחרי 7 שניות.
   useEffect(() => {
-    if (localStorage.getItem(HINT_SEEN_KEY)) return;
-    localStorage.setItem(HINT_SEEN_KEY, '1');
     const showTimer = window.setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     const hideTimer = window.setTimeout(() => setShowHint(false), HINT_SHOW_DELAY_MS + HINT_AUTOHIDE_MS);
     return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer); };

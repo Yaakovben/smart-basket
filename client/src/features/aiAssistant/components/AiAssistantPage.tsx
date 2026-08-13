@@ -1,4 +1,4 @@
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -14,7 +14,20 @@ export const AiAssistantPage = memo(() => {
   const navigate = useNavigate();
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
-  const SUGGESTIONS = [t('aiSuggestion1'), t('aiSuggestion2'), t('aiSuggestion3')];
+  // בחירה אקראית של 3 שאלות מוצעות מתוך 9 - שונות בכל פתיחה
+  const SUGGESTIONS = useMemo(() => {
+    const all = [
+      t('aiSuggestion1'), t('aiSuggestion2'), t('aiSuggestion3'),
+      t('aiSuggestion4'), t('aiSuggestion5'), t('aiSuggestion6'),
+      t('aiSuggestion7'), t('aiSuggestion8'), t('aiSuggestion9'),
+    ];
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return all.slice(0, 3);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { messages, sending, sendMessage, listEndRef } = useAiAssistantChat();
   const [input, setInput] = useState('');
 
