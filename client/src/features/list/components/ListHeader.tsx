@@ -159,9 +159,6 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {costEstimate && (
-            <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} sx={glassButtonSx} />
-          )}
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
@@ -257,38 +254,44 @@ export const ListHeader = memo(({
         </Box>
       </Collapse>
 
-      {/* ===== טאבים ===== */}
-      <Tabs
-        value={filter}
-        onChange={(_, v) => onFilterChange(v)}
-        variant="fullWidth"
-        aria-label={t('toBuy')}
-        sx={{
-          bgcolor: 'rgba(255,255,255,0.15)',
-          borderRadius: '14px',
-          p: 0.6,
-          minHeight: 'auto',
-          '& .MuiTabs-indicator': { display: 'none' },
-          '& .MuiTab-root': {
-            borderRadius: '10px',
-            py: { xs: 0.75, sm: 1.5 },
-            px: { xs: 1, sm: 2 },
-            minHeight: { xs: 38, sm: 48 },
-            fontSize: { xs: 13.5, sm: 15 },
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            textTransform: 'none',
-            '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' },
-          },
-          '@media (max-width: 360px)': {
-            p: 0.4,
-            '& .MuiTab-root': { py: 0.5, px: 0.75, minHeight: 32, fontSize: 11 },
-          },
-        }}
-      >
-        <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
-        <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
-      </Tabs>
+      {/* ===== טאבים + כפתור AI ===== */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <Tabs
+          value={filter}
+          onChange={(_, v) => onFilterChange(v)}
+          variant="fullWidth"
+          aria-label={t('toBuy')}
+          sx={{
+            flex: 1,
+            bgcolor: 'rgba(255,255,255,0.15)',
+            borderRadius: '14px',
+            p: 0.6,
+            minHeight: 'auto',
+            '& .MuiTabs-indicator': { display: 'none' },
+            '& .MuiTab-root': {
+              borderRadius: '10px',
+              py: { xs: 0.75, sm: 1.5 },
+              px: { xs: 1, sm: 2 },
+              minHeight: { xs: 38, sm: 48 },
+              fontSize: { xs: 13.5, sm: 15 },
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.9)',
+              textTransform: 'none',
+              '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' },
+            },
+            '@media (max-width: 360px)': {
+              p: 0.4,
+              '& .MuiTab-root': { py: 0.5, px: 0.75, minHeight: 32, fontSize: 11 },
+            },
+          }}
+        >
+          <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
+          <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
+        </Tabs>
+        {costEstimate && (
+          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate} sx={glassButtonSx} />
+        )}
+      </Box>
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />
 
