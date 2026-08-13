@@ -1,7 +1,6 @@
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import PaidRoundedIcon from '@mui/icons-material/PaidRounded';
+import { Box, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -14,11 +13,7 @@ interface ListCostEstimateBadgeProps {
   estimate: ListCostEstimate;
 }
 
-// גלולה עדינה בכותרת הרשימה - "~₪84" - לחיצה פותחת תפריט קטן: פירוט מלא
-// בתובנות (טאב מחירים, מסונן לרשימה הזו), או ניתוח חופשי עם עוזר ה-AI.
-// שני היעדים נפתחים ב-push (לא replace) כך שכפתור "חזור" שלהם (navigate(-1))
-// מחזיר בדיוק לרשימה הזו.
-export const ListCostEstimateBadge = memo(({ listId, listName, estimate }: ListCostEstimateBadgeProps) => {
+export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _ }: ListCostEstimateBadgeProps) => {
   const { t } = useSettings();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -49,20 +44,18 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate }: ListC
         type="button"
         onClick={handleOpen}
         sx={{
-          display: 'inline-flex', alignItems: 'center', gap: 0.5,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 32, height: 32,
           bgcolor: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer',
-          borderRadius: '999px', px: 1.1, py: 0.4,
-          color: 'rgba(255,255,255,0.85)',
+          borderRadius: '50%',
+          color: 'rgba(255,255,255,0.9)',
           WebkitTapHighlightColor: 'transparent',
-          transition: 'background-color 0.15s',
-          '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' },
-          '&:active': { transform: 'scale(0.96)' },
+          transition: 'background-color 0.15s, transform 0.15s',
+          '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+          '&:active': { transform: 'scale(0.88)' },
         }}
       >
-        <PaidRoundedIcon sx={{ fontSize: 13 }} />
-        <Typography sx={{ fontSize: 11, fontWeight: 700 }}>
-          {t('estimatedCostBadge').replace('{amount}', String(Math.round(estimate.estimatedTotal)))}
-        </Typography>
+        <AutoAwesomeRoundedIcon sx={{ fontSize: 17 }} />
       </Box>
 
       <Menu
