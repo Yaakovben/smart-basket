@@ -249,82 +249,67 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
     const distanceKm = location ? Math.round(haversineKm(location, b) * 10) / 10 : null;
     return (
       <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
-        <Popup className="sb-popup" minWidth={230}>
+        <Popup className="sb-popup" minWidth={200}>
           {(() => {
             const { fill, stroke } = getChainColor(b.chainId);
             const { isOpen, todayHours } = parseOpeningHours(b.openingHours);
             return (
               <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-                {/* כותרת: לוגו + שם + מרחק */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                {/* שם הרשת + סניף */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.6 }}>
                   <Box sx={{
-                    width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
-                    bgcolor: fill, color: 'white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, fontWeight: 900,
-                    boxShadow: `0 3px 8px ${fill}55`,
-                  }}>
-                    {getMonogram(b.chainName)}
-                  </Box>
+                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    bgcolor: fill, mt: '1px',
+                  }} />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: 900, color: stroke, lineHeight: 1.2 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: stroke, lineHeight: 1.3 }}>
                       {b.chainName}
-                    </Typography>
-                    <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#64748B', lineHeight: 1.3 }}>
-                      {b.storeName}
+                      {b.storeName && b.storeName !== b.chainName && (
+                        <Typography component="span" sx={{ fontSize: 11.5, fontWeight: 500, color: '#64748B', mr: 0.5 }}>
+                          {' — '}{b.storeName}
+                        </Typography>
+                      )}
                     </Typography>
                   </Box>
                   {distanceKm !== null && (
-                    <Box sx={{
-                      flexShrink: 0, bgcolor: `${fill}18`, color: stroke,
-                      fontSize: 11, fontWeight: 800, borderRadius: '8px',
-                      px: 0.9, py: 0.5, whiteSpace: 'nowrap',
-                    }}>
+                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#94A3B8', flexShrink: 0 }}>
                       {distanceKm} ק"מ
-                    </Box>
+                    </Typography>
                   )}
                 </Box>
 
-                {/* קו מפריד */}
-                <Box sx={{ height: '1px', bgcolor: '#F1F5F9', mb: 0.9 }} />
-
                 {/* כתובת */}
                 {(b.address || b.city) && (
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.6, mb: 0.75 }}>
-                    <Typography sx={{ fontSize: 13, lineHeight: 1, mt: '1px', flexShrink: 0 }}>📍</Typography>
-                    <Typography sx={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>
-                      {[b.address, b.city].filter(Boolean).join(', ')}
-                    </Typography>
-                  </Box>
+                  <Typography sx={{ fontSize: 11, color: '#94A3B8', mb: todayHours ? 0.5 : 0.9, lineHeight: 1.4 }}>
+                    {[b.address, b.city].filter(Boolean).join(', ')}
+                  </Typography>
                 )}
 
                 {/* שעות פתיחה */}
                 {todayHours && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: 0.9 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.9 }}>
                     <Box sx={{
-                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                      bgcolor: isOpen === true ? '#22C55E' : isOpen === false ? '#EF4444' : '#94A3B8',
-                      boxShadow: isOpen === true ? '0 0 0 2px rgba(34,197,94,0.25)' : isOpen === false ? '0 0 0 2px rgba(239,68,68,0.2)' : 'none',
+                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: isOpen === true ? '#22C55E' : isOpen === false ? '#F87171' : '#CBD5E1',
                     }} />
-                    <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isOpen === true ? '#16A34A' : isOpen === false ? '#DC2626' : '#64748B' }}>
-                      {isOpen === true ? 'פתוח עכשיו' : isOpen === false ? 'סגור עכשיו' : 'שעות פתיחה'}
+                    <Typography sx={{ fontSize: 11, color: isOpen === true ? '#16A34A' : isOpen === false ? '#EF4444' : '#94A3B8', fontWeight: 600 }}>
+                      {isOpen === true ? 'פתוח' : isOpen === false ? 'סגור' : ''}
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: '#64748B', mr: 0.25 }}>
-                      {todayHours}
-                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>{todayHours}</Typography>
                   </Box>
                 )}
 
                 {/* כפתור ניווט */}
                 <Button
-                  fullWidth size="small" variant="contained"
+                  fullWidth size="small" variant="outlined"
                   onClick={() => openNav(b)}
-                  startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
+                  startIcon={<NearMeIcon sx={{ fontSize: 13 }} />}
                   sx={{
-                    bgcolor: fill, '&:hover': { bgcolor: stroke },
-                    fontSize: 12, fontWeight: 800, textTransform: 'none',
-                    borderRadius: '10px', py: 0.75, mt: 0.25,
-                    boxShadow: `0 3px 10px ${fill}44`,
+                    borderColor: `${fill}60`, color: stroke,
+                    '&:hover': { bgcolor: `${fill}0D`, borderColor: fill },
+                    fontSize: 11.5, fontWeight: 700, textTransform: 'none',
+                    borderRadius: '8px', py: 0.5, mb: 0.5,
+                    '& .MuiButton-startIcon': { mr: 1, ml: -0.25 },
                   }}
                 >
                   {t('mapPopupNavigate')}
