@@ -11,6 +11,7 @@ import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
+import { setFetchIssue } from "../global/services/connectionIssue";
 
 // טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/pages/LoginPage";
@@ -198,6 +199,12 @@ export const AppRouter = () => {
     }
   }, [authLoading, listsFetchError, notificationsFetchError, showToast, t]);
 
+  // מדווח על כשל fetch לרכיב הגלובלי היחיד שמציג "אין קליטה" (OfflineBanner ב-App.tsx)
+  // - כך אין רכיב נפרד ליד הפעמון, ואייקון החיבור מזהה גם כשל fetch וגם ניתוק socket.
+  useEffect(() => {
+    setFetchIssue(!authLoading && !!(listsFetchError || notificationsFetchError));
+  }, [authLoading, listsFetchError, notificationsFetchError]);
+
   // מיפוי שמות רשימות להתראות
   const listNames = useMemo(() =>
     lists.reduce((acc, list) => ({ ...acc, [list.id]: list.name }), {} as Record<string, string>),
@@ -372,7 +379,6 @@ export const AppRouter = () => {
                 lists={lists}
                 listsLoading={listsLoading}
                 listsFetchError={listsFetchError || initialData.connectionError}
-                serverConnectionVisible={!authLoading && !!(listsFetchError || notificationsFetchError)}
                 user={user!}
                 onSelectList={handleSelectList}
                 onCreateList={handleCreateList}
@@ -463,11 +469,9 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      {/* ServerConnectionBanner עבר להיות מוצג inline ליד פעמון ההתראות
-          ב-HomeHeader (דרך serverConnectionVisible שמועבר ל-HomePage למעלה),
-          לא כ-overlay צף גלובלי - הוסר מכאן. אותה לוגיקה בדיוק
-          (listsFetchError/notificationsFetchError, לא initialData.connectionError
-          שהוא דגל חד-פעמי שלא מתאפס - ראו הערה קודמת שהייתה כאן). */}
+      {/* אין רכיב חיבור נפרד כאן - כשל fetch מדווח דרך setFetchIssue() (למעלה)
+          ל-OfflineBanner הגלובלי היחיד (mounted תמיד ב-App.tsx, קבוע מתחת
+          לפעמון בכל עמוד), שמזהה גם את זה וגם ניתוק socket. ראו OfflineBanner.tsx. */}
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

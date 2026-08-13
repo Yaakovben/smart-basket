@@ -117,8 +117,12 @@ export const OfflineBanner = () => {
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTap(); } }}
         sx={{
           position: 'fixed',
+          // ברצועת ה-status bar, מעל כרטיס הכותרת עצמו - מיקום קבוע וזהה בכל
+          // עמוד (גם בעמודים בלי פעמון בפועל, כמו רשימה/תובנות), קרוב אופקית
+          // לאשכול הפעמון/הגדרות בלי לשבת ממש עליהם ולחסום טאפ על האייקונים
+          // האמיתיים של הכותרת.
           top: 'max(env(safe-area-inset-top), 8px)',
-          insetInlineEnd: 10,
+          insetInlineEnd: 54,
           zIndex: 9999,
           display: 'flex', alignItems: 'center', gap: 0.75,
           height: 26,
