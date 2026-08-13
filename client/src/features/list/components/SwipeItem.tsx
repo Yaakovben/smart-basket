@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
-import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -447,16 +446,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               </Box>
             )}
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, minWidth: 0 }}>
-            <Typography sx={{
-              fontSize: '13px', color: 'text.secondary',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
-            }}>
-              {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
-            </Typography>
-            {/* חץ עדין - רמז שיש עוד פרטים (היסטוריה מלאה) בלחיצה על הכרטיס */}
-            <ChevronLeftRoundedIcon sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0, opacity: 0.6 }} />
-          </Box>
+          <Typography sx={{
+            fontSize: '13px', color: 'text.secondary',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
+          </Typography>
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>

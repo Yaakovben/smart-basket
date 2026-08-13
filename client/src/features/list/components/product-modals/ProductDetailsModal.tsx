@@ -1,8 +1,5 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import type { Product } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal } from '../../../../global/components';
@@ -17,7 +14,6 @@ interface ProductDetailsModalProps {
 
 interface HistoryEntry {
   key: string;
-  icon: typeof AddCircleRoundedIcon;
   label: string;
   person: string;
   highlight: boolean;
@@ -46,7 +42,6 @@ export const ProductDetailsModal = memo(({
   const history: HistoryEntry[] = [
     {
       key: 'added',
-      icon: AddCircleRoundedIcon,
       label: t('addedBy'),
       person: displayName(product.addedBy),
       highlight: product.addedBy === currentUserName,
@@ -54,7 +49,6 @@ export const ProductDetailsModal = memo(({
     },
     ...(hasUpdate ? [{
       key: 'updated',
-      icon: EditRoundedIcon,
       label: t('updatedByLabel'),
       person: displayName(product.updatedBy!),
       highlight: product.updatedBy === currentUserName,
@@ -62,7 +56,6 @@ export const ProductDetailsModal = memo(({
     }] : []),
     ...(hasPurchase ? [{
       key: 'purchased',
-      icon: ShoppingCartRoundedIcon,
       label: t('purchasedByLabel'),
       person: displayName(product.purchasedBy!),
       highlight: product.purchasedBy === currentUserName,
@@ -107,47 +100,43 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* ציר זמן - היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה). עיצוב מכוון
-          מאופק: אייקון אחיד קטן וניטרלי (לא צבעוני-דרמטי), משקל טקסט רגיל,
-          קו מחבר דק - נראה כמו יומן פעילות אמין, לא "התראה". הדגשה עדינה
-          בצבע הראשי רק כשהפעולה שייכת למשתמש הנוכחי. */}
-      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', p: '13px 16px' }}>
+      {/* היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) - עיצוב שקט ומינימלי:
+          בלי אייקונים, בלי קווים מחברים, רק שורות דקות מופרדות בקו-שיער.
+          נקודה קטנה כתחליף עדין לאייקון. הדגשה בצבע הראשי רק כשהפעולה
+          שייכת למשתמש הנוכחי - כל השאר בגוונים ניטרליים ושקטים. */}
+      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', px: 2 }}>
         {history.map((entry, index) => {
-          const Icon = entry.icon;
           const isLast = index === history.length - 1;
           return (
-            <Box key={entry.key} sx={{ display: 'flex', gap: 1.25, pb: isLast ? 0 : 1.1 }}>
-              {/* עמודת אייקון + קו מחבר */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+            <Box
+              key={entry.key}
+              sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
+                py: 1.1,
+                borderBottom: isLast ? 'none' : '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                 <Box sx={{
-                  width: 24, height: 24, borderRadius: '50%',
-                  bgcolor: 'action.hover', color: 'text.secondary',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <Icon sx={{ fontSize: 13.5 }} />
-                </Box>
-                {!isLast && (
-                  <Box sx={{ width: 1, flex: 1, bgcolor: 'divider', my: 0.4, minHeight: 12 }} />
-                )}
-              </Box>
-              {/* תוכן הפעולה */}
-              <Box sx={{ flex: 1, minWidth: 0, pt: 0.05, pb: isLast ? 0 : 0.4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
-                  <Typography sx={{ fontSize: 13.5, color: entry.highlight ? 'primary.main' : 'text.primary', fontWeight: 500 }}>
-                    <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>{entry.label}{' '}</Box>
+                  width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                  bgcolor: entry.highlight ? 'primary.main' : 'text.disabled',
+                }} />
+                <Typography sx={{ fontSize: 13, color: 'text.primary', minWidth: 0 }}>
+                  <Box component="span" sx={{ color: 'text.secondary' }}>{entry.label}{' '}</Box>
+                  <Box component="span" sx={{ color: entry.highlight ? 'primary.main' : 'text.primary', fontWeight: entry.highlight ? 600 : 400 }}>
                     {entry.person}
-                  </Typography>
-                  {entry.timestamp && (
-                    <Typography
-                      sx={{ fontSize: 11, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
-                      title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
-                    >
-                      {getRelativeTime(entry.timestamp, settings.language)}
-                    </Typography>
-                  )}
-                </Box>
+                  </Box>
+                </Typography>
               </Box>
+              {entry.timestamp && (
+                <Typography
+                  sx={{ fontSize: 11, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
+                  title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
+                >
+                  {getRelativeTime(entry.timestamp, settings.language)}
+                </Typography>
+              )}
             </Box>
           );
         })}
