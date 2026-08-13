@@ -6,6 +6,7 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { safeStorage, haptic } from '../../../../global/helpers';
 import type { ListCostEstimate } from '../../hooks/useListCostEstimate';
+import { ListAnalysisDrawer } from './ListAnalysisDrawer';
 
 interface ListCostEstimateBadgeProps {
   listId: string;
@@ -19,6 +20,7 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
   const { t } = useSettings();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) => {
     haptic('light');
@@ -32,14 +34,9 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
     navigate('/insights?tab=price');
   };
 
-  const askAi = () => {
+  const openAnalysis = () => {
     handleClose();
-    const itemsText = productNames.length > 0
-      ? `\nמוצרים ברשימה: ${productNames.slice(0, 30).join(', ')}.`
-      : '';
-    navigate('/assistant', {
-      state: { initialPrompt: `${t('aiAnalyzeListPrompt').replace('{name}', listName)}${itemsText}` },
-    });
+    setDrawerOpen(true);
   };
 
   return (
@@ -56,6 +53,13 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
         slotProps={{ paper: { sx: { borderRadius: '14px', mt: 0.5, minWidth: 220 } } }}
       >
+        <MenuItem onClick={openAnalysis} sx={{ py: 1.1 }}>
+          <ListItemIcon><AutoAwesomeRoundedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} /></ListItemIcon>
+          <ListItemText
+            primary={t('askAiAboutList')}
+            slotProps={{ primary: { fontSize: 14, fontWeight: 600 } }}
+          />
+        </MenuItem>
         <MenuItem onClick={goToInsights} sx={{ py: 1.1 }}>
           <ListItemIcon><InsightsRoundedIcon sx={{ fontSize: 20, color: '#0D9488' }} /></ListItemIcon>
           <ListItemText
@@ -64,14 +68,14 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
             slotProps={{ primary: { fontSize: 14, fontWeight: 600 }, secondary: { fontSize: 11 } }}
           />
         </MenuItem>
-        <MenuItem onClick={askAi} sx={{ py: 1.1 }}>
-          <ListItemIcon><AutoAwesomeRoundedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} /></ListItemIcon>
-          <ListItemText
-            primary={t('askAiAboutList')}
-            slotProps={{ primary: { fontSize: 14, fontWeight: 600 } }}
-          />
-        </MenuItem>
       </Menu>
+
+      <ListAnalysisDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        listName={listName}
+        productNames={productNames}
+      />
     </>
   );
 });
