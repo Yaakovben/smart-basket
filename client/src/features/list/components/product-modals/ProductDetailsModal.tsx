@@ -18,8 +18,6 @@ interface ProductDetailsModalProps {
 interface HistoryEntry {
   key: string;
   icon: typeof AddCircleRoundedIcon;
-  color: string;
-  bgColor: string;
   label: string;
   person: string;
   highlight: boolean;
@@ -49,8 +47,6 @@ export const ProductDetailsModal = memo(({
     {
       key: 'added',
       icon: AddCircleRoundedIcon,
-      color: '#0D9488',
-      bgColor: 'rgba(20,184,166,0.12)',
       label: t('addedBy'),
       person: displayName(product.addedBy),
       highlight: product.addedBy === currentUserName,
@@ -59,8 +55,6 @@ export const ProductDetailsModal = memo(({
     ...(hasUpdate ? [{
       key: 'updated',
       icon: EditRoundedIcon,
-      color: '#D97706',
-      bgColor: 'rgba(217,119,6,0.12)',
       label: t('updatedByLabel'),
       person: displayName(product.updatedBy!),
       highlight: product.updatedBy === currentUserName,
@@ -69,8 +63,6 @@ export const ProductDetailsModal = memo(({
     ...(hasPurchase ? [{
       key: 'purchased',
       icon: ShoppingCartRoundedIcon,
-      color: '#16A34A',
-      bgColor: 'rgba(34,197,94,0.12)',
       label: t('purchasedByLabel'),
       person: displayName(product.purchasedBy!),
       highlight: product.purchasedBy === currentUserName,
@@ -115,34 +107,35 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* ציר זמן - היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) */}
-      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', p: '14px 16px' }}>
+      {/* ציר זמן - היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה). עיצוב מכוון
+          מאופק: אייקון אחיד קטן וניטרלי (לא צבעוני-דרמטי), משקל טקסט רגיל,
+          קו מחבר דק - נראה כמו יומן פעילות אמין, לא "התראה". הדגשה עדינה
+          בצבע הראשי רק כשהפעולה שייכת למשתמש הנוכחי. */}
+      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', p: '13px 16px' }}>
         {history.map((entry, index) => {
           const Icon = entry.icon;
           const isLast = index === history.length - 1;
           return (
-            <Box key={entry.key} sx={{ display: 'flex', gap: 1.5, pb: isLast ? 0 : 1.5 }}>
-              {/* עמודת נקודה + קו מחבר */}
+            <Box key={entry.key} sx={{ display: 'flex', gap: 1.25, pb: isLast ? 0 : 1.1 }}>
+              {/* עמודת אייקון + קו מחבר */}
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <Box sx={{
-                  width: 30, height: 30, borderRadius: '50%',
-                  bgcolor: entry.bgColor, color: entry.color,
+                  width: 24, height: 24, borderRadius: '50%',
+                  bgcolor: 'action.hover', color: 'text.secondary',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <Icon sx={{ fontSize: 17 }} />
+                  <Icon sx={{ fontSize: 13.5 }} />
                 </Box>
                 {!isLast && (
-                  <Box sx={{ width: 2, flex: 1, bgcolor: 'divider', borderRadius: 1, my: 0.5, minHeight: 14 }} />
+                  <Box sx={{ width: 1, flex: 1, bgcolor: 'divider', my: 0.4, minHeight: 12 }} />
                 )}
               </Box>
               {/* תוכן הפעולה */}
-              <Box sx={{ flex: 1, minWidth: 0, pt: 0.25, pb: isLast ? 0 : 0.5 }}>
-                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 0.15 }}>
-                  {entry.label}
-                </Typography>
+              <Box sx={{ flex: 1, minWidth: 0, pt: 0.05, pb: isLast ? 0 : 0.4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
-                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: entry.highlight ? 'primary.main' : 'text.primary' }}>
+                  <Typography sx={{ fontSize: 13.5, color: entry.highlight ? 'primary.main' : 'text.primary', fontWeight: 500 }}>
+                    <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>{entry.label}{' '}</Box>
                     {entry.person}
                   </Typography>
                   {entry.timestamp && (
