@@ -664,6 +664,8 @@ export const ru: Translations = {
   aiNoResponse: 'Ответ не получен, попробуйте снова.',
   aiNotConfigured: 'ИИ-помощник сейчас не настроен на сервере.',
   aiTooManyMessages: 'Слишком много сообщений за последний час - попробуйте позже.',
+  aiTryAgainInMinutes: 'Лимит обновится примерно через {minutes} мин.',
+  aiFallbackNotice: 'Этот ответ от резервной модели',
   aiGenericError: 'Что-то пошло не так, попробуйте снова.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'Сбор цен из всех филиалов',

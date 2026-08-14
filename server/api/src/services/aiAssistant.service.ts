@@ -137,6 +137,10 @@ const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של 
 export interface AssistantStreamHandle {
   reader: ReadableStreamDefaultReader<Uint8Array>;
   cleanup: () => void;
+  providerName: string;
+  // true אם זה לא הספק הראשון ברשימה (כלומר הספק הראשי נכשל ועברנו לגיבוי) -
+  // ה-controller משתמש בזה כדי לשדר ללקוח חיווי עדין "עברנו למודל גיבוי".
+  isFallback: boolean;
 }
 
 /**
@@ -196,7 +200,8 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   // מנסים כל ספק לפי סדר (Groq, אחר כך NIM). כשל בספק אחד (מכסה חינמית
   // נגמרה, שגיאת שרת, timeout) עובר לספק הבא במקום להיכשל למשתמש - כל עוד
   // יש עוד ספק מוגדר לנסות. כשל בכולם זורק שגיאה אחת מרוכזת בסוף.
-  for (const provider of providers) {
+  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
+    const provider = providers[providerIndex];
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
@@ -232,7 +237,12 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
       continue;
     }
 
-    return { reader: response.body.getReader(), cleanup: () => clearTimeout(timeoutId) };
+    return {
+      reader: response.body.getReader(),
+      cleanup: () => clearTimeout(timeoutId),
+      providerName: provider.name,
+      isFallback: providerIndex > 0,
+    };
   }
 
   logger.error('aiAssistant: all providers failed, last error: %s', lastError);

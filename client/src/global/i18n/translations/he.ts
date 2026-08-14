@@ -665,6 +665,8 @@ export const he: Translations = {
   aiNoResponse: 'לא התקבלה תשובה, נסה שוב.',
   aiNotConfigured: 'עוזר ה-AI לא מוגדר כרגע בשרת.',
   aiTooManyMessages: 'יותר מדי הודעות בשעה האחרונה - נסה שוב מאוחר יותר.',
+  aiTryAgainInMinutes: 'המכסה מתחדשת בעוד כ-{minutes} דקות.',
+  aiFallbackNotice: 'התשובה הזו הגיעה ממודל גיבוי',
   aiGenericError: 'משהו השתבש, נסה שוב.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'אוסף מחירים מכל הסניפים',
