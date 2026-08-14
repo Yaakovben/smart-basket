@@ -55,13 +55,15 @@ export const useProductMutations = ({
     const newIsPurchased = !product.isPurchased;
     dismissHint();
 
-    // עדכון אופטימיסטי מיידי
+    // עדכון אופטימיסטי מיידי - כולל purchasedBy, תואם למה שהשרת בפועל שומר
+    // (product.service.ts: purchasedBy = userId אם isPurchased, אחרת null).
+    // בלי זה "נקנה ע״י" בכרטיס/בפרטים נשאר עם הערך הישן עד לרענון מלא.
     if (newIsPurchased) {
       markPurchased();
     }
     onUpdateProductsForList(list.id, (currentProducts) =>
       currentProducts.map((p: Product) =>
-        p.id === productId ? { ...p, isPurchased: newIsPurchased } : p
+        p.id === productId ? { ...p, isPurchased: newIsPurchased, purchasedBy: newIsPurchased ? user.name : null } : p
       )
     );
 
@@ -89,7 +91,7 @@ export const useProductMutations = ({
       if (import.meta.env.DEV) console.error('Failed to toggle product:', { productId, listId: list.id, error });
       onUpdateProductsForList(list.id, (currentProducts) =>
         currentProducts.map((p: Product) =>
-          p.id === productId ? { ...p, isPurchased: product.isPurchased } : p
+          p.id === productId ? { ...p, isPurchased: product.isPurchased, purchasedBy: product.purchasedBy } : p
         )
       );
       showToast(t('errorOccurred'), 'error');
@@ -254,11 +256,16 @@ export const useProductMutations = ({
     if (editData.category !== original.category) changes.category = editData.category;
     if ((editData.note || '') !== (original.note || '')) changes.note = editData.note || '';
 
-    // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי
+    // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי. updatedBy מתעדכן רק אם
+    // באמת יש שינוי בתוכן (אותה בדיקה כמו product.service.ts בשרת), כדי לא
+    // להראות "עודכן ע״י" על שמירה בלי שינוי אמיתי.
     setShowEdit(null);
     setOriginalEditProduct(null);
+    const hasContentChange = Object.keys(changes).length > 0;
     onUpdateProductsForList(list.id, (current) =>
-      current.map(p => p.id === editData.id ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note } : p)
+      current.map(p => p.id === editData.id
+        ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note, ...(hasContentChange ? { updatedBy: user.name } : {}) }
+        : p)
     );
 
     try {
@@ -278,7 +285,7 @@ export const useProductMutations = ({
       }
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note } : p)
+        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note, updatedBy: original.updatedBy } : p)
       );
       showToast(t('errorOccurred'), 'error');
     }
