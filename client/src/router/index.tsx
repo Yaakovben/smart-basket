@@ -24,17 +24,24 @@ const listImport = () => import("../features/list/list").then(m => ({ default: m
 listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
 const ListPage = lazy(listImport);
 const profileImport = () => import("../features/profile/profile").then(m => ({ default: m.ProfilePage }));
-profileImport(); // prefetch מיידי - מונע עיכוב בלחיצה על פרופיל (כמו Home/List)
 const ProfilePage = lazy(profileImport);
 const settingsImport = () => import("../features/settings/settings").then(m => ({ default: m.SettingsPage }));
-settingsImport(); // prefetch מיידי - מונע עיכוב בלחיצה על הגדרות (כמו Home/List)
 const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
-insightsImport(); // prefetch מיידי - יעד ניווט מרכזי מהבית (כמו Home/List/Profile/Settings)
 const InsightsPage = lazy(insightsImport);
+
+// prefetch מושהה לזמן סרק: Home+List נטענים מיידית (ניווט ראשוני),
+// שאר הדפים (Profile/Settings/Insights = 600+ kB) ממתינים שהדף יתייצב.
+// InsightsPage לבדו שוקל 451kB — טעינתו המיידית גרמה לתחרות רשת עם
+// הטעינה הראשונית והאיטה את הרינדור הראשון.
+if (typeof requestIdleCallback === 'function') {
+  requestIdleCallback(() => { profileImport(); settingsImport(); insightsImport(); }, { timeout: 4000 });
+} else {
+  setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
+}
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
 // ניתוב QR - שומר code+password ומפנה לדף הבית
