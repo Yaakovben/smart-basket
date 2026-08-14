@@ -79,14 +79,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
 
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
-  // הפעולה האחרונה שבוצעה על המוצר - זו היחידה שמוצגת בכרטיס (לא כל ההיסטוריה,
-  // ראו את זה בפרטי המוצר). קנייה תמיד אחרונה כרונולוגית אם קרתה; אחרת עריכה
-  // אם קרתה; אחרת רק ההוספה המקורית.
+  // בטאב "לקנות" מציגים תמיד "נוסף ע״י", ובטאב "נקנה" תמיד "נקנה ע״י" -
+  // תואם את הטאב שבו המוצר מוצג, לא "הפעולה האחרונה" בפועל. השרשרת המלאה
+  // (כולל עריכה) מוצגת בפרטי המוצר בלבד.
   const displayName = (name: string) => name === currentUserName ? t('you') : name;
   const lastAction = isPurchased && product.purchasedBy
     ? { label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
-    : product.updatedBy && product.updatedBy !== product.addedBy
-    ? { label: t('updatedByLabel'), name: displayName(product.updatedBy) }
     : { label: t('addedBy'), name: displayName(product.addedBy) };
 
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
