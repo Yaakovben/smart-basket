@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Drawer, Typography, IconButton, Button, CircularProgress } from '@mui/material';
+import { Box, Drawer, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import { aiAssistantApi } from '../../../../services/api';
+import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison/services/priceComparison.api';
 import type { PriceListGroup, PriceChainTotal } from '../../../priceComparison/types/priceComparison.types';
@@ -163,7 +164,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       <Box sx={{ flex: 1, overflowY: 'auto', px: 2.5, pb: 1 }}>
         {loading && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 3 }}>
-            <CircularProgress size={18} sx={{ color: '#14B8A6' }} />
+            <AiThinkingIndicator />
             <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>מנתח את הרשימה...</Typography>
           </Box>
         )}
