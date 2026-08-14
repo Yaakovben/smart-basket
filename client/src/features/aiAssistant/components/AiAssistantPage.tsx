@@ -116,7 +116,10 @@ export const AiAssistantPage = memo(() => {
             </Typography>
 
             {/* הצעות שאלה - רשת של כרטיסי-שבב קומפקטיים (2 בשורה), כניסה
-                מדורגת לכל כרטיס. ה-5 מרוכזת לבד בשורה האחרונה. */}
+                מדורגת לכל כרטיס. ה-5 מרוכזת לבד בשורה האחרונה. מסגרת גרדיאנט
+                סגול-טורקיז (אותו גרדיאנט מותג ה-AI מהכותרת/בועות) - טכניקת
+                "רקע כפול" (padding-box + border-box) כדי לצייר גבול גרדיאנט
+                בלי תלות ב-border-image (שלא תומך ברדיוס יפה). */}
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
               {SUGGESTIONS.map((s, i) => (
                 <Box
@@ -129,8 +132,12 @@ export const AiAssistantPage = memo(() => {
                     gridColumn: i === 4 ? '1 / span 2' : undefined,
                     justifySelf: i === 4 ? 'center' : undefined,
                     width: i === 4 ? '50%' : undefined,
-                    bgcolor: isDark ? 'rgba(20,184,166,0.1)' : '#F0FDFA',
-                    border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
+                    border: '1.5px solid transparent',
+                    backgroundImage: isDark
+                      ? 'linear-gradient(#1E293B, #1E293B), linear-gradient(135deg, rgba(167,139,250,0.55) 0%, rgba(20,184,166,0.5) 100%)'
+                      : 'linear-gradient(#F0FDFA, #F0FDFA), linear-gradient(135deg, rgba(139,92,246,0.4) 0%, rgba(20,184,166,0.45) 100%)',
+                    backgroundOrigin: 'border-box',
+                    backgroundClip: 'padding-box, border-box',
                     boxShadow: isDark ? 'none' : '0 2px 8px rgba(15,118,110,0.06)',
                     opacity: 0,
                     animation: `aiSuggestionIn 0.5s cubic-bezier(0.34,1.56,0.64,1) ${0.15 + i * 0.1}s both`,
@@ -142,7 +149,13 @@ export const AiAssistantPage = memo(() => {
                     '&:active': { transform: 'scale(0.96)' },
                   }}
                 >
-                  <Typography sx={{ fontSize: 12, fontWeight: 600, color: isDark ? '#5EEAD4' : '#0F766E', lineHeight: 1.45 }}>
+                  <Typography sx={{
+                    fontSize: 12, fontWeight: 700, lineHeight: 1.45,
+                    background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
                     {s}
                   </Typography>
                 </Box>
