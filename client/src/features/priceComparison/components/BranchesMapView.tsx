@@ -15,7 +15,21 @@ import { useUserLocation } from '../hooks/useUserLocation';
 import { priceComparisonApi } from '../services/priceComparison.api';
 import { NavigationPicker } from './NavigationPicker';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { MemberAvatar } from '../../../global/components/MemberAvatar';
+import type { User } from '../../../global/types';
 import type { NearestBranch } from '../types/priceComparison.types';
+
+// קריאה קלה מה-cache המקומי בלבד (בלי useAuth המלא - זה היה מפעיל שוב
+// טעינת רשימות/התראות מהשרת, מיותר לגמרי כאן, רק כדי להציג שם+אווטאר
+// בפופאפ "המיקום שלי").
+function getCachedUser(): User | null {
+  try {
+    const raw = localStorage.getItem('cached_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 const ISRAEL_CENTER: [number, number] = [31.7683, 35.2137];
 const ISRAEL_ZOOM = 8;
@@ -206,6 +220,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
   const [branches, setBranches] = useState<NearbyBranch[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+  const currentUser = useMemo(getCachedUser, []);
 
   // בקשת מיקום אוטומטית ברגע שהמפה נפתחת (רק אם עוד לא נשאל בכלל - 'idle').
   // פתיחת מפה היא כוונה ברורה מספיק לבקש מיקום כאן, ובלי זה משתמש חדש רואה
@@ -375,7 +390,31 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
 
           {location && (
             <Marker position={[location.lat, location.lng]} icon={userIcon}>
-              <Popup className="sb-popup"><b>{t('mapMyLocation')}</b></Popup>
+              <Popup className="sb-popup" minWidth={180}>
+                <Box sx={{ direction: 'rtl', textAlign: 'right', display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                  {currentUser ? (
+                    <MemberAvatar member={currentUser} size={38} />
+                  ) : (
+                    <Box sx={{
+                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(37,99,235,0.4)',
+                    }}>
+                      <MyLocationIcon sx={{ fontSize: 18, color: 'white' }} />
+                    </Box>
+                  )}
+                  <Box sx={{ minWidth: 0 }}>
+                    {currentUser?.name && (
+                      <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
+                        {currentUser.name}
+                      </Typography>
+                    )}
+                    <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#2563EB', lineHeight: 1.3 }}>
+                      {t('mapMyLocation')}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Popup>
             </Marker>
           )}
 
