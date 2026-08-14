@@ -9,9 +9,11 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
-import { authApi } from "../services/api";
+import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
 import { setFetchIssue } from "../global/services/connectionIssue";
+import { writeCache } from "../features/insights/helpers/insightsCache";
+import { INSIGHTS_CACHE_KEY } from "../features/insights/helpers/insightsCache";
 
 // טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/pages/LoginPage";
@@ -31,16 +33,14 @@ const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ 
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
+insightsImport(); // prefetch מיידי - יעד ניווט מרכזי, שוקל 451kB ונרצה שיהיה מוכן
 const InsightsPage = lazy(insightsImport);
 
-// prefetch מושהה לזמן סרק: Home+List נטענים מיידית (ניווט ראשוני),
-// שאר הדפים (Profile/Settings/Insights = 600+ kB) ממתינים שהדף יתייצב.
-// InsightsPage לבדו שוקל 451kB — טעינתו המיידית גרמה לתחרות רשת עם
-// הטעינה הראשונית והאיטה את הרינדור הראשון.
+// prefetch מושהה לזמן סרק: Profile/Settings פחות דחופים מ-Home/List/Insights
 if (typeof requestIdleCallback === 'function') {
-  requestIdleCallback(() => { profileImport(); settingsImport(); insightsImport(); }, { timeout: 4000 });
+  requestIdleCallback(() => { profileImport(); settingsImport(); }, { timeout: 4000 });
 } else {
-  setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
+  setTimeout(() => { profileImport(); settingsImport(); }, 2000);
 }
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
@@ -166,6 +166,20 @@ export const AppRouter = () => {
       return () => cancelAnimationFrame(raf);
     }
   }, [authLoading]);
+
+  // pre-warm: אחרי שהמשתמש נכנס ו-auth הסתיים, מבצעים fetch לנתוני תובנות
+  // ברקע בשקט. כשיכנס לדף התובנות — ה-cache בשרת (4 דק') וב-localStorage
+  // כבר חמים, והדף נפתח מיידית במקום לחכות לחישוב spending יקר (80 regex).
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const timer = setTimeout(() => {
+      insightsApi.getInsights()
+        .then(res => writeCache(INSIGHTS_CACHE_KEY, res))
+        .catch(() => {/* שקט — זה רק pre-warm, לא קריטי */});
+    }, 3000); // 3 שניות אחרי login - לא מתחרה עם טעינת הבית
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   // הודעות מ-Service Worker: ניווט מהתראות בלבד.
   //
