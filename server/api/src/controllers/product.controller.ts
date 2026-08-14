@@ -3,6 +3,7 @@ import * as productService from '../services/product.service';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
 import type { CreateProductInput, UpdateProductInput, ReorderProductsInput } from '../validators';
+import { invalidateInsightsCache } from '../services/insights.service';
 
 export const addProduct = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
@@ -17,6 +18,8 @@ export const updateProduct = asyncHandler(async (req: AuthRequest, res: Response
   const { listId, productId } = req.params;
   const data = req.body as UpdateProductInput;
   await productService.updateProduct(listId, productId, userId, data);
+  // שינוי isPurchased משפיע על חישובי spending/insights - מנקה cache
+  if ('isPurchased' in data) invalidateInsightsCache(userId);
   res.json({ success: true });
 });
 

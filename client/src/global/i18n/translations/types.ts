@@ -771,6 +771,8 @@ export type TranslationKeys =
   | 'estimatedCostDisclaimer'
   | 'fullDetailsInInsights'
   | 'askAiAboutList'
-  | 'aiAnalyzeListPrompt';
+  | 'aiAnalyzeListPrompt'
+  | 'itemsMatchedShort'
+  | 'continueChatWithAi';
 
 export type Translations = Record<TranslationKeys, string>;

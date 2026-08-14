@@ -768,4 +768,6 @@ export const ru: Translations = {
   fullDetailsInInsights: 'Подробнее в аналитике',
   askAiAboutList: 'Проанализировать список с ИИ',
   aiAnalyzeListPrompt: 'Проанализируй мой список покупок "{name}" - сколько это примерно будет стоить и где можно сэкономить?',
+  itemsMatchedShort: 'товаров найдено',
+  continueChatWithAi: 'Продолжить разговор с ИИ',
 };

@@ -768,4 +768,6 @@ export const en: Translations = {
   fullDetailsInInsights: 'Full details in Insights',
   askAiAboutList: 'Analyze this list with AI',
   aiAnalyzeListPrompt: 'Analyze my shopping list "{name}" - roughly how much will it cost, and where can I save?',
+  itemsMatchedShort: 'items matched',
+  continueChatWithAi: 'Continue chatting with the AI',
 };

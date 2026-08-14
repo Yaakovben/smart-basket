@@ -44,7 +44,7 @@ const DISCLAIMER = 'ההוצאה מבוססת על התאמת שמות המוצ�
 // (5 דק' לעומת 3) כי הוצאה חודשית משוערת רגישה הרבה פחות לרעננות
 // שנייה-שנייה מאשר תוכן שיחה - שווה ויתור קטן על טריות תמורת שיפור עצום
 // בזמן טעינה.
-const SPENDING_CACHE_TTL_MS = 5 * 60 * 1000;
+const SPENDING_CACHE_TTL_MS = 20 * 60 * 1000;
 const spendingCache = new Map<string, { data: SpendingData; expiresAt: number }>();
 
 export function emptySpending(enabled = false): SpendingData {
@@ -147,7 +147,16 @@ async function computeSpendingUncached(
   // שמות ייחודיים מכל 6 החודשים - ה-matchCache יכסה את כולם
   const sixMonthsStart = monthBounds[0].start;
   const allSixMonthsPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= sixMonthsStart);
-  const uniqueNames = Array.from(new Set(allSixMonthsPurchases.map(p => p.name)));
+  // מגבילים ל-80 שמות ייחודיים - כל שם = שאילתת regex יקרה על prices.
+  // ממיינים לפי תדירות (הנפוצים קודם) כדי לכסות את רוב ההוצאה האמיתית
+  // גם עם החיתוך. מעל 80 שמות - כמעט תמיד "זנב ארוך" של מוצרים נדירים
+  // שתרומתם לסכום הכולל מזערית, אבל עלותם בזמן שווה לנפוצים.
+  const nameFreq = new Map<string, number>();
+  for (const p of allSixMonthsPurchases) nameFreq.set(p.name, (nameFreq.get(p.name) || 0) + 1);
+  const uniqueNames = Array.from(nameFreq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 80)
+    .map(([name]) => name);
 
   const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
   await Promise.all(

@@ -769,4 +769,6 @@ export const he: Translations = {
   fullDetailsInInsights: 'פירוט מלא בתובנות',
   askAiAboutList: 'נתח לי את הרשימה עם AI',
   aiAnalyzeListPrompt: 'נתח לי את רשימת הקניות "{name}" - כמה זה בערך יעלה, ואיפה אפשר לחסוך?',
+  itemsMatchedShort: 'מוצרים אותרו',
+  continueChatWithAi: 'המשך שיחה עם ה-AI',
 };

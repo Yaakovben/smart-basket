@@ -73,6 +73,7 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
       <ListAnalysisDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        listId={listId}
         listName={listName}
         productNames={productNames}
       />
