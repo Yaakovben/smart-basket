@@ -61,21 +61,6 @@ if (SENTRY_DSN && import.meta.env.PROD) {
 // אנליטיקס מוצרי (PostHog) - מושהה, no-op עד ש-VITE_POSTHOG_KEY יוגדר בסביבה
 initAnalytics()
 
-// פינג keep-alive לשרת: Render free tier נרדם אחרי 15 דק' חוסר פעילות.
-// ה-cold start לוקח 30-60 שניות ומורגש כ"האפליקציה קפואה". פינג כל 12 דק'
-// כשהאפליקציה גלויה מונע את השינה לחלוטין. 12 < 15 עם מרווח בטחון.
-{
-  const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
-  if (apiUrl && import.meta.env.PROD) {
-    const PING_INTERVAL_MS = 12 * 60 * 1000;
-    const pingHealth = () => {
-      if (document.visibilityState !== 'visible') return;
-      fetch(`${apiUrl}/health`, { method: 'GET', credentials: 'omit' }).catch(() => {/* שקט */});
-    };
-    setInterval(pingHealth, PING_INTERVAL_MS);
-  }
-}
-
 // חייב להיות מוגדר במשתני סביבה
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
