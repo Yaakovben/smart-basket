@@ -9,7 +9,7 @@ import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES } from '../../../global/helpers';
-import { MembersButton, ListMenu } from '../../../global/components';
+import { MembersButton, ListMenu, ConnectionStatusIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { ListCostEstimate } from '../hooks/useListCostEstimate';
@@ -159,7 +159,8 @@ export const ListHeader = memo(({
           </Typography>
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <ConnectionStatusIcon />
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
