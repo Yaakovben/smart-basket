@@ -193,51 +193,79 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           const matchedCount = cheapest?.matchedCount ?? priceGroup?.matchedCount ?? 0;
           return (
             <Box sx={{
-              mb: 1.5, p: 1.75, borderRadius: '14px',
-              bgcolor: isDark ? 'rgba(20,184,166,0.08)' : '#F0FDFA',
-              border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
+              mb: 1.5, borderRadius: '16px', overflow: 'hidden',
+              border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.2)' : '#CCFBF1',
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: chainsWithMatches.length > 1 || matchedItems.length > 0 ? 1 : 0 }}>
-                <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: isDark ? '#5EEAD4' : '#0F766E' }}>
-                  💰 {t('estimatedCostBadge').replace('{amount}', String(Math.round(displayTotal)))}
-                </Typography>
-                {totalItems > 0 && (
-                  <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
-                    {matchedCount}/{totalItems} {t('itemsMatchedShort')}
+              {/* כותרת + סכום */}
+              <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                px: 2, py: 1.25,
+                bgcolor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1',
+              }}>
+                <Box>
+                  <Typography sx={{ fontSize: 11, fontWeight: 600, color: isDark ? '#5EEAD4' : '#0F766E', mb: 0.1, letterSpacing: 0.3 }}>
+                    עלות משוערת לסל
                   </Typography>
-                )}
+                  <Typography sx={{ fontSize: 22, fontWeight: 800, color: isDark ? '#2DD4BF' : '#0F766E', lineHeight: 1.1 }}>
+                    ₪{Math.round(displayTotal)}
+                  </Typography>
+                  {totalItems > 0 && (
+                    <Typography sx={{ fontSize: 10.5, color: isDark ? 'rgba(94,234,212,0.7)' : '#0F766E', opacity: 0.8, mt: 0.2 }}>
+                      {matchedCount} מתוך {totalItems} פריטים זוהו
+                    </Typography>
+                  )}
+                </Box>
+                <Box sx={{
+                  width: 44, height: 44, borderRadius: '12px', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.6)',
+                  fontSize: 22,
+                }}>
+                  🛒
+                </Box>
               </Box>
 
-              {/* השוואה בין רשתות - עד 3 הזולות ביותר */}
+              {/* השוואה בין רשתות */}
               {chainsWithMatches.length > 1 && (
-                <Box sx={{ display: 'flex', gap: 0.6, flexWrap: 'wrap', mb: matchedItems.length > 0 ? 1 : 0 }}>
-                  {chainsWithMatches.slice(0, 3).map((c, idx) => (
-                    <Box key={c.chainId} sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.4,
-                      px: 1, py: 0.4, borderRadius: '999px',
-                      bgcolor: idx === 0 ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'white'),
-                      border: '1px solid', borderColor: idx === 0 ? '#14B8A6' : 'divider',
-                    }}>
-                      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: idx === 0 ? 'white' : 'text.primary' }}>
-                        {c.chainName}
-                      </Typography>
-                      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: idx === 0 ? 'white' : 'text.secondary' }}>
-                        ₪{Math.round(c.total)}
-                      </Typography>
-                    </Box>
-                  ))}
+                <Box sx={{ px: 2, py: 1, borderTop: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1' }}>
+                  <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>
+                    השוואת מחירים
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                    {chainsWithMatches.slice(0, 4).map((c, idx) => (
+                      <Box key={c.chainId} sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.5,
+                        px: 1.25, py: 0.5, borderRadius: '999px',
+                        bgcolor: idx === 0
+                          ? (isDark ? '#14B8A6' : '#0D9488')
+                          : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
+                      }}>
+                        {idx === 0 && (
+                          <Typography sx={{ fontSize: 9, color: 'white', fontWeight: 800, lineHeight: 1 }}>
+                            הזול
+                          </Typography>
+                        )}
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: idx === 0 ? 'white' : 'text.primary' }}>
+                          {c.chainName}
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: idx === 0 ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
+                          ₪{Math.round(c.total)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
               )}
 
-              {/* פירוט לפי מוצר - עד 3 הראשונים */}
+              {/* פירוט פריטים */}
               {matchedItems.length > 0 && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                  {matchedItems.slice(0, 3).map(m => (
-                    <Box key={m.productId} sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Box sx={{ px: 2, py: 1, borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+                  {matchedItems.slice(0, 4).map(m => (
+                    <Box key={m.productId} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.35 }}>
+                      <Typography sx={{ fontSize: 12, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, ml: 0.5 }}>
                         {m.userProductName}
                       </Typography>
-                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', flexShrink: 0 }}>
                         ₪{Math.round(m.price * m.userQuantity)}
                       </Typography>
                     </Box>
