@@ -328,7 +328,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
                     '&:hover': { bgcolor: '#16A34A', boxShadow: '0 2px 10px rgba(34,197,94,0.45)' },
                     fontSize: 11.5, fontWeight: 700, textTransform: 'none',
                     borderRadius: '8px', py: 0.6, mb: 0.5,
-                    '& .MuiButton-startIcon': { mr: 1, ml: -0.25 },
+                    '& .MuiButton-startIcon': { marginInlineEnd: '8px', marginInlineStart: 0 },
                   }}
                 >
                   {t('mapPopupNavigate')}
