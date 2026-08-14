@@ -668,6 +668,8 @@ export type TranslationKeys =
   | 'aiNoResponse'
   | 'aiNotConfigured'
   | 'aiTooManyMessages'
+  | 'aiTryAgainInMinutes'
+  | 'aiFallbackNotice'
   | 'aiGenericError'
   // Slow load indicator defaults
   | 'slowLoadDefaultMessage'

@@ -664,6 +664,8 @@ export const en: Translations = {
   aiNoResponse: 'No response received, try again.',
   aiNotConfigured: 'The AI assistant is not configured on the server right now.',
   aiTooManyMessages: 'Too many messages in the last hour - try again later.',
+  aiTryAgainInMinutes: 'Quota resets in about {minutes} minutes.',
+  aiFallbackNotice: 'This reply came from a backup model',
   aiGenericError: 'Something went wrong, try again.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'Collecting prices from all branches',
