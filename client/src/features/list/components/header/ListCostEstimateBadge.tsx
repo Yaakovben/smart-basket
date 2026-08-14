@@ -2,9 +2,9 @@ import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { safeStorage, haptic } from '../../../../global/helpers';
+import { AiAssistantIcon } from '../../../../global/components';
 import type { ListCostEstimate } from '../../hooks/useListCostEstimate';
 import { ListAnalysisDrawer } from './ListAnalysisDrawer';
 
@@ -42,7 +42,7 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
   return (
     <>
       <IconButton onClick={handleOpen} aria-label="AI ותובנות" sx={sx}>
-        <AutoAwesomeRoundedIcon sx={{ color: 'white', fontSize: 20 }} />
+        <AiAssistantIcon sx={{ color: 'white', fontSize: 20 }} />
       </IconButton>
 
       <Menu
@@ -54,7 +54,7 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
         slotProps={{ paper: { sx: { borderRadius: '14px', mt: 0.5, minWidth: 220 } } }}
       >
         <MenuItem onClick={openAnalysis} sx={{ py: 1.1 }}>
-          <ListItemIcon><AutoAwesomeRoundedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} /></ListItemIcon>
+          <ListItemIcon><AiAssistantIcon sx={{ fontSize: 20, color: '#8B5CF6' }} /></ListItemIcon>
           <ListItemText
             primary={t('askAiAboutList')}
             slotProps={{ primary: { fontSize: 14, fontWeight: 600 } }}

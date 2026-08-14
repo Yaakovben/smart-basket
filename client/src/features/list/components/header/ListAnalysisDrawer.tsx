@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Drawer, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import { aiAssistantApi } from '../../../../services/api';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
+import { AiAssistantIcon } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison/services/priceComparison.api';
 import type { PriceListGroup, PriceChainTotal } from '../../../priceComparison/types/priceComparison.types';
@@ -71,7 +71,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     priceComparisonApi.getComparison(listId)
       .then(res => {
         const group = res.lists?.find(l => l.listId === listId) ?? res.lists?.[0] ?? null;
-        setPriceGroup(group && group.matchedCount > 0 ? group : null);
+        setPriceGroup(group ?? null);
         setChainTotals(res.chainTotals ?? []);
       })
       .catch(() => { setPriceGroup(null); setChainTotals([]); })
@@ -145,7 +145,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
         }}>
-          <AutoAwesomeRoundedIcon sx={{ color: 'white', fontSize: 18 }} />
+          <AiAssistantIcon sx={{ color: 'white', fontSize: 18 }} />
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontSize: 15, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
@@ -175,60 +175,78 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
         )}
 
         {/* הערכת מחיר אמיתית - מגיעה ממאגר המחירים הממשלתי, לא ניחוש של ה-AI.
-            מוצגת בנפרד וברור מהניתוח הטקסטואלי כדי שלא יתערבבו כמקור אמון. */}
-        {!priceLoading && priceGroup && (
-          <Box sx={{
-            mb: 1.5, p: 1.75, borderRadius: '14px',
-            bgcolor: isDark ? 'rgba(20,184,166,0.08)' : '#F0FDFA',
-            border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: chainTotals.length > 0 || priceGroup.matches.length > 0 ? 1 : 0 }}>
-              <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: isDark ? '#5EEAD4' : '#0F766E' }}>
-                💰 {t('estimatedCostBadge').replace('{amount}', String(Math.round(priceGroup.estimatedTotal)))}
-              </Typography>
-              <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
-                {priceGroup.matchedCount}/{priceGroup.matchedCount + priceGroup.unmatchedCount} {t('itemsMatchedShort')}
-              </Typography>
+            מוצגת בנפרד וברור מהניתוח הטקסטואלי כדי שלא יתערבבו כמקור אמון.
+            המחיר המוצג הוא של הרשת הזולה ביותר (מ-chainTotals) ולא רק אושר עד -
+            כי אושר עד הוא ה-BETA_CHAIN_ID שלא בהכרח מכסה את כל המוצרים. */}
+        {!priceLoading && (() => {
+          // הרשת הזולה ביותר שיש לה לפחות התאמה אחת
+          const chainsWithMatches = [...chainTotals]
+            .filter(c => c.matchedCount > 0 && c.total > 0)
+            .sort((a, b) => a.total - b.total);
+          const cheapest = chainsWithMatches[0];
+          // פירוט מוצרים - מהרשת הזולה אם יש, אחרת מהרשת הראשית (priceGroup)
+          const matchedItems = priceGroup?.matches?.filter(m => m.matched) ?? [];
+          // אין שום נתון מחיר - לא מציגים כלום
+          if (!cheapest && matchedItems.length === 0) return null;
+          const displayTotal = cheapest?.total ?? priceGroup?.estimatedTotal ?? 0;
+          const totalItems = (priceGroup?.matchedCount ?? 0) + (priceGroup?.unmatchedCount ?? 0);
+          const matchedCount = cheapest?.matchedCount ?? priceGroup?.matchedCount ?? 0;
+          return (
+            <Box sx={{
+              mb: 1.5, p: 1.75, borderRadius: '14px',
+              bgcolor: isDark ? 'rgba(20,184,166,0.08)' : '#F0FDFA',
+              border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: chainsWithMatches.length > 1 || matchedItems.length > 0 ? 1 : 0 }}>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: isDark ? '#5EEAD4' : '#0F766E' }}>
+                  💰 {t('estimatedCostBadge').replace('{amount}', String(Math.round(displayTotal)))}
+                </Typography>
+                {totalItems > 0 && (
+                  <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
+                    {matchedCount}/{totalItems} {t('itemsMatchedShort')}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* השוואה בין רשתות - עד 3 הזולות ביותר */}
+              {chainsWithMatches.length > 1 && (
+                <Box sx={{ display: 'flex', gap: 0.6, flexWrap: 'wrap', mb: matchedItems.length > 0 ? 1 : 0 }}>
+                  {chainsWithMatches.slice(0, 3).map((c, idx) => (
+                    <Box key={c.chainId} sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.4,
+                      px: 1, py: 0.4, borderRadius: '999px',
+                      bgcolor: idx === 0 ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'white'),
+                      border: '1px solid', borderColor: idx === 0 ? '#14B8A6' : 'divider',
+                    }}>
+                      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: idx === 0 ? 'white' : 'text.primary' }}>
+                        {c.chainName}
+                      </Typography>
+                      <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: idx === 0 ? 'white' : 'text.secondary' }}>
+                        ₪{Math.round(c.total)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              {/* פירוט לפי מוצר - עד 3 הראשונים */}
+              {matchedItems.length > 0 && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                  {matchedItems.slice(0, 3).map(m => (
+                    <Box key={m.productId} sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {m.userProductName}
+                      </Typography>
+                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
+                        ₪{Math.round(m.price * m.userQuantity)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Box>
-
-            {/* השוואה בין רשתות - עד 3 הזולות ביותר */}
-            {chainTotals.length > 0 && (
-              <Box sx={{ display: 'flex', gap: 0.6, flexWrap: 'wrap', mb: priceGroup.matches.length > 0 ? 1 : 0 }}>
-                {[...chainTotals].sort((a, b) => a.total - b.total).slice(0, 3).map(c => (
-                  <Box key={c.chainId} sx={{
-                    display: 'flex', alignItems: 'center', gap: 0.4,
-                    px: 1, py: 0.4, borderRadius: '999px',
-                    bgcolor: c.isCheapest ? '#14B8A6' : (isDark ? 'rgba(255,255,255,0.06)' : 'white'),
-                    border: '1px solid', borderColor: c.isCheapest ? '#14B8A6' : 'divider',
-                  }}>
-                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: c.isCheapest ? 'white' : 'text.primary' }}>
-                      {c.chainName}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: c.isCheapest ? 'white' : 'text.secondary' }}>
-                      ₪{Math.round(c.total)}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            {/* פירוט לפי מוצר - עד 3 היקרים ביותר ברשימה */}
-            {priceGroup.matches.filter(m => m.matched).length > 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                {priceGroup.matches.filter(m => m.matched).slice(0, 3).map(m => (
-                  <Box key={m.productId} sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {m.userProductName}
-                    </Typography>
-                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
-                      ₪{Math.round(m.price * m.userQuantity)}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-        )}
+          );
+        })()}
 
         {text && (
           <Box sx={{
