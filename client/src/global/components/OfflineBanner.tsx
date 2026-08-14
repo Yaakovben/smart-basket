@@ -120,19 +120,20 @@ export const OfflineBanner = () => {
           // ברצועת ה-status bar, מעל כרטיס הכותרת עצמו - מיקום קבוע וזהה בכל
           // עמוד (גם בעמודים בלי פעמון בפועל, כמו רשימה/תובנות), קרוב אופקית
           // לאשכול הפעמון/הגדרות בלי לשבת ממש עליהם ולחסום טאפ על האייקונים
-          // האמיתיים של הכותרת.
-          top: 'max(env(safe-area-inset-top), 8px)',
-          insetInlineEnd: 54,
+          // האמיתיים של הכותרת. בלי רקע/גלולה - רק האייקון עצמו, בצבע האפליקציה,
+          // כדי שיתמזג טבעי עם הכותרת במקום להיראות כמו overlay זר.
+          top: 'max(env(safe-area-inset-top), 6px)',
+          insetInlineEnd: 50,
           zIndex: 9999,
           display: 'flex', alignItems: 'center', gap: 0.75,
-          height: 26,
-          minWidth: 26,
+          height: 32,
+          minWidth: 32,
           px: showLabel ? 1.25 : 0,
           justifyContent: 'center',
-          bgcolor: isReconnecting ? 'rgba(217,119,6,0.92)' : 'rgba(0,0,0,0.52)',
-          backdropFilter: 'blur(6px)',
+          bgcolor: showLabel ? (isReconnecting ? 'rgba(217,119,6,0.92)' : 'rgba(0,0,0,0.52)') : 'transparent',
+          backdropFilter: showLabel ? 'blur(6px)' : 'none',
           borderRadius: '999px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+          boxShadow: showLabel ? '0 2px 8px rgba(0,0,0,0.18)' : 'none',
           cursor: 'pointer',
           animation: 'sbFadeIn 0.3s ease',
           transition: 'padding 0.18s ease, background-color 0.18s ease',
@@ -140,7 +141,11 @@ export const OfflineBanner = () => {
           '@keyframes sbFadeIn': { from: { opacity: 0, transform: 'translateY(-6px)' }, to: { opacity: 1, transform: 'none' } },
         }}
       >
-        <WifiFadeIcon style={{ fontSize: 13, color: 'rgba(255,255,255,0.95)', flexShrink: 0 }} />
+        <WifiFadeIcon style={{
+          fontSize: 20, flexShrink: 0,
+          color: showLabel ? 'white' : (isReconnecting ? '#D97706' : '#14B8A6'),
+          filter: showLabel ? 'none' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))',
+        }} />
         {showLabel && (
           <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'white', whiteSpace: 'nowrap' }}>
             {label}
