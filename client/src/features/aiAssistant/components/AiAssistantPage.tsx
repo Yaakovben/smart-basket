@@ -3,8 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, IconButton, TextField } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SendIcon from '@mui/icons-material/Send';
-import RecordVoiceOverRoundedIcon from '@mui/icons-material/RecordVoiceOverRounded';
-import TouchAppRoundedIcon from '@mui/icons-material/TouchAppRounded';
 import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -28,7 +26,7 @@ export const AiAssistantPage = memo(() => {
       const j = Math.floor(Math.random() * (i + 1));
       [all[i], all[j]] = [all[j], all[i]];
     }
-    return all.slice(0, 3);
+    return all.slice(0, 5);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const { messages, sending, sendMessage, listEndRef } = useAiAssistantChat();
@@ -109,81 +107,33 @@ export const AiAssistantPage = memo(() => {
       }}>
         {messages.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 3, px: 1 }}>
-            {/* אייקון AI מרכזי - כניסה עם "pop" גמיש, הילה פועמת ברקע וריחוף
-                עדין מתמשך + שלוש נקודות מקיפות (אותה שפה ויזואלית כמו
-                AiThinkingIndicator, בקנה מידה גדול יותר בתור "hero"). */}
-            <Box sx={{ position: 'relative', width: 56, height: 56, mx: 'auto', mb: 1.75 }}>
-              <Box sx={{
-                position: 'absolute', inset: -8, borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, rgba(20,184,166,0.18) 55%, transparent 75%)',
-                filter: 'blur(4px)',
-                animation: 'aiHeroGlow 2.4s ease-in-out infinite',
-                '@keyframes aiHeroGlow': {
-                  '0%, 100%': { opacity: 0.55, transform: 'scale(0.9)' },
-                  '50%': { opacity: 1, transform: 'scale(1.12)' },
-                },
-              }} />
-              {[
-                { color: '#A78BFA', duration: '5s', delay: '0s', size: 5 },
-                { color: '#2DD4BF', duration: '5s', delay: '-1.7s', size: 4.5 },
-                { color: '#5EEAD4', duration: '5s', delay: '-3.3s', size: 4 },
-              ].map((dot, i) => (
-                <Box key={i} aria-hidden="true" sx={{
-                  position: 'absolute', inset: -3,
-                  animation: `aiHeroOrbit ${dot.duration} linear infinite`,
-                  animationDelay: dot.delay,
-                  '@keyframes aiHeroOrbit': { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
-                }}>
-                  <Box sx={{
-                    position: 'absolute', top: -1.5, left: '50%', transform: 'translateX(-50%)',
-                    width: dot.size, height: dot.size, borderRadius: '50%',
-                    bgcolor: dot.color, boxShadow: `0 0 6px ${dot.color}`,
-                  }} />
-                </Box>
-              ))}
-              <Box sx={{
-                position: 'relative', width: 56, height: 56, borderRadius: '18px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
-                boxShadow: '0 8px 22px rgba(139,92,246,0.32), 0 4px 12px rgba(20,184,166,0.28)',
-                animation: 'aiHeroPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both, aiHeroFloat 3.4s ease-in-out 0.55s infinite',
-                '@keyframes aiHeroPop': { from: { opacity: 0, transform: 'scale(0.4) rotate(-8deg)' }, to: { opacity: 1, transform: 'scale(1) rotate(0)' } },
-                '@keyframes aiHeroFloat': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-4px)' } },
-              }}>
-                <AiAssistantIcon sx={{ color: 'white', fontSize: 26 }} />
-              </Box>
-            </Box>
-
             <Typography sx={{
               fontSize: 13.5, color: 'text.secondary', mb: 2.5, lineHeight: 1.7,
-              animation: 'aiFadeUp 0.5s ease 0.25s both',
+              animation: 'aiFadeUp 0.5s ease both',
               '@keyframes aiFadeUp': { from: { opacity: 0, transform: 'translateY(10px)' }, to: { opacity: 1, transform: 'none' } },
             }}>
               {t('aiAssistantIntro')}
             </Typography>
 
-            {/* הצעות שאלה - רשת של כרטיסי-שבב קומפקטיים (2 בשורה), כל אחד
-                עם אייקון איש-מדבר בעיגול גרדיאנט מעל הטקסט, כדי שיהיה ברור
-                חזותית שזו שאלה שאפשר "לשאול" בלחיצה. כניסה מדורגת לכל כרטיס,
-                ותג "הקש" קטן בפינת הכרטיס הראשון בלבד כדי ללמד את האינטראקציה. */}
+            {/* הצעות שאלה - רשת של כרטיסי-שבב קומפקטיים (2 בשורה), כניסה
+                מדורגת לכל כרטיס. ה-5 מרוכזת לבד בשורה האחרונה. */}
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
               {SUGGESTIONS.map((s, i) => (
                 <Box
                   key={s}
                   onClick={() => sendMessage(s)}
                   sx={{
-                    position: 'relative',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.6,
-                    px: 1.25, py: 1.5, borderRadius: '18px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    px: 1.5, py: 1.4, borderRadius: '16px', cursor: 'pointer',
                     textAlign: 'center',
-                    gridColumn: i === 2 ? '1 / span 2' : undefined,
-                    justifySelf: i === 2 ? 'center' : undefined,
-                    width: i === 2 ? '50%' : undefined,
+                    gridColumn: i === 4 ? '1 / span 2' : undefined,
+                    justifySelf: i === 4 ? 'center' : undefined,
+                    width: i === 4 ? '50%' : undefined,
                     bgcolor: isDark ? 'rgba(20,184,166,0.1)' : '#F0FDFA',
                     border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : '#99F6E4',
                     boxShadow: isDark ? 'none' : '0 2px 8px rgba(15,118,110,0.06)',
                     opacity: 0,
-                    animation: `aiSuggestionIn 0.5s cubic-bezier(0.34,1.56,0.64,1) ${0.4 + i * 0.13}s both`,
+                    animation: `aiSuggestionIn 0.5s cubic-bezier(0.34,1.56,0.64,1) ${0.15 + i * 0.1}s both`,
                     '@keyframes aiSuggestionIn': {
                       from: { opacity: 0, transform: 'translateY(14px) scale(0.94)' },
                       to: { opacity: 1, transform: 'none' },
@@ -192,31 +142,9 @@ export const AiAssistantPage = memo(() => {
                     '&:active': { transform: 'scale(0.96)' },
                   }}
                 >
-                  <Box sx={{
-                    flexShrink: 0, width: 30, height: 30, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
-                    boxShadow: '0 2px 8px rgba(20,184,166,0.35)',
-                  }}>
-                    <RecordVoiceOverRoundedIcon sx={{ color: 'white', fontSize: 15 }} />
-                  </Box>
                   <Typography sx={{ fontSize: 12, fontWeight: 600, color: isDark ? '#5EEAD4' : '#0F766E', lineHeight: 1.45 }}>
                     {s}
                   </Typography>
-                  {i === 0 && (
-                    <TouchAppRoundedIcon
-                      aria-hidden="true"
-                      sx={{
-                        position: 'absolute', top: 6, insetInlineEnd: 6,
-                        fontSize: 15, color: isDark ? 'rgba(94,234,212,0.7)' : 'rgba(15,118,110,0.55)',
-                        animation: 'aiTapHint 1.6s ease-in-out 1.4s infinite',
-                        '@keyframes aiTapHint': {
-                          '0%, 100%': { transform: 'scale(1)', opacity: 0.5 },
-                          '50%': { transform: 'scale(1.25)', opacity: 1 },
-                        },
-                      }}
-                    />
-                  )}
                 </Box>
               ))}
             </Box>
