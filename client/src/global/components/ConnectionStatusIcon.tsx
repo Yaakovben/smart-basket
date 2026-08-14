@@ -52,10 +52,10 @@ export const ConnectionStatusIcon = () => {
         }}
       >
         <Box sx={{ position: 'relative', display: 'flex' }}>
-          <WifiFadeIcon style={{ fontSize: 18, color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }} />
+          <WifiFadeIcon style={{ fontSize: 24, color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }} />
           {isOffline && pendingCount > 0 && (
             <Box sx={{
-              position: 'absolute', top: -5, insetInlineEnd: -7,
+              position: 'absolute', top: -6, insetInlineEnd: -9,
               minWidth: 13, height: 13, px: '3px',
               borderRadius: '999px',
               bgcolor: '#EF4444', color: 'white',

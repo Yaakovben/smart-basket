@@ -766,7 +766,7 @@ export const ru: Translations = {
   kmUnit: 'км',
   // List cost estimate badge
   estimatedCostBadge: '~₪{amount} примерно',
-  estimatedCostDisclaimer: 'Оценка на основе государственных данных о ценах, не точная',
+  estimatedCostDisclaimer: 'Оценка на основе государственных данных о ценах',
   fullDetailsInInsights: 'Подробнее в аналитике',
   askAiAboutList: 'Проанализировать список с ИИ',
   aiAnalyzeListPrompt: 'Проанализируй мой список покупок "{name}" - сколько это примерно будет стоить и где можно сэкономить?',

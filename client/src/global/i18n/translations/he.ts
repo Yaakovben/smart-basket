@@ -767,7 +767,7 @@ export const he: Translations = {
   kmUnit: 'ק״מ',
   // List cost estimate badge
   estimatedCostBadge: '~₪{amount} בערך',
-  estimatedCostDisclaimer: 'הערכה על סמך מחירי מאגר ממשלתי, לא מדויקת',
+  estimatedCostDisclaimer: 'הערכה על סמך מחירי מאגר ממשלתי',
   fullDetailsInInsights: 'פירוט מלא בתובנות',
   askAiAboutList: 'נתח לי את הרשימה עם AI',
   aiAnalyzeListPrompt: 'נתח לי את רשימת הקניות "{name}" - כמה זה בערך יעלה, ואיפה אפשר לחסוך?',
