@@ -42,7 +42,7 @@ export const InsightsPage = memo(() => {
   };
 
   const {
-    data, priceData, allListsPriceData, loading, error, currentUserName,
+    data, priceData, allListsPriceData, loading, error, dataFresh, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     locationStatus, requestLocation, resetLocationDenied,
@@ -142,7 +142,7 @@ export const InsightsPage = memo(() => {
 
         {tab === 'spending' && (
           <ErrorBoundary fallback={tabCrashFallback}>
-            <SpendingTab data={data} isDark={isDark} t={tStr} />
+            <SpendingTab data={data} isDark={isDark} t={tStr} dataFresh={dataFresh} />
           </ErrorBoundary>
         )}
       </Box>

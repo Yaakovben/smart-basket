@@ -5,7 +5,7 @@
  */
 
 import { memo, useState, useMemo } from 'react';
-import { Box, Typography, Paper, keyframes } from '@mui/material';
+import { Box, Typography, Paper, Skeleton, keyframes } from '@mui/material';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -24,6 +24,10 @@ interface Props {
   data: InsightsData;
   isDark: boolean;
   t: (key: string) => string;
+  // true אחרי שהתשובה האמיתית הראשונה מהשרת חזרה במאונט הזה (לא cache).
+  // עד אז, אם עדיין אין פילוח-לפי-רשימה תקין, מציגים skeleton במקומו כדי
+  // שהמקטע לא "ייעלם ואז יופיע פתאום" ברגע שה-fetch האמיתי מסתיים.
+  dataFresh?: boolean;
 }
 
 /* אנימציית כניסה לכרטיסי הרשימות */
@@ -342,7 +346,7 @@ ListBreakdownSection.displayName = 'ListBreakdownSection';
 const formatILS = (n: number) => `₪${Math.round(n).toLocaleString('he-IL')}`;
 const MoneyValue = ({ amount }: { amount: number }) => <>₪<AnimatedNumber value={Math.round(amount)} /></>;
 
-export const SpendingTab = memo(({ data, isDark, t }: Props) => {
+export const SpendingTab = memo(({ data, isDark, t, dataFresh = false }: Props) => {
   const { spending } = data;
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
 
@@ -603,8 +607,11 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
         </SectionCard>
       )}
 
-      {/* פילוח לפי רשימה - מוצג רק כשיש יותר מרשימה אחת עם הוצאות */}
-      {spending.listBreakdown && spending.listBreakdown.length > 1 && (
+      {/* פילוח לפי רשימה - מוצג רק כשיש יותר מרשימה אחת עם הוצאות. אם עדיין
+          אין תשובה טרייה מהשרת (ראו dataFresh) וגם אין עדיין נתון תקף
+          מה-cache - מציגים skeleton במקום שהמקטע פשוט לא יהיה שם, כדי שלא
+          "יקפוץ" פנימה ברגע שהתשובה האמיתית מגיעה. */}
+      {spending.listBreakdown && spending.listBreakdown.length > 1 ? (
         <ListBreakdownSection
           listBreakdown={spending.listBreakdown}
           filteredListBreakdown={filteredListBreakdown}
@@ -617,6 +624,15 @@ export const SpendingTab = memo(({ data, isDark, t }: Props) => {
           t={t}
           LIST_PALETTE={LIST_PALETTE}
         />
+      ) : !dataFresh && (
+        <SectionCard title={t('listSpendingBreakdownTitle')} isDark={isDark}>
+          {[0, 1, 2].map(i => (
+            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
+              <Skeleton variant="circular" width={28} height={28} />
+              <Skeleton variant="text" width={`${60 - i * 12}%`} height={18} />
+            </Box>
+          ))}
+        </SectionCard>
       )}
 
       <Box sx={{

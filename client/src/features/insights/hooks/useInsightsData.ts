@@ -42,6 +42,11 @@ export function useInsightsData(tab: InsightTab) {
   const [priceData, setPriceData] = useState<PriceComparisonData | null>(() => readCache<PriceComparisonData>(PRICE_CACHE_KEY));
   const [loading, setLoading] = useState(initCacheRef.current === null);
   const [error, setError] = useState(false);
+  // true אחרי שהתשובה האמיתית הראשונה מהשרת (לא cache) חזרה במאונט הזה.
+  // משמש למקטעים שתלויים במידע שעלול "לקפוץ" אם נציג אותם על בסיס cache
+  // שעלול להיות חסר/מיושן (למשל פילוח הוצאות לפי רשימה) - הם מציגים skeleton
+  // עד ש-dataFresh=true, במקום להיעלם ואז להופיע פתאום כשה-fetch מסתיים.
+  const [dataFresh, setDataFresh] = useState(false);
   // שם המשתמש נקרא מ-localStorage שמולא ע"י SettingsContext - ללא קריאת API.
   // אין צורך ב-state כי הערך אינו משתנה במהלך החיים של הקומפוננטה.
   const currentUserName = readCachedUserName();
@@ -84,6 +89,7 @@ export function useInsightsData(tab: InsightTab) {
         setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
         writeCache(INSIGHTS_CACHE_KEY, res);
         setError(false);
+        setDataFresh(true);
       })
       .catch(() => {
         // retry אחד אחרי 3 שניות - מכסה CursorKilled (MongoDB 134) ו-cold start
@@ -93,6 +99,7 @@ export function useInsightsData(tab: InsightTab) {
               setData(prev => (prev && JSON.stringify(prev) === JSON.stringify(res)) ? prev : res);
               writeCache(INSIGHTS_CACHE_KEY, res);
               setError(false);
+              setDataFresh(true);
             })
             .catch(() => setError(true));
         }, 3000);
@@ -210,7 +217,7 @@ export function useInsightsData(tab: InsightTab) {
   };
 
   return {
-    data, priceData, allListsPriceData, loading, error, currentUserName,
+    data, priceData, allListsPriceData, loading, error, dataFresh, currentUserName,
     priceLoading, priceLoadingLabel, priceError, retryPriceFetch,
     selectedListId, setSelectedListId, allUserLists,
     userLocation, locationStatus, requestLocation, resetLocationDenied,
