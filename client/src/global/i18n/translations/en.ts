@@ -766,7 +766,7 @@ export const en: Translations = {
   kmUnit: 'km',
   // List cost estimate badge
   estimatedCostBadge: '~₪{amount} approx.',
-  estimatedCostDisclaimer: 'Estimate based on government price data, not exact',
+  estimatedCostDisclaimer: 'Estimate based on government price data',
   fullDetailsInInsights: 'Full details in Insights',
   askAiAboutList: 'Analyze this list with AI',
   aiAnalyzeListPrompt: 'Analyze my shopping list "{name}" - roughly how much will it cost, and where can I save?',
