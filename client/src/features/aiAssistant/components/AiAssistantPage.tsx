@@ -100,11 +100,28 @@ export const AiAssistantPage = memo(() => {
 
       {/* גוף הצ'אט - גוון רקע עדין (לא שטוח) שמדגיש את בועות הצ'אט */}
       <Box sx={{
+        position: 'relative',
         flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 2,
         background: isDark
           ? 'radial-gradient(circle at 50% 0%, rgba(139,92,246,0.06) 0%, transparent 55%)'
           : 'radial-gradient(circle at 50% 0%, rgba(20,184,166,0.05) 0%, transparent 55%)',
       }}>
+        {/* סימן-מים - אייקון ה-AI ענק ועדין מאוד ברקע העמוד, קבוע ביחס
+            לויאופורט (לא גולל עם התוכן) כדי לתת נוכחות מותג לעמוד כולו
+            בלי להפריע לקריאות הטקסט/בועות שמעליו. */}
+        <AiAssistantIcon
+          aria-hidden="true"
+          sx={{
+            position: 'fixed',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: 'min(80vw, 420px)',
+            color: isDark ? 'rgba(139,92,246,0.05)' : 'rgba(20,184,166,0.055)',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
+        <Box sx={{ position: 'relative', zIndex: 1 }}>
         {messages.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 3, px: 1 }}>
             <Typography sx={{
@@ -175,6 +192,7 @@ export const AiAssistantPage = memo(() => {
           </>
         )}
         <div ref={listEndRef} />
+        </Box>
       </Box>
 
       {/* שורת קלט */}
