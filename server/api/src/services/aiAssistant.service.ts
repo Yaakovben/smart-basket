@@ -3,13 +3,14 @@
  *
  * צ'אט עוזר AI: עונה על שאלות כלליות (סופרים, מחירים, טיפים לקנייה חכמה)
  * וגם נותן המלצות מבוססות-נתונים על סמך התובנות/ההוצאות האמיתיות של המשתמש.
- * מבוסס על Groq - endpoint תואם OpenAI (console.groq.com), טייר חינמי עם
- * חומרת LPU ייעודית שמריצה מודלים כמו Llama 3.3 70B מהר משמעותית מ-GPU
- * רגיל. מפתח ה-API הוא סוד אמיתי - נשמר רק כמשתנה סביבה בשרת, אף פעם לא
- * נשלח ללקוח.
+ * מבוסס על Groq כספק ראשי - endpoint תואם OpenAI (console.groq.com), טייר
+ * חינמי עם חומרת LPU ייעודית שמריצה מודלים כמו Llama 3.3 70B מהר משמעותית
+ * מ-GPU רגיל. NVIDIA NIM משמש כספק גיבוי אוטומטי: אם Groq נכשל (מכסה
+ * חינמית נגמרה, שגיאת שרת, timeout) עוברים אליו בלי שהמשתמש ירגיש. שני
+ * המפתחות הם סוד אמיתי - נשמרים רק כמשתני סביבה בשרת, אף פעם לא נשלחים ללקוח.
  *
- * קובץ מבודד בכוונה: אם Groq יוחלף בספק אחר (OpenAI/Anthropic/וכו'),
- * זה שינוי מקומי כאן בלבד - שום קוד אחר לא תלוי בספק הספציפי.
+ * קובץ מבודד בכוונה: הוספת/החלפת ספק היא שינוי מקומי כאן בלבד (רשימת
+ * PROVIDERS) - שום קוד אחר לא תלוי בספק ספציפי.
  */
 
 import { logger } from '../config';
@@ -18,7 +19,25 @@ import { AppError } from '../errors';
 import { getUserInsights } from './insights.service';
 import { ListDAL } from '../dal/list.dal';
 
-const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
+interface AiProvider {
+  name: string;
+  url: string;
+  apiKey: string;
+  model: string;
+}
+
+// סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי. providers() ולא קבוע
+// כדי לקרוא env בזמן ריצה (נוח לבדיקות ולשינוי env בלי restart בחלק מהסביבות).
+function getProviders(): AiProvider[] {
+  const list: AiProvider[] = [];
+  if (env.GROQ_API_KEY) {
+    list.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', apiKey: env.GROQ_API_KEY, model: env.GROQ_MODEL });
+  }
+  if (env.NVIDIA_NIM_API_KEY) {
+    list.push({ name: 'NVIDIA NIM', url: 'https://integrate.api.nvidia.com/v1/chat/completions', apiKey: env.NVIDIA_NIM_API_KEY, model: env.NVIDIA_NIM_MODEL });
+  }
+  return list;
+}
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -38,7 +57,7 @@ const CONTEXT_CACHE_TTL_MS = 3 * 60 * 1000;
 const contextCache = new Map<string, { context: string; expiresAt: number }>();
 
 function isConfigured(): boolean {
-  return !!env.GROQ_API_KEY;
+  return getProviders().length > 0;
 }
 
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
@@ -164,43 +183,58 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   }
 
   const systemMessage = { role: 'system' as const, content: `${SYSTEM_PROMPT_HEADER}\n${userContext}` };
+  const body = {
+    messages: [systemMessage, ...trimmedHistory],
+    temperature: 0.6,
+    max_tokens: 400,
+    stream: true,
+  };
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  const providers = getProviders();
+  let lastError: string | null = null;
 
-  let response: Response;
-  try {
-    response = await fetch(GROQ_CHAT_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: env.GROQ_MODEL,
-        messages: [systemMessage, ...trimmedHistory],
-        temperature: 0.6,
-        max_tokens: 400,
-        stream: true,
-      }),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(timeoutId);
-    logger.warn('aiAssistant: request to Groq failed: %s', (err as Error).message);
-    throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+  // מנסים כל ספק לפי סדר (Groq, אחר כך NIM). כשל בספק אחד (מכסה חינמית
+  // נגמרה, שגיאת שרת, timeout) עובר לספק הבא במקום להיכשל למשתמש - כל עוד
+  // יש עוד ספק מוגדר לנסות. כשל בכולם זורק שגיאה אחת מרוכזת בסוף.
+  for (const provider of providers) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+    let response: Response;
+    try {
+      response = await fetch(provider.url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${provider.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...body, model: provider.model }),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastError = (err as Error).message;
+      logger.warn('aiAssistant: request to %s failed, trying next provider if available: %s', provider.name, lastError);
+      continue;
+    }
+
+    if (!response.ok) {
+      clearTimeout(timeoutId);
+      const errText = await response.text().catch(() => '');
+      lastError = `${response.status}: ${errText}`;
+      logger.warn('aiAssistant: %s returned %s, trying next provider if available', provider.name, lastError);
+      continue;
+    }
+    if (!response.body) {
+      clearTimeout(timeoutId);
+      lastError = 'empty response body';
+      logger.warn('aiAssistant: %s returned an empty response, trying next provider if available', provider.name);
+      continue;
+    }
+
+    return { reader: response.body.getReader(), cleanup: () => clearTimeout(timeoutId) };
   }
 
-  if (!response.ok) {
-    clearTimeout(timeoutId);
-    const errText = await response.text().catch(() => '');
-    logger.warn(`aiAssistant: Groq returned ${response.status}: ${errText}`);
-    throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
-  }
-  if (!response.body) {
-    clearTimeout(timeoutId);
-    throw new AppError('AI assistant returned an empty response', 502, 'AI_ASSISTANT_EMPTY_RESPONSE');
-  }
-
-  return { reader: response.body.getReader(), cleanup: () => clearTimeout(timeoutId) };
+  logger.error('aiAssistant: all providers failed, last error: %s', lastError);
+  throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
 }
