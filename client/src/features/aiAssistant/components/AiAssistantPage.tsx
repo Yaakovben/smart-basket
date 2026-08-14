@@ -58,22 +58,39 @@ export const AiAssistantPage = memo(() => {
     <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* כותרת */}
       <Box sx={{
+        position: 'relative',
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: 'max(50px, env(safe-area-inset-top) + 20px) 16px 16px',
         borderRadius: '0 0 24px 24px',
+        boxShadow: isDark ? '0 6px 20px rgba(0,0,0,0.35)' : '0 6px 20px rgba(15,118,110,0.18)',
         flexShrink: 0,
+        zIndex: 1,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton onClick={() => navigate(-1)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.12)', width: 36, height: 36 }}>
+          <IconButton
+            onClick={() => navigate(-1)}
+            sx={{
+              color: 'white', bgcolor: 'rgba(255,255,255,0.14)', width: 36, height: 36,
+              transition: 'background-color 0.15s ease, transform 0.1s ease',
+              '&:active': { transform: 'scale(0.92)' },
+            }}
+          >
             <ArrowForwardIcon sx={{ fontSize: 20 }} />
           </IconButton>
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75 }}>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.9 }}>
             <Box sx={{
-              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+              position: 'relative',
+              width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              background: 'linear-gradient(135deg, #A78BFA 0%, #2DD4BF 100%)',
+              boxShadow: '0 2px 10px rgba(139,92,246,0.5)',
+              animation: 'aiHeaderPulse 2.6s ease-in-out infinite',
+              '@keyframes aiHeaderPulse': {
+                '0%, 100%': { boxShadow: '0 2px 10px rgba(139,92,246,0.5)' },
+                '50%': { boxShadow: '0 2px 16px rgba(45,212,191,0.65)' },
+              },
             }}>
-              <AiAssistantIcon sx={{ color: 'white', fontSize: 16 }} />
+              <AiAssistantIcon sx={{ color: 'white', fontSize: 17 }} />
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white', letterSpacing: -0.3 }}>
               {t('aiAssistantTitle')}
@@ -83,8 +100,13 @@ export const AiAssistantPage = memo(() => {
         </Box>
       </Box>
 
-      {/* גוף הצ'אט */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 2 }}>
+      {/* גוף הצ'אט - גוון רקע עדין (לא שטוח) שמדגיש את בועות הצ'אט */}
+      <Box sx={{
+        flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 2,
+        background: isDark
+          ? 'radial-gradient(circle at 50% 0%, rgba(139,92,246,0.06) 0%, transparent 55%)'
+          : 'radial-gradient(circle at 50% 0%, rgba(20,184,166,0.05) 0%, transparent 55%)',
+      }}>
         {messages.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 3, px: 1 }}>
             {/* אייקון AI מרכזי - כניסה עם "pop" גמיש, הילה פועמת ברקע וריחוף
@@ -201,7 +223,7 @@ export const AiAssistantPage = memo(() => {
               <ChatBubble key={entry.id} entry={entry} isDark={isDark} />
             ))}
             {sending && (
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.25 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'flex-end', gap: 0.9, mb: 1.5 }}>
                 <AiThinkingIndicator />
               </Box>
             )}
@@ -215,6 +237,7 @@ export const AiAssistantPage = memo(() => {
         display: 'flex', gap: 1, alignItems: 'flex-end',
         p: 1.5, pb: 'max(12px, env(safe-area-inset-bottom))',
         borderTop: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        bgcolor: 'background.paper',
         flexShrink: 0,
       }}>
         <TextField
@@ -232,7 +255,18 @@ export const AiAssistantPage = memo(() => {
           }}
           disabled={sending}
           size="small"
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: '18px', bgcolor: isDark ? 'rgba(30,41,59,0.6)' : '#F8FAFB', minHeight: 44 } }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '20px',
+              bgcolor: isDark ? 'rgba(30,41,59,0.6)' : '#F8FAFB',
+              minHeight: 44,
+              transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
+              '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.08)' },
+              '&:hover fieldset': { borderColor: isDark ? 'rgba(94,234,212,0.35)' : 'rgba(20,184,166,0.35)' },
+              '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(20,184,166,0.15)' },
+              '&.Mui-focused fieldset': { borderColor: '#14B8A6', borderWidth: '1.5px' },
+            },
+          }}
         />
         <IconButton
           onClick={handleSend}
