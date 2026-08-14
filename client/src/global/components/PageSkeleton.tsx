@@ -57,7 +57,7 @@ export const PageSkeleton = () => {
     </Box>
 
     {/* Content skeleton */}
-    <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+    <Box sx={{ flex: 1, p: 2, pb: 9, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {/* Section label */}
       <Skeleton variant="text" width={80} height={18} sx={{ borderRadius: '4px' }} />
 
@@ -83,6 +83,57 @@ export const PageSkeleton = () => {
           <Skeleton variant="circular" width={32} height={32} sx={{ flexShrink: 0 }} />
         </Box>
       ))}
+    </Box>
+
+    {/* AI assistant FAB skeleton - אותו מיקום/גודל בדיוק כמו AiAssistantFab
+        האמיתי, כדי שלא תהיה "קפיצה" ברגע שהעמוד האמיתי עולה מתחתיו. */}
+    <Box sx={{
+      position: 'fixed',
+      bottom: 'max(88px, calc(env(safe-area-inset-bottom) + 78px))',
+      left: 16,
+      zIndex: 1090,
+    }}>
+      <Skeleton variant="circular" width={48} height={48} />
+    </Box>
+
+    {/* Bottom nav skeleton - בר + FAB מרכזי, אותו מבנה בדיוק כמו HomeBottomNav */}
+    <Box sx={{
+      position: 'fixed',
+      bottom: 0, left: 0, right: 0,
+      zIndex: 1000,
+      bgcolor: 'background.paper',
+      borderTop: '1px solid',
+      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      boxShadow: isDark
+        ? '0 -8px 24px rgba(0,0,0,0.4), 0 -2px 6px rgba(0,0,0,0.25)'
+        : '0 -8px 24px rgba(0,0,0,0.08), 0 -2px 6px rgba(0,0,0,0.04)',
+    }}>
+      <Box sx={{
+        width: '100%', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        gap: 1.5, py: 0.85, px: 3.5, minHeight: 50,
+      }}>
+        <Box sx={{ flex: 1, maxWidth: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Skeleton variant="circular" width={24} height={24} />
+          <Skeleton variant="text" width={36} height={14} sx={{ borderRadius: '4px' }} />
+        </Box>
+        <Box sx={{ width: 64, flexShrink: 0 }} />
+        <Box sx={{ flex: 1, maxWidth: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Skeleton variant="circular" width={24} height={24} />
+          <Skeleton variant="text" width={48} height={14} sx={{ borderRadius: '4px' }} />
+        </Box>
+      </Box>
+    </Box>
+    <Box sx={{
+      position: 'fixed',
+      bottom: 'max(32px, env(safe-area-inset-bottom))',
+      left: 0, right: 0,
+      display: 'flex', justifyContent: 'center',
+      zIndex: 1100,
+    }}>
+      <Skeleton variant="circular" width={56} height={56} sx={{ bgcolor: 'rgba(20,184,166,0.35)' }} />
     </Box>
   </Box>
   );
