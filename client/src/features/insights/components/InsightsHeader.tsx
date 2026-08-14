@@ -2,6 +2,7 @@ import { Box, Typography, IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BetaRibbon } from '../../priceComparison';
 import { COMMON_STYLES } from '../../../global/helpers';
+import { ConnectionStatusIcon } from '../../../global/components';
 
 interface InsightsHeaderProps {
   isDark: boolean;
@@ -31,7 +32,9 @@ export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHead
             {title}
           </Typography>
         </Box>
-        <Box sx={{ width: 36, flexShrink: 0 }} />
+        <Box sx={{ width: 36, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+          <ConnectionStatusIcon />
+        </Box>
       </Box>
     </Box>
   );

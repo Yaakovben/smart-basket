@@ -11,3 +11,4 @@ export { useLists } from './useLists';
 export { convertApiProduct, convertApiList } from './converters';
 export { useOfflineSync } from './useOfflineSync';
 export { useReliableTap } from './useReliableTap';
+export { useConnectionStatus, type ConnectionPhase } from './useConnectionStatus';

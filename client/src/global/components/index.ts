@@ -10,6 +10,7 @@ export { PageSkeleton } from './PageSkeleton';
 export { TopProgressBar } from './TopProgressBar';
 export { ShimmerBlock, ShimmerList } from './Shimmer';
 export { SlowLoadIndicator } from './SlowLoadIndicator';
+export { ConnectionStatusIcon } from './ConnectionStatusIcon';
 export { Toast } from './Toast';
 // QRScanner לא מיוצא מהברל בכוונה: הוא גורר את @zxing (spergot ~250KB+)
 // שאין לו sideEffects:false, כך שאם ייוצא מכאן, כל מי שמייבא כל דבר אחר
