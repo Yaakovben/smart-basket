@@ -54,6 +54,7 @@ smart-basket/
 | Validation | joi | 18.0 | ולידציית body/query/params מוצהרת בבירור, נפרדת מהלוגיקה העסקית |
 | Security | helmet, cors, express-mongo-sanitize, express-rate-limit | - | חבילת hardening סטנדרטית - headers מאובטחים, מניעת NoSQL injection, הגבלת קצב בקשות |
 | Push | web-push | 3.6 | מימוש רשמי של Web Push Protocol עם VAPID, בלי צורך ב-Firebase |
+| Email | nodemailer | 9.0 | שליחת מייל דרך Gmail SMTP (App Password) — ערוץ גיבוי להתראות אדמין למשתמשים שלא הפעילו push |
 | Cron | node-cron | 4.2 | תזמון משימת סנכרון מחירים תקופתית בתוך אותו תהליך, בלי שירות scheduler חיצוני |
 | XML parsing | fast-xml-parser | 5.7 | הרשתות מפרסמות מחירים כ-XML — parser מהיר וקל-משקל לפורמט הזה |
 | ZIP | adm-zip | 0.5 | קבצי המחירים של הרשתות מגיעים דחוסים (gzip/zip) — פתיחה בזיכרון בלי תלות במערכת קבצים |
@@ -332,6 +333,11 @@ TTL index — מחיקה אוטומטית אחרי 90 יום.
 - `GET /vapid-public-key`, `POST /subscribe`, `POST /unsubscribe`, `GET /status`
 - `POST /broadcast` (admin), `POST /send-to-user` (admin)
 
+### Email — `/api/email` (אדמין בלבד, נוסף 2026-08-16)
+- `GET /status` — האם שליחת מייל מוגדרת (`GMAIL_APP_PASSWORD` קיים)
+- `POST /broadcast` — שליחת מייל לכל המשתמשים, עם אופציה `onlyWithoutPush` (רק למי שלא הפעיל push)
+- `POST /send-to-user` — מייל למשתמש ספציפי
+
 ### Insights — `/api/insights`
 - `GET /` — תובנות אישיות/קבוצתיות
 
@@ -374,6 +380,7 @@ TTL index — מחיקה אוטומטית אחרי 90 יום.
 | **עוזר AI** | צ'אט שמנתח את הרשימה/ההוצאות ועונה על שאלות (`aiAssistant` feature) |
 | **סריקת רשימה מתמונה (OCR)** | מעלים תמונה, OCR.space מזהה טקסט, מוצרים מתווספים אוטומטית |
 | **התראות Push** | web-push עם VAPID — הזמנות, שינויים ברשימה, שידור אדמין |
+| **שליחת מייל מהאדמין** | Nodemailer דרך Gmail (App Password, נשלח מ-`ADMIN_EMAIL`) — שידור לכולם / רק למי שלא הפעיל push / למשתמש ספציפי, מנוהל מתוך אותו מודל כמו Push broadcast (מתג Push/Email) |
 | **חיזוק יומי** | ציטוט/מסר יומי מנוהל ע"י אדמין, מוצג פעם ביום למשתמש |
 | **פאנל אדמין** | ניהול משתמשים, מעקב פעילות התחברות, בריאות DB, שליחת push, ניהול סניפים/מחירים ידני |
 | **PWA מלא** | מותקן כאפליקציה, offline חלקי, Service Worker עם ניהול גרסאות, splash screen מותאם |
