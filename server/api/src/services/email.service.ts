@@ -38,7 +38,15 @@ async function sendSingle(client: Resend, to: string, subject: string, body: str
     to,
     subject,
     text: body,
-    html: `<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;white-space:pre-wrap;">${body.replace(/\n/g, '<br/>')}</div>`,
+    html: `
+<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
+  <div style="white-space:pre-wrap;margin-bottom:32px;">${body.replace(/\n/g, '<br/>')}</div>
+  <div style="text-align:center;">
+    <a href="https://prod-smart-basket.vercel.app/" style="display:inline-block;background:linear-gradient(135deg,#0F766E,#14B8A6);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:12px;">
+      פתח את Smart Basket
+    </a>
+  </div>
+</div>`,
   });
   if (error) {
     logger.warn('Resend failed to %s: %s', to, error.message);
