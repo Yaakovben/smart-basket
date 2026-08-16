@@ -8,12 +8,13 @@
 
 PWA (Progressive Web App) לניהול רשימות קניות שיתופיות בזמן אמת, עם מנוע השוואת מחירים בין רשתות סופרמרקט בישראל (מבוסס על קבצי ה-XML הציבוריים שרשתות מחויבות לפרסם לפי חוק שקיפות המחירים).
 
-מבנה הריפו:
+מבנה הריפו — **שלושה שירותים נפרדים** (לא שניים):
 ```
 smart-basket/
 ├── client/            React SPA (PWA) — Vercel
 └── server/
-    └── api/            Express REST API + Socket.io — Render
+    ├── api/            Express REST API — Render
+    └── socket/         שרת Socket.io עצמאי לחלוטין (package.json/deploy נפרד) — Render
 ```
 
 ---
@@ -21,71 +22,80 @@ smart-basket/
 ## 2. Tech Stack (מאומת מול package.json בפועל)
 
 ### Client (`client/package.json`)
-| קטגוריה | ספרייה | גרסה |
-|---|---|---|
-| Framework | React | 19.2 |
-| Build tool | Vite | 7.3 |
-| שפה | TypeScript | 5.9 |
-| UI | @mui/material + @mui/icons-material | 7.3 |
-| Styling | @emotion/react + @emotion/styled, Tailwind (postcss) | - |
-| Routing | react-router-dom | 7.12 |
-| HTTP | axios | 1.13 |
-| Real-time | socket.io-client | 4.8 |
-| Auth | @react-oauth/google | 0.13 |
-| Validation | zod | 4.3 |
-| מפות | leaflet + react-leaflet | 1.9 / 5.0 |
-| סריקת ברקוד | @zxing/browser + @zxing/library | - |
-| PWA | vite-plugin-pwa + workbox-precaching/routing | 1.2 |
-| Native wrapper | @capacitor/core + android/ios/geolocation/status-bar/splash-screen | 8.x |
-| Error tracking | @sentry/react | 10.38 |
-| Analytics | posthog-js | 1.407 |
-| Charts | recharts | 3.10 |
-| PDF/Canvas | jspdf, html2canvas | - |
-| QR | qrcode.react | 4.2 |
+| קטגוריה | ספרייה | גרסה | למה נבחרה |
+|---|---|---|---|
+| Framework | React | 19.2 | הספרייה הדומיננטית ל-SPA, אקוסיסטם ענק, concurrent rendering (useTransition) לחוויית טעינה חלקה |
+| Build tool | Vite | 7.3 | dev server מהיר עם HMR אמיתי, בניית production מהירה מ-Webpack, תמיכה טבעית ב-ESM |
+| שפה | TypeScript | 5.9 | type safety בין client לשרת (טיפוסי `Product`/`List` משותפים ברוח), תופס באגים בזמן קומפילציה |
+| UI | @mui/material + @mui/icons-material | 7.3 | ספריית קומפוננטות בשלה עם theme system מובנה (בהיר/כהה), חוסך בניית design system מאפס |
+| Styling | @emotion/react + @emotion/styled, Tailwind | - | Emotion הוא ה-styling engine שמאחורי ה-`sx` prop של MUI; Tailwind למקרים נקודתיים של utility classes |
+| Routing | react-router-dom | 7.12 | ראוטר סטנדרטי ל-React, תומך ב-lazy loading של routes (code splitting) |
+| HTTP | axios | 1.13 | interceptors מובנים לרענון JWT אוטומטי בתשובת 401, טיפול נוח יותר מ-fetch גולמי |
+| Real-time | socket.io-client | 4.8 | WebSocket עם fallback אוטומטי ל-long-polling ותמיכה מובנית ב-reconnection |
+| Auth | @react-oauth/google | 0.13 | אינטגרציית Google Sign-In רשמית, נמנעת מלבנות OAuth flow ידני |
+| Validation | zod | 4.3 | ולידציית טפסים/קלט בצד קליינט עם type inference אוטומטי |
+| מפות | leaflet + react-leaflet | 1.9 / 5.0 | ספריית מפות open-source (לא Google Maps) — בלי עלות API key, מציגה סניפים קרובים |
+| סריקת ברקוד | @zxing/browser + @zxing/library | - | סריקת ברקוד מוצרים דרך מצלמת הדפדפן, בלי native app |
+| PWA | vite-plugin-pwa + workbox | 1.2 | מייצר Service Worker + manifest אוטומטית, מאפשר התקנה כאפליקציה ועבודה אופליין |
+| Native wrapper | @capacitor/* | 8.x | עוטף את ה-PWA כאפליקציית iOS/Android אמיתית (גישה ל-geolocation, splash screen, status bar) בלי לכתוב קוד native נפרד |
+| Error tracking | @sentry/react | 10.38 | תופס שגיאות runtime בפרודקשן עם stack trace אמיתי, לא רק console.error |
+| Analytics | posthog-js | 1.407 | מעקב אירועי משתמש (product analytics) להבנת שימוש בפועל |
+| Charts | recharts | 3.10 | גרפים לתובנות (הוצאות לאורך זמן וכו') |
+| PDF/Canvas | jspdf, html2canvas | - | ייצוא/שיתוף תוכן כתמונה/PDF |
+| QR | qrcode.react | 4.2 | הצגת QR code להזמנת חברים לרשימה |
 
 ### Server (`server/api/package.json`)
-| קטגוריה | ספרייה | גרסה |
-|---|---|---|
-| Runtime | Node.js + Express | 4.18 |
-| שפה | TypeScript | 5.3 |
-| DB / ODM | MongoDB + Mongoose | 8.0 |
-| Auth | jsonwebtoken + bcrypt | 9.0 / 6.0 |
-| Validation | joi | 18.0 |
-| Security | helmet, cors, express-mongo-sanitize, express-rate-limit | - |
-| Push | web-push | 3.6 |
-| Cron | node-cron | 4.2 |
-| XML parsing | fast-xml-parser | 5.7 |
-| ZIP | adm-zip | 0.5 |
-| HTTP client (לרשתות) | axios + tough-cookie + http-cookie-agent | - |
-| Logging | winston + @logtail/node + @logtail/winston | 3.19 |
-| Error tracking | @sentry/node | 10.38 |
-| Redis client | ioredis | 5.3 |
-| Sanitize | sanitize-html | 2.17 |
+| קטגוריה | ספרייה | גרסה | למה נבחרה |
+|---|---|---|---|
+| Runtime | Node.js + Express | 4.18 | Express הוא ה-framework המינימליסטי הכי נפוץ ל-REST ב-Node — גמיש, לא כופה מבנה |
+| שפה | TypeScript | 5.3 | type safety על כל שכבות ה-API, פחות באגים של "שכחתי שדה" |
+| DB / ODM | MongoDB + Mongoose | 8.0 | מודל document מתאים לרשימות/מוצרים (מבנה גמיש, embedded members); Mongoose נותן schema validation + hooks מעל MongoDB הגולמי |
+| Auth | jsonwebtoken + bcrypt | 9.0 / 6.0 | JWT ל-stateless auth (לא צריך session store); bcrypt לגיבוב סיסמאות בטוח (salt מובנה) |
+| Validation | joi | 18.0 | ולידציית body/query/params מוצהרת בבירור, נפרדת מהלוגיקה העסקית |
+| Security | helmet, cors, express-mongo-sanitize, express-rate-limit | - | חבילת hardening סטנדרטית - headers מאובטחים, מניעת NoSQL injection, הגבלת קצב בקשות |
+| Push | web-push | 3.6 | מימוש רשמי של Web Push Protocol עם VAPID, בלי צורך ב-Firebase |
+| Cron | node-cron | 4.2 | תזמון משימת סנכרון מחירים תקופתית בתוך אותו תהליך, בלי שירות scheduler חיצוני |
+| XML parsing | fast-xml-parser | 5.7 | הרשתות מפרסמות מחירים כ-XML — parser מהיר וקל-משקל לפורמט הזה |
+| ZIP | adm-zip | 0.5 | קבצי המחירים של הרשתות מגיעים דחוסים (gzip/zip) — פתיחה בזיכרון בלי תלות במערכת קבצים |
+| HTTP client (לרשתות) | axios + tough-cookie + http-cookie-agent | - | חלק מפורטלי הרשתות דורשים session cookies בין בקשות — tough-cookie מנהל cookie jar אמיתי |
+| Logging | winston + @logtail | 3.19 | structured logging עם רמות (info/warn/error) ושליחה לענן ל-search/alerts, לא רק console.log |
+| Error tracking | @sentry/node | 10.38 | תפיסת חריגות שרת בפרודקשן עם context מלא |
+| Redis client | ioredis | 5.3 | מפרסם אירועים ל-Redis pub/sub שהשרת השני (Socket) קורא מהם — כך שני שרתים עצמאיים מתואמים בלי לדבר ישירות |
+| Sanitize | sanitize-html | 2.17 | ניקוי HTML מסוכן מקלט טקסט חופשי (הערות מוצר וכו') למניעת XSS מאוחסן |
+
+### Socket server (`server/socket/package.json`) — שירות עצמאי, deploy נפרד
+| קטגוריה | ספרייה | גרסה | למה נבחרה |
+|---|---|---|---|
+| Real-time | socket.io | 4.7 | תשתית WebSocket עם rooms מובנים (חדר לכל רשימה) ו-fallback אוטומטי |
+| Auth | jsonwebtoken | 9.0 | מאמת את אותו access token שהונפק ע"י שרת ה-API - שני השרתים חולקים JWT secret אך לא DB session |
+| Pub/Sub | ioredis | 5.3 | מנוי (subscribe) לאותו ערוץ Redis ששרת ה-API מפרסם אליו - זו הדרך היחידה שבה שני השרתים "מדברים" |
+| Logging/monitoring | winston, @logtail, @sentry/node | - | אותו סטאק לוגים/שגיאות כמו שרת ה-API, לצפייה מאוחדת |
+
+**למה שרת Socket נפרד משרת ה-API ולא הכל תהליך אחד:** מפריד עומס I/O-bound (חיבורי WebSocket פתוחים לאורך זמן) מעומס בקשות REST קצרות, ומאפשר לסקל/להפעיל מחדש כל שירות בנפרד בלי להפיל את השני.
 
 ### תשתית (Infra)
 - **Vercel** — hosting הקליינט (SPA סטטי, CDN, preview deploys לכל branch)
-- **Render** — hosting שרת ה-API
+- **Render** — hosting שני שרתי הבאקאנד (API + Socket) כ-2 שירותים נפרדים
 - **MongoDB Atlas** — DB מנוהל בענן
-- **Sentry** — error monitoring (client + server)
+- **Sentry** — error monitoring (client + API server + socket server, שלושה DSN/project נפרדים)
 - **Logtail** — log aggregation
-- **Redis** (ioredis) — publisher/subscriber cross-instance ל-socket events
+- **Redis** — ערוץ pub/sub (`smart-basket:events`) בין שרת ה-API לשרת ה-Socket, ראו סעיף 3.1
 
 ---
 
 ## 3. ארכיטקטורה
 
 ```
-┌──────────────┐  HTTPS/REST   ┌──────────────┐        ┌──────────────┐
-│  Client PWA  │ ────────────► │  API Server  │ ─────► │ MongoDB Atlas│
-│ React+Vite   │ ◄──────────── │ Express+TS   │        └──────────────┘
-│  (Vercel)    │  WebSocket    │  (Render)    │
-└──────────────┘ ◄───────────► └──────┬───────┘
-                                       │ axios
-                                       ▼
-                          ┌────────────────────────┐
-                          │ פורטלי שקיפות מחירים    │
-                          │ (שופרסל, רמי לוי, וכו') │
-                          └────────────────────────┘
+Client PWA (React, Vercel)
+   │  HTTPS/REST                    │  WebSocket
+   ▼                                 ▼
+API Server (Express, Render) ──publish──► Redis pub/sub ──subscribe──► Socket Server (socket.io, Render)
+   │                                                                        │
+   ▼                                                                        ▼
+MongoDB Atlas                                                    broadcast to socket rooms
+   │                                                              (list:<id>, user:<id>)
+   ▼
+פורטלי שקיפות מחירים (axios, 15 רשתות) — נגישים רק משרת ה-API
 ```
 
 שכבתיות בשרת: **Routes → Controllers → Services → DAL → Models**
@@ -96,6 +106,19 @@ smart-basket/
 3. `product.service.ts::updateProduct` — בודק הרשאת גישה, בונה diff מול הערכים הקיימים, בונה רשומת `editHistory`, מנקה cache של insights/AI assistant
 4. `product.dal.ts::updateProductInListWithHistory` — עוטף את קריאת ה-Mongoose (`findOneAndUpdate` עם `$push`+`$slice`)
 5. `Product.model.ts` — ה-Schema עצמו
+
+### 3.1 איך זמן-אמת עובד בפועל (API ↔ Redis ↔ Socket server)
+
+שרת ה-API ושרת ה-Socket הם שני תהליכים נפרדים לגמרי (deploy, package.json, וקוד מקור נפרדים תחת `server/api` ו-`server/socket`). הם לא מדברים ישירות זה עם זה — התקשורת עוברת דרך **Redis pub/sub** בערוץ יחיד `smart-basket:events`:
+
+1. הקליינט שולח REST (למשל `PUT /api/lists/:id/products/:pid`) לשרת ה-API
+2. שרת ה-API שומר ב-MongoDB, ואז מפרסם (`publish`) אירוע ל-Redis (`product:added`/`toggled`/`deleted`/`notification`/`user:deleted`/`member:kicked`)
+3. שרת ה-Socket מנוי (`subscribe`) על אותו ערוץ — מקבל את האירוע ומשדר ל-room המתאים (`list:<id>` או `user:<id>`) לכל הקליינטים המחוברים
+4. הקליינטים ברשימה מקבלים את האירוע דרך socket.io ומעדכנים UI
+
+שרת ה-Socket **גם מנהל אימות עצמאי** — כל חיבור socket עובר `authenticateSocket` (בדיקת JWT), ותומך ב-`token:refresh` event לעדכון טוקן על חיבור פתוח בלי לנתק. יש גם מנגנון נוכחות אדמין (`admin:presence` room) שמראה בזמן אמת אילו משתמשים מחוברים, ו-revalidation תקופתי (כל 5 דקות) שמתקן חברות ברשימות אם הודעת Redis אבדה בזמן שה-subscriber היה מנותק.
+
+אם `REDIS_URL` לא מוגדר, שרת ה-Socket עדיין עובד (חיבורים ישירים ל-rooms עדיין פעילים), אך לא מקבל broadcast מהשרת ה-API — כלומר real-time cross-server משתתק בשקט (`getRedisStatus()` מחזיר `'disabled'`).
 
 ---
 
@@ -154,6 +177,22 @@ middleware/                  auth, rateLimiter, errorHandler, validate
 errors/                      AppError + תת-מחלקות (NotFoundError, ForbiddenError...)
 utils/                       logger, JWT helpers, sanitizeText
 config/                      environment (Joi validation ל-env vars), mongo connection, winston
+```
+
+### Socket server — `server/socket/src/`
+```
+server.ts                    אתחול io, health endpoint, connection lifecycle, admin presence
+handlers/
+├── list.handler.ts           join/leave לחדרי רשימה + revalidateListMemberships (תיקון תקופתי)
+├── notification.handler.ts   שידור התראות
+└── product.handler.ts        broadcastProductAdded/Toggled/Deleted
+services/
+├── redis.service.ts          pub/sub client - initRedis, handleRedisEvent
+└── api.service.ts            קריאות חזרה לשרת ה-API (למשל אימות חברות ברשימה)
+middleware/
+├── auth.middleware.ts         authenticateSocket - מאמת JWT על כל חיבור
+└── rateLimiter.middleware.ts  הגבלת קצב לאירועי socket נכנסים
+config/                       env validation, logger
 ```
 
 ---
@@ -314,8 +353,9 @@ TTL index — מחיקה אוטומטית אחרי 90 יום.
 - `DELETE /branches/:id` (admin)
 - `GET /status` (admin)
 
-### Daily Faith — `/api/daily-faith`
-- `GET /random`, `GET /` (admin), `POST /` (admin), `DELETE /` (admin)
+### Daily Faith — `/api/daily-faith` (כולם דורשים authenticate)
+- `GET /random` — פתוח לכל משתמש מאומת
+- `GET /`, `POST /`, `DELETE /:id` — אדמין בלבד
 
 ---
 
@@ -359,9 +399,12 @@ TTL index — מחיקה אוטומטית אחרי 90 יום.
 
 ## 9. תהליכי עבודה (Git)
 
+ענפים קיימים בפועל בריפו:
 - **`main`** — production, מסונכרן ל-Render+Vercel prod
-- **`non-prod`** — סביבת עבודה/staging, כל הפיתוח היומיומי
-- מיזוג ל-main מתבצע ידנית לאחר build ירוק (client tsc+vite build, server tsc)
+- **`non-prod`** — סביבת עבודה/staging, כל הפיתוח היומיומי מתבצע כאן
+- **`dev`**, **`persist-local-storage`**, **`vanila-ui`** — ענפי ניסוי/פיצ'ר נקודתיים, לא בשימוש שוטף
+
+מיזוג `non-prod` ל-`main` מתבצע ידנית: `fetch` → build ירוק על `non-prod` (client: `tsc --noEmit` + `vite build`; server: `tsc`) → merge ל-`main` → build ירוק שוב על `main` → push.
 
 ---
 

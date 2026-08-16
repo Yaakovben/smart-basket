@@ -5,15 +5,15 @@ import { env } from '../config/environment';
 import { logger } from '../config';
 
 function createTransporter() {
-  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) return null;
+  if (!env.GMAIL_APP_PASSWORD) return null;
   return nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: env.GMAIL_USER, pass: env.GMAIL_APP_PASSWORD },
+    auth: { user: env.ADMIN_EMAIL, pass: env.GMAIL_APP_PASSWORD },
   });
 }
 
 export function isEmailEnabled(): boolean {
-  return !!(env.GMAIL_USER && env.GMAIL_APP_PASSWORD);
+  return !!env.GMAIL_APP_PASSWORD;
 }
 
 export interface EmailPayload {
@@ -39,7 +39,7 @@ export interface EmailBroadcastResult {
 async function sendSingle(transporter: nodemailer.Transporter, to: string, subject: string, body: string): Promise<boolean> {
   try {
     await transporter.sendMail({
-      from: `"Smart Basket" <${env.GMAIL_USER}>`,
+      from: `"Smart Basket" <${env.ADMIN_EMAIL}>`,
       to,
       subject,
       text: body,
