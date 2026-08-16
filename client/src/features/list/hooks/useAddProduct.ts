@@ -101,10 +101,18 @@ export const useAddProduct = ({
           try {
             await productsApi.updateProduct(list.id, realId, { isPurchased: true });
             socketService.emitProductToggled(list.id, realId, addedProduct.name, true, user.name);
+            // ה-convertApiProduct למעלה (שמחליף את המזהה הזמני) כבר דרס את
+            // הסימון האופטימיסטי isPurchased/purchasedBy שנקבע בזמנו על
+            // המוצר הזמני (toggleProduct ב-useProductMutations) בערכי
+            // התגובה הגולמית של ההוספה (עוד לא נקנה) - בלי זה "מי הוסיף"
+            // נשאר מוצג במקום "מי קנה" עד לרענון מלא של הרשימה.
+            onUpdateProductsForList(list.id, (current) =>
+              current.map(p => p.id === realId ? { ...p, isPurchased: true, purchasedBy: user.name } : p)
+            );
           } catch {
             // שחזור הסימון
             onUpdateProductsForList(list.id, (current) =>
-              current.map(p => p.id === realId ? { ...p, isPurchased: false } : p)
+              current.map(p => p.id === realId ? { ...p, isPurchased: false, purchasedBy: null } : p)
             );
           }
         }
