@@ -53,7 +53,7 @@ async function sendSingle(transporter: nodemailer.Transporter, to: string, subje
     return true;
   } catch (err) {
     logger.warn('Email send failed to %s: %s', to, (err as Error).message);
-    return false;
+    throw err;
   }
 }
 
