@@ -196,83 +196,61 @@ export const ProductDetailsModal = memo(({
 
               {/* תוכן הפעולה - התווית ("נוסף ע״י") קודם, השם אחריה למטה:
                   סדר קריאה טבעי (כמו "Added by" ואז השם), לא הפוך. שורת
-                  "עודכן" עם לוג עריכות אמיתי ניתנת להרחבה - חץ+מונה עריכות,
-                  לחיצה חושפת בדיוק מה השתנה בכל עריכה (formatFieldValue/
-                  FIELD_LABEL_KEYS). */}
+                  "עודכן" עם לוג עריכות אמיתי ניתנת להרחבה - שורה שלמה
+                  לחיצה, חץ יחיד בקצה (לא צבוע/תג נפרד), פרטי העריכה
+                  מוצגים כרשימה שקטה עם קווי הפרדה - לא כרטיס בתוך כרטיס. */}
               <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 1.5, pt: 0.25 }}>
                 <Box
                   onClick={canExpand ? () => setEditsExpanded(v => !v) : undefined}
                   sx={{
-                    display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
                     cursor: canExpand ? 'pointer' : 'default',
                     WebkitTapHighlightColor: 'transparent',
+                    ...(canExpand ? { mx: -0.5, px: 0.5, py: 0.25, borderRadius: '8px', '&:active': { bgcolor: 'action.hover' } } : {}),
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                  <Box sx={{ minWidth: 0 }}>
                     <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
-                      {entry.label}
+                      {entry.label}{canExpand && entry.editCount! > 1 ? ` · ${entry.editCount}` : ''}
                     </Typography>
+                    <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? 'primary.main' : 'text.primary', mt: 0.1 }}>
+                      {entry.person}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                    {entry.timestamp && (
+                      <Typography
+                        sx={{ fontSize: 10.5, color: 'text.disabled', whiteSpace: 'nowrap' }}
+                        title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
+                      >
+                        {getRelativeTime(entry.timestamp, settings.language)}
+                      </Typography>
+                    )}
                     {canExpand && (
-                      <>
-                        {entry.editCount! > 1 && (
-                          <Box sx={{
-                            fontSize: 9.5, fontWeight: 700, color: 'text.secondary',
-                            bgcolor: 'action.hover', borderRadius: '999px', px: 0.6, lineHeight: 1.5,
-                          }}>
-                            {entry.editCount}
-                          </Box>
-                        )}
-                        <ExpandMoreRoundedIcon sx={{
-                          fontSize: 15, color: 'text.disabled',
-                          transition: 'transform 0.15s ease',
-                          transform: editsExpanded ? 'rotate(180deg)' : 'none',
-                        }} />
-                      </>
+                      <ExpandMoreRoundedIcon sx={{
+                        fontSize: 16, color: 'text.disabled',
+                        transition: 'transform 0.15s ease',
+                        transform: editsExpanded ? 'rotate(180deg)' : 'none',
+                      }} />
                     )}
                   </Box>
-                  {entry.timestamp && (
-                    <Typography
-                      sx={{ fontSize: 10.5, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
-                      title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
-                    >
-                      {getRelativeTime(entry.timestamp, settings.language)}
-                    </Typography>
-                  )}
                 </Box>
-                <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? 'primary.main' : 'text.primary', mt: 0.1 }}>
-                  {entry.person}
-                </Typography>
 
                 {canExpand && (
                   <Collapse in={editsExpanded}>
-                    <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
                       {editEntries.map((edit, i) => (
-                        <Box key={i} sx={{
-                          borderRadius: '10px', bgcolor: 'action.hover',
-                          border: '1px solid', borderColor: 'divider',
-                          px: 1.25, py: 0.85,
-                        }}>
-                          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
-                            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary' }}>
-                              {displayName(edit.editedBy)}
-                            </Typography>
-                            <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                              {getRelativeTime(edit.editedAt, settings.language)}
-                            </Typography>
-                          </Box>
+                        <Box key={i} sx={{ mb: i < editEntries.length - 1 ? 1.1 : 0 }}>
+                          <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mb: 0.3 }}>
+                            {displayName(edit.editedBy)} · {getRelativeTime(edit.editedAt, settings.language)}
+                          </Typography>
                           {edit.changes.map((change, ci) => (
-                            <Box key={ci} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 11.5, mt: 0.25 }}>
-                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
-                                {t(FIELD_LABEL_KEYS[change.field])}:
-                              </Typography>
-                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.disabled', textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {formatFieldValue(change.field, change.oldValue, t)}
-                              </Typography>
-                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.disabled' }}>←</Typography>
-                              <Typography component="span" sx={{ fontSize: 11.5, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {formatFieldValue(change.field, change.newValue, t)}
-                              </Typography>
-                            </Box>
+                            <Typography key={ci} sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {t(FIELD_LABEL_KEYS[change.field])}:{' '}
+                              <Box component="span" sx={{ color: 'text.disabled' }}>{formatFieldValue(change.field, change.oldValue, t)}</Box>
+                              {' ← '}
+                              <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{formatFieldValue(change.field, change.newValue, t)}</Box>
+                            </Typography>
                           ))}
                         </Box>
                       ))}
