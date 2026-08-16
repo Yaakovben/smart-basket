@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, type RefObject } from 'react';
-import type { Product, List, User, ToastType } from '../../../global/types';
+import type { Product, List, User, ToastType, ProductEditEntry, ProductEditChange } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { trackEvent } from '../../../global/services/analytics';
@@ -258,13 +258,29 @@ export const useProductMutations = ({
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי. updatedBy מתעדכן רק אם
     // באמת יש שינוי בתוכן (אותה בדיקה כמו product.service.ts בשרת), כדי לא
-    // להראות "עודכן ע״י" על שמירה בלי שינוי אמיתי.
+    // להראות "עודכן ע״י" על שמירה בלי שינוי אמיתי. בונים גם רשומת
+    // editHistory מקומית מתוך אותו diff (changes) - בלי זה הלוג בפרטי המוצר
+    // נשאר ריק/מיושן עד לרענון מלא של הרשימה, בדיוק כמו הבאג שכבר תוקן פעם
+    // ל-updatedBy/purchasedBy באותו hook.
     setShowEdit(null);
     setOriginalEditProduct(null);
     const hasContentChange = Object.keys(changes).length > 0;
+    const fieldLabels: Record<string, ProductEditChange['field']> = { name: 'name', quantity: 'quantity', unit: 'unit', category: 'category', note: 'note' };
+    const optimisticEditEntry: ProductEditEntry | null = hasContentChange ? {
+      editedBy: user.name,
+      editedAt: new Date().toISOString(),
+      changes: Object.entries(changes).map(([field, newValue]) => ({
+        field: fieldLabels[field],
+        oldValue: original[field as keyof Product] as string | number,
+        newValue: newValue as string | number,
+      })),
+    } : null;
     onUpdateProductsForList(list.id, (current) =>
       current.map(p => p.id === editData.id
-        ? { ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note, ...(hasContentChange ? { updatedBy: user.name } : {}) }
+        ? {
+          ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note,
+          ...(hasContentChange ? { updatedBy: user.name, editHistory: [...(p.editHistory ?? []), optimisticEditEntry!].slice(-10) } : {}),
+        }
         : p)
     );
 
@@ -285,7 +301,7 @@ export const useProductMutations = ({
       }
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note, updatedBy: original.updatedBy } : p)
+        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note, updatedBy: original.updatedBy, editHistory: original.editHistory } : p)
       );
       showToast(t('errorOccurred'), 'error');
     }
