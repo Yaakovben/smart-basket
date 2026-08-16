@@ -28,7 +28,7 @@ export const ConnectionStatusIcon = () => {
     ? (pendingCount > 0 ? `${t('offlineMessage')} · ${t('offlinePendingSync')}` : t('offlineMessage'))
     : isReconnecting ? t('reconnectingMessage') : t('serverUnreachableMessage');
   // צהוב = socket מנותק, שחור = בעיית שרת/רשת (trying)
-  const color = isOffline ? '#FCA5A5' : isReconnecting ? '#FBBF24' : '#111111';
+  const color = isOffline ? '#EF4444' : isReconnecting ? '#FBBF24' : '#111111';
 
   const handleTap = () => {
     haptic('light');
