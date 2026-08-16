@@ -18,7 +18,17 @@ interface HistoryEntry {
   person: string;
   highlight: boolean;
   timestamp?: string;
+  color: string;
 }
+
+// צבע קבוע לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה: נוסף
+// תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
+// מאשר "מודגש רק כשזה אני".
+const ACTION_COLORS: Record<string, string> = {
+  added: '#14B8A6',
+  updated: '#3B82F6',
+  purchased: '#22C55E',
+};
 
 export const ProductDetailsModal = memo(({
   product,
@@ -46,6 +56,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.addedBy),
       highlight: product.addedBy === currentUserName,
       timestamp: product.createdAt,
+      color: ACTION_COLORS.added,
     },
     ...(hasUpdate ? [{
       key: 'updated',
@@ -53,6 +64,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.updatedBy!),
       highlight: product.updatedBy === currentUserName,
       timestamp: hasPurchase ? undefined : product.updatedAt,
+      color: ACTION_COLORS.updated,
     }] : []),
     ...(hasPurchase ? [{
       key: 'purchased',
@@ -60,6 +72,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.purchasedBy!),
       highlight: product.purchasedBy === currentUserName,
       timestamp: product.updatedAt,
+      color: ACTION_COLORS.purchased,
     }] : []),
   ];
 
@@ -102,8 +115,9 @@ export const ProductDetailsModal = memo(({
 
       {/* היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) - עיצוב שקט ומינימלי:
           בלי אייקונים, בלי קווים מחברים, רק שורות דקות מופרדות בקו-שיער.
-          נקודה קטנה כתחליף עדין לאייקון. הדגשה בצבע הראשי רק כשהפעולה
-          שייכת למשתמש הנוכחי - כל השאר בגוונים ניטרליים ושקטים. */}
+          נקודה קטנה כתחליף עדין לאייקון. הצבע קבוע לפי סוג הפעולה עצמה
+          (ACTION_COLORS) - לא תלוי אם זה המשתמש הנוכחי - כדי שאפשר יהיה
+          לזהות מיד "נוסף/נערך/נקנה" גם בלי לקרוא את התווית. */}
       <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', px: 2 }}>
         {history.map((entry, index) => {
           const isLast = index === history.length - 1;
@@ -120,11 +134,11 @@ export const ProductDetailsModal = memo(({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                 <Box sx={{
                   width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                  bgcolor: entry.highlight ? 'primary.main' : 'text.disabled',
+                  bgcolor: entry.color,
                 }} />
                 <Typography sx={{ fontSize: 13, color: 'text.primary', minWidth: 0 }}>
                   <Box component="span" sx={{ color: 'text.secondary' }}>{entry.label}{' '}</Box>
-                  <Box component="span" sx={{ color: entry.highlight ? 'primary.main' : 'text.primary', fontWeight: entry.highlight ? 600 : 400 }}>
+                  <Box component="span" sx={{ color: entry.color, fontWeight: entry.highlight ? 700 : 600 }}>
                     {entry.person}
                   </Box>
                 </Typography>
