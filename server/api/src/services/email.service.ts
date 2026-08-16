@@ -4,11 +4,13 @@ import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
+const gmailUser = () => env.GMAIL_USER || env.ADMIN_EMAIL;
+
 function createTransporter() {
   if (!env.GMAIL_APP_PASSWORD) return null;
   return nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: env.ADMIN_EMAIL, pass: env.GMAIL_APP_PASSWORD },
+    auth: { user: gmailUser(), pass: env.GMAIL_APP_PASSWORD },
   });
 }
 
@@ -39,7 +41,7 @@ export interface EmailBroadcastResult {
 async function sendSingle(transporter: nodemailer.Transporter, to: string, subject: string, body: string): Promise<boolean> {
   try {
     await transporter.sendMail({
-      from: `"Smart Basket" <${env.ADMIN_EMAIL}>`,
+      from: `"Smart Basket" <${gmailUser()}>`,
       to,
       subject,
       text: body,
