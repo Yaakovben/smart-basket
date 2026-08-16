@@ -773,4 +773,5 @@ export const he: Translations = {
   aiAnalyzeListPrompt: 'נתח לי את רשימת הקניות "{name}" - כמה זה בערך יעלה, ואיפה אפשר לחסוך?',
   itemsMatchedShort: 'מוצרים אותרו',
   continueChatWithAi: 'המשך שיחה עם ה-AI',
+  priceNotIdentifiedForList: 'לא זוהו מחירים למוצרי הרשימה הזו במאגר',
 };

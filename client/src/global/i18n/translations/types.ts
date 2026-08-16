@@ -775,6 +775,7 @@ export type TranslationKeys =
   | 'askAiAboutList'
   | 'aiAnalyzeListPrompt'
   | 'itemsMatchedShort'
-  | 'continueChatWithAi';
+  | 'continueChatWithAi'
+  | 'priceNotIdentifiedForList';
 
 export type Translations = Record<TranslationKeys, string>;
