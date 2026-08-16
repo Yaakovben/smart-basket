@@ -7,6 +7,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
+import { ConnectionStatusIcon } from '../../../global/components';
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -55,6 +56,7 @@ export const AdminDashboardHeaderBar = ({
           animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
         }} />
       </Box>
+      <ConnectionStatusIcon />
     </Box>
   </Box>
 );

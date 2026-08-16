@@ -418,7 +418,11 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
       />
 
       <ProductDetailsModal
-        product={showDetails}
+        // showDetails הוא snapshot שנלקח ברגע הפתיחה - אם המוצר נערך בזמן
+        // שהמודל פתוח (למשל דרך מודל העריכה שנפתח מתוכו), ה-snapshot נשאר
+        // מיושן. מחפשים את הגרסה החיה מתוך list.products לפי id, עם נפילה
+        // חזרה ל-snapshot אם המוצר כבר לא ברשימה (למשל נמחק בזמן שהמודל פתוח).
+        product={showDetails ? (list.products.find(p => p.id === showDetails.id) ?? showDetails) : null}
         currentUserName={user.name}
         onClose={() => setShowDetails(null)}
       />

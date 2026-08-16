@@ -27,6 +27,11 @@ export function useReliableTap(action: () => void) {
   }, [action]);
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
+    // מונע click תאום שהדפדפן יוצר אחרי touch - בלי זה, אם ה-action (כמו
+    // סגירת מודל) מסיר את הכפתור מה-DOM באופן מיידי, ה-click התאום שמגיע
+    // אחריו "נופל" על מה שנחשף מתחתיו באותן קואורדינטות (למשל שורת המוצר
+    // שמתחת למודל) ומפעיל אותו - נראה כאילו "המודל לא נסגר" כי הוא נפתח שוב.
+    e.preventDefault();
     // blur לפני הפעולה — מסיר פוקוס ויזואלי מהכפתור לאחר לחיצה
     try { (e.currentTarget as HTMLElement).blur(); } catch { /* התעלם אם הבלור נכשל */ }
     fire();
