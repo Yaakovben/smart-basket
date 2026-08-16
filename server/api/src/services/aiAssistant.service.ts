@@ -60,6 +60,15 @@ function isConfigured(): boolean {
   return getProviders().length > 0;
 }
 
+// נקראת מ-controllers שמשנים מוצרים/רשימות (הוספה, מחיקה, סימון קנייה,
+// ניקוי) - כדי שהעוזר לא ימשיך לענות עד 3 דקות לפי context ישן. בלי זה,
+// משתמש שמוסיף/משנה פריט ומיד שואל את ה-AI עליו מקבל תשובה שלא רואה את
+// השינוי, כי contextCache מפתחו userId בלבד ולא היה לו hook ביטול משלו
+// (בניגוד ל-insightsMemCache שכבר יש לו invalidateInsightsCache).
+export function invalidateAssistantContext(userId: string): void {
+  contextCache.delete(userId);
+}
+
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
 // ה-InsightsData הגולמי (ענק, ברובו לא רלוונטי לשיחה, מכביד על ה-context).
 function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>, listNames: string[]): string {
@@ -107,7 +116,7 @@ function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>,
     lines.push(`שינויים בהרגלי הקנייה: ${anomalies.slice(0, 3).map(a => a.description).join(', ')}.`);
   }
   if (groupStats.length > 0) {
-    lines.push(`חבר ב-${groupStats.length} רשימות קבוצתיות: ${groupStats.slice(0, 3).map(g => `"${g.name}" (${g.membersCount} חברים)`).join(', ')}.`);
+    lines.push(`חבר ב-${groupStats.length} רשימות קבוצתיות: ${groupStats.slice(0, 8).map(g => `"${g.name}" (${g.membersCount} חברים)`).join(', ')}.`);
   }
 
   return lines.join('\n');
