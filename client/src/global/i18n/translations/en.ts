@@ -772,4 +772,5 @@ export const en: Translations = {
   aiAnalyzeListPrompt: 'Analyze my shopping list "{name}" - roughly how much will it cost, and where can I save?',
   itemsMatchedShort: 'items matched',
   continueChatWithAi: 'Continue chatting with the AI',
+  priceNotIdentifiedForList: 'No prices found for this list\'s items in the database',
 };

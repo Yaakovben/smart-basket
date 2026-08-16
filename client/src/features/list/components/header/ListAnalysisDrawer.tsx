@@ -210,8 +210,24 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           const cheapest = chainsWithMatches[0];
           // פירוט מוצרים - מהרשת הזולה אם יש, אחרת מהרשת הראשית (priceGroup)
           const matchedItems = priceGroup?.matches?.filter(m => m.matched) ?? [];
-          // אין שום נתון מחיר - לא מציגים כלום
-          if (!cheapest && matchedItems.length === 0) return null;
+          // אין שום נתון מחיר - מציגים הודעה מפורשת "לא זוהה" במקום להיעלם
+          // בשקט, כדי שהמשתמש יידע שהערכת המחיר פשוט לא זמינה לרשימה הזו
+          // (ולא שהיא נשכחה/נכשלה בטעות).
+          if (!cheapest && matchedItems.length === 0) {
+            return (
+              <Box sx={{
+                mb: 1.5, px: 2, py: 1.25, borderRadius: '14px',
+                bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                display: 'flex', alignItems: 'center', gap: 1,
+              }}>
+                <Typography sx={{ fontSize: 18 }}>🛒</Typography>
+                <Typography sx={{ fontSize: 12.5, color: 'text.secondary' }}>
+                  {t('priceNotIdentifiedForList')}
+                </Typography>
+              </Box>
+            );
+          }
           const displayTotal = cheapest?.total ?? priceGroup?.estimatedTotal ?? 0;
           const totalItems = (priceGroup?.matchedCount ?? 0) + (priceGroup?.unmatchedCount ?? 0);
           const matchedCount = cheapest?.matchedCount ?? priceGroup?.matchedCount ?? 0;
@@ -258,21 +274,21 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
                   <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                     {chainsWithMatches.slice(0, 4).map((c, idx) => (
                       <Box key={c.chainId} sx={{
-                        display: 'flex', alignItems: 'center', gap: 0.5,
+                        display: 'flex', alignItems: 'center', gap: 0.6,
                         px: 1.25, py: 0.5, borderRadius: '999px',
                         bgcolor: idx === 0
                           ? (isDark ? '#14B8A6' : '#0D9488')
                           : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
                       }}>
                         {idx === 0 && (
-                          <Typography sx={{ fontSize: 9, color: 'white', fontWeight: 800, lineHeight: 1 }}>
-                            הזול
+                          <Typography sx={{ fontSize: 11, color: 'white', fontWeight: 800, lineHeight: 1 }}>
+                            {t('cheapestTag')}
                           </Typography>
                         )}
                         <Typography sx={{ fontSize: 11, fontWeight: 700, color: idx === 0 ? 'white' : 'text.primary' }}>
                           {c.chainName}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: idx === 0 ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: idx === 0 ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
                           ₪{Math.round(c.total)}
                         </Typography>
                       </Box>

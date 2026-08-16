@@ -772,4 +772,5 @@ export const ru: Translations = {
   aiAnalyzeListPrompt: 'Проанализируй мой список покупок "{name}" - сколько это примерно будет стоить и где можно сэкономить?',
   itemsMatchedShort: 'товаров найдено',
   continueChatWithAi: 'Продолжить разговор с ИИ',
+  priceNotIdentifiedForList: 'Цены на товары из этого списка не найдены в базе данных',
 };

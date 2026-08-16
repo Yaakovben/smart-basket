@@ -86,6 +86,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   const lastAction = isPurchased && product.purchasedBy
     ? { label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
     : { label: t('addedBy'), name: displayName(product.addedBy) };
+  // תג "נערך" עדין - לא מחליף את התווית הראשית (נוסף/נקנה ע״י, תואמת
+  // לטאב), רק מוסיף רמז קטן שהתוכן נערך מאז שהתווסף. לא רלוונטי בטאב
+  // "נקנה" - שם ההיסטוריה המלאה כבר זמינה בפרטי המוצר.
+  const wasEdited = !isPurchased && !!product.updatedBy && product.updatedBy !== product.addedBy;
 
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
@@ -447,8 +451,23 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           <Typography sx={{
             fontSize: '13px', color: 'text.secondary',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            display: 'flex', alignItems: 'center', gap: 0.4,
           }}>
-            {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
+            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
+            </Box>
+            {wasEdited && (
+              <Box
+                component="span"
+                title={`${t('updatedByLabel')} ${displayName(product.updatedBy!)}`}
+                sx={{
+                  flexShrink: 0, fontSize: 10.5, fontWeight: 600, color: 'text.disabled',
+                  display: 'inline-flex', alignItems: 'center', gap: 0.15,
+                }}
+              >
+                · ✎
+              </Box>
+            )}
           </Typography>
         </Box>
         {isPurchased && (
