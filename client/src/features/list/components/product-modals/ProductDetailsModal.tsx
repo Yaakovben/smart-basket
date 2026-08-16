@@ -1,12 +1,14 @@
-import { memo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { memo, useState } from 'react';
+import { Box, Typography, Collapse } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import type { Product } from '../../../../global/types';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
+import type { TranslationKeys } from '../../../../global/i18n/translations';
 
 // ===== מודאל פרטי מוצר =====
 interface ProductDetailsModalProps {
@@ -23,7 +25,25 @@ interface HistoryEntry {
   timestamp?: string;
   color: string;
   Icon: typeof AddRoundedIcon;
+  editCount?: number;
 }
+
+const FIELD_LABEL_KEYS: Record<ProductEditChange['field'], TranslationKeys> = {
+  name: 'productName',
+  quantity: 'quantity',
+  unit: 'unit',
+  category: 'category',
+  note: 'note',
+};
+
+// ערך שדה מתורגם לתצוגה - קטגוריה מתורגמת (הערך הגולמי הוא מפתח עברי קבוע
+// ב-DB, לא בהכרח שפת התצוגה), שאר השדות מוצגים כמו שהם (גם unit, כמו בכל
+// מקום אחר באפליקציה - אין מיפוי תרגום ליחידות).
+const formatFieldValue = (field: ProductEditChange['field'], value: string | number, t: (k: TranslationKeys) => string): string => {
+  if (field === 'category') return t(CATEGORY_TRANSLATION_KEYS[value as ProductCategory]);
+  if (value === '' || value === undefined || value === null) return '—';
+  return String(value);
+};
 
 // צבע+אייקון קבועים לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה:
 // נוסף תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
@@ -50,6 +70,7 @@ export const ProductDetailsModal = memo(({
   onClose
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
+  const [editsExpanded, setEditsExpanded] = useState(false);
 
   if (!product) return null;
 
@@ -62,6 +83,10 @@ export const ProductDetailsModal = memo(({
   // לייחס זמן שגוי לפעולה הלא-נכונה.
   const hasUpdate = !!(product.updatedBy && product.updatedBy !== product.addedBy);
   const hasPurchase = !!(product.isPurchased && product.purchasedBy);
+  // רשומות עריכה בפועל (עד 10 אחרונות, ראו MAX_EDIT_HISTORY בשרת) - ריק
+  // אצל מוצר שנערך לפני שהפיצ'ר הזה קיים (יש updatedBy אבל אין לוג). מציגים
+  // חדש-קודם כדי שהעריכה האחרונה תהיה ראשונה ברשימה המורחבת.
+  const editEntries = [...(product.editHistory ?? [])].reverse();
 
   const history: HistoryEntry[] = [
     {
@@ -78,6 +103,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.updatedBy!),
       highlight: product.updatedBy === currentUserName,
       timestamp: hasPurchase ? undefined : product.updatedAt,
+      editCount: editEntries.length,
       ...ACTION_STYLE.updated,
     }] : []),
     ...(hasPurchase ? [{
@@ -137,6 +163,8 @@ export const ProductDetailsModal = memo(({
         </Typography>
         {history.map((entry, index) => {
           const isLast = index === history.length - 1;
+          const isUpdatedRow = entry.key === 'updated';
+          const canExpand = isUpdatedRow && !!entry.editCount && entry.editCount > 0;
           return (
             <Box key={entry.key} sx={{ display: 'flex', gap: 1.25 }}>
               {/* עמודת אווטאר + קו מחבר */}
@@ -167,12 +195,41 @@ export const ProductDetailsModal = memo(({
               </Box>
 
               {/* תוכן הפעולה - התווית ("נוסף ע״י") קודם, השם אחריה למטה:
-                  סדר קריאה טבעי (כמו "Added by" ואז השם), לא הפוך. */}
+                  סדר קריאה טבעי (כמו "Added by" ואז השם), לא הפוך. שורת
+                  "עודכן" עם לוג עריכות אמיתי ניתנת להרחבה - חץ+מונה עריכות,
+                  לחיצה חושפת בדיוק מה השתנה בכל עריכה (formatFieldValue/
+                  FIELD_LABEL_KEYS). */}
               <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 1.5, pt: 0.25 }}>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
-                  <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
-                    {entry.label}
-                  </Typography>
+                <Box
+                  onClick={canExpand ? () => setEditsExpanded(v => !v) : undefined}
+                  sx={{
+                    display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1,
+                    cursor: canExpand ? 'pointer' : 'default',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
+                      {entry.label}
+                    </Typography>
+                    {canExpand && (
+                      <>
+                        {entry.editCount! > 1 && (
+                          <Box sx={{
+                            fontSize: 9.5, fontWeight: 700, color: 'text.secondary',
+                            bgcolor: 'action.hover', borderRadius: '999px', px: 0.6, lineHeight: 1.5,
+                          }}>
+                            {entry.editCount}
+                          </Box>
+                        )}
+                        <ExpandMoreRoundedIcon sx={{
+                          fontSize: 15, color: 'text.disabled',
+                          transition: 'transform 0.15s ease',
+                          transform: editsExpanded ? 'rotate(180deg)' : 'none',
+                        }} />
+                      </>
+                    )}
+                  </Box>
                   {entry.timestamp && (
                     <Typography
                       sx={{ fontSize: 10.5, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
@@ -185,6 +242,43 @@ export const ProductDetailsModal = memo(({
                 <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? 'primary.main' : 'text.primary', mt: 0.1 }}>
                   {entry.person}
                 </Typography>
+
+                {canExpand && (
+                  <Collapse in={editsExpanded}>
+                    <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {editEntries.map((edit, i) => (
+                        <Box key={i} sx={{
+                          borderRadius: '10px', bgcolor: 'action.hover',
+                          border: '1px solid', borderColor: 'divider',
+                          px: 1.25, py: 0.85,
+                        }}>
+                          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary' }}>
+                              {displayName(edit.editedBy)}
+                            </Typography>
+                            <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
+                              {getRelativeTime(edit.editedAt, settings.language)}
+                            </Typography>
+                          </Box>
+                          {edit.changes.map((change, ci) => (
+                            <Box key={ci} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 11.5, mt: 0.25 }}>
+                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
+                                {t(FIELD_LABEL_KEYS[change.field])}:
+                              </Typography>
+                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.disabled', textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {formatFieldValue(change.field, change.oldValue, t)}
+                              </Typography>
+                              <Typography component="span" sx={{ fontSize: 11.5, color: 'text.disabled' }}>←</Typography>
+                              <Typography component="span" sx={{ fontSize: 11.5, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {formatFieldValue(change.field, change.newValue, t)}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Collapse>
+                )}
               </Box>
             </Box>
           );

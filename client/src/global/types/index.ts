@@ -27,6 +27,18 @@ export type ProductCategory =
   | "ניקיון"
   | "אחר";
 
+export interface ProductEditChange {
+  field: 'name' | 'quantity' | 'unit' | 'category' | 'note';
+  oldValue: string | number;
+  newValue: string | number;
+}
+
+export interface ProductEditEntry {
+  editedBy: string;
+  editedAt: string;
+  changes: ProductEditChange[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -40,6 +52,9 @@ export interface Product {
   createdAt: string;
   updatedAt?: string;
   note?: string;
+  // לוג עריכות תוכן - עד 10 האחרונות (ראו MAX_EDIT_HISTORY בשרת). לא חובה
+  // כי מוצר שמעולם לא נערך פשוט לא מכיל את השדה.
+  editHistory?: ProductEditEntry[];
 }
 
 // ===== רשימה =====

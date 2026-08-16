@@ -10,6 +10,18 @@ export interface Member {
   joinedAt: string;
 }
 
+export interface ProductEditChange {
+  field: 'name' | 'quantity' | 'unit' | 'category' | 'note';
+  oldValue: string | number;
+  newValue: string | number;
+}
+
+export interface ProductEditEntry {
+  editedBy: string;
+  editedAt: string;
+  changes: ProductEditChange[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -23,6 +35,7 @@ export interface Product {
   createdAt: string;
   updatedAt?: string;
   note?: string;
+  editHistory?: ProductEditEntry[];
 }
 
 export interface List {

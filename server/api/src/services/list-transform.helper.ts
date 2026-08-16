@@ -31,6 +31,19 @@ const transformProduct = (p: IProductDoc | Record<string, unknown>): Record<stri
       pJson[field] = (pJson[field] as { name?: string }).name || 'Unknown';
     }
   }
+
+  // editHistory.editedBy מגיע populated (ref User) - משטחים לשם בלבד, אותו
+  // דפוס כמו addedBy/updatedBy/purchasedBy למעלה.
+  if (Array.isArray(pJson.editHistory)) {
+    pJson.editHistory = (pJson.editHistory as Record<string, unknown>[]).map(entry => {
+      const editedBy = entry.editedBy;
+      return {
+        ...entry,
+        editedBy: editedBy && typeof editedBy === 'object' ? (editedBy as { name?: string }).name || 'Unknown' : editedBy,
+      };
+    });
+  }
+
   return pJson;
 };
 

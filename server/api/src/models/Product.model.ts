@@ -2,6 +2,26 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 import { PRODUCT_UNITS, PRODUCT_CATEGORIES, DEFAULT_UNIT, DEFAULT_CATEGORY } from '../constants';
 import type { ProductUnit, ProductCategory } from '../constants';
 
+// מספר רשומות editHistory מקסימלי שנשמר - הישנות ביותר נחתכות (ראו
+// product.service.ts:updateProduct). מונע גדילה בלתי מוגבלת של המסמך
+// על מוצר שנערך עשרות פעמים; 10 העריכות האחרונות מספיקות להצגה בפרטי מוצר.
+export const MAX_EDIT_HISTORY = 10;
+
+// שינוי שדה בודד בתוך עריכה אחת (יכולה לכלול כמה שדות בבת אחת - למשל שם
+// וכמות באותה שמירה). oldValue/newValue כ-Mixed כי quantity הוא מספר
+// ושאר השדות מחרוזות.
+export interface IProductEditChange {
+  field: 'name' | 'quantity' | 'unit' | 'category' | 'note';
+  oldValue: unknown;
+  newValue: unknown;
+}
+
+export interface IProductEditEntry {
+  editedBy: Types.ObjectId;
+  editedAt: Date;
+  changes: IProductEditChange[];
+}
+
 export interface IProductDoc extends Document {
   _id: Types.ObjectId;
   listId: Types.ObjectId;
@@ -17,6 +37,11 @@ export interface IProductDoc extends Document {
   // מי סימן את המוצר כ"נקנה" לאחרונה. מתאפס ל-null כשמסמנים "לא נקנה" -
   // אין טעם ב"מי קנה" למוצר שכרגע לא מסומן כנקנה.
   purchasedBy?: Types.ObjectId | null;
+  // לוג עריכות תוכן - כל עריכה (שמירה אחת בעורך) כרשומה נפרדת עם כל השדות
+  // שהשתנו בה יחד (לא שדה בודד לרשומה - כך "שיניתי שם וכמות באותה שמירה"
+  // מוצג כאירוע אחד, לא שניים). מוגבל ל-MAX_EDIT_HISTORY האחרונים כדי
+  // שהמסמך לא יגדל ללא הגבלה על מוצר שנערך עשרות פעמים.
+  editHistory?: IProductEditEntry[];
   position: number;
   note?: string;
   // מזהה זמני מהלקוח (temp id) - idempotency key להוספת מוצר. אופציונלי כי
@@ -75,6 +100,27 @@ const productSchema = new Schema<IProductDoc>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: null,
+    },
+    editHistory: {
+      type: [
+        {
+          _id: false,
+          editedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+          editedAt: { type: Date, required: true },
+          changes: {
+            type: [
+              {
+                _id: false,
+                field: { type: String, enum: ['name', 'quantity', 'unit', 'category', 'note'], required: true },
+                oldValue: { type: Schema.Types.Mixed },
+                newValue: { type: Schema.Types.Mixed },
+              },
+            ],
+            required: true,
+          },
+        },
+      ],
+      default: undefined,
     },
     position: {
       type: Number,
