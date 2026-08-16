@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Drawer, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
-import { aiAssistantApi } from '../../../../services/api';
+import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
+import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
 import { AiAssistantIcon } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -16,6 +17,15 @@ interface ListAnalysisDrawerProps {
   listId: string;
   listName: string;
   productNames: string[];
+}
+
+// ממיר resetAt (ISO string מהשרת) למספר דקות עגול עד האיפוס - אותה לוגיקה
+// כמו ב-useAiAssistantChat.ts, לא ייצאנו hook משותף כי זה state קטן מקומי.
+function minutesUntil(resetAt: string | null | undefined): number | null {
+  if (!resetAt) return null;
+  const ms = new Date(resetAt).getTime() - Date.now();
+  if (Number.isNaN(ms) || ms <= 0) return null;
+  return Math.max(1, Math.ceil(ms / 60_000));
 }
 
 function buildAnalysisPrompt(listName: string, productNames: string[]): string {
@@ -38,7 +48,8 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fallback, setFallback] = useState(false);
   const ranRef = useRef(false);
 
   // הערכת מחיר אמיתית (לא ניחוש של ה-AI) - מגיעה ממאגר המחירים הממשלתי,
@@ -52,7 +63,8 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     ranRef.current = true;
     setText('');
     setDone(false);
-    setError(false);
+    setError(null);
+    setFallback(false);
     setLoading(true);
 
     const prompt = buildAnalysisPrompt(listName, productNames);
@@ -61,10 +73,21 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       (delta) => {
         setLoading(false);
         setText(prev => prev + delta);
-      }
+      },
+      () => setFallback(true)
     )
       .then(() => setDone(true))
-      .catch(() => { setError(true); setLoading(false); })
+      .catch((err) => {
+        const status = err instanceof AiAssistantStreamError ? err.status : undefined;
+        const minutes = err instanceof AiAssistantStreamError ? minutesUntil(err.resetAt) : null;
+        const message = status === 503
+          ? t('aiNotConfigured')
+          : status === 429
+          ? t('aiTooManyMessages') + (minutes ? ` ${t('aiTryAgainInMinutes').replace('{minutes}', String(minutes))}` : '')
+          : t('aiGenericError');
+        setError(message);
+        setLoading(false);
+      })
       .finally(() => setLoading(false));
 
     setPriceLoading(true);
@@ -85,7 +108,8 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       ranRef.current = false;
       setText('');
       setDone(false);
-      setError(false);
+      setError(null);
+      setFallback(false);
       setPriceGroup(null);
       setChainTotals([]);
     }, 300);
@@ -170,7 +194,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
         )}
         {error && (
           <Typography sx={{ fontSize: 14, color: 'error.main', py: 2 }}>
-            לא הצלחתי לנתח את הרשימה. נסה שוב.
+            {error}
           </Typography>
         )}
 
@@ -292,6 +316,17 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
                 '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
               }} />
             )}
+          </Box>
+        )}
+
+        {/* חיווי עדין - הניתוח הזה הגיע ממודל גיבוי (הספק הראשי נכשל/נגמרה
+            לו המכסה). אותו חיווי כמו בצ'אט - ראו ChatBubble.tsx. */}
+        {fallback && done && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.75, px: 0.5 }}>
+            <SyncAltRoundedIcon sx={{ fontSize: 12, color: isDark ? 'rgba(148,163,184,0.7)' : 'rgba(100,116,139,0.7)' }} />
+            <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: isDark ? 'rgba(148,163,184,0.85)' : 'rgba(100,116,139,0.85)' }}>
+              {t('aiFallbackNotice')}
+            </Typography>
           </Box>
         )}
       </Box>
