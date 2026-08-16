@@ -1,5 +1,8 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import type { Product } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal } from '../../../../global/components';
@@ -19,16 +22,17 @@ interface HistoryEntry {
   highlight: boolean;
   timestamp?: string;
   color: string;
-  glyph: string;
+  Icon: typeof AddRoundedIcon;
 }
 
-// צבע+גליף קבועים לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה:
+// צבע+אייקון קבועים לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה:
 // נוסף תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
-// מאשר "מודגש רק כשזה אני".
-const ACTION_STYLE: Record<string, { color: string; glyph: string }> = {
-  added: { color: '#14B8A6', glyph: '+' },
-  updated: { color: '#3B82F6', glyph: '✎' },
-  purchased: { color: '#22C55E', glyph: '✓' },
+// מאשר "מודגש רק כשזה אני". אייקוני MUI ולא גליפים טקסטואליים (✎/✓) -
+// אלו מרנדרים לא אחיד בין פונטים/פלטפורמות בגדלים קטנים, קשה לזהות.
+const ACTION_STYLE: Record<string, { color: string; Icon: typeof AddRoundedIcon }> = {
+  added: { color: '#14B8A6', Icon: AddRoundedIcon },
+  updated: { color: '#3B82F6', Icon: EditRoundedIcon },
+  purchased: { color: '#22C55E', Icon: CheckRoundedIcon },
 };
 
 // ראשי תיבות מהשם המלא - עד שתי אותיות ("דני כהן" → "דכ", "דני" → "ד")
@@ -146,15 +150,13 @@ export const ProductDetailsModal = memo(({
                     {initials(entry.person)}
                   </Typography>
                   <Box sx={{
-                    position: 'absolute', bottom: -2, insetInlineEnd: -2,
-                    width: 14, height: 14, borderRadius: '50%',
+                    position: 'absolute', bottom: -3, insetInlineEnd: -3,
+                    width: 16, height: 16, borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     bgcolor: entry.color,
                     border: '2px solid', borderColor: 'background.default',
                   }}>
-                    <Typography sx={{ fontSize: 8, fontWeight: 800, color: 'white', lineHeight: 1 }}>
-                      {entry.glyph}
-                    </Typography>
+                    <entry.Icon sx={{ fontSize: 11, color: 'white' }} />
                   </Box>
                 </Box>
                 {!isLast && (
@@ -162,11 +164,12 @@ export const ProductDetailsModal = memo(({
                 )}
               </Box>
 
-              {/* תוכן הפעולה */}
+              {/* תוכן הפעולה - התווית ("נוסף ע״י") קודם, השם אחריה למטה:
+                  סדר קריאה טבעי (כמו "Added by" ואז השם), לא הפוך. */}
               <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 1.5, pt: 0.25 }}>
                 <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
-                  <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: entry.highlight ? entry.color : 'text.primary' }}>
-                    {entry.person}
+                  <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
+                    {entry.label}
                   </Typography>
                   {entry.timestamp && (
                     <Typography
@@ -177,8 +180,8 @@ export const ProductDetailsModal = memo(({
                     </Typography>
                   )}
                 </Box>
-                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.1 }}>
-                  {entry.label}
+                <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? entry.color : 'text.primary', mt: 0.1 }}>
+                  {entry.person}
                 </Typography>
               </Box>
             </Box>
