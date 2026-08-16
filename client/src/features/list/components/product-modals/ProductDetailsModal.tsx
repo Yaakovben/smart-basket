@@ -29,10 +29,12 @@ interface HistoryEntry {
 // נוסף תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
 // מאשר "מודגש רק כשזה אני". אייקוני MUI ולא גליפים טקסטואליים (✎/✓) -
 // אלו מרנדרים לא אחיד בין פונטים/פלטפורמות בגדלים קטנים, קשה לזהות.
+// גוונים מעומעמים (600/700 ולא 400/500 בוהקים) - הצבע מופיע רק בתג הקטן
+// בפינת האווטאר, לא על כל העיגול/טקסט, כדי שזה יישאר עדין ולא "יצעק".
 const ACTION_STYLE: Record<string, { color: string; Icon: typeof AddRoundedIcon }> = {
-  added: { color: '#14B8A6', Icon: AddRoundedIcon },
-  updated: { color: '#3B82F6', Icon: EditRoundedIcon },
-  purchased: { color: '#22C55E', Icon: CheckRoundedIcon },
+  added: { color: '#0D9488', Icon: AddRoundedIcon },
+  updated: { color: '#475569', Icon: EditRoundedIcon },
+  purchased: { color: '#16A34A', Icon: CheckRoundedIcon },
 };
 
 // ראשי תיבות מהשם המלא - עד שתי אותיות ("דני כהן" → "דכ", "דני" → "ד")
@@ -143,10 +145,10 @@ export const ProductDetailsModal = memo(({
                   position: 'relative',
                   width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: `${entry.color}1A`,
-                  border: '1.5px solid', borderColor: `${entry.color}40`,
+                  bgcolor: 'action.hover',
+                  border: '1px solid', borderColor: 'divider',
                 }}>
-                  <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: entry.color, lineHeight: 1 }}>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
                     {initials(entry.person)}
                   </Typography>
                   <Box sx={{
@@ -180,7 +182,7 @@ export const ProductDetailsModal = memo(({
                     </Typography>
                   )}
                 </Box>
-                <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? entry.color : 'text.primary', mt: 0.1 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 700, color: entry.highlight ? 'primary.main' : 'text.primary', mt: 0.1 }}>
                   {entry.person}
                 </Typography>
               </Box>
