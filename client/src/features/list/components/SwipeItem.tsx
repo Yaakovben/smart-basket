@@ -444,31 +444,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               </Box>
             )}
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, minWidth: 0 }}>
-            <Typography sx={{
-              fontSize: '13px', color: 'text.secondary', flexShrink: 0,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {product.quantity} {product.unit}
-            </Typography>
-            {/* רק השם, בלי "נוסף/נקנה ע״י" - צ'יפ עדין שצבעו מבדיל בין הטאבים
-                (טורקיז=לקנות, ירוק=נקנה) בלי מילים נוספות. הפירוט המלא
-                (נוסף/נערך/נקנה - מי ומתי) נשאר בפרטי המוצר בלבד. */}
-            <Box
-              component="span"
-              title={`${lastAction.label} ${lastAction.name}`}
-              sx={{
-                minWidth: 0, flexShrink: 1,
-                px: 0.85, py: 0.15, borderRadius: '999px',
-                bgcolor: isPurchased ? 'rgba(34,197,94,0.12)' : 'rgba(20,184,166,0.12)',
-                color: isPurchased ? '#16A34A' : '#0D9488',
-                fontSize: 11, fontWeight: 700,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
-            >
-              {lastAction.name}
-            </Box>
-          </Box>
+          <Typography sx={{
+            fontSize: '13px', color: 'text.secondary',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
+          </Typography>
         </Box>
         {isPurchased && (
           <Box component="span" sx={{ fontSize: '20px', flexShrink: 0 }}>✅</Box>
