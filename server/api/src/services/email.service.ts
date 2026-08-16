@@ -10,7 +10,7 @@ export function isEmailEnabled(): boolean {
   return !!env.RESEND_API_KEY;
 }
 
-const fromAddress = () => env.GMAIL_USER ? `Smart Basket <${env.GMAIL_USER}>` : `Smart Basket <onboarding@resend.dev>`;
+const fromAddress = () => `Smart Basket <onboarding@resend.dev>`;
 
 export interface EmailPayload {
   subject: string;
