@@ -1,29 +1,16 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { User } from '../models';
 import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-const gmailUser = () => env.GMAIL_USER || env.ADMIN_EMAIL;
-
-function createTransporter() {
-  if (!env.GMAIL_APP_PASSWORD) return null;
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    family: 4, // כופה IPv4 — Render חוסם חיבורי IPv6
-    auth: { user: gmailUser(), pass: env.GMAIL_APP_PASSWORD },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-  } as nodemailer.TransportOptions);
-}
+const resend = () => env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 export function isEmailEnabled(): boolean {
-  return !!env.GMAIL_APP_PASSWORD;
+  return !!env.RESEND_API_KEY;
 }
+
+const fromAddress = () => env.GMAIL_USER ? `Smart Basket <${env.GMAIL_USER}>` : `Smart Basket <onboarding@resend.dev>`;
 
 export interface EmailPayload {
   subject: string;
@@ -45,28 +32,23 @@ export interface EmailBroadcastResult {
   perUser: EmailUserStatus[];
 }
 
-async function sendSingle(transporter: nodemailer.Transporter, to: string, subject: string, body: string): Promise<boolean> {
-  try {
-    await transporter.sendMail({
-      from: `"Smart Basket" <${gmailUser()}>`,
-      to,
-      subject,
-      text: body,
-      html: `<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;white-space:pre-wrap;">${body.replace(/\n/g, '<br/>')}</div>`,
-    });
-    return true;
-  } catch (err) {
-    logger.warn('Email send failed to %s: %s', to, (err as Error).message);
-    throw err;
+async function sendSingle(client: Resend, to: string, subject: string, body: string): Promise<void> {
+  const { error } = await client.emails.send({
+    from: fromAddress(),
+    to,
+    subject,
+    text: body,
+    html: `<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;white-space:pre-wrap;">${body.replace(/\n/g, '<br/>')}</div>`,
+  });
+  if (error) {
+    logger.warn('Resend failed to %s: %s', to, error.message);
+    throw new Error(error.message);
   }
 }
 
-/** שליחת מייל לכל המשתמשים. אם onlyWithoutPush=true — רק למי שאין לו push. */
 export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = false): Promise<EmailBroadcastResult> {
-  const transporter = createTransporter();
-  if (!transporter) {
-    return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
-  }
+  const client = resend();
+  if (!client) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
 
   const users = await User.find({}, 'name email').lean();
 
@@ -81,8 +63,12 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
     if (onlyWithoutPush && userIdsWithPush.has(userId)) {
       return { userId, name: u.name, email: u.email, status: 'skipped' };
     }
-    const ok = await sendSingle(transporter, u.email, payload.subject, payload.body);
-    return { userId, name: u.name, email: u.email, status: ok ? 'sent' : 'failed' };
+    try {
+      await sendSingle(client, u.email, payload.subject, payload.body);
+      return { userId, name: u.name, email: u.email, status: 'sent' };
+    } catch {
+      return { userId, name: u.name, email: u.email, status: 'failed' };
+    }
   }));
 
   return {
@@ -94,12 +80,11 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
   };
 }
 
-/** שליחת מייל למשתמש ספציפי. */
 export async function sendEmailToUser(userId: string, payload: EmailPayload): Promise<{ sent: boolean; email: string }> {
-  const transporter = createTransporter();
+  const client = resend();
   const user = await User.findById(userId, 'name email').lean();
   if (!user) return { sent: false, email: '' };
-  if (!transporter) return { sent: false, email: user.email };
-  const ok = await sendSingle(transporter, user.email, payload.subject, payload.body);
-  return { sent: ok, email: user.email };
+  if (!client) return { sent: false, email: user.email };
+  await sendSingle(client, user.email, payload.subject, payload.body);
+  return { sent: true, email: user.email };
 }
