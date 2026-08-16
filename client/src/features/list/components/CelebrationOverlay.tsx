@@ -75,10 +75,8 @@ const makeConfetti = (id: number, direction: 'up' | 'down'): Particle => {
 
 // בונה רשימת חלקיקים חד-פעמית. מוצא מחוץ לקומפוננטה כדי שלא ייקרא ב-render.
 const buildParticles = (): Particle[] => [
-  // 20 חלקיקים עולים + 20 יורדים
   ...Array.from({ length: 20 }, (_, i) => makeConfetti(i, 'up')),
   ...Array.from({ length: 20 }, (_, i) => makeConfetti(20 + i, 'down')),
-  // 8 אמוג'ים
   ...Array.from({ length: 8 }, (_, i): Particle => ({
     id: 40 + i, type: 'emoji', direction: i % 2 === 0 ? 'up' : 'down',
     left: `${5 + Math.random() * 90}%`,
@@ -87,7 +85,6 @@ const buildParticles = (): Particle[] => [
     color: '', w: 0, h: 0, round: false,
     emoji: EMOJIS[i % EMOJIS.length]
   })),
-  // 12 ניצוצות
   ...Array.from({ length: 12 }, (_, i): Particle => {
     const size = 3 + Math.random() * 4;
     return {

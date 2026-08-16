@@ -109,10 +109,10 @@ function parseXmlBuffer(buf: Buffer, isGzipped: boolean): ChainPriceItem[] {
   const parsed = parser.parse(xml) as PriceFullXml;
   const itemsNode = parsed.Root?.Items?.Item || parsed.root?.Items?.Item;
   if (!itemsNode) return [];
-  const arr = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
+  const priceItems = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
 
   const results: ChainPriceItem[] = [];
-  for (const it of arr) {
+  for (const it of priceItems) {
     const barcode = String(it.ItemCode || '').trim();
     const price = parseFloat(String(it.ItemPrice || '0'));
     const itemName = String(it.ItemName || '').trim();

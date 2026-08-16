@@ -37,7 +37,6 @@ export const Toast = ({ msg, type = 'success', onDismiss, onUndo }: ToastProps) 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
-    // רק החלקה למעלה
     if (diff < 0 && boxRef.current) {
       boxRef.current.style.transform = `translateY(${diff}px)`;
       boxRef.current.style.opacity = `${Math.max(0, 1 + diff / 150)}`;
@@ -47,14 +46,12 @@ export const Toast = ({ msg, type = 'success', onDismiss, onUndo }: ToastProps) 
   const handleTouchEnd = useCallback(() => {
     const diff = currentY.current - startY.current;
     if (diff < -SWIPE_THRESHOLD && onDismiss) {
-      // החלקה מספיקה = סגירה
       if (boxRef.current) {
         boxRef.current.style.transform = 'translateY(-100px)';
         boxRef.current.style.opacity = '0';
       }
       setTimeout(onDismiss, 150);
     } else if (boxRef.current) {
-      // החזרה למקום
       boxRef.current.style.transform = '';
       boxRef.current.style.opacity = '';
     }

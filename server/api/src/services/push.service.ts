@@ -168,8 +168,8 @@ export async function sendToAll(payload: PushPayload): Promise<BroadcastResult> 
   const subsByUser = new Map<string, typeof subscriptions>();
   for (const sub of subscriptions) {
     const key = sub.userId.toString();
-    const arr = subsByUser.get(key);
-    if (arr) arr.push(sub); else subsByUser.set(key, [sub]);
+    const userSubs = subsByUser.get(key);
+    if (userSubs) userSubs.push(sub); else subsByUser.set(key, [sub]);
   }
 
   const enabled = isEnabled();

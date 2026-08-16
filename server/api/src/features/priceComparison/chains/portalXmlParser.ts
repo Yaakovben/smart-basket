@@ -68,10 +68,10 @@ export function parseXmlBuffer(buf: Buffer, _filename: string): ChainPriceItem[]
   const parsed = parser.parse(xml) as PriceFullXml;
   const itemsNode = parsed.Root?.Items?.Item || parsed.root?.Items?.Item;
   if (!itemsNode) return [];
-  const arr = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
+  const priceItems = Array.isArray(itemsNode) ? itemsNode : [itemsNode];
 
   const results: ChainPriceItem[] = [];
-  for (const it of arr) {
+  for (const it of priceItems) {
     const itAnyEarly = it as Record<string, unknown>;
     const barcode = String(it.ItemCode || itAnyEarly.itemCode || '').trim();
     const price = parseFloat(String(it.ItemPrice || itAnyEarly.itemPrice || '0'));

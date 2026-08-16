@@ -33,8 +33,8 @@ export async function getGroupStats(
   const productsByList = new Map<string, GroupStatsProduct[]>();
   for (const p of relevantProducts) {
     const key = p.listId.toString();
-    const arr = productsByList.get(key);
-    if (arr) arr.push(p);
+    const listProducts = productsByList.get(key);
+    if (listProducts) listProducts.push(p);
     else productsByList.set(key, [p]);
   }
 

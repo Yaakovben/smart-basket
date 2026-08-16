@@ -9,8 +9,8 @@ import { invalidateAssistantContext } from '../services/aiAssistant.service';
 export const addProduct = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const { listId } = req.params;
-  const data = req.body as CreateProductInput;
-  const product = await productService.addProduct(listId, userId, data);
+  const productInput = req.body as CreateProductInput;
+  const product = await productService.addProduct(listId, userId, productInput);
   invalidateAssistantContext(userId);
   res.status(201).json({ success: true, data: product });
 });
@@ -18,10 +18,10 @@ export const addProduct = asyncHandler(async (req: AuthRequest, res: Response) =
 export const updateProduct = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const { listId, productId } = req.params;
-  const data = req.body as UpdateProductInput;
-  await productService.updateProduct(listId, productId, userId, data);
+  const productInput = req.body as UpdateProductInput;
+  await productService.updateProduct(listId, productId, userId, productInput);
   // שינוי isPurchased משפיע על חישובי spending/insights - מנקה cache
-  if ('isPurchased' in data) invalidateInsightsCache(userId);
+  if ('isPurchased' in productInput) invalidateInsightsCache(userId);
   // כל עדכון (גם שם/כמות/הערה, לא רק isPurchased) רלוונטי להקשר שה-AI
   // רואה - מנקים תמיד, לא רק ל-insights.
   invalidateAssistantContext(userId);

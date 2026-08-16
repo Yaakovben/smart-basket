@@ -32,9 +32,14 @@ export function useReliableTap(action: () => void) {
     // אחריו "נופל" על מה שנחשף מתחתיו באותן קואורדינטות (למשל שורת המוצר
     // שמתחת למודל) ומפעיל אותו - נראה כאילו "המודל לא נסגר" כי הוא נפתח שוב.
     e.preventDefault();
-    // blur לפני הפעולה — מסיר פוקוס ויזואלי מהכפתור לאחר לחיצה
-    try { (e.currentTarget as HTMLElement).blur(); } catch { /* התעלם אם הבלור נכשל */ }
+    try { (e.currentTarget as HTMLElement).blur(); } catch { /* התעלם */ }
     fire();
+    // בולע את ה-ghost click שהדפדפן מייצר אחרי touch — ה-click הסינתטי מגיע
+    // לאחר שהמודל כבר נסגר ונופל על מה שנחשף מתחתיו. capture:true מבטיח
+    // שהליסנר יקבל אותו לפני כל אלמנט אחר ויחסום אותו.
+    const absorb = (ev: MouseEvent) => { ev.stopPropagation(); ev.preventDefault(); };
+    window.addEventListener('click', absorb, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', absorb, true), 600);
   }, [fire]);
 
   const onClick = useCallback(() => {
