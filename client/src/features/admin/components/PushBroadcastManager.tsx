@@ -107,8 +107,10 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
         setEmailBody('');
       }
       setSelectedUser(null);
-    } catch {
-      isPush ? setPushResult({ success: false, msg: 'שליחה נכשלה - נסה שוב' }) : setEmailResult({ success: false, msg: 'שליחה נכשלה - נסה שוב' });
+    } catch (err: unknown) {
+      const apiMsg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+      const msg = apiMsg || 'שליחה נכשלה - נסה שוב';
+      isPush ? setPushResult({ success: false, msg }) : setEmailResult({ success: false, msg });
     } finally {
       setSending(false);
     }
