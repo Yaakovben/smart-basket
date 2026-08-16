@@ -773,4 +773,5 @@ export const en: Translations = {
   itemsMatchedShort: 'items matched',
   continueChatWithAi: 'Continue chatting with the AI',
   priceNotIdentifiedForList: 'No prices found for this list\'s items in the database',
+  history: 'History',
 };
