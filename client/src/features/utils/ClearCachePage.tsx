@@ -45,7 +45,6 @@ export const ClearCachePage = () => {
         updateStep('sw', 'error', String(e));
       }
 
-      // ניקוי Caches API
       updateStep('caches', 'running');
       try {
         if ('caches' in window) {
@@ -88,7 +87,6 @@ export const ClearCachePage = () => {
         }
       } catch { /* IDB לא זמין - מתעלמים */ }
 
-      // ניקוי sessionStorage
       updateStep('session', 'running');
       try {
         sessionStorage.clear();
@@ -97,7 +95,6 @@ export const ClearCachePage = () => {
         updateStep('session', 'error', String(e));
       }
 
-      // ניקוי cookies
       updateStep('cookies', 'running');
       try {
         document.cookie.split(';').forEach(c => {

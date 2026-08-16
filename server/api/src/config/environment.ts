@@ -25,13 +25,10 @@ dotenv.config();
  *   register at ocr.space/ocrapi/freekey). Feature silently no-ops if absent.
  */
 const envSchema = Joi.object({
-  // סביבת ריצה
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
-  // פורט השרת
   PORT: Joi.number().default(5000),
 
-  // חיבור ל-MongoDB
   MONGODB_URI: Joi.string().required().messages({
     'any.required': 'MongoDB URI is required',
   }),

@@ -94,12 +94,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
     }
   }, [isOpen, offset]);
 
-  // ניקוי ב-unmount
-  useEffect(() => {
-    return () => {
-    };
-  }, []);
-
   // חישוב אפקט גומייה
   const calcOffset = useCallback((rawOffset: number): number => {
     // החלקה ימינה (כיוון שגוי) - התנגדות חזקה
@@ -276,7 +270,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
     if (justSwiped.current) return;
 
     if (offset > 20) {
-      // סגירה אם פתוח
       setOffset(0);
       onClose();
     } else {

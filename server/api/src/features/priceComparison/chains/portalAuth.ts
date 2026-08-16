@@ -83,10 +83,10 @@ function usernameVariants(username: string): string[] {
 // מרחיב מערך של מועמדי-usernames לכל ה-variants האפשריים (case toggle על כל אחד),
 // בלי כפילויות. שימושי כשלא ידוע ה-username המדויק של רשת בפורטל.
 function expandUsernameCandidates(usernames: string | string[]): string[] {
-  const arr = Array.isArray(usernames) ? usernames : [usernames];
+  const usernameList = Array.isArray(usernames) ? usernames : [usernames];
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const u of arr) {
+  for (const u of usernameList) {
     for (const v of usernameVariants(u)) {
       if (!seen.has(v)) { seen.add(v); out.push(v); }
     }

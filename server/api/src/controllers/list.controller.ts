@@ -25,15 +25,15 @@ export const getList = asyncHandler(async (req: AuthRequest, res: Response) => {
 
 /** POST /api/lists — יצירת רשימה חדשה */
 export const createList = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const data = req.body as CreateListInput;
-  const list = await listService.createList(req.user!.id, data);
+  const listInput = req.body as CreateListInput;
+  const list = await listService.createList(req.user!.id, listInput);
   res.status(201).json({ success: true, data: list });
 });
 
 /** PUT /api/lists/:id — עדכון רשימה (רק בעלים) */
 export const updateList = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const data = req.body as UpdateListInput;
-  const list = await listService.updateList(req.params.id, req.user!.id, data);
+  const listInput = req.body as UpdateListInput;
+  const list = await listService.updateList(req.params.id, req.user!.id, listInput);
   res.json({ success: true, data: list });
 });
 
@@ -49,8 +49,8 @@ export const deleteList = asyncHandler(async (req: AuthRequest, res: Response) =
 
 /** POST /api/lists/join — הצטרפות לקבוצה דרך inviteCode */
 export const joinGroup = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const data = req.body as JoinGroupInput;
-  const list = await listService.joinGroup(req.user!.id, data);
+  const joinInput = req.body as JoinGroupInput;
+  const list = await listService.joinGroup(req.user!.id, joinInput);
   res.json({ success: true, data: list });
 });
 

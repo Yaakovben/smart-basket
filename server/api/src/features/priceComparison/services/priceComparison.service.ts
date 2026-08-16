@@ -175,8 +175,8 @@ export async function getComparisonForUser(
   const productsByList = new Map<string, typeof pendingProducts>();
   for (const p of pendingProducts) {
     const key = String(p.listId);
-    const arr = productsByList.get(key);
-    if (arr) arr.push(p);
+    const listProducts = productsByList.get(key);
+    if (listProducts) listProducts.push(p);
     else productsByList.set(key, [p]);
   }
 

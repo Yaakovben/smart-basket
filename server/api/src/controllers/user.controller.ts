@@ -34,8 +34,8 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) =
  * עדכון פרופיל (שם/מייל/אמוג׳י).
  */
 export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const data = req.body as UpdateProfileInput;
-  const user = await persistProfile(req.user!.id, data);
+  const profileInput = req.body as UpdateProfileInput;
+  const user = await persistProfile(req.user!.id, profileInput);
   res.json({ success: true, data: user });
 });
 
@@ -45,8 +45,8 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
  * דורש currentPassword + newPassword. מבטל טוקנים בכל המכשירים בהצלחה.
  */
 export const changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const data = req.body as ChangePasswordInput;
-  await updatePassword(req.user!.id, data.currentPassword, data.newPassword);
+  const passwordInput = req.body as ChangePasswordInput;
+  await updatePassword(req.user!.id, passwordInput.currentPassword, passwordInput.newPassword);
   res.json({ success: true, message: 'Password changed successfully' });
 });
 
