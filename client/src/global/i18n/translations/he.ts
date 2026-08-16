@@ -774,4 +774,5 @@ export const he: Translations = {
   itemsMatchedShort: 'מוצרים אותרו',
   continueChatWithAi: 'המשך שיחה עם ה-AI',
   priceNotIdentifiedForList: 'לא זוהו מחירים למוצרי הרשימה הזו במאגר',
+  history: 'היסטוריה',
 };

@@ -773,4 +773,5 @@ export const ru: Translations = {
   itemsMatchedShort: 'товаров найдено',
   continueChatWithAi: 'Продолжить разговор с ИИ',
   priceNotIdentifiedForList: 'Цены на товары из этого списка не найдены в базе данных',
+  history: 'История',
 };

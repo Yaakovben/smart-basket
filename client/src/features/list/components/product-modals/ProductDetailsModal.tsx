@@ -19,15 +19,23 @@ interface HistoryEntry {
   highlight: boolean;
   timestamp?: string;
   color: string;
+  glyph: string;
 }
 
-// צבע קבוע לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה: נוסף
-// תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
+// צבע+גליף קבועים לפי סוג הפעולה - עקבי בכל מוצר, לא תלוי במי ביצע אותה:
+// נוסף תמיד תורכיז, נערך תמיד כחול, נקנה תמיד ירוק. קל יותר לסרוק ויזואלית
 // מאשר "מודגש רק כשזה אני".
-const ACTION_COLORS: Record<string, string> = {
-  added: '#14B8A6',
-  updated: '#3B82F6',
-  purchased: '#22C55E',
+const ACTION_STYLE: Record<string, { color: string; glyph: string }> = {
+  added: { color: '#14B8A6', glyph: '+' },
+  updated: { color: '#3B82F6', glyph: '✎' },
+  purchased: { color: '#22C55E', glyph: '✓' },
+};
+
+// ראשי תיבות מהשם המלא - עד שתי אותיות ("דני כהן" → "דכ", "דני" → "ד")
+const initials = (name: string): string => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return parts.length === 1 ? parts[0].slice(0, 1) : parts[0].slice(0, 1) + parts[1].slice(0, 1);
 };
 
 export const ProductDetailsModal = memo(({
@@ -56,7 +64,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.addedBy),
       highlight: product.addedBy === currentUserName,
       timestamp: product.createdAt,
-      color: ACTION_COLORS.added,
+      ...ACTION_STYLE.added,
     },
     ...(hasUpdate ? [{
       key: 'updated',
@@ -64,7 +72,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.updatedBy!),
       highlight: product.updatedBy === currentUserName,
       timestamp: hasPurchase ? undefined : product.updatedAt,
-      color: ACTION_COLORS.updated,
+      ...ACTION_STYLE.updated,
     }] : []),
     ...(hasPurchase ? [{
       key: 'purchased',
@@ -72,7 +80,7 @@ export const ProductDetailsModal = memo(({
       person: displayName(product.purchasedBy!),
       highlight: product.purchasedBy === currentUserName,
       timestamp: product.updatedAt,
-      color: ACTION_COLORS.purchased,
+      ...ACTION_STYLE.purchased,
     }] : []),
   ];
 
@@ -113,44 +121,66 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) - עיצוב שקט ומינימלי:
-          בלי אייקונים, בלי קווים מחברים, רק שורות דקות מופרדות בקו-שיער.
-          נקודה קטנה כתחליף עדין לאייקון. הצבע קבוע לפי סוג הפעולה עצמה
-          (ACTION_COLORS) - לא תלוי אם זה המשתמש הנוכחי - כדי שאפשר יהיה
-          לזהות מיד "נוסף/נערך/נקנה" גם בלי לקרוא את התווית. */}
-      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', px: 2 }}>
+      {/* היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) - ציר פעילות עם
+          "אווטאר" ראשי-תיבות צבעוני לכל פעולה (צבע+גליף קבועים לפי הסוג,
+          ACTION_STYLE) וקו מחבר דק ביניהם - דפוס מוכר מכלי עבודה מקצועיים
+          (activity feed), קריא יותר מרשימת טקסט שטוחה. */}
+      <Box sx={{ bgcolor: 'background.default', borderRadius: '12px', border: '1px solid', borderColor: 'divider', p: '14px 16px' }}>
+        <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', letterSpacing: 0.3, textTransform: 'uppercase', mb: 1.25 }}>
+          {t('history')}
+        </Typography>
         {history.map((entry, index) => {
           const isLast = index === history.length - 1;
           return (
-            <Box
-              key={entry.key}
-              sx={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1,
-                py: 1.1,
-                borderBottom: isLast ? 'none' : '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <Box key={entry.key} sx={{ display: 'flex', gap: 1.25 }}>
+              {/* עמודת אווטאר + קו מחבר */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <Box sx={{
-                  width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                  bgcolor: entry.color,
-                }} />
-                <Typography sx={{ fontSize: 13, color: 'text.primary', minWidth: 0 }}>
-                  <Box component="span" sx={{ color: 'text.secondary' }}>{entry.label}{' '}</Box>
-                  <Box component="span" sx={{ color: entry.color, fontWeight: entry.highlight ? 700 : 600 }}>
-                    {entry.person}
+                  position: 'relative',
+                  width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: `${entry.color}1A`,
+                  border: '1.5px solid', borderColor: `${entry.color}40`,
+                }}>
+                  <Typography sx={{ fontSize: 11.5, fontWeight: 800, color: entry.color, lineHeight: 1 }}>
+                    {initials(entry.person)}
+                  </Typography>
+                  <Box sx={{
+                    position: 'absolute', bottom: -2, insetInlineEnd: -2,
+                    width: 14, height: 14, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    bgcolor: entry.color,
+                    border: '2px solid', borderColor: 'background.default',
+                  }}>
+                    <Typography sx={{ fontSize: 8, fontWeight: 800, color: 'white', lineHeight: 1 }}>
+                      {entry.glyph}
+                    </Typography>
                   </Box>
+                </Box>
+                {!isLast && (
+                  <Box sx={{ width: 1.5, flex: 1, minHeight: 18, bgcolor: 'divider', my: 0.5, borderRadius: 1 }} />
+                )}
+              </Box>
+
+              {/* תוכן הפעולה */}
+              <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 1.5, pt: 0.25 }}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
+                  <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: entry.highlight ? entry.color : 'text.primary' }}>
+                    {entry.person}
+                  </Typography>
+                  {entry.timestamp && (
+                    <Typography
+                      sx={{ fontSize: 10.5, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
+                    >
+                      {getRelativeTime(entry.timestamp, settings.language)}
+                    </Typography>
+                  )}
+                </Box>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.1 }}>
+                  {entry.label}
                 </Typography>
               </Box>
-              {entry.timestamp && (
-                <Typography
-                  sx={{ fontSize: 11, color: 'text.disabled', whiteSpace: 'nowrap', flexShrink: 0 }}
-                  title={`${formatDateShort(entry.timestamp, settings.language)} ${formatTimeShort(entry.timestamp, settings.language)}`}
-                >
-                  {getRelativeTime(entry.timestamp, settings.language)}
-                </Typography>
-              )}
             </Box>
           );
         })}
