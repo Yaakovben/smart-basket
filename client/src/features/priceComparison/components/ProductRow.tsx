@@ -40,10 +40,16 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
   const isMostExpensive = mostExpensivePrice !== undefined && Math.abs(match.price - mostExpensivePrice) < 0.01 && mostExpensivePrice > cheapestPrice!;
   const hasComparison = cheapestPrice !== undefined && mostExpensivePrice !== undefined && mostExpensivePrice > cheapestPrice;
 
-  // אחוז חיסכון אפשרי (כמה יותר יקר מהזול)
-  const savingsPct = hasComparison && !isCheapest
+  // אחוז חיסכון אפשרי (כמה יותר יקר מהזול). ההתאמה מתבצעת בנפרד לכל רשת
+  // (matchNormalizedName רץ פר-רשת) - כך שהזול והיקר עלולים להיות שני
+  // מוצרים שונים ולא-קשורים שהותאמו (בטעות) לאותו productId, לא הפרש מחיר
+  // אמיתי על אותו מוצר. פער קיצוני (300%+) הוא סימן חזק להתאמה שגויה, לא
+  // לחיסכון אמיתי - עדיף להסתיר את התג מאשר להציג מספר מטעה.
+  const IMPLAUSIBLE_SAVINGS_PCT = 300;
+  const rawSavingsPct = hasComparison && !isCheapest
     ? Math.round(((match.price - cheapestPrice!) / cheapestPrice!) * 100)
     : 0;
+  const savingsPct = rawSavingsPct <= IMPLAUSIBLE_SAVINGS_PCT ? rawSavingsPct : 0;
 
   return (
     <Box sx={{
