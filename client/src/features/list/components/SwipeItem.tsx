@@ -79,13 +79,12 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
 
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
-  // בטאב "לקנות" מציגים תמיד "נוסף ע״י", ובטאב "נקנה" תמיד "נקנה ע״י" -
-  // תואם את הטאב שבו המוצר מוצג, לא "הפעולה האחרונה" בפועל. השרשרת המלאה
-  // (כולל עריכה) מוצגת בפרטי המוצר בלבד.
+  // בטאב "לקנות" מציגים את שם המוסיף, ובטאב "נקנה" את שם הקונה - בלי המילים
+  // "נוסף/נקנה ע״י" (רק שם). השרשרת המלאה עם התוויות מוצגת בפרטי המוצר בלבד.
   const displayName = (name: string) => name === currentUserName ? t('you') : name;
-  const lastAction = isPurchased && product.purchasedBy
-    ? { label: t('purchasedByLabel'), name: displayName(product.purchasedBy) }
-    : { label: t('addedBy'), name: displayName(product.addedBy) };
+  const relevantName = isPurchased && product.purchasedBy
+    ? displayName(product.purchasedBy)
+    : displayName(product.addedBy);
 
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
@@ -448,7 +447,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             fontSize: '13px', color: 'text.secondary',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            {product.quantity} {product.unit} • {lastAction.label} {lastAction.name}
+            {product.quantity} {product.unit} • {relevantName}
           </Typography>
         </Box>
         {isPurchased && (
