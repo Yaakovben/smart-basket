@@ -10,14 +10,14 @@ function createTransporter() {
   if (!env.GMAIL_APP_PASSWORD) return null;
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    // כופה IPv4 — Render חוסם חיבורי IPv6 לשרתי SMTP חיצוניים
-    tls: { family: 4 },
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    family: 4, // כופה IPv4 — Render חוסם חיבורי IPv6
     auth: { user: gmailUser(), pass: env.GMAIL_APP_PASSWORD },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
   } as nodemailer.TransportOptions);
 }
 
