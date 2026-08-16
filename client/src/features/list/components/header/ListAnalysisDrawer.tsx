@@ -9,6 +9,7 @@ import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingI
 import { AiAssistantIcon } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison/services/priceComparison.api';
+import { getCheapestChain } from '../../../priceComparison/helpers/priceComparisonCardHelpers';
 import type { PriceListGroup, PriceChainTotal } from '../../../priceComparison/types/priceComparison.types';
 
 interface ListAnalysisDrawerProps {
@@ -203,11 +204,15 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
             המחיר המוצג הוא של הרשת הזולה ביותר (מ-chainTotals) ולא רק אושר עד -
             כי אושר עד הוא ה-BETA_CHAIN_ID שלא בהכרח מכסה את כל המוצרים. */}
         {!priceLoading && (() => {
-          // הרשת הזולה ביותר שיש לה לפחות התאמה אחת
+          // רשימת תצוגה ממוינת לפי מחיר, אבל "הזולה ביותר" עצמה נקבעת לפי
+          // getCheapestChain (אותה פונקציה שמשמשת את טאב "מחירים" בתובנות) -
+          // מכסה מלאה קודם, ורק בלי מכסה מלאה - הכי הרבה התאמות ואז הכי זול.
+          // בלי זה, רשת שהתאימה פריט זול יחיד (למשל 1 מתוך 5) יכולה להיראות
+          // "הזולה ביותר" מול רשת שהתאימה את כל הסל - בדיוק ההפך מהאמת.
           const chainsWithMatches = [...chainTotals]
             .filter(c => c.matchedCount > 0 && c.total > 0)
             .sort((a, b) => a.total - b.total);
-          const cheapest = chainsWithMatches[0];
+          const cheapest = getCheapestChain(chainTotals);
           // פירוט מוצרים - מהרשת הזולה אם יש, אחרת מהרשת הראשית (priceGroup)
           const matchedItems = priceGroup?.matches?.filter(m => m.matched) ?? [];
           // אין שום נתון מחיר - מציגים הודעה מפורשת "לא זוהה" במקום להיעלם
@@ -272,27 +277,30 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
                     השוואת מחירים
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                    {chainsWithMatches.slice(0, 4).map((c, idx) => (
-                      <Box key={c.chainId} sx={{
-                        display: 'flex', alignItems: 'center', gap: 0.6,
-                        px: 1.25, py: 0.5, borderRadius: '999px',
-                        bgcolor: idx === 0
-                          ? (isDark ? '#14B8A6' : '#0D9488')
-                          : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
-                      }}>
-                        {idx === 0 && (
-                          <Typography sx={{ fontSize: 11, color: 'white', fontWeight: 800, lineHeight: 1 }}>
-                            {t('cheapestTag')}
+                    {chainsWithMatches.slice(0, 4).map((c) => {
+                      const isFairCheapest = c.chainId === cheapest?.chainId;
+                      return (
+                        <Box key={c.chainId} sx={{
+                          display: 'flex', alignItems: 'center', gap: 0.6,
+                          px: 1.25, py: 0.5, borderRadius: '999px',
+                          bgcolor: isFairCheapest
+                            ? (isDark ? '#14B8A6' : '#0D9488')
+                            : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'),
+                        }}>
+                          {isFairCheapest && (
+                            <Typography sx={{ fontSize: 11, color: 'white', fontWeight: 800, lineHeight: 1 }}>
+                              {t('cheapestTag')}
+                            </Typography>
+                          )}
+                          <Typography sx={{ fontSize: 11, fontWeight: 700, color: isFairCheapest ? 'white' : 'text.primary' }}>
+                            {c.chainName}
                           </Typography>
-                        )}
-                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: idx === 0 ? 'white' : 'text.primary' }}>
-                          {c.chainName}
-                        </Typography>
-                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: idx === 0 ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
-                          ₪{Math.round(c.total)}
-                        </Typography>
-                      </Box>
-                    ))}
+                          <Typography sx={{ fontSize: 11, fontWeight: 700, color: isFairCheapest ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
+                            ₪{Math.round(c.total)}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
                   </Box>
                 </Box>
               )}
