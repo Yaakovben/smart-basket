@@ -74,8 +74,7 @@ const envSchema = Joi.object({
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
 
-  // Gmail לשליחת מיילים מהאדמין (nodemailer). צריך App Password מגוגל, לא סיסמה רגילה.
-  GMAIL_USER: Joi.string().email().optional(),
+  // Gmail לשליחת מיילים מהאדמין (nodemailer). App Password מגוגל, נשלח מ-ADMIN_EMAIL.
   GMAIL_APP_PASSWORD: Joi.string().optional(),
 
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
@@ -144,7 +143,6 @@ export interface Environment {
   GROQ_MODEL: string;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL: string;
-  GMAIL_USER?: string;
   GMAIL_APP_PASSWORD?: string;
 }
 
