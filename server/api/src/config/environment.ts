@@ -74,9 +74,8 @@ const envSchema = Joi.object({
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
 
-  // Resend (resend.com) - שליחת מיילים דרך HTTP (לא SMTP). GMAIL_USER אופציונלי לכתובת השולח.
-  RESEND_API_KEY: Joi.string().optional(),
-  GMAIL_USER: Joi.string().email().optional(),
+  // Brevo (brevo.com) - שליחת מיילים דרך HTTP API (לא SMTP).
+  BREVO_API_KEY: Joi.string().optional(),
 
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
@@ -144,8 +143,7 @@ export interface Environment {
   GROQ_MODEL: string;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL: string;
-  RESEND_API_KEY?: string;
-  GMAIL_USER?: string;
+  BREVO_API_KEY?: string;
 }
 
 export const env = parseEnv();

@@ -1,16 +1,14 @@
-import { Resend } from 'resend';
 import { User } from '../models';
 import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-const resend = () => env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
+const FROM = { name: 'Smart Basket', email: 'smartbasket129@gmail.com' };
 
 export function isEmailEnabled(): boolean {
-  return !!env.RESEND_API_KEY;
+  return !!env.BREVO_API_KEY;
 }
-
-const fromAddress = () => `Smart Basket <onboarding@resend.dev>`;
 
 export interface EmailPayload {
   subject: string;
@@ -32,13 +30,20 @@ export interface EmailBroadcastResult {
   perUser: EmailUserStatus[];
 }
 
-async function sendSingle(client: Resend, to: string, subject: string, body: string): Promise<void> {
-  const { error } = await client.emails.send({
-    from: fromAddress(),
-    to,
-    subject,
-    text: body,
-    html: `
+async function sendSingle(to: string, subject: string, body: string): Promise<void> {
+  const res = await fetch(BREVO_URL, {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': env.BREVO_API_KEY!,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: FROM,
+      to: [{ email: to }],
+      subject,
+      textContent: body,
+      htmlContent: `
 <div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
   <div style="white-space:pre-wrap;margin-bottom:32px;">${body.replace(/\n/g, '<br/>')}</div>
   <div style="text-align:center;">
@@ -47,16 +52,17 @@ async function sendSingle(client: Resend, to: string, subject: string, body: str
     </a>
   </div>
 </div>`,
+    }),
   });
-  if (error) {
-    logger.warn('Resend failed to %s: %s', to, error.message);
-    throw new Error(error.message);
+  if (!res.ok) {
+    const err = await res.text();
+    logger.warn('Brevo send failed to %s: %s', to, err);
+    throw new Error(err);
   }
 }
 
 export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = false): Promise<EmailBroadcastResult> {
-  const client = resend();
-  if (!client) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
+  if (!env.BREVO_API_KEY) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
 
   const users = await User.find({}, 'name email').lean();
 
@@ -72,7 +78,7 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
       return { userId, name: u.name, email: u.email, status: 'skipped' };
     }
     try {
-      await sendSingle(client, u.email, payload.subject, payload.body);
+      await sendSingle(u.email, payload.subject, payload.body);
       return { userId, name: u.name, email: u.email, status: 'sent' };
     } catch {
       return { userId, name: u.name, email: u.email, status: 'failed' };
@@ -89,10 +95,9 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
 }
 
 export async function sendEmailToUser(userId: string, payload: EmailPayload): Promise<{ sent: boolean; email: string }> {
-  const client = resend();
   const user = await User.findById(userId, 'name email').lean();
   if (!user) return { sent: false, email: '' };
-  if (!client) return { sent: false, email: user.email };
-  await sendSingle(client, user.email, payload.subject, payload.body);
+  if (!env.BREVO_API_KEY) return { sent: false, email: user.email };
+  await sendSingle(user.email, payload.subject, payload.body);
   return { sent: true, email: user.email };
 }

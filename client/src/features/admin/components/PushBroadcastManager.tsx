@@ -192,7 +192,7 @@ export const PushBroadcastManager = ({ isDark, users, onClose }: PushBroadcastMa
           <Box sx={{ px: 1.5, py: 1, borderRadius: '12px', bgcolor: isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2', display: 'flex', gap: 1, alignItems: 'center' }}>
             <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 18, flexShrink: 0 }} />
             <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: '#B91C1C' }}>
-              שירות המייל לא מוגדר בשרת (RESEND_API_KEY חסר)
+              שירות המייל לא מוגדר בשרת (BREVO_API_KEY חסר)
             </Typography>
           </Box>
         )}
