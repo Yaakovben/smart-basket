@@ -8,7 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
-import { COMMON_STYLES } from '../../../global/helpers';
+import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
 import { MembersButton, ListMenu, ConnectionStatusIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -65,6 +65,18 @@ export const ListHeader = memo(({
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // תג "חדש" על תפריט ה-⋮ - מודיע שיש פיצ'ר חדש בפנים (סריקת רשימה),
+  // נעלם לצמיתות בפעם הראשונה שהתפריט נפתח.
+  const [showMenuNewBadge, setShowMenuNewBadge] = useState(
+    () => !!onScanList && safeStorage.get('sb_scanlist_menu_seen') !== 'true'
+  );
+  const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchor(e.currentTarget);
+    if (showMenuNewBadge) {
+      setShowMenuNewBadge(false);
+      safeStorage.set('sb_scanlist_menu_seen', 'true');
+    }
+  }, [showMenuNewBadge]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
@@ -164,8 +176,25 @@ export const ListHeader = memo(({
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
-          <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} sx={glassButtonSx} aria-label={t('groupSettings')}>
+          <IconButton onClick={handleOpenMenu} sx={{ ...glassButtonSx, position: 'relative' }} aria-label={t('groupSettings')}>
             <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
+            {showMenuNewBadge && (
+              <Box
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute', top: 2, insetInlineEnd: 2,
+                  width: 9, height: 9, borderRadius: '50%',
+                  bgcolor: '#EF4444', border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
+                  boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
+                  animation: 'menuNewBadgePulse 1.8s ease-out infinite',
+                  '@keyframes menuNewBadgePulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
+                    '70%': { boxShadow: '0 0 0 5px rgba(239,68,68,0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
+                  },
+                }}
+              />
+            )}
           </IconButton>
         </Box>
       </Box>

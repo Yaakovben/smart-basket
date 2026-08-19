@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { haptic } from '../../../global/helpers';
+import { haptic, safeStorage } from '../../../global/helpers';
 
 const HINT_SHOW_DELAY_MS = 700;
 const HINT_AUTOHIDE_MS = 7000;
+const NEW_BADGE_KEY = 'sb_ai_fab_used';
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
 // בר הניווט התחתון. Portal ל-document.body כמו HomeBottomNav, כדי לעקוף
@@ -17,6 +18,9 @@ export const AiAssistantFab = () => {
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
   const [showHint, setShowHint] = useState(false);
+  // תג "חדש" - נשאר עד שהמשתמש בפועל פותח את העוזר בפעם הראשונה, לא רק
+  // עד שרואה את הרמז הטקסטואלי (שנעלם אחרי 7ש' ועלול לפספס משתמש שלא שם לב).
+  const [showNewBadge, setShowNewBadge] = useState(() => safeStorage.get(NEW_BADGE_KEY) !== 'true');
 
   // רמז טקסט "שאל את ה-AI" - מוצג בכל פתיחת דף הבית, נעלם אחרי 7 שניות.
   useEffect(() => {
@@ -27,6 +31,10 @@ export const AiAssistantFab = () => {
 
   const handleOpen = () => {
     setShowHint(false);
+    if (showNewBadge) {
+      setShowNewBadge(false);
+      safeStorage.set(NEW_BADGE_KEY, 'true');
+    }
     haptic('light');
     navigate('/assistant');
   };
@@ -101,6 +109,23 @@ export const AiAssistantFab = () => {
         }}
       >
         <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
+        {showNewBadge && (
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute', top: -2, insetInlineEnd: -2,
+              width: 15, height: 15, borderRadius: '50%',
+              bgcolor: '#EF4444', border: '2px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
+              boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
+              animation: 'aiNewBadgePulse 1.8s ease-out infinite',
+              '@keyframes aiNewBadgePulse': {
+                '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
+                '70%': { boxShadow: '0 0 0 6px rgba(239,68,68,0)' },
+                '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
+              },
+            }}
+          />
+        )}
       </Box>
     </>,
     document.body
