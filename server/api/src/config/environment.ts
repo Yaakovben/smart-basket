@@ -93,7 +93,7 @@ const envSchema = Joi.object({
   // ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח. המפתח הוא סוד אמיתי -
   // רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
   GROQ_API_KEY: Joi.string().optional(),
-  GROQ_MODEL: Joi.string().default('llama-3.3-70b-versatile'),
+  GROQ_MODEL: Joi.string().default('openai/gpt-oss-120b'),
   // NVIDIA NIM (build.nvidia.com) - ספק גיבוי לעוזר ה-AI, לא ראשי. Groq הוא
   // הראשי (מהיר יותר), אבל לטייר החינמי שלו יש מכסה יומית/דקתית - אם היא
   // נגמרת (429) או ש-Groq לא זמין רגעית, השירות עובר אוטומטית ל-NIM כדי
