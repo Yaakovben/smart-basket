@@ -26,12 +26,64 @@ interface AiProvider {
   model: string;
 }
 
-// סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי. providers() ולא קבוע
-// כדי לקרוא env בזמן ריצה (נוח לבדיקות ולשינוי env בלי restart בחלק מהסביבות).
-function getProviders(): AiProvider[] {
+// מודלים מועדפים בסדר עדיפות — הראשון הזמין יבחר אוטומטית.
+// מעודכן ידנית רק כשרוצים לשנות עדיפויות, לא כשמודל נעלם.
+const GROQ_PREFERRED_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-70b-versatile',
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.6-27b',
+  'mixtral-8x7b-32768',
+];
+
+let cachedGroqModel: string | null = null;
+let groqModelCachedAt = 0;
+const GROQ_MODEL_CACHE_TTL = 10 * 60 * 1000; // 10 דקות
+
+async function resolveGroqModel(apiKey: string): Promise<string> {
+  const now = Date.now();
+  // החזר מהcache אם טרי
+  if (cachedGroqModel && now - groqModelCachedAt < GROQ_MODEL_CACHE_TTL) {
+    return cachedGroqModel;
+  }
+  // אם יש הגדרה ידנית ב-env — השתמש בה בלי לבדוק
+  if (env.GROQ_MODEL && env.GROQ_MODEL !== 'openai/gpt-oss-120b' && env.GROQ_MODEL !== 'llama-3.3-70b-versatile') {
+    cachedGroqModel = env.GROQ_MODEL;
+    groqModelCachedAt = now;
+    return cachedGroqModel;
+  }
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.ok) {
+      const data = await res.json() as { data: { id: string }[] };
+      const available = new Set(data.data.map((m: { id: string }) => m.id));
+      const chosen = GROQ_PREFERRED_MODELS.find(m => available.has(m));
+      if (chosen) {
+        cachedGroqModel = chosen;
+        groqModelCachedAt = now;
+        logger.info('Groq auto-selected model: %s', chosen);
+        return chosen;
+      }
+    }
+  } catch (e) {
+    logger.warn('Groq model discovery failed, falling back to env default: %s', (e as Error).message);
+  }
+  // fallback לברירת מחדל
+  cachedGroqModel = env.GROQ_MODEL;
+  groqModelCachedAt = now;
+  return cachedGroqModel;
+}
+
+// סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
+async function getProviders(): Promise<AiProvider[]> {
   const list: AiProvider[] = [];
   if (env.GROQ_API_KEY) {
-    list.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', apiKey: env.GROQ_API_KEY, model: env.GROQ_MODEL });
+    const model = await resolveGroqModel(env.GROQ_API_KEY);
+    list.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', apiKey: env.GROQ_API_KEY, model });
   }
   if (env.NVIDIA_NIM_API_KEY) {
     list.push({ name: 'NVIDIA NIM', url: 'https://integrate.api.nvidia.com/v1/chat/completions', apiKey: env.NVIDIA_NIM_API_KEY, model: env.NVIDIA_NIM_MODEL });
@@ -57,7 +109,7 @@ const CONTEXT_CACHE_TTL_MS = 3 * 60 * 1000;
 const contextCache = new Map<string, { context: string; expiresAt: number }>();
 
 function isConfigured(): boolean {
-  return getProviders().length > 0;
+  return !!(env.GROQ_API_KEY || env.NVIDIA_NIM_API_KEY);
 }
 
 // נקראת מ-controllers שמשנים מוצרים/רשימות (הוספה, מחיקה, סימון קנייה,
@@ -203,7 +255,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     stream: true,
   };
 
-  const providers = getProviders();
+  const providers = await getProviders();
   let lastError: string | null = null;
 
   // מנסים כל ספק לפי סדר (Groq, אחר כך NIM). כשל בספק אחד (מכסה חינמית
