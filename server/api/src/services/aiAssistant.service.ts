@@ -74,9 +74,12 @@ async function resolveGroqModel(apiKey: string): Promise<string> {
   return cachedGroqModel;
 }
 
-/** נקרא בעת עליית השרת — ממלא את cache המודל ברקע לפני שמשתמש ישאל */
+/** נקרא בעת עליית השרת — ממלא את cache המודל ורענן אותו ברקע לעד */
 export function warmGroqModel(): void {
-  if (env.GROQ_API_KEY) resolveGroqModel(env.GROQ_API_KEY).catch(() => {});
+  if (!env.GROQ_API_KEY) return;
+  resolveGroqModel(env.GROQ_API_KEY).catch(() => {});
+  // מרענן לפני שה-cache פג — המשתמש תמיד מקבל תשובה ממה שכבר בcache
+  setInterval(() => resolveGroqModel(env.GROQ_API_KEY!).catch(() => {}), 9 * 60 * 1000);
 }
 
 // סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
