@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../types';
 import { asyncHandler } from '../utils';
 import { logger } from '../config';
-import { openAssistantStream, type ChatMessage } from '../services/aiAssistant.service';
+import { openAssistantStream, getAiStatus, type ChatMessage } from '../services/aiAssistant.service';
 
 /**
  * POST /api/ai-assistant/chat
@@ -82,4 +82,9 @@ export const chat = asyncHandler(async (req: AuthRequest, res: Response) => {
   } finally {
     cleanup();
   }
+});
+
+export const getStatus = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const status = await getAiStatus();
+  res.json(status);
 });

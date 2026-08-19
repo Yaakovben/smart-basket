@@ -37,4 +37,17 @@ export const adminApi = {
   async deleteUser(userId: string): Promise<void> {
     await apiClient.delete(`/admin/users/${userId}`);
   },
+
+  async getAiStatus() {
+    const response = await apiClient.get('/ai-assistant/status');
+    return response.data as {
+      providers: {
+        name: string; configured: boolean; model: string | null;
+        modelCachedAt: number | null; nextRefreshAt: number | null;
+        rateLimitRequests: number | null; rateLimitRemainingRequests: number | null;
+        rateLimitResetRequests: string | null; rateLimitTokens: number | null;
+        rateLimitRemainingTokens: number | null; rateLimitResetTokens: string | null;
+      }[];
+    };
+  },
 };

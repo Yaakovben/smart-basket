@@ -83,6 +83,40 @@ export function warmGroqModel(): void {
   setInterval(() => resolveGroqModel(env.GROQ_API_KEY!).catch(() => {}), 60 * 60 * 1000);
 }
 
+export interface AiProviderStatus {
+  name: string; configured: boolean; model: string | null;
+  modelCachedAt: number | null; nextRefreshAt: number | null;
+  rateLimitRequests: number | null; rateLimitRemainingRequests: number | null;
+  rateLimitResetRequests: string | null; rateLimitTokens: number | null;
+  rateLimitRemainingTokens: number | null; rateLimitResetTokens: string | null;
+}
+
+export async function getAiStatus(): Promise<{ providers: AiProviderStatus[] }> {
+  const providers: AiProviderStatus[] = [];
+  if (env.GROQ_API_KEY) {
+    let rl: Partial<AiProviderStatus> = {};
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      rl = {
+        rateLimitRequests: Number(res.headers.get('x-ratelimit-limit-requests')) || null,
+        rateLimitRemainingRequests: Number(res.headers.get('x-ratelimit-remaining-requests')) || null,
+        rateLimitResetRequests: res.headers.get('x-ratelimit-reset-requests'),
+        rateLimitTokens: Number(res.headers.get('x-ratelimit-limit-tokens')) || null,
+        rateLimitRemainingTokens: Number(res.headers.get('x-ratelimit-remaining-tokens')) || null,
+        rateLimitResetTokens: res.headers.get('x-ratelimit-reset-tokens'),
+      };
+    } catch { /* timeout */ }
+    providers.push({ name: 'Groq', configured: true, model: cachedGroqModel, modelCachedAt: groqModelCachedAt || null, nextRefreshAt: groqModelCachedAt ? groqModelCachedAt + GROQ_MODEL_CACHE_TTL : null, rateLimitRequests: rl.rateLimitRequests ?? null, rateLimitRemainingRequests: rl.rateLimitRemainingRequests ?? null, rateLimitResetRequests: rl.rateLimitResetRequests ?? null, rateLimitTokens: rl.rateLimitTokens ?? null, rateLimitRemainingTokens: rl.rateLimitRemainingTokens ?? null, rateLimitResetTokens: rl.rateLimitResetTokens ?? null });
+  } else {
+    providers.push({ name: 'Groq', configured: false, model: null, modelCachedAt: null, nextRefreshAt: null, rateLimitRequests: null, rateLimitRemainingRequests: null, rateLimitResetRequests: null, rateLimitTokens: null, rateLimitRemainingTokens: null, rateLimitResetTokens: null });
+  }
+  providers.push({ name: 'NVIDIA NIM', configured: !!env.NVIDIA_NIM_API_KEY, model: env.NVIDIA_NIM_API_KEY ? env.NVIDIA_NIM_MODEL : null, modelCachedAt: null, nextRefreshAt: null, rateLimitRequests: null, rateLimitRemainingRequests: null, rateLimitResetRequests: null, rateLimitTokens: null, rateLimitRemainingTokens: null, rateLimitResetTokens: null });
+  return { providers };
+}
+
 // סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
 async function getProviders(): Promise<AiProvider[]> {
   const list: AiProvider[] = [];

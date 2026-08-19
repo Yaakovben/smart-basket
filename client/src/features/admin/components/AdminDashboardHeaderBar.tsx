@@ -6,6 +6,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
 import { ConnectionStatusIcon } from '../../../global/components';
 
@@ -19,13 +20,14 @@ interface AdminDashboardHeaderBarProps {
   onOpenFaith: () => void;
   onOpenPriceSync: () => void;
   onOpenPush: () => void;
+  onOpenAiStatus: () => void;
   onRefresh: () => void;
 }
 
-// שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים (DB, חיזוק יומי, מחירים, push, רענון)
+// שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים (DB, חיזוק יומי, מחירים, push, AI, רענון)
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle, isRefreshing,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenPush, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenPush, onOpenAiStatus, onRefresh,
 }: AdminDashboardHeaderBarProps) => (
   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -49,6 +51,9 @@ export const AdminDashboardHeaderBar = ({
       </Box>
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעת push" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
+      </Box>
+      <Box onClick={onOpenAiStatus} role="button" tabIndex={0} aria-label="מצב AI" sx={headerIconButtonSx(44)}>
+        <SmartToyIcon sx={{ fontSize: 26 }} />
       </Box>
       <Box onClick={onRefresh} role="button" tabIndex={0} sx={headerIconButtonSx(44)}>
         <RefreshIcon sx={{
