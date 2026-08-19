@@ -18,6 +18,7 @@ import { env } from '../config/environment';
 import { AppError } from '../errors';
 import { getUserInsights } from './insights.service';
 import { ListDAL } from '../dal/list.dal';
+import { Product } from '../models';
 
 interface AiProvider {
   name: string;
@@ -125,21 +126,43 @@ export function invalidateAssistantContext(userId: string): void {
   contextCache.delete(userId);
 }
 
+interface ListWithProducts {
+  name: string;
+  icon?: string;
+  items: { name: string; quantity: number; unit: string; isPurchased: boolean }[];
+}
+
 // תמצות תובנות המשתמש לטקסט קצר וקריא ל-LLM - לא שולחים את כל אובייקט
 // ה-InsightsData הגולמי (ענק, ברובו לא רלוונטי לשיחה, מכביד על ה-context).
-function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>, listNames: string[]): string {
+function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>, lists: ListWithProducts[]): string {
   const {
     stats, topProducts, categoryBreakdown, spending, shoppingFrequency, forgotten, upcomingNeeds,
     shoppingScore, shoppingPersonality, streaks, monthComparison, anomalies, groupStats,
   } = insights;
 
-  if (stats.totalProducts === 0) {
-    return 'למשתמש הזה אין עדיין נתוני קנייה (רשימות ריקות או חדש באפליקציה).';
+  const lines: string[] = [];
+
+  // תוכן הרשימות הנוכחי — מה יש ממש ברשימה עכשיו
+  if (lists.length > 0) {
+    lines.push('תוכן הרשימות הנוכחי:');
+    for (const list of lists) {
+      const title = `${list.icon || ''} ${list.name}`.trim();
+      if (list.items.length === 0) {
+        lines.push(`  📋 "${title}": ריקה`);
+      } else {
+        const itemLines = list.items.map(i => {
+          const qty = i.quantity !== 1 ? ` x${i.quantity} ${i.unit}` : '';
+          return `    ${i.isPurchased ? '✅' : '⬜'} ${i.name}${qty}`;
+        });
+        lines.push(`  📋 "${title}":`);
+        lines.push(...itemLines);
+      }
+    }
   }
 
-  const lines: string[] = [];
-  if (listNames.length > 0) {
-    lines.push(`הרשימות של המשתמש: ${listNames.join(', ')}.`);
+  if (stats.totalProducts === 0) {
+    lines.push('אין עדיין נתוני קנייה היסטוריים (משתמש חדש או רשימות ריקות).');
+    return lines.join('\n');
   }
   lines.push(`סה"כ ${stats.totalProducts} מוצרים ב-${stats.totalLists} רשימות, ${stats.completionRate}% הושלמו. היום הכי פעיל: ${stats.mostActiveDay}.`);
   lines.push(`ציון קנייה: ${shoppingScore}/100. פרופיל קונה: ${shoppingPersonality.description}.`);
@@ -242,8 +265,18 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
         getUserInsights(userId, { includeSpending: true }),
         ListDAL.findUserLists(userId),
       ]);
-      const listNames = lists.map(l => `${l.icon || ''} ${l.name}`.trim());
-      userContext = buildUserContext(insights, listNames);
+      const listIds = lists.map(l => l._id);
+      const products = await Product.find({ listId: { $in: listIds } }, 'listId name quantity unit isPurchased').lean();
+      const productsByList = new Map(lists.map(l => [l._id.toString(), [] as typeof products]));
+      for (const p of products) productsByList.get(p.listId.toString())?.push(p);
+      const listsWithProducts: ListWithProducts[] = lists.map(l => ({
+        name: l.name,
+        icon: l.icon,
+        items: (productsByList.get(l._id.toString()) ?? []).map(p => ({
+          name: p.name, quantity: p.quantity, unit: p.unit, isPurchased: p.isPurchased,
+        })),
+      }));
+      userContext = buildUserContext(insights, listsWithProducts);
     } catch (err) {
       logger.warn('aiAssistant: failed to fetch user insights for context, continuing without it: %s', (err as Error).message);
       userContext = 'לא ניתן היה לטעון את נתוני המשתמש כרגע.';
@@ -255,7 +288,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   const body = {
     messages: [systemMessage, ...trimmedHistory],
     temperature: 0.6,
-    max_tokens: 400,
+    max_tokens: 800,
     stream: true,
   };
 
