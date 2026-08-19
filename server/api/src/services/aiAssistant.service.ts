@@ -74,6 +74,11 @@ async function resolveGroqModel(apiKey: string): Promise<string> {
   return cachedGroqModel;
 }
 
+/** נקרא בעת עליית השרת — ממלא את cache המודל ברקע לפני שמשתמש ישאל */
+export function warmGroqModel(): void {
+  if (env.GROQ_API_KEY) resolveGroqModel(env.GROQ_API_KEY).catch(() => {});
+}
+
 // סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
 async function getProviders(): Promise<AiProvider[]> {
   const list: AiProvider[] = [];
