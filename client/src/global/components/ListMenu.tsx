@@ -30,6 +30,7 @@ interface ListMenuProps {
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
+  scanListIsNew?: boolean;
   stopPropagation?: boolean;
 }
 
@@ -50,6 +51,7 @@ export const ListMenu = memo(({
   hasProducts = false,
   onLeave,
   onScanList,
+  scanListIsNew = false,
   stopPropagation = false
 }: ListMenuProps) => {
   const { t } = useSettings();
@@ -95,8 +97,18 @@ export const ListMenu = memo(({
       {onScanList && (
         <MenuItem onClick={() => { onClose(); onScanList(); }} sx={menuItemSx}>
           <DocumentScannerIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-          <Typography sx={menuLabelSx}>
+          <Typography sx={{ ...menuLabelSx, display: 'flex', alignItems: 'center', gap: 0.75 }}>
             {t('scanShoppingListMenuItem')}
+            {scanListIsNew && (
+              <Box component="span" sx={{
+                px: 0.7, py: 0.1, borderRadius: '999px',
+                background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+                color: 'white', fontSize: 9.5, fontWeight: 800, lineHeight: 1.5,
+                letterSpacing: 0.2,
+              }}>
+                חדש
+              </Box>
+            )}
           </Typography>
         </MenuItem>
       )}
