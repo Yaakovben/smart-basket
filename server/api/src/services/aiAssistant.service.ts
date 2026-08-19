@@ -42,7 +42,7 @@ function scoreModel(id: string): number {
 
 let cachedGroqModel: string | null = null;
 let groqModelCachedAt = 0;
-const GROQ_MODEL_CACHE_TTL = 10 * 60 * 1000;
+const GROQ_MODEL_CACHE_TTL = 60 * 60 * 1000;
 
 async function resolveGroqModel(apiKey: string): Promise<string> {
   const now = Date.now();
@@ -79,7 +79,7 @@ export function warmGroqModel(): void {
   if (!env.GROQ_API_KEY) return;
   resolveGroqModel(env.GROQ_API_KEY).catch(() => {});
   // מרענן לפני שה-cache פג — המשתמש תמיד מקבל תשובה ממה שכבר בcache
-  setInterval(() => resolveGroqModel(env.GROQ_API_KEY!).catch(() => {}), 9 * 60 * 1000);
+  setInterval(() => resolveGroqModel(env.GROQ_API_KEY!).catch(() => {}), 60 * 60 * 1000);
 }
 
 // סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
