@@ -32,7 +32,11 @@ export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHead
             {title}
           </Typography>
         </Box>
-        <Box sx={{ width: 36, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+        {/* z-index מעל ה-BetaRibbon (zIndex:3) - בעברית (RTL) הריבון "top-left"
+            יושב פיזית באותו צד שאליו נופל הריבוע הזה בשורת ה-flex, ובלי
+            position+zIndex מפורשים כאן הריבון (עם ה-zIndex המפורש שלו) מצייר
+            מעל אייקון החיבור ומסתיר אותו. */}
+        <Box sx={{ width: 36, flexShrink: 0, display: 'flex', justifyContent: 'flex-end', position: 'relative', zIndex: 4 }}>
           <ConnectionStatusIcon />
         </Box>
       </Box>

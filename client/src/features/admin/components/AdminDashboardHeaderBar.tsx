@@ -56,7 +56,11 @@ export const AdminDashboardHeaderBar = ({
           animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
         }} />
       </Box>
-      <ConnectionStatusIcon />
+      {/* z-index גבוה משלו כדי שיישאר תמיד מעל שאר אייקוני הכותרת/רקע דקורטיבי,
+          באותו דפוס כמו התיקון ב-InsightsHeader */}
+      <Box sx={{ position: 'relative', zIndex: 4 }}>
+        <ConnectionStatusIcon />
+      </Box>
     </Box>
   </Box>
 );
