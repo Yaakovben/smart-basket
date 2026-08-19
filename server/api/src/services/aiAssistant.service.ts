@@ -26,33 +26,28 @@ interface AiProvider {
   model: string;
 }
 
-// מודלים מועדפים בסדר עדיפות — הראשון הזמין יבחר אוטומטית.
-// מעודכן ידנית רק כשרוצים לשנות עדיפויות, לא כשמודל נעלם.
-const GROQ_PREFERRED_MODELS = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
-  'openai/gpt-oss-120b',
-  'openai/gpt-oss-20b',
-  'qwen/qwen3.6-27b',
-  'mixtral-8x7b-32768',
-];
+// מודלים שלא מתאימים לטקסט — מסוננים אוטומטית
+const MODEL_BLOCKLIST = ['whisper', 'guard', 'tts', 'embed', 'vision', 'audio', 'speech'];
+
+// מחרוזות שמעידות על מודל גדול — משמשות לדירוג
+const SIZE_HINTS = ['405b', '70b', '120b', '72b', '65b', '34b', '27b', '32b', '20b', '13b', '8b', '7b'];
+
+function scoreModel(id: string): number {
+  const lower = id.toLowerCase();
+  if (MODEL_BLOCKLIST.some(b => lower.includes(b))) return -1;
+  const sizeIdx = SIZE_HINTS.findIndex(s => lower.includes(s));
+  // מודל גדול יותר = ציון גבוה יותר (SIZE_HINTS ממויין מגדול לקטן)
+  return sizeIdx === -1 ? 0 : SIZE_HINTS.length - sizeIdx;
+}
 
 let cachedGroqModel: string | null = null;
 let groqModelCachedAt = 0;
-const GROQ_MODEL_CACHE_TTL = 10 * 60 * 1000; // 10 דקות
+const GROQ_MODEL_CACHE_TTL = 10 * 60 * 1000;
 
 async function resolveGroqModel(apiKey: string): Promise<string> {
   const now = Date.now();
-  // החזר מהcache אם טרי
-  if (cachedGroqModel && now - groqModelCachedAt < GROQ_MODEL_CACHE_TTL) {
-    return cachedGroqModel;
-  }
-  // אם יש הגדרה ידנית ב-env — השתמש בה בלי לבדוק
-  if (env.GROQ_MODEL && env.GROQ_MODEL !== 'openai/gpt-oss-120b' && env.GROQ_MODEL !== 'llama-3.3-70b-versatile') {
-    cachedGroqModel = env.GROQ_MODEL;
-    groqModelCachedAt = now;
-    return cachedGroqModel;
-  }
+  if (cachedGroqModel && now - groqModelCachedAt < GROQ_MODEL_CACHE_TTL) return cachedGroqModel;
+
   try {
     const res = await fetch('https://api.groq.com/openai/v1/models', {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -60,19 +55,20 @@ async function resolveGroqModel(apiKey: string): Promise<string> {
     });
     if (res.ok) {
       const data = await res.json() as { data: { id: string }[] };
-      const available = new Set(data.data.map((m: { id: string }) => m.id));
-      const chosen = GROQ_PREFERRED_MODELS.find(m => available.has(m));
-      if (chosen) {
-        cachedGroqModel = chosen;
+      const best = data.data
+        .map(m => ({ id: m.id, score: scoreModel(m.id) }))
+        .filter(m => m.score >= 0)
+        .sort((a, b) => b.score - a.score)[0];
+      if (best) {
+        cachedGroqModel = best.id;
         groqModelCachedAt = now;
-        logger.info('Groq auto-selected model: %s', chosen);
-        return chosen;
+        logger.info('Groq auto-selected model: %s (score %d)', best.id, best.score);
+        return cachedGroqModel;
       }
     }
   } catch (e) {
-    logger.warn('Groq model discovery failed, falling back to env default: %s', (e as Error).message);
+    logger.warn('Groq model discovery failed: %s', (e as Error).message);
   }
-  // fallback לברירת מחדל
   cachedGroqModel = env.GROQ_MODEL;
   groqModelCachedAt = now;
   return cachedGroqModel;
