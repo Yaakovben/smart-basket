@@ -70,6 +70,18 @@ export const ListHeader = memo(({
   const [showMenuNewBadge, setShowMenuNewBadge] = useState(
     () => !!onScanList && safeStorage.get('sb_scanlist_menu_seen') !== 'true'
   );
+  // תג "חדש" נוסף, ממוקד יותר - יושב ממש על שורת "סריקת רשימה" בתוך התפריט,
+  // ונעלם רק כשהמשתמש בפועל לוחץ עליה (לא רק פותח את התפריט).
+  const [showScanItemNewBadge, setShowScanItemNewBadge] = useState(
+    () => !!onScanList && safeStorage.get('sb_scanlist_used') !== 'true'
+  );
+  const handleScanList = useCallback(() => {
+    if (showScanItemNewBadge) {
+      setShowScanItemNewBadge(false);
+      safeStorage.set('sb_scanlist_used', 'true');
+    }
+    onScanList?.();
+  }, [showScanItemNewBadge, onScanList]);
   const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(e.currentTarget);
     if (showMenuNewBadge) {
@@ -182,9 +194,11 @@ export const ListHeader = memo(({
               <Box
                 aria-hidden="true"
                 sx={{
-                  position: 'absolute', top: 2, insetInlineEnd: 2,
-                  width: 9, height: 9, borderRadius: '50%',
+                  position: 'absolute', top: -6, insetInlineEnd: -8,
+                  px: 0.5, py: 0.1, borderRadius: '999px',
                   bgcolor: '#EF4444', border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
+                  color: 'white', fontSize: 7.5, fontWeight: 800, lineHeight: 1.4,
+                  whiteSpace: 'nowrap',
                   boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
                   animation: 'menuNewBadgePulse 1.8s ease-out infinite',
                   '@keyframes menuNewBadgePulse': {
@@ -193,7 +207,9 @@ export const ListHeader = memo(({
                     '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
                   },
                 }}
-              />
+              >
+                חדש
+              </Box>
             )}
           </IconButton>
         </Box>
@@ -205,7 +221,8 @@ export const ListHeader = memo(({
         mainNotificationsOff={mainNotificationsOff} onToggleMute={onToggleMute}
         onEdit={onEditList} onDelete={onDeleteList} onRefresh={onRefresh}
         onClearList={onClearList} onShoppingMode={onShoppingMode}
-        hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList}
+        hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
+        scanListIsNew={showScanItemNewBadge}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}

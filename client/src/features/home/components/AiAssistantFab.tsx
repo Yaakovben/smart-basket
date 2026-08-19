@@ -113,9 +113,11 @@ export const AiAssistantFab = () => {
           <Box
             aria-hidden="true"
             sx={{
-              position: 'absolute', top: -2, insetInlineEnd: -2,
-              width: 15, height: 15, borderRadius: '50%',
-              bgcolor: '#EF4444', border: '2px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
+              position: 'absolute', top: -8, insetInlineEnd: -10,
+              px: 0.6, py: 0.15, borderRadius: '999px',
+              bgcolor: '#EF4444', border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
+              color: 'white', fontSize: 8.5, fontWeight: 800, lineHeight: 1.4,
+              whiteSpace: 'nowrap',
               boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
               animation: 'aiNewBadgePulse 1.8s ease-out infinite',
               '@keyframes aiNewBadgePulse': {
@@ -124,7 +126,9 @@ export const AiAssistantFab = () => {
                 '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
               },
             }}
-          />
+          >
+            חדש
+          </Box>
         )}
       </Box>
     </>,
