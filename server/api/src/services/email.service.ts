@@ -42,6 +42,15 @@ async function sendSingle(to: string, subject: string, body: string): Promise<vo
       sender: FROM,
       to: [{ email: to }],
       subject,
+      // List-Unsubscribe (RFC 8058) - הסימן היחיד שאנחנו יכולים לתת לספאם
+      // פילטרים בלי דומיין מאומת משלנו (SPF/DKIM/DMARC על gmail.com לא
+      // באפשרותנו - אנחנו לא הבעלים של הדומיין). Gmail/Outlook מציגים
+      // "Unsubscribe" ליד מיילים המונית עם ה-header הזה, ומתייחסים
+      // בחשדנות פחותה למיילים שיש להם דרך הסרה ברורה.
+      headers: {
+        'List-Unsubscribe': `<mailto:${FROM.email}?subject=Unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
       textContent: body,
       htmlContent: `
 <div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
