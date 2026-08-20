@@ -354,7 +354,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   const body = {
     messages: [systemMessage, ...trimmedHistory],
     temperature: 0.6,
-    max_tokens: 500,
+    max_tokens: 700,
     stream: true,
   };
 

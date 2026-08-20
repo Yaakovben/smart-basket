@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
@@ -11,6 +12,7 @@ interface Props {
   loading: boolean;
   refreshing: boolean;
   lastFetchAt: Date | null;
+  refreshError: string | null;
   onRefresh: () => void;
   onClose: () => void;
 }
@@ -22,7 +24,7 @@ interface Props {
 // data/loading/refreshing מגיעים מ-useAiStatus שמוחזק פעם אחת ב-AdminDashboard
 // (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
 // את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
-export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, onRefresh, onClose }: Props) => {
+export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, refreshError, onRefresh, onClose }: Props) => {
   return (
     <Box sx={{
       position: 'fixed', inset: 0, zIndex: 2000,
@@ -40,6 +42,20 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
       />
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2, pb: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+        {refreshError && (
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
+            px: 1.5, py: 1, borderRadius: 2,
+            bgcolor: isDark ? 'rgba(239,68,68,0.1)' : '#FEF2F2',
+            border: '1px solid', borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA',
+          }}>
+            <ErrorOutlineIcon sx={{ fontSize: 18, color: '#EF4444', flexShrink: 0 }} />
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: isDark ? '#FCA5A5' : '#B91C1C' }}>
+              {refreshError}
+            </Typography>
+          </Box>
+        )}
+
         {loading && !data && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
             <ShimmerBlock height={160} radius={16} />

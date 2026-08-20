@@ -6,6 +6,7 @@ interface UseAiStatusReturn {
   loading: boolean;
   refreshing: boolean;
   lastFetchAt: Date | null;
+  refreshError: string | null;
   load: () => Promise<void>;
   forceRefresh: () => Promise<void>;
 }
@@ -15,6 +16,10 @@ export const useAiStatus = (): UseAiStatusReturn => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastFetchAt, setLastFetchAt] = useState<Date | null>(null);
+  // חיווי שגיאה לרענון הידני בלבד - טעינה ראשונית (load) כבר מטפלת בכישלון
+  // בשקט (מציגה "לא ניתן לטעון"), אבל רענון ביוזמת המנהל חייב להראות
+  // בבירור שהוא נכשל, אחרת נראה כאילו שום דבר לא קרה בלחיצה על הכפתור.
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,12 +38,14 @@ export const useAiStatus = (): UseAiStatusReturn => {
   // זו האופציה ל"עדכון עכשווי" שהמנהל יכול להפעיל ידנית.
   const forceRefresh = useCallback(async () => {
     setRefreshing(true);
+    setRefreshError(null);
     try {
       const r = await adminApi.refreshAiStatus();
       setData(r);
       setLastFetchAt(new Date());
-    } catch {
-      // נשארים עם הנתונים הקודמים אם הרענון נכשל
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      setRefreshError(status ? `הרענון נכשל (שגיאה ${status})` : 'הרענון נכשל - בדוק חיבור לשרת');
     } finally {
       setRefreshing(false);
     }
@@ -46,5 +53,5 @@ export const useAiStatus = (): UseAiStatusReturn => {
 
   useEffect(() => { load(); }, [load]);
 
-  return { data, loading, refreshing, lastFetchAt, load, forceRefresh };
+  return { data, loading, refreshing, lastFetchAt, refreshError, load, forceRefresh };
 };
