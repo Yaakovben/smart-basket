@@ -72,17 +72,36 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     setLoading(true);
 
     const prompt = buildAnalysisPrompt(listName, productNames);
-    aiAssistantApi.chatStream(
-      [{ role: 'user', content: prompt }],
-      (delta) => {
+    const MAX_ATTEMPTS = 2;
+
+    // מודל ה-reasoning (gpt-oss) לפעמים "נכשל" חד-פעמית - stream ריק/מתנתק
+    // באמצע בלי סיבה עקבית. נסיון שקט נוסף (בלי להראות שגיאה קודם) פותר את
+    // רוב המקרים במקום להציג "נסה שוב" על תקלה שבפועל הייתה חולפת. 503
+    // (לא מוגדר בשרת) ו-429 (מכסה נגמרה) הם תקלות אמיתיות שנסיון נוסף לא
+    // יעזור להן - לא חוזרים עליהן.
+    const runAnalysis = async (attemptNum: number): Promise<void> => {
+      if (attemptNum > 1) {
+        setText('');
+        setFallback(false);
+      }
+      try {
+        await aiAssistantApi.chatStream(
+          [{ role: 'user', content: prompt }],
+          (delta) => {
+            setLoading(false);
+            setText(prev => prev + delta);
+          },
+          () => setFallback(true)
+        );
+        setDone(true);
         setLoading(false);
-        setText(prev => prev + delta);
-      },
-      () => setFallback(true)
-    )
-      .then(() => setDone(true))
-      .catch((err) => {
+      } catch (err) {
         const status = err instanceof AiAssistantStreamError ? err.status : undefined;
+        const isRetryable = status !== 503 && status !== 429;
+        if (isRetryable && attemptNum < MAX_ATTEMPTS) {
+          await runAnalysis(attemptNum + 1);
+          return;
+        }
         const minutes = err instanceof AiAssistantStreamError ? minutesUntil(err.resetAt) : null;
         const message = status === 503
           ? t('aiNotConfigured')
@@ -91,8 +110,9 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           : t('aiGenericError');
         setError(message);
         setLoading(false);
-      })
-      .finally(() => setLoading(false));
+      }
+    };
+    runAnalysis(1);
 
     setPriceLoading(true);
     priceComparisonApi.getComparison(listId)

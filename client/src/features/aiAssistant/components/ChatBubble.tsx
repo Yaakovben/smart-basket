@@ -79,7 +79,7 @@ export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
           bgcolor: entry.error
             ? (isDark ? 'rgba(239,68,68,0.15)' : '#FEF2F2')
             : isUser
-            ? (isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6')
+            ? (isDark ? 'rgba(255,255,255,0.14)' : '#E2E5EA')
             : undefined,
           background: !isUser && !entry.error ? 'linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)' : undefined,
           border: entry.error ? '1px solid' : 'none',
