@@ -2,7 +2,7 @@ import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment }
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
-import { ClearableTextField, ConnectionStatusIcon } from '../../../global/components';
+import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -107,7 +107,6 @@ export const HomeHeader = ({
           </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <ConnectionStatusIcon />
           {/* useReliableTap: onPointerUp + blur במקום onClick רגיל - אותו
               דפוס בדיוק כמו ב-HomeBottomNav, שם onClick רגיל התגלה כלא אמין
               (לפעמים לא מגיב) על חלק מהמכשירים: focus שנשאר תקוע אחרי לחיצה

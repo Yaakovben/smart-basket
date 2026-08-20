@@ -7,7 +7,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
-import { ConnectionStatusIcon, AiAssistantIcon } from '../../../global/components';
+import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 import { getAiHealth, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
 
@@ -75,11 +75,6 @@ export const AdminDashboardHeaderBar = ({
           fontSize: 26,
           animation: isRefreshing ? `${spin} 1s linear infinite` : 'none',
         }} />
-      </Box>
-      {/* z-index גבוה משלו כדי שיישאר תמיד מעל שאר אייקוני הכותרת/רקע דקורטיבי,
-          באותו דפוס כמו התיקון ב-InsightsHeader */}
-      <Box sx={{ position: 'relative', zIndex: 4 }}>
-        <ConnectionStatusIcon />
       </Box>
     </Box>
   </Box>

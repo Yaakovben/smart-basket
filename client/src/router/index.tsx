@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
@@ -493,9 +493,12 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      {/* אין רכיב חיבור נפרד כאן - כשל fetch מדווח דרך setFetchIssue() (למעלה)
-          ל-OfflineBanner הגלובלי היחיד (mounted תמיד ב-App.tsx, קבוע מתחת
-          לפעמון בכל עמוד), שמזהה גם את זה וגם ניתוק socket. ראו OfflineBanner.tsx. */}
+      {/* אייקון חיבור גלובלי יחיד - mounted כאן פעם אחת בלבד לכל האפליקציה
+          (לא בתוך כל כותרת עמוד בנפרד), כך שהוא תמיד באותו מיקום פיזי קבוע
+          על גבי כל דף, כולל דפים שלא הטמיעו אותו קודם. כשל fetch מדווח
+          דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
+          useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
+      <ConnectionStatusIcon />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>
