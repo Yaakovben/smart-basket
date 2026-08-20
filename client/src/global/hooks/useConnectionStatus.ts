@@ -1,12 +1,13 @@
 // מצב חיבור גלובלי (מכשיר offline / socket מנותק) - state יחיד ברמת המודול,
-// לא state מקומי שנוצר מחדש בכל mount. ConnectionStatusIcon מוצג בכותרת
-// של כל דף (בית, רשימה, תובנות, מנהל...), וכל מעבר ניווט ממחזר-mounting
-// אותו. לפני התיקון, ה-state/הטיימרים/המאזינים נוצרו מחדש בכל hook call -
-// כלומר גם ב-timer של "trying" (8 שניות) וגם "reconnecting" (4 שניות)
-// התאפסו בכל מעבר דף, ומצב "אין קליטה" שכבר זוהה בעמוד A היה נעלם ומתחיל
-// מחדש להמתין בעמוד B, במקום פשוט להמשיך להציג את המצב האמיתי שכבר נקבע.
-// עכשיו האתחול (מאזיני online/offline/socket) רץ פעם אחת בלבד ברמת המודול
-// (כמו ה-heartbeat ב-crashLog.ts), וכל hook רק נרשם ל-snapshot המשותף.
+// לא state מקומי שנוצר מחדש בכל mount. בעבר ConnectionStatusIcon היה
+// מוטמע בנפרד בתוך כותרת כל דף (בית, רשימה, תובנות, מנהל...), וכל מעבר
+// ניווט ממחזר-mounting אותו: ה-state/הטיימרים/המאזינים נוצרו מחדש בכל
+// קריאה ל-hook - גם ב-timer של "trying" (8 שניות) וגם "reconnecting"
+// (4 שניות) התאפסו בכל מעבר דף, ומצב "אין קליטה" שכבר זוהה בעמוד A היה
+// נעלם ומתחיל מחדש להמתין בעמוד B. עכשיו גם ה-hook הזה singleton וגם
+// ConnectionStatusIcon עצמו mounted פעם אחת בלבד גלובלית (ראו AppRouter) -
+// האתחול (מאזיני online/offline/socket) רץ פעם אחת ברמת המודול (כמו
+// ה-heartbeat ב-crashLog.ts), וכל hook רק נרשם ל-snapshot המשותף.
 import { useSyncExternalStore } from 'react';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';

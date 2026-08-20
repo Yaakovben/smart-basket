@@ -2,7 +2,6 @@ import { Box, Typography, IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BetaRibbon } from '../../priceComparison';
 import { COMMON_STYLES } from '../../../global/helpers';
-import { ConnectionStatusIcon } from '../../../global/components';
 
 interface InsightsHeaderProps {
   isDark: boolean;
@@ -32,13 +31,10 @@ export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHead
             {title}
           </Typography>
         </Box>
-        {/* z-index מעל ה-BetaRibbon (zIndex:3) - בעברית (RTL) הריבון "top-left"
-            יושב פיזית באותו צד שאליו נופל הריבוע הזה בשורת ה-flex, ובלי
-            position+zIndex מפורשים כאן הריבון (עם ה-zIndex המפורש שלו) מצייר
-            מעל אייקון החיבור ומסתיר אותו. */}
-        <Box sx={{ width: 36, flexShrink: 0, display: 'flex', justifyContent: 'flex-end', position: 'relative', zIndex: 4 }}>
-          <ConnectionStatusIcon />
-        </Box>
+        {/* מרווח סימטרי לכפתור החזרה - שומר על כותרת ממורכזת באמת.
+            אייקון החיבור עבר ל-overlay גלובלי (ConnectionStatusIcon,
+            mounted פעם אחת ב-AppRouter) ולא צריך יותר סלוט כאן. */}
+        <Box sx={{ width: 36, flexShrink: 0 }} />
       </Box>
     </Box>
   );
