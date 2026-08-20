@@ -195,6 +195,15 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           </Typography>
         )}
 
+        {/* מצב קצה: הבקשה הצליחה (done, אין error) אבל שום טקסט לא חזר -
+            בלי זה הדראוור פשוט "מדלג" ישר לכרטיס המחיר בלי שום הסבר,
+            ונראה כאילו הניתוח נעלם/לא רץ בכלל. */}
+        {done && !text && !error && (
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', py: 1.5 }}>
+            לא התקבל ניתוח טקסטואלי הפעם - נסה שוב מאוחר יותר. הערכת המחיר למטה עדיין מדויקת.
+          </Typography>
+        )}
+
         {text && (
           <Box sx={{
             bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'white',

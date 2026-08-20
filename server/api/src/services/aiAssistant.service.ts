@@ -138,6 +138,17 @@ function truncateRaw(msg: string): string {
   return msg.length > RAW_ERROR_MAX_LEN ? `${msg.slice(0, RAW_ERROR_MAX_LEN)}…` : msg;
 }
 
+// מודלי "reasoning" (כמו gpt-oss, שנבחר אוטומטית ע"י resolveGroqModel כי
+// הוא הכי גדול) חושבים "בשקט" לפני שהם פולטים תוכן גלוי - אם כל תקציב
+// ה-max_tokens נאכל על חשיבה פנימית, יכולים לחזור עם תשובה ריקה לגמרי
+// (בלי אף delta) או חתוכה, בלי שום שגיאה שמסבירה למה. reasoning_effort:
+// 'low' (נתמך ב-Groq למשפחת gpt-oss) שומר את רוב התקציב לתשובה בפועל -
+// קריטי לצ'אט/ניתוח שצריך תשובה קצרה וגלויה, לא חשיבה ארוכה מאחורי הקלעים.
+function isReasoningModel(model: string): boolean {
+  const lower = model.toLowerCase();
+  return lower.includes('gpt-oss') || lower.includes('deepseek') || lower.includes('qwq');
+}
+
 // headers סטנדרטיים תואמי-OpenAI ל-rate limit (Groq תומך בהם; NIM לרוב לא -
 // אז מחזיר null וזה בסדר, ה-UI מציג "אין נתונים" במקום להמציא ערך)
 function readRateLimit(headers: Headers): AiProviderRateLimit | null {
@@ -392,6 +403,9 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
+    const providerBody: Record<string, unknown> = { ...body, model: provider.model };
+    if (isReasoningModel(provider.model)) providerBody.reasoning_effort = 'low';
+
     let response: Response;
     try {
       response = await fetch(provider.url, {
@@ -400,7 +414,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
           Authorization: `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...body, model: provider.model }),
+        body: JSON.stringify(providerBody),
         signal: controller.signal,
       });
     } catch (err) {
