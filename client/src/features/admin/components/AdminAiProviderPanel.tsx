@@ -64,8 +64,8 @@ export const AdminAiProviderPanel = ({ provider, isDark }: AdminAiProviderPanelP
           {statRow('מודל פעיל', provider.model ?? '—', isDark)}
           {provider.role === 'primary' && (
             <>
-              {statRow('עודכן לאחרונה', fmtDateTime(provider.modelResolvedAt) ?? '—', isDark)}
-              {statRow('בדיקה הבאה', fmtDateTime(provider.nextModelCheckAt) ?? '—', isDark)}
+              {statRow('המודל נבדק לאחרונה', fmtDateTime(provider.modelResolvedAt) ?? '—', isDark)}
+              {statRow('בדיקה אוטומטית הבאה', fmtDateTime(provider.nextModelCheckAt) ?? '—', isDark)}
             </>
           )}
           {statRow('בקשות שטופלו (מאז עליית השרת)', provider.requestCount.toLocaleString('he-IL'), isDark)}
@@ -91,16 +91,29 @@ export const AdminAiProviderPanel = ({ provider, isDark }: AdminAiProviderPanelP
           )}
 
           {hasError && (
-            <Box sx={{ mt: 1, p: 1.1, borderRadius: 2, bgcolor: isDark ? 'rgba(239,68,68,0.1)' : '#FEF2F2', display: 'flex', gap: 0.75, alignItems: 'flex-start' }}>
-              <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 16, flexShrink: 0, mt: '1px' }} />
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: '#B91C1C' }}>
-                  שגיאה אחרונה {fmtDateTime(provider.lastErrorAt) ? `(${fmtDateTime(provider.lastErrorAt)})` : ''}
-                </Typography>
-                <Typography sx={{ fontSize: 11, color: '#B91C1C', opacity: 0.85, wordBreak: 'break-word' }}>
+            <Box sx={{ mt: 1, p: 1.25, borderRadius: 2, bgcolor: isDark ? 'rgba(239,68,68,0.1)' : '#FEF2F2', border: '1px solid', borderColor: isDark ? 'rgba(239,68,68,0.25)' : '#FECACA' }}>
+              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'flex-start' }}>
+                <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 17, flexShrink: 0, mt: '1px' }} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#B91C1C', opacity: 0.75, mb: 0.15 }}>
+                    שגיאה אחרונה{fmtDateTime(provider.lastErrorAt) ? ` · ${fmtDateTime(provider.lastErrorAt)}` : ''}
+                  </Typography>
+                  {/* הסבר קריא - למה זה כנראה קרה, לא רק קוד שגיאה */}
+                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#B91C1C', lineHeight: 1.4 }}>
+                    {provider.lastErrorReason ?? 'שגיאה לא מזוהה'}
+                  </Typography>
+                </Box>
+              </Box>
+              {/* פרטים טכניים גולמיים - למי שצריך לחפור עמוק יותר */}
+              {provider.lastError && (
+                <Typography sx={{
+                  fontSize: 10, color: '#B91C1C', opacity: 0.65, mt: 0.75, pt: 0.75,
+                  borderTop: '1px solid', borderColor: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.15)',
+                  fontFamily: 'monospace', wordBreak: 'break-word', direction: 'ltr', textAlign: 'left',
+                }}>
                   {provider.lastError}
                 </Typography>
-              </Box>
+              )}
             </Box>
           )}
         </>

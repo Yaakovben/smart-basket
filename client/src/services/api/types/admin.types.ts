@@ -98,6 +98,7 @@ export interface AiProviderStatus {
   requestCount: number;
   lastSuccessAt: string | null;
   lastError: string | null;
+  lastErrorReason: string | null;
   lastErrorAt: string | null;
   rateLimit: AiProviderRateLimit | null;
 }
