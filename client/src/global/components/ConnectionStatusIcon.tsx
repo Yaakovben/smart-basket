@@ -9,9 +9,13 @@ import { WifiFadeIcon } from './icons/WifiFadeIcon';
 const TAP_LABEL_MS = 3000;
 
 // אייקון חיבור גלובלי - overlay יחיד, position:fixed, באותו מיקום פיזי
-// בדיוק (פינה שמאלית עליונה) על גבי כל עמוד באפליקציה. Portal ל-
-// document.body (כמו AiAssistantFab) כדי לעקוף ancestor עם transform/
-// filter שהיה הופך position:fixed ליחסי לאב.
+// בדיוק על גבי כל עמוד באפליקציה - אותו מיקום ועיצוב שהיה במסך הבית
+// (בלי רקע/גלולה משלו, רק האייקון בצבע שמתאר את הבעיה + drop-shadow
+// עדין לקריאות על רקעים בהירים) - לא עיצוב "בטוח" חדש שמתחשב ברקע של
+// כל עמוד. בכוונה עלול להסתיר תוכן בעמודים עם כותרת שונה - זה בסדר,
+// עדיפות לעקביות מיקום/עיצוב על פני "לא להפריע" בכל עמוד לגופו.
+// Portal ל-document.body (כמו AiAssistantFab) כדי לעקוף ancestor עם
+// transform/filter שהיה הופך position:fixed ליחסי לאב.
 //
 // בעבר זה היה רכיב "inline" שכל כותרת עמוד הטמיעה בעצמה בתוך אשכול
 // האייקונים שלה - וכיוון שלכל כותרת פריסה שונה (מספר אייקונים אחר, סדר
@@ -21,8 +25,7 @@ const TAP_LABEL_MS = 3000;
 // לפי איזה עמוד פתוח.
 // מוצג רק כשיש בעיה (online = לא מרנדר כלום).
 export const ConnectionStatusIcon = () => {
-  const { t, settings } = useSettings();
-  const isDark = settings.theme === 'dark';
+  const { t } = useSettings();
   const { phase, pendingCount } = useConnectionStatus();
   const [showLabel, setShowLabel] = useState(false);
   const labelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,9 +50,10 @@ export const ConnectionStatusIcon = () => {
   return createPortal(
     <Box sx={{
       position: 'fixed',
-      // פינה שמאלית עליונה (פיזית, לא RTL-relative) - קבועה בכל עמוד.
-      top: 'calc(env(safe-area-inset-top) + 10px)',
-      left: 12,
+      // פינה שמאלית עליונה (פיזית, לא RTL-relative) - בערך אותו גובה שבו
+      // האייקון ישב בשורת האייקונים של כותרת מסך הבית.
+      top: 'max(56px, calc(env(safe-area-inset-top) + 30px))',
+      left: 16,
       zIndex: 1090,
       display: 'flex', alignItems: 'center',
     }}>
@@ -60,19 +64,16 @@ export const ConnectionStatusIcon = () => {
         aria-label={label}
         sx={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 34, height: 34, borderRadius: '50%',
-          bgcolor: isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(6px)',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-          border: 'none', cursor: 'pointer', p: 0,
+          flexShrink: 0, lineHeight: 0,
+          bgcolor: 'transparent', border: 'none', cursor: 'pointer', p: '4px', m: 0,
           WebkitTapHighlightColor: 'transparent',
         }}
       >
         <Box sx={{ position: 'relative', display: 'flex' }}>
-          <WifiFadeIcon style={{ fontSize: 19, color }} />
+          <WifiFadeIcon style={{ fontSize: 24, color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }} />
           {isOffline && pendingCount > 0 && (
             <Box sx={{
-              position: 'absolute', top: -8, insetInlineEnd: -10,
+              position: 'absolute', top: -6, insetInlineEnd: -9,
               minWidth: 13, height: 13, px: '3px',
               borderRadius: '999px',
               bgcolor: '#EF4444', color: 'white',
