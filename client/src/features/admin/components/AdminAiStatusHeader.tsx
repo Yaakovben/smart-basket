@@ -1,8 +1,8 @@
 import { Box, Typography, IconButton } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import MemoryIcon from '@mui/icons-material/Memory';
 import CloseIcon from '@mui/icons-material/Close';
 import { spin } from '../styles/AdminDashboard.styles';
+import { AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
 
 interface AdminAiStatusHeaderProps {
@@ -28,7 +28,13 @@ export const AdminAiStatusHeader = ({ data, loading, refreshing, lastFetchAt, on
       px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0,
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
-        <MemoryIcon sx={{ color: '#0D9488' }} />
+        <Box sx={{
+          width: 32, height: 32, borderRadius: '10px', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+        }}>
+          <AiAssistantIcon sx={{ color: 'white', fontSize: 16 }} />
+        </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography sx={{ fontSize: 18, fontWeight: 800, lineHeight: 1.1 }}>פרטי AI</Typography>
           {data && (
