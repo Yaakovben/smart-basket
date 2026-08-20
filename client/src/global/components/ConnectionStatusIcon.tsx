@@ -50,11 +50,14 @@ export const ConnectionStatusIcon = () => {
   return createPortal(
     <Box sx={{
       position: 'fixed',
-      // בערך אותו מיקום פיזי שבו האייקון ישב בכותרת מסך הבית - מיד ליד
-      // (מימין ל-, כלומר יותר פנימה מ-) אייקון ההתראות. 16px padding + 44px
-      // כפתור הגדרות + 6px gap + 44px כפתור התראות + 6px gap ≈ 116px מהקצה.
-      top: 'max(56px, calc(env(safe-area-inset-top) + 30px))',
-      left: 106,
+      // גובה מדויק של אייקון ההתראות בכותרת הבית: כפתורי הכותרת גובהם 44px
+      // ומתחילים ב-padding-top של הכותרת עצמה (max(48px, safe-area+12px)),
+      // ה-24px של אייקון החיבור (עם 4px padding = 32px קופסה) ממורכז אנכית
+      // בתוך אותם 44px - +6px מקזז את ההפרש. אופקית: 16px padding + 44px
+      // כפתור הגדרות + 6px gap + 44px כפתור התראות + עוד קצת מרווח מעבר
+      // לצמוד-ממש (במקום 116px המדויק).
+      top: 'max(54px, calc(env(safe-area-inset-top) + 18px))',
+      left: 118,
       zIndex: 1090,
       display: 'flex', alignItems: 'center',
     }}>
