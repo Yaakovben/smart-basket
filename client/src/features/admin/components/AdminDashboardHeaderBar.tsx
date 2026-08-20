@@ -6,11 +6,10 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
-import { ConnectionStatusIcon } from '../../../global/components';
+import { ConnectionStatusIcon, AiAssistantIcon } from '../../../global/components';
 import type { AiStatus } from '../../../services/api/admin.api';
-import { getAiHealth, AI_HEALTH_COLOR, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
+import { getAiHealth, AI_HEALTH_LABEL } from '../helpers/aiStatusHelpers';
 
 interface AdminDashboardHeaderBarProps {
   isRtl: boolean;
@@ -51,20 +50,18 @@ export const AdminDashboardHeaderBar = ({
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
+      {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ) + כיתוב "AI" מעליו -
+          בלי חיווי צבע על האייקון עצמו, כי הסטטוס כבר מוצג בפירוט בפאנל
+          שנפתח בלחיצה. */}
       <Box
         onClick={onOpenAiStatus} role="button" tabIndex={0}
         aria-label={`פרטי AI - ${AI_HEALTH_LABEL[aiHealth]}`}
-        sx={{ ...headerIconButtonSx(44), position: 'relative' }}
+        sx={{ ...headerIconButtonSx(44), flexDirection: 'column', gap: 0.2 }}
       >
-        <SmartToyOutlinedIcon sx={{ fontSize: 26 }} />
-        {/* נקודת סטטוס חיה - ירוק תקין, כתום על גיבוי, אדום מושבת - נגזרת
-            מ-/admin/ai-status האמיתי, לא סתם דקורציה */}
-        <Box sx={{
-          position: 'absolute', bottom: 6, insetInlineEnd: 6,
-          width: 9, height: 9, borderRadius: '50%',
-          bgcolor: AI_HEALTH_COLOR[aiHealth],
-          border: '1.5px solid white',
-        }} />
+        <Typography sx={{ fontSize: 8, fontWeight: 800, lineHeight: 1, letterSpacing: 0.3, color: 'inherit' }}>
+          AI
+        </Typography>
+        <AiAssistantIcon sx={{ fontSize: 19 }} />
       </Box>
       <Box onClick={onOpenDbHealth} role="button" tabIndex={0} aria-label="שימוש ב-MongoDB" sx={headerIconButtonSx(44)}>
         <StorageIcon sx={{ fontSize: 26 }} />
