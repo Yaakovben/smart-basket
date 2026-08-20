@@ -51,8 +51,8 @@ export const AdminAiStatusHeader = ({ data, loading, refreshing, lastFetchAt, on
                 </Box>
               )}
               {lastUpdatedText && (
-                <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>
-                  · עודכן {lastUpdatedText}
+                <Typography sx={{ fontSize: 10, color: 'text.disabled' }} title="מתי המסך הזה נטען בפועל - לא בהכרח אותו רגע שבו המודל נבדק, ראו 'נבדק לאחרונה' למטה">
+                  · המסך נטען {lastUpdatedText}
                 </Typography>
               )}
             </Box>

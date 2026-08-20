@@ -64,8 +64,8 @@ export const AdminAiProviderPanel = ({ provider, isDark }: AdminAiProviderPanelP
           {statRow('מודל פעיל', provider.model ?? '—', isDark)}
           {provider.role === 'primary' && (
             <>
-              {statRow('עודכן לאחרונה', fmtDateTime(provider.modelResolvedAt) ?? '—', isDark)}
-              {statRow('בדיקה הבאה', fmtDateTime(provider.nextModelCheckAt) ?? '—', isDark)}
+              {statRow('המודל נבדק לאחרונה', fmtDateTime(provider.modelResolvedAt) ?? '—', isDark)}
+              {statRow('בדיקה אוטומטית הבאה', fmtDateTime(provider.nextModelCheckAt) ?? '—', isDark)}
             </>
           )}
           {statRow('בקשות שטופלו (מאז עליית השרת)', provider.requestCount.toLocaleString('he-IL'), isDark)}
