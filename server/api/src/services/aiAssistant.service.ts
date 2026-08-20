@@ -99,6 +99,7 @@ interface ProviderStats {
   requestCount: number;
   lastSuccessAt: number | null;
   lastError: string | null;
+  lastErrorReason: string | null;
   lastErrorAt: number | null;
   rateLimit: AiProviderRateLimit | null;
 }
@@ -109,10 +110,32 @@ let fallbackCount = 0;
 function getProviderStats(name: string): ProviderStats {
   let s = providerStats.get(name);
   if (!s) {
-    s = { requestCount: 0, lastSuccessAt: null, lastError: null, lastErrorAt: null, rateLimit: null };
+    s = { requestCount: 0, lastSuccessAt: null, lastError: null, lastErrorReason: null, lastErrorAt: null, rateLimit: null };
     providerStats.set(name, s);
   }
   return s;
+}
+
+// הודעת שגיאה גולמית (status code / stack טכני) לא אומרת כלום למנהל -
+// זה מתרגם אותה להסבר קריא בעברית: למה זה כנראה קרה בפועל, לא רק "429".
+// ה-raw נשמר בנפרד (מקוצר) לצורך דיבוג אמיתי מי שצריך את הפרטים הטכניים.
+function classifyError(status: number | null, rawMessage: string): string {
+  if (status === 401 || status === 403) return 'מפתח ה-API נדחה על ידי הספק - כנראה לא תקין או פג תוקף';
+  if (status === 429) return 'המכסה של הספק נגמרה כרגע (Rate Limit) - יחזור לפעול לבד כשהמכסה מתאפסת';
+  if (status && status >= 500) return `שגיאת שרת אצל הספק (קוד ${status}) - כנראה תקלה זמנית בצד שלהם, לא קשורה אלינו`;
+  if (status && status >= 400) return `הבקשה נדחתה על ידי הספק (קוד ${status})`;
+  const lower = rawMessage.toLowerCase();
+  if (lower.includes('abort') || lower.includes('timeout')) return 'הספק לא הגיב תוך 30 שניות (timeout) - כנראה עומס זמני אצלו';
+  if (lower.includes('empty response')) return 'הספק החזיר תשובה ריקה ללא תוכן';
+  if (lower.includes('fetch failed') || lower.includes('network') || lower.includes('enotfound') || lower.includes('econnrefused')) {
+    return 'בעיית רשת - השרת שלנו לא הצליח בכלל להגיע לספק';
+  }
+  return 'שגיאה לא מזוהה - ראה פרטים טכניים למטה';
+}
+
+const RAW_ERROR_MAX_LEN = 300;
+function truncateRaw(msg: string): string {
+  return msg.length > RAW_ERROR_MAX_LEN ? `${msg.slice(0, RAW_ERROR_MAX_LEN)}…` : msg;
 }
 
 // headers סטנדרטיים תואמי-OpenAI ל-rate limit (Groq תומך בהם; NIM לרוב לא -
@@ -384,7 +407,8 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
       clearTimeout(timeoutId);
       lastError = (err as Error).message;
       const stats = getProviderStats(provider.name);
-      stats.lastError = lastError;
+      stats.lastError = truncateRaw(lastError);
+      stats.lastErrorReason = classifyError(null, lastError);
       stats.lastErrorAt = Date.now();
       logger.warn('aiAssistant: request to %s failed, trying next provider if available: %s', provider.name, lastError);
       continue;
@@ -395,7 +419,8 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
       const errText = await response.text().catch(() => '');
       lastError = `${response.status}: ${errText}`;
       const stats = getProviderStats(provider.name);
-      stats.lastError = lastError;
+      stats.lastError = truncateRaw(lastError);
+      stats.lastErrorReason = classifyError(response.status, errText);
       stats.lastErrorAt = Date.now();
       const rl = readRateLimit(response.headers);
       if (rl) stats.rateLimit = rl;
@@ -407,6 +432,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
       lastError = 'empty response body';
       const stats = getProviderStats(provider.name);
       stats.lastError = lastError;
+      stats.lastErrorReason = classifyError(null, lastError);
       stats.lastErrorAt = Date.now();
       logger.warn('aiAssistant: %s returned an empty response, trying next provider if available', provider.name);
       continue;
@@ -416,6 +442,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     stats.requestCount++;
     stats.lastSuccessAt = Date.now();
     stats.lastError = null;
+    stats.lastErrorReason = null;
     stats.lastErrorAt = null;
     const rl = readRateLimit(response.headers);
     if (rl) stats.rateLimit = rl;
@@ -443,6 +470,7 @@ export interface AiProviderStatus {
   requestCount: number;
   lastSuccessAt: string | null;
   lastError: string | null;
+  lastErrorReason: string | null;
   lastErrorAt: string | null;
   rateLimit: AiProviderRateLimit | null;
 }
@@ -475,6 +503,7 @@ export async function getAiStatus(): Promise<AiStatus> {
         requestCount: groqStats.requestCount,
         lastSuccessAt: toIso(groqStats.lastSuccessAt),
         lastError: groqStats.lastError,
+        lastErrorReason: groqStats.lastErrorReason,
         lastErrorAt: toIso(groqStats.lastErrorAt),
         rateLimit: groqStats.rateLimit,
       },
@@ -488,6 +517,7 @@ export async function getAiStatus(): Promise<AiStatus> {
         requestCount: nimStats.requestCount,
         lastSuccessAt: toIso(nimStats.lastSuccessAt),
         lastError: nimStats.lastError,
+        lastErrorReason: nimStats.lastErrorReason,
         lastErrorAt: toIso(nimStats.lastErrorAt),
         rateLimit: nimStats.rateLimit,
       },
