@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { AiAssistantIcon, MemberAvatar } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { renderInlineBold } from '../../../global/helpers';
 import type { User } from '../../../global/types';
 import type { ChatEntry } from '../hooks/useAiAssistantChat';
 
@@ -88,7 +89,7 @@ export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
             fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             color: entry.error ? (isDark ? '#FCA5A5' : '#B91C1C') : isUser ? (isDark ? '#E5E7EB' : 'text.primary') : 'white',
           }}>
-            {entry.content}
+            {isUser ? entry.content : renderInlineBold(entry.content)}
           </Typography>
         </Box>
       </Box>

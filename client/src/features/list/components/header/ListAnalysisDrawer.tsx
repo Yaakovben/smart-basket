@@ -7,6 +7,7 @@ import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
 import { AiAssistantIcon } from '../../../../global/components';
+import { renderInlineBold } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison/services/priceComparison.api';
 import { getCheapestChain } from '../../../priceComparison/helpers/priceComparisonCardHelpers';
@@ -125,23 +126,16 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     });
   };
 
-  // עיבוד טקסט פשוט: **bold** → מודגש, שורות ריקות → רווח
+  // עיבוד טקסט פשוט: **bold** → מודגש (renderInlineBold, משותף עם הצ'אט), שורות ריקות → רווח
   const renderText = (raw: string) => {
-    return raw.split('\n').map((line, i) => {
-      const parts = line.split(/\*\*(.+?)\*\*/g);
-      return (
-        <Typography key={i} component="p" sx={{
-          fontSize: 14.5, lineHeight: 1.75, color: 'text.primary',
-          mb: line.trim() === '' ? 0.5 : 0,
-        }}>
-          {parts.map((part, j) =>
-            j % 2 === 1
-              ? <Box key={j} component="span" sx={{ fontWeight: 800 }}>{part}</Box>
-              : part
-          )}
-        </Typography>
-      );
-    });
+    return raw.split('\n').map((line, i) => (
+      <Typography key={i} component="p" sx={{
+        fontSize: 14.5, lineHeight: 1.75, color: 'text.primary',
+        mb: line.trim() === '' ? 0.5 : 0,
+      }}>
+        {renderInlineBold(line, `${i}-`)}
+      </Typography>
+    ));
   };
 
   return (

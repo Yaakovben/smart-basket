@@ -105,6 +105,7 @@ export const AdminDashboard = () => {
           loading={aiStatus.loading}
           refreshing={aiStatus.refreshing}
           lastFetchAt={aiStatus.lastFetchAt}
+          refreshError={aiStatus.refreshError}
           onRefresh={aiStatus.forceRefresh}
         />
       )}
