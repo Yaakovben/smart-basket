@@ -33,14 +33,17 @@ const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ 
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
-insightsImport(); // prefetch מיידי - יעד ניווט מרכזי, שוקל 451kB ונרצה שיהיה מוכן
 const InsightsPage = lazy(insightsImport);
 
-// prefetch מושהה לזמן סרק: Profile/Settings פחות דחופים מ-Home/List/Insights
+// prefetch מושהה לזמן סרק: Profile/Settings/Insights פחות דחופים מ-Home/List
+// לפתיחת האפליקציה עצמה. Insights הוזז לכאן (היה prefetch מיידי) כי הוא
+// שוקל 451kB (recharts) והיה מתחרה על רוחב פס עם אימות+טעינת רשימות בדיוק
+// בחלון הקריטי של הפתיחה - למרות שהוא לא הדף הראשון שהמשתמש רואה בכלל.
+// עדיין נטען מוקדם מספיק (זמן סרק) שיהיה מוכן כשילחצו על הטאב בפועל.
 if (typeof requestIdleCallback === 'function') {
-  requestIdleCallback(() => { profileImport(); settingsImport(); }, { timeout: 4000 });
+  requestIdleCallback(() => { profileImport(); settingsImport(); insightsImport(); }, { timeout: 4000 });
 } else {
-  setTimeout(() => { profileImport(); settingsImport(); }, 2000);
+  setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
 }
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
