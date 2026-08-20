@@ -50,18 +50,16 @@ export const AdminDashboardHeaderBar = ({
       <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
         <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
-      {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ) + כיתוב "AI" מעליו -
-          בלי חיווי צבע על האייקון עצמו, כי הסטטוס כבר מוצג בפירוט בפאנל
-          שנפתח בלחיצה. */}
+      {/* אותו אייקון AI כמו בכל האפליקציה (כוכבי-נצנוץ), לבן, באותו גודל
+          וסגנון בדיוק כמו שאר אייקוני הכותרת - בלי כיתוב/פריסה שונה שהיה
+          שובר את האחידות של השורה. בלי חיווי צבע על האייקון עצמו, כי
+          הסטטוס כבר מוצג בפירוט בפאנל שנפתח בלחיצה. */}
       <Box
         onClick={onOpenAiStatus} role="button" tabIndex={0}
         aria-label={`פרטי AI - ${AI_HEALTH_LABEL[aiHealth]}`}
-        sx={{ ...headerIconButtonSx(44), flexDirection: 'column', gap: 0.2 }}
+        sx={headerIconButtonSx(44)}
       >
-        <Typography sx={{ fontSize: 8, fontWeight: 800, lineHeight: 1, letterSpacing: 0.3, color: 'inherit' }}>
-          AI
-        </Typography>
-        <AiAssistantIcon sx={{ fontSize: 19 }} />
+        <AiAssistantIcon sx={{ fontSize: 26 }} />
       </Box>
       <Box onClick={onOpenDbHealth} role="button" tabIndex={0} aria-label="שימוש ב-MongoDB" sx={headerIconButtonSx(44)}>
         <StorageIcon sx={{ fontSize: 26 }} />
