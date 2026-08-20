@@ -26,13 +26,24 @@ interface SessionLog {
 let entries: LogEntry[] = [];
 let sessionStart = Date.now();
 
+// cache בזיכרון של ההיסטוריה המפוענחת - נמנע מ-JSON.parse מחדש של כל
+// ההיסטוריה (עד 8 סשנים × 150 שורות) בכל קריאה בודדת ל-diagLog. לפני
+// התיקון persist() קראה מ-localStorage ופענחה מחדש בכל קריאה, כולל
+// ה-heartbeat כל 1.5 שניות לכל אורך חיי הסשן, ובכמה קריאות diagLog
+// שרצות באופן סינכרוני בדיוק בחלון הקריטי של עליית האפליקציה (module
+// eval, לפני/אחרי render()). ה-write ל-localStorage עצמו נשאר סינכרוני
+// בכל קריאה (זו הערבות ל"שרד קריסה"), רק ה-read מוזז ל-cache חד-פעמי.
+let cachedHistory: SessionLog[] | null = null;
+
 function readHistory(): SessionLog[] {
+  if (cachedHistory) return cachedHistory;
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
+    cachedHistory = raw ? JSON.parse(raw) : [];
   } catch {
-    return [];
+    cachedHistory = [];
   }
+  return cachedHistory!;
 }
 
 function persist() {
@@ -44,6 +55,7 @@ function persist() {
     if (idx >= 0) history[idx] = current;
     else history.push(current);
     const trimmed = history.slice(-MAX_SESSIONS);
+    cachedHistory = trimmed;
     localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
   } catch { /* quota/blocked - לא קריטי, עדיין יש console.log */ }
 }
@@ -62,6 +74,9 @@ export function getSessionHistory(): SessionLog[] {
 
 export function clearSessionHistory(): void {
   try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
+  // מאפסים גם את ה-cache - אחרת diagLog הבא היה מחזיר את ההיסטוריה הישנה
+  // מהזיכרון ומחייה אותה בחזרה ל-localStorage בכתיבה הבאה.
+  cachedHistory = null;
 }
 
 /** רישום אבחון - console.log רגיל + שמירה סינכרונית ל-localStorage */

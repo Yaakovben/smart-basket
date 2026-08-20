@@ -115,15 +115,16 @@ export const AiAssistantFab = () => {
             sx={{
               position: 'absolute', top: -8, insetInlineEnd: -10,
               px: 0.6, py: 0.15, borderRadius: '999px',
-              bgcolor: '#EF4444', border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
               color: 'white', fontSize: 8.5, fontWeight: 800, lineHeight: 1.4,
               whiteSpace: 'nowrap',
-              boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
+              boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
               animation: 'aiNewBadgePulse 1.8s ease-out infinite',
               '@keyframes aiNewBadgePulse': {
-                '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
-                '70%': { boxShadow: '0 0 0 6px rgba(239,68,68,0)' },
-                '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
+                '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
+                '70%': { boxShadow: '0 0 0 6px rgba(139,92,246,0)' },
+                '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
               },
             }}
           >

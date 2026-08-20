@@ -42,14 +42,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-
     <!--
       חיבור מוקדם לשרת ה-API והסוקט — רץ לפני טעינת ה-bundle כדי שה-TCP/TLS
       handshake יתחיל בזמן שה-JS עדיין נטען. הקוד המקביל ב-main.tsx רץ מאוחר
       מדי (אחרי הערכת ה-bundle) ולא מספיק לבקשה הראשונה של checkAuth.
+      (אין כאן יותר ping ל-/health - השרת רץ על tier בתשלום שתמיד ער,
+      אין sleep/cold-start להתמודד איתו יותר. ה-preconnect לבדו מספיק.)
       %VITE_API_URL% ו-%VITE_SOCKET_URL% מוחלפים ע"י Vite בזמן build;
       בפיתוח מקומי ללא הגדרת env — הסקריפט יוצא בשקט.
     -->

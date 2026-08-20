@@ -14,6 +14,8 @@ import {
   getUserDetails,
   deleteUser,
   getDbHealth,
+  getAiStatusHandler,
+  refreshAiStatusHandler,
 } from '../controllers/admin.controller';
 import { authenticate, isAdmin, validate } from '../middleware';
 import { commonSchemas, adminValidator } from '../validators';
@@ -30,6 +32,8 @@ router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
 router.get('/stats', getStats);
 router.get('/db-health', getDbHealth);
+router.get('/ai-status', getAiStatusHandler);
+router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
 router.delete('/users/:userId', validate({ params: userIdParams }), deleteUser);
 
