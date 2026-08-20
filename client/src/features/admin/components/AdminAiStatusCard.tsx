@@ -1,12 +1,17 @@
 import { Box, Typography } from '@mui/material';
 import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { ShimmerBlock } from '../../../global/components';
-import { useAiStatus } from '../hooks/useAiStatus';
+import type { AiStatus } from '../../../services/api/admin.api';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
 
 interface Props {
   isDark: boolean;
+  data: AiStatus | null;
+  loading: boolean;
+  refreshing: boolean;
+  lastFetchAt: Date | null;
+  onRefresh: () => void;
   onClose: () => void;
 }
 
@@ -14,9 +19,10 @@ interface Props {
 // DbHealthCard. זה מה שמונע את הבאג שבו התוכן גולל *מתחת* לכותרת ולנתוני
 // המכסה שלא מתעדכנים: הכותרת היא flex item קבוע מחוץ לאזור ה-overflow,
 // לא absolute/sticky בתוך אזור גלילה.
-export const AdminAiStatusCard = ({ isDark, onClose }: Props) => {
-  const { data, loading, refreshing, lastFetchAt, forceRefresh } = useAiStatus();
-
+// data/loading/refreshing מגיעים מ-useAiStatus שמוחזק פעם אחת ב-AdminDashboard
+// (לא hook עצמאי כאן) - כך שגם אייקון הסטטוס בכותרת וגם הפאנל הזה חולקים
+// את אותם הנתונים בלי לירות שתי קריאות רשת נפרדות לאותו endpoint.
+export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetchAt, onRefresh, onClose }: Props) => {
   return (
     <Box sx={{
       position: 'fixed', inset: 0, zIndex: 2000,
@@ -29,7 +35,7 @@ export const AdminAiStatusCard = ({ isDark, onClose }: Props) => {
         loading={loading}
         refreshing={refreshing}
         lastFetchAt={lastFetchAt}
-        onRefresh={forceRefresh}
+        onRefresh={onRefresh}
         onClose={onClose}
       />
 

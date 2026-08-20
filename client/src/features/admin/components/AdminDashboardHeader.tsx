@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import type { DashboardStats, UserFilter } from '../types';
+import type { AiStatus } from '../../../services/api/admin.api';
 import { AdminDashboardHeaderBar } from './AdminDashboardHeaderBar';
 import { AdminDashboardStatCards } from './AdminDashboardStatCards';
 
@@ -15,6 +16,7 @@ interface AdminDashboardHeaderProps {
   onOpenFaith: () => void;
   onOpenPriceSync: () => void;
   onOpenAiStatus: () => void;
+  aiStatus: AiStatus | null;
   onOpenPush: () => void;
   onRefresh: () => void;
   userFilter: UserFilter;
@@ -29,7 +31,7 @@ interface AdminDashboardHeaderProps {
 // כותרת הדשבורד: רקע גרדיאנט, שורת ניווט עליונה וכרטיסי סטטיסטיקה לחיצים
 export const AdminDashboardHeader = ({
   isDark, isRtl, title, faithTitle, isRefreshing,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, onOpenPush, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, aiStatus, onOpenPush, onRefresh,
   userFilter, onlineCount, stats, loading, onFilterClick, onSelectAll, t,
 }: AdminDashboardHeaderProps) => (
   <Box
@@ -54,6 +56,7 @@ export const AdminDashboardHeader = ({
       onOpenFaith={onOpenFaith}
       onOpenPriceSync={onOpenPriceSync}
       onOpenAiStatus={onOpenAiStatus}
+      aiStatus={aiStatus}
       onOpenPush={onOpenPush}
       onRefresh={onRefresh}
     />
