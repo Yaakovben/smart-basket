@@ -123,10 +123,6 @@ function showUpdateOverlay() {
 
 handleNewVersion();
 
-// ה-warm-up ping ל-/health (מעיר את שרת Render Free מ-sleep) הוזז ל-
-// index.html - רץ שם *לפני* שה-JS bundle הזה בכלל ירד ונטען, כמה מילישניות
-// קריטיות שמקצרות עוד יותר את ה-cold-start של 30-50 שניות. ראו ההערה שם.
-
 const ThemedApp = () => {
   const { settings } = useSettings();
 

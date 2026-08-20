@@ -46,10 +46,8 @@
       חיבור מוקדם לשרת ה-API והסוקט — רץ לפני טעינת ה-bundle כדי שה-TCP/TLS
       handshake יתחיל בזמן שה-JS עדיין נטען. הקוד המקביל ב-main.tsx רץ מאוחר
       מדי (אחרי הערכת ה-bundle) ולא מספיק לבקשה הראשונה של checkAuth.
-      אותה סיבה בדיוק גורמת ל-ping ל-/health לרוץ כאן ולא ב-App.tsx כמו
-      שהיה קודם: שרת Render Free ישן ל-sleep, וכל מילישנייה שה-ping יוצא
-      מוקדם יותר (כאן - לפני שה-JS bundle בכלל ירד ורץ) מקצרת את ה-cold-start
-      של 30-50 שניות שהמשתמש היה סופג בבקשה האמיתית הראשונה (checkAuth).
+      (אין כאן יותר ping ל-/health - השרת רץ על tier בתשלום שתמיד ער,
+      אין sleep/cold-start להתמודד איתו יותר. ה-preconnect לבדו מספיק.)
       %VITE_API_URL% ו-%VITE_SOCKET_URL% מוחלפים ע"י Vite בזמן build;
       בפיתוח מקומי ללא הגדרת env — הסקריפט יוצא בשקט.
     -->
@@ -71,16 +69,8 @@
             document.head.appendChild(dns);
           } catch (e) { /* URL לא תקין — מתעלמים */ }
         }
-        function pingHealth(url) {
-          if (!url || url.charAt(0) === '%') return;
-          try {
-            var origin = new URL(url).origin;
-            fetch(origin + '/health', { method: 'GET', cache: 'no-store', credentials: 'omit' }).catch(function () {});
-          } catch (e) { /* URL לא תקין — מתעלמים */ }
-        }
         addPreconnect('%VITE_API_URL%');
         addPreconnect('%VITE_SOCKET_URL%');
-        pingHealth('%VITE_API_URL%');
       })();
     </script>
   <!-- רקע טורקיז קבוע + סגנון מסך הטעינה - חייב להיות ב-<head> כדי שיוחל לפני כל רינדור -->
