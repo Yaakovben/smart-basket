@@ -33,10 +33,12 @@ function buildAnalysisPrompt(listName: string, productNames: string[]): string {
   const items = productNames.slice(0, 40).join(', ');
   return (
     `נתח את רשימת הקניות "${listName}" שמכילה: ${items}.\n` +
+    `השתמש בנתוני ההיסטוריה וההרגלים האמיתיים שלי שכבר מופיעים בהקשר (מוצרים שכיחים, מוצרים ששכחתי, קטגוריות לחידוש, הוצאה לפי קטגוריה) - אל תמציא נתונים ואל תכתוב תשובות כלליות שמתאימות לכל רשימה.\n` +
     `ענה בעברית בפורמט קצר ומובנה עם 3 סעיפים בלבד:\n` +
-    `🛒 **סיכום**: קטגוריות עיקריות ומה בולט ברשימה (משפט אחד).\n` +
-    `➕ **מה כדאי להוסיף**: עד 3 מוצרים שכנראה נשכחו לפי ההקשר (שורה קצרה לכל אחד).\n` +
-    `💡 **טיפ לחיסכון**: המלצה אחת ספציפית וישימה.\n` +
+    `🛒 **סיכום**: מה בולט ברשימה הזו ספציפית - קטגוריות עיקריות, כמות חריגה, או קשר להרגלי הקנייה הרגילים שלי (משפט אחד קונקרטי, לא תיאור גנרי).\n` +
+    `➕ **מה כדאי להוסיף**: עד 3 מוצרים ספציפיים שחסרים - קודם בדוק מול המוצרים ששכחתי/קטגוריות לחידוש בהקשר, ורק אם אין התאמה תציע לפי הגיון (שורה קצרה לכל אחד + נימוק קצר).\n` +
+    `💡 **טיפ לחיסכון**: המלצה אחת שמתייחסת ספציפית למוצר או קטגוריה שכן ברשימה הזו (למשל השוואת מחיר לרשת הזולה, כמות, מותג חלופי) - לא טיפ גנרי שמתאים לכל רשימה.\n` +
+    `אם אין מספיק מידע ספציפי לסעיף מסוים - כתוב זאת בקצרה במקום למלא בכלליות.\n` +
     `אל תוסיף כותרות נוספות, אל תסביר את עצמך, רק את 3 הסעיפים.`
   );
 }
@@ -199,6 +201,26 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           </Typography>
         )}
 
+        {text && (
+          <Box sx={{
+            bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'white',
+            borderRadius: '16px',
+            p: 2,
+            mb: 1.5,
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+          }}>
+            {renderText(text)}
+            {!done && (
+              <Box component="span" sx={{
+                display: 'inline-block', width: 8, height: 15, bgcolor: '#14B8A6',
+                borderRadius: 1, ml: 0.5, animation: 'blink 0.8s step-end infinite',
+                '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
+              }} />
+            )}
+          </Box>
+        )}
+
         {/* הערכת מחיר אמיתית - מגיעה ממאגר המחירים הממשלתי, לא ניחוש של ה-AI.
             מוצגת בנפרד וברור מהניתוח הטקסטואלי כדי שלא יתערבבו כמקור אמון.
             המחיר המוצג הוא של הרשת הזולה ביותר (מ-chainTotals) ולא רק אושר עד -
@@ -323,25 +345,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
             </Box>
           );
         })()}
-
-        {text && (
-          <Box sx={{
-            bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'white',
-            borderRadius: '16px',
-            p: 2,
-            border: '1px solid',
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-          }}>
-            {renderText(text)}
-            {!done && (
-              <Box component="span" sx={{
-                display: 'inline-block', width: 8, height: 15, bgcolor: '#14B8A6',
-                borderRadius: 1, ml: 0.5, animation: 'blink 0.8s step-end infinite',
-                '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
-              }} />
-            )}
-          </Box>
-        )}
 
         {/* חיווי עדין - הניתוח הזה הגיע ממודל גיבוי (הספק הראשי נכשל/נגמרה
             לו המכסה). אותו חיווי כמו בצ'אט - ראו ChatBubble.tsx. */}

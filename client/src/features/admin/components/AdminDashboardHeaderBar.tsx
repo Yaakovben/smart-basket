@@ -6,6 +6,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import StorageIcon from '@mui/icons-material/Storage';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import MemoryIcon from '@mui/icons-material/Memory';
 import { headerIconButtonSx, spin } from '../styles/AdminDashboard.styles';
 import { ConnectionStatusIcon } from '../../../global/components';
 
@@ -18,14 +19,17 @@ interface AdminDashboardHeaderBarProps {
   onOpenDbHealth: () => void;
   onOpenFaith: () => void;
   onOpenPriceSync: () => void;
+  onOpenAiStatus: () => void;
   onOpenPush: () => void;
   onRefresh: () => void;
 }
 
-// שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים (DB, חיזוק יומי, מחירים, push, רענון)
+// שורת ניווט עליונה: חזרה, כותרת, וכפתורי כלים. סדר ה-DOM כאן = סדר
+// ויזואלי מימין לשמאל (ראו הערה למטה) - שליחת הודעות תמיד הכי ימני,
+// ואייקון ה-AI תמיד מיד לפניו (משמאלו).
 export const AdminDashboardHeaderBar = ({
   isRtl, title, faithTitle, isRefreshing,
-  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenPush, onRefresh,
+  onBack, onOpenDbHealth, onOpenFaith, onOpenPriceSync, onOpenAiStatus, onOpenPush, onRefresh,
 }: AdminDashboardHeaderBarProps) => (
   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, position: 'relative', zIndex: 1 }}>
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -37,7 +41,14 @@ export const AdminDashboardHeaderBar = ({
       </Typography>
     </Box>
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-      {/* MongoDB - ראשון ב-DOM = ימני קיצוני ב-RTL */}
+      {/* ראשון ב-DOM = ימני קיצוני ב-RTL: שליחת הודעות תמיד הכי ימני,
+          ומיד אחריו (משמאלו) אייקון פרטי ה-AI */}
+      <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעות למשתמשים" sx={headerIconButtonSx(44)}>
+        <CampaignIcon sx={{ fontSize: 26 }} />
+      </Box>
+      <Box onClick={onOpenAiStatus} role="button" tabIndex={0} aria-label="פרטי AI" sx={headerIconButtonSx(44)}>
+        <MemoryIcon sx={{ fontSize: 26 }} />
+      </Box>
       <Box onClick={onOpenDbHealth} role="button" tabIndex={0} aria-label="שימוש ב-MongoDB" sx={headerIconButtonSx(44)}>
         <StorageIcon sx={{ fontSize: 26 }} />
       </Box>
@@ -46,9 +57,6 @@ export const AdminDashboardHeaderBar = ({
       </Box>
       <Box onClick={onOpenPriceSync} role="button" tabIndex={0} aria-label="ניהול מאגר מחירים" sx={headerIconButtonSx(44)}>
         <StorefrontIcon sx={{ fontSize: 26 }} />
-      </Box>
-      <Box onClick={onOpenPush} role="button" tabIndex={0} aria-label="שליחת הודעת push" sx={headerIconButtonSx(44)}>
-        <CampaignIcon sx={{ fontSize: 26 }} />
       </Box>
       <Box onClick={onRefresh} role="button" tabIndex={0} sx={headerIconButtonSx(44)}>
         <RefreshIcon sx={{

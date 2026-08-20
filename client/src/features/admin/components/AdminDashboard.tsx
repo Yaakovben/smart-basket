@@ -12,6 +12,7 @@ import { mergeOnlineWithSelf } from '../helpers/adminDashboardHelpers';
 import { AdminDashboardHeader } from './AdminDashboardHeader';
 import { AdminDashboardContent } from './AdminDashboardContent';
 import { PushBroadcastManager } from './PushBroadcastManager';
+import { AdminAiStatusCard } from './AdminAiStatusCard';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export const AdminDashboard = () => {
   const [faithOpen, setFaithOpen] = useState(false);
   const [priceSyncOpen, setPriceSyncOpen] = useState(false);
   const [dbHealthOpen, setDbHealthOpen] = useState(false);
+  const [aiStatusOpen, setAiStatusOpen] = useState(false);
   const [pushOpen, setPushOpen] = useState(false);
   const {
     activities,
@@ -60,6 +62,7 @@ export const AdminDashboard = () => {
         onOpenDbHealth={() => setDbHealthOpen(true)}
         onOpenFaith={() => setFaithOpen(true)}
         onOpenPriceSync={() => setPriceSyncOpen(true)}
+        onOpenAiStatus={() => setAiStatusOpen(true)}
         onOpenPush={() => setPushOpen(true)}
         onRefresh={handleRefresh}
         userFilter={userFilter}
@@ -89,6 +92,7 @@ export const AdminDashboard = () => {
       {faithOpen && <DailyFaithManager onClose={() => setFaithOpen(false)} />}
       {priceSyncOpen && <PriceSyncManager onClose={() => setPriceSyncOpen(false)} />}
       {dbHealthOpen && <DbHealthCard onClose={() => setDbHealthOpen(false)} isDark={isDark} />}
+      {aiStatusOpen && <AdminAiStatusCard onClose={() => setAiStatusOpen(false)} isDark={isDark} />}
       {pushOpen && <PushBroadcastManager onClose={() => setPushOpen(false)} isDark={isDark} users={usersWithLoginInfo} />}
     </Box>
   );
