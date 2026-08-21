@@ -1,7 +1,7 @@
-// ערוץ קטן לדיווח על כשל fetch בטעינה הראשונית (רשימות/התראות) - מאפשר
-// ל-OfflineBanner (הגלובלי, mounted תמיד) להגיב לזה גם הוא, בלי prop drilling
-// דרך HomeHeader/HomeComponent/router. כך יש מקור אמת אחד לאייקון "אין
-// קליטה" בכל האפליקציה, לא שני רכיבים נפרדים שיכולים להיות לא מסונכרנים.
+// ערוץ קטן לדיווח על כשל fetch בטעינה הראשונית (רשימות/התראות), בלי
+// prop drilling דרך HomeHeader/HomeComponent/router. כרגע רק setFetchIssue
+// נקרא בפועל (מ-router/index.tsx) - subscribeFetchIssue זמין לשימוש עתידי
+// אם ירצו להציג את זה גם ב-ConnectionStatusIcon הגלובלי.
 let fetchIssueActive = false;
 const listeners = new Set<(active: boolean) => void>();
 

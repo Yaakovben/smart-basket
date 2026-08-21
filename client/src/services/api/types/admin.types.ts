@@ -78,3 +78,34 @@ export interface DbHealth {
   collectionCount: number;
   collections: DbHealthCollection[];
 }
+
+export interface AiProviderRateLimit {
+  limitRequests: string | null;
+  remainingRequests: string | null;
+  resetRequests: string | null;
+  limitTokens: string | null;
+  remainingTokens: string | null;
+  resetTokens: string | null;
+}
+
+export interface AiProviderStatus {
+  name: string;
+  role: 'primary' | 'backup';
+  configured: boolean;
+  model: string | null;
+  modelResolvedAt: string | null;
+  nextModelCheckAt: string | null;
+  requestCount: number;
+  lastSuccessAt: string | null;
+  lastError: string | null;
+  lastErrorReason: string | null;
+  lastErrorAt: string | null;
+  rateLimit: AiProviderRateLimit | null;
+}
+
+export interface AiStatus {
+  providers: AiProviderStatus[];
+  fallbackCount: number;
+  serverStartedAt: string;
+  configured: boolean;
+}

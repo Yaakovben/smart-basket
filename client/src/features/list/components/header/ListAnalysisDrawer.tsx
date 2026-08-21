@@ -7,6 +7,7 @@ import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
 import { AiAssistantIcon } from '../../../../global/components';
+import { renderInlineBold } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { priceComparisonApi } from '../../../priceComparison/services/priceComparison.api';
 import { getCheapestChain } from '../../../priceComparison/helpers/priceComparisonCardHelpers';
@@ -33,10 +34,12 @@ function buildAnalysisPrompt(listName: string, productNames: string[]): string {
   const items = productNames.slice(0, 40).join(', ');
   return (
     `נתח את רשימת הקניות "${listName}" שמכילה: ${items}.\n` +
+    `השתמש בנתוני ההיסטוריה וההרגלים האמיתיים שלי שכבר מופיעים בהקשר (מוצרים שכיחים, מוצרים ששכחתי, קטגוריות לחידוש, הוצאה לפי קטגוריה) - אל תמציא נתונים ואל תכתוב תשובות כלליות שמתאימות לכל רשימה.\n` +
     `ענה בעברית בפורמט קצר ומובנה עם 3 סעיפים בלבד:\n` +
-    `🛒 **סיכום**: קטגוריות עיקריות ומה בולט ברשימה (משפט אחד).\n` +
-    `➕ **מה כדאי להוסיף**: עד 3 מוצרים שכנראה נשכחו לפי ההקשר (שורה קצרה לכל אחד).\n` +
-    `💡 **טיפ לחיסכון**: המלצה אחת ספציפית וישימה.\n` +
+    `🛒 **סיכום**: מה בולט ברשימה הזו ספציפית - קטגוריות עיקריות, כמות חריגה, או קשר להרגלי הקנייה הרגילים שלי (משפט אחד קונקרטי, לא תיאור גנרי).\n` +
+    `➕ **מה כדאי להוסיף**: עד 3 מוצרים ספציפיים שחסרים - קודם בדוק מול המוצרים ששכחתי/קטגוריות לחידוש בהקשר, ורק אם אין התאמה תציע לפי הגיון (שורה קצרה לכל אחד + נימוק קצר).\n` +
+    `💡 **טיפ לחיסכון**: המלצה אחת שמתייחסת ספציפית למוצר או קטגוריה שכן ברשימה הזו (למשל השוואת מחיר לרשת הזולה, כמות, מותג חלופי) - לא טיפ גנרי שמתאים לכל רשימה.\n` +
+    `אם אין מספיק מידע ספציפי לסעיף מסוים - כתוב זאת בקצרה במקום למלא בכלליות.\n` +
     `אל תוסיף כותרות נוספות, אל תסביר את עצמך, רק את 3 הסעיפים.`
   );
 }
@@ -69,17 +72,36 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     setLoading(true);
 
     const prompt = buildAnalysisPrompt(listName, productNames);
-    aiAssistantApi.chatStream(
-      [{ role: 'user', content: prompt }],
-      (delta) => {
+    const MAX_ATTEMPTS = 2;
+
+    // מודל ה-reasoning (gpt-oss) לפעמים "נכשל" חד-פעמית - stream ריק/מתנתק
+    // באמצע בלי סיבה עקבית. נסיון שקט נוסף (בלי להראות שגיאה קודם) פותר את
+    // רוב המקרים במקום להציג "נסה שוב" על תקלה שבפועל הייתה חולפת. 503
+    // (לא מוגדר בשרת) ו-429 (מכסה נגמרה) הם תקלות אמיתיות שנסיון נוסף לא
+    // יעזור להן - לא חוזרים עליהן.
+    const runAnalysis = async (attemptNum: number): Promise<void> => {
+      if (attemptNum > 1) {
+        setText('');
+        setFallback(false);
+      }
+      try {
+        await aiAssistantApi.chatStream(
+          [{ role: 'user', content: prompt }],
+          (delta) => {
+            setLoading(false);
+            setText(prev => prev + delta);
+          },
+          () => setFallback(true)
+        );
+        setDone(true);
         setLoading(false);
-        setText(prev => prev + delta);
-      },
-      () => setFallback(true)
-    )
-      .then(() => setDone(true))
-      .catch((err) => {
+      } catch (err) {
         const status = err instanceof AiAssistantStreamError ? err.status : undefined;
+        const isRetryable = status !== 503 && status !== 429;
+        if (isRetryable && attemptNum < MAX_ATTEMPTS) {
+          await runAnalysis(attemptNum + 1);
+          return;
+        }
         const minutes = err instanceof AiAssistantStreamError ? minutesUntil(err.resetAt) : null;
         const message = status === 503
           ? t('aiNotConfigured')
@@ -88,8 +110,9 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           : t('aiGenericError');
         setError(message);
         setLoading(false);
-      })
-      .finally(() => setLoading(false));
+      }
+    };
+    runAnalysis(1);
 
     setPriceLoading(true);
     priceComparisonApi.getComparison(listId)
@@ -123,23 +146,16 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     });
   };
 
-  // עיבוד טקסט פשוט: **bold** → מודגש, שורות ריקות → רווח
+  // עיבוד טקסט פשוט: **bold** → מודגש (renderInlineBold, משותף עם הצ'אט), שורות ריקות → רווח
   const renderText = (raw: string) => {
-    return raw.split('\n').map((line, i) => {
-      const parts = line.split(/\*\*(.+?)\*\*/g);
-      return (
-        <Typography key={i} component="p" sx={{
-          fontSize: 14.5, lineHeight: 1.75, color: 'text.primary',
-          mb: line.trim() === '' ? 0.5 : 0,
-        }}>
-          {parts.map((part, j) =>
-            j % 2 === 1
-              ? <Box key={j} component="span" sx={{ fontWeight: 800 }}>{part}</Box>
-              : part
-          )}
-        </Typography>
-      );
-    });
+    return raw.split('\n').map((line, i) => (
+      <Typography key={i} component="p" sx={{
+        fontSize: 14.5, lineHeight: 1.75, color: 'text.primary',
+        mb: line.trim() === '' ? 0.5 : 0,
+      }}>
+        {renderInlineBold(line, `${i}-`)}
+      </Typography>
+    ));
   };
 
   return (
@@ -197,6 +213,35 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           <Typography sx={{ fontSize: 14, color: 'error.main', py: 2 }}>
             {error}
           </Typography>
+        )}
+
+        {/* מצב קצה: הבקשה הצליחה (done, אין error) אבל שום טקסט לא חזר -
+            בלי זה הדראוור פשוט "מדלג" ישר לכרטיס המחיר בלי שום הסבר,
+            ונראה כאילו הניתוח נעלם/לא רץ בכלל. */}
+        {done && !text && !error && (
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', py: 1.5 }}>
+            לא התקבל ניתוח טקסטואלי הפעם - נסה שוב מאוחר יותר. הערכת המחיר למטה עדיין מדויקת.
+          </Typography>
+        )}
+
+        {text && (
+          <Box sx={{
+            bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'white',
+            borderRadius: '16px',
+            p: 2,
+            mb: 1.5,
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+          }}>
+            {renderText(text)}
+            {!done && (
+              <Box component="span" sx={{
+                display: 'inline-block', width: 8, height: 15, bgcolor: '#14B8A6',
+                borderRadius: 1, ml: 0.5, animation: 'blink 0.8s step-end infinite',
+                '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
+              }} />
+            )}
+          </Box>
         )}
 
         {/* הערכת מחיר אמיתית - מגיעה ממאגר המחירים הממשלתי, לא ניחוש של ה-AI.
@@ -323,25 +368,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
             </Box>
           );
         })()}
-
-        {text && (
-          <Box sx={{
-            bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'white',
-            borderRadius: '16px',
-            p: 2,
-            border: '1px solid',
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-          }}>
-            {renderText(text)}
-            {!done && (
-              <Box component="span" sx={{
-                display: 'inline-block', width: 8, height: 15, bgcolor: '#14B8A6',
-                borderRadius: 1, ml: 0.5, animation: 'blink 0.8s step-end infinite',
-                '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
-              }} />
-            )}
-          </Box>
-        )}
 
         {/* חיווי עדין - הניתוח הזה הגיע ממודל גיבוי (הספק הראשי נכשל/נגמרה
             לו המכסה). אותו חיווי כמו בצ'אט - ראו ChatBubble.tsx. */}

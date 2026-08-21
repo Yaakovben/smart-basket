@@ -54,7 +54,7 @@ class SocketService {
   connect() {
     // אין socket server מוגדר לסביבה הזו בכוונה - לא מנסים בכלל, כדי שלא
     // ייווצר "מתחבר מחדש" שלא נגמר לעולם ולא יורים אירועי connect_error/
-    // disconnect ש-OfflineBanner מקשיב להם.
+    // disconnect ש-useConnectionStatus מקשיב להם.
     if (!SOCKET_URL) return;
     const token = getAccessToken();
     if (!token) return;

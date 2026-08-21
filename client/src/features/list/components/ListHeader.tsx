@@ -9,7 +9,7 @@ import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
-import { MembersButton, ListMenu, ConnectionStatusIcon } from '../../../global/components';
+import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { ListCostEstimate } from '../hooks/useListCostEstimate';
@@ -184,7 +184,6 @@ export const ListHeader = memo(({
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <ConnectionStatusIcon />
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
@@ -196,15 +195,16 @@ export const ListHeader = memo(({
                 sx={{
                   position: 'absolute', top: -6, insetInlineEnd: -8,
                   px: 0.5, py: 0.1, borderRadius: '999px',
-                  bgcolor: '#EF4444', border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+                  border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
                   color: 'white', fontSize: 7.5, fontWeight: 800, lineHeight: 1.4,
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 0 0 0 rgba(239,68,68,0.6)',
+                  boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
                   animation: 'menuNewBadgePulse 1.8s ease-out infinite',
                   '@keyframes menuNewBadgePulse': {
-                    '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
-                    '70%': { boxShadow: '0 0 0 5px rgba(239,68,68,0)' },
-                    '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
+                    '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
+                    '70%': { boxShadow: '0 0 0 5px rgba(139,92,246,0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
                   },
                 }}
               >

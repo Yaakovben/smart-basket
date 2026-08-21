@@ -83,38 +83,86 @@ export function warmGroqModel(): void {
   setInterval(() => resolveGroqModel(env.GROQ_API_KEY!).catch(() => {}), 60 * 60 * 1000);
 }
 
-export interface AiProviderStatus {
-  name: string; configured: boolean; model: string | null;
-  modelCachedAt: number | null; nextRefreshAt: number | null;
-  rateLimitRequests: number | null; rateLimitRemainingRequests: number | null;
-  rateLimitResetRequests: string | null; rateLimitTokens: number | null;
-  rateLimitRemainingTokens: number | null; rateLimitResetTokens: string | null;
+// ===== מעקב סטטוס לפאנל "פרטי AI" באדמין =====
+// לא persistent (זיכרון תהליך יחיד) - מספיק כדי להראות למנהל תמונת מצב
+// חיה: כמה בקשות בוצעו, מתי הספק הצליח/נכשל לאחרונה, ומה מכסת ה-rate-limit
+// שהספק עצמו מחזיר ב-headers (לא ניחוש שלנו - הנתון האמיתי מהספק).
+export interface AiProviderRateLimit {
+  limitRequests: string | null;
+  remainingRequests: string | null;
+  resetRequests: string | null;
+  limitTokens: string | null;
+  remainingTokens: string | null;
+  resetTokens: string | null;
+}
+interface ProviderStats {
+  requestCount: number;
+  lastSuccessAt: number | null;
+  lastError: string | null;
+  lastErrorReason: string | null;
+  lastErrorAt: number | null;
+  rateLimit: AiProviderRateLimit | null;
+}
+const providerStats = new Map<string, ProviderStats>();
+const serverStartedAt = Date.now();
+let fallbackCount = 0;
+
+function getProviderStats(name: string): ProviderStats {
+  let s = providerStats.get(name);
+  if (!s) {
+    s = { requestCount: 0, lastSuccessAt: null, lastError: null, lastErrorReason: null, lastErrorAt: null, rateLimit: null };
+    providerStats.set(name, s);
+  }
+  return s;
 }
 
-export async function getAiStatus(): Promise<{ providers: AiProviderStatus[] }> {
-  const providers: AiProviderStatus[] = [];
-  if (env.GROQ_API_KEY) {
-    let rl: Partial<AiProviderStatus> = {};
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/models', {
-        headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
-        signal: AbortSignal.timeout(5000),
-      });
-      rl = {
-        rateLimitRequests: Number(res.headers.get('x-ratelimit-limit-requests')) || null,
-        rateLimitRemainingRequests: Number(res.headers.get('x-ratelimit-remaining-requests')) || null,
-        rateLimitResetRequests: res.headers.get('x-ratelimit-reset-requests'),
-        rateLimitTokens: Number(res.headers.get('x-ratelimit-limit-tokens')) || null,
-        rateLimitRemainingTokens: Number(res.headers.get('x-ratelimit-remaining-tokens')) || null,
-        rateLimitResetTokens: res.headers.get('x-ratelimit-reset-tokens'),
-      };
-    } catch { /* timeout */ }
-    providers.push({ name: 'Groq', configured: true, model: cachedGroqModel, modelCachedAt: groqModelCachedAt || null, nextRefreshAt: groqModelCachedAt ? groqModelCachedAt + GROQ_MODEL_CACHE_TTL : null, rateLimitRequests: rl.rateLimitRequests ?? null, rateLimitRemainingRequests: rl.rateLimitRemainingRequests ?? null, rateLimitResetRequests: rl.rateLimitResetRequests ?? null, rateLimitTokens: rl.rateLimitTokens ?? null, rateLimitRemainingTokens: rl.rateLimitRemainingTokens ?? null, rateLimitResetTokens: rl.rateLimitResetTokens ?? null });
-  } else {
-    providers.push({ name: 'Groq', configured: false, model: null, modelCachedAt: null, nextRefreshAt: null, rateLimitRequests: null, rateLimitRemainingRequests: null, rateLimitResetRequests: null, rateLimitTokens: null, rateLimitRemainingTokens: null, rateLimitResetTokens: null });
+// הודעת שגיאה גולמית (status code / stack טכני) לא אומרת כלום למנהל -
+// זה מתרגם אותה להסבר קריא בעברית: למה זה כנראה קרה בפועל, לא רק "429".
+// ה-raw נשמר בנפרד (מקוצר) לצורך דיבוג אמיתי מי שצריך את הפרטים הטכניים.
+function classifyError(status: number | null, rawMessage: string): string {
+  if (status === 401 || status === 403) return 'מפתח ה-API נדחה על ידי הספק - כנראה לא תקין או פג תוקף';
+  if (status === 429) return 'המכסה של הספק נגמרה כרגע (Rate Limit) - יחזור לפעול לבד כשהמכסה מתאפסת';
+  if (status && status >= 500) return `שגיאת שרת אצל הספק (קוד ${status}) - כנראה תקלה זמנית בצד שלהם, לא קשורה אלינו`;
+  if (status && status >= 400) return `הבקשה נדחתה על ידי הספק (קוד ${status})`;
+  const lower = rawMessage.toLowerCase();
+  if (lower.includes('abort') || lower.includes('timeout')) return 'הספק לא הגיב תוך 30 שניות (timeout) - כנראה עומס זמני אצלו';
+  if (lower.includes('empty response')) return 'הספק החזיר תשובה ריקה ללא תוכן';
+  if (lower.includes('fetch failed') || lower.includes('network') || lower.includes('enotfound') || lower.includes('econnrefused')) {
+    return 'בעיית רשת - השרת שלנו לא הצליח בכלל להגיע לספק';
   }
-  providers.push({ name: 'NVIDIA NIM', configured: !!env.NVIDIA_NIM_API_KEY, model: env.NVIDIA_NIM_API_KEY ? env.NVIDIA_NIM_MODEL : null, modelCachedAt: null, nextRefreshAt: null, rateLimitRequests: null, rateLimitRemainingRequests: null, rateLimitResetRequests: null, rateLimitTokens: null, rateLimitRemainingTokens: null, rateLimitResetTokens: null });
-  return { providers };
+  return 'שגיאה לא מזוהה - ראה פרטים טכניים למטה';
+}
+
+const RAW_ERROR_MAX_LEN = 300;
+function truncateRaw(msg: string): string {
+  return msg.length > RAW_ERROR_MAX_LEN ? `${msg.slice(0, RAW_ERROR_MAX_LEN)}…` : msg;
+}
+
+// מודלי "reasoning" (כמו gpt-oss, שנבחר אוטומטית ע"י resolveGroqModel כי
+// הוא הכי גדול) חושבים "בשקט" לפני שהם פולטים תוכן גלוי - אם כל תקציב
+// ה-max_tokens נאכל על חשיבה פנימית, יכולים לחזור עם תשובה ריקה לגמרי
+// (בלי אף delta) או חתוכה, בלי שום שגיאה שמסבירה למה. reasoning_effort:
+// 'low' (נתמך ב-Groq למשפחת gpt-oss) שומר את רוב התקציב לתשובה בפועל -
+// קריטי לצ'אט/ניתוח שצריך תשובה קצרה וגלויה, לא חשיבה ארוכה מאחורי הקלעים.
+function isReasoningModel(model: string): boolean {
+  const lower = model.toLowerCase();
+  return lower.includes('gpt-oss') || lower.includes('deepseek') || lower.includes('qwq');
+}
+
+// headers סטנדרטיים תואמי-OpenAI ל-rate limit (Groq תומך בהם; NIM לרוב לא -
+// אז מחזיר null וזה בסדר, ה-UI מציג "אין נתונים" במקום להמציא ערך)
+function readRateLimit(headers: Headers): AiProviderRateLimit | null {
+  const limitRequests = headers.get('x-ratelimit-limit-requests');
+  const limitTokens = headers.get('x-ratelimit-limit-tokens');
+  if (!limitRequests && !limitTokens) return null;
+  return {
+    limitRequests,
+    remainingRequests: headers.get('x-ratelimit-remaining-requests'),
+    resetRequests: headers.get('x-ratelimit-reset-requests'),
+    limitTokens,
+    remainingTokens: headers.get('x-ratelimit-remaining-tokens'),
+    resetTokens: headers.get('x-ratelimit-reset-tokens'),
+  };
 }
 
 // סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
@@ -262,8 +310,10 @@ const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של 
 "אני כאן רק לענות על שאלות הקשורות לקניות ולרשימות שלך. נסה לשאול אותי על מוצרים, מחירים, או דרכי חיסכון בסופר 🛒"
 
 כללי תגובה:
-- ענה תמיד בעברית, בטון ידידותי וממוקד. מקסימום 3-4 משפטים, או 4-5 נקודות - לא יותר.
-- כשמתאים - נסח כנקודות קצרות (•). שאלה פשוטה = תשובה של משפט-שניים.
+- קצר זה הכלל, לא היוצא מן הכלל: ברירת המחדל היא 1-2 משפטים. עד 3 נקודות
+  (•) קצרות רק כשממש יש כמה פריטים נפרדים לרשימה - לא כברירת מחדל.
+  אל תוסיף משפט הסבר/סיכום נוסף בסוף אם התשובה כבר ניתנה.
+- ענה תמיד בעברית, בטון ידידותי וממוקד.
 - אל תפתח במבוא ("שאלה מצוינת!" וכו') - עבור ישר לתשובה.
 - כשאתה מסתמך על נתוני המשתמש - ציין זאת ("על סמך הרשימות שלך...").
 - כשרלוונטי - הצע פיצ'ר באפליקציה שיכול לעזור ("אגב, אפשר גם...").
@@ -338,7 +388,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   const body = {
     messages: [systemMessage, ...trimmedHistory],
     temperature: 0.6,
-    max_tokens: 800,
+    max_tokens: 700,
     stream: true,
   };
 
@@ -353,6 +403,9 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
+    const providerBody: Record<string, unknown> = { ...body, model: provider.model };
+    if (isReasoningModel(provider.model)) providerBody.reasoning_effort = 'low';
+
     let response: Response;
     try {
       response = await fetch(provider.url, {
@@ -361,12 +414,16 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
           Authorization: `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...body, model: provider.model }),
+        body: JSON.stringify(providerBody),
         signal: controller.signal,
       });
     } catch (err) {
       clearTimeout(timeoutId);
       lastError = (err as Error).message;
+      const stats = getProviderStats(provider.name);
+      stats.lastError = truncateRaw(lastError);
+      stats.lastErrorReason = classifyError(null, lastError);
+      stats.lastErrorAt = Date.now();
       logger.warn('aiAssistant: request to %s failed, trying next provider if available: %s', provider.name, lastError);
       continue;
     }
@@ -375,15 +432,35 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
       clearTimeout(timeoutId);
       const errText = await response.text().catch(() => '');
       lastError = `${response.status}: ${errText}`;
+      const stats = getProviderStats(provider.name);
+      stats.lastError = truncateRaw(lastError);
+      stats.lastErrorReason = classifyError(response.status, errText);
+      stats.lastErrorAt = Date.now();
+      const rl = readRateLimit(response.headers);
+      if (rl) stats.rateLimit = rl;
       logger.warn('aiAssistant: %s returned %s, trying next provider if available', provider.name, lastError);
       continue;
     }
     if (!response.body) {
       clearTimeout(timeoutId);
       lastError = 'empty response body';
+      const stats = getProviderStats(provider.name);
+      stats.lastError = lastError;
+      stats.lastErrorReason = classifyError(null, lastError);
+      stats.lastErrorAt = Date.now();
       logger.warn('aiAssistant: %s returned an empty response, trying next provider if available', provider.name);
       continue;
     }
+
+    const stats = getProviderStats(provider.name);
+    stats.requestCount++;
+    stats.lastSuccessAt = Date.now();
+    stats.lastError = null;
+    stats.lastErrorReason = null;
+    stats.lastErrorAt = null;
+    const rl = readRateLimit(response.headers);
+    if (rl) stats.rateLimit = rl;
+    if (providerIndex > 0) fallbackCount++;
 
     return {
       reader: response.body.getReader(),
@@ -395,4 +472,81 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
 
   logger.error('aiAssistant: all providers failed, last error: %s', lastError);
   throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+}
+
+export interface AiProviderStatus {
+  name: string;
+  role: 'primary' | 'backup';
+  configured: boolean;
+  model: string | null;
+  modelResolvedAt: string | null;
+  nextModelCheckAt: string | null;
+  requestCount: number;
+  lastSuccessAt: string | null;
+  lastError: string | null;
+  lastErrorReason: string | null;
+  lastErrorAt: string | null;
+  rateLimit: AiProviderRateLimit | null;
+}
+
+export interface AiStatus {
+  providers: AiProviderStatus[];
+  fallbackCount: number;
+  serverStartedAt: string;
+  configured: boolean;
+}
+
+/** נתוני סטטוס לפאנל "פרטי AI" באדמין - איזה מודל פעיל, מתי עודכן, כמה נוצל ומתי מתאפס. */
+export async function getAiStatus(): Promise<AiStatus> {
+  const groqConfigured = !!env.GROQ_API_KEY;
+  const nimConfigured = !!env.NVIDIA_NIM_API_KEY;
+  const groqStats = getProviderStats('Groq');
+  const nimStats = getProviderStats('NVIDIA NIM');
+
+  const toIso = (ms: number | null) => (ms ? new Date(ms).toISOString() : null);
+
+  return {
+    providers: [
+      {
+        name: 'Groq',
+        role: 'primary',
+        configured: groqConfigured,
+        model: groqConfigured ? (cachedGroqModel ?? env.GROQ_MODEL) : null,
+        modelResolvedAt: groqConfigured ? toIso(groqModelCachedAt || null) : null,
+        nextModelCheckAt: groqConfigured && groqModelCachedAt ? toIso(groqModelCachedAt + GROQ_MODEL_CACHE_TTL) : null,
+        requestCount: groqStats.requestCount,
+        lastSuccessAt: toIso(groqStats.lastSuccessAt),
+        lastError: groqStats.lastError,
+        lastErrorReason: groqStats.lastErrorReason,
+        lastErrorAt: toIso(groqStats.lastErrorAt),
+        rateLimit: groqStats.rateLimit,
+      },
+      {
+        name: 'NVIDIA NIM',
+        role: 'backup',
+        configured: nimConfigured,
+        model: nimConfigured ? env.NVIDIA_NIM_MODEL : null,
+        modelResolvedAt: null,
+        nextModelCheckAt: null,
+        requestCount: nimStats.requestCount,
+        lastSuccessAt: toIso(nimStats.lastSuccessAt),
+        lastError: nimStats.lastError,
+        lastErrorReason: nimStats.lastErrorReason,
+        lastErrorAt: toIso(nimStats.lastErrorAt),
+        rateLimit: nimStats.rateLimit,
+      },
+    ],
+    fallbackCount,
+    serverStartedAt: new Date(serverStartedAt).toISOString(),
+    configured: groqConfigured || nimConfigured,
+  };
+}
+
+/** מאלץ בדיקה מחדש של המודל הטוב ביותר ב-Groq עכשיו, בלי לחכות ל-cache השעתי. */
+export async function refreshAiStatus(): Promise<AiStatus> {
+  if (env.GROQ_API_KEY) {
+    groqModelCachedAt = 0;
+    await resolveGroqModel(env.GROQ_API_KEY);
+  }
+  return getAiStatus();
 }

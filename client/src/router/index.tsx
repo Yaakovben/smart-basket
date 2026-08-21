@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
@@ -33,14 +33,17 @@ const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ 
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
-insightsImport(); // prefetch מיידי - יעד ניווט מרכזי, שוקל 451kB ונרצה שיהיה מוכן
 const InsightsPage = lazy(insightsImport);
 
-// prefetch מושהה לזמן סרק: Profile/Settings פחות דחופים מ-Home/List/Insights
+// prefetch מושהה לזמן סרק: Profile/Settings/Insights פחות דחופים מ-Home/List
+// לפתיחת האפליקציה עצמה. Insights הוזז לכאן (היה prefetch מיידי) כי הוא
+// שוקל 451kB (recharts) והיה מתחרה על רוחב פס עם אימות+טעינת רשימות בדיוק
+// בחלון הקריטי של הפתיחה - למרות שהוא לא הדף הראשון שהמשתמש רואה בכלל.
+// עדיין נטען מוקדם מספיק (זמן סרק) שיהיה מוכן כשילחצו על הטאב בפועל.
 if (typeof requestIdleCallback === 'function') {
-  requestIdleCallback(() => { profileImport(); settingsImport(); }, { timeout: 4000 });
+  requestIdleCallback(() => { profileImport(); settingsImport(); insightsImport(); }, { timeout: 4000 });
 } else {
-  setTimeout(() => { profileImport(); settingsImport(); }, 2000);
+  setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
 }
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
@@ -490,9 +493,12 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      {/* אין רכיב חיבור נפרד כאן - כשל fetch מדווח דרך setFetchIssue() (למעלה)
-          ל-OfflineBanner הגלובלי היחיד (mounted תמיד ב-App.tsx, קבוע מתחת
-          לפעמון בכל עמוד), שמזהה גם את זה וגם ניתוק socket. ראו OfflineBanner.tsx. */}
+      {/* אייקון חיבור גלובלי יחיד - mounted כאן פעם אחת בלבד לכל האפליקציה
+          (לא בתוך כל כותרת עמוד בנפרד), כך שהוא תמיד באותו מיקום פיזי קבוע
+          על גבי כל דף, כולל דפים שלא הטמיעו אותו קודם. כשל fetch מדווח
+          דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
+          useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
+      <ConnectionStatusIcon />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

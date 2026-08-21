@@ -1,7 +1,14 @@
-// מצב חיבור גלובלי (מכשיר offline / socket מנותק) - הוצא מ-OfflineBanner
-// כדי שגם רכיבים אחרים (אייקון inline בכותרות) יוכלו להשתמש באותו state,
-// בלי לשכפל את לוגיקת ה-timers/socket listeners בכל מקום.
-import { useState, useEffect, useRef } from 'react';
+// מצב חיבור גלובלי (מכשיר offline / socket מנותק) - state יחיד ברמת המודול,
+// לא state מקומי שנוצר מחדש בכל mount. בעבר ConnectionStatusIcon היה
+// מוטמע בנפרד בתוך כותרת כל דף (בית, רשימה, תובנות, מנהל...), וכל מעבר
+// ניווט ממחזר-mounting אותו: ה-state/הטיימרים/המאזינים נוצרו מחדש בכל
+// קריאה ל-hook - גם ב-timer של "trying" (8 שניות) וגם "reconnecting"
+// (4 שניות) התאפסו בכל מעבר דף, ומצב "אין קליטה" שכבר זוהה בעמוד A היה
+// נעלם ומתחיל מחדש להמתין בעמוד B. עכשיו גם ה-hook הזה singleton וגם
+// ConnectionStatusIcon עצמו mounted פעם אחת בלבד גלובלית (ראו AppRouter) -
+// האתחול (מאזיני online/offline/socket) רץ פעם אחת ברמת המודול (כמו
+// ה-heartbeat ב-crashLog.ts), וכל hook רק נרשם ל-snapshot המשותף.
+import { useSyncExternalStore } from 'react';
 import { subscribeToQueueCount } from '../../services/offlineQueue';
 import { socketService } from '../../services/socket/socket.service';
 
@@ -10,78 +17,78 @@ export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting';
 const OFFLINE_CONFIRM_MS = 8000;
 const SOCKET_GRACE_MS = 4000;
 
+interface ConnectionState {
+  phase: ConnectionPhase;
+  pendingCount: number;
+}
+
+let state: ConnectionState = { phase: navigator.onLine ? 'online' : 'offline', pendingCount: 0 };
+const listeners = new Set<() => void>();
+
+function setState(patch: Partial<ConnectionState>) {
+  state = { ...state, ...patch };
+  listeners.forEach(l => l());
+}
+
+function getSnapshot(): ConnectionState {
+  return state;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+let offlineTimer: ReturnType<typeof setTimeout> | null = null;
+let socketTimer: ReturnType<typeof setTimeout> | null = null;
+let socketDown = false;
+
+function clearOfflineTimer() {
+  if (offlineTimer) { clearTimeout(offlineTimer); offlineTimer = null; }
+}
+function clearSocketTimer() {
+  if (socketTimer) { clearTimeout(socketTimer); socketTimer = null; }
+}
+
+function handleOffline() {
+  setState({ phase: 'trying' });
+  clearOfflineTimer();
+  offlineTimer = setTimeout(() => setState({ phase: 'offline' }), OFFLINE_CONFIRM_MS);
+}
+
+function handleOnline() {
+  clearOfflineTimer();
+  setState({ phase: socketDown ? 'reconnecting' : 'online' });
+}
+
+window.addEventListener('offline', handleOffline);
+window.addEventListener('online', handleOnline);
+if (!navigator.onLine) {
+  state = { ...state, phase: 'trying' };
+  offlineTimer = setTimeout(() => setState({ phase: 'offline' }), OFFLINE_CONFIRM_MS);
+}
+
+function scheduleReconnecting() {
+  clearSocketTimer();
+  socketTimer = setTimeout(() => {
+    socketDown = true;
+    if (navigator.onLine && state.phase === 'online') setState({ phase: 'reconnecting' });
+  }, SOCKET_GRACE_MS);
+}
+
+function handleSocketConnected() {
+  clearSocketTimer();
+  socketDown = false;
+  if (state.phase === 'reconnecting') setState({ phase: 'online' });
+}
+
+socketService.on('disconnect', scheduleReconnecting);
+socketService.on('connect_error', scheduleReconnecting);
+socketService.on('connect', handleSocketConnected);
+if (!socketService.isConnected()) scheduleReconnecting();
+
+subscribeToQueueCount(n => setState({ pendingCount: n }));
+
 export function useConnectionStatus() {
-  const [phase, setPhase] = useState<ConnectionPhase>(() => navigator.onLine ? 'online' : 'offline');
-  const [pendingCount, setPendingCount] = useState(0);
-  const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const socketTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const socketDownRef = useRef(false);
-
-  useEffect(() => {
-    const clearOfflineTimer = () => {
-      if (offlineTimerRef.current) { clearTimeout(offlineTimerRef.current); offlineTimerRef.current = null; }
-    };
-
-    const handleOffline = () => {
-      setPhase('trying');
-      clearOfflineTimer();
-      offlineTimerRef.current = setTimeout(() => setPhase('offline'), OFFLINE_CONFIRM_MS);
-    };
-
-    const handleOnline = () => {
-      clearOfflineTimer();
-      setPhase(socketDownRef.current ? 'reconnecting' : 'online');
-    };
-
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('online', handleOnline);
-
-    if (!navigator.onLine) {
-      setPhase('trying');
-      offlineTimerRef.current = setTimeout(() => setPhase('offline'), OFFLINE_CONFIRM_MS);
-    }
-
-    return () => {
-      clearOfflineTimer();
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('online', handleOnline);
-    };
-  }, []);
-
-  useEffect(() => {
-    const clearSocketTimer = () => {
-      if (socketTimerRef.current) { clearTimeout(socketTimerRef.current); socketTimerRef.current = null; }
-    };
-
-    const scheduleReconnecting = () => {
-      clearSocketTimer();
-      socketTimerRef.current = setTimeout(() => {
-        socketDownRef.current = true;
-        if (navigator.onLine) setPhase(p => (p === 'online' ? 'reconnecting' : p));
-      }, SOCKET_GRACE_MS);
-    };
-
-    const handleConnected = () => {
-      clearSocketTimer();
-      socketDownRef.current = false;
-      setPhase(p => (p === 'reconnecting' ? 'online' : p));
-    };
-
-    const unsubDisconnect = socketService.on('disconnect', scheduleReconnecting);
-    const unsubConnectError = socketService.on('connect_error', scheduleReconnecting);
-    const unsubConnect = socketService.on('connect', handleConnected);
-
-    if (!socketService.isConnected()) scheduleReconnecting();
-
-    return () => {
-      clearSocketTimer();
-      unsubDisconnect();
-      unsubConnectError();
-      unsubConnect();
-    };
-  }, []);
-
-  useEffect(() => subscribeToQueueCount(setPendingCount), []);
-
-  return { phase, pendingCount };
+  return useSyncExternalStore(subscribe, getSnapshot);
 }

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Box, Typography } from '@mui/material';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { useSettings } from '../context/SettingsContext';
@@ -7,13 +8,22 @@ import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
 const TAP_LABEL_MS = 3000;
 
-// אייקון חיבור inline - יושב בתוך אשכול האייקונים של הכותרת (ליד הפעמון
-// בעמוד הבית, ובאותו סלוט בדיוק בכותרות אחרות) במקום לצוף כ-overlay נפרד.
-// מוצג רק כשיש בעיה (online = null, לא מרנדר כלום - לא תופס מקום בכותרת).
-// בלי רקע/גלולה - רק האייקון בצבע שמתאר את המקור: צהוב = בעיית socket
-// (מחובר לאינטרנט אבל מנותק מהשרת בזמן אמת), שחור = בעיית שרת/רשת כללית
-// (עדיין בודקים אם המכשיר outright offline). בלי width/height קבועים כדי
-// שלא יידחוף/יגדיל את שורת הכותרת - רק ה-padding הכי מינימלי לאזור טאפ.
+// אייקון חיבור גלובלי - overlay יחיד, position:fixed, באותו מיקום פיזי
+// בדיוק על גבי כל עמוד באפליקציה - אותו מיקום ועיצוב שהיה במסך הבית
+// (בלי רקע/גלולה משלו, רק האייקון בצבע שמתאר את הבעיה + drop-shadow
+// עדין לקריאות על רקעים בהירים) - לא עיצוב "בטוח" חדש שמתחשב ברקע של
+// כל עמוד. בכוונה עלול להסתיר תוכן בעמודים עם כותרת שונה - זה בסדר,
+// עדיפות לעקביות מיקום/עיצוב על פני "לא להפריע" בכל עמוד לגופו.
+// Portal ל-document.body (כמו AiAssistantFab) כדי לעקוף ancestor עם
+// transform/filter שהיה הופך position:fixed ליחסי לאב.
+//
+// בעבר זה היה רכיב "inline" שכל כותרת עמוד הטמיעה בעצמה בתוך אשכול
+// האייקונים שלה - וכיוון שלכל כותרת פריסה שונה (מספר אייקונים אחר, סדר
+// אחר), האייקון "קפץ" למקום אחר בכל עמוד, ובעמודים שלא הטמיעו אותו בכלל
+// (פרופיל, הגדרות, צ'אט AI, מסכי משפטי) הוא לא הופיע בכלל. עכשיו הוא
+// mounted פעם אחת בלבד (ב-AppRouter) ומופיע/נעלם לפי הסטטוס בלבד, לא
+// לפי איזה עמוד פתוח.
+// מוצג רק כשיש בעיה (online = לא מרנדר כלום).
 export const ConnectionStatusIcon = () => {
   const { t } = useSettings();
   const { phase, pendingCount } = useConnectionStatus();
@@ -37,8 +47,20 @@ export const ConnectionStatusIcon = () => {
     labelTimerRef.current = setTimeout(() => setShowLabel(false), TAP_LABEL_MS);
   };
 
-  return (
-    <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+  return createPortal(
+    <Box sx={{
+      position: 'fixed',
+      // גובה מדויק של אייקון ההתראות בכותרת הבית: כפתורי הכותרת גובהם 44px
+      // ומתחילים ב-padding-top של הכותרת עצמה (max(48px, safe-area+12px)),
+      // ה-24px של אייקון החיבור (עם 4px padding = 32px קופסה) ממורכז אנכית
+      // בתוך אותם 44px - +6px מקזז את ההפרש. אופקית: 16px padding + 44px
+      // כפתור הגדרות + 6px gap + 44px כפתור התראות + עוד קצת מרווח מעבר
+      // לצמוד-ממש (במקום 116px המדויק).
+      top: 'max(54px, calc(env(safe-area-inset-top) + 18px))',
+      left: 118,
+      zIndex: 1090,
+      display: 'flex', alignItems: 'center',
+    }}>
       <Box
         component="button"
         type="button"
@@ -71,17 +93,18 @@ export const ConnectionStatusIcon = () => {
 
       {showLabel && (
         <Box sx={{
-          position: 'absolute', top: '100%', insetInlineEnd: 0, mt: 0.5,
+          position: 'absolute', top: '100%', left: 0, mt: 0.5,
           bgcolor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)',
           borderRadius: '10px', px: 1.25, py: 0.6,
           boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-          zIndex: 10, whiteSpace: 'nowrap',
+          whiteSpace: 'nowrap',
         }}>
           <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'white' }}>
             {label}
           </Typography>
         </Box>
       )}
-    </Box>
+    </Box>,
+    document.body
   );
 };

@@ -1,9 +1,9 @@
 import apiClient from './client';
-import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth } from './types/admin.types';
+import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, AiStatus } from './types/admin.types';
 
 // DbHealth/DbHealthCollection ממשיכים להיות מיובאים ישירות מהקובץ הזה
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
-export type { DbHealthCollection, DbHealth } from './types/admin.types';
+export type { DbHealthCollection, DbHealth, AiStatus, AiProviderStatus, AiProviderRateLimit } from './types/admin.types';
 
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
@@ -38,16 +38,14 @@ export const adminApi = {
     await apiClient.delete(`/admin/users/${userId}`);
   },
 
-  async getAiStatus() {
-    const response = await apiClient.get('/ai-assistant/status');
-    return response.data as {
-      providers: {
-        name: string; configured: boolean; model: string | null;
-        modelCachedAt: number | null; nextRefreshAt: number | null;
-        rateLimitRequests: number | null; rateLimitRemainingRequests: number | null;
-        rateLimitResetRequests: string | null; rateLimitTokens: number | null;
-        rateLimitRemainingTokens: number | null; rateLimitResetTokens: string | null;
-      }[];
-    };
+  async getAiStatus(): Promise<AiStatus> {
+    const response = await apiClient.get<{ data: AiStatus }>('/admin/ai-status');
+    return response.data.data;
+  },
+
+  /** מאלץ בדיקה מחדש של מודל Groq עכשיו, בלי לחכות ל-cache השעתי. */
+  async refreshAiStatus(): Promise<AiStatus> {
+    const response = await apiClient.post<{ data: AiStatus }>('/admin/ai-status/refresh');
+    return response.data.data;
   },
 };
