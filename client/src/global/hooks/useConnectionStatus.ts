@@ -14,7 +14,7 @@ import { socketService } from '../../services/socket/socket.service';
 
 export type ConnectionPhase = 'online' | 'trying' | 'offline' | 'reconnecting';
 
-const OFFLINE_CONFIRM_MS = 4000;
+const OFFLINE_CONFIRM_MS = 3000;
 const SOCKET_GRACE_MS = 4000;
 
 interface ConnectionState {
