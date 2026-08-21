@@ -14,9 +14,7 @@ export const ConnectionStatusIcon = () => {
   const isTrying    = phase === 'trying';
   const isReconnecting = phase === 'reconnecting';
 
-  const barColor = (isOffline || isTrying)
-    ? 'linear-gradient(90deg, #9a3412 0%, #c2410c 35%, #ea580c 100%)'
-    : 'linear-gradient(90deg, #92400e 0%, #b45309 40%, #d97706 100%)';
+  const borderColor = (isOffline || isTrying) ? '#ea580c' : '#f59e0b';
 
   const mainText = isOffline || isTrying
     ? 'אין קליטה'
@@ -24,9 +22,12 @@ export const ConnectionStatusIcon = () => {
     ? 'מחפש חיבור...'
     : 'אין חיבור לשרת';
 
-  const subText = pendingCount > 0
-    ? `${pendingCount} פעולות ממתינות — יישלחו אוטומטית כשיחזור החיבור`
-    : 'הנתונים יישמרו וישלחו כשיחזור החיבור';
+  // תת-כיתוב רק במצב אין קליטה (לא ב-reconnecting שזה רק socket)
+  const subText = (isOffline || isTrying)
+    ? (pendingCount > 0
+        ? `${pendingCount} פעולות ממתינות — יישלחו כשיחזור החיבור`
+        : 'הנתונים יישמרו וישלחו כשיחזור החיבור')
+    : null;
 
   return createPortal(
     <Box
@@ -38,15 +39,16 @@ export const ConnectionStatusIcon = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: barColor,
-        // מרווח safe-area למכשירי notch
-        pt: 'calc(env(safe-area-inset-top) + 14px)',
-        pb: '14px',
-        px: 3,
+        background: 'rgba(15, 20, 35, 0.97)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: `2px solid ${borderColor}`,
+        pt: 'calc(env(safe-area-inset-top) + 8px)',
+        pb: '8px',
+        px: 2.5,
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
-        boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
       }}
     >
       <WifiFadeIcon style={{ fontSize: 26, color: 'white', flexShrink: 0 }} />
@@ -54,9 +56,11 @@ export const ConnectionStatusIcon = () => {
         <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'white', lineHeight: 1.3, letterSpacing: '-0.01em' }}>
           {mainText}
         </Typography>
-        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
-          {subText}
-        </Typography>
+        {subText && (
+          <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+            {subText}
+          </Typography>
+        )}
       </Box>
       {pendingCount > 0 && (
         <Box sx={{
