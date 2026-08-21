@@ -17,22 +17,16 @@ export const ConnectionStatusIcon = () => {
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
 
-  if (phase === 'online' || dismissed) return null;
+  if (phase === 'online' || phase === 'trying' || dismissed) return null;
 
-  const isOffline      = phase === 'offline';
-  const isTrying       = phase === 'trying';
-  const isReconnecting = phase === 'reconnecting';
+  const isOffline = phase === 'offline';
 
-  const borderColor = (isOffline || isTrying) ? '#fb923c' : '#fbbf24';
+  const borderColor = isOffline ? '#fb923c' : '#fbbf24';
 
-  const mainText = isOffline || isTrying
-    ? 'אין קליטה'
-    : isReconnecting
-    ? 'מחפש חיבור...'
-    : 'אין חיבור לשרת';
+  const mainText = isOffline ? 'אין קליטה' : 'מחפש חיבור לשרת...';
 
   // תת-כיתוב רק במצב אין קליטה (לא ב-reconnecting שזה רק socket)
-  const subText = (isOffline || isTrying)
+  const subText = isOffline
     ? (pendingCount > 0
         ? `${pendingCount} פעולות ממתינות — יישלחו כשיחזור החיבור`
         : 'הנתונים יישמרו וישלחו כשיחזור החיבור')
@@ -48,7 +42,7 @@ export const ConnectionStatusIcon = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: (isOffline || isTrying)
+        background: isOffline
           ? 'rgba(194, 65, 12, 0.72)'
           : 'rgba(161, 98, 7, 0.72)',
         backdropFilter: 'blur(14px)',
