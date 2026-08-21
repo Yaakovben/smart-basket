@@ -1,108 +1,82 @@
-import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Box, Typography } from '@mui/material';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
-import { useSettings } from '../context/SettingsContext';
-import { haptic } from '../helpers';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
-const TAP_LABEL_MS = 3000;
-
-// אייקון חיבור גלובלי - overlay יחיד, position:fixed, באותו מיקום פיזי
-// בדיוק על גבי כל עמוד באפליקציה - אותו מיקום ועיצוב שהיה במסך הבית
-// (בלי רקע/גלולה משלו, רק האייקון בצבע שמתאר את הבעיה + drop-shadow
-// עדין לקריאות על רקעים בהירים) - לא עיצוב "בטוח" חדש שמתחשב ברקע של
-// כל עמוד. בכוונה עלול להסתיר תוכן בעמודים עם כותרת שונה - זה בסדר,
-// עדיפות לעקביות מיקום/עיצוב על פני "לא להפריע" בכל עמוד לגופו.
-// Portal ל-document.body (כמו AiAssistantFab) כדי לעקוף ancestor עם
-// transform/filter שהיה הופך position:fixed ליחסי לאב.
-//
-// בעבר זה היה רכיב "inline" שכל כותרת עמוד הטמיעה בעצמה בתוך אשכול
-// האייקונים שלה - וכיוון שלכל כותרת פריסה שונה (מספר אייקונים אחר, סדר
-// אחר), האייקון "קפץ" למקום אחר בכל עמוד, ובעמודים שלא הטמיעו אותו בכלל
-// (פרופיל, הגדרות, צ'אט AI, מסכי משפטי) הוא לא הופיע בכלל. עכשיו הוא
-// mounted פעם אחת בלבד (ב-AppRouter) ומופיע/נעלם לפי הסטטוס בלבד, לא
-// לפי איזה עמוד פתוח.
-// מוצג רק כשיש בעיה (online = לא מרנדר כלום).
+// פס חיבור גלובלי — נצמד לראש המסך (מעל כל תוכן), מוצג רק כשיש בעיה.
+// Portal ל-document.body כדי לעקוף ancestor עם transform שהיה שובר position:fixed.
 export const ConnectionStatusIcon = () => {
-  const { t } = useSettings();
   const { phase, pendingCount } = useConnectionStatus();
-  const [showLabel, setShowLabel] = useState(false);
-  const labelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (phase === 'online') return null;
 
-  const isOffline = phase === 'offline';
+  const isOffline   = phase === 'offline';
+  const isTrying    = phase === 'trying';
   const isReconnecting = phase === 'reconnecting';
-  const label = isOffline
-    ? (pendingCount > 0
-        ? `אין קליטה · ${pendingCount} פעולות ממתינות — יישלחו כשיחזור החיבור`
-        : 'אין קליטה · הנתונים יישמרו וישלחו כשיחזור החיבור')
-    : isReconnecting ? t('reconnectingMessage') : t('serverUnreachableMessage');
-  const color = isReconnecting ? '#FB923C' : '#F97316';
 
-  const handleTap = () => {
-    haptic('light');
-    setShowLabel(true);
-    if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
-    labelTimerRef.current = setTimeout(() => setShowLabel(false), TAP_LABEL_MS);
-  };
+  // צבע: offline/trying = כתום-אדמדם יותר, reconnecting = כתום בהיר יותר
+  const barColor = (isOffline || isTrying)
+    ? 'linear-gradient(90deg, #ea580c 0%, #f97316 60%, #fb923c 100%)'
+    : 'linear-gradient(90deg, #f97316 0%, #fb923c 60%, #fdba74 100%)';
+
+  const mainText = isOffline || isTrying
+    ? 'אין קליטה'
+    : isReconnecting
+    ? 'מחפש חיבור...'
+    : 'אין חיבור לשרת';
+
+  const subText = pendingCount > 0
+    ? `${pendingCount} פעולות ממתינות — יישלחו אוטומטית כשיחזור החיבור`
+    : 'הנתונים יישמרו וישלחו כשיחזור החיבור';
 
   return createPortal(
-    <Box sx={{
-      position: 'fixed',
-      // גובה מדויק של אייקון ההתראות בכותרת הבית: כפתורי הכותרת גובהם 44px
-      // ומתחילים ב-padding-top של הכותרת עצמה (max(48px, safe-area+12px)),
-      // ה-24px של אייקון החיבור (עם 4px padding = 32px קופסה) ממורכז אנכית
-      // בתוך אותם 44px - +6px מקזז את ההפרש. אופקית: 16px padding + 44px
-      // כפתור הגדרות + 6px gap + 44px כפתור התראות + עוד קצת מרווח מעבר
-      // לצמוד-ממש (במקום 116px המדויק).
-      top: 'max(54px, calc(env(safe-area-inset-top) + 18px))',
-      left: 118,
-      zIndex: 1090,
-      display: 'flex', alignItems: 'center',
-    }}>
-      <Box
-        component="button"
-        type="button"
-        onClick={handleTap}
-        aria-label={label}
-        sx={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0, lineHeight: 0,
-          bgcolor: 'transparent', border: 'none', cursor: 'pointer', p: '4px', m: 0,
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        <Box sx={{ position: 'relative', display: 'flex' }}>
-          <WifiFadeIcon style={{ fontSize: 24, color, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }} />
-          {isOffline && pendingCount > 0 && (
-            <Box sx={{
-              position: 'absolute', top: -6, insetInlineEnd: -9,
-              minWidth: 13, height: 13, px: '3px',
-              borderRadius: '999px',
-              bgcolor: '#F97316', color: 'white',
-              fontSize: 8.5, fontWeight: 800,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              lineHeight: 1,
-            }}>
-              {pendingCount > 99 ? '99+' : pendingCount}
-            </Box>
-          )}
-        </Box>
+    <Box
+      role="status"
+      aria-live="polite"
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        background: barColor,
+        // מרווח safe-area למכשירי notch
+        pt: 'env(safe-area-inset-top)',
+        px: 2,
+        py: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+      }}
+    >
+      <WifiFadeIcon style={{ fontSize: 18, color: 'white', flexShrink: 0, opacity: 0.95 }} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'white', lineHeight: 1.3 }}>
+          {mainText}
+        </Typography>
+        <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.3 }}>
+          {subText}
+        </Typography>
       </Box>
-
-      {showLabel && (
+      {pendingCount > 0 && (
         <Box sx={{
-          position: 'absolute', top: '100%', left: 0, mt: 0.5,
-          bgcolor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)',
-          borderRadius: '10px', px: 1.25, py: 0.6,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-          whiteSpace: 'nowrap',
+          mr: 'auto',
+          ml: 0,
+          minWidth: 22,
+          height: 22,
+          px: '5px',
+          borderRadius: '999px',
+          bgcolor: 'rgba(255,255,255,0.25)',
+          color: 'white',
+          fontSize: 11,
+          fontWeight: 800,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1.5px solid rgba(255,255,255,0.5)',
         }}>
-          <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'white' }}>
-            {label}
-          </Typography>
+          {pendingCount > 99 ? '99+' : pendingCount}
         </Box>
       )}
     </Box>,
