@@ -189,7 +189,7 @@ export interface ChatMessage {
 // טקסט הנחיות קבוע (~750 תווים) שכבר לבדו קרוב לתקרה, ועם רשימה של 15-20+
 // מוצרים חורג ממנה בקלות - נכשל ב-400 "Message too long" בלי שום אינדיקציה
 // למשתמש למה, בדיוק על רשימות גדולות יותר בעוד רשימות קטנות עובדות תקין.
-const MAX_MESSAGE_LENGTH = 2000;
+const MAX_MESSAGE_LENGTH = 2500;
 const MAX_HISTORY_MESSAGES = 20;
 
 // getUserInsights מריץ אגרגציה כבדה (כל המוצרים של המשתמש + group stats +
