@@ -39,6 +39,7 @@ export const AiAssistantFab = () => {
     // sw.ts), אז ה-chunk שלו חייב רשת בכל טעינה. עדיף להראות הודעה ברורה
     // כאן, במקום לנווט לעמוד שכנראה לא יעלה בכלל.
     if (phase !== 'online') {
+      setShowHint(false);
       haptic('light');
       setShowOfflineHint(true);
       window.setTimeout(() => setShowOfflineHint(false), OFFLINE_HINT_MS);
