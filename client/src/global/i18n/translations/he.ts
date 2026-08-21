@@ -653,6 +653,7 @@ export const he: Translations = {
   aiAssistantIntro: 'שאל אותי על סופרים, מחירים, טיפים לחיסכון - או בקש המלצות מבוססות על הקניות האמיתיות שלך',
   aiAssistantPlaceholder: 'שאל משהו...',
   aiAssistantHint: 'שאל את ה-AI ✨',
+  aiOfflineHint: 'אין חיבור לאינטרנט - נסה שוב כשהחיבור יחזור',
   aiSuggestion1: 'מה כדאי לי לקנות החודש על סמך ההיסטוריה שלי?',
   aiSuggestion2: 'איך חוסכים בקניות בסופר?',
   aiSuggestion3: 'מתי הכי כדאי לעשות קניות גדולות?',

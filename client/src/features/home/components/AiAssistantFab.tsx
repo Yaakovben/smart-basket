@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useConnectionStatus } from '../../../global/hooks';
 import { haptic, safeStorage } from '../../../global/helpers';
 
 const HINT_SHOW_DELAY_MS = 700;
 const HINT_AUTOHIDE_MS = 7000;
+const OFFLINE_HINT_MS = 3000;
 const NEW_BADGE_KEY = 'sb_ai_fab_used';
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
@@ -17,7 +19,9 @@ export const AiAssistantFab = () => {
   const navigate = useNavigate();
   const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
+  const { phase } = useConnectionStatus();
   const [showHint, setShowHint] = useState(false);
+  const [showOfflineHint, setShowOfflineHint] = useState(false);
   // תג "חדש" - נשאר עד שהמשתמש בפועל פותח את העוזר בפעם הראשונה, לא רק
   // עד שרואה את הרמז הטקסטואלי (שנעלם אחרי 7ש' ועלול לפספס משתמש שלא שם לב).
   const [showNewBadge, setShowNewBadge] = useState(() => safeStorage.get(NEW_BADGE_KEY) !== 'true');
@@ -30,6 +34,16 @@ export const AiAssistantFab = () => {
   }, []);
 
   const handleOpen = () => {
+    // בלי אינטרנט, ניווט לעמוד ה-AI פשוט "תקוע" בלי שום משוב - עמוד הצ'אט
+    // נטען lazy (code-splitting) וה-SW הזה בכוונה לא עושה שום caching (ראו
+    // sw.ts), אז ה-chunk שלו חייב רשת בכל טעינה. עדיף להראות הודעה ברורה
+    // כאן, במקום לנווט לעמוד שכנראה לא יעלה בכלל.
+    if (phase !== 'online') {
+      haptic('light');
+      setShowOfflineHint(true);
+      window.setTimeout(() => setShowOfflineHint(false), OFFLINE_HINT_MS);
+      return;
+    }
     setShowHint(false);
     if (showNewBadge) {
       setShowNewBadge(false);
@@ -41,6 +55,34 @@ export const AiAssistantFab = () => {
 
   return createPortal(
     <>
+      {showOfflineHint && (
+        <Box
+          role="status"
+          aria-live="polite"
+          sx={{
+            position: 'fixed',
+            bottom: 'max(96px, calc(env(safe-area-inset-bottom) + 86px))',
+            left: 16,
+            insetInlineEnd: 16,
+            zIndex: 1089,
+            bgcolor: isDark ? '#1E293B' : '#ffffff',
+            color: 'text.primary',
+            px: 1.75, py: 1,
+            borderRadius: '14px',
+            fontSize: 12.5, fontWeight: 700,
+            textAlign: 'center',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+            border: '1px solid', borderColor: isDark ? 'rgba(239,68,68,0.35)' : 'rgba(239,68,68,0.2)',
+            animation: 'aiOfflineHintPop 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+            '@keyframes aiOfflineHintPop': {
+              from: { opacity: 0, transform: 'translateY(6px) scale(0.95)' },
+              to: { opacity: 1, transform: 'none' },
+            },
+          }}
+        >
+          {t('aiOfflineHint')}
+        </Box>
+      )}
       {showHint && (
         <Box
           sx={{

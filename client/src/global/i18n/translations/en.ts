@@ -652,6 +652,7 @@ export const en: Translations = {
   aiAssistantIntro: 'Ask me about supermarkets, prices, saving tips - or get recommendations based on your actual purchases',
   aiAssistantPlaceholder: 'Ask something...',
   aiAssistantHint: 'Ask the AI ✨',
+  aiOfflineHint: 'No internet connection - try again once you\'re back online',
   aiSuggestion1: 'What should I buy this month based on my history?',
   aiSuggestion2: 'How can I save money on groceries?',
   aiSuggestion3: 'When is the best time to do a big shop?',

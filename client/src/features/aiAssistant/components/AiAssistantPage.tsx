@@ -113,7 +113,7 @@ export const AiAssistantPage = memo(() => {
           aria-hidden="true"
           sx={{
             position: 'fixed',
-            top: '50%', left: '50%',
+            top: '62%', left: '50%',
             transform: 'translate(-50%, -50%)',
             fontSize: 'min(80vw, 420px)',
             color: isDark ? 'rgba(139,92,246,0.05)' : 'rgba(20,184,166,0.055)',

@@ -656,6 +656,7 @@ export type TranslationKeys =
   | 'aiAssistantIntro'
   | 'aiAssistantPlaceholder'
   | 'aiAssistantHint'
+  | 'aiOfflineHint'
   | 'aiSuggestion1'
   | 'aiSuggestion2'
   | 'aiSuggestion3'
