@@ -39,7 +39,9 @@ export const ConnectionStatusIcon = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: 'rgba(15, 20, 35, 0.97)',
+        background: (isOffline || isTrying)
+          ? 'rgba(154, 52, 18, 0.82)'
+          : 'rgba(120, 53, 15, 0.82)',
         backdropFilter: 'blur(12px)',
         borderBottom: `2px solid ${borderColor}`,
         pt: 'calc(env(safe-area-inset-top) + 8px)',
