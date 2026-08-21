@@ -63,8 +63,12 @@ export const AiAssistantFab = () => {
           sx={{
             position: 'fixed',
             bottom: 'max(96px, calc(env(safe-area-inset-bottom) + 86px))',
+            // left+right פיזיים (לא insetInlineEnd) - באפליקציה שכולה RTL,
+            // insetInlineEnd מתפרש כ-left, בדיוק כמו left שכבר מוגדר - הקופסה
+            // הייתה בלי גבול ממשי בצד ה"סוף", מתרחבת לפי תוכן הטקסט הארוך
+            // ויכולה לצאת מהמסך/להיחתך במקום להתרחב בתוך 16px משני הצדדים.
             left: 16,
-            insetInlineEnd: 16,
+            right: 16,
             zIndex: 1089,
             bgcolor: isDark ? '#1E293B' : '#ffffff',
             color: 'text.primary',
