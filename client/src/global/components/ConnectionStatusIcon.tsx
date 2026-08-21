@@ -35,7 +35,9 @@ export const ConnectionStatusIcon = () => {
   const isOffline = phase === 'offline';
   const isReconnecting = phase === 'reconnecting';
   const label = isOffline
-    ? (pendingCount > 0 ? `${t('offlineMessage')} · ${t('offlinePendingSync')}` : t('offlineMessage'))
+    ? (pendingCount > 0
+        ? `אין קליטה · ${pendingCount} פעולות ממתינות — יישלחו כשיחזור החיבור`
+        : 'אין קליטה · הנתונים יישמרו וישלחו כשיחזור החיבור')
     : isReconnecting ? t('reconnectingMessage') : t('serverUnreachableMessage');
   const color = isReconnecting ? '#FB923C' : '#F97316';
 
