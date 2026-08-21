@@ -37,8 +37,7 @@ export const ConnectionStatusIcon = () => {
   const label = isOffline
     ? (pendingCount > 0 ? `${t('offlineMessage')} · ${t('offlinePendingSync')}` : t('offlineMessage'))
     : isReconnecting ? t('reconnectingMessage') : t('serverUnreachableMessage');
-  // צהוב = socket מנותק, שחור = בעיית שרת/רשת (trying)
-  const color = isOffline ? '#EF4444' : isReconnecting ? '#FBBF24' : '#111111';
+  const color = isReconnecting ? '#FB923C' : '#F97316';
 
   const handleTap = () => {
     haptic('light');
@@ -80,7 +79,7 @@ export const ConnectionStatusIcon = () => {
               position: 'absolute', top: -6, insetInlineEnd: -9,
               minWidth: 13, height: 13, px: '3px',
               borderRadius: '999px',
-              bgcolor: '#EF4444', color: 'white',
+              bgcolor: '#F97316', color: 'white',
               fontSize: 8.5, fontWeight: 800,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               lineHeight: 1,
