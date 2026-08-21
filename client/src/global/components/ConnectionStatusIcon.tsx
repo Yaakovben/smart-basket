@@ -14,10 +14,9 @@ export const ConnectionStatusIcon = () => {
   const isTrying    = phase === 'trying';
   const isReconnecting = phase === 'reconnecting';
 
-  // צבע: offline/trying = כתום-אדמדם יותר, reconnecting = כתום בהיר יותר
   const barColor = (isOffline || isTrying)
-    ? 'linear-gradient(90deg, #ea580c 0%, #f97316 60%, #fb923c 100%)'
-    : 'linear-gradient(90deg, #f97316 0%, #fb923c 60%, #fdba74 100%)';
+    ? 'linear-gradient(90deg, #9a3412 0%, #c2410c 35%, #ea580c 100%)'
+    : 'linear-gradient(90deg, #92400e 0%, #b45309 40%, #d97706 100%)';
 
   const mainText = isOffline || isTrying
     ? 'אין קליטה'
@@ -41,21 +40,21 @@ export const ConnectionStatusIcon = () => {
         zIndex: 9999,
         background: barColor,
         // מרווח safe-area למכשירי notch
-        pt: 'env(safe-area-inset-top)',
-        px: 2,
-        py: '6px',
+        pt: 'calc(env(safe-area-inset-top) + 14px)',
+        pb: '14px',
+        px: 3,
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        gap: 1.5,
+        boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
       }}
     >
-      <WifiFadeIcon style={{ fontSize: 18, color: 'white', flexShrink: 0, opacity: 0.95 }} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'white', lineHeight: 1.3 }}>
+      <WifiFadeIcon style={{ fontSize: 26, color: 'white', flexShrink: 0 }} />
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'white', lineHeight: 1.3, letterSpacing: '-0.01em' }}>
           {mainText}
         </Typography>
-        <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.88)', lineHeight: 1.3 }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
           {subText}
         </Typography>
       </Box>
