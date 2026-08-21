@@ -1,5 +1,7 @@
+import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
@@ -7,14 +9,21 @@ import { WifiFadeIcon } from './icons/WifiFadeIcon';
 // Portal ל-document.body כדי לעקוף ancestor עם transform שהיה שובר position:fixed.
 export const ConnectionStatusIcon = () => {
   const { phase, pendingCount } = useConnectionStatus();
+  const [dismissed, setDismissed] = useState(false);
 
-  if (phase === 'online') return null;
+  // כשהמצב חוזר ל-online — מאפסים את הסתרה כך שיוצג שוב בבעיה הבאה
+  const prevPhase = phase;
+  if (prevPhase === 'online' && dismissed) setDismissed(false);
 
-  const isOffline   = phase === 'offline';
-  const isTrying    = phase === 'trying';
+  const handleDismiss = useCallback(() => setDismissed(true), []);
+
+  if (phase === 'online' || dismissed) return null;
+
+  const isOffline      = phase === 'offline';
+  const isTrying       = phase === 'trying';
   const isReconnecting = phase === 'reconnecting';
 
-  const borderColor = (isOffline || isTrying) ? '#ea580c' : '#f59e0b';
+  const borderColor = (isOffline || isTrying) ? '#fb923c' : '#fbbf24';
 
   const mainText = isOffline || isTrying
     ? 'אין קליטה'
@@ -40,50 +49,59 @@ export const ConnectionStatusIcon = () => {
         right: 0,
         zIndex: 9999,
         background: (isOffline || isTrying)
-          ? 'rgba(154, 52, 18, 0.82)'
-          : 'rgba(120, 53, 15, 0.82)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: `2px solid ${borderColor}`,
+          ? 'rgba(194, 65, 12, 0.72)'
+          : 'rgba(161, 98, 7, 0.72)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: `1.5px solid ${borderColor}`,
         pt: 'calc(env(safe-area-inset-top) + 8px)',
         pb: '8px',
-        px: 2.5,
+        px: 2,
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        gap: 1.25,
+        boxShadow: '0 4px 18px rgba(0,0,0,0.25)',
       }}
     >
-      <WifiFadeIcon style={{ fontSize: 26, color: 'white', flexShrink: 0 }} />
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'white', lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+      <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0 }} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+        <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: 'white', lineHeight: 1.3 }}>
           {mainText}
         </Typography>
         {subText && (
-          <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
             {subText}
           </Typography>
         )}
       </Box>
       {pendingCount > 0 && (
         <Box sx={{
-          mr: 'auto',
-          ml: 0,
-          minWidth: 22,
-          height: 22,
-          px: '5px',
+          minWidth: 20, height: 20, px: '4px',
           borderRadius: '999px',
-          bgcolor: 'rgba(255,255,255,0.25)',
+          bgcolor: 'rgba(255,255,255,0.22)',
           color: 'white',
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: 800,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1.5px solid rgba(255,255,255,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '1.5px solid rgba(255,255,255,0.45)',
+          flexShrink: 0,
         }}>
           {pendingCount > 99 ? '99+' : pendingCount}
         </Box>
       )}
+      <IconButton
+        size="small"
+        onClick={handleDismiss}
+        aria-label="סגור"
+        sx={{
+          color: 'rgba(255,255,255,0.8)',
+          p: '4px',
+          flexShrink: 0,
+          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
+        }}
+      >
+        <CloseIcon sx={{ fontSize: 16 }} />
+      </IconButton>
     </Box>,
     document.body
   );
