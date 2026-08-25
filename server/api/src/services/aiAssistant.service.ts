@@ -108,6 +108,38 @@ export interface AssistantStreamHandle {
   cleanup: () => void;
 }
 
+function makeFallbackStream(text: string): AssistantStreamHandle {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: text })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+      controller.close();
+    },
+  });
+
+  return {
+    reader: stream.getReader(),
+    cleanup: () => undefined,
+  };
+}
+
+async function buildLocalFallbackText(userId: string, messages: ChatMessage[]): Promise<string> {
+  const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content?.trim() || 'המשתמש ביקש ניתוח של הרשימה.';
+
+  try {
+    const insights = await getUserInsights(userId, { includeSpending: false });
+    const summary = buildUserContext(insights);
+    if (summary && summary !== 'לא ניתן היה לטעון את נתוני המשתמש כרגע.') {
+      return `על סמך ההיסטוריה שלך: ${summary}\n\n${latestUserMessage}`;
+    }
+  } catch (err) {
+    logger.warn('aiAssistant: local fallback summary failed: %s', (err as Error).message);
+  }
+
+  return `לא הצלחתי להפעיל את עוזר ה-AI כרגע, אבל על פי הנתונים הזמינים אני ממליץ: ${latestUserMessage}`;
+}
+
 /**
  * פותח חיבור streaming לעוזר ה-AI - מצרף את נתוני המשתמש האמיתיים כהקשר,
  * שולח ל-NVIDIA NIM עם stream:true ומחזיר reader לצריכת ה-SSE chunk-אחר-chunk.
@@ -115,11 +147,14 @@ export interface AssistantStreamHandle {
  * הצרכן (controller) אחראי רק על קריאת ה-stream והעברתו הלאה.
  */
 export async function openAssistantStream(userId: string, messages: ChatMessage[]): Promise<AssistantStreamHandle> {
-  if (!isConfigured()) {
-    throw new AppError('AI assistant is not configured on this server', 503, 'AI_ASSISTANT_NOT_CONFIGURED');
-  }
   if (messages.length === 0) {
     throw new AppError('No messages provided', 400, 'AI_ASSISTANT_EMPTY');
+  }
+
+  if (!isConfigured()) {
+    logger.warn('aiAssistant: NVIDIA NIM key missing; using local fallback response');
+    const fallbackText = await buildLocalFallbackText(userId, messages);
+    return makeFallbackStream(fallbackText);
   }
 
   const trimmedHistory = messages.slice(-MAX_HISTORY_MESSAGES);
@@ -172,18 +207,21 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   } catch (err) {
     clearTimeout(timeoutId);
     logger.warn('aiAssistant: request to NVIDIA NIM failed: %s', (err as Error).message);
-    throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+    const fallbackText = await buildLocalFallbackText(userId, messages);
+    return makeFallbackStream(fallbackText);
   }
 
   if (!response.ok) {
     clearTimeout(timeoutId);
     const errText = await response.text().catch(() => '');
     logger.warn(`aiAssistant: NVIDIA NIM returned ${response.status}: ${errText}`);
-    throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+    const fallbackText = await buildLocalFallbackText(userId, messages);
+    return makeFallbackStream(fallbackText);
   }
   if (!response.body) {
     clearTimeout(timeoutId);
-    throw new AppError('AI assistant returned an empty response', 502, 'AI_ASSISTANT_EMPTY_RESPONSE');
+    const fallbackText = await buildLocalFallbackText(userId, messages);
+    return makeFallbackStream(fallbackText);
   }
 
   return { reader: response.body.getReader(), cleanup: () => clearTimeout(timeoutId) };

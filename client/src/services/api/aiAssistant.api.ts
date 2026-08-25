@@ -32,7 +32,16 @@ export const aiAssistantApi = {
     });
 
     if (!response.ok || !response.body) {
-      throw new AiAssistantStreamError('AI assistant request failed', response.status);
+      let message = 'AI assistant request failed';
+      try {
+        const payload = await response.clone().json();
+        if (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string') {
+          message = payload.message;
+        }
+      } catch {
+        // ignore JSON parse issues; keep generic server error
+      }
+      throw new AiAssistantStreamError(message, response.status);
     }
 
     const reader = response.body.getReader();
