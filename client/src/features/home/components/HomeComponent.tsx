@@ -82,12 +82,11 @@ export const HomeComponent = memo(({
   }
   if (!editList) editListOriginal.current = null;
 
-  const editListData = editList ? { name: editList.name, icon: editList.icon, color: editList.color, isPermanent: !!editList.isPermanent } : null;
+  const editListData = editList ? { name: editList.name, icon: editList.icon, color: editList.color } : null;
   const editListHasChanges = !!(editList && editListOriginal.current && (
     editList.name !== editListOriginal.current.name ||
     editList.icon !== editListOriginal.current.icon ||
-    editList.color !== editListOriginal.current.color ||
-    !!editList.isPermanent !== !!editListOriginal.current.isPermanent
+    editList.color !== editListOriginal.current.color
   ));
 
   const {

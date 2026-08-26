@@ -13,7 +13,6 @@ export interface EditListForm {
   name: string;
   icon: string;
   color: string;
-  isPermanent: boolean;
 }
 
 // ===== מצב דיאלוג אישור =====

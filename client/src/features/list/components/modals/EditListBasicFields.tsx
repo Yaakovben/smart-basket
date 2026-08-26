@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { Box, Typography, Switch } from '@mui/material';
-import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded';
+import { Box, Typography } from '@mui/material';
 import { ClearableTextField } from '../../../../global/components';
 import { COMMON_STYLES, LIST_COLORS } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -106,33 +105,6 @@ export const EditListBasicFields = memo(({ editData, onUpdateData, icons }: Edit
             />
           ))}
         </Box>
-      </Box>
-
-      {/* רשימה קבועה - toggle קליל, לא מודל/מסך נפרד. כשמופעל, "ניקוי רשימה"
-          מרמז למשתמש להשתמש באיפוס (ראו ClearListModal) כדי שהמוצרים יחזרו
-          מוכנים לפעם הבאה במקום להימחק. */}
-      <Box
-        onClick={() => onUpdateData({ ...editData, isPermanent: !editData.isPermanent })}
-        sx={{
-          display: 'flex', alignItems: 'center', gap: 1.25,
-          p: 1.5, mb: 0.5, borderRadius: '14px',
-          bgcolor: editData.isPermanent ? 'rgba(139,92,246,0.08)' : 'action.hover',
-          border: '1px solid',
-          borderColor: editData.isPermanent ? 'rgba(139,92,246,0.25)' : 'transparent',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-        }}
-      >
-        <PushPinRoundedIcon sx={{ fontSize: 20, color: editData.isPermanent ? '#8B5CF6' : 'text.secondary', flexShrink: 0 }} />
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: 'text.primary' }}>
-            {t('permanentList')}
-          </Typography>
-          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.1 }}>
-            {t('permanentListHint')}
-          </Typography>
-        </Box>
-        <Switch checked={editData.isPermanent} onChange={() => onUpdateData({ ...editData, isPermanent: !editData.isPermanent })} onClick={(e) => e.stopPropagation()} size="small" />
       </Box>
     </>
   );

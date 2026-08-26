@@ -51,7 +51,6 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
         name: updatedList.name,
         icon: updatedList.icon,
         color: updatedList.color,
-        isPermanent: updatedList.isPermanent,
         ...(isConvertingToGroup ? { isGroup: true, password: updatedList.password || undefined } : {}),
         ...(isConvertingToPrivate ? { isGroup: false } : {}),
         ...(passwordChanged ? { password: updatedList.password || undefined } : {}),

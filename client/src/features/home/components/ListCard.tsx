@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback, memo } from 'react';
 import { Box, Typography, Card, Chip, IconButton } from '@mui/material';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
-import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { List, Product } from '../../../global/types';
@@ -131,21 +130,8 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
           }} />
         </Box>
       )}
-      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0, position: 'relative' }}>
+      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
         {l.icon}
-        {l.isPermanent && (
-          <Box
-            title={t('permanentList')}
-            sx={{
-              position: 'absolute', top: -5, insetInlineEnd: -5,
-              width: 18, height: 18, borderRadius: '50%',
-              bgcolor: '#8B5CF6', border: '2px solid', borderColor: 'background.paper',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <PushPinRoundedIcon sx={{ fontSize: 10, color: 'white' }} />
-          </Box>
-        )}
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

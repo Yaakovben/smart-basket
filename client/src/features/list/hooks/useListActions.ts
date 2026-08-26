@@ -42,19 +42,18 @@ export const useListActions = ({
     return (
       editListData.name !== list.name ||
       editListData.icon !== list.icon ||
-      editListData.color !== list.color ||
-      editListData.isPermanent !== !!list.isPermanent
+      editListData.color !== list.color
     );
-  }, [editListData, list.name, list.icon, list.color, list.isPermanent]);
+  }, [editListData, list.name, list.icon, list.color]);
 
   const handleEditList = useCallback(() => {
-    setEditListData({ name: list.name, icon: list.icon, color: list.color, isPermanent: !!list.isPermanent });
+    setEditListData({ name: list.name, icon: list.icon, color: list.color });
     setShowEditList(true);
-  }, [list.name, list.icon, list.color, list.isPermanent]);
+  }, [list.name, list.icon, list.color]);
 
   const saveListChanges = useCallback(async () => {
     if (!editListData || !hasListChanges) return;
-    const oldData = { name: list.name, icon: list.icon, color: list.color, isPermanent: list.isPermanent };
+    const oldData = { name: list.name, icon: list.icon, color: list.color };
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון מיידי
     setShowEditList(false);

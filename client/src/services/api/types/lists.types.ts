@@ -44,7 +44,6 @@ export interface List {
   icon: string;
   color: string;
   isGroup: boolean;
-  isPermanent?: boolean;
   owner: {
     id: string;
     name: string;
@@ -67,7 +66,6 @@ export interface CreateListData {
   icon?: string;
   color?: string;
   isGroup?: boolean;
-  isPermanent?: boolean;
   password?: string;
 }
 
@@ -77,7 +75,6 @@ export interface UpdateListData {
   color?: string;
   password?: string | null;
   isGroup?: boolean;
-  isPermanent?: boolean;
 }
 
 export interface JoinGroupData {

@@ -16,7 +16,6 @@ export const listValidator = {
         'string.pattern.base': 'Color must be a valid hex color (e.g., #14B8A6)',
       }),
     isGroup: Joi.boolean().default(false),
-    isPermanent: Joi.boolean().default(false),
     password: Joi.string().length(4).optional().messages({
       'string.length': 'Password must be exactly 4 characters',
     }),
@@ -37,7 +36,6 @@ export const listValidator = {
       'string.length': 'Password must be exactly 4 characters',
     }),
     isGroup: Joi.boolean().optional(),
-    isPermanent: Joi.boolean().optional(),
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
   }),
@@ -67,7 +65,6 @@ export type CreateListInput = {
   icon?: string;
   color?: string;
   isGroup?: boolean;
-  isPermanent?: boolean;
   password?: string;
 };
 
@@ -77,7 +74,6 @@ export type UpdateListInput = {
   color?: string;
   password?: string | null;
   isGroup?: boolean;
-  isPermanent?: boolean;
 };
 
 export type JoinGroupInput = {
