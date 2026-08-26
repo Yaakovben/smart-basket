@@ -527,6 +527,7 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
         <ClearListModal
           pendingCount={pending.length}
           purchasedCount={purchased.length}
+          isPermanent={list.isPermanent}
           onClear={handleClearList}
           onReset={handleResetList}
           onClose={() => setShowClearList(false)}

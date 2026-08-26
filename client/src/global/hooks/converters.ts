@@ -37,6 +37,7 @@ export const convertApiList = (apiList: ApiList): List => ({
   icon: apiList.icon,
   color: apiList.color,
   isGroup: apiList.isGroup,
+  isPermanent: apiList.isPermanent,
   owner: {
     id: apiList.owner.id,
     name: apiList.owner.name,

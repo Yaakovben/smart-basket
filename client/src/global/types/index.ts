@@ -74,6 +74,7 @@ export interface List {
   icon: string;
   color: string;
   isGroup: boolean;
+  isPermanent?: boolean;
   owner: User;
   members: Member[];
   products: Product[];

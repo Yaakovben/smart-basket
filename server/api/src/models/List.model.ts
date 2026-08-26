@@ -15,6 +15,7 @@ export interface IList extends Document {
   icon: string;
   color: string;
   isGroup: boolean;
+  isPermanent: boolean;
   owner: Types.ObjectId;
   members: IMember[];
   inviteCode?: string;
@@ -61,6 +62,13 @@ const listSchema = new Schema<IList>(
       default: '#14B8A6',
     },
     isGroup: {
+      type: Boolean,
+      default: false,
+    },
+    // רשימה קבועה (למשל "מוצרי בסיס שבועיים") - "ניקוי" ברשימה כזו מאפס
+    // את המוצרים ל"לא נקנה" (resetProducts) במקום למחוק אותם, כדי שהרשימה
+    // תהיה מוכנה שוב לפעם הבאה בלי לבנות אותה מחדש.
+    isPermanent: {
       type: Boolean,
       default: false,
     },

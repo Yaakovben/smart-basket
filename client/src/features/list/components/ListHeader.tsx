@@ -7,6 +7,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
+import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded';
 import type { List, User } from '../../../global/types';
 import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
@@ -181,6 +182,9 @@ export const ListHeader = memo(({
           }}>
             {list.name}
           </Typography>
+          {list.isPermanent && (
+            <PushPinRoundedIcon titleAccess={t('permanentList')} sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 16, flexShrink: 0 }} />
+          )}
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

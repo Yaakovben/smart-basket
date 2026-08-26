@@ -4,6 +4,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded';
 import { Modal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 
@@ -37,18 +38,31 @@ const RESET_OPTION = { rgb: '59,130,246', hex: '#3B82F6', Icon: RestartAltIcon, 
 interface ClearListModalProps {
   pendingCount: number;
   purchasedCount: number;
+  isPermanent?: boolean;
   onClear: (filter: 'all' | 'purchased' | 'pending') => void;
   onReset: () => void;
   onClose: () => void;
 }
 
-export const ClearListModal = memo(({ pendingCount, purchasedCount, onClear, onReset, onClose }: ClearListModalProps) => {
+export const ClearListModal = memo(({ pendingCount, purchasedCount, isPermanent = false, onClear, onReset, onClose }: ClearListModalProps) => {
   const { t } = useSettings();
   const counts = { all: pendingCount + purchasedCount, purchased: purchasedCount, pending: pendingCount };
   const ResetIcon = RESET_OPTION.Icon;
 
   return (
     <Modal title={t('clearList')} onClose={onClose}>
+      {isPermanent && purchasedCount > 0 && (
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
+          p: 1.25, borderRadius: '12px',
+          bgcolor: 'rgba(139,92,246,0.08)', border: '1px solid', borderColor: 'rgba(139,92,246,0.2)',
+        }}>
+          <PushPinRoundedIcon sx={{ fontSize: 18, color: '#8B5CF6', flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+            {t('permanentListClearHint')}
+          </Typography>
+        </Box>
+      )}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {CLEAR_OPTIONS.map(({ filter, rgb, hex, Icon, label, desc }) =>
           counts[filter] > 0 && (
