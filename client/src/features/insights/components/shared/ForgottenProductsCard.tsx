@@ -4,9 +4,10 @@ import { fadeIn } from './animations';
 // ===== כרטיס "מוצרים שאולי שכחת" - friendly nudge =====
 // מציג מוצרים שלא נראו לאחרונה ברשימות פעילות. מטרה: trigger רגשי
 // ("אה נכון! שכחתי") שגורם למשתמש להוסיף לרשימה.
-export const ForgottenProductsCard = ({ items, isDark }: {
+export const ForgottenProductsCard = ({ items, isDark, t }: {
   items: { name: string; lastSeen: string; category: string }[];
   isDark: boolean;
+  t: (key: string) => string;
 }) => {
   if (!items || items.length === 0) return null;
   return (
@@ -23,10 +24,10 @@ export const ForgottenProductsCard = ({ items, isDark }: {
         <Typography sx={{ fontSize: 18 }}>🤔</Typography>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-            אולי שכחת?
+            {t('maybeForgotTitle')}
           </Typography>
           <Typography sx={{ fontSize: 10.5, color: 'text.secondary', lineHeight: 1.3, mt: 0.15 }}>
-            מוצרים שקנית בעבר אבל לא הופיעו לאחרונה
+            {t('maybeForgotDesc')}
           </Typography>
         </Box>
       </Box>
@@ -46,7 +47,7 @@ export const ForgottenProductsCard = ({ items, isDark }: {
                 {p.name}
               </Typography>
               <Typography sx={{ fontSize: 9.5, fontWeight: 700, color: '#D97706', fontVariantNumeric: 'tabular-nums' }}>
-                · לפני {daysAgo}י׳
+                · {t('daysAgoSuffix').replace('{days}', String(daysAgo))}
               </Typography>
             </Box>
           );

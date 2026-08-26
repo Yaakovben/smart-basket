@@ -3,11 +3,14 @@ import { Box, Typography, Button } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import type { NearestBranch } from '../types/priceComparison.types';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 // סניף קרוב + כפתור ניווט - מוצג בתוך הפירוט המורחב של כרטיס רשת
 export const ChainBranchInfo = memo(({ branch, isDark, onNavigate }: {
   branch: NearestBranch; isDark: boolean; onNavigate: (e: React.MouseEvent) => void;
-}) => (
+}) => {
+  const { t } = useSettings();
+  return (
   <Box sx={{
     mt: 1.25, p: 1, borderRadius: '10px',
     bgcolor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
@@ -44,8 +47,9 @@ export const ChainBranchInfo = memo(({ branch, isDark, onNavigate }: {
         '& .MuiButton-startIcon': { mr: 0, ml: 0 },
       }}
     >
-      ניווט
+      {t('mapPopupNavigate')}
     </Button>
   </Box>
-));
+  );
+});
 ChainBranchInfo.displayName = 'ChainBranchInfo';

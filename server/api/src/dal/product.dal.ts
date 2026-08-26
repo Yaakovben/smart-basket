@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Product, type IProductDoc } from '../models';
+import { Product, MAX_EDIT_HISTORY, type IProductDoc, type IProductEditEntry } from '../models';
 import { createBaseDal } from './base.dal';
 
 export interface CreateProductInput {
@@ -23,6 +23,7 @@ export const ProductDAL = {
       .populate('addedBy', 'name')
       .populate('updatedBy', 'name')
       .populate('purchasedBy', 'name')
+      .populate('editHistory.editedBy', 'name')
       .sort({ position: 1, createdAt: 1 })
       .lean();
   },
@@ -40,6 +41,7 @@ export const ProductDAL = {
       .populate('addedBy', 'name')
       .populate('updatedBy', 'name')
       .populate('purchasedBy', 'name')
+      .populate('editHistory.editedBy', 'name')
       .sort({ position: 1, createdAt: 1 })
       .lean();
 
@@ -91,6 +93,27 @@ export const ProductDAL = {
       .populate('addedBy', 'name')
       .populate('updatedBy', 'name')
       .populate('purchasedBy', 'name');
+  },
+
+  // כמו updateProductInList, אבל גם דוחף רשומת עריכה ל-editHistory (עם
+  // $slice שמגביל ל-MAX_EDIT_HISTORY האחרונות) - שימוש יחיד: עריכת תוכן
+  // (לא סימון קנייה) שבאמת שינתה שדה, ראה product.service.ts:updateProduct.
+  async updateProductInListWithHistory(
+    productId: string, listId: string, updates: Partial<IProductDoc>, historyEntry: IProductEditEntry
+  ): Promise<IProductDoc | null> {
+    return Product
+      .findOneAndUpdate(
+        { _id: productId, listId },
+        {
+          $set: updates,
+          $push: { editHistory: { $each: [historyEntry], $slice: -MAX_EDIT_HISTORY } },
+        },
+        { new: true }
+      )
+      .populate('addedBy', 'name')
+      .populate('updatedBy', 'name')
+      .populate('purchasedBy', 'name')
+      .populate('editHistory.editedBy', 'name');
   },
 
   async deleteProduct(productId: string): Promise<IProductDoc | null> {

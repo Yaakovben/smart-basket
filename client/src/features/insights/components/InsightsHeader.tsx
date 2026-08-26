@@ -31,6 +31,9 @@ export const InsightsHeader = ({ isDark, title, onBack, mb = 1.5 }: InsightsHead
             {title}
           </Typography>
         </Box>
+        {/* מרווח סימטרי לכפתור החזרה - שומר על כותרת ממורכזת באמת.
+            אייקון החיבור עבר ל-overlay גלובלי (ConnectionStatusIcon,
+            mounted פעם אחת ב-AppRouter) ולא צריך יותר סלוט כאן. */}
         <Box sx={{ width: 36, flexShrink: 0 }} />
       </Box>
     </Box>

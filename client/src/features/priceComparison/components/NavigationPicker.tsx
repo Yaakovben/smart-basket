@@ -9,6 +9,7 @@ import { Box, Typography, IconButton, Dialog } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import type { NearestBranch } from '../types/priceComparison.types';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 // בוני URL לאפליקציות הניווט השונות - לא פותחים ישר, מציגים picker למשתמש.
 // אם יש lat/lng - ניווט מדויק. אם יש רק כתובת (כמו במעיין 2000/שפע) -
@@ -60,6 +61,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
   isDark?: boolean;
   onClose: () => void;
 }) => {
+  const { t } = useSettings();
   if (!branch) return null;
   const urls = buildNavUrls(branch);
   const open = (url: string) => {
@@ -124,7 +126,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     {
       key: 'waze',
       label: 'Waze',
-      subtitle: 'ניווט קהילתי',
+      subtitle: t('wazeSubtitle'),
       icon: WazeLogo,
       color: '#33CCFF',
       url: urls.waze,
@@ -132,7 +134,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     {
       key: 'googleMaps',
       label: 'Google Maps',
-      subtitle: 'מפות גוגל',
+      subtitle: t('googleMapsSubtitle'),
       icon: GoogleMapsLogo,
       color: '#1A73E8',
       url: urls.googleMaps,
@@ -140,7 +142,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
     {
       key: 'appleMaps',
       label: 'Apple Maps',
-      subtitle: 'מפות אפל',
+      subtitle: t('appleMapsSubtitle'),
       icon: AppleMapsLogo,
       color: '#64748B',
       url: urls.appleMaps,
@@ -196,7 +198,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         <IconButton
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          aria-label="חזור"
+          aria-label={t('back')}
           disableRipple
           disableFocusRipple
           sx={{
@@ -227,16 +229,16 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
                 {branch.isApproximate ? `~${branch.distanceKm}` : branch.distanceKm}
               </Typography>
               <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', letterSpacing: 0.3 }}>
-                ק״מ{branch.isApproximate ? ' (משוער)' : ''}
+                {t('kmUnit')}{branch.isApproximate ? t('distanceApproxSuffix') : ''}
               </Typography>
             </>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.2 }}>
               <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1, letterSpacing: 0.3 }}>
-                מרחק לא ידוע
+                {t('distanceUnknown')}
               </Typography>
               <Typography sx={{ fontSize: 8.5, fontWeight: 600, color: 'rgba(255,255,255,0.85)', lineHeight: 1 }}>
-                ניווט לפי כתובת
+                {t('navigateByAddress')}
               </Typography>
             </Box>
           )}
@@ -246,7 +248,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
           fontSize: 9.5, fontWeight: 800, color: '#0D9488',
           letterSpacing: 1.4, textTransform: 'uppercase', mb: 0.4, opacity: 0.85,
         }}>
-          ניווט אל
+          {t('navigateTo')}
         </Typography>
         <Typography sx={{
           fontSize: 18, fontWeight: 800, color: 'text.primary',
@@ -320,7 +322,7 @@ export const NavigationPicker = memo(({ branch, isDark, onClose }: {
         fontSize: 10, color: 'text.disabled', textAlign: 'center',
         pt: 1, pb: 1.75, px: 2, lineHeight: 1.4,
       }}>
-        אם האפליקציה לא מותקנת היא תיפתח בדפדפן
+        {t('navAppFallbackHint')}
       </Typography>
     </Dialog>
   );

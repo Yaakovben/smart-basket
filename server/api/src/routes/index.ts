@@ -11,6 +11,7 @@ import ocrRoutes from './ocr.routes';
 import aiAssistantRoutes from './aiAssistant.routes';
 import { dailyFaithRoutes } from '../features/daily-faith';
 import { priceComparisonRoutes } from '../features/priceComparison';
+import emailRoutes from './email.routes';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/ocr', ocrRoutes);
 router.use('/ai-assistant', aiAssistantRoutes);
 router.use('/price-comparison', priceComparisonRoutes);
 router.use('/daily-faith', dailyFaithRoutes);
+router.use('/email', emailRoutes);
 
 export default router;

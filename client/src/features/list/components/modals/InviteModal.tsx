@@ -54,7 +54,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
         if (!blob) return;
         if (navigator.share) {
           const file = new File([blob], `${list.name}-qr.png`, { type: 'image/png' });
-          navigator.share({ title: `הצטרף ל"${list.name}"`, files: [file] }).catch(() => {});
+          navigator.share({ title: t('joinListShareTitle').replace('{name}', list.name), files: [file] }).catch(() => {});
         } else {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
@@ -111,7 +111,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
               '@media (max-width: 360px)': { fontSize: 11 },
             }}
           >
-            רשימת: "{list.name}"
+            {t('listColonName').replace('{name}', list.name)}
           </Typography>
         </Box>
 
@@ -156,7 +156,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   transition: 'opacity 0.2s ease',
                 }}
               >
-                {tab === 'text' ? 'הצג QR' : 'חזור לקוד וסיסמה'}
+                {tab === 'text' ? t('showQr') : t('backToCodePassword')}
               </Typography>
             </Box>
           </Box>
@@ -243,7 +243,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   },
                 }}
               >
-                העתק
+                {t('copy')}
               </Button>
             </Box>
             {switcher}
@@ -289,13 +289,13 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                 />
               </Box>
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.75, fontWeight: 500, '@media (max-width: 360px)': { fontSize: 10, mt: 0.25 } }}>
-                סרוק להצטרפות מיידית
+                {t('scanToJoinInstantly')}
               </Typography>
             </Box>
             {/* כפתורים */}
             <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
               <Button
-                aria-label="שלח QR"
+                aria-label={t('sendQrAria')}
                 fullWidth disableRipple disableFocusRipple onClick={handleShareQR}
                 sx={{
                   background: `linear-gradient(135deg, ${BRAND_COLORS.whatsapp}, ${BRAND_COLORS.whatsappHover}) !important`,
@@ -370,7 +370,7 @@ export const InviteModal = memo(({ isOpen, list, onClose, showToast }: InviteMod
                   },
                 }}
               >
-                שמור
+                {t('save')}
               </Button>
             </Box>
             {switcher}

@@ -78,8 +78,12 @@ const CHAIN_BRANDS: Record<ChainId, { brands: string[]; names: string[] }> = {
   // chainId נפרד. ראו הסרת ה-adapter המדומה 'netto' - לא היה לו username
   // אמיתי לנחש כי הרשת הזו לא קיימת כרשומה עצמאית בפורטל.
   super_sapir: {
-    brands: ['Super Sapir', 'SuperSapir', 'Sapir', 'Netto Hisachon', 'Netto'],
-    names: ['סופר ספיר', 'ספיר', 'רשת ספיר', 'נטו חיסכון', 'נטו'],
+    brands: ['Super Sapir', 'SuperSapir', 'Sapir'],
+    names: ['סופר ספיר', 'ספיר', 'רשת ספיר'],
+  },
+  netto_hisachon: {
+    brands: ['Netto Hisachon', 'Netto', 'Netto Hisachon Sapir'],
+    names: ['נטו חיסכון', 'נטו', 'נטו-חיסכון'],
   },
   carrefour: {
     brands: ['Carrefour', 'Yaynot Bitan', 'Yaynot Bitan Carrefour', 'Yenot Bitan', 'Mega', 'Mega Bool', "Mega Ba'Ir"],
@@ -94,6 +98,7 @@ export interface OsmBranch {
   address?: string;
   lat: number;
   lng: number;
+  openingHours?: string;
 }
 
 interface OverpassElement {
@@ -154,13 +159,16 @@ function parseElement(el: OverpassElement, chainId: ChainId): OsmBranch | null {
   const address = addrParts.length > 0 ? addrParts.join(' ') : undefined;
   const city = tags['addr:city'] || tags['addr:suburb'] || tags.city;
 
+  const openingHours = tags['opening_hours'] || undefined;
+
   return {
-    storeId: `osm-${el.type}-${el.id}`, // מזהה ייחודי מ-OSM
+    storeId: `osm-${el.type}-${el.id}`,
     storeName: name,
     city,
     address,
     lat,
     lng,
+    openingHours,
   };
 }
 

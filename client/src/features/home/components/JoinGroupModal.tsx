@@ -165,7 +165,7 @@ export const JoinGroupModal = ({
           }}
         >
           <QrCodeScannerIcon sx={{ fontSize: 14 }} />
-          הצטרף באמצעות QR
+          {t('joinViaQr')}
         </Box>
       </Box>
 

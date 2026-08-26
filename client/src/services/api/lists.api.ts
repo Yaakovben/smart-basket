@@ -47,4 +47,5 @@ export const listsApi = {
     const response = await apiClient.delete<{ data: List }>(`/lists/${listId}/members/${memberId}`);
     return response.data.data;
   },
+
 };

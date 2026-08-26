@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { fadeIn } from './animations';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== Group Leadership Hero - "אתה מוביל ב-X קבוצות" =====
 // מציג סטטוס מנהיגות מצרפי על פני כל הקבוצות. אם המשתמש מקום ראשון
@@ -7,6 +8,7 @@ import { fadeIn } from './animations';
 export const GroupLeadershipHero = ({ leadingCount, totalGroups }: {
   leadingCount: number; totalGroups: number; isDark?: boolean;
 }) => {
+  const { t } = useSettings();
   if (totalGroups === 0) return null;
 
   const isWinner = leadingCount > 0;
@@ -16,14 +18,14 @@ export const GroupLeadershipHero = ({ leadingCount, totalGroups }: {
   const emoji = isWinner ? (leadingCount >= 2 ? '👑' : '🏆') : '🤝';
   const title = isWinner
     ? leadingCount === totalGroups
-      ? 'מלך הקבוצות'
-      : `מוביל ב-${leadingCount} ${leadingCount === 1 ? 'קבוצה' : 'קבוצות'}`
-    : `שותף ב-${totalGroups} ${totalGroups === 1 ? 'קבוצה' : 'קבוצות'}`;
+      ? t('kingOfGroups')
+      : t('leadingInGroupsCount').replace('{count}', String(leadingCount)).replace('{groupWord}', leadingCount === 1 ? t('groupWordSingle') : t('groupWordPlural'))
+    : t('partnerInGroupsCount').replace('{count}', String(totalGroups)).replace('{groupWord}', totalGroups === 1 ? t('groupWordSingle') : t('groupWordPlural'));
   const subtitle = isWinner
     ? leadingCount === totalGroups
-      ? 'מקום ראשון בכל קבוצה — מדהים!'
-      : `מתוך ${totalGroups} סך הכל`
-    : 'הוסף עוד פריטים כדי להיות מוביל';
+      ? t('firstPlaceEveryGroup')
+      : t('outOfTotalGroups').replace('{total}', String(totalGroups))
+    : t('addMoreToLead');
 
   return (
     <Box sx={{

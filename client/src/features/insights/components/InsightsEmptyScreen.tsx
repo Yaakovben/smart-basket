@@ -25,10 +25,10 @@ export const InsightsEmptyScreen = ({ isDark, t, onBack, onNavigateHome }: Insig
           accent="#14B8A6"
           mainEmoji="💡"
           floatingItems={['💰', '📍', '📊', '🛒']}
-          title="ברוך הבא לתובנות!"
-          description="צור רשימה ראשונה - וכאן תקבל השוואת מחירים בין רשתות, מפת הסניפים הקרובים אליך, וניתוח הרגלי הקנייה שלך."
-          tips={['💰 הכי זול', '📍 הכי קרוב', '📊 הרגלים']}
-          ctaLabel="לרשימות שלי"
+          title={t('insightsWelcomeTitle')}
+          description={t('insightsWelcomeDesc')}
+          tips={[t('insightsTipCheapest'), t('insightsTipNearest'), t('insightsTipHabits')]}
+          ctaLabel={t('toMyLists')}
           ctaIcon={<HomeIcon sx={{ fontSize: 18 }} />}
           onCtaClick={() => { haptic('medium'); onNavigateHome(); }}
         />

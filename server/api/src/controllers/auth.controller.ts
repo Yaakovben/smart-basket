@@ -42,9 +42,9 @@ export const checkEmail = asyncHandler(async (req: Request, res: Response) => {
  * יצירת חשבון חדש עם מייל + סיסמה. מחזיר את המשתמש + זוג טוקנים.
  */
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const data = req.body as RegisterInput;
+  const registerInput = req.body as RegisterInput;
   const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.register(data, ipAddress, userAgent);
+  const result = await authService.register(registerInput, ipAddress, userAgent);
   res.status(201).json({ success: true, data: result });
 });
 
@@ -53,9 +53,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
  * כניסה עם מייל + סיסמה. מחזיר את המשתמש + זוג טוקנים.
  */
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const data = req.body as LoginInput;
+  const loginInput = req.body as LoginInput;
   const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.login(data, ipAddress, userAgent);
+  const result = await authService.login(loginInput, ipAddress, userAgent);
   res.json({ success: true, data: result });
 });
 
@@ -64,9 +64,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
  * כניסה/הרשמה עם Google OAuth access-token.
  */
 export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
-  const data = req.body as GoogleAuthInput;
+  const googleAuthInput = req.body as GoogleAuthInput;
   const { ipAddress, userAgent } = getClientInfo(req);
-  const result = await authService.googleAuth(data, ipAddress, userAgent);
+  const result = await authService.googleAuth(googleAuthInput, ipAddress, userAgent);
   res.json({ success: true, data: result });
 });
 

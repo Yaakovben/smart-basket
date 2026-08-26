@@ -4,33 +4,48 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AiAssistantIcon } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { haptic } from '../../../global/helpers';
+import { useConnectionStatus } from '../../../global/hooks';
+import { haptic, safeStorage } from '../../../global/helpers';
 
-const HINT_SEEN_KEY = 'sb_ai_assistant_hint_seen';
 const HINT_SHOW_DELAY_MS = 700;
-const HINT_AUTOHIDE_MS = 5000;
+const HINT_AUTOHIDE_MS = 7000;
+const NEW_BADGE_KEY = 'sb_ai_fab_used';
 
 // כפתור צף לעוזר ה-AI - פינה שמאלית תחתונה (פיזית, לא RTL-relative), מעל
 // בר הניווט התחתון. Portal ל-document.body כמו HomeBottomNav, כדי לעקוף
 // ancestor עם transform/filter שהיה הופך position:fixed ליחסי לאב.
 export const AiAssistantFab = () => {
   const navigate = useNavigate();
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   const isDark = settings.theme === 'dark';
+  const { phase } = useConnectionStatus();
   const [showHint, setShowHint] = useState(false);
+  // תג "חדש" - נשאר עד שהמשתמש בפועל פותח את העוזר בפעם הראשונה, לא רק
+  // עד שרואה את הרמז הטקסטואלי (שנעלם אחרי 7ש' ועלול לפספס משתמש שלא שם לב).
+  const [showNewBadge, setShowNewBadge] = useState(() => safeStorage.get(NEW_BADGE_KEY) !== 'true');
 
-  // רמז טקסט "שאל את ה-AI" - מוצג פעם אחת בלבד בחיי המשתמש (localStorage),
-  // עם עיכוב קטן כדי לא להבהב מיד עם טעינת הדף, ונעלם אוטומטית אחרי כמה שניות.
+  // רמז טקסט "שאל את ה-AI" - מוצג בכל פתיחת דף הבית, נעלם אחרי 7 שניות.
   useEffect(() => {
-    if (localStorage.getItem(HINT_SEEN_KEY)) return;
-    localStorage.setItem(HINT_SEEN_KEY, '1');
     const showTimer = window.setTimeout(() => setShowHint(true), HINT_SHOW_DELAY_MS);
     const hideTimer = window.setTimeout(() => setShowHint(false), HINT_SHOW_DELAY_MS + HINT_AUTOHIDE_MS);
     return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer); };
   }, []);
 
   const handleOpen = () => {
+    // בלי אינטרנט, ניווט לעמוד ה-AI פשוט "תקוע" בלי שום משוב - עמוד הצ'אט
+    // נטען lazy (code-splitting) וה-SW הזה בכוונה לא עושה שום caching (ראו
+    // sw.ts), אז ה-chunk שלו חייב רשת בכל טעינה. לא מנווטים במצב הזה - אין
+    // צורך בהודעת טקסט משלנו, הבאנר הגלובלי (ConnectionStatusIcon) כבר
+    // מציג "אין קליטה" למעלה בכל עמוד.
+    if (phase !== 'online') {
+      haptic('light');
+      return;
+    }
     setShowHint(false);
+    if (showNewBadge) {
+      setShowNewBadge(false);
+      safeStorage.set(NEW_BADGE_KEY, 'true');
+    }
     haptic('light');
     navigate('/assistant');
   };
@@ -68,11 +83,11 @@ export const AiAssistantFab = () => {
             },
           }}
         >
-          שאל את ה-AI ✨
+          {t('aiAssistantHint')}
         </Box>
       )}
       <Box
-        aria-label="עוזר קניות חכם"
+        aria-label={t('aiAssistantTitle')}
         role="button"
         tabIndex={0}
         onClick={(e) => {
@@ -105,6 +120,28 @@ export const AiAssistantFab = () => {
         }}
       >
         <AiAssistantIcon sx={{ fontSize: 22, color: 'white', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} />
+        {showNewBadge && (
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute', top: -8, insetInlineEnd: -10,
+              px: 0.6, py: 0.15, borderRadius: '999px',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#F8FAFB',
+              color: 'white', fontSize: 8.5, fontWeight: 800, lineHeight: 1.4,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
+              animation: 'aiNewBadgePulse 1.8s ease-out infinite',
+              '@keyframes aiNewBadgePulse': {
+                '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
+                '70%': { boxShadow: '0 0 0 6px rgba(139,92,246,0)' },
+                '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
+              },
+            }}
+          >
+            חדש
+          </Box>
+        )}
       </Box>
     </>,
     document.body

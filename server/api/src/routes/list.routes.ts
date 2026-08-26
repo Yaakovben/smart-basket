@@ -28,7 +28,7 @@ router.use(authenticate);
 router.get('/', getLists);
 router.post('/', validate(listValidator.create), createList);
 
-// חייב לבוא לפני /:id כדי ש-Express לא יתפוס את "join" כמזהה
+// חייב לבוא לפני /:id כדי ש-Express לא יתפוס את "join" / "templates" כמזהה
 router.post('/join', joinGroupLimiter, validate(listValidator.join), joinGroup);
 
 // === Item ===

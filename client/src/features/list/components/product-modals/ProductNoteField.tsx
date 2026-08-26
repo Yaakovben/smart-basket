@@ -1,11 +1,13 @@
 import { memo, useState } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import { haptic } from '../../../../global/helpers';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
 // עיצוב פתק יצירתי: סלוטייפ באמצע למעלה, פינה מקופלת בשמאל-עליון,
 // הטיה קלה, קווי מחברת עדינים, וגופן Caveat איטלי.
 export const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const { t } = useSettings();
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
 
@@ -48,7 +50,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           }}
         >
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
-            הוסף הערה
+            {t('addNote')}
           </Typography>
           {/* תג + עגול בסוף הצ'יפ (צד שמאל ב-RTL) - מבהיר שזה כפתור הוספה לחיץ */}
           <Box sx={{
@@ -106,10 +108,10 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
                 fontSize: 10, fontWeight: 800, color: '#0F766E',
                 letterSpacing: 1, textTransform: 'uppercase',
               }}>
-                הערה
+                {t('note')}
               </Typography>
               <Typography sx={{ fontSize: 9.5, color: 'rgba(15,118,110,0.7)', fontWeight: 500, mt: 0.15 }}>
-                כשרות · סוג · מותג
+                {t('noteHintKosherTypeBrand')}
               </Typography>
             </Box>
             <Box sx={{
@@ -129,7 +131,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             {/* רווח 1.25 בין הספירה ל-X כדי שלא יהיו דבוקים */}
             <Box
               role="button"
-              aria-label="סגור הערה"
+              aria-label={t('closeNoteAria')}
               onClick={closeAndClear}
               sx={{
                 ml: 1.25,
@@ -155,7 +157,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             autoFocus={expanded && value.length === 0}
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder="פרט על המוצר - כשרות, סוג וכו׳"
+            placeholder={t('productNotePlaceholder')}
             inputProps={{ maxLength: 200 }}
             sx={{
               position: 'relative', zIndex: 2,

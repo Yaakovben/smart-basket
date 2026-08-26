@@ -3,7 +3,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import { ClearableTextField } from '../../../global/components';
-import { ServerConnectionBanner } from '../../../global/components/ServerConnectionBanner';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -24,7 +23,6 @@ interface HomeHeaderProps {
   groupsCount: number;
   totalUnreadCount: number;
   notificationsLoading: boolean;
-  serverConnectionVisible?: boolean;
   onAvatarClick: () => void;
   onNotificationsClick: () => void;
   onSettingsClick: () => void;
@@ -34,7 +32,7 @@ interface HomeHeaderProps {
 // כותרת מסך הבית: אווטאר + ברכה, כפתורי התראות/הגדרות, חיפוש וטאבים.
 export const HomeHeader = ({
   user, greeting, isDark, search, onSearchChange, tab, onTabChange,
-  allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading, serverConnectionVisible = false,
+  allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading,
   onAvatarClick, onNotificationsClick, onSettingsClick, t,
 }: HomeHeaderProps) => {
   const notificationsTap = useReliableTap(onNotificationsClick);
@@ -109,9 +107,6 @@ export const HomeHeader = ({
           </Box>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          {/* אייקון "אין חיבור לשרת" - inline ליד הפעמון, לא overlay צף.
-              ServerConnectionBanner מחזיר null בעצמו כשאין בעיה. */}
-          <ServerConnectionBanner visible={serverConnectionVisible} />
           {/* useReliableTap: onPointerUp + blur במקום onClick רגיל - אותו
               דפוס בדיוק כמו ב-HomeBottomNav, שם onClick רגיל התגלה כלא אמין
               (לפעמים לא מגיב) על חלק מהמכשירים: focus שנשאר תקוע אחרי לחיצה

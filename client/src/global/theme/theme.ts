@@ -25,7 +25,6 @@ const COLORS = {
     main: '#22C55E',
     dark: '#16A34A'
   },
-  // צבעי מצב בהיר
   light: {
     background: '#F8FAFC',
     paper: '#FFFFFF',
@@ -38,7 +37,6 @@ const COLORS = {
     headerGradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     cardShadow: '0 2px 8px rgba(0,0,0,0.04)'
   },
-  // צבעי מצב כהה
   dark: {
     background: '#111827',
     paper: '#1F2937',

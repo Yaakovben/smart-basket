@@ -19,6 +19,7 @@ import { asyncHandler } from '../utils';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
+import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
 
 /**
  * GET /api/admin/users
@@ -211,4 +212,23 @@ export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response)
       collections: perCollection,
     },
   });
+});
+
+/**
+ * GET /api/admin/ai-status
+ * מצב עוזר ה-AI: איזה ספק/מודל פעיל כרגע, מתי עודכן, כמה בקשות בוצעו,
+ * מכסת ה-rate-limit שהספק עצמו מחזיר (מתי מתאפסת, כמה נשאר), ומי הגיבוי.
+ */
+export const getAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const data = await getAiStatus();
+  res.json({ success: true, data });
+});
+
+/**
+ * POST /api/admin/ai-status/refresh
+ * מאלץ בדיקה מחדש של המודל הכי טוב הזמין ב-Groq עכשיו, בלי לחכות ל-cache השעתי.
+ */
+export const refreshAiStatusHandler = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const data = await refreshAiStatus();
+  res.json({ success: true, data });
 });

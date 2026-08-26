@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import app from './app';
 import { env, connectDatabase, logger } from './config';
 import { startPriceSyncJob } from './features/priceComparison';
+import { warmGroqModel } from './services/aiAssistant.service';
 
 // אתחול Sentry לניטור שגיאות (חייב להיות ראשון)
 if (env.SENTRY_DSN) {
@@ -24,6 +25,8 @@ const startServer = async () => {
 
     server = app.listen(env.PORT, () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+      // discovery ברקע — מחמם את cache המודל לפני שמשתמש יגיע
+      warmGroqModel();
     });
 
     // התחלת cron job לרענון מחירים - בכל סביבה שהיא לא development (dev מקומי).

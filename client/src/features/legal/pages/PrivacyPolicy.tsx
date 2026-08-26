@@ -29,12 +29,13 @@ export const PrivacyPolicy = memo(() => {
   const isDark = settings.theme === 'dark';
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 4 }}>
+    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
         p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
-        borderRadius: '0 0 24px 24px'
+        borderRadius: '0 0 24px 24px',
+        flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton
@@ -51,12 +52,12 @@ export const PrivacyPolicy = memo(() => {
       </Box>
 
       {/* Content */}
-      <Box sx={{ p: 2, maxWidth: 600, mx: 'auto' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', p: 2, pb: 'calc(32px + env(safe-area-inset-bottom))', maxWidth: 600, mx: 'auto', width: '100%' }}>
         <Paper sx={{ p: 3, borderRadius: '16px' }}>
           {language === 'he' ? (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                עדכון אחרון: מרץ 2026
+                עדכון אחרון: אוגוסט 2026
               </Typography>
 
               <SectionText>
@@ -110,17 +111,37 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. שימוש ושיתוף</SectionTitle>
               <SectionText>
-                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי. מידע מועבר רק למשתמשים ברשימות משותפות ולספקי תשתית הכרחיים.
+                המידע משמש לתפעול השירות בלבד. Smart Basket אינה מוכרת מידע אישי ואינה משתמשת בו לפרסום. מידע מועבר רק למשתמשים ברשימות משותפות (שם ותמונת פרופיל) ולספקי תשתית הכרחיים הפועלים מטעמנו, ביניהם: אחסון בסיס נתונים (MongoDB Atlas), אחסון והרצת שרתים (Render, Vercel), התחברות באמצעות חשבון Google (Google OAuth), שירות ניתוח שימוש אנונימי לשיפור השירות (PostHog), שירות דיווח על תקלות (Sentry) ושירות זיהוי טקסט בתמונות (OCR.space, רק בעת שימוש בסריקת רשימה מתמונה). לכל ספק כאמור מדיניות פרטיות עצמאית, והגישה שלו למידע מוגבלת למטרת מתן השירות בלבד.
               </SectionText>
 
-              <SectionTitle>9. זכויות ומחיקה</SectionTitle>
+              <SectionTitle>9. מיקום</SectionTitle>
               <SectionText>
-                המשתמש רשאי לצפות, לעדכן ולמחוק את כל המידע שלו בכל עת דרך הגדרות החשבון. מחיקת החשבון היא בלתי הפיכה.
+                בתכונת השוואת המחירים בין סניפים, האפליקציה עשויה לבקש גישה למיקום המכשיר לצורך איתור סניפים קרובים. המיקום נעשה בו שימוש בזמן אמת בלבד ואינו נשמר בשרת. ניתן לסרב לבקשת המיקום ולהמשיך להשתמש בשאר תכונות האפליקציה.
+              </SectionText>
+
+              <SectionTitle>9א. מצלמה ותמונות</SectionTitle>
+              <SectionText>
+                האפליקציה עשויה לבקש גישה למצלמה או לספריית התמונות לצורך סריקת ברקוד, קוד QR או תמונת רשימת קניות לזיהוי מוצרים. תמונת רשימת קניות שהמשתמש מעלה נשלחת לשירות זיהוי טקסט חיצוני (OCR.space) לצורך חילוץ הטקסט בלבד, ואינה נשמרת על ידינו לאחר סיום העיבוד.
+              </SectionText>
+
+              <SectionTitle>10. עוגיות ואחסון מקומי</SectionTitle>
+              <SectionText>
+                האפליקציה משתמשת באחסון מקומי במכשיר (localStorage) ובאסימוני התחברות (JWT) לצורך שמירת ההתחברות והעדפות תצוגה. אין שימוש בעוגיות למעקב פרסומי.
+              </SectionText>
+
+              <SectionTitle>11. פרטיות קטינים</SectionTitle>
+              <SectionText>
+                השירות אינו מיועד לילדים מתחת לגיל 16, ואיננו אוספים ביודעין מידע מקטינים בגיל זה. הורה או אפוטרופוס שמזהה כי קטין מסר לנו מידע מוזמן ליצור עמנו קשר לצורך מחיקתו.
+              </SectionText>
+
+              <SectionTitle>12. זכויות ומחיקה</SectionTitle>
+              <SectionText>
+                המשתמש רשאי לצפות, לעדכן ולמחוק את כל המידע שלו בכל עת דרך הגדרות החשבון. מחיקת החשבון היא בלתי הפיכה ומוחקת את הרשימות הפרטיות, הפריטים, ההתראות ומנויי ההתראות של המשתמש. ניתן לפנות אלינו בכל שאלה או בקשה הנוגעת למידע האישי בכתובת: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>10. שינויים ודין חל</SectionTitle>
+              <SectionTitle>13. שינויים ודין חל</SectionTitle>
               <SectionText>
                 תנאים אלה עשויים להתעדכן. המשך השימוש מהווה הסכמה לנוסח המעודכן. על תנאים אלה יחולו דיני מדינת ישראל, וסמכות השיפוט הבלעדית נתונה לבתי המשפט המוסמכים בישראל.
               </SectionText>
@@ -128,7 +149,7 @@ export const PrivacyPolicy = memo(() => {
           ) : language === 'ru' ? (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                Последнее обновление: март 2026
+                Последнее обновление: август 2026
               </Typography>
 
               <SectionText>
@@ -182,17 +203,37 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Использование и передача</SectionTitle>
               <SectionText>
-                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные. Данные передаются только пользователям в общих списках и необходимым поставщикам инфраструктуры.
+                Информация используется исключительно для работы сервиса. Smart Basket не продаёт персональные данные и не использует их в рекламных целях. Данные передаются только пользователям в общих списках (имя и аватар) и необходимым поставщикам инфраструктуры, включая: хранение базы данных (MongoDB Atlas), хостинг серверов (Render, Vercel), вход через аккаунт Google (Google OAuth), анонимную аналитику использования (PostHog), сервис отчётов об ошибках (Sentry) и сервис распознавания текста на изображениях (OCR.space, только при сканировании списка по фото). У каждого из этих поставщиков есть собственная политика конфиденциальности, и их доступ к данным ограничен целями предоставления сервиса.
               </SectionText>
 
-              <SectionTitle>9. Права и удаление</SectionTitle>
+              <SectionTitle>9. Геолокация</SectionTitle>
               <SectionText>
-                Пользователь может просматривать, обновлять и удалять все свои данные в любое время через настройки аккаунта. Удаление аккаунта необратимо.
+                Функция сравнения цен между филиалами может запрашивать доступ к геолокации устройства для поиска ближайших филиалов. Местоположение используется только в реальном времени и не сохраняется на сервере. Вы можете отказать в доступе к геолокации и продолжать пользоваться остальными функциями приложения.
+              </SectionText>
+
+              <SectionTitle>9а. Камера и фото</SectionTitle>
+              <SectionText>
+                Приложение может запрашивать доступ к камере или фототеке для сканирования штрихкода, QR-кода или фото списка покупок для распознавания товаров. Загруженное фото списка покупок отправляется во внешний сервис распознавания текста (OCR.space) исключительно для извлечения текста и не сохраняется нами после завершения обработки.
+              </SectionText>
+
+              <SectionTitle>10. Cookies и локальное хранилище</SectionTitle>
+              <SectionText>
+                Приложение использует локальное хранилище устройства (localStorage) и токены авторизации (JWT) для сохранения сессии и настроек отображения. Рекламные cookies не используются.
+              </SectionText>
+
+              <SectionTitle>11. Конфиденциальность детей</SectionTitle>
+              <SectionText>
+                Сервис не предназначен для детей младше 16 лет, и мы сознательно не собираем данные таких пользователей. Если родитель или опекун считает, что ребёнок предоставил нам данные, просим связаться с нами для их удаления.
+              </SectionText>
+
+              <SectionTitle>12. Права и удаление</SectionTitle>
+              <SectionText>
+                Пользователь может просматривать, обновлять и удалять все свои данные в любое время через настройки аккаунта. Удаление аккаунта необратимо и удаляет личные списки, товары, уведомления и подписки пользователя. По любым вопросам о персональных данных: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>10. Изменения и применимое право</SectionTitle>
+              <SectionTitle>13. Изменения и применимое право</SectionTitle>
               <SectionText>
                 Данные условия могут обновляться. Продолжение использования означает согласие с обновлённой редакцией. Настоящие условия регулируются законодательством Государства Израиль, и исключительная юрисдикция принадлежит компетентным судам Израиля.
               </SectionText>
@@ -200,7 +241,7 @@ export const PrivacyPolicy = memo(() => {
           ) : (
             <>
               <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mb: 2 }}>
-                Last updated: March 2026
+                Last updated: August 2026
               </Typography>
 
               <SectionText>
@@ -254,17 +295,37 @@ export const PrivacyPolicy = memo(() => {
 
               <SectionTitle>8. Use & Sharing</SectionTitle>
               <SectionText>
-                Information is used solely for service operation. Smart Basket does not sell personal data. Data is shared only with users in shared lists and essential infrastructure providers.
+                Information is used solely for service operation. Smart Basket does not sell personal data and does not use it for advertising. Data is shared only with users in shared lists (name and avatar) and with essential infrastructure providers acting on our behalf, including: database hosting (MongoDB Atlas), server hosting (Render, Vercel), sign-in via Google account (Google OAuth), anonymized usage analytics (PostHog), error-reporting (Sentry), and image text-recognition (OCR.space, only when scanning a list from a photo). Each such provider has its own privacy policy, and its access to data is limited to the purpose of providing the service.
               </SectionText>
 
-              <SectionTitle>9. Rights & Deletion</SectionTitle>
+              <SectionTitle>9. Location</SectionTitle>
               <SectionText>
-                Users may view, update, and delete all their data at any time via account settings. Account deletion is irreversible.
+                The price-comparison feature may request access to device location to find nearby store branches. Location is used in real time only and is not stored on our servers. You may decline the location request and continue using the rest of the app.
+              </SectionText>
+
+              <SectionTitle>9a. Camera & Photos</SectionTitle>
+              <SectionText>
+                The app may request access to the camera or photo library to scan a barcode, QR code, or a photo of a shopping list to identify products. An uploaded shopping-list photo is sent to a third-party text-recognition service (OCR.space) solely to extract text, and is not retained by us after processing.
+              </SectionText>
+
+              <SectionTitle>10. Cookies & Local Storage</SectionTitle>
+              <SectionText>
+                The app uses on-device local storage (localStorage) and login tokens (JWT) to maintain your session and display preferences. No advertising cookies are used.
+              </SectionText>
+
+              <SectionTitle>11. Children's Privacy</SectionTitle>
+              <SectionText>
+                The service is not directed to children under 16, and we do not knowingly collect data from children under that age. If a parent or guardian believes a child has provided us with information, please contact us so we can delete it.
+              </SectionText>
+
+              <SectionTitle>12. Rights & Deletion</SectionTitle>
+              <SectionText>
+                Users may view, update, and delete all their data at any time via account settings. Account deletion is irreversible and removes the user's private lists, items, notifications, and notification subscriptions. For any question or request regarding personal data, contact: smartbasket129@gmail.com.
               </SectionText>
 
               <SectionDivider />
 
-              <SectionTitle>10. Changes & Governing Law</SectionTitle>
+              <SectionTitle>13. Changes & Governing Law</SectionTitle>
               <SectionText>
                 These terms may be updated. Continued use constitutes acceptance of the revised terms. These terms are governed by the laws of the State of Israel, and exclusive jurisdiction is vested in the competent courts of Israel.
               </SectionText>

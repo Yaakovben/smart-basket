@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import { haptic } from '../../../../../global/helpers';
 import { fadeIn, scoreEmoji, AnimatedNumber, ScoreTrendBadge, useScoreDelta } from '../../insightsShared';
+import { useSettings } from '../../../../../global/context/SettingsContext';
 
 interface PulseScoreCardProps {
   shoppingScore: number;
@@ -11,6 +12,7 @@ interface PulseScoreCardProps {
 
 // כרטיס "ציון הקנייה שלך" - עיגול התקדמות עם ציון 0-100, לחיץ להרחבת הסבר.
 export const PulseScoreCard = ({ shoppingScore, completionRate, isDark }: PulseScoreCardProps) => {
+  const { t } = useSettings();
   const [scoreExplained, setScoreExplained] = useState(false);
   // הפרש הציון מהביקור הקודם - מוצג כתווית ליד הציון
   const scoreDelta = useScoreDelta(shoppingScore);
@@ -40,7 +42,7 @@ export const PulseScoreCard = ({ shoppingScore, completionRate, isDark }: PulseS
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 0.75 }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 800 }}>📈 ציון הקנייה שלך</Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 800 }}>{t('scoreCardTitle')}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
           <ScoreTrendBadge delta={scoreDelta} />
           <Typography sx={{
@@ -65,10 +67,10 @@ export const PulseScoreCard = ({ shoppingScore, completionRate, isDark }: PulseS
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: 14, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-            {completionRate}% השלמה
+            {t('completionPct').replace('{pct}', String(completionRate))}
           </Typography>
           <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5, lineHeight: 1.5 }}>
-            {scoreExplained ? 'לחץ כדי לסגור' : 'הציון מבוסס על פעילות שלך · לחץ להרחבה'}
+            {scoreExplained ? t('tapToClose') : t('scoreBasedHint')}
           </Typography>
         </Box>
       </Box>
@@ -79,25 +81,25 @@ export const PulseScoreCard = ({ shoppingScore, completionRate, isDark }: PulseS
           animation: `${fadeIn} 0.2s ease both`,
         }}>
           <Typography sx={{ fontSize: 11.5, color: 'text.secondary', lineHeight: 1.7, mb: 1 }}>
-            הציון (0-100) מחושב מ-3 מדדים:
+            {t('scoreCalcExplainedIntro')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.95 }} />
               <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-                <b>יחס השלמה</b> — כמה מהפריטים שנוספו באמת נקנו
+                <b>{t('metricCompletionRate')}</b> {t('metricCompletionRateDesc')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.7 }} />
               <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-                <b>רצף שבועות</b> — האם אתה פעיל באופן קבוע
+                <b>{t('metricStreak')}</b> {t('metricStreakDesc')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#14B8A6', opacity: 0.45 }} />
               <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-                <b>גיוון קטגוריות</b> — האם אתה קונה מגוון מוצרים
+                <b>{t('metricCategoryVariety')}</b> {t('metricCategoryVarietyDesc')}
               </Typography>
             </Box>
           </Box>

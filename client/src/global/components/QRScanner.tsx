@@ -5,6 +5,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import BarcodeScannerIcon from '@mui/icons-material/ViewWeek';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { haptic } from '../helpers';
+import { useSettings } from '../context/SettingsContext';
 import { useQRCameraScanner } from '../hooks/useQRCameraScanner';
 import { QRScannerConsentOverlay } from './QRScannerConsentOverlay';
 import {
@@ -32,6 +33,7 @@ interface QRScannerProps {
  * מבקש הרשאת מצלמה, ומאפשר גם לבחור תמונה מהגלריה אם הקוד התקבל כקובץ.
  */
 export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps) => {
+  const { t } = useSettings();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileScanError, setFileScanError] = useState<string | null>(null);
   // הסכמה מקדימה: המצלמה תיפתח רק אחרי שהמשתמש אישר ספציפית פעם ראשונה.
@@ -89,7 +91,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
         URL.revokeObjectURL(url);
       }
     } catch {
-      setFileScanError(mode === 'barcode' ? 'לא זיהינו ברקוד בתמונה. ודא שהוא ברור ומלא בתמונה.' : 'לא זיהינו QR בתמונה. ודא שה-QR ברור ומלא בתמונה.');
+      setFileScanError(mode === 'barcode' ? t('scanBarcodeNotDetected') : t('scanQrNotDetected'));
     }
   };
 
@@ -117,7 +119,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               : <QrCodeScannerIcon sx={{ fontSize: 22 }} />}
             <Box>
               <Typography sx={{ fontWeight: 800, fontSize: 15, lineHeight: 1.1 }}>
-                {mode === 'barcode' ? 'סריקת ברקוד מוצר' : 'סריקת קוד QR'}
+                {mode === 'barcode' ? t('scanBarcodeTitle') : t('scanQrTitle')}
               </Typography>
               {mode === 'barcode' && (
                 <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>
@@ -128,7 +130,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
           </Box>
           <IconButton
             onClick={onClose}
-            aria-label="סגור"
+            aria-label={t('scanCloseAria')}
             sx={{
               color: '#111',
               bgcolor: 'rgba(255,255,255,0.92)',
@@ -173,9 +175,9 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               <Typography sx={errorTextSx}>{error}</Typography>
               {fileScanError && <Typography sx={errorSubTextSx}>{fileScanError}</Typography>}
               <Button onClick={() => { haptic('light'); fileInputRef.current?.click(); }} startIcon={<PhotoLibraryIcon />} variant="contained" sx={errorGalleryButtonSx}>
-                בחר תמונה מהגלריה
+                {t('scanPickFromGallery')}
               </Button>
-              <Button onClick={onClose} sx={{ color: 'white' }}>סגור</Button>
+              <Button onClick={onClose} sx={{ color: 'white' }}>{t('scanCloseButton')}</Button>
             </Box>
           )}
         </Box>
@@ -186,13 +188,11 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
         {!error && cameraConsent && (
           <Box sx={bottomStatusSx}>
             <Typography sx={statusTextSx}>
-              {starting ? 'פותח את המצלמה...' : mode === 'barcode' ? 'סרוק ברקוד מוצר' : 'כוון את ה-QR למרכז המסך'}
+              {starting ? t('scanOpeningCamera') : mode === 'barcode' ? t('scanBarcodeStatus') : t('scanQrStatus')}
             </Typography>
             {!starting && slowScan && !fileScanError && (
               <Typography sx={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.5 }}>
-                {mode === 'barcode'
-                  ? 'לא מצליחים לזהות? ודאו תאורה טובה, קרבו את הברקוד ושהוא ישר'
-                  : 'לא מצליחים לזהות? ודאו תאורה טובה והחזיקו את הקוד ישר'}
+                {mode === 'barcode' ? t('scanBarcodeTroubleHint') : t('scanQrTroubleHint')}
               </Typography>
             )}
             {fileScanError && (
@@ -201,7 +201,7 @@ export const QRScanner = ({ open, onClose, onScan, mode = 'qr' }: QRScannerProps
               </Typography>
             )}
             <Button onClick={() => { haptic('light'); fileInputRef.current?.click(); }} startIcon={<PhotoLibraryIcon />} sx={galleryPillButtonSx}>
-              בחר תמונה מהגלריה
+              {t('scanPickFromGallery')}
             </Button>
           </Box>
         )}

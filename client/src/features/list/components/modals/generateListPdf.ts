@@ -16,7 +16,7 @@ const SOURCE_SELECTOR = '.print-list-view';
 const CAPTURE_WIDTH = 480; // רוחב קבוע לצילום - יחס דומה לעמוד צר, קריא במובייל
 const OVERLAY_ID = 'pdf-generating-overlay';
 
-export async function generateListPdf(fileNameBase: string): Promise<File | null> {
+export async function generateListPdf(fileNameBase: string, preparingText: string = 'מכין PDF...'): Promise<File | null> {
   const sourceEl = document.querySelector<HTMLElement>(SOURCE_SELECTOR);
   if (!sourceEl) return null;
 
@@ -40,7 +40,7 @@ export async function generateListPdf(fileNameBase: string): Promise<File | null
     display: flex; align-items: center; justify-content: center;
     font-family: Arial, sans-serif; font-size: 15px; color: #0F766E;
   `;
-  overlay.textContent = 'מכין PDF...';
+  overlay.textContent = preparingText;
   document.body.appendChild(overlay);
 
   const prevStyle = {

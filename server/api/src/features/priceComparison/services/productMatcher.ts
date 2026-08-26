@@ -63,6 +63,14 @@ export async function matchNormalizedName(
 
   if (meaningful.length === 0) return unmatched;
 
+  // שאילתה עם טוקן משמעותי יחיד קצר מדי (עד 2 אותיות, למשל שגיאת OCR כמו
+  // "פח") - חוסמים לגמרי במקום לנסות להתאים. עם טוקן יחיד, minRequiredMatches
+  // תמיד יורד ל-1 והעוגן היחיד הוא הטוקן הקצר עצמו - די בבונוסים (למשל
+  // "המוצר ברשת מתחיל באחת ממילות המשתמש") כדי לעבור את סף 0.55 גם על
+  // התאמה מקרית לגמרי, בלי שום איתות אמיתי לתוכן. הפסד קטן (שאילתות כמו
+  // "דג" בלבד) מול הרווח: מניעת התאמות-דמיון בטוחות ומטעות.
+  if (meaningful.length === 1 && meaningful[0].length <= 2) return unmatched;
+
   const longestUserToken = meaningful.reduce((a, b) => (a.length >= b.length ? a : b));
   const longestUserStem = stemHebrew(longestUserToken);
 

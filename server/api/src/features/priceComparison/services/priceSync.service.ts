@@ -90,7 +90,8 @@ export async function syncBranchesFromOsm(): Promise<Array<{ chainId: ChainId; c
       city: b.city,
       lat: b.lat,
       lng: b.lng,
-      coordSource: 'portal' as const, // OSM נחשב מקור אמין כמו portal
+      coordSource: 'portal' as const,
+      openingHours: b.openingHours,
     }));
     const upserted = await BranchDAL.bulkUpsert(inputs);
     logger.info(`[osm-branches] ${chainId}: ${branches.length} fetched, ${upserted} upserted`);

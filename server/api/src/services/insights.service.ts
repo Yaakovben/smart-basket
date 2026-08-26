@@ -8,17 +8,28 @@ import { computeSpending, emptySpending } from './spending.service';
 export type { InsightsData } from './insights.types';
 
 export interface GetUserInsightsOptions {
-  // computeSpending מריץ regex-search לא-מעוגן (unanchored, לא יכול להשתמש
-  // באינדקס) על כל שם מוצר ייחודי שהמשתמש קנה, מול קולקציית prices (מאות
-  // אלפי מסמכים) - החלק היקר ביותר בחישוב. עבור עוזר ה-AI זה רק שורה אחת
-  // "nice to have" בהקשר, לא קריטי - מדלגים עליו כדי לזרז משמעותית את
-  // התשובה. דף התובנות ממשיך לקבל את החישוב המלא (ברירת המחדל).
   includeSpending?: boolean;
+}
+
+// cache בזיכרון לתוצאת getUserInsights - 4 דקות.
+// החלק היקר (computeSpending - regex על מאות אלפי מסמכים) רץ פעם אחת בלבד
+// לכל 4 דקות לכל משתמש, ולא בכל visibilitychange / כניסה חוזרת / בקשת AI.
+// invalidateInsightsCache נקראת מ-controllers שמשנים נתונים (מוצר נרכש וכו')
+// כדי שהמשתמש לא יראה נתונים ישנים אחרי שינוי ממשי.
+const INSIGHTS_CACHE_TTL_MS = 4 * 60 * 1000;
+const insightsMemCache = new Map<string, { data: InsightsData; expiresAt: number }>();
+
+export function invalidateInsightsCache(userId: string): void {
+  insightsMemCache.delete(userId);
 }
 
 // הפונקציה הראשית - מחזירה את כל התובנות של המשתמש
 export async function getUserInsights(userId: string, options: GetUserInsightsOptions = {}): Promise<InsightsData> {
   const { includeSpending = true } = options;
+
+  // cache hit - מחזיר מיידית
+  const cached = insightsMemCache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
   try {
     const lists = await ListDAL.findUserLists(userId);
     const listIds = lists.map(l => l._id);
@@ -27,8 +38,11 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
       return emptyInsights();
     }
 
-    // שליפה ישירה עם lean לביצועים (analytics בלבד, לא צריך populate)
-    const allProducts = await Product.find({ listId: { $in: listIds } }).lean();
+    // projection על שדות הדרושים בלבד - חוסך העברת name/note/unit/quantity מה-DB
+    const allProducts = await Product.find(
+      { listId: { $in: listIds } },
+      { listId: 1, name: 1, category: 1, isPurchased: 1, createdAt: 1, updatedAt: 1, addedBy: 1 }
+    ).lean();
 
     if (allProducts.length === 0) {
       return emptyInsights();
@@ -218,12 +232,18 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
     // עם נתונים ישנים עד שה-TTL פג. getActiveChainsWithCounts כבר עטוף
     // ב-cache גלובלי משלו (price.dal.ts) וזה סיפק את רוב שיפור הביצועים
     // בלי הסיכון הזה, כי הוא לא תלוי בפעולה של משתמש ספציפי.
+    // מפה מ-listId (string) לשם ואייקון - עבור פילוח הוצאות לפי רשימה
+    const listMeta = new Map(lists.map(l => [l._id.toString(), { name: l.name, icon: l.icon }]));
+
+    // העשרת purchasedProducts ב-listId (string) כדי לאפשר פילוח לפי רשימה בspending
+    const purchasedWithListId = purchasedProducts.map(p => ({ ...p, listId: p.listId.toString() }));
+
     const [groupStats, spending] = await Promise.all([
       getGroupStats(lists, userId, allProducts),
-      includeSpending ? computeSpending(userId, purchasedProducts) : Promise.resolve(emptySpending(false)),
+      includeSpending ? computeSpending(userId, purchasedWithListId, listMeta) : Promise.resolve(emptySpending(false)),
     ]);
 
-    return {
+    const result: InsightsData = {
       topProducts, categoryBreakdown,
       stats: {
         totalProducts: allProducts.length, totalPurchased: purchasedProducts.length,
@@ -245,6 +265,12 @@ export async function getUserInsights(userId: string, options: GetUserInsightsOp
       anomalies: detectAnomalies(allProducts),
       spending,
     };
+
+    // שמירה בcache רק כשהחישוב המלא הסתיים (כולל spending) - כדי לא לcache
+    // תוצאה חלקית. cache miss של spending (ראשית בשרת) לא פוגע בcache כאן:
+    // הפעם הבאה תחזיר מיד מה-insightsMemCache.
+    insightsMemCache.set(userId, { data: result, expiresAt: Date.now() + INSIGHTS_CACHE_TTL_MS });
+    return result;
   } catch (err) {
     // לוג מפורט - עוזר לאתר שגיאות DB / queries כשהן קורות. במקום
     // להחזיר תובנות ריקות בשקט (שמסתיר באג), זורקים שהקונטרולר יחזיר 503.

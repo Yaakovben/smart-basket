@@ -6,10 +6,11 @@ import { fadeIn, dayLabels, SectionCard } from '../../insightsShared';
 interface PulseWeekdayHeatmapProps {
   weekdayActivity: number[];
   isDark: boolean;
+  t: (key: string) => string;
 }
 
 // "פעילות לפי ימים" - 7 משבצות בעוצמת צבע יחסית, לחיצות לפירוט יום ספציפי.
-export const PulseWeekdayHeatmap = ({ weekdayActivity, isDark }: PulseWeekdayHeatmapProps) => {
+export const PulseWeekdayHeatmap = ({ weekdayActivity, isDark, t }: PulseWeekdayHeatmapProps) => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   if (!weekdayActivity || !weekdayActivity.some(v => v > 0)) return null;
 
@@ -17,7 +18,7 @@ export const PulseWeekdayHeatmap = ({ weekdayActivity, isDark }: PulseWeekdayHea
   const bestDayIdx = weekdayActivity.indexOf(maxWeekday);
 
   return (
-    <SectionCard title="📅 פעילות לפי ימים" isDark={isDark}>
+    <SectionCard title={t('activityByDayTitle')} isDark={isDark}>
       <Box sx={{ display: 'flex', gap: 0.75, justifyContent: 'space-between', mb: 1 }}>
         {weekdayActivity.map((count, i) => {
           const intensity = count / maxWeekday;
@@ -28,7 +29,7 @@ export const PulseWeekdayHeatmap = ({ weekdayActivity, isDark }: PulseWeekdayHea
               key={i}
               role={count > 0 ? 'button' : undefined}
               tabIndex={count > 0 ? 0 : undefined}
-              aria-label={count > 0 ? `${dayLabels[i]}: ${count} פעולות${isBest ? ' - יום שיא' : ''}` : undefined}
+              aria-label={count > 0 ? `${t('weekdayAria').replace('{day}', dayLabels[i]).replace('{count}', String(count))}${isBest ? t('bestDaySuffix') : ''}` : undefined}
               onClick={() => {
                 if (count === 0) return;
                 haptic('light');
@@ -83,7 +84,13 @@ export const PulseWeekdayHeatmap = ({ weekdayActivity, isDark }: PulseWeekdayHea
           animation: `${fadeIn} 0.2s ease both`,
         }}>
           <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-            יום <b>{dayLabels[selectedWeekday]}</b>: <b>{weekdayActivity[selectedWeekday]}</b> פעולות — {Math.round((weekdayActivity[selectedWeekday] / maxWeekday) * 100)}% מיום השיא
+            {(() => {
+              const pct = Math.round((weekdayActivity[selectedWeekday] / maxWeekday) * 100);
+              const [p1, rest] = t('weekdaySelectedDetail').split('{day}');
+              const [p2, rest2] = rest.split('{count}');
+              const [p3, p4] = rest2.split('{pct}');
+              return <>{p1}<b>{dayLabels[selectedWeekday]}</b>{p2}<b>{weekdayActivity[selectedWeekday]}</b>{p3}{pct}{p4}</>;
+            })()}
           </Typography>
         </Box>
       )}

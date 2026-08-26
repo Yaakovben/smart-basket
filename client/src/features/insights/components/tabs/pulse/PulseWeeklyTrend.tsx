@@ -7,10 +7,11 @@ import { fadeIn, SectionCard } from '../../insightsShared';
 interface PulseWeeklyTrendProps {
   weeklyTrends: InsightsData['weeklyTrends'];
   isDark: boolean;
+  t: (key: string) => string;
 }
 
 // "מגמה שבועית" - בר-צ'ארט של פריטים שנוספו/נקנו, לחיץ לפירוט שבוע ספציפי.
-export const PulseWeeklyTrend = ({ weeklyTrends, isDark }: PulseWeeklyTrendProps) => {
+export const PulseWeeklyTrend = ({ weeklyTrends, isDark, t }: PulseWeeklyTrendProps) => {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
   const hasData = weeklyTrends && weeklyTrends.length > 0 && weeklyTrends.some(w => w.added + w.purchased > 0);
   if (!hasData) return null;
@@ -20,7 +21,7 @@ export const PulseWeeklyTrend = ({ weeklyTrends, isDark }: PulseWeeklyTrendProps
   const maxWeeklyTrend = Math.max(...weeklyTrends.map(w => Math.max(w.added, w.purchased)), 1);
 
   return (
-    <SectionCard title="📊 מגמה שבועית" isDark={isDark}>
+    <SectionCard title={t('weeklyTrendTitle')} isDark={isDark}>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 70, mb: 0.75 }}>
         {weeklyTrends.map((w, i) => {
           const isSelected = selectedWeekIdx === i;
@@ -81,20 +82,24 @@ export const PulseWeeklyTrend = ({ weeklyTrends, isDark }: PulseWeeklyTrendProps
           animation: `${fadeIn} 0.2s ease both`,
         }}>
           <Typography sx={{ fontSize: 11.5, color: 'text.primary' }}>
-            שבוע שהתחיל ב-<b>{weeklyTrends[selectedWeekIdx].week}</b>:
-            {' '}<b>{weeklyTrends[selectedWeekIdx].added}</b> נוספו ·
-            {' '}<b>{weeklyTrends[selectedWeekIdx].purchased}</b> נקנו
+            {(() => {
+              const w = weeklyTrends[selectedWeekIdx];
+              const [p1, rest] = t('weekDetailLine').split('{week}');
+              const [p2, p3] = rest.split('{added}');
+              const [p4, p5] = p3.split('{purchased}');
+              return <>{p1}<b>{w.week}</b>{p2}<b>{w.added}</b>{p4}<b>{w.purchased}</b>{p5}</>;
+            })()}
           </Typography>
         </Box>
       )}
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: '#22C55E' }} />
-          <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>נקנו</Typography>
+          <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{t('purchasedLegend')}</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35 }}>
           <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: isDark ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)' }} />
-          <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>ממתינים</Typography>
+          <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{t('pendingLegend')}</Typography>
         </Box>
       </Box>
     </SectionCard>

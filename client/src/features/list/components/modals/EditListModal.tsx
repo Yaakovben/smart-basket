@@ -36,7 +36,7 @@ export const EditListModal = memo(({
   onUpdateData,
   onConvertToGroup,
   onConvertToPrivate,
-  onChangePassword
+  onChangePassword,
 }: EditListModalProps) => {
   const { t } = useSettings();
 
@@ -63,6 +63,7 @@ export const EditListModal = memo(({
       {list.isGroup && onConvertToPrivate && list.members.length === 0 && (
         <ConvertToPrivateSection onConvertToPrivate={onConvertToPrivate} />
       )}
+
     </Modal>
   );
 });

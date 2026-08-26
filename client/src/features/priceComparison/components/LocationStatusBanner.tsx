@@ -3,6 +3,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import { haptic } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 import type { LocationStatus } from '../hooks/useUserLocation';
 
 interface LocationStatusBannerProps {
@@ -12,7 +13,9 @@ interface LocationStatusBannerProps {
 }
 
 // באנר מיקום - מוצג לפי מצב ה-geolocation הנוכחי (idle/requesting/granted/denied/blocked/unavailable/error)
-export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark }: LocationStatusBannerProps) => (
+export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark }: LocationStatusBannerProps) => {
+  const { t } = useSettings();
+  return (
   <>
     {/* באנר מיקום - רק אם רלוונטי */}
     {onRequestLocation && locationStatus === 'idle' && (
@@ -37,9 +40,9 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
           <MyLocationIcon sx={{ fontSize: 19, color: '#14B8A6' }} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>הפעל מיקום</Typography>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>{t('enableLocationTitle')}</Typography>
           <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.15 }}>
-            נראה לך את הסניף הקרוב ביותר לכל רשת
+            {t('enableLocationDesc')}
           </Typography>
         </Box>
       </Box>
@@ -52,7 +55,7 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
         bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.07)',
       }}>
         <CircularProgress size={18} sx={{ color: '#14B8A6' }} />
-        <Typography sx={{ fontSize: 12, fontWeight: 700 }}>מאתר מיקום…</Typography>
+        <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{t('locatingInProgress')}</Typography>
       </Box>
     )}
 
@@ -64,7 +67,7 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
       }}>
         <LocationOnIcon sx={{ fontSize: 13, color: '#059669' }} />
         <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#059669' }}>
-          מיקום פעיל
+          {t('locationActive')}
         </Typography>
       </Box>
     )}
@@ -80,10 +83,10 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
         <LocationOffIcon sx={{ fontSize: 16, color: '#D97706', flexShrink: 0, mt: 0.15 }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
-            {locationStatus === 'blocked' ? 'המיקום חסום בדפדפן'
-              : locationStatus === 'denied' ? 'מיקום לא משותף'
-              : locationStatus === 'unavailable' ? 'הדפדפן לא תומך במיקום'
-              : 'לא הצלחנו לקבל מיקום'}
+            {locationStatus === 'blocked' ? t('locationBlockedTitle')
+              : locationStatus === 'denied' ? t('locationDeniedTitle')
+              : locationStatus === 'unavailable' ? t('locationUnavailableTitle')
+              : t('locationErrorTitle')}
           </Typography>
           <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: 0.25, lineHeight: 1.4 }}>
             {locationStatus === 'blocked' ? (() => {
@@ -91,17 +94,17 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
               const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
               const isIOS = /iPad|iPhone|iPod/.test(ua);
               if (isIOS) {
-                return 'הגדרות iOS → Safari → מיקום → "תוך כדי שימוש באפליקציה". לאחר מכן רעננו את הדף.';
+                return t('locationBlockedIOSHint');
               }
               const isAndroid = /Android/.test(ua);
               if (isAndroid) {
-                return 'הקישו על ה-⋮ בדפדפן → "הגדרות אתר" → הרשו "מיקום" → רעננו את הדף.';
+                return t('locationBlockedAndroidHint');
               }
-              return 'פתחו את הגדרות האתר בדפדפן, הרשו "מיקום", ורעננו את הדף.';
+              return t('locationBlockedDesktopHint');
             })()
               : locationStatus === 'denied'
-              ? 'אם רוצים, אפשרו מיקום בהגדרות הדפדפן או לחצו "נסה שוב"'
-              : 'נסה שוב או רענן את הדף'}
+              ? t('locationDeniedHint')
+              : t('locationErrorHint')}
           </Typography>
         </Box>
         {locationStatus !== 'unavailable' && locationStatus !== 'blocked' && onRequestLocation && (
@@ -123,10 +126,11 @@ export const LocationStatusBanner = ({ locationStatus, onRequestLocation, isDark
               '&:active': { transform: 'scale(0.96)' },
             }}
           >
-            נסה שוב
+            {t('tryAgain')}
           </Box>
         )}
       </Box>
     )}
   </>
-);
+  );
+};

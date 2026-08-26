@@ -8,12 +8,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
 import type { List, User } from '../../../global/types';
-import { COMMON_STYLES } from '../../../global/helpers';
+import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
+import type { ListCostEstimate } from '../hooks/useListCostEstimate';
 import { QuickAddBar } from './header/QuickAddBar';
 import { ListProgressBar } from './header/ListProgressBar';
+import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
 const glassButtonSx = COMMON_STYLES.glassIconButton;
 
@@ -46,6 +48,8 @@ interface ListHeaderProps {
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
+  costEstimate?: ListCostEstimate | null;
+  productNames?: string[];
 }
 
 export const ListHeader = memo(({
@@ -54,12 +58,37 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
+  costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const [showSearch, setShowSearch] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // תג "חדש" על תפריט ה-⋮ - מודיע שיש פיצ'ר חדש בפנים (סריקת רשימה),
+  // נעלם לצמיתות בפעם הראשונה שהתפריט נפתח.
+  const [showMenuNewBadge, setShowMenuNewBadge] = useState(
+    () => !!onScanList && safeStorage.get('sb_scanlist_menu_seen') !== 'true'
+  );
+  // תג "חדש" נוסף, ממוקד יותר - יושב ממש על שורת "סריקת רשימה" בתוך התפריט,
+  // ונעלם רק כשהמשתמש בפועל לוחץ עליה (לא רק פותח את התפריט).
+  const [showScanItemNewBadge, setShowScanItemNewBadge] = useState(
+    () => !!onScanList && safeStorage.get('sb_scanlist_used') !== 'true'
+  );
+  const handleScanList = useCallback(() => {
+    if (showScanItemNewBadge) {
+      setShowScanItemNewBadge(false);
+      safeStorage.set('sb_scanlist_used', 'true');
+    }
+    onScanList?.();
+  }, [showScanItemNewBadge, onScanList]);
+  const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchor(e.currentTarget);
+    if (showMenuNewBadge) {
+      setShowMenuNewBadge(false);
+      safeStorage.set('sb_scanlist_menu_seen', 'true');
+    }
+  }, [showMenuNewBadge]);
 
   const handleToggleSearch = useCallback(() => {
     if (showSearch) {
@@ -154,12 +183,34 @@ export const ListHeader = memo(({
           </Typography>
           {refreshing && <CircularProgress size={16} sx={{ color: 'white' }} />}
         </Box>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <IconButton onClick={onShareList} sx={glassButtonSx} aria-label={t('shareList')}>
             <ShareIcon sx={{ color: 'white', fontSize: 20 }} />
           </IconButton>
-          <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} sx={glassButtonSx} aria-label={t('groupSettings')}>
+          <IconButton onClick={handleOpenMenu} sx={{ ...glassButtonSx, position: 'relative' }} aria-label={t('groupSettings')}>
             <MoreVertIcon sx={{ color: 'white', fontSize: 20 }} />
+            {showMenuNewBadge && (
+              <Box
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute', top: -6, insetInlineEnd: -8,
+                  px: 0.5, py: 0.1, borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+                  border: '1.5px solid', borderColor: isDark ? '#0F172A' : '#0D9488',
+                  color: 'white', fontSize: 7.5, fontWeight: 800, lineHeight: 1.4,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 0 0 0 rgba(139,92,246,0.6)',
+                  animation: 'menuNewBadgePulse 1.8s ease-out infinite',
+                  '@keyframes menuNewBadgePulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.6)' },
+                    '70%': { boxShadow: '0 0 0 5px rgba(139,92,246,0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' },
+                  },
+                }}
+              >
+                חדש
+              </Box>
+            )}
           </IconButton>
         </Box>
       </Box>
@@ -170,7 +221,8 @@ export const ListHeader = memo(({
         mainNotificationsOff={mainNotificationsOff} onToggleMute={onToggleMute}
         onEdit={onEditList} onDelete={onDeleteList} onRefresh={onRefresh}
         onClearList={onClearList} onShoppingMode={onShoppingMode}
-        hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList}
+        hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
+        scanListIsNew={showScanItemNewBadge}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
@@ -250,40 +302,47 @@ export const ListHeader = memo(({
         </Box>
       </Collapse>
 
-      {/* ===== טאבים ===== */}
-      <Tabs
-        value={filter}
-        onChange={(_, v) => onFilterChange(v)}
-        variant="fullWidth"
-        aria-label={t('toBuy')}
-        sx={{
-          bgcolor: 'rgba(255,255,255,0.15)',
-          borderRadius: '14px',
-          p: 0.6,
-          minHeight: 'auto',
-          '& .MuiTabs-indicator': { display: 'none' },
-          '& .MuiTab-root': {
-            borderRadius: '10px',
-            py: { xs: 0.75, sm: 1.5 },
-            px: { xs: 1, sm: 2 },
-            minHeight: { xs: 38, sm: 48 },
-            fontSize: { xs: 13.5, sm: 15 },
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            textTransform: 'none',
-            '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' },
-          },
-          '@media (max-width: 360px)': {
-            p: 0.4,
-            '& .MuiTab-root': { py: 0.5, px: 0.75, minHeight: 32, fontSize: 11 },
-          },
-        }}
-      >
-        <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
-        <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
-      </Tabs>
+      {/* ===== טאבים + כפתור AI ===== */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <Tabs
+          value={filter}
+          onChange={(_, v) => onFilterChange(v)}
+          variant="fullWidth"
+          aria-label={t('toBuy')}
+          sx={{
+            flex: 1,
+            bgcolor: 'rgba(255,255,255,0.15)',
+            borderRadius: '14px',
+            p: 0.6,
+            minHeight: 'auto',
+            '& .MuiTabs-indicator': { display: 'none' },
+            '& .MuiTab-root': {
+              borderRadius: '10px',
+              py: { xs: 0.75, sm: 1.5 },
+              px: { xs: 1, sm: 2 },
+              minHeight: { xs: 38, sm: 48 },
+              fontSize: { xs: 13.5, sm: 15 },
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.9)',
+              textTransform: 'none',
+              '&.Mui-selected': { bgcolor: 'background.paper', color: 'primary.main' },
+            },
+            '@media (max-width: 360px)': {
+              p: 0.4,
+              '& .MuiTab-root': { py: 0.5, px: 0.75, minHeight: 32, fontSize: 11 },
+            },
+          }}
+        >
+          <Tab value="pending" label={`${t('toBuy')} (${pendingCount})`} />
+          <Tab value="purchased" label={`${t('purchased')} (${purchasedCount})`} />
+        </Tabs>
+        {hasProducts && (
+          <ListCostEstimateBadge listId={list.id} listName={list.name} estimate={costEstimate ?? null} productNames={productNames} sx={glassButtonSx} />
+        )}
+      </Box>
 
       <ListProgressBar updatedAt={list.updatedAt} pendingCount={pendingCount} purchasedCount={purchasedCount} />
+
     </Box>
   );
 });

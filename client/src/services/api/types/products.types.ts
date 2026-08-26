@@ -33,5 +33,6 @@ export interface ApiProductResponse {
   updatedBy?: string | null;
   purchasedBy?: string | null;
   createdAt: string;
+  updatedAt?: string;
   note?: string;
 }

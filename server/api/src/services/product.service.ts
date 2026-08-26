@@ -2,7 +2,7 @@ import { ProductDAL, ListDAL } from '../dal';
 import { NotFoundError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
-import type { IProductDoc } from '../models';
+import type { IProductDoc, IProductEditChange, IProductEditEntry } from '../models';
 import { checkListAccessLean } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
 
@@ -79,6 +79,9 @@ export async function updateProduct(
 ): Promise<void> {
   await checkListAccessLean(listId, userId);
 
+  const hasContentEdit = data.name !== undefined || data.quantity !== undefined || data.unit !== undefined ||
+    data.category !== undefined || data.note !== undefined;
+
   const updates: Record<string, unknown> = {};
   if (data.name !== undefined) updates.name = sanitizeText(data.name);
   if (data.quantity !== undefined) updates.quantity = data.quantity;
@@ -86,8 +89,7 @@ export async function updateProduct(
   if (data.category !== undefined) updates.category = data.category;
   if (data.note !== undefined) updates.note = sanitizeText(data.note);
   // עריכת תוכן (לא סימון קנייה) - מי ערך לאחרונה
-  if (data.name !== undefined || data.quantity !== undefined || data.unit !== undefined ||
-      data.category !== undefined || data.note !== undefined) {
+  if (hasContentEdit) {
     updates.updatedBy = userId;
   }
   // סימון קנייה - ייחוס נפרד מעריכת תוכן. מתאפס ל-null כשמסמנים "לא נקנה",
@@ -97,7 +99,47 @@ export async function updateProduct(
     updates.purchasedBy = data.isPurchased ? userId : null;
   }
 
-  const product = await ProductDAL.updateProductInList(productId, listId, updates);
+  let product: IProductDoc | null;
+
+  if (hasContentEdit) {
+    // צריך את הערכים הישנים לפני העדכון כדי לבנות diff אמיתי (oldValue/
+    // newValue) - round-trip נוסף, אבל רק בעריכת תוכן בפועל (לא בכל toggle
+    // קנייה, שהוא הפעולה השכיחה בהרבה).
+    const current = await ProductDAL.findById(productId);
+    if (!current) {
+      throw NotFoundError.product();
+    }
+
+    const changes: IProductEditChange[] = [];
+    const fieldsToCheck: Array<{ field: IProductEditChange['field']; oldValue: unknown; newValue: unknown }> = [
+      { field: 'name', oldValue: current.name, newValue: updates.name },
+      { field: 'quantity', oldValue: current.quantity, newValue: updates.quantity },
+      { field: 'unit', oldValue: current.unit, newValue: updates.unit },
+      { field: 'category', oldValue: current.category, newValue: updates.category },
+      { field: 'note', oldValue: current.note ?? '', newValue: updates.note },
+    ];
+    for (const { field, oldValue, newValue } of fieldsToCheck) {
+      if (newValue === undefined) continue;
+      if (newValue === oldValue) continue;
+      changes.push({ field, oldValue, newValue });
+    }
+
+    if (changes.length > 0) {
+      const historyEntry: IProductEditEntry = {
+        editedBy: userId as unknown as IProductEditEntry['editedBy'],
+        editedAt: new Date(),
+        changes,
+      };
+      product = await ProductDAL.updateProductInListWithHistory(productId, listId, updates, historyEntry);
+    } else {
+      // כל השדות ששלחו זהים לערכים הקיימים (למשל שמירה בלי שינוי אמיתי) -
+      // אין טעם ברשומת היסטוריה ריקה, מעדכנים כרגיל.
+      product = await ProductDAL.updateProductInList(productId, listId, updates);
+    }
+  } else {
+    product = await ProductDAL.updateProductInList(productId, listId, updates);
+  }
+
   if (!product) {
     throw NotFoundError.product();
   }

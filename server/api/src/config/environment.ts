@@ -25,13 +25,10 @@ dotenv.config();
  *   register at ocr.space/ocrapi/freekey). Feature silently no-ops if absent.
  */
 const envSchema = Joi.object({
-  // סביבת ריצה
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
-  // פורט השרת
   PORT: Joi.number().default(5000),
 
-  // חיבור ל-MongoDB
   MONGODB_URI: Joi.string().required().messages({
     'any.required': 'MongoDB URI is required',
   }),
@@ -77,6 +74,9 @@ const envSchema = Joi.object({
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
 
+  // Brevo (brevo.com) - שליחת מיילים דרך HTTP API (לא SMTP).
+  BREVO_API_KEY: Joi.string().optional(),
+
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
@@ -86,16 +86,21 @@ const envSchema = Joi.object({
   // עדיין מצליחות ב-DB, פשוט בלי אפקט מיידי על sockets פעילים.
   REDIS_URL: Joi.string().optional(),
 
-  // NVIDIA NIM (build.nvidia.com) - endpoint תואם OpenAI, לעוזר ה-AI לניתוח
-  // הוצאות. אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
-  // המפתח הוא סוד אמיתי - רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
+  // Groq (console.groq.com) - endpoint תואם OpenAI, לעוזר ה-AI לניתוח הוצאות.
+  // הוחלף מ-NVIDIA NIM: אותה איכות מודל (Llama 3.3 70B) אבל רץ על חומרת LPU
+  // ייעודית של Groq - מהיר משמעותית (~320 טוקן/שנייה), בלי תפוגת קרדיטים
+  // ובלי בעיית deprecation פתאומית של מודלים שהייתה ב-NIM. אם המפתח חסר -
+  // ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח. המפתח הוא סוד אמיתי -
+  // רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
+  GROQ_API_KEY: Joi.string().optional(),
+  GROQ_MODEL: Joi.string().default('openai/gpt-oss-120b'),
+  // NVIDIA NIM (build.nvidia.com) - ספק גיבוי לעוזר ה-AI, לא ראשי. Groq הוא
+  // הראשי (מהיר יותר), אבל לטייר החינמי שלו יש מכסה יומית/דקתית - אם היא
+  // נגמרת (429) או ש-Groq לא זמין רגעית, השירות עובר אוטומטית ל-NIM כדי
+  // שהעוזר ימשיך לעבוד במקום להחזיר שגיאה למשתמש. אופציונלי לגמרי - אם
+  // המפתח חסר, פשוט אין גיבוי (Groq בלבד).
   NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  // ברירת המחדל הקודמת ('zai-org/glm-5.2') לא הייתה מזהה מודל תקף ב-NIM
-  // (namespace שגוי - ה-API משתמש ב-'z-ai', לא ב-'zai-org' של ה-NGC catalog),
-  // מה שגרם ל-NVIDIA להחזיר שגיאה על כל בקשה. llama-3.1-8b-instruct הוא
-  // מודל קטן/מהיר/בטוח על הטייר החינמי - מתאים יותר גם למקרה השימוש (צ'אט
-  // עוזר קניות קליל, לא reasoning כבד).
-  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.1-8b-instruct'),
+  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.3-70b-instruct'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -134,8 +139,11 @@ export interface Environment {
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   REDIS_URL?: string;
+  GROQ_API_KEY?: string;
+  GROQ_MODEL: string;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL: string;
+  BREVO_API_KEY?: string;
 }
 
 export const env = parseEnv();

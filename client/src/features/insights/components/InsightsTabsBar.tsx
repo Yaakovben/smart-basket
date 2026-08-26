@@ -1,5 +1,6 @@
 import { Box, Paper, Tabs, Tab } from '@mui/material';
 import type { InsightTab } from '../types/insights-types';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface InsightsTabsBarProps {
   isDark: boolean;
@@ -7,18 +8,18 @@ interface InsightsTabsBarProps {
   onTabChange: (tab: InsightTab) => void;
 }
 
-// הגדרת מיפוי tabs - ריכוז מידע על כל טאב
-const TABS: { value: InsightTab; emoji: string; label: string }[] = [
-  { value: 'price',    emoji: '💰', label: 'מחירים'  },
-  { value: 'spending', emoji: '🧾', label: 'הוצאות'  },
-  { value: 'lists',    emoji: '📋', label: 'רשימות'  },
-  { value: 'activity', emoji: '📊', label: 'פעילות'  },
-];
-
 // טאבים ראשיים - עיצוב בולט ומוגבה כניווט ראשי.
 // גובה 52px + אמוג'י 20px + פונט מוגדל + צל עמוק = היררכיה ברורה מעל
 // ChainSortBar שנשאר קטן וקל כמסנן משני.
 export const InsightsTabsBar = ({ isDark, tab, onTabChange }: InsightsTabsBarProps) => {
+  const { t } = useSettings();
+  // הגדרת מיפוי tabs - ריכוז מידע על כל טאב
+  const TABS: { value: InsightTab; emoji: string; label: string }[] = [
+    { value: 'price',    emoji: '💰', label: t('tabPrices') },
+    { value: 'spending', emoji: '🧾', label: t('tabSpendingLabel') },
+    { value: 'lists',    emoji: '📋', label: t('tabListsLabel') },
+    { value: 'activity', emoji: '📊', label: t('tabActivityLabel') },
+  ];
   return (
     <Box sx={{ px: 2, mb: 2 }}>
       <Paper elevation={0} sx={{

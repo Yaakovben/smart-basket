@@ -7,12 +7,13 @@ interface InsightsHeroCardProps {
   tab: InsightTab;
   groupStats: InsightsData['groupStats'];
   shoppingScore?: number;
+  t: (key: string) => string;
 }
 
 interface Insight { emoji: string; title: string; subtitle?: string; gradient: string }
 
 // Hero card - תובנת היום, ניסוח חיובי וברור. שונה לפי הטאב הנוכחי.
-export const InsightsHeroCard = ({ tab, groupStats, shoppingScore }: InsightsHeroCardProps) => {
+export const InsightsHeroCard = ({ tab, groupStats, shoppingScore, t }: InsightsHeroCardProps) => {
   let insight: Insight | null = null;
   // טאב מחירים: כרטיס Hero של PriceComparisonCard כבר מציג 'הזול ב-X' באופן בולט -
   // אין צורך בכרטיס "תובנת היום" נוסף שיציג אותו דבר. מדלגים כדי למנוע כפילות.
@@ -22,12 +23,14 @@ export const InsightsHeroCard = ({ tab, groupStats, shoppingScore }: InsightsHer
     const top = groupStats[0];
     insight = {
       emoji: '📋',
-      title: `${top.name} — הכי פעילה`,
-      subtitle: top.topContributor ? `${top.topContributor.name} מוסיף הכי הרבה` : `${top.membersCount} חברים`,
+      title: t('heroMostActive').replace('{name}', top.name),
+      subtitle: top.topContributor
+        ? t('heroTopContributor').replace('{name}', top.topContributor.name)
+        : t('membersCountLabel').replace('{count}', String(top.membersCount)),
       gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)',
     };
   } else if (tab === 'activity' && shoppingScore !== undefined) {
-    const label = shoppingScore >= 80 ? 'אלוף!' : shoppingScore >= 60 ? 'בדרך הנכונה' : shoppingScore >= 40 ? 'מתפתחים' : 'יש לאן לצמוח';
+    const label = shoppingScore >= 80 ? t('scoreLabelChampion') : shoppingScore >= 60 ? t('scoreLabelOnTrack') : shoppingScore >= 40 ? t('scoreLabelDeveloping') : t('scoreLabelRoomToGrow');
     insight = {
       emoji: shoppingScore >= 80 ? '🎯' : shoppingScore >= 60 ? '📈' : '🌱',
       title: `${shoppingScore}/100`,

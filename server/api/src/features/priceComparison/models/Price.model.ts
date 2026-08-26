@@ -14,6 +14,7 @@ export type ChainId =
   | 'maayan_2000'
   | 'shefa_birkat_hashem'
   | 'super_sapir'
+  | 'netto_hisachon'
   | 'carrefour';
 
 export interface IPriceDoc extends Document {

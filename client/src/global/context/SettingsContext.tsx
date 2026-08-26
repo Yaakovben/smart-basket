@@ -102,6 +102,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     syncedRef.current = true;
     authApi.getProfile()
       .then(profile => {
+        // שמירת שם המשתמש ב-localStorage - מאפשר ל-useInsightsData לקרוא
+        // אותו מיידית בלי לבצע קריאת API נפרדת לאותו endpoint.
+        if (profile?.name) {
+          try { localStorage.setItem('sb_user_name', profile.name); } catch { /* ignore */ }
+        }
         if (!profile?.mutedGroupIds) return;
         const serverMuted = profile.mutedGroupIds.map(String);
         setSettings(prev => {

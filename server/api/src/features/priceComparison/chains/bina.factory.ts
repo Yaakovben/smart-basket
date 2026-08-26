@@ -81,11 +81,11 @@ async function listFiles(
     validateStatus: s => s < 500,
   });
   if (res.status >= 400) throw new Error(`bina_list_http_${res.status}`);
-  const data = res.data;
-  if (!Array.isArray(data)) {
+  const fileEntries = res.data;
+  if (!Array.isArray(fileEntries)) {
     throw new Error('bina_list_not_array');
   }
-  return data as BinaFileEntry[];
+  return fileEntries as BinaFileEntry[];
 }
 
 // פותר שם-קובץ ל-URL חתום ומוריד את התוכן (gzipped XML).
@@ -101,11 +101,11 @@ async function resolveAndDownload(
     validateStatus: s => s < 500,
   });
   if (resolveRes.status >= 400) throw new Error(`bina_resolve_http_${resolveRes.status}`);
-  const arr = resolveRes.data;
-  if (!Array.isArray(arr) || arr.length === 0 || !arr[0].SPath) {
+  const resolvedPaths = resolveRes.data;
+  if (!Array.isArray(resolvedPaths) || resolvedPaths.length === 0 || !resolvedPaths[0].SPath) {
     throw new Error('bina_resolve_no_spath');
   }
-  const sPath = arr[0].SPath;
+  const sPath = resolvedPaths[0].SPath;
   const fileRes = await axios.get<ArrayBuffer>(sPath, {
     timeout: 60_000,
     responseType: 'arraybuffer',

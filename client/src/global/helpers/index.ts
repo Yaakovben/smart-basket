@@ -54,3 +54,6 @@ export { safeStorage } from './safeStorage';
 // rotateCrashLog/startHeartbeat רצים אוטומטית ב-import של המודול (ראו
 // crashLog.ts) ולכן לא מיוצאים - רק ה-API שצריך שימוש חיצוני.
 export { diagLog, getSessionHistory, clearSessionHistory } from './crashLog';
+
+// הופך **טקסט** גולמי מתשובות ה-AI למודגש בפועל - משותף בין הצ'אט לניתוח רשימה
+export { renderInlineBold } from './renderInlineBold';

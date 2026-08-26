@@ -20,7 +20,7 @@ export const HabitsTopProducts = ({ topProducts, isDark, t }: HabitsTopProductsP
   const maxCount = topProducts[0].count;
 
   return (
-    <SectionCard title="🏆 המוצרים הנפוצים שלך" isDark={isDark}>
+    <SectionCard title={t('topProductsTitle')} isDark={isDark}>
       {/* Top 3 - פודיום עם גבהים שונים ואנימציה staggered */}
       <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, mb: topProducts.length > 3 ? 1.75 : 0 }}>
         {[1, 0, 2].map(mapIdx => {

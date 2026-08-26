@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { PriceMatch } from '../types/priceComparison.types';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 interface ProductRowProps {
   match: PriceMatch;
@@ -12,6 +13,7 @@ interface ProductRowProps {
 
 // שורת מוצר בתוך כרטיס מורחב - שם + מחיר + אינדיקטור "הכי זול"
 export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePrice }: ProductRowProps) => {
+  const { t } = useSettings();
   if (!match.matched) {
     return (
       <Box sx={{
@@ -24,7 +26,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
           {match.userProductName}
         </Typography>
         <Typography sx={{ fontSize: 10.5, color: '#D97706', fontWeight: 700, flexShrink: 0 }}>
-          לא נמצא
+          {t('productNotFound')}
         </Typography>
       </Box>
     );
@@ -38,10 +40,16 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
   const isMostExpensive = mostExpensivePrice !== undefined && Math.abs(match.price - mostExpensivePrice) < 0.01 && mostExpensivePrice > cheapestPrice!;
   const hasComparison = cheapestPrice !== undefined && mostExpensivePrice !== undefined && mostExpensivePrice > cheapestPrice;
 
-  // אחוז חיסכון אפשרי (כמה יותר יקר מהזול)
-  const savingsPct = hasComparison && !isCheapest
+  // אחוז חיסכון אפשרי (כמה יותר יקר מהזול). ההתאמה מתבצעת בנפרד לכל רשת
+  // (matchNormalizedName רץ פר-רשת) - כך שהזול והיקר עלולים להיות שני
+  // מוצרים שונים ולא-קשורים שהותאמו (בטעות) לאותו productId, לא הפרש מחיר
+  // אמיתי על אותו מוצר. פער קיצוני (300%+) הוא סימן חזק להתאמה שגויה, לא
+  // לחיסכון אמיתי - עדיף להסתיר את התג מאשר להציג מספר מטעה.
+  const IMPLAUSIBLE_SAVINGS_PCT = 300;
+  const rawSavingsPct = hasComparison && !isCheapest
     ? Math.round(((match.price - cheapestPrice!) / cheapestPrice!) * 100)
     : 0;
+  const savingsPct = rawSavingsPct <= IMPLAUSIBLE_SAVINGS_PCT ? rawSavingsPct : 0;
 
   return (
     <Box sx={{
@@ -74,7 +82,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             fontStyle: 'italic',
           }}>
-            זוהה כ: <Box component="span" sx={{ fontStyle: 'normal', fontWeight: 600, color: 'text.primary' }}>{match.itemName}</Box>
+            {t('identifiedAs')} <Box component="span" sx={{ fontStyle: 'normal', fontWeight: 600, color: 'text.primary' }}>{match.itemName}</Box>
             {match.manufacturerName ? <> · {match.manufacturerName}</> : null}
           </Typography>
         )}
@@ -101,7 +109,7 @@ export const ProductRow = memo(({ match, isDark, cheapestPrice, mostExpensivePri
             bgcolor: '#10B981', color: 'white',
             fontSize: 8.5, fontWeight: 800, lineHeight: 1.2, letterSpacing: 0.2,
           }}>
-            הכי זול
+            {t('cheapestTag')}
           </Box>
         )}
         {!isCheapest && savingsPct > 0 && (

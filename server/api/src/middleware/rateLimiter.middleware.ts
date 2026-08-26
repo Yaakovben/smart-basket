@@ -1,4 +1,5 @@
 import rateLimit from 'express-rate-limit';
+import type { Request } from 'express';
 
 // הגבלת קצב כללית ל-API
 export const apiLimiter = rateLimit({
@@ -104,16 +105,20 @@ export const ocrLimiter = rateLimit({
   keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
 });
 
-// הגבלת עוזר ה-AI - 20 הודעות לשעה למשתמש (fallback ל-IP). קריאה ל-NVIDIA
-// NIM (מפתח חיצוני, מכסה משותפת לכל האפליקציה) - בלי הגבלה פר-משתמש,
+// הגבלת עוזר ה-AI - 20 הודעות לשעה למשתמש (fallback ל-IP). קריאה לספקי
+// AI חיצוניים (מכסה משותפת לכל האפליקציה) - בלי הגבלה פר-משתמש בצד הספק,
 // משתמש בודד יכול לרוקן את כל המכסה, אותו עיקרון כמו ocrLimiter.
+// message כפונקציה (לא אובייקט קבוע) כדי לצרף את זמן האיפוס בפועל
+// (req.rateLimit.resetTime, זמין הודות ל-standardHeaders) - כך הלקוח יכול
+// להציג "מתחדש בעוד X דקות" במקום הודעת שגיאה סתמית.
 export const aiAssistantLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  message: {
+  message: (req: Request) => ({
     success: false,
     message: 'Too many AI assistant requests, please try again later',
-  },
+    resetAt: (req as Request & { rateLimit?: { resetTime?: Date } }).rateLimit?.resetTime?.toISOString() ?? null,
+  }),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',

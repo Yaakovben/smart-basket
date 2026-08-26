@@ -20,10 +20,14 @@ export interface SpendingData {
   daysInMonth: number;
   topCategory: { category: string; amount: number; percentage: number } | null;
   categoryBreakdown: { category: string; amount: number; percentage: number }[];
+  // פילוח הוצאה לפי רשימה - כמה הוצאת מכל רשימה החודש
+  listBreakdown: { listId: string; name: string; icon: string; amount: number; percentage: number }[];
   previousMonthTotal: number | null;
   monthGrowthPct: number | null;
   hasBaseline: boolean;
   disclaimer: string;
+  // מגמת הוצאות 6 חודשים אחרונים - ממוין ישן לחדש
+  monthlyTrend: { label: string; total: number; monthNum: number; year: number }[];
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -40,7 +44,7 @@ const DISCLAIMER = 'ההוצאה מבוססת על התאמת שמות המוצ�
 // (5 דק' לעומת 3) כי הוצאה חודשית משוערת רגישה הרבה פחות לרעננות
 // שנייה-שנייה מאשר תוכן שיחה - שווה ויתור קטן על טריות תמורת שיפור עצום
 // בזמן טעינה.
-const SPENDING_CACHE_TTL_MS = 5 * 60 * 1000;
+const SPENDING_CACHE_TTL_MS = 20 * 60 * 1000;
 const spendingCache = new Map<string, { data: SpendingData; expiresAt: number }>();
 
 export function emptySpending(enabled = false): SpendingData {
@@ -55,23 +59,26 @@ export function emptySpending(enabled = false): SpendingData {
     daysInMonth: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(),
     topCategory: null,
     categoryBreakdown: [],
+    listBreakdown: [],
     previousMonthTotal: null,
     monthGrowthPct: null,
     hasBaseline: false,
     disclaimer: DISCLAIMER,
+    monthlyTrend: [],
   };
 }
 
 // מסכם רשימת רכישות (של חודש אחד) לפי ה-matches שכבר חושבו: סכום כולל +
-// פילוח קטגוריות. פריטים שלא זוהו לא נכנסים לסכום (רק לספירת unmatched).
+// פילוח קטגוריות ורשימות. פריטים שלא זוהו לא נכנסים לסכום (רק לספירת unmatched).
 function summarizeMonth(
-  purchases: { name: string; category: string; quantity: number }[],
+  purchases: { name: string; category: string; quantity: number; listId?: string }[],
   matchCache: Map<string, { matched: boolean; price: number }>
-): { total: number; matchedCount: number; unmatchedCount: number; categoryAmounts: Map<string, number> } {
+): { total: number; matchedCount: number; unmatchedCount: number; categoryAmounts: Map<string, number>; listAmounts: Map<string, number> } {
   let total = 0;
   let matchedCount = 0;
   let unmatchedCount = 0;
   const categoryAmounts = new Map<string, number>();
+  const listAmounts = new Map<string, number>();
 
   for (const p of purchases) {
     const m = matchCache.get(p.name);
@@ -80,34 +87,49 @@ function summarizeMonth(
     const amount = m.price * (p.quantity || 1);
     total += amount;
     categoryAmounts.set(p.category, (categoryAmounts.get(p.category) || 0) + amount);
+    if (p.listId) {
+      listAmounts.set(p.listId, (listAmounts.get(p.listId) || 0) + amount);
+    }
   }
 
-  return { total: round2(total), matchedCount, unmatchedCount, categoryAmounts };
+  return { total: round2(total), matchedCount, unmatchedCount, categoryAmounts, listAmounts };
 }
 
 export async function computeSpending(
   userId: string,
-  purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date }[]
+  purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date; listId?: string }[],
+  listMeta?: Map<string, { name: string; icon: string }>
 ): Promise<SpendingData> {
   const cached = spendingCache.get(userId);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
 
-  const result = await computeSpendingUncached(purchasedProducts);
+  const result = await computeSpendingUncached(purchasedProducts, listMeta);
   spendingCache.set(userId, { data: result, expiresAt: Date.now() + SPENDING_CACHE_TTL_MS });
   return result;
 }
 
 async function computeSpendingUncached(
-  purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date }[]
+  purchasedProducts: { name: string; category: string; quantity: number; updatedAt: Date; listId?: string }[],
+  listMeta?: Map<string, { name: string; icon: string }>
 ): Promise<SpendingData> {
   const activeChains = await PriceDAL.getActiveChainsWithCounts();
   if (activeChains.length === 0) return emptySpending(false);
 
   const now = new Date();
+  const HEBREW_MONTHS = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יוני', 'יולי', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const daysElapsed = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // בניית גבולות 6 חודשים אחרונים (כולל חודש נוכחי)
+  const monthBounds: { start: Date; end: Date; monthNum: number; year: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    monthBounds.push({ start, end, monthNum: start.getMonth(), year: start.getFullYear() });
+  }
 
   const thisMonthPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= thisMonthStart);
   const prevMonthPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= prevMonthStart && new Date(p.updatedAt) < thisMonthStart);
@@ -122,7 +144,19 @@ async function computeSpendingUncached(
   // איפה המשתמש קנה בפועל, ורשת בודדת (osher_ad) מכסה רק חלק קטן מהמוצרים.
   // אותו דפוס בדיוק כמו chainComparison.ts: candidates רב-רשתיים פעם אחת,
   // ואז ניקוד per-chain בזיכרון בלי שאילתות DB נוספות.
-  const uniqueNames = Array.from(new Set([...thisMonthPurchases, ...prevMonthPurchases].map(p => p.name)));
+  // שמות ייחודיים מכל 6 החודשים - ה-matchCache יכסה את כולם
+  const sixMonthsStart = monthBounds[0].start;
+  const allSixMonthsPurchases = purchasedProducts.filter(p => new Date(p.updatedAt) >= sixMonthsStart);
+  // מגבילים ל-80 שמות ייחודיים - כל שם = שאילתת regex יקרה על prices.
+  // ממיינים לפי תדירות (הנפוצים קודם) כדי לכסות את רוב ההוצאה האמיתית
+  // גם עם החיתוך. מעל 80 שמות - כמעט תמיד "זנב ארוך" של מוצרים נדירים
+  // שתרומתם לסכום הכולל מזערית, אבל עלותם בזמן שווה לנפוצים.
+  const nameFreq = new Map<string, number>();
+  for (const p of allSixMonthsPurchases) nameFreq.set(p.name, (nameFreq.get(p.name) || 0) + 1);
+  const uniqueNames = Array.from(nameFreq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 80)
+    .map(([name]) => name);
 
   const candidatesByName = new Map<string, Awaited<ReturnType<typeof PriceDAL.findByAnyToken>>>();
   await Promise.all(
@@ -157,6 +191,21 @@ async function computeSpendingUncached(
   const thisMonth = summarizeMonth(thisMonthPurchases, matchCache);
   const prevMonth = summarizeMonth(prevMonthPurchases, matchCache);
 
+  // מגמת 6 חודשים - פילטור לכל חודש בנפרד ושימוש ב-matchCache שכבר בנוי
+  const monthlyTrend = monthBounds.map(({ start, end, monthNum, year }) => {
+    const monthPurchases = purchasedProducts.filter(p => {
+      const d = new Date(p.updatedAt);
+      return d >= start && d < end;
+    });
+    const summary = summarizeMonth(monthPurchases, matchCache);
+    return {
+      label: HEBREW_MONTHS[monthNum],
+      total: summary.total,
+      monthNum,
+      year,
+    };
+  });
+
   const hasBaseline = prevMonthPurchases.length > 0 && prevMonth.matchedCount > 0;
   const previousMonthTotal = hasBaseline ? prevMonth.total : null;
   const monthGrowthPct = hasBaseline && prevMonth.total > 0
@@ -178,6 +227,21 @@ async function computeSpendingUncached(
       percentage: categoryTotal > 0 ? Math.round((amount / categoryTotal) * 100) : 0,
     }));
 
+  // פילוח לפי רשימה - רק עבור חודש נוכחי, ממויין לפי סכום יורד
+  const listTotal = Array.from(thisMonth.listAmounts.values()).reduce((a, b) => a + b, 0);
+  const listBreakdown = Array.from(thisMonth.listAmounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([listId, amount]) => {
+      const meta = listMeta?.get(listId);
+      return {
+        listId,
+        name: meta?.name ?? 'רשימה',
+        icon: meta?.icon ?? '🛒',
+        amount: round2(amount),
+        percentage: listTotal > 0 ? Math.round((amount / listTotal) * 100) : 0,
+      };
+    });
+
   return {
     enabled: true,
     monthTotal,
@@ -188,9 +252,11 @@ async function computeSpendingUncached(
     daysInMonth,
     topCategory: categoryBreakdown[0] || null,
     categoryBreakdown,
+    listBreakdown,
     previousMonthTotal,
     monthGrowthPct,
     hasBaseline,
     disclaimer: DISCLAIMER,
+    monthlyTrend,
   };
 }

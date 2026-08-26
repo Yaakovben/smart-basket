@@ -50,7 +50,7 @@ interface Props {
 }
 
 export const PriceComparisonCard = memo(({ data, loading, isDark = false, locationStatus, onRequestLocation, selectedListName }: Props) => {
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   // הזולה לא נפתחת אוטומטית - הלקוח מחליט מתי לחקור
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // מצב מיון - ברירת המחדל "קרוב" (נופל ל-price אם אין מיקום)
@@ -90,12 +90,12 @@ export const PriceComparisonCard = memo(({ data, loading, isDark = false, locati
     <Box sx={{ animation: `${fadeIn} 0.5s ease 0.45s both`, mb: 2 }}>
       {/* כותרת קומפקטית */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25, px: 0.25 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 800 }}>🛒 השוואת מחירים</Typography>
+        <Typography sx={{ fontSize: 16, fontWeight: 800 }}>{t('priceComparisonTitle')}</Typography>
         <BetaBadge size="sm" />
         <Box sx={{ flex: 1 }} />
         {data.lastUpdatedISO && (
           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', fontWeight: 600 }}>
-            עודכן {freshness}
+            {t('priceComparisonUpdated').replace('{time}', freshness || '')}
           </Typography>
         )}
       </Box>

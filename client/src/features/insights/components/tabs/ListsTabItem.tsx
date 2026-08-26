@@ -5,6 +5,7 @@ import type { InsightsData } from '../../../../services/api';
 import type { PriceListGroup } from '../../../priceComparison/types/priceComparison.types';
 import { haptic } from '../../../../global/helpers';
 import { fadeIn } from '../insightsShared';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 // פלטת צבעים קבועה לחברי קבוצה - טורקיז ראשון (תואם לאפליקציה), שאר הצבעים לבידול בלבד
 const MEMBER_PALETTE = ['#14B8A6', '#0D9488', '#3B82F6', '#22C55E', '#A16207', '#EC4899', '#EF4444'];
@@ -33,6 +34,7 @@ interface ListsTabItemProps {
 export const ListsTabItem = ({
   list: L, index: idx, sectionHeader, group: g, currentUserName, isDark, isExpanded, onToggleExpand, onNavigate,
 }: ListsTabItemProps) => {
+  const { t } = useSettings();
   const members = g?.memberBreakdown || [];
   const memberTotalAdded = members.reduce((s, m) => s + m.added, 0);
   const memberTotalPurchased = members.reduce((s, m) => s + m.purchased, 0);
@@ -52,11 +54,11 @@ export const ListsTabItem = ({
   if (L.isGroup && sortedMembers.length > 1 && memberTotalActivity > 0) {
     const topPct = ((sortedMembers[0].added + sortedMembers[0].purchased) / memberTotalActivity) * 100;
     if (purchasedPct >= 70) {
-      insight = { label: 'קצב מעולה', color: '#14B8A6', emoji: '⚡' };
+      insight = { label: t('bestPaceLabel'), color: '#14B8A6', emoji: '⚡' };
     } else if (topPct >= 55) {
-      insight = { label: `עיקר על ${sortedMembers[0].name}`, color: '#0D9488', emoji: '👑' };
+      insight = { label: t('mostlyBy').replace('{name}', sortedMembers[0].name), color: '#0D9488', emoji: '👑' };
     } else if (topPct <= 45) {
-      insight = { label: 'קבוצה מאוזנת', color: '#14B8A6', emoji: '⚖️' };
+      insight = { label: t('balancedGroup'), color: '#14B8A6', emoji: '⚖️' };
     }
   }
 
@@ -136,7 +138,7 @@ export const ListsTabItem = ({
                 }}>
                   <GroupIcon sx={{ fontSize: 12, color: '#14B8A6' }} />
                   <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#14B8A6' }}>
-                    {g?.membersCount || 0} חברים
+                    {t('membersCountLabel').replace('{count}', String(g?.membersCount || 0))}
                   </Typography>
                 </Box>
               ) : (
@@ -144,7 +146,7 @@ export const ListsTabItem = ({
                   px: 0.7, py: 0.2, borderRadius: '6px',
                   bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                 }}>
-                  <Typography sx={{ fontSize: 9.5, fontWeight: 700, color: 'text.secondary' }}>פרטית</Typography>
+                  <Typography sx={{ fontSize: 9.5, fontWeight: 700, color: 'text.secondary' }}>{t('privateTagFem')}</Typography>
                 </Box>
               )}
             </Box>
@@ -153,28 +155,35 @@ export const ListsTabItem = ({
                 לכל סוגי הרשימות, כולל פרטיות שאין להן שום תובנה אחרת. */}
             {L.isGroup && g && memberTotalAdded > 0 ? (
               <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
-                <b>{memberTotalAdded}</b> נוספו · <b>{memberTotalPurchased}</b> נקנו
+                {(() => {
+                  const [, rest] = t('addedPurchasedLine').split('{added}');
+                  const [p2, p3] = rest.split('{purchased}');
+                  return <><b>{memberTotalAdded}</b>{p2}<b>{memberTotalPurchased}</b>{p3}</>;
+                })()}
                 <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
                   ({purchasedPct}%)
                 </Typography>
                 {L.estimatedTotal > 0 && (
                   <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
-                    · הערכה {formatILS(L.estimatedTotal)}
+                    {t('estimatedTotalSuffix').replace('{amount}', formatILS(L.estimatedTotal))}
                   </Typography>
                 )}
               </Typography>
             ) : L.pendingCount > 0 ? (
               <Typography sx={{ fontSize: 11.5, color: 'text.secondary', mt: 0.25 }}>
-                <b>{L.pendingCount}</b> פריטים ממתינים לקנייה
+                {(() => {
+                  const [p1, p2] = t('pendingItemsLine').split('{count}');
+                  return <>{p1}<b>{L.pendingCount}</b>{p2}</>;
+                })()}
                 {L.estimatedTotal > 0 && (
                   <Typography component="span" sx={{ fontSize: 11, color: 'text.disabled', ml: 0.5 }}>
-                    · הערכה {formatILS(L.estimatedTotal)}
+                    {t('estimatedTotalSuffix').replace('{amount}', formatILS(L.estimatedTotal))}
                   </Typography>
                 )}
               </Typography>
             ) : (
               <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.2 }}>
-                רשימה פעילה
+                {t('activeListLabel')}
               </Typography>
             )}
           </Box>
@@ -207,10 +216,14 @@ export const ListsTabItem = ({
             </Typography>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 700, lineHeight: 1 }}>
-                התרומה שלך {myRank > 0 ? `· מקום ${myRank}` : ''}
+                {t('yourContributionLabel')} {myRank > 0 ? t('rankSuffix').replace('{rank}', String(myRank)) : ''}
               </Typography>
               <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: L.listColor, lineHeight: 1.3, mt: 0.2 }}>
-                הוספת <b>{myStats.added}</b> · קנית <b>{myStats.purchased}</b>
+                {(() => {
+                  const [p1, rest] = t('addedPurchasedBoldLine').split('{added}');
+                  const [p2, p3] = rest.split('{purchased}');
+                  return <>{p1}<b>{myStats.added}</b>{p2}<b>{myStats.purchased}</b>{p3}</>;
+                })()}
               </Typography>
             </Box>
             <Box sx={{
@@ -233,7 +246,7 @@ export const ListsTabItem = ({
           const above = pct > 120;
           const below = pct < 80;
           const tone = above ? '#10B981' : below ? '#F59E0B' : '#6B7280';
-          const verdict = above ? `+${pct - 100}% מעל הממוצע` : below ? `${pct - 100}% מתחת לממוצע` : 'בערך כמו הממוצע';
+          const verdict = above ? t('aboveAveragePct').replace('{pct}', String(pct - 100)) : below ? t('belowAveragePct').replace('{pct}', String(pct - 100)) : t('aboutAverage');
           const emoji = above ? '🚀' : below ? '🌱' : '⚖️';
           return (
             <Box sx={{
@@ -244,7 +257,7 @@ export const ListsTabItem = ({
             }}>
               <Typography sx={{ fontSize: 13, lineHeight: 1 }}>{emoji}</Typography>
               <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: tone, lineHeight: 1.3, flex: 1 }}>
-                {verdict} בהוספות
+                {verdict} {t('inAdditionsWord')}
               </Typography>
               {pct < 999 && (
                 <Typography sx={{ fontSize: 10, fontWeight: 800, color: tone, fontVariantNumeric: 'tabular-nums' }}>
@@ -261,7 +274,7 @@ export const ListsTabItem = ({
             {/* Stacked bar - תרומה כוללת לפי חבר */}
             <Box sx={{ mt: 1.25 }}>
               <Typography sx={{ fontSize: 9.5, color: 'text.disabled', fontWeight: 700, mb: 0.4, letterSpacing: 0.3 }}>
-                חלוקת פעילות
+                {t('activityDistributionLabel')}
               </Typography>
               <Box sx={{
                 display: 'flex', height: 7, borderRadius: 2, overflow: 'hidden',
@@ -322,7 +335,7 @@ export const ListsTabItem = ({
                           px: 0.5, py: 0.1, borderRadius: '4px',
                           bgcolor: color, color: 'white',
                           letterSpacing: 0.3,
-                        }}>אתה</Box>
+                        }}>{t('you')}</Box>
                       )}
                     </Box>
                     {/* Added badge */}
@@ -369,7 +382,7 @@ export const ListsTabItem = ({
                 }}
               >
                 <Typography sx={{ fontSize: 11.5, fontWeight: 700 }}>
-                  {isExpanded ? 'הסתר' : `הצג עוד ${hiddenMembersCount} חברים`}
+                  {isExpanded ? t('hideAction') : t('showMoreMembersCount').replace('{count}', String(hiddenMembersCount))}
                 </Typography>
                 <Typography sx={{ fontSize: 10, transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                   ▼
@@ -388,7 +401,7 @@ export const ListsTabItem = ({
           }}>
             <Typography sx={{ fontSize: 18, mb: 0.25 }}>👥</Typography>
             <Typography sx={{ fontSize: 11, color: 'text.disabled', fontWeight: 600 }}>
-              אין עדיין פעילות של חברים
+              {t('noMemberActivityYet')}
             </Typography>
           </Box>
         )}

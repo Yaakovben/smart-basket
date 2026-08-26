@@ -53,9 +53,13 @@ export interface InsightsData {
     daysInMonth: number;
     topCategory: { category: string; amount: number; percentage: number } | null;
     categoryBreakdown: { category: string; amount: number; percentage: number }[];
+    // פילוח הוצאה לפי רשימה - כמה הוצאת מכל רשימה החודש
+    listBreakdown: { listId: string; name: string; icon: string; amount: number; percentage: number }[];
     previousMonthTotal: number | null;
     monthGrowthPct: number | null;
     hasBaseline: boolean;
     disclaimer: string;
+    // מגמת הוצאות 6 חודשים אחרונים - ממוין ישן לחדש
+    monthlyTrend: { label: string; total: number; monthNum: number; year: number }[];
   };
 }

@@ -25,7 +25,9 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   updatedBy: p.updatedBy ?? null,
   purchasedBy: p.purchasedBy ?? null,
   createdAt: p.createdAt,
+  updatedAt: p.updatedAt,
   note: p.note,
+  editHistory: p.editHistory,
 });
 
 // המרת רשימה מפורמט API לפורמט לקוח

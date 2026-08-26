@@ -14,7 +14,22 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { priceComparisonApi } from '../services/priceComparison.api';
 import { NavigationPicker } from './NavigationPicker';
+import { useSettings } from '../../../global/context/SettingsContext';
+import { MemberAvatar } from '../../../global/components/MemberAvatar';
+import type { User } from '../../../global/types';
 import type { NearestBranch } from '../types/priceComparison.types';
+
+// קריאה קלה מה-cache המקומי בלבד (בלי useAuth המלא - זה היה מפעיל שוב
+// טעינת רשימות/התראות מהשרת, מיותר לגמרי כאן, רק כדי להציג שם+אווטאר
+// בפופאפ "המיקום שלי").
+function getCachedUser(): User | null {
+  try {
+    const raw = localStorage.getItem('cached_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 const ISRAEL_CENTER: [number, number] = [31.7683, 35.2137];
 const ISRAEL_ZOOM = 8;
@@ -46,6 +61,66 @@ const CHAIN_COLORS: Partial<Record<string, { fill: string; stroke: string }>> = 
 };
 function getChainColor(chainId: string): { fill: string; stroke: string } {
   return CHAIN_COLORS[chainId] ?? DEFAULT_CHAIN_COLOR;
+}
+
+// ---- פרסור שעות פתיחה מפורמט OSM ----
+const OSM_DAY_MAP: Record<string, number> = { Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5, Sa: 6, Su: 0 };
+const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function parseTimeMin(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function dayRangeIncludes(rangeStr: string, dayNum: number): boolean {
+  // rangeStr can be "Mo-Fr", "Sa", "Mo,We,Fr", etc.
+  for (const part of rangeStr.split(',')) {
+    const dash = part.indexOf('-');
+    if (dash > 0) {
+      const from = OSM_DAY_MAP[part.slice(0, dash).trim()];
+      const to = OSM_DAY_MAP[part.slice(dash + 1).trim()];
+      if (from === undefined || to === undefined) continue;
+      // handle wrap-around (e.g. Sa-Su for Sunday=0, Saturday=6)
+      if (from <= to) {
+        if (dayNum >= from && dayNum <= to) return true;
+      } else {
+        if (dayNum >= from || dayNum <= to) return true;
+      }
+    } else {
+      if (OSM_DAY_MAP[part.trim()] === dayNum) return true;
+    }
+  }
+  return false;
+}
+
+interface ParsedHours { isOpen: boolean | null; todayLabel: string | null; todayHours: string | null }
+
+function parseOpeningHours(raw: string | undefined): ParsedHours {
+  if (!raw) return { isOpen: null, todayLabel: null, todayHours: null };
+  const trimmed = raw.trim();
+  if (trimmed === '24/7' || trimmed === '24/7;') {
+    return { isOpen: true, todayLabel: '24/7', todayHours: '00:00–24:00' };
+  }
+
+  const now = new Date();
+  const todayNum = now.getDay(); // 0=Sun
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  for (const rule of trimmed.split(';')) {
+    const r = rule.trim();
+    if (!r || r === 'off' || r === 'closed') continue;
+    const timeMatch = r.match(/(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+    if (!timeMatch) continue;
+    const startMin = parseTimeMin(timeMatch[1]);
+    const endMin = parseTimeMin(timeMatch[2]);
+    const daysPart = r.slice(0, r.indexOf(timeMatch[0])).trim().replace(/,$/, '');
+    if (!daysPart || dayRangeIncludes(daysPart, todayNum)) {
+      const label = `${timeMatch[1]}–${timeMatch[2]}`;
+      const isOpen = nowMin >= startMin && nowMin < (endMin === 0 ? 24 * 60 : endMin);
+      return { isOpen, todayLabel: HE_DAYS[todayNum], todayHours: label };
+    }
+  }
+  return { isOpen: null, todayLabel: null, todayHours: null };
 }
 
 const iconCache = new Map<string, L.DivIcon>();
@@ -97,12 +172,13 @@ function MapFlyTo({ location }: { location: { lat: number; lng: number } | null 
 
 // כפתור חזרה למיקום
 function RecenterBtn({ location }: { location: { lat: number; lng: number } | null }) {
+  const { t } = useSettings();
   const map = useMap();
   if (!location) return null;
   return (
     <IconButton
       onClick={() => map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), USER_ZOOM), { duration: 0.6 })}
-      aria-label="מרכז למיקום שלי"
+      aria-label={t('mapRecenterAria')}
       sx={{
         position: 'absolute', bottom: 28, right: 10, zIndex: 1000,
         bgcolor: 'white', width: 40, height: 40, borderRadius: '10px',
@@ -130,6 +206,7 @@ function MapSizer() {
 interface NearbyBranch {
   chainId: string; chainName: string; storeName: string;
   address: string; city: string; lat: number; lng: number;
+  openingHours?: string;
 }
 
 interface Props {
@@ -138,10 +215,12 @@ interface Props {
 }
 
 export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) => {
+  const { t } = useSettings();
   const { location, status: locationStatus, requestLocation } = useUserLocation();
   const [branches, setBranches] = useState<NearbyBranch[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [navBranch, setNavBranch] = useState<NearestBranch | null>(null);
+  const currentUser = useMemo(getCachedUser, []);
 
   // בקשת מיקום אוטומטית ברגע שהמפה נפתחת (רק אם עוד לא נשאל בכלל - 'idle').
   // פתיחת מפה היא כוונה ברורה מספיק לבקש מיקום כאן, ובלי זה משתמש חדש רואה
@@ -181,51 +260,86 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
   // ה-JSX של עד 150 markers+popups ממורמז בנפרד מה-state של הדיאלוג
   // (navBranch/loading) - בלי זה, כל טאפ על "ניווט" בפופאפ מפעיל re-render
   // שבונה מחדש את כל עצי ה-Marker/Popup, וזה מה שגורם לתחושת "לא מגיב".
-  const branchMarkers = useMemo(() => validBranches.map((b, i) => (
-    <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
-      <Popup className="sb-popup" minWidth={210}>
-        <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-            {(() => {
-              const { fill } = getChainColor(b.chainId);
-              return (
-                <Box sx={{
-                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  bgcolor: fill, color: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 900, letterSpacing: 0.2,
-                  boxShadow: `0 2px 6px ${fill}66`,
-                }}>
-                  {getMonogram(b.chainName)}
+  const branchMarkers = useMemo(() => validBranches.map((b, i) => {
+    const distanceKm = location ? Math.round(haversineKm(location, b) * 10) / 10 : null;
+    return (
+      <Marker key={`${b.chainId}-${i}`} position={[b.lat, b.lng]} icon={getBranchIcon(b.chainId, b.chainName)}>
+        <Popup className="sb-popup" minWidth={200}>
+          {(() => {
+            const { fill, stroke } = getChainColor(b.chainId);
+            const { isOpen, todayHours } = parseOpeningHours(b.openingHours);
+            return (
+              <Box sx={{ direction: 'rtl', textAlign: 'right' }}>
+                {/* שם הרשת + סניף */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.6 }}>
+                  <Box sx={{
+                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    bgcolor: fill, mt: '1px',
+                  }} />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 800, color: stroke, lineHeight: 1.3 }}>
+                      {b.chainName}
+                      {b.storeName && b.storeName !== b.chainName && (
+                        <Typography component="span" sx={{ fontSize: 11.5, fontWeight: 500, color: '#64748B', mr: 0.5 }}>
+                          {' — '}{b.storeName}
+                        </Typography>
+                      )}
+                    </Typography>
+                  </Box>
+                  {distanceKm !== null && (
+                    <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: '#94A3B8', flexShrink: 0 }}>
+                      {distanceKm} ק"מ
+                    </Typography>
+                  )}
                 </Box>
-              );
-            })()}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: getChainColor(b.chainId).stroke, lineHeight: 1.25 }}>
-                {b.chainName}
-              </Typography>
-              <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary', lineHeight: 1.3, mt: 0.1 }}>
-                {b.storeName}
-              </Typography>
-            </Box>
-          </Box>
-          {(b.address || b.city) && (
-            <Typography sx={{ fontSize: 11, color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-              📍 {[b.address, b.city].filter(Boolean).join(', ')}
-            </Typography>
-          )}
-          <Button
-            fullWidth size="small" variant="contained"
-            onClick={() => openNav(b)}
-            startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
-            sx={{ bgcolor: '#0D9488', '&:hover': { bgcolor: '#0F766E' }, fontSize: 12, fontWeight: 800, textTransform: 'none', borderRadius: '9px', py: 0.65 }}
-          >
-            ניווט
-          </Button>
-        </Box>
-      </Popup>
-    </Marker>
-  )), [validBranches, openNav]);
+
+                {/* כתובת */}
+                {(b.address || b.city) && (
+                  <Typography sx={{ fontSize: 11, color: '#94A3B8', mb: todayHours ? 0.5 : 0.9, lineHeight: 1.4 }}>
+                    {[b.address, b.city].filter(Boolean).join(', ')}
+                  </Typography>
+                )}
+
+                {/* שעות פתיחה */}
+                {todayHours && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.9 }}>
+                    <Box sx={{
+                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: isOpen === true ? '#22C55E' : isOpen === false ? '#F87171' : '#CBD5E1',
+                    }} />
+                    <Typography sx={{ fontSize: 11, color: isOpen === true ? '#16A34A' : isOpen === false ? '#EF4444' : '#94A3B8', fontWeight: 600 }}>
+                      {isOpen === true ? 'פתוח' : isOpen === false ? 'סגור' : ''}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>{todayHours}</Typography>
+                  </Box>
+                )}
+
+                {/* קו מפריד עדין לפני הכפתור */}
+                <Box sx={{ height: '1px', bgcolor: 'divider', opacity: 0.6, mb: 0.75 }} />
+
+                {/* כפתור ניווט - תמיד ירוק, בלי קשר לצבע הרשת */}
+                <Button
+                  fullWidth size="small" variant="contained"
+                  onClick={() => openNav(b)}
+                  startIcon={<NearMeIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    bgcolor: '#22C55E', color: 'white',
+                    boxShadow: '0 2px 8px rgba(34,197,94,0.35)',
+                    '&:hover': { bgcolor: '#16A34A', boxShadow: '0 2px 10px rgba(34,197,94,0.45)' },
+                    fontSize: 11.5, fontWeight: 700, textTransform: 'none',
+                    borderRadius: '8px', py: 0.6, mb: 0.5,
+                    '& .MuiButton-startIcon': { marginInlineEnd: '8px', marginInlineStart: 0 },
+                  }}
+                >
+                  {t('mapPopupNavigate')}
+                </Button>
+              </Box>
+            );
+          })()}
+        </Popup>
+      </Marker>
+    );
+  }), [validBranches, openNav, location, t]);
 
   return (
     <Box sx={{
@@ -276,7 +390,31 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
 
           {location && (
             <Marker position={[location.lat, location.lng]} icon={userIcon}>
-              <Popup className="sb-popup"><b>המיקום שלי</b></Popup>
+              <Popup className="sb-popup" minWidth={180}>
+                <Box sx={{ direction: 'rtl', textAlign: 'right', display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                  {currentUser ? (
+                    <MemberAvatar member={currentUser} size={38} />
+                  ) : (
+                    <Box sx={{
+                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                      bgcolor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(37,99,235,0.4)',
+                    }}>
+                      <MyLocationIcon sx={{ fontSize: 18, color: 'white' }} />
+                    </Box>
+                  )}
+                  <Box sx={{ minWidth: 0 }}>
+                    {currentUser?.name && (
+                      <Typography sx={{ fontSize: 13, fontWeight: 800, color: 'text.primary', lineHeight: 1.3 }}>
+                        {currentUser.name}
+                      </Typography>
+                    )}
+                    <Typography sx={{ fontSize: 11.5, fontWeight: 600, color: '#2563EB', lineHeight: 1.3 }}>
+                      {t('mapMyLocation')}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Popup>
             </Marker>
           )}
 
@@ -296,7 +434,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
         }}>
           <CircularProgress size={32} sx={{ color: '#14B8A6' }} />
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.secondary' }}>
-            טוען סניפים...
+            {t('mapLoadingBranches')}
           </Typography>
         </Box>
       )}
@@ -311,7 +449,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           maxWidth: '80%', textAlign: 'center',
         }}>
           <Typography sx={{ fontSize: 13, color: 'text.secondary', fontWeight: 600 }}>
-            לא נמצאו סניפים באזור
+            {t('mapNoBranchesFound')}
           </Typography>
         </Box>
       )}
@@ -324,7 +462,7 @@ export const BranchesMapView = ({ isDark = false, fillHeight = false }: Props) =
           maxWidth: '85%', textAlign: 'center',
         }}>
           <Typography sx={{ fontSize: 12, color: 'white', fontWeight: 700 }}>
-            📍 שתף מיקום לראות סניפים קרובים
+            {t('mapShareLocationHint')}
           </Typography>
         </Box>
       )}

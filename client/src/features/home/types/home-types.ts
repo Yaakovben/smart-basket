@@ -71,7 +71,6 @@ export interface HomePageProps {
   lists: List[];
   listsLoading?: boolean;
   listsFetchError?: boolean;
-  serverConnectionVisible?: boolean;
   user: User;
   onSelectList: (list: List) => void;
   onCreateList: (list: { name: string; icon: string; color: string; isGroup: boolean; password?: string | null }) => void | Promise<void>;

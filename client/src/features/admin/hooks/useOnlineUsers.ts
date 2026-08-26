@@ -18,7 +18,6 @@ export function useOnlineUsers(): Set<string> {
       setOnlineUserIds(new Set(data.userIds));
     });
 
-    // משתמש התחבר
     const unsubConnected = socketService.on<{ userId: string }>('admin:user-connected', (data) => {
       setOnlineUserIds(prev => {
         if (prev.has(data.userId)) return prev;
@@ -28,7 +27,6 @@ export function useOnlineUsers(): Set<string> {
       });
     });
 
-    // משתמש התנתק
     const unsubDisconnected = socketService.on<{ userId: string }>('admin:user-disconnected', (data) => {
       setOnlineUserIds(prev => {
         if (!prev.has(data.userId)) return prev;

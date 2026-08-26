@@ -79,6 +79,13 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
 
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
 
+  // בטאב "לקנות" מציגים את שם המוסיף, ובטאב "נקנה" את שם הקונה - בלי המילים
+  // "נוסף/נקנה ע״י" (רק שם). השרשרת המלאה עם התוויות מוצגת בפרטי המוצר בלבד.
+  const displayName = (name: string) => name === currentUserName ? t('you') : name;
+  const relevantName = isPurchased && product.purchasedBy
+    ? displayName(product.purchasedBy)
+    : displayName(product.addedBy);
+
   // סנכרון עם state חיצוני - סגירה כשפריט אחר נפתח
   useEffect(() => {
     if (!isOpen && offset > 0) {
@@ -86,12 +93,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
       setOffset(0);
     }
   }, [isOpen, offset]);
-
-  // ניקוי ב-unmount
-  useEffect(() => {
-    return () => {
-    };
-  }, []);
 
   // חישוב אפקט גומייה
   const calcOffset = useCallback((rawOffset: number): number => {
@@ -269,7 +270,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
     if (justSwiped.current) return;
 
     if (offset > 20) {
-      // סגירה אם פתוח
       setOffset(0);
       onClose();
     } else {
@@ -436,17 +436,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               </Box>
             )}
           </Box>
-          <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
-            {product.quantity} {product.unit} • {product.addedBy === currentUserName ? t('you') : product.addedBy}
-            {/* "נקנה ע״י" עדיף על "עודכן ע״י" כשהמוצר נקנה - זו הפעולה הכי
-                רלוונטית כרגע. שתיהן מוצגות רק כשהעושה שונה מהמוסיף המקורי -
-                אחרת זה רק חוזר על אותו מידע. */}
-            {isPurchased && product.purchasedBy && product.purchasedBy !== product.addedBy && (
-              <> • {t('purchasedByLabel')} {product.purchasedBy === currentUserName ? t('you') : product.purchasedBy}</>
-            )}
-            {!isPurchased && product.updatedBy && product.updatedBy !== product.addedBy && (
-              <> • {t('updatedByLabel')} {product.updatedBy === currentUserName ? t('you') : product.updatedBy}</>
-            )}
+          <Typography sx={{
+            fontSize: '13px', color: 'text.secondary',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {product.quantity} {product.unit} • {relevantName}
           </Typography>
         </Box>
         {isPurchased && (

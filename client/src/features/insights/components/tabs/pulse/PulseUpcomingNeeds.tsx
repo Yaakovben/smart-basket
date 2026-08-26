@@ -25,7 +25,7 @@ export const PulseUpcomingNeeds = ({ upcomingNeeds, isDark, t }: PulseUpcomingNe
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.25 }}>
         <Typography sx={{ fontSize: 18 }}>🔮</Typography>
         <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: 'text.primary' }}>
-          צפוי בקרוב לפי המחזור שלך
+          {t('upcomingByYourCycleTitle')}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
@@ -34,12 +34,12 @@ export const PulseUpcomingNeeds = ({ upcomingNeeds, isDark, t }: PulseUpcomingNe
           const label = transKey ? t(transKey) : u.category;
           const icon = CATEGORY_ICONS[u.category as keyof typeof CATEGORY_ICONS] || '📦';
           const overdueText = u.daysOverdue >= 1
-            ? `איחור של ${u.daysOverdue} ימים`
+            ? t('overdueDays').replace('{days}', String(u.daysOverdue))
             : u.daysOverdue === 0
-              ? 'צפוי היום'
+              ? t('expectedToday')
               : u.daysOverdue === -1
-                ? 'צפוי מחר'
-                : `בעוד ${Math.abs(u.daysOverdue)} ימים`;
+                ? t('expectedTomorrow')
+                : t('expectedInDays').replace('{days}', String(Math.abs(u.daysOverdue)));
           const isOverdue = u.daysOverdue >= 0;
           return (
             <Box key={u.category} sx={{

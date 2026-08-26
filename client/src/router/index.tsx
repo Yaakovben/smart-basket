@@ -4,13 +4,16 @@ import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "re
 import { Box } from "@mui/material";
 import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
-import { Toast, PageSkeleton, ErrorBoundary } from "../global/components";
+import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
-import { authApi } from "../services/api";
+import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
+import { setFetchIssue } from "../global/services/connectionIssue";
+import { writeCache } from "../features/insights/helpers/insightsCache";
+import { INSIGHTS_CACHE_KEY } from "../features/insights/helpers/insightsCache";
 
 // טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/pages/LoginPage";
@@ -23,17 +26,25 @@ const listImport = () => import("../features/list/list").then(m => ({ default: m
 listImport(); // prefetch מיידי - מונע עיכוב בלחיצה על רשימה
 const ListPage = lazy(listImport);
 const profileImport = () => import("../features/profile/profile").then(m => ({ default: m.ProfilePage }));
-profileImport(); // prefetch מיידי - מונע עיכוב בלחיצה על פרופיל (כמו Home/List)
 const ProfilePage = lazy(profileImport);
 const settingsImport = () => import("../features/settings/settings").then(m => ({ default: m.SettingsPage }));
-settingsImport(); // prefetch מיידי - מונע עיכוב בלחיצה על הגדרות (כמו Home/List)
 const SettingsPage = lazy(settingsImport);
 const PrivacyPolicy = lazy(() => import("../features/legal/legal").then(m => ({ default: m.PrivacyPolicy })));
 const AdminPage = lazy(() => import("../features/admin/admin").then(m => ({ default: m.AdminPage })));
 const ClearCachePage = lazy(() => import("../features/utils/ClearCachePage").then(m => ({ default: m.ClearCachePage })));
 const insightsImport = () => import("../features/insights/components/InsightsPage").then(m => ({ default: m.InsightsPage }));
-insightsImport(); // prefetch מיידי - יעד ניווט מרכזי מהבית (כמו Home/List/Profile/Settings)
 const InsightsPage = lazy(insightsImport);
+
+// prefetch מושהה לזמן סרק: Profile/Settings/Insights פחות דחופים מ-Home/List
+// לפתיחת האפליקציה עצמה. Insights הוזז לכאן (היה prefetch מיידי) כי הוא
+// שוקל 451kB (recharts) והיה מתחרה על רוחב פס עם אימות+טעינת רשימות בדיוק
+// בחלון הקריטי של הפתיחה - למרות שהוא לא הדף הראשון שהמשתמש רואה בכלל.
+// עדיין נטען מוקדם מספיק (זמן סרק) שיהיה מוכן כשילחצו על הטאב בפועל.
+if (typeof requestIdleCallback === 'function') {
+  requestIdleCallback(() => { profileImport(); settingsImport(); insightsImport(); }, { timeout: 4000 });
+} else {
+  setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
+}
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
 
 // ניתוב QR - שומר code+password ומפנה לדף הבית
@@ -149,10 +160,29 @@ export const AppRouter = () => {
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
-  // הסתרת loader ראשוני כשבדיקת האימות הושלמה - בלי RAF כפול
+  // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
+  // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
+  // צויר בפועל לפני שמסירים את ה-loader — מונע הבהוב לבן של שבריר שנייה.
   useEffect(() => {
-    if (!authLoading) hideInitialLoader();
+    if (!authLoading) {
+      const raf = requestAnimationFrame(() => hideInitialLoader());
+      return () => cancelAnimationFrame(raf);
+    }
   }, [authLoading]);
+
+  // pre-warm: אחרי שהמשתמש נכנס ו-auth הסתיים, מבצעים fetch לנתוני תובנות
+  // ברקע בשקט. כשיכנס לדף התובנות — ה-cache בשרת (4 דק') וב-localStorage
+  // כבר חמים, והדף נפתח מיידית במקום לחכות לחישוב spending יקר (80 regex).
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const timer = setTimeout(() => {
+      insightsApi.getInsights()
+        .then(res => writeCache(INSIGHTS_CACHE_KEY, res))
+        .catch(() => {/* שקט — זה רק pre-warm, לא קריטי */});
+    }, 3000); // 3 שניות אחרי login - לא מתחרה עם טעינת הבית
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   // הודעות מ-Service Worker: ניווט מהתראות בלבד.
   //
@@ -192,6 +222,12 @@ export const AppRouter = () => {
       showToast(t('errorOccurred'), 'error');
     }
   }, [authLoading, listsFetchError, notificationsFetchError, showToast, t]);
+
+  // מדווח על כשל fetch לרכיב הגלובלי היחיד שמציג "אין קליטה" (OfflineBanner ב-App.tsx)
+  // - כך אין רכיב נפרד ליד הפעמון, ואייקון החיבור מזהה גם כשל fetch וגם ניתוק socket.
+  useEffect(() => {
+    setFetchIssue(!authLoading && !!(listsFetchError || notificationsFetchError));
+  }, [authLoading, listsFetchError, notificationsFetchError]);
 
   // מיפוי שמות רשימות להתראות
   const listNames = useMemo(() =>
@@ -367,7 +403,6 @@ export const AppRouter = () => {
                 lists={lists}
                 listsLoading={listsLoading}
                 listsFetchError={listsFetchError || initialData.connectionError}
-                serverConnectionVisible={!authLoading && !!(listsFetchError || notificationsFetchError)}
                 user={user!}
                 onSelectList={handleSelectList}
                 onCreateList={handleCreateList}
@@ -458,11 +493,12 @@ export const AppRouter = () => {
       </Box>
       </Suspense>
       <Toast key={toastKey} msg={toast} type={toastType} onDismiss={hideToast} onUndo={onUndo} />
-      {/* ServerConnectionBanner עבר להיות מוצג inline ליד פעמון ההתראות
-          ב-HomeHeader (דרך serverConnectionVisible שמועבר ל-HomePage למעלה),
-          לא כ-overlay צף גלובלי - הוסר מכאן. אותה לוגיקה בדיוק
-          (listsFetchError/notificationsFetchError, לא initialData.connectionError
-          שהוא דגל חד-פעמי שלא מתאפס - ראו הערה קודמת שהייתה כאן). */}
+      {/* אייקון חיבור גלובלי יחיד - mounted כאן פעם אחת בלבד לכל האפליקציה
+          (לא בתוך כל כותרת עמוד בנפרד), כך שהוא תמיד באותו מיקום פיזי קבוע
+          על גבי כל דף, כולל דפים שלא הטמיעו אותו קודם. כשל fetch מדווח
+          דרך setFetchIssue() (למעלה) ומזוהה יחד עם ניתוק socket ב-
+          useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
+      <ConnectionStatusIcon />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>

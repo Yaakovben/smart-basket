@@ -10,6 +10,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { haptic, CATEGORY_ICONS } from '../../../../global/helpers';
 import { parseOcrList, type OcrListItem } from '../../../../global/helpers/parseOcrList';
 import { ocrApi } from '../../../../services/api';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 interface ReviewItem extends OcrListItem {
   id: string;
@@ -60,6 +61,7 @@ type Phase = 'intro' | 'uploading' | 'review' | 'error';
  * קריטי כי זיהוי כתב יד לא מדויק, המסך הזה הוא קו ההגנה האמיתי.
  */
 export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) => {
+  const { t } = useSettings();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [phase, setPhase] = useState<Phase>('intro');
   const [items, setItems] = useState<ReviewItem[]>([]);
@@ -89,7 +91,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
       const text = await ocrApi.scanList(compressed);
       const { items: parsed, detectedTitle: title } = parseOcrList(text);
       if (parsed.length === 0) {
-        setErrorMsg('לא זיהינו טקסט ברור בתמונה. נסה תמונה ברורה וחדה יותר, עם תאורה טובה.');
+        setErrorMsg(t('ocrNoTextDetected'));
         setPhase('error');
         return;
       }
@@ -97,7 +99,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
       setItems(parsed.map((p, i) => ({ ...p, id: `${i}-${p.name}`, checked: true })));
       setPhase('review');
     } catch {
-      setErrorMsg('משהו השתבש בזיהוי הטקסט. נסה שוב, או הוסף את הפריטים ידנית.');
+      setErrorMsg(t('ocrGenericError'));
       setPhase('error');
     }
   };
@@ -148,24 +150,22 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
 
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <IconButton onClick={handleClose} aria-label="סגור">
+          <IconButton onClick={handleClose} aria-label={t('close')}>
             <CloseIcon />
           </IconButton>
-          <Typography sx={{ fontWeight: 700, flex: 1 }}>סריקת רשימה מהדף</Typography>
+          <Typography sx={{ fontWeight: 700, flex: 1 }}>{t('scanListTitle')}</Typography>
         </Box>
 
         <Box sx={{ flex: 1, overflowY: 'auto', p: 2.5 }}>
           {phase === 'intro' && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 2, pt: 4 }}>
               <DocumentScannerIcon sx={{ fontSize: 60, color: '#14B8A6' }} />
-              <Typography sx={{ fontSize: 18, fontWeight: 800 }}>צלם פתק עם רשימת קניות</Typography>
+              <Typography sx={{ fontSize: 18, fontWeight: 800 }}>{t('scanListIntroTitle')}</Typography>
               <Typography sx={{ fontSize: 14, color: 'text.secondary', maxWidth: 320 }}>
-                נזהה את הטקסט בתמונה ונציע לך רשימת מוצרים - תוכל לערוך ולאשר
-                לפני שמוסיפים אותם. <b>התמונה נשלחת לשירות זיהוי טקסט חיצוני</b> (OCR.space)
-                לצורך הזיהוי בלבד, ולא נשמרת אצלנו.
+                {t('scanListIntroDescPart1')}<b>{t('scanListIntroDescBold')}</b>{t('scanListIntroDescPart2')}
               </Typography>
               <Typography sx={{ fontSize: 12.5, color: 'text.disabled', maxWidth: 320 }}>
-                זיהוי כתב יד לא תמיד מדויק - תמיד תוכל לתקן לפני ההוספה.
+                {t('scanListHandwritingHint')}
               </Typography>
               <Button
                 variant="contained"
@@ -177,7 +177,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                   '& .MuiButton-startIcon': { marginInlineEnd: '10px', marginInlineStart: 0 },
                 }}
               >
-                צלם / בחר תמונה
+                {t('scanListCaptureButton')}
               </Button>
             </Box>
           )}
@@ -185,7 +185,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
           {phase === 'uploading' && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, height: '100%' }}>
               <CircularProgress />
-              <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>מזהה טקסט בתמונה...</Typography>
+              <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{t('scanListDetecting')}</Typography>
             </Box>
           )}
 
@@ -214,7 +214,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                     '0%, 100%': { transform: 'translateY(0)' },
                     '50%': { transform: 'translateY(-6px)' },
                   },
-                }} role="img" aria-label="לא זוהה טקסט בתמונה">
+                }} role="img" aria-label={t('scanListNoTextAria')}>
                   🔍
                 </Box>
                 {['❓', '📝'].map((emoji, i) => (
@@ -233,18 +233,18 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                 ))}
               </Box>
               <Typography sx={{ fontSize: 14, color: 'text.secondary', maxWidth: 280 }}>{errorMsg}</Typography>
-              <Button variant="outlined" onClick={() => { haptic('light'); reset(); }}>נסה שוב</Button>
+              <Button variant="outlined" onClick={() => { haptic('light'); reset(); }}>{t('tryAgain')}</Button>
             </Box>
           )}
 
           {phase === 'review' && (
             <Box>
               <Typography sx={{ fontSize: 13, color: 'text.secondary', mb: 1.5 }}>
-                זיהינו {items.length} שורות - בטל סימון/מחק מה שלא רלוונטי, ותקן שמות לפי הצורך.
+                {t('scanListReviewHint').replace('{count}', String(items.length))}
               </Typography>
               {detectedTitle && (
                 <Typography sx={{ fontSize: 12, color: 'text.disabled', mb: 1.5, fontStyle: 'italic' }}>
-                  זיהינו גם כותרת "{detectedTitle}" - לא נוספה כפריט.
+                  {t('scanListDetectedTitle').replace('{title}', detectedTitle)}
                 </Typography>
               )}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -264,11 +264,11 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                       onChange={(e) => updateItemName(it.id, e.target.value)}
                       variant="standard"
                       fullWidth
-                      placeholder="שם המוצר"
+                      placeholder={t('productNamePlaceholder')}
                       slotProps={{ input: { disableUnderline: true } }}
                       sx={{ '& .MuiInputBase-input': { fontSize: 14.5 } }}
                     />
-                    <IconButton size="small" onClick={() => removeItem(it.id)} aria-label="הסר">
+                    <IconButton size="small" onClick={() => removeItem(it.id)} aria-label={t('removeAction')}>
                       <DeleteOutlineIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                   </Box>
@@ -279,7 +279,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
                 onClick={addBlankItem}
                 sx={{ mt: 1.5 }}
               >
-                הוסף שורה ידנית
+                {t('addManualRow')}
               </Button>
             </Box>
           )}
@@ -295,7 +295,7 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
               onClick={handleConfirm}
               sx={{ borderRadius: '12px' }}
             >
-              {checkedCount > 0 ? `הוסף ${checkedCount} פריטים לרשימה` : 'בחר לפחות פריט אחד'}
+              {checkedCount > 0 ? t('addItemsToListCount').replace('{count}', String(checkedCount)) : t('selectAtLeastOneItem')}
             </Button>
           </Box>
         )}

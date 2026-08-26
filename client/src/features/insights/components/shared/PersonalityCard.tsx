@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import { fadeIn } from './animations';
+import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== כרטיס אישיות קנייה =====
 // מציג את ה-shoppingPersonality שכבר מחושב בשרת (השף, היעיל, וכו׳).
@@ -8,7 +9,9 @@ import { fadeIn } from './animations';
 export const PersonalityCard = ({ personality, isDark }: {
   personality: { type: string; emoji: string; description: string };
   isDark: boolean;
-}) => (
+}) => {
+  const { t } = useSettings();
+  return (
   <Box sx={{
     position: 'relative', mb: 2, p: 2.25, borderRadius: '20px',
     background: isDark
@@ -53,7 +56,7 @@ export const PersonalityCard = ({ personality, isDark }: {
           fontSize: 10.5, fontWeight: 800, letterSpacing: 0.6,
           opacity: 0.92, textTransform: 'uppercase',
         }}>
-          האישיות שלך
+          {t('yourPersonalityLabel')}
         </Typography>
         <Typography sx={{
           fontSize: 22, fontWeight: 900, lineHeight: 1.15, mt: 0.2,
@@ -70,4 +73,5 @@ export const PersonalityCard = ({ personality, isDark }: {
       </Box>
     </Box>
   </Box>
-);
+  );
+};
