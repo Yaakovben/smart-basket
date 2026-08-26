@@ -97,20 +97,30 @@ export const useProductSelection = ({ list, onUpdateProductsForList, showToast, 
 
   // העברה מרוכזת לרשימה אחרת - קריאה אחת עם כל ה-IDs (לא לולאה כמו
   // bulkDelete/bulkSetPurchased) כי לשרת יש כבר endpoint מרוכז לזה.
-  // אין עדכון אופטימי לרשימת היעד - היא לא בהכרח טעונה אצל הלקוח כרגע,
-  // תתעדכן בטעינה/ריענון הבאה שלה.
+  // עדכון אופטימי משני הצדדים: onUpdateProductsForList מעדכן לפי listId
+  // בתוך ה-lists הגלובלי (לא רק את הרשימה הפתוחה כרגע) - כל הרשימות של
+  // המשתמש כבר טעונות בזיכרון, אז אפשר לעדכן גם רשימת יעד שלא מוצגת כרגע,
+  // בלי לחכות ל-refetch. בלי זה המשתמש שנכנס מיד לרשימת היעד לא רואה
+  // את המוצרים שהועברו עד רענון ידני.
   const bulkMove = useCallback((targetListId: string) => {
     haptic('medium');
     const ids = Array.from(selectedProducts);
     const count = ids.length;
+    const movedProducts = list.products.filter((p: Product) => ids.includes(p.id));
     exitSelectionMode();
     onUpdateProductsForList(list.id, (current) =>
       current.filter(p => !ids.includes(p.id))
     );
+    onUpdateProductsForList(targetListId, (current) => [...current, ...movedProducts]);
     productsApi.moveProducts(list.id, targetListId, ids)
       .then(() => showToast(`${count} ${t('productsMoved')}`))
-      .catch(() => showToast(t('errorOccurred'), 'error'));
-  }, [selectedProducts, list.id, exitSelectionMode, onUpdateProductsForList, showToast, t]);
+      .catch(() => {
+        // כישלון בשרת - מחזירים את שני הצדדים למצב הקודם
+        onUpdateProductsForList(list.id, (current) => [...current, ...movedProducts]);
+        onUpdateProductsForList(targetListId, (current) => current.filter(p => !ids.includes(p.id)));
+        showToast(t('errorOccurred'), 'error');
+      });
+  }, [selectedProducts, list.id, list.products, exitSelectionMode, onUpdateProductsForList, showToast, t]);
 
   return {
     selectedProducts,
