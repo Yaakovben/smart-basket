@@ -14,6 +14,7 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { ListCostEstimate } from '../hooks/useListCostEstimate';
 import { QuickAddBar } from './header/QuickAddBar';
+import { StaplesBar } from './header/StaplesBar';
 import { ListProgressBar } from './header/ListProgressBar';
 import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
@@ -50,6 +51,7 @@ interface ListHeaderProps {
   onScanList?: () => void;
   costEstimate?: ListCostEstimate | null;
   productNames?: string[];
+  onToggleStaple: (name: string) => Promise<void>;
 }
 
 export const ListHeader = memo(({
@@ -58,7 +60,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  costEstimate, productNames = [],
+  costEstimate, productNames = [], onToggleStaple,
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -264,6 +266,14 @@ export const ListHeader = memo(({
         '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
       }}>
         <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
+      </Box>
+
+      {/* ===== שורת מוצרים קבועים - הוספה מהירה בצ'יפ, בנוסף להוספה הרגילה ===== */}
+      <Box sx={{
+        mb: { xs: 0.75, sm: 1 },
+        '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+      }}>
+        <StaplesBar list={list} staples={user.staples} onQuickAdd={onQuickAdd} onToggleStaple={onToggleStaple} />
       </Box>
 
       {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}

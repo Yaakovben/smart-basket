@@ -274,6 +274,8 @@ export type TranslationKeys =
   | 'categoryBreakdown'
   | 'maybeForgot'
   | 'resetListConfirm'
+  | 'addStaple'
+  | 'addStapleHint'
   | 'noProductsInCategory'
   | 'showAll'
   | 'errorOccurred'

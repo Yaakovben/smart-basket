@@ -12,6 +12,10 @@ export interface IUser extends Document {
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
   listOrder: string[];
+  // "מוצרים קבועים" - שמות מוצרים שהמשתמש תמיד קונה, בלי קשר לרשימה
+  // ספציפית. מוצגים כצ'יפים להוספה מהירה בתוך כל רשימה (ראו StaplesBar
+  // בקליינט) - עצמאי מתוכן/מחזור החיים של רשימה בודדת.
+  staples: string[];
   // מוגדל בכל שינוי סיסמה / מחיקת חשבון כדי לבטל access tokens שכבר הונפקו
   // (JWT הוא stateless - זו הדרך היחידה לבטל טוקן לפני שפג תוקפו).
   // מוטמע ב-payload של ה-JWT ונבדק מול הערך ב-DB בכל בקשה מאומתת.
@@ -65,6 +69,9 @@ const userSchema = new Schema<IUser>(
       ref: 'List',
     }],
     listOrder: [{
+      type: String,
+    }],
+    staples: [{
       type: String,
     }],
     tokenVersion: {

@@ -261,5 +261,34 @@ export function useAuth() {
     [user],
   );
 
-  return { user, login, logout, updateUser, isAuthenticated: !!user, loading, initialData };
+  // הוספה/הסרה של "מוצר קבוע" - אופטימיסטי (עדכון מיידי, שחזור אם השרת נכשל)
+  const toggleStaple = useCallback(
+    async (name: string) => {
+      if (!user) return;
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const previousStaples = user.staples || [];
+      const exists = previousStaples.includes(trimmed);
+      const optimisticStaples = exists
+        ? previousStaples.filter(s => s !== trimmed)
+        : [...previousStaples, trimmed];
+
+      setUser(prev => prev ? { ...prev, staples: optimisticStaples } : prev);
+      try {
+        const { staples } = await authApi.toggleStaple(trimmed);
+        setUser(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev, staples };
+          try { localStorage.setItem('cached_user', JSON.stringify({ ...updated, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
+          return updated;
+        });
+      } catch {
+        setUser(prev => prev ? { ...prev, staples: previousStaples } : prev);
+        throw new Error('toggleStaple failed');
+      }
+    },
+    [user],
+  );
+
+  return { user, login, logout, updateUser, toggleStaple, isAuthenticated: !!user, loading, initialData };
 }

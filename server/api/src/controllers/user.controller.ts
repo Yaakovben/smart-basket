@@ -17,6 +17,7 @@ import {
   updateProfile as persistProfile,
   changePassword as updatePassword,
   toggleMutedGroup,
+  toggleStaple as toggleStapleService,
   deleteAccount,
 } from '../services/user.service';
 
@@ -68,6 +69,16 @@ export const updateListOrder = asyncHandler(async (req: AuthRequest, res: Respon
   const { listOrder } = req.body as { listOrder: string[] };
   await UserDAL.updateListOrder(req.user!.id, listOrder);
   res.json({ success: true, data: { listOrder } });
+});
+
+/**
+ * POST /api/users/me/staples/toggle
+ * הוספה/הסרה של "מוצר קבוע" (שם מוצר שהמשתמש תמיד קונה).
+ */
+export const toggleStaple = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { name } = req.body as { name: string };
+  const staples = await toggleStapleService(req.user!.id, name);
+  res.json({ success: true, data: { staples } });
 });
 
 /**

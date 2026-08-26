@@ -87,6 +87,7 @@ const ListPageWrapper = ({
   deleteList,
   showToast,
   onlineUsers,
+  onToggleStaple,
 }: {
   lists: List[];
   user: User;
@@ -97,6 +98,7 @@ const ListPageWrapper = ({
   deleteList: (id: string) => void;
   showToast: (msg: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUsers: Record<string, string[]>;
+  onToggleStaple: (name: string) => Promise<void>;
 }) => {
   const navigate = useNavigate();
   const { listId } = useParams();
@@ -141,6 +143,7 @@ const ListPageWrapper = ({
       onDeleteList={handleDeleteList}
       showToast={showToast}
       onlineUserIds={onlineUserIds}
+      onToggleStaple={onToggleStaple}
     />
   );
 };
@@ -152,7 +155,7 @@ export const AppRouter = () => {
   const { t } = useSettings();
 
   // hooks חייבים להיקרא לפני כל return מותנה
-  const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
+  const { user, login, logout, updateUser, toggleStaple, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
   const { lists, fetchError: listsFetchError, loading: listsLoading, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
   const { message: toast, toastType, toastKey, onUndo, showToast, hideToast } = useToast();
@@ -436,6 +439,7 @@ export const AppRouter = () => {
                 deleteList={deleteList}
                 showToast={showToast}
                 onlineUsers={onlineUsers}
+                onToggleStaple={toggleStaple}
               />
               </ErrorBoundary>
             </ProtectedRoute>

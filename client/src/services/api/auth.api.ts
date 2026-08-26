@@ -95,6 +95,12 @@ export const authApi = {
     await apiClient.put('/users/me/list-order', { listOrder });
   },
 
+  // הוספה/הסרה של "מוצר קבוע" (שם מוצר שהמשתמש תמיד קונה)
+  async toggleStaple(name: string): Promise<{ staples: string[] }> {
+    const response = await apiClient.post<{ data: { staples: string[] } }>('/users/me/staples/toggle', { name });
+    return response.data.data;
+  },
+
   // רישום פתיחת אפליקציה לאדמין
   logAppOpen: () => apiClient.post('/auth/app-open').catch(() => {}),
 

@@ -54,6 +54,23 @@ export const UserDAL = {
     );
   },
 
+  async toggleStaple(userId: string, name: string): Promise<IUser | null> {
+    // ניסיון הסרה (אם כבר קיים)
+    const pulled = await User.findOneAndUpdate(
+      { _id: userId, staples: name },
+      { $pull: { staples: name } },
+      { new: true }
+    );
+    if (pulled) return pulled;
+
+    // לא קיים - הוספה
+    return User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { staples: name } },
+      { new: true }
+    );
+  },
+
   async findUserIdsWhoMutedGroup(groupId: string, userIds: string[]): Promise<string[]> {
     const users = await User.find({
       _id: { $in: userIds },
