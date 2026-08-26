@@ -6,7 +6,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { Modal } from '../../../../global/components';
+import { Modal, TapToRevealText } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -137,9 +137,10 @@ export const ProductDetailsModal = memo(({
             {CATEGORY_ICONS[product.category]}
           </Typography>
         </Box>
-        <Typography sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
-          {product.name}
-        </Typography>
+        <TapToRevealText
+          text={product.name}
+          sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5 }}
+        />
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>

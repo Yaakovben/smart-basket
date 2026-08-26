@@ -215,6 +215,10 @@ export const AddProductModal = memo(({
           onKeyDown={handleNameKeyDown}
           placeholder={t('productName')}
           aria-required="true"
+          // שם ארוך (נפוץ בשמות שמגיעים מסריקת ברקוד) לא ייחתך בלי חיווי
+          // כשהשדה לא בפוקוס - text-overflow:ellipsis על input לא-ממוקד
+          // נתמך native בדפדפנים; בפוקוס ההתנהגות הרגילה (גלילה לפי caret) ממשיכה.
+          sx={{ '& .MuiInputBase-input': { textOverflow: 'ellipsis' } }}
           inputProps={{
             enterKeyHint: 'next',
             maxLength: 100

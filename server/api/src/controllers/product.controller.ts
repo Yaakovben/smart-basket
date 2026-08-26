@@ -11,6 +11,7 @@ export const addProduct = asyncHandler(async (req: AuthRequest, res: Response) =
   const { listId } = req.params;
   const productInput = req.body as CreateProductInput;
   const product = await productService.addProduct(listId, userId, productInput);
+  invalidateInsightsCache(userId);
   invalidateAssistantContext(userId);
   res.status(201).json({ success: true, data: product });
 });
@@ -32,6 +33,7 @@ export const deleteProduct = asyncHandler(async (req: AuthRequest, res: Response
   const userId = req.user!.id;
   const { listId, productId } = req.params;
   await productService.deleteProduct(listId, productId, userId);
+  invalidateInsightsCache(userId);
   invalidateAssistantContext(userId);
   res.json({ success: true });
 });
@@ -45,6 +47,7 @@ export const clearProducts = asyncHandler(async (req: AuthRequest, res: Response
     return;
   }
   const deletedCount = await productService.clearProducts(listId, userId, filter as 'all' | 'purchased' | 'pending');
+  invalidateInsightsCache(userId);
   invalidateAssistantContext(userId);
   res.json({ success: true, data: { deletedCount } });
 });
@@ -53,6 +56,7 @@ export const resetProducts = asyncHandler(async (req: AuthRequest, res: Response
   const userId = req.user!.id;
   const { listId } = req.params;
   const resetCount = await productService.resetProducts(listId, userId);
+  invalidateInsightsCache(userId);
   invalidateAssistantContext(userId);
   res.json({ success: true, data: { resetCount } });
 });

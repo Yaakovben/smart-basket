@@ -67,8 +67,24 @@ export function useUserLocation() {
 
   // רענון שקט: לא משנה status (שלא יקפוץ "מבקש מיקום..."), רק מעדכן location.
   // אם הדפדפן ביטל הרשאה (err.code===1), זה מוחזר ל-denied.
-  const silentRefresh = useCallback(() => {
+  //
+  // לפני קריאה בפועל בודקים את מצב ההרשאה האמיתי דרך Permissions API (לא
+  // רק flag ב-localStorage) - קריאה "שקטה" ל-getCurrentPosition כשההרשאה
+  // כבר לא 'granted' בפועל (הדפדפן/OS ביטלו אותה ברקע - iOS ITP, "unused
+  // permissions" auto-revoke בכרום וכו') מציגה prompt נייטיבי בלי שום
+  // אינטראקציה של המשתמש - בדיוק התלונה "מבקש הרשאה שוב לבד". דפדפנים בלי
+  // תמיכה ב-Permissions API ל-geolocation (חלק מגרסאות Safari) ממשיכים
+  // להתנהגות הקודמת.
+  const silentRefresh = useCallback(async () => {
     if (!('geolocation' in navigator)) return;
+    if (navigator.permissions) {
+      try {
+        const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+        if (perm.state !== 'granted') return;
+      } catch {
+        // Permissions API לא תומך ב-geolocation בדפדפן הזה - ממשיכים כרגיל
+      }
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -158,12 +174,22 @@ export function useUserLocation() {
   // האזנה לחזרה לחלון/לטאב - מנסה לרענן מיקום אם המשתמש שינה הרשאות
   // בהגדרות הדפדפן/iOS Settings וחזר לאפליקציה. שקט - לא משנה UI אם נכשל.
   useEffect(() => {
-    const onVisible = () => {
+    const onVisible = async () => {
       if (document.visibilityState !== 'visible') return;
       // אם המשתמש כעת ב-denied/error/unavailable - ננסה ברקע. אם זה כעת מאושר,
       // ייצא ל-granted; אם עדיין מסורב, נשארים באותו status.
       if (status === 'denied' || status === 'error') {
         if (!('geolocation' in navigator)) return;
+        // כמו ב-silentRefresh: בודקים הרשאה אמיתית לפני קריאה שקטה, כדי
+        // שלא יופיע prompt נייטיבי מפתיע רק מזה שהמשתמש חזר לטאב.
+        if (navigator.permissions) {
+          try {
+            const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+            if (perm.state !== 'granted') return;
+          } catch {
+            // ממשיכים כרגיל אם אין תמיכה
+          }
+        }
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const loc: UserLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };

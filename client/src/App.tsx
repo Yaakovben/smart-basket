@@ -19,10 +19,14 @@ import { diagLog } from './global/helpers/crashLog';
 // מוקדם בטעינת הדף - אז ויתרנו עליו לגמרי, כמו שנעשה גם למנגנון המקביל
 // ב-router/index.tsx.
 //
-// עדיין רוצים לוודא שמכשירים עם SW/cache ישנים "יתנקו" בפועל ולא ייתקעו -
-// אז מנקים caches + מבטלים רישום SW ברקע (לא חוסם, לא מרענן). ה-JS שכבר
-// רץ בזיכרון ממשיך בלי הפרעה; הטעינה הבאה (סגירה-פתיחה טבעית, שלא עוברת
-// דרך שום cache ישן יותר) מקבלת קוד טרי לגמרי.
+// עדיין רוצים לוודא שמכשירים עם cache ישנים "יתנקו" בפועל ולא ייתקעו -
+// אז מנקים caches ברקע (לא חוסם, לא מרענן). לא מבטלים רישום SW: unregister()
+// הורס את ה-push subscription הקיים (קשור ל-registration עצמו), וגורם
+// למשתמש להתבקש להירשם מחדש להתראות אחרי כל deploy. זה מיותר גם מבחינה
+// פונקציונלית - sw.ts לא עושה שום caching בכלל, וה-activate handler שלו
+// כבר מנקה caches ישנים + תופס שליטה (clients.claim) בכל עדכון, אז מחזור
+// החיים הרגיל של ה-SW (install→skipWaiting→activate) כבר דואג לרעננות
+// בלי שום צורך להרוס את הרישום עצמו.
 const handleNewVersion = () => {
   if (typeof __BUILD_VERSION__ === 'undefined' || !__BUILD_VERSION__) return;
   const buildVersion = __BUILD_VERSION__;
@@ -39,11 +43,6 @@ const handleNewVersion = () => {
         const cacheNames = await caches.keys();
         diagLog('version', `deleting ${cacheNames.length} caches`);
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-      }
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        diagLog('version', `unregistering ${registrations.length} service worker(s)`);
-        await Promise.all(registrations.map(r => r.unregister()));
       }
       diagLog('version', 'background cleanup done');
       showUpdateOverlay();

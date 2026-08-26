@@ -138,10 +138,15 @@ export async function updateQueuedAddPendingPurchase(tempId: string, isPurchased
   return true;
 }
 
-// בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם
+// בדיקת שגיאת רשת (ולא שגיאת שרת) - כדי להחליט אם לתור או לחזור לסטייט הקודם.
+// 502/503/504 (עם response אמיתי) נחשבים כאן כמו שגיאת רשת ולא כישלון קבוע -
+// אלו שגיאות cold-start אופייניות (Render free tier), שקורות בדיוק כש-
+// navigator.onLine/הסוקט עדיין מראים "מחובר" - בלי זה המשתמש רואה טוסט שגיאה
+// באמצע חיווי "מחובר" תקין.
 export function isNetworkError(error: unknown): boolean {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return true;
-  const e = error as { response?: unknown; code?: string; message?: string } | null;
+  const e = error as { response?: { status?: number }; code?: string; message?: string } | null;
   if (!e) return false;
-  return !e.response && (e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.message === 'Network Error');
+  if (!e.response) return e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.message === 'Network Error';
+  return e.response.status === 502 || e.response.status === 503 || e.response.status === 504;
 }
