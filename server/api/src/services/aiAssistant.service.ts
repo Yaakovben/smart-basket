@@ -339,8 +339,8 @@ function makeFallbackStream(text: string): AssistantStreamHandle {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: text })}\n\n`));
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
       controller.close();
     },
   });
@@ -348,6 +348,8 @@ function makeFallbackStream(text: string): AssistantStreamHandle {
   return {
     reader: stream.getReader(),
     cleanup: () => undefined,
+    providerName: 'local-fallback',
+    isFallback: true,
   };
 }
 
@@ -356,7 +358,7 @@ async function buildLocalFallbackText(userId: string, messages: ChatMessage[]): 
 
   try {
     const insights = await getUserInsights(userId, { includeSpending: false });
-    const summary = buildUserContext(insights);
+    const summary = buildUserContext(insights, []);
     if (summary && summary !== 'לא ניתן היה לטעון את נתוני המשתמש כרגע.') {
       return `על סמך ההיסטוריה שלך: ${summary}\n\n${latestUserMessage}`;
     }
