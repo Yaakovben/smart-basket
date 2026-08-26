@@ -93,6 +93,8 @@ export const he: Translations = {
   bulkDeleted: 'נמחקו',
   bulkMarkedPurchased: 'סומנו כנקנו',
   bulkReturnedToList: 'הוחזרו לרשימה',
+  moveToList: 'העבר לרשימה',
+  productsMoved: 'הועברו',
   installIosHint: 'הוסף למסך הבית לחוויה מלאה',
   installStep1Ios: 'לחץ על ⋯ או ⬆️ (שיתוף) בסרגל למטה',
   installStep2Ios: 'בחר "הוסף למסך הבית" ➕',

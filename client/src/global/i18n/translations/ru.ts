@@ -94,6 +94,8 @@ export const ru: Translations = {
   bulkDeleted: 'удалено',
   bulkMarkedPurchased: 'отмечено как купленное',
   bulkReturnedToList: 'возвращено в список',
+  moveToList: 'Переместить в список',
+  productsMoved: 'перемещено',
   installIosHint: 'Добавьте на главный экран для лучшего опыта',
   installStep1Ios: 'Нажмите ⋯ или ⬆️ (поделиться) внизу',
   installStep2Ios: 'Выберите "На экран Домой" ➕',

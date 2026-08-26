@@ -94,6 +94,8 @@ export const en: Translations = {
   bulkDeleted: 'deleted',
   bulkMarkedPurchased: 'marked as purchased',
   bulkReturnedToList: 'returned to list',
+  moveToList: 'Move to list',
+  productsMoved: 'moved',
   clearPurchased: 'Clear purchased products',
   installIosHint: 'Add to home screen for the best experience',
   installStep1Ios: 'Tap ⋯ or ⬆️ (share) in the toolbar below',

@@ -95,6 +95,23 @@ export const useProductSelection = ({ list, onUpdateProductsForList, showToast, 
     });
   }, [selectedProducts, list.id, list.products, exitSelectionMode, onUpdateProductsForList, showToast, t]);
 
+  // העברה מרוכזת לרשימה אחרת - קריאה אחת עם כל ה-IDs (לא לולאה כמו
+  // bulkDelete/bulkSetPurchased) כי לשרת יש כבר endpoint מרוכז לזה.
+  // אין עדכון אופטימי לרשימת היעד - היא לא בהכרח טעונה אצל הלקוח כרגע,
+  // תתעדכן בטעינה/ריענון הבאה שלה.
+  const bulkMove = useCallback((targetListId: string) => {
+    haptic('medium');
+    const ids = Array.from(selectedProducts);
+    const count = ids.length;
+    exitSelectionMode();
+    onUpdateProductsForList(list.id, (current) =>
+      current.filter(p => !ids.includes(p.id))
+    );
+    productsApi.moveProducts(list.id, targetListId, ids)
+      .then(() => showToast(`${count} ${t('productsMoved')}`))
+      .catch(() => showToast(t('errorOccurred'), 'error'));
+  }, [selectedProducts, list.id, exitSelectionMode, onUpdateProductsForList, showToast, t]);
+
   return {
     selectedProducts,
     selectionMode,
@@ -105,5 +122,6 @@ export const useProductSelection = ({ list, onUpdateProductsForList, showToast, 
     clearSelection,
     bulkSetPurchased,
     bulkDelete,
+    bulkMove,
   };
 };

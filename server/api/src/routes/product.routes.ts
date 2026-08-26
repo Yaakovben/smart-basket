@@ -6,6 +6,7 @@ import {
   clearProducts,
   resetProducts,
   reorderProducts,
+  moveProducts,
 } from '../controllers/product.controller';
 import { authenticate, validate } from '../middleware';
 import { productValidator } from '../validators';
@@ -18,6 +19,7 @@ router.post('/', validate({ body: productValidator.create, params: productValida
 router.put('/reorder', validate({ body: productValidator.reorder, params: productValidator.listParams }), reorderProducts);
 router.delete('/clear', validate({ params: productValidator.listParams }), clearProducts);
 router.post('/reset', validate({ params: productValidator.listParams }), resetProducts);
+router.post('/move', validate({ body: productValidator.move, params: productValidator.listParams }), moveProducts);
 router.put('/:productId', validate({ body: productValidator.update, params: productValidator.params }), updateProduct);
 router.delete('/:productId', validate({ params: productValidator.params }), deleteProduct);
 

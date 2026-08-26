@@ -131,6 +131,7 @@ const ListPageWrapper = ({
   return (
     <ListPage
       list={list}
+      lists={lists}
       user={user}
       onBack={handleBack}
       onUpdateList={updateList}

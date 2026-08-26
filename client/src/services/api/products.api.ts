@@ -32,4 +32,14 @@ export const productsApi = {
     validateId(productId, 'productId');
     await apiClient.delete(`/lists/${listId}/products/${productId}`);
   },
+
+  async moveProducts(sourceListId: string, targetListId: string, productIds: string[]): Promise<number> {
+    validateId(sourceListId, 'listId');
+    validateId(targetListId, 'targetListId');
+    const response = await apiClient.post<{ data: { movedCount: number } }>(
+      `/lists/${sourceListId}/products/move`,
+      { productIds, targetListId }
+    );
+    return response.data.data.movedCount;
+  },
 };

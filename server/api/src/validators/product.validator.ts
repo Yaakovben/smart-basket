@@ -64,6 +64,18 @@ export const productValidator = {
         'any.required': 'Product IDs are required',
       }),
   }),
+
+  move: Joi.object({
+    productIds: Joi.array()
+      .items(commonSchemas.objectId)
+      .min(1)
+      .required()
+      .messages({
+        'array.min': 'At least one product ID is required',
+        'any.required': 'Product IDs are required',
+      }),
+    targetListId: commonSchemas.objectId.required(),
+  }),
 };
 
 // ייבוא טיפוסים מהקבועים
@@ -89,4 +101,9 @@ export type UpdateProductInput = {
 
 export type ReorderProductsInput = {
   productIds: string[];
+};
+
+export type MoveProductsInput = {
+  productIds: string[];
+  targetListId: string;
 };

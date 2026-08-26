@@ -155,6 +155,23 @@ export const ProductDAL = {
     }
   },
 
+  // העברת מוצרים לרשימה אחרת - מסנן לפי sourceListId בפילטר, כך שרק
+  // מוצרים ששייכים בפועל למקור זזים (גם אם productIds מהלקוח לא מדויק).
+  // position חדש מבוסס Date.now() כמו ב-createProduct - נכנסים לסוף
+  // רשימת היעד, לא מתנגשים עם positions קיימים שם.
+  async moveToList(productIds: string[], sourceListId: string, targetListId: string): Promise<number> {
+    if (productIds.length === 0) return 0;
+    const basePosition = Date.now();
+    const bulkOps = productIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: new mongoose.Types.ObjectId(id), listId: new mongoose.Types.ObjectId(sourceListId) },
+        update: { $set: { listId: new mongoose.Types.ObjectId(targetListId), position: basePosition + index } },
+      },
+    }));
+    const result = await Product.bulkWrite(bulkOps);
+    return result.modifiedCount;
+  },
+
   async clearPurchased(listId: string): Promise<number> {
     const result = await Product.deleteMany({ listId, isPurchased: true });
     return result.deletedCount;

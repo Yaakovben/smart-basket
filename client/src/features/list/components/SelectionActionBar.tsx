@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, Button } from '@mui/material';
+import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -14,6 +15,8 @@ interface SelectionActionBarProps {
   onToggleSelectAll: () => void;
   onBulkAction: () => void;
   onDelete: () => void;
+  onMove: () => void;
+  canMove: boolean;
 }
 
 export const SelectionActionBar = memo(({
@@ -25,6 +28,8 @@ export const SelectionActionBar = memo(({
   onToggleSelectAll,
   onBulkAction,
   onDelete,
+  onMove,
+  canMove,
 }: SelectionActionBarProps) => {
   const { t } = useSettings();
 
@@ -142,6 +147,21 @@ export const SelectionActionBar = memo(({
           }}
         >
           {t('delete')}
+        </Button>
+        {/* העברה לרשימה אחרת - icon-only, מושתק (בלי גרדיאנט/צל כמו שני
+            הכפתורים הראשיים) ובקצה השורה, כי משתמשים בזה הרבה פחות. */}
+        <Button
+          disabled={selectedCount === 0 || !canMove}
+          onClick={onMove}
+          aria-label={t('moveToList')}
+          sx={{
+            flex: '0 0 auto', width: 44, minWidth: 44, borderRadius: '14px',
+            bgcolor: 'action.hover', color: 'text.secondary',
+            '&:hover': { bgcolor: 'action.selected' },
+            '&.Mui-disabled': { opacity: 0.4, color: 'text.secondary' },
+          }}
+        >
+          <DriveFileMoveRoundedIcon sx={{ fontSize: 20 }} />
         </Button>
       </Box>
     </Box>

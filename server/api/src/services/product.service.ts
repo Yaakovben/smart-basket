@@ -1,5 +1,5 @@
 import { ProductDAL, ListDAL } from '../dal';
-import { NotFoundError } from '../errors';
+import { NotFoundError, AppError } from '../errors';
 import { sanitizeText } from '../utils';
 import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc, IProductEditChange, IProductEditEntry } from '../models';
@@ -202,4 +202,27 @@ export async function reorderProducts(
 ): Promise<void> {
   await checkListAccessLean(listId, userId);
   await ProductDAL.reorderProducts(listId, productIds);
+}
+
+export async function moveProducts(
+  sourceListId: string,
+  targetListId: string,
+  productIds: string[],
+  userId: string
+): Promise<number> {
+  if (sourceListId === targetListId) {
+    throw new AppError('Cannot move products to the same list', 400, 'SAME_LIST');
+  }
+  // גישה לשתי הרשימות - לא רק למקור. בלי זה משתמש יכול "להעביר" מוצר
+  // לרשימה שהוא לא חבר בה.
+  await checkListAccessLean(sourceListId, userId);
+  await checkListAccessLean(targetListId, userId);
+
+  const movedCount = await ProductDAL.moveToList(productIds, sourceListId, targetListId);
+
+  await ListDAL.touchUpdatedAt(sourceListId);
+  await ListDAL.touchUpdatedAt(targetListId);
+  invalidatePriceCacheForUser(userId);
+
+  return movedCount;
 }

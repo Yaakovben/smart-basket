@@ -24,6 +24,7 @@ import { ClearListModal } from './ClearListModal';
 import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { CategoryFilterChips } from './CategoryFilterChips';
 import { SelectionActionBar } from './SelectionActionBar';
+import { MoveToListModal } from './MoveToListModal';
 import { DuplicateProductModal } from './DuplicateProductModal';
 import { AddProductModal } from './product-modals/AddProductModal';
 // prefetch מיידי של QRScanner כשנכנסים לרשימה - כך כשהמשתמש לוחץ "סרוק ברקוד"
@@ -45,6 +46,7 @@ import { EditListModal } from './modals/EditListModal';
 // ===== Props =====
 interface ListPageProps {
   list: List;
+  lists: List[];
   user: User;
   onBack: () => void;
   onUpdateList: (list: List) => void;
@@ -57,7 +59,7 @@ interface ListPageProps {
 }
 
 // ===== קומפוננטה ראשית =====
-export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
+export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
   const isMuteToggling = useRef(false);
 
@@ -85,10 +87,12 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
 
   const {
     selectedProducts, selectionMode, exitSelectionMode, handleLongPress,
-    toggleSelected, selectAll, clearSelection, bulkSetPurchased, bulkDelete,
+    toggleSelected, selectAll, clearSelection, bulkSetPurchased, bulkDelete, bulkMove,
   } = useProductSelection({ list, onUpdateProductsForList, showToast, t });
 
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const otherLists = useMemo(() => lists.filter(l => l.id !== list.id), [lists, list.id]);
 
   // סריקת רשימה מהדף (OCR) - נפתח מתפריט "עוד" בכותרת (ליד השיתוף)
   const [showScanList, setShowScanList] = useState(false);
@@ -519,6 +523,17 @@ export const ListComponent = memo(({ list, onBack, onUpdateList, onUpdateListLoc
           onToggleSelectAll={() => allSelected ? clearSelection() : selectAll(filteredItems.map(p => p.id))}
           onBulkAction={() => bulkSetPurchased(filter !== 'purchased')}
           onDelete={bulkDelete}
+          onMove={() => setShowMoveModal(true)}
+          canMove={otherLists.length > 0}
+        />
+      )}
+
+      {/* בורר רשימת יעד להעברת מוצרים */}
+      {showMoveModal && (
+        <MoveToListModal
+          lists={otherLists}
+          onSelect={(targetListId) => { bulkMove(targetListId); setShowMoveModal(false); }}
+          onClose={() => setShowMoveModal(false)}
         />
       )}
 

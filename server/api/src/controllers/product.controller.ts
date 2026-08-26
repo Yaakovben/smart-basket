@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import * as productService from '../services/product.service';
 import { asyncHandler } from '../utils';
 import type { AuthRequest } from '../types';
-import type { CreateProductInput, UpdateProductInput, ReorderProductsInput } from '../validators';
+import type { CreateProductInput, UpdateProductInput, ReorderProductsInput, MoveProductsInput } from '../validators';
 import { invalidateInsightsCache } from '../services/insights.service';
 import { invalidateAssistantContext } from '../services/aiAssistant.service';
 
@@ -67,4 +67,14 @@ export const reorderProducts = asyncHandler(async (req: AuthRequest, res: Respon
   const { productIds } = req.body as ReorderProductsInput;
   await productService.reorderProducts(listId, userId, productIds);
   res.json({ success: true });
+});
+
+export const moveProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
+  const { listId } = req.params;
+  const { productIds, targetListId } = req.body as MoveProductsInput;
+  const movedCount = await productService.moveProducts(listId, targetListId, productIds, userId);
+  invalidateInsightsCache(userId);
+  invalidateAssistantContext(userId);
+  res.json({ success: true, data: { movedCount } });
 });

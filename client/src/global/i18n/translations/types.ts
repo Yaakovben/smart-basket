@@ -91,6 +91,8 @@ export type TranslationKeys =
   | 'bulkDeleted'
   | 'bulkMarkedPurchased'
   | 'bulkReturnedToList'
+  | 'moveToList'
+  | 'productsMoved'
   | 'installIosHint'
   | 'installStep1Ios'
   | 'installStep2Ios'
