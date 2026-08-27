@@ -58,6 +58,7 @@ export type TranslationKeys =
   | 'goodNight'
   | 'search'
   | 'homeSearchFewListsHint'
+  | 'fewListsSearchTitle'
   | 'all'
   | 'myLists'
   | 'groups'

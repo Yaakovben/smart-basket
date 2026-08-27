@@ -16,6 +16,7 @@ interface HomeListContentProps {
   listsFetchError: boolean;
   hasAnyLists: boolean;
   hasSearchQuery: boolean;
+  fewLists: boolean;
   listsLoading: boolean;
   tab: HomeTab;
   isDark: boolean;
@@ -41,7 +42,7 @@ interface HomeListContentProps {
 
 // אזור התוכן של מסך הבית: מצב שגיאת חיבור / סקלטון טעינה / ריק / רשימת כרטיסים עם סידור-מחדש.
 export const HomeListContent = ({
-  contentRef, listsFetchError, hasAnyLists, hasSearchQuery, listsLoading, tab, isDark, orderedDisplay, user,
+  contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
   reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
@@ -164,9 +165,11 @@ export const HomeListContent = ({
         </Box>
       ) : orderedDisplay.length === 0 && hasSearchQuery ? (
         // חיפוש בלי תוצאות - שונה מ"אין רשימות בכלל" (יש רשימות, פשוט לא
-        // תואמות את החיפוש). אותו דפוס אנימציה בדיוק כמו חיפוש מוצר בתוך
-        // רשימה (EmptyState.tsx בפיצ'ר הרשימה - pulseRing/floatMain/floatItem,
-        // גרדיאנט ענבר, 4 אייקונים מרחפים) אבל עם טקסט מותאם לחיפוש רשימות.
+        // תואמות את החיפוש, או שיש רק 0-1 רשימות ואין ממש מה לחפש). אותו
+        // פאנל אחד לשני המקרים - אותו דפוס אנימציה בדיוק כמו חיפוש מוצר
+        // בתוך רשימה (EmptyState.tsx - pulseRing/floatMain/floatItem,
+        // גרדיאנט ענבר, 4 אייקונים מרחפים), רק הטקסט משתנה לפי fewLists.
+        // בכוונה לא כטקסט צמוד לשדה החיפוש בכותרת - תמיד כאן, כפאנל אחד.
         <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '45vh' }}>
           <Box sx={{ position: 'relative', width: 130, height: 130, mb: { xs: 1.75, sm: 2 } }}>
             <Box sx={{
@@ -206,10 +209,10 @@ export const HomeListContent = ({
             ))}
           </Box>
           <Typography sx={{ fontSize: { xs: 16, sm: 17 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
-            {t('noListSearchResults')}
+            {t(fewLists ? 'fewListsSearchTitle' : 'noListSearchResults')}
           </Typography>
           <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', maxWidth: { xs: 260, sm: 280 } }}>
-            {t('noListSearchResultsDesc')}
+            {t(fewLists ? 'homeSearchFewListsHint' : 'noListSearchResultsDesc')}
           </Typography>
         </Box>
       ) : orderedDisplay.length === 0 ? (

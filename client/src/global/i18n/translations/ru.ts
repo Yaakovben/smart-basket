@@ -61,6 +61,7 @@ export const ru: Translations = {
   goodNight: 'Доброй ночи,',
   search: 'Поиск...',
   homeSearchFewListsHint: 'Поиск станет доступен, когда у вас будет несколько списков',
+  fewListsSearchTitle: 'Пока почти нечего искать',
   all: 'Все',
   myLists: 'Мои списки',
   groups: 'Совместные',

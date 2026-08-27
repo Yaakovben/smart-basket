@@ -149,6 +149,7 @@ export const HomeComponent = memo(({
         listsFetchError={listsFetchError}
         hasAnyLists={lists.length > 0}
         hasSearchQuery={!!search.trim()}
+        fewLists={userLists.length <= 1}
         listsLoading={listsLoading}
         tab={tab}
         isDark={isDark}

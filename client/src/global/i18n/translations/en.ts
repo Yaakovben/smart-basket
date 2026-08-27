@@ -61,6 +61,7 @@ export const en: Translations = {
   goodNight: 'Good Night,',
   search: 'Search...',
   homeSearchFewListsHint: "You'll be able to search here once you have a few lists",
+  fewListsSearchTitle: "Not much to search yet",
   all: 'All',
   myLists: 'My Lists',
   groups: 'Shared',

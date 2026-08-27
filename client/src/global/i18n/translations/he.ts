@@ -60,6 +60,7 @@ export const he: Translations = {
   goodNight: 'לילה טוב,',
   search: 'חיפוש רשימה...',
   homeSearchFewListsHint: 'תוכל לחפש כאן ברגע שיהיו לך כמה רשימות',
+  fewListsSearchTitle: 'עוד לא הרבה מה לחפש',
   all: 'הכל',
   myLists: 'שלי',
   groups: 'משותפות',
