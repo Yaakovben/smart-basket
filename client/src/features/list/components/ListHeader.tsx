@@ -14,7 +14,6 @@ import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { ListCostEstimate } from '../hooks/useListCostEstimate';
 import { QuickAddBar } from './header/QuickAddBar';
-import { SavedListsBar } from './header/SavedListsBar';
 import { ListProgressBar } from './header/ListProgressBar';
 import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
@@ -42,7 +41,6 @@ interface ListHeaderProps {
   onShowInvite: () => void;
   onQuickAdd?: (name: string) => void;
   onlineUserIds?: Set<string>;
-  onRefresh: () => void;
   refreshing?: boolean;
   onClearList?: () => void;
   onShoppingMode?: () => void;
@@ -50,10 +48,7 @@ interface ListHeaderProps {
   onLeave?: () => void;
   onScanList?: () => void;
   savedLists?: SavedList[];
-  pendingNames?: string[];
-  onApplySavedList?: (savedList: SavedList) => void;
-  onManageSavedLists?: () => void;
-  onSaveAsSavedList?: () => void;
+  onSavedLists?: () => void;
   costEstimate?: ListCostEstimate | null;
   productNames?: string[];
 }
@@ -62,9 +57,9 @@ export const ListHeader = memo(({
   list, user, filter, search, pendingCount, purchasedCount, allMembers,
   isOwner, onBack, onFilterChange, onSearchChange, onEditList, onDeleteList,
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
-  onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
+  onShowInvite, onQuickAdd, onlineUserIds, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  savedLists = [], pendingNames = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
+  savedLists = [], onSavedLists,
   costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
@@ -90,17 +85,17 @@ export const ListHeader = memo(({
     onScanList?.();
   }, [showScanItemNewBadge, onScanList]);
 
-  // תג "חדש" על "שמור כרשימה קבועה" - נעלם לצמיתות ברגע שהמשתמש לוחץ עליו.
+  // תג "חדש" על כניסת "רשימות קבועות" המאוחדת - נעלם לצמיתות ברגע שהמשתמש לוחץ עליה.
   const [showSavedListNewBadge, setShowSavedListNewBadge] = useState(
-    () => !!onSaveAsSavedList && safeStorage.get('sb_savedlist_used') !== 'true'
+    () => !!onSavedLists && safeStorage.get('sb_savedlist_used') !== 'true'
   );
-  const handleSaveAsSavedList = useCallback(() => {
+  const handleOpenSavedLists = useCallback(() => {
     if (showSavedListNewBadge) {
       setShowSavedListNewBadge(false);
       safeStorage.set('sb_savedlist_used', 'true');
     }
-    onSaveAsSavedList?.();
-  }, [showSavedListNewBadge, onSaveAsSavedList]);
+    onSavedLists?.();
+  }, [showSavedListNewBadge, onSavedLists]);
   const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(e.currentTarget);
     if (showMenuNewBadge) {
@@ -238,13 +233,12 @@ export const ListHeader = memo(({
         anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}
         isGroup={list.isGroup} isOwner={isOwner} isMuted={isMuted}
         mainNotificationsOff={mainNotificationsOff} onToggleMute={onToggleMute}
-        onEdit={onEditList} onDelete={onDeleteList} onRefresh={onRefresh}
+        onEdit={onEditList} onDelete={onDeleteList}
         onClearList={onClearList} onShoppingMode={onShoppingMode}
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
         scanListIsNew={showScanItemNewBadge}
-        onSaveAsSavedList={hasProducts && onSaveAsSavedList ? handleSaveAsSavedList : undefined}
-        saveAsSavedListIsNew={showSavedListNewBadge}
-        onManageSavedLists={savedLists.length > 0 ? onManageSavedLists : undefined}
+        onSavedLists={(savedLists.length > 0 || hasProducts) && onSavedLists ? handleOpenSavedLists : undefined}
+        savedListsIsNew={showSavedListNewBadge}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
@@ -287,16 +281,6 @@ export const ListHeader = memo(({
       }}>
         <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
       </Box>
-
-      {/* ===== שורת רשימות קבועות - הזרקת אוסף מוצרים בלחיצה אחת.
-          SavedListsBar מחזיר null (כולל המרווח שלו) אם אין מה להציג. ===== */}
-      {onApplySavedList && savedLists.length > 0 && (
-        <SavedListsBar
-          savedLists={savedLists}
-          pendingNames={pendingNames}
-          onApply={onApplySavedList}
-        />
-      )}
 
       {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}
       <Collapse in={showSearch}>

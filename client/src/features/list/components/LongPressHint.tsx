@@ -30,9 +30,9 @@ const slideOut = keyframes`
 `;
 
 /**
- * רמז עדין על תכונת "לחיצה ארוכה לבחירה מרובה".
- * קומפקטי יותר מ-SwipeHint, עם אייקון אצבע ו"טבעת החזקה" מונפשת שמדמה את
- * המחווה עצמה. נעלם פעם אחת לצמיתות אחרי שהמשתמש לוחץ X או אחרי 12 שניות
+ * רמז על תכונת "לחיצה ארוכה לבחירה מרובה", באותה משפחה חזותית של SwipeHint
+ * (גודל/מבנה דומים) עם גרדיאנט סגול→טורקיז ואייקון אצבע ו"טבעת החזקה"
+ * מונפשת שמדמה את המחווה עצמה. נעלם פעם אחת לצמיתות אחרי שהמשתמש לוחץ X או אחרי 12 שניות
  * של היחשפות (כדי לא להישאר לעולם), עם אנימציית יציאה חלקה במקום היעלמות פתאומית.
  */
 export const LongPressHint = memo(() => {
@@ -62,38 +62,54 @@ export const LongPressHint = memo(() => {
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.1,
-        px: 1.35,
-        py: 0.8,
-        mb: 1,
-        borderRadius: '12px',
-        background: 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(20,184,166,0.08) 100%)',
-        border: '1px solid rgba(139, 92, 246, 0.22)',
-        boxShadow: '0 2px 8px rgba(139,92,246,0.08)',
+        gap: 1.5,
+        p: '12px 16px',
+        mb: 1.5,
+        borderRadius: '14px',
+        // גרדיאנט סגול→טורקיז - אותה משפחת "AI/פיצ׳ר חדש" שמופיעה בבאדג׳ים
+        // ובאייקון העוזר החכם, כדי שהרמז ירגיש שייך למותג ולא כתם סגול מבודד
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(20,184,166,0.1) 100%)',
+        border: '1px solid rgba(139, 92, 246, 0.28)',
+        boxShadow: '0 2px 8px rgba(139,92,246,0.1)',
+        position: 'relative',
         animation: `${closing ? slideOut : slideIn} ${closing ? EXIT_ANIM_MS : 350}ms ease ${closing ? '' : 'both'}`,
         overflow: 'hidden',
       }}
       role="status"
       aria-live="polite"
     >
-      {/* אייקון אצבע + טבעת "מחזיקה" מתרחבת מאחוריו */}
-      <Box sx={{ position: 'relative', width: 22, height: 22, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Box
-          aria-hidden="true"
-          sx={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            border: '1.5px solid #8B5CF6',
-            animation: `${holdRing} 1.8s ease-out infinite`,
-          }}
-        />
-        <Typography
-          sx={{ fontSize: 16, lineHeight: 1, animation: `${fingerTap} 1.8s ease-in-out infinite`, transformOrigin: 'center' }}
-          aria-hidden="true"
-        >
-          👆
-        </Typography>
+      {/* קופסת אייקון בגודל תואם ל-SwipeHint, עם רקע גרדיאנט; בפנים - אותה
+          טבעת "מחזיקה" עגולה מתרחבת + אצבע, ללא שינוי בצורתן/באנימציה שלהן */}
+      <Box
+        sx={{
+          width: 36,
+          height: 36,
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(20,184,166,0.16) 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ position: 'relative', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              border: '1.5px solid #8B5CF6',
+              animation: `${holdRing} 1.8s ease-out infinite`,
+            }}
+          />
+          <Typography
+            sx={{ fontSize: 16, lineHeight: 1, animation: `${fingerTap} 1.8s ease-in-out infinite`, transformOrigin: 'center' }}
+            aria-hidden="true"
+          >
+            👆
+          </Typography>
+        </Box>
       </Box>
-      <Typography sx={{ flex: 1, fontSize: 11.5, fontWeight: 600, color: '#6D28D9', lineHeight: 1.35 }}>
+      <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#6D28D9', lineHeight: 1.4 }}>
         {t('longPressMultiSelectHint')}
       </Typography>
       <IconButton
@@ -101,15 +117,15 @@ export const LongPressHint = memo(() => {
         onClick={dismiss}
         aria-label={t('dismissHint')}
         sx={{
-          width: 22, height: 22, flexShrink: 0,
+          width: 28, height: 28, flexShrink: 0,
           color: '#8B5CF6',
-          bgcolor: 'rgba(139, 92, 246, 0.1)',
+          bgcolor: 'rgba(139, 92, 246, 0.12)',
           transition: 'background-color 0.15s ease, transform 0.1s ease',
-          '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.18)' },
+          '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.2)' },
           '&:active': { transform: 'scale(0.9)' },
         }}
       >
-        <CloseIcon sx={{ fontSize: 13 }} />
+        <CloseIcon sx={{ fontSize: 16 }} />
       </IconButton>
     </Box>
   );

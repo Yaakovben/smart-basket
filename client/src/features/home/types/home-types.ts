@@ -14,7 +14,6 @@ export type HomeTab = 'all' | 'my' | 'groups';
 // ===== ערכי החזרה של Hooks =====
 export interface UseHomeReturn {
   tab: HomeTab;
-  search: string;
   showMenu: boolean;
   showCreate: boolean;
   showCreateGroup: boolean;
@@ -39,7 +38,6 @@ export interface UseHomeReturn {
   display: List[];
 
   setTab: (tab: HomeTab) => void;
-  setSearch: (search: string) => void;
   setShowMenu: (show: boolean) => void;
   setShowCreate: (show: boolean) => void;
   setShowCreateGroup: (show: boolean) => void;

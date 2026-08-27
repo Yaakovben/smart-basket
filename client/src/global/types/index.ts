@@ -9,7 +9,7 @@ export interface SavedListItem {
 }
 
 // "רשימה קבועה" - אוסף מוצרים בעל שם ואמוג׳י שהמשתמש שומר פעם אחת
-// ומזריק לכל רשימה בלחיצה אחת (ראו SavedListsBar). ברמת המשתמש.
+// ומזריק לכל רשימה בלחיצה אחת (ראו SavedListsModal / SavedListsChooserModal). ברמת המשתמש.
 export interface SavedList {
   id: string;
   emoji: string;

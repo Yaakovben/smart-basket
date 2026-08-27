@@ -44,6 +44,7 @@ import { ShareListModal } from './modals/ShareListModal';
 import { EditListModal } from './modals/EditListModal';
 import { SavedListsModal } from './modals/SavedListsModal';
 import { SaveAsSavedListModal } from './modals/SaveAsSavedListModal';
+import { SavedListsChooserModal } from './modals/SavedListsChooserModal';
 
 // ===== Props =====
 interface ListPageProps {
@@ -109,6 +110,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   }, [handleQuickAdd]);
 
   // ===== רשימות קבועות =====
+  // showSavedListsChooser: הפופאפ הקטן שנפתח מכניסת התפריט המאוחדת ("רשימות
+  // קבועות"), מציע בחירה בין הוספת רשימה קיימת ליצירת רשימה חדשה.
+  const [showSavedListsChooser, setShowSavedListsChooser] = useState(false);
   const [showSavedLists, setShowSavedLists] = useState(false);
   const [showSaveAsSavedList, setShowSaveAsSavedList] = useState(false);
   // מונע הזרקה כפולה (טאפ מהיר על אותו צ'יפ / כמה צ'יפים) - ref כי צריך
@@ -231,12 +235,18 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     setScanListMounted(true);
     setShowScanList(true);
   }, []);
-  const stableManageSavedLists = useCallback(() => {
+  const stableOpenSavedLists = useCallback(() => {
     if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowSavedListsChooser(true);
+  }, []);
+  // מהבורר: "הוסף רשימה קבועה" -> SavedListsModal (ניהול+החלה קיימים).
+  const handleChooseApplySavedList = useCallback(() => {
+    setShowSavedListsChooser(false);
     setShowSavedLists(true);
   }, []);
-  const stableSaveAsSavedList = useCallback(() => {
-    if (selectionModeRef.current) exitSelectionModeRef.current();
+  // מהבורר: "צור רשימה קבועה חדשה" -> SaveAsSavedListModal.
+  const handleChooseCreateSavedList = useCallback(() => {
+    setShowSavedListsChooser(false);
     setShowSaveAsSavedList(true);
   }, []);
   const stableLeaveList = useCallback(() => {
@@ -291,10 +301,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     () => [...pending, ...purchased].map(p => p.name),
     [pending, purchased]
   );
-  // שמות המוצרים שעדיין לא נקנו - עבור SavedListsBar (החלטה אילו רשימות
-  // קבועות עדיין רלוונטיות). ממואיזציה כדי לא לשבור את ה-memo של ListHeader.
-  const pendingNames = useMemo(() => pending.map(p => p.name), [pending]);
-
   // הצעות מוצרים מהרשימה הנוכחית (שמות ייחודיים)
   const productSuggestions = useMemo(() => {
     const all = [...pending, ...purchased];
@@ -350,17 +356,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onShowInvite={stableShowInvite}
         onQuickAdd={stableQuickAdd}
         onlineUserIds={onlineUserIds}
-        onRefresh={refreshList}
         refreshing={refreshing}
         onClearList={stableClearList}
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
         onScanList={stableScanList}
         savedLists={savedLists}
-        pendingNames={pendingNames}
-        onApplySavedList={handleApplySavedList}
-        onManageSavedLists={stableManageSavedLists}
-        onSaveAsSavedList={stableSaveAsSavedList}
+        onSavedLists={stableOpenSavedLists}
         costEstimate={costEstimate}
         productNames={productNames}
       />
@@ -649,6 +651,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       )}
 
       {/* רשימות קבועות */}
+      {showSavedListsChooser && (
+        <SavedListsChooserModal
+          hasProducts={pending.length + purchased.length > 0}
+          onApply={handleChooseApplySavedList}
+          onCreate={handleChooseCreateSavedList}
+          onClose={() => setShowSavedListsChooser(false)}
+        />
+      )}
       {showSavedLists && (
         <SavedListsModal
           savedLists={savedLists}
@@ -659,7 +669,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       )}
       {showSaveAsSavedList && (
         <SaveAsSavedListModal
-          defaultName={list.name}
           products={[...pending, ...purchased]}
           onSave={handleCreateSavedList}
           onClose={() => setShowSaveAsSavedList(false)}

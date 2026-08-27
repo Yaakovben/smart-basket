@@ -19,6 +19,11 @@ export const MoveToListModal = memo(({ lists, onSelect, onClose }: MoveToListMod
 
   return (
     <Modal title={t('moveToList')} onClose={onClose}>
+      {/* הסבר קצר */}
+      <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.55, mb: 2 }}>
+        {t('moveToListHint')}
+      </Typography>
+
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
         {lists.map((l) => (
           <Box

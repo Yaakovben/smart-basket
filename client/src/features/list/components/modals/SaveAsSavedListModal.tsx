@@ -12,15 +12,16 @@ import { SAVED_LIST_EMOJIS, MAX_SAVED_LIST_ITEMS, newSavedListId, nameToSavedIte
 // נפתח מתפריט ה-⋮ של הרשימה (כשיש מוצרים). מינימום טקסט - כותרת, שורת
 // אמוג׳י+שם, תצוגה מקדימה של הפריטים, כפתור שמירה.
 interface SaveAsSavedListModalProps {
-  defaultName: string;
   products: Product[];
   onSave: (savedList: SavedList) => Promise<void>;
   onClose: () => void;
 }
 
-export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }: SaveAsSavedListModalProps) => {
+export const SaveAsSavedListModal = ({ products, onSave, onClose }: SaveAsSavedListModalProps) => {
   const { t } = useSettings();
-  const [name, setName] = useState(defaultName.slice(0, 40));
+  // ריק בכוונה - השם לא נגזר משם הרשימה הנוכחית, המשתמש חייב לבחור בעצמו.
+  // ה-placeholder (savedListNameExample) הוא הדגמה, לא ברירת מחדל אמיתית.
+  const [name, setName] = useState('');
   const [emoji, setEmoji] = useState(SAVED_LIST_EMOJIS[0]);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -173,20 +174,26 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
                 disabled={newItemText.trim().length < 2}
                 aria-label={t('savedListAddItemPlaceholder')}
                 sx={{
-                  width: 38, height: 38, flexShrink: 0, borderRadius: '11px', color: 'white',
                   background: newItemText.trim().length >= 2
-                    ? 'linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%)'
-                    : 'action.disabledBackground',
-                  boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20,184,166,0.45)' : 'none',
-                  transition: 'all 0.15s',
-                  '&.Mui-disabled': { color: 'text.disabled' },
+                    ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
+                    : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                  color: 'white',
+                  width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
+                  '@media (max-width: 360px)': { width: 28, height: 28 },
+                  borderRadius: '10px',
+                  boxShadow: newItemText.trim().length >= 2 ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    background: newItemText.trim().length >= 2 ? 'linear-gradient(135deg, #0D9488 0%, #0891B2 100%)' : 'action.disabledBackground',
+                    background: newItemText.trim().length >= 2
+                      ? 'linear-gradient(135deg, #0D9488, #0F766E)'
+                      : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                    boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20, 184, 166, 0.45)' : 'none'
                   },
-                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.9)' : 'none' },
+                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
+                  '&.Mui-disabled': { color: 'white', opacity: 0.7 }
                 }}
               >
-                <AddRoundedIcon sx={{ fontSize: 22 }} />
+                <AddRoundedIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
               </IconButton>
             </InputAdornment>
           ),

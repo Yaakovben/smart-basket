@@ -203,18 +203,18 @@ export interface MenuOption {
 
 export const MENU_OPTIONS: MenuOption[] = [
   {
-    id: 'private',
-    icon: '📝',
-    iconBg: '#CCFBF1',
-    titleKey: 'privateList',
-    descKey: 'privateListDesc'
-  },
-  {
     id: 'group',
     icon: '👨‍👩‍👧‍👦',
     iconBg: '#E0E7FF',
     titleKey: 'sharedGroup',
     descKey: 'sharedGroupDesc'
+  },
+  {
+    id: 'private',
+    icon: '📝',
+    iconBg: '#CCFBF1',
+    titleKey: 'privateList',
+    descKey: 'privateListDesc'
   },
   {
     id: 'join',

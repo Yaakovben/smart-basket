@@ -1,8 +1,14 @@
 import { memo } from 'react';
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { PULL_THRESHOLD, PULL_MAX } from '../helpers/list-helpers';
 
 // ===== אינדיקטור Pull to Refresh - מופיע מעל התוכן בזמן משיכה =====
+// טבעת התקדמות אמיתית (0%-100% עד סף המשיכה) סביב חץ שמסתובב בהדרגה;
+// בהגעה לסף - הטבעת מתמלאת, "קופצת" קלות והחץ מתחלף לוי - מצב "ניתן
+// לשחרר" ברור ושונה מ"עדיין למשוך". בזמן הרענון עצמו - ספינר אמיתי
+// (indeterminate), לא רק סיבוב CSS על אייקון קבוע.
 interface PullToRefreshIndicatorProps {
   pullDistance: number;
   refreshing: boolean;
@@ -12,28 +18,60 @@ interface PullToRefreshIndicatorProps {
 export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActive }: PullToRefreshIndicatorProps) => {
   if (!(pullDistance > 0 || refreshing)) return null;
 
+  const progress = Math.min(1, pullDistance / PULL_THRESHOLD);
+  const ready = progress >= 1;
+
   return (
     <Box sx={{
       position: 'absolute',
       top: 0, left: 0, right: 0,
-      height: refreshing ? 50 : Math.min(pullDistance, PULL_MAX),
+      height: refreshing ? 54 : Math.min(pullDistance, PULL_MAX),
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       bgcolor: 'background.default',
-      transition: pullActive ? 'none' : 'height 0.2s ease',
+      transition: pullActive ? 'none' : 'height 0.25s cubic-bezier(0.34, 1.2, 0.64, 1)',
       zIndex: 5,
       pointerEvents: 'none',
     }}>
       <Box sx={{
-        fontSize: 22,
-        opacity: refreshing ? 1 : Math.min(1, pullDistance / PULL_THRESHOLD),
-        transform: refreshing
-          ? 'rotate(0deg)'
-          : `rotate(${Math.min(180, (pullDistance / PULL_THRESHOLD) * 180)}deg)`,
-        transition: refreshing ? 'transform 0.4s linear' : 'none',
-        animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
-        '@keyframes spin': { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+        position: 'relative',
+        width: 30, height: 30,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transform: !refreshing && ready ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}>
-        🔄
+        <CircularProgress
+          variant={refreshing ? 'indeterminate' : 'determinate'}
+          value={refreshing ? undefined : progress * 100}
+          size={30}
+          thickness={4}
+          sx={{
+            color: ready || refreshing ? 'primary.main' : 'text.disabled',
+            transition: pullActive ? 'color 0.15s ease' : 'none',
+          }}
+        />
+        <Box sx={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: refreshing ? 0 : 1,
+          transition: 'opacity 0.15s ease',
+        }}>
+          {ready ? (
+            <CheckRoundedIcon sx={{
+              fontSize: 16, color: 'primary.main',
+              animation: 'ptrPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              '@keyframes ptrPop': {
+                from: { transform: 'scale(0.5)', opacity: 0 },
+                to: { transform: 'scale(1)', opacity: 1 },
+              },
+            }} />
+          ) : (
+            <ArrowDownwardRoundedIcon sx={{
+              fontSize: 16, color: 'text.disabled',
+              transform: `rotate(${progress * 180}deg)`,
+              transition: pullActive ? 'none' : 'transform 0.15s ease',
+            }} />
+          )}
+        </Box>
       </Box>
     </Box>
   );

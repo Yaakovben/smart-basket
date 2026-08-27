@@ -53,11 +53,11 @@ export const HomeComponent = memo(({
   const [menuClosing, setMenuClosing] = useState(false);
 
   const {
-    tab, search, showMenu, showCreate, showCreateGroup, showJoin,
+    tab, showMenu, showCreate, showCreateGroup, showJoin,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
-    setTab, setSearch, setShowMenu, setShowNotifications, setConfirmLogout,
+    setTab, setShowMenu, setShowNotifications, setConfirmLogout,
     setEditList, setConfirmDeleteList, setJoinCode, setJoinPass, setJoinError,
     handleCreate, handleJoin, openOption, closeCreateModal, closeCreateGroupModal,
     closeJoinModal, updateNewListField, saveEditList,
@@ -129,8 +129,6 @@ export const HomeComponent = memo(({
         user={user}
         greeting={greeting}
         isDark={isDark}
-        search={search}
-        onSearchChange={setSearch}
         tab={tab}
         onTabChange={setTab}
         allCount={userLists.length}

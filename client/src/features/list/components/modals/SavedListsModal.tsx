@@ -170,7 +170,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         autoFocus
                         variant="standard"
                         placeholder={t('savedListNameExample')}
-                        sx={{ flex: 1, '& .MuiInput-input': { fontSize: 14.5, fontWeight: 600, py: '2px' } }}
+                        sx={{ flex: 1, '& .MuiInput-input': { fontSize: 15.5, fontWeight: 600, py: '2px' } }}
                       />
                     ) : (
                       <Box
@@ -187,12 +187,17 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         }}
                       >
                         <Typography sx={{
-                          minWidth: 0, fontSize: 14.5, fontWeight: 600, color: 'text.primary',
+                          minWidth: 0, fontSize: 15.5, fontWeight: 600, color: 'text.primary',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                           {sl.name}
                         </Typography>
-                        {open && <EditRoundedIcon sx={{ fontSize: 13, color: 'text.disabled', flexShrink: 0 }} />}
+                        {/* עט תמיד מוצג - רמז מתמיד שהשם ניתן לעריכה, מודגש
+                            (opacity גבוה) כשהכרטיס פתוח, מעומעם כשסגור. */}
+                        <EditRoundedIcon sx={{
+                          fontSize: 13, color: 'text.disabled', flexShrink: 0,
+                          opacity: open ? 0.85 : 0.45, transition: 'opacity 0.15s',
+                        }} />
                       </Box>
                     )}
                     <Box sx={{
@@ -282,20 +287,26 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                                 disabled={newItemText.trim().length < 2}
                                 aria-label={t('savedListAddItemPlaceholder')}
                                 sx={{
-                                  width: 38, height: 38, flexShrink: 0, borderRadius: '11px', color: 'white',
                                   background: newItemText.trim().length >= 2
-                                    ? 'linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%)'
-                                    : 'action.disabledBackground',
-                                  boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20,184,166,0.45)' : 'none',
-                                  transition: 'all 0.15s',
-                                  '&.Mui-disabled': { color: 'text.disabled' },
+                                    ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
+                                    : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                                  color: 'white',
+                                  width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
+                                  '@media (max-width: 360px)': { width: 28, height: 28 },
+                                  borderRadius: '10px',
+                                  boxShadow: newItemText.trim().length >= 2 ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
+                                  transition: 'all 0.2s ease',
                                   '&:hover': {
-                                    background: newItemText.trim().length >= 2 ? 'linear-gradient(135deg, #0D9488 0%, #0891B2 100%)' : 'action.disabledBackground',
+                                    background: newItemText.trim().length >= 2
+                                      ? 'linear-gradient(135deg, #0D9488, #0F766E)'
+                                      : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                                    boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20, 184, 166, 0.45)' : 'none'
                                   },
-                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.9)' : 'none' },
+                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
+                                  '&.Mui-disabled': { color: 'white', opacity: 0.7 }
                                 }}
                               >
-                                <AddRoundedIcon sx={{ fontSize: 22 }} />
+                                <AddRoundedIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
                               </IconButton>
                             </InputAdornment>
                           ),
@@ -318,11 +329,25 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         <Box sx={{ flex: 1 }} />
                         <Button
                           size="small"
-                          variant="outlined"
                           onClick={() => { haptic('light'); onApply(sl); handleClose(); }}
                           disabled={sl.items.length === 0}
                           startIcon={<PlaylistAddRoundedIcon sx={{ fontSize: 18 }} />}
-                          sx={{ textTransform: 'none', fontSize: 13, fontWeight: 600, borderRadius: '10px', px: 2, py: 0.6 }}
+                          sx={{
+                            textTransform: 'none', fontSize: 13, fontWeight: 700, borderRadius: '10px', px: 2, py: 0.6,
+                            color: 'white',
+                            background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                            boxShadow: '0 2px 8px rgba(20,184,166,0.35)',
+                            '& .MuiButton-startIcon': { marginInlineEnd: '10px' },
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, #0D9488, #0F766E)',
+                              boxShadow: '0 3px 10px rgba(20,184,166,0.45)',
+                            },
+                            '&:active': { transform: 'scale(0.96)' },
+                            '&.Mui-disabled': {
+                              background: 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                              color: 'white', opacity: 0.7, boxShadow: 'none',
+                            },
+                          }}
                         >
                           {`${t('add')} ${sl.items.length} ${t('items')}`}
                         </Button>

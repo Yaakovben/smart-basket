@@ -1,8 +1,6 @@
-import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
+import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import SearchIcon from '@mui/icons-material/Search';
-import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -14,8 +12,6 @@ interface HomeHeaderProps {
   user: User;
   greeting: { label: string; emoji: string; weekdayMsg: string | null };
   isDark: boolean;
-  search: string;
-  onSearchChange: (value: string) => void;
   tab: HomeTab;
   onTabChange: (tab: HomeTab) => void;
   allCount: number;
@@ -31,7 +27,7 @@ interface HomeHeaderProps {
 
 // כותרת מסך הבית: אווטאר + ברכה, כפתורי התראות/הגדרות, חיפוש וטאבים.
 export const HomeHeader = ({
-  user, greeting, isDark, search, onSearchChange, tab, onTabChange,
+  user, greeting, isDark, tab, onTabChange,
   allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading,
   onAvatarClick, onNotificationsClick, onSettingsClick, t,
 }: HomeHeaderProps) => {
@@ -55,10 +51,9 @@ export const HomeHeader = ({
         p: 'max(28px, env(safe-area-inset-top) + 6px) 10px 10px',
         borderRadius: '0 0 14px 14px',
         '& .MuiAvatar-root': { width: '36px !important', height: '36px !important', fontSize: '14px !important' },
-        '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
-        '& .MuiOutlinedInput-input': { fontSize: '13px !important' },
         '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
         '& > .MuiBox-root': { marginBottom: '6px !important' },
+        '& .MuiTabs-root': { marginBottom: '0px !important' },
       },
       // Landscape - דחיסה מקסימלית
       '@media (orientation: landscape) and (max-height: 500px)': {
@@ -66,8 +61,6 @@ export const HomeHeader = ({
         borderRadius: '0 0 8px 8px',
         '& .MuiAvatar-root': { width: '26px !important', height: '26px !important', fontSize: '12px !important' },
         '& > .MuiBox-root': { marginBottom: '3px !important' },
-        '& .MuiOutlinedInput-root': { minHeight: '28px !important' },
-        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
         '& .MuiTab-root': {
           minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
           position: 'relative',
@@ -79,6 +72,7 @@ export const HomeHeader = ({
           '&::before': { content: '""', position: 'absolute', inset: '-8px' },
         },
         '& [class*="MuiIconButton-root"] .MuiSvgIcon-root': { fontSize: '15px !important' },
+        '& .MuiTabs-root': { marginBottom: '0px !important' },
       },
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -130,17 +124,6 @@ export const HomeHeader = ({
         </Box>
       </Box>
 
-      <ClearableTextField
-        fullWidth
-        placeholder={t('search')}
-        value={search}
-        onChange={e => onSearchChange(e.target.value)}
-        onClear={() => onSearchChange('')}
-        size="small"
-        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
-      />
-
       <Tabs
         value={tab}
         onChange={(_, v) => onTabChange(v)}
@@ -149,6 +132,7 @@ export const HomeHeader = ({
           bgcolor: 'rgba(255,255,255,0.15)',
           borderRadius: { xs: '10px', sm: '12px' },
           p: { xs: 0.5, sm: 0.6 },
+          mb: 0.5,
           minHeight: 'auto',
           '& .MuiTabs-indicator': { display: 'none' },
           '& .MuiTab-root': {
