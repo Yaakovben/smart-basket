@@ -1,5 +1,6 @@
 import apiClient, { setTokens, clearTokens, getRefreshToken, getAccessToken, setAuthInProgress } from './client';
 import type { User, AuthResponse, LoginData, CheckEmailResponse, RegisterData } from './types/auth.types';
+import type { SavedList } from '../../global/types';
 
 // שמירת טוקנים עם אימות שנשמרו (דפדפנים/extensions עלולים לחסום localStorage)
 const saveAndVerifyTokens = (accessToken: string, refreshToken: string): void => {
@@ -93,6 +94,12 @@ export const authApi = {
   // עדכון סדר רשימות
   async updateListOrder(listOrder: string[]): Promise<void> {
     await apiClient.put('/users/me/list-order', { listOrder });
+  },
+
+  // החלפת מלוא מערך ה"רשימות הקבועות" (replace-all). מחזיר מערך מנורמל מהשרת.
+  async updateSavedLists(savedLists: SavedList[]): Promise<{ savedLists: SavedList[] }> {
+    const response = await apiClient.put<{ data: { savedLists: SavedList[] } }>('/users/me/saved-lists', { savedLists });
+    return response.data.data;
   },
 
   // רישום פתיחת אפליקציה לאדמין

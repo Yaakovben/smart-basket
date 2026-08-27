@@ -9,6 +9,7 @@ import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import BookmarkAddRoundedIcon from '@mui/icons-material/BookmarkAddRounded';
 import { useSettings } from '../context/SettingsContext';
 import { menuPaperSx, menuItemSx, menuLabelSx, dividerSx, muteToggleBoxSx, muteToggleLabelSx } from '../styles/ListMenu.styles';
 
@@ -27,6 +28,7 @@ interface ListMenuProps {
   onClearList?: () => void;
   onShoppingMode?: () => void;
   onDuplicate?: () => void;
+  onSaveAsSavedList?: () => void;
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
@@ -48,6 +50,7 @@ export const ListMenu = memo(({
   onRefresh,
   onShoppingMode,
   onClearList,
+  onSaveAsSavedList,
   hasProducts = false,
   onLeave,
   onScanList,
@@ -60,7 +63,7 @@ export const ListMenu = memo(({
   // קבוצות ולא בין פריטים בתוך אותה קבוצה: (1) רענון/מצב קנייה/סריקה,
   // (2) השתקה/עריכה/ניקוי, (3) מחיקה/עזיבה.
   const hasGroup1 = !!onRefresh || !!(onShoppingMode && hasProducts) || !!onScanList;
-  const hasGroup2 = isGroup || isOwner || !!(onClearList && hasProducts);
+  const hasGroup2 = isGroup || isOwner || !!(onClearList && hasProducts) || !!onSaveAsSavedList;
   const hasGroup3 = isOwner || (!isOwner && isGroup && !!onLeave);
 
   return (
@@ -147,6 +150,16 @@ export const ListMenu = memo(({
           <EditIcon sx={{ color: 'primary.main', fontSize: 22 }} />
           <Typography sx={menuLabelSx}>
             {isGroup ? t('editGroup') : t('editList')}
+          </Typography>
+        </MenuItem>
+      )}
+
+      {/* שמירת הרשימה כ"רשימה קבועה" */}
+      {onSaveAsSavedList && (
+        <MenuItem onClick={() => { onClose(); onSaveAsSavedList(); }} sx={menuItemSx}>
+          <BookmarkAddRoundedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            {t('saveAsSavedList')}
           </Typography>
         </MenuItem>
       )}

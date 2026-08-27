@@ -12,6 +12,7 @@ import {
   changePassword,
   toggleMuteGroup,
   updateListOrder,
+  updateSavedLists,
   deleteMyAccount,
 } from '../controllers/user.controller';
 import { authenticate, validate, passwordChangeLimiter } from '../middleware';
@@ -36,6 +37,7 @@ router.post(
   toggleMuteGroup
 );
 router.put('/me/list-order', validate(userValidator.updateListOrder), updateListOrder);
+router.put('/me/saved-lists', validate(userValidator.updateSavedLists), updateSavedLists);
 router.delete('/me', deleteMyAccount);
 
 export default router;

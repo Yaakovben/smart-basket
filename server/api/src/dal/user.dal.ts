@@ -1,4 +1,4 @@
-import { User, type IUser } from '../models';
+import { User, type IUser, type ISavedList } from '../models';
 import { createBaseDal } from './base.dal';
 
 export const UserDAL = {
@@ -77,6 +77,10 @@ export const UserDAL = {
 
   async updateListOrder(userId: string, listOrder: string[]): Promise<IUser | null> {
     return User.findByIdAndUpdate(userId, { listOrder }, { new: true });
+  },
+
+  async updateSavedLists(userId: string, savedLists: ISavedList[]): Promise<IUser | null> {
+    return User.findByIdAndUpdate(userId, { savedLists }, { new: true });
   },
 
   async getListOrder(userId: string): Promise<string[]> {

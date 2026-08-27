@@ -133,6 +133,7 @@ export const useList = ({
 
   const {
     duplicateProduct,
+    addProductToServer,
     handleAdd,
     handleQuickAdd,
     handleDuplicateIncreaseQuantity,
@@ -256,6 +257,7 @@ export const useList = ({
     dismissHint,
     handleAdd,
     handleQuickAdd,
+    addProductToServer,
     handleEditList,
     saveListChanges,
     handleDeleteList,

@@ -1,7 +1,10 @@
 import { memo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Chip } from '@mui/material';
+import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
+import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
+import type { SavedList } from '../../../global/types';
 
 // ===== Props =====
 interface EmptyStateProps {
@@ -10,10 +13,12 @@ interface EmptyStateProps {
   hasSearch?: boolean;
   onAddProduct?: () => void;
   onClearPurchased?: () => void;
+  savedLists?: SavedList[];
+  onApplySavedList?: (savedList: SavedList) => void;
 }
 
 // ===== קומפוננטה =====
-export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyStateProps) => {
+export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists = [], onApplySavedList }: EmptyStateProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   // קביעת סוג מצב:
@@ -59,6 +64,9 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyState
   };
 
   const config = getDisplayConfig();
+
+  // הצעת "התחל מרשימה קבועה" - רק ברשימה ריקה לגמרי (טאב לקנות, בלי חיפוש).
+  const showSavedLists = !hasSearch && filter === 'pending' && totalProducts === 0 && savedLists.length > 0 && !!onApplySavedList;
 
   // פריטים מרחפים סביב הדמות - שונים לפי סוג ה-empty state
   const floatingItems = hasSearch
@@ -140,6 +148,29 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch }: EmptyState
       <Typography sx={{ fontSize: { xs: 12.5, sm: 14 }, color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
         {config.description}
       </Typography>
+
+      {showSavedLists && (
+        <Box sx={{ width: '100%', maxWidth: 340 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 1, color: 'text.secondary' }}>
+            <PlaylistAddCheckRoundedIcon sx={{ fontSize: 16 }} />
+            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{t('startFromSavedList')}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.75 }}>
+            {savedLists.map(sl => (
+              <Chip
+                key={sl.id}
+                onClick={() => { haptic('light'); onApplySavedList!(sl); }}
+                label={`${sl.emoji} ${sl.name}`}
+                sx={{
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  bgcolor: 'action.hover',
+                  '&:active': { transform: 'scale(0.96)' },
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
       {/* כפתור ניקוי הוסר מטאב 'לקנות' - מופיע רק בטאב 'נקנו' */}
     </Box>
   );

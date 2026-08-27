@@ -23,6 +23,20 @@ export interface AuthTokens {
 }
 
 // ===== טיפוסי משתמש =====
+export interface ISavedListItemResponse {
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+}
+
+export interface ISavedListResponse {
+  id: string;
+  emoji: string;
+  name: string;
+  items: ISavedListItemResponse[];
+}
+
 export interface IUserResponse {
   id: string;
   name: string;
@@ -31,6 +45,7 @@ export interface IUserResponse {
   avatarEmoji: string;
   isAdmin: boolean;
   createdAt: Date;
+  savedLists?: ISavedListResponse[];
 }
 
 // ===== טיפוסי מוצר =====

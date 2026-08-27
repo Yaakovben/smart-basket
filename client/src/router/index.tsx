@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
-import type { User, List, Product, LoginMethod, ToastType } from "../global/types";
+import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../global/types";
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
@@ -87,6 +87,7 @@ const ListPageWrapper = ({
   deleteList,
   showToast,
   onlineUsers,
+  onSaveSavedLists,
 }: {
   lists: List[];
   user: User;
@@ -97,6 +98,7 @@ const ListPageWrapper = ({
   deleteList: (id: string) => void;
   showToast: (msg: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUsers: Record<string, string[]>;
+  onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }) => {
   const navigate = useNavigate();
   const { listId } = useParams();
@@ -141,6 +143,7 @@ const ListPageWrapper = ({
       onDeleteList={handleDeleteList}
       showToast={showToast}
       onlineUserIds={onlineUserIds}
+      onSaveSavedLists={onSaveSavedLists}
     />
   );
 };
@@ -152,7 +155,7 @@ export const AppRouter = () => {
   const { t } = useSettings();
 
   // hooks חייבים להיקרא לפני כל return מותנה
-  const { user, login, logout, updateUser, loading: authLoading, initialData } = useAuth();
+  const { user, login, logout, updateUser, saveSavedLists, loading: authLoading, initialData } = useAuth();
   // נתונים שנטענו מראש לטעינה מהירה יותר
   const { lists, fetchError: listsFetchError, loading: listsLoading, createList, updateList, updateListLocal, updateProductsForList, deleteList, joinGroup, leaveList, removeListLocal } = useLists(user, initialData.lists, authLoading);
   const { message: toast, toastType, toastKey, onUndo, showToast, hideToast } = useToast();
@@ -436,6 +439,7 @@ export const AppRouter = () => {
                 deleteList={deleteList}
                 showToast={showToast}
                 onlineUsers={onlineUsers}
+                onSaveSavedLists={saveSavedLists}
               />
               </ErrorBoundary>
             </ProtectedRoute>

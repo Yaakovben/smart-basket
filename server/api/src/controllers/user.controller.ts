@@ -9,7 +9,7 @@
 
 import type { Response } from 'express';
 import type { AuthRequest } from '../types';
-import type { UpdateProfileInput, ChangePasswordInput } from '../validators';
+import type { UpdateProfileInput, ChangePasswordInput, UpdateSavedListsInput } from '../validators';
 import { asyncHandler } from '../utils';
 import { UserDAL } from '../dal';
 import {
@@ -17,6 +17,7 @@ import {
   updateProfile as persistProfile,
   changePassword as updatePassword,
   toggleMutedGroup,
+  updateSavedLists as persistSavedLists,
   deleteAccount,
 } from '../services/user.service';
 
@@ -68,6 +69,16 @@ export const updateListOrder = asyncHandler(async (req: AuthRequest, res: Respon
   const { listOrder } = req.body as { listOrder: string[] };
   await UserDAL.updateListOrder(req.user!.id, listOrder);
   res.json({ success: true, data: { listOrder } });
+});
+
+/**
+ * PUT /api/users/me/saved-lists
+ * החלפת מלוא מערך ה"רשימות הקבועות" של המשתמש. מחזיר את המערך המנורמל.
+ */
+export const updateSavedLists = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { savedLists } = req.body as UpdateSavedListsInput;
+  const saved = await persistSavedLists(req.user!.id, savedLists);
+  res.json({ success: true, data: { savedLists: saved } });
 });
 
 /**

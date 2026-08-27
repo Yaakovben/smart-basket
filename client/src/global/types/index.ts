@@ -1,4 +1,22 @@
 // ===== משתמש ואימות =====
+
+// פריט בתוך "רשימה קבועה" - מוצר בודד שנשמר עם כמות/יחידה/קטגוריה.
+export interface SavedListItem {
+  name: string;
+  quantity: number;
+  unit: ProductUnit;
+  category: ProductCategory;
+}
+
+// "רשימה קבועה" - אוסף מוצרים בעל שם ואמוג׳י שהמשתמש שומר פעם אחת
+// ומזריק לכל רשימה בלחיצה אחת (ראו SavedListsBar). ברמת המשתמש.
+export interface SavedList {
+  id: string;
+  emoji: string;
+  name: string;
+  items: SavedListItem[];
+}
+
 export interface User {
   id: string;
   name: string;
@@ -7,6 +25,8 @@ export interface User {
   avatarColor?: string;
   avatarEmoji?: string;
   listOrder?: string[];
+  // רשימות קבועות - עצמאיות ממחזור החיים של רשימה בודדת.
+  savedLists?: SavedList[];
 }
 
 // ===== מוצר =====

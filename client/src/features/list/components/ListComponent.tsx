@@ -1,7 +1,7 @@
 import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import type { Product, List, User, ToastType } from '../../../global/types';
+import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi } from '../../../services/api';
@@ -42,6 +42,8 @@ import { InviteModal } from './modals/InviteModal';
 import { MembersModal } from './modals/MembersModal';
 import { ShareListModal } from './modals/ShareListModal';
 import { EditListModal } from './modals/EditListModal';
+import { SavedListsModal } from './modals/SavedListsModal';
+import { SaveAsSavedListModal } from './modals/SaveAsSavedListModal';
 
 // ===== Props =====
 interface ListPageProps {
@@ -56,10 +58,11 @@ interface ListPageProps {
   onDeleteList: (listId: string) => void;
   showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUserIds?: Set<string>;
+  onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
 
 // ===== קומפוננטה ראשית =====
-export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
+export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds, onSaveSavedLists }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
   const isMuteToggling = useRef(false);
 
@@ -74,7 +77,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     setShowInvite, setShowMembers, setShowShareList, setShowEditList,
     setEditListData, setConfirmDeleteList, setConfirm, setOpenItemId,
     handleDragStart, handleDragMove, handleDragEnd, dismissHint,
-    handleAdd, handleQuickAdd, handleEditList, saveListChanges, handleDeleteList,
+    handleAdd, handleQuickAdd, addProductToServer, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
@@ -104,6 +107,46 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       await handleQuickAdd(name);
     }
   }, [handleQuickAdd]);
+
+  // ===== רשימות קבועות =====
+  const [showSavedLists, setShowSavedLists] = useState(false);
+  const [showSaveAsSavedList, setShowSaveAsSavedList] = useState(false);
+  const savedLists = useMemo(() => user.savedLists ?? [], [user.savedLists]);
+
+  // הזרקת רשימה קבועה שלמה - סדרתית (כמו handleScanListConfirm), מדלגת על
+  // מוצרים שכבר קיימים ברשימה (לא ממתינים) ומשמרת כמות/יחידה/קטגוריה.
+  const handleApplySavedList = useCallback(async (sl: SavedList) => {
+    const present = new Set(list.products.filter(p => !p.isPurchased).map(p => p.name.trim().toLowerCase()));
+    const toAdd = sl.items.filter(it => !present.has(it.name.trim().toLowerCase()));
+    setShowSavedLists(false);
+    if (toAdd.length === 0) {
+      showToast(t('savedListAllPresent'), 'info');
+      return;
+    }
+    for (const it of toAdd) {
+      await addProductToServer({ name: it.name, quantity: it.quantity || 1, unit: it.unit, category: it.category }, false);
+    }
+    showToast(`${toAdd.length} ${t('savedListApplied')}`);
+  }, [list.products, addProductToServer, showToast, t]);
+
+  const handleCreateSavedList = useCallback(async (sl: SavedList) => {
+    try {
+      await onSaveSavedLists([...savedLists, sl]);
+      showToast(t('savedListSaved'));
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [savedLists, onSaveSavedLists, showToast, t]);
+
+  // עטיפה בטוחה ל-SavedListsModal - useAuth כבר משחזר את המצב האופטימי
+  // בכישלון, כאן רק מודיעים למשתמש (בלי לזרוק unhandled rejection).
+  const handleChangeSavedLists = useCallback(async (next: SavedList[]) => {
+    try {
+      await onSaveSavedLists(next);
+    } catch {
+      showToast(t('errorOccurred'), 'error');
+    }
+  }, [onSaveSavedLists, showToast, t]);
 
   const { pullDistance, pullActiveRef, handlePullStart, handlePullMove, handlePullEnd } = usePullToRefresh(refreshList);
 
@@ -165,6 +208,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     setScanListMounted(true);
     setShowScanList(true);
   }, []);
+  const stableManageSavedLists = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowSavedLists(true);
+  }, []);
+  const stableSaveAsSavedList = useCallback(() => {
+    if (selectionModeRef.current) exitSelectionModeRef.current();
+    setShowSaveAsSavedList(true);
+  }, []);
   const stableLeaveList = useCallback(() => {
     if (selectionModeRef.current) exitSelectionModeRef.current();
     leaveList();
@@ -209,6 +260,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     if (!categoryFilter) return items;
     return items.filter(p => p.category === categoryFilter);
   }, [items, categoryFilter]);
+
+  // שמות כל המוצרים - ממואיזציה כדי שלא ייווצר מערך חדש בכל render של
+  // ListComponent (למשל בכל תו בחיפוש), מה שהיה שובר את ה-memo של ListHeader
+  // וגורם לרינדור מחדש של כל הכותרת (QuickAddBar, טאבים, פס התקדמות) לחינם.
+  const productNames = useMemo(
+    () => [...pending, ...purchased].map(p => p.name),
+    [pending, purchased]
+  );
 
   // הצעות מוצרים מהרשימה הנוכחית (שמות ייחודיים)
   const productSuggestions = useMemo(() => {
@@ -271,8 +330,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         hasProducts={pending.length + purchased.length > 0}
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
         onScanList={stableScanList}
+        savedLists={savedLists}
+        onApplySavedList={handleApplySavedList}
+        onManageSavedLists={stableManageSavedLists}
+        onSaveAsSavedList={stableSaveAsSavedList}
         costEstimate={costEstimate}
-        productNames={[...pending, ...purchased].map(p => p.name)}
+        productNames={productNames}
       />
 
       {scanListMounted && (
@@ -334,7 +397,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
         {/* Products List or Empty State */}
         {items.length === 0 ? (
-          <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} />
+          <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} savedLists={savedLists} onApplySavedList={handleApplySavedList} />
         ) : filteredItems.length === 0 && effectiveCategoryFilter ? (
           <Box sx={{ textAlign: 'center', py: 6 }}>
             <Typography sx={{ fontSize: 40, mb: 1 }}>{CATEGORY_ICONS[effectiveCategoryFilter as keyof typeof CATEGORY_ICONS] || '📦'}</Typography>
@@ -555,6 +618,24 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           onIncreaseQuantity={handleDuplicateIncreaseQuantity}
           onAddNew={handleDuplicateAddNew}
           onCancel={handleDuplicateCancel}
+        />
+      )}
+
+      {/* רשימות קבועות */}
+      {showSavedLists && (
+        <SavedListsModal
+          savedLists={savedLists}
+          onChange={handleChangeSavedLists}
+          onApply={handleApplySavedList}
+          onClose={() => setShowSavedLists(false)}
+        />
+      )}
+      {showSaveAsSavedList && (
+        <SaveAsSavedListModal
+          defaultName={list.name}
+          products={[...pending, ...purchased]}
+          onSave={handleCreateSavedList}
+          onClose={() => setShowSaveAsSavedList(false)}
         />
       )}
     </Box>

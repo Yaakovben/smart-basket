@@ -7,13 +7,14 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import CloseIcon from '@mui/icons-material/Close';
-import type { List, User } from '../../../global/types';
+import type { List, User, SavedList } from '../../../global/types';
 import { COMMON_STYLES, safeStorage } from '../../../global/helpers';
 import { MembersButton, ListMenu } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { ListCostEstimate } from '../hooks/useListCostEstimate';
 import { QuickAddBar } from './header/QuickAddBar';
+import { SavedListsBar } from './header/SavedListsBar';
 import { ListProgressBar } from './header/ListProgressBar';
 import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
@@ -48,6 +49,10 @@ interface ListHeaderProps {
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
+  savedLists?: SavedList[];
+  onApplySavedList?: (savedList: SavedList) => void;
+  onManageSavedLists?: () => void;
+  onSaveAsSavedList?: () => void;
   costEstimate?: ListCostEstimate | null;
   productNames?: string[];
 }
@@ -58,6 +63,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
+  savedLists = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
   costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
@@ -208,7 +214,7 @@ export const ListHeader = memo(({
                   },
                 }}
               >
-                חדש
+                {t('new')}
               </Box>
             )}
           </IconButton>
@@ -223,6 +229,7 @@ export const ListHeader = memo(({
         onClearList={onClearList} onShoppingMode={onShoppingMode}
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
         scanListIsNew={showScanItemNewBadge}
+        onSaveAsSavedList={hasProducts ? onSaveAsSavedList : undefined}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
@@ -265,6 +272,23 @@ export const ListHeader = memo(({
       }}>
         <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
       </Box>
+
+      {/* ===== שורת רשימות קבועות - הזרקת אוסף מוצרים בלחיצה אחת.
+          מרונדרת רק אם יש למשתמש רשימות קבועות רלוונטיות (ראו SavedListsBar). ===== */}
+      {onApplySavedList && onManageSavedLists && savedLists.length > 0 && (
+        <Box sx={{
+          mb: { xs: 0.75, sm: 1 },
+          '@media (max-width: 360px)': { mb: 0.5 },
+          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
+        }}>
+          <SavedListsBar
+            savedLists={savedLists}
+            pendingProducts={list.products.filter(p => !p.isPurchased)}
+            onApply={onApplySavedList}
+            onManage={onManageSavedLists}
+          />
+        </Box>
+      )}
 
       {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}
       <Collapse in={showSearch}>

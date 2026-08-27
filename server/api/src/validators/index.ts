@@ -3,7 +3,7 @@ export { authValidator, type RegisterInput, type LoginInput, type CheckEmailInpu
 export { listValidator, type CreateListInput, type UpdateListInput, type JoinGroupInput } from './list.validator';
 export { productValidator, type CreateProductInput, type UpdateProductInput, type ReorderProductsInput, type MoveProductsInput } from './product.validator';
 export type { ProductUnit, ProductCategory } from '../constants';
-export { userValidator, type UpdateProfileInput, type ChangePasswordInput } from './user.validator';
+export { userValidator, type UpdateProfileInput, type ChangePasswordInput, type SavedListInput, type SavedListItemInput, type UpdateSavedListsInput } from './user.validator';
 export { notificationValidator, type NotificationType, type GetNotificationsQuery, type CreateNotificationInput, type BroadcastNotificationInput } from './notification.validator';
 export { adminValidator } from './admin.validator';
 export { ocrValidator, type ScanListInput } from './ocr.validator';

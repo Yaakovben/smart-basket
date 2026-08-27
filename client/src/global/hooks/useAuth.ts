@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { User, LoginMethod } from "../types";
+import type { User, LoginMethod, SavedList } from "../types";
 import { authApi, listsApi, pushApi, notificationsApi, type ApiList } from "../../services/api";
 import { socketService } from "../../services/socket";
 import { getAccessToken, rehydrateTokensFromIdb, setAuthInProgress } from "../../services/api/client";
@@ -261,5 +261,28 @@ export function useAuth() {
     [user],
   );
 
-  return { user, login, logout, updateUser, isAuthenticated: !!user, loading, initialData };
+  // החלפת מלוא מערך ה"רשימות הקבועות" - אופטימיסטי (עדכון מיידי, שחזור
+  // אם השרת נכשל). replace-all כמו listOrder: המערך קטן ומנוהל מ-UI יחיד.
+  const saveSavedLists = useCallback(
+    async (next: SavedList[]) => {
+      if (!user) return;
+      const previous = user.savedLists || [];
+      setUser(prev => (prev ? { ...prev, savedLists: next } : prev));
+      try {
+        const { savedLists } = await authApi.updateSavedLists(next);
+        setUser(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev, savedLists };
+          try { localStorage.setItem('cached_user', JSON.stringify({ ...updated, _cachedAt: Date.now() })); } catch { /* quota exceeded */ }
+          return updated;
+        });
+      } catch {
+        setUser(prev => (prev ? { ...prev, savedLists: previous } : prev));
+        throw new Error('saveSavedLists failed');
+      }
+    },
+    [user],
+  );
+
+  return { user, login, logout, updateUser, saveSavedLists, isAuthenticated: !!user, loading, initialData };
 }

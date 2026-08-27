@@ -11,8 +11,8 @@ import { sanitizeText } from '../utils';
 import { invalidateAllUserTokens } from './token.service';
 import { publishUserDeleted } from './redisPublisher.service';
 import { logger } from '../config';
-import type { UpdateProfileInput } from '../validators';
-import type { IUserResponse } from '../types';
+import type { UpdateProfileInput, SavedListInput } from '../validators';
+import type { IUserResponse, ISavedListResponse } from '../types';
 
 /**
  * שליפת פרופיל המשתמש המחובר.
@@ -87,6 +87,45 @@ export async function toggleMutedGroup(userId: string, groupId: string): Promise
   const updated = await UserDAL.toggleMutedGroup(userId, groupId);
   if (!updated) throw NotFoundError.user();
   return (updated.mutedGroupIds || []).map(id => id.toString());
+}
+
+// תקרה על מספר "רשימות קבועות" ועל מספר הפריטים בכל אחת - מונע ניצול
+// לרעה ושומר על מסמך המשתמש קטן.
+const MAX_SAVED_LISTS = 20;
+const MAX_SAVED_LIST_ITEMS = 80;
+
+/**
+ * החלפת מלוא מערך ה"רשימות הקבועות" של המשתמש (replace-all, כמו listOrder).
+ * מנקה קלט, מסנן פריטים ריקים, ומחזיר את המערך המנורמל שנשמר.
+ */
+export async function updateSavedLists(
+  userId: string,
+  savedLists: SavedListInput[]
+): Promise<ISavedListResponse[]> {
+  if (savedLists.length > MAX_SAVED_LISTS) {
+    throw ValidationError.single('savedLists', `Maximum ${MAX_SAVED_LISTS} saved lists reached`);
+  }
+
+  const cleaned: ISavedListResponse[] = savedLists
+    .map(sl => ({
+      id: sanitizeText(sl.id),
+      emoji: sanitizeText(sl.emoji || '') || '📋',
+      name: sanitizeText(sl.name),
+      items: (sl.items || [])
+        .slice(0, MAX_SAVED_LIST_ITEMS)
+        .map(it => ({
+          name: sanitizeText(it.name),
+          quantity: typeof it.quantity === 'number' && it.quantity > 0 ? it.quantity : 1,
+          unit: sanitizeText(it.unit || '') || 'יח׳',
+          category: sanitizeText(it.category || '') || 'אחר',
+        }))
+        .filter(it => it.name.length > 0),
+    }))
+    .filter(sl => sl.id.length > 0 && sl.name.length > 0);
+
+  const updated = await UserDAL.updateSavedLists(userId, cleaned);
+  if (!updated) throw NotFoundError.user();
+  return cleaned;
 }
 
 /**

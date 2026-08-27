@@ -1,4 +1,4 @@
-export { User, type IUser } from './User.model';
+export { User, type IUser, type ISavedList, type ISavedListItem } from './User.model';
 export { List, type IList, type IMember } from './List.model';
 export { Product, MAX_EDIT_HISTORY, type IProductDoc, type IProductEditEntry, type IProductEditChange } from './Product.model';
 export { RefreshToken, type IRefreshToken } from './RefreshToken.model';

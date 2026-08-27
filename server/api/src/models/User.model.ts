@@ -1,6 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcrypt';
 
+// פריט בתוך "רשימה קבועה" - מוצר יחיד עם כמות/יחידה/קטגוריה, כדי
+// שכשמחילים את הרשימה הקבועה המוצר חוזר בדיוק כפי שנשמר.
+export interface ISavedListItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+}
+
+// "רשימה קבועה" - אוסף מוצרים בעל שם ואמוג׳י שהמשתמש שומר פעם אחת
+// ומזריק לכל רשימה בלחיצה אחת (ראו SavedListsBar בקליינט). ברמת
+// המשתמש, עצמאי לחלוטין ממחזור החיים של רשימה בודדת.
+export interface ISavedList {
+  id: string;
+  emoji: string;
+  name: string;
+  items: ISavedListItem[];
+}
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -12,6 +31,7 @@ export interface IUser extends Document {
   isAdmin: boolean;
   mutedGroupIds: mongoose.Types.ObjectId[];
   listOrder: string[];
+  savedLists: ISavedList[];
   // מוגדל בכל שינוי סיסמה / מחיקת חשבון כדי לבטל access tokens שכבר הונפקו
   // (JWT הוא stateless - זו הדרך היחידה לבטל טוקן לפני שפג תוקפו).
   // מוטמע ב-payload של ה-JWT ונבדק מול הערך ב-DB בכל בקשה מאומתת.
@@ -20,6 +40,26 @@ export interface IUser extends Document {
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
+
+const savedListItemSchema = new Schema<ISavedListItem>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 60 },
+    quantity: { type: Number, default: 1, min: 0, max: 9999 },
+    unit: { type: String, default: 'יח׳', maxlength: 16 },
+    category: { type: String, default: 'אחר', maxlength: 32 },
+  },
+  { _id: false }
+);
+
+const savedListSchema = new Schema<ISavedList>(
+  {
+    id: { type: String, required: true, maxlength: 64 },
+    emoji: { type: String, default: '📋', maxlength: 16 },
+    name: { type: String, required: true, trim: true, maxlength: 40 },
+    items: { type: [savedListItemSchema], default: [] },
+  },
+  { _id: false }
+);
 
 const userSchema = new Schema<IUser>(
   {
@@ -67,6 +107,10 @@ const userSchema = new Schema<IUser>(
     listOrder: [{
       type: String,
     }],
+    savedLists: {
+      type: [savedListSchema],
+      default: [],
+    },
     tokenVersion: {
       type: Number,
       default: 0,
