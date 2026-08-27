@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { Box, Typography, Button, Chip, CircularProgress, Collapse } from '@mui/material';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
@@ -24,7 +24,9 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const items = useMemo(() => productsToSavedItems(products), [products]);
+  // ניתן להסיר פריטים לפני השמירה (init פעם אחת מהמוצרים הנוכחיים).
+  const [items, setItems] = useState(() => productsToSavedItems(products));
+  const removeItem = (name: string) => { haptic('light'); setItems(prev => prev.filter(it => it.name !== name)); };
   const canSave = name.trim().length >= 2 && items.length > 0 && !saving;
 
   const handleSave = useCallback(async () => {
@@ -98,7 +100,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         </Box>
       </Collapse>
 
-      {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה */}
+      {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה. אפשר להסיר פריט לפני שמירה. */}
       <Box sx={{
         display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 3.5,
         maxHeight: 156, overflowY: 'auto', overscrollBehavior: 'contain',
@@ -113,7 +115,18 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
           {items.length}
         </Box>
         {items.map(it => (
-          <Chip key={it.name} label={it.name} sx={{ fontSize: 13, height: 30, bgcolor: 'action.hover' }} />
+          <Chip
+            key={it.name}
+            label={it.name}
+            onDelete={() => removeItem(it.name)}
+            sx={{
+              fontSize: 13, height: 30, bgcolor: 'action.hover',
+              '& .MuiChip-deleteIcon': {
+                color: 'rgba(239,68,68,0.55)', fontSize: 17,
+                '&:hover': { color: 'error.main' },
+              },
+            }}
+          />
         ))}
       </Box>
 

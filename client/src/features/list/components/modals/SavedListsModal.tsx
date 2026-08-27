@@ -214,7 +214,13 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                               key={it.name}
                               label={it.name}
                               onDelete={() => removeItem(sl.id, idx)}
-                              sx={{ fontSize: 13, height: 30, bgcolor: 'action.hover' }}
+                              sx={{
+                                fontSize: 13, height: 30, bgcolor: 'action.hover',
+                                '& .MuiChip-deleteIcon': {
+                                  color: 'rgba(239,68,68,0.55)', fontSize: 17,
+                                  '&:hover': { color: 'error.main' },
+                                },
+                              }}
                             />
                           ))}
                         </Box>
@@ -268,7 +274,11 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           size="small"
                           onClick={() => setPendingDelete(sl)}
                           startIcon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}
-                          sx={{ textTransform: 'none', fontSize: 13, fontWeight: 500, color: 'error.main', px: 1 }}
+                          sx={{
+                            textTransform: 'none', fontSize: 13, fontWeight: 600, color: 'error.main',
+                            px: 1.25, borderRadius: '10px', bgcolor: 'rgba(239,68,68,0.08)',
+                            '&:hover': { bgcolor: 'rgba(239,68,68,0.14)' },
+                          }}
                         >
                           {t('deleteSavedListAction')}
                         </Button>

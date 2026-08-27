@@ -85,20 +85,20 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      // calc(100dvh - 320px) - גובה viewport פחות הבר העליון, ה-FAB והבר התחתון.
-      // ה-EmptyState תופס את המקום שבין ההדר ל-FAB, וה-justifyContent:center
-      // ממקם אותו במרכז האנכי האמיתי - בלי שה-FAB יסתיר את הכפתור.
       minHeight: 'calc(100dvh - 320px)',
-      // pb נדיב נוסף - מבטיח שגם אם הכפתור הוסף-מוצר יתווסף בעתיד הוא לא יסתתר
-      // מאחורי ה-FAB ומאחורי safe-area-inset-bottom.
-      pb: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+      // כשמוצגות רשימות קבועות - pb גדול יותר דוחף את הבלוק המרכזי מעלה,
+      // כדי שהצ'יפים לא ייחתכו ע"י ה-FAB (כפתור פלוס, מרחף מימין-למטה).
+      pb: showSavedLists
+        ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)'
+        : 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
-      {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב */}
+      {/* דמות ידידותית - אייקון מרכזי צף + פריטים מרחפים מסביב.
+          מוקטנת כשמוצגות רשימות קבועות כדי לפנות מקום להצעה. */}
       <Box sx={{
         position: 'relative',
-        width: { xs: 140, sm: 180 },
-        height: { xs: 140, sm: 180 },
-        mb: { xs: 1.5, sm: 2.5 },
+        width: showSavedLists ? { xs: 100, sm: 124 } : { xs: 140, sm: 180 },
+        height: showSavedLists ? { xs: 100, sm: 124 } : { xs: 140, sm: 180 },
+        mb: showSavedLists ? { xs: 1.25, sm: 2 } : { xs: 1.5, sm: 2.5 },
       }}>
         <Box sx={{
           position: 'absolute', inset: 0,
@@ -114,7 +114,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
           sx={{
             position: 'absolute', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: { xs: 56, sm: 72 },
+            fontSize: showSavedLists ? { xs: 42, sm: 54 } : { xs: 56, sm: 72 },
             animation: 'esFloat 3s ease-in-out infinite',
             '@keyframes esFloat': {
               '0%, 100%': { transform: 'translateY(0)' },
@@ -145,15 +145,21 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       <Typography sx={{ fontSize: { xs: 15, sm: 18 }, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>
         {config.title}
       </Typography>
-      <Typography sx={{ fontSize: { xs: 12.5, sm: 14 }, color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
-        {config.description}
-      </Typography>
+      {!showSavedLists && (
+        <Typography sx={{ fontSize: { xs: 12.5, sm: 14 }, color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
+          {config.description}
+        </Typography>
+      )}
 
       {showSavedLists && (
-        <Box sx={{ width: '100%', maxWidth: 340 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.5, color: 'text.secondary' }}>
-            <PlaylistAddRoundedIcon sx={{ fontSize: 17 }} />
-            <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>{t('startFromSavedList')}</Typography>
+        <Box sx={{
+          width: '100%', maxWidth: 320, mt: 1.5,
+          p: 1.5, borderRadius: '16px',
+          border: '1px solid', borderColor: 'divider',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.25, color: 'primary.main' }}>
+            <PlaylistAddRoundedIcon sx={{ fontSize: 18 }} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{t('startFromSavedList')}</Typography>
           </Box>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
             {savedLists.map(sl => (
@@ -162,8 +168,9 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
                 onClick={() => { haptic('light'); onApplySavedList!(sl); }}
                 label={`${sl.emoji}  ${sl.name}`}
                 sx={{
-                  fontSize: 13.5, fontWeight: 500, height: 34, px: 0.5, cursor: 'pointer',
-                  bgcolor: 'action.hover',
+                  fontSize: 13.5, fontWeight: 600, height: 36, px: 0.75, cursor: 'pointer',
+                  color: 'primary.main', bgcolor: 'rgba(20,184,166,0.1)',
+                  '&:hover': { bgcolor: 'rgba(20,184,166,0.16)' },
                   '&:active': { transform: 'scale(0.96)' },
                 }}
               />
