@@ -110,44 +110,60 @@ async function getAccessToken(): Promise<string> {
   return cachedToken;
 }
 
-function renderHtml(body: string): string {
+// isBulk=false (שליחה בודדת/טרנזקציונית): בלי כפתור CTA צבעוני, קישור טקסט
+// פשוט בלבד - נראה כמו מייל אישי, לא כמו מייל שיווקי/bulk. isBulk=true
+// (broadcastEmail האמיתי) שומר על הכפתור - שם זה באמת שידור לרשימה.
+// ההבדל הזה משנה כי סמני ספאם (במיוחד מול חשבון Gmail אישי טרי בלי היסטוריית
+// שליחה) מזהים כפתור CTA + List-Unsubscribe יחד כסימן קלאסי ל"מייל שיווקי" -
+// אין סיבה "לצעוק bulk" על מייל בודד שנשלח למשתמש אחד.
+function renderHtml(body: string, isBulk: boolean): string {
   const safeBody = body
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br/>');
-  return `
-<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
-  <div style="white-space:pre-wrap;margin-bottom:32px;">${safeBody}</div>
-  <div style="text-align:center;">
+  const link = isBulk
+    ? `<div style="text-align:center;">
     <a href="https://prod-smart-basket.vercel.app/" style="display:inline-block;background:linear-gradient(135deg,#0F766E,#14B8A6);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:12px;">
       פתח את Smart Basket
     </a>
-  </div>
+  </div>`
+    : `<div style="font-size:13.5px;">
+    <a href="https://prod-smart-basket.vercel.app/" style="color:#0F766E;">פתח את Smart Basket</a>
+  </div>`;
+  return `
+<div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
+  <div style="white-space:pre-wrap;margin-bottom:32px;">${safeBody}</div>
+  ${link}
 </div>`;
 }
 
 // בונה הודעת RFC822 מלאה (nodemailer מטפל ב-MIME + קידוד כותרות עברית)
 // ומחזיר אותה מקודדת base64url כפי שה-Gmail API דורש בשדה raw.
-async function buildRawMessage(to: string, subject: string, body: string): Promise<string> {
+// List-Unsubscribe רק ב-isBulk - זו כותרת מיועדת לרשימות תפוצה אמיתיות
+// (וגם דורשת אותה Gmail לשולחי bulk); על שליחה בודדת היא רק עוד סימן bulk
+// מיותר שמזמין סינון ספאם.
+async function buildRawMessage(to: string, subject: string, body: string, isBulk: boolean): Promise<string> {
   const from = env.GMAIL_USER!;
   const composer = new MailComposer({
     from: { name: FROM_NAME, address: from },
     to,
     subject,
     text: body,
-    html: renderHtml(body),
-    list: {
-      unsubscribe: { url: `mailto:${from}?subject=Unsubscribe`, comment: 'Unsubscribe' },
-    },
-    headers: { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    html: renderHtml(body, isBulk),
+    ...(isBulk ? {
+      list: {
+        unsubscribe: { url: `mailto:${from}?subject=Unsubscribe`, comment: 'Unsubscribe' },
+      },
+      headers: { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    } : {}),
   });
   const buf = await composer.compile().build();
   return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function sendSingle(to: string, subject: string, body: string): Promise<void> {
-  const raw = await buildRawMessage(to, subject, body);
+async function sendSingle(to: string, subject: string, body: string, isBulk: boolean): Promise<void> {
+  const raw = await buildRawMessage(to, subject, body, isBulk);
   const token = await getAccessToken();
 
   const res = await fetch(GMAIL_SEND_URL, {
@@ -174,7 +190,7 @@ async function sendBatch(
   for (let i = 0; i < targets.length; i += SEND_CONCURRENCY) {
     const slice = targets.slice(i, i + SEND_CONCURRENCY);
     const settled = await Promise.allSettled(
-      slice.map(u => sendSingle(u.email, payload.subject, payload.body)),
+      slice.map(u => sendSingle(u.email, payload.subject, payload.body, true)),
     );
     settled.forEach((r, idx) => {
       const u = slice[idx];
@@ -231,6 +247,6 @@ export async function sendEmailToUser(userId: string, payload: EmailPayload): Pr
   const user = await User.findById(userId, 'name email').lean();
   if (!user) return { sent: false, email: '' };
   if (!isEmailEnabled()) return { sent: false, email: user.email };
-  await sendSingle(user.email, payload.subject, payload.body);
+  await sendSingle(user.email, payload.subject, payload.body, false);
   return { sent: true, email: user.email };
 }
