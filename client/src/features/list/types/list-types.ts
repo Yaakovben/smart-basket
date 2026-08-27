@@ -94,6 +94,10 @@ export interface UseListReturn {
   dismissHint: () => void;
   handleAdd: () => void;
   handleQuickAdd: (name: string) => void;
+  addProductToServer: (
+    productData: { name: string; quantity: number; unit: Product['unit']; category: Product['category']; note?: string },
+    showToastOnAdd?: boolean
+  ) => Promise<void>;
   handleEditList: () => void;
   saveListChanges: () => void;
   handleDeleteList: () => void;
