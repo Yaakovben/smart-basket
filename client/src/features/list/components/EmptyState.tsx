@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
-import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
+import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import { haptic } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
@@ -152,7 +152,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       {showSavedLists && (
         <Box sx={{ width: '100%', maxWidth: 340 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 1, color: 'text.secondary' }}>
-            <PlaylistAddCheckRoundedIcon sx={{ fontSize: 16 }} />
+            <PlaylistAddRoundedIcon sx={{ fontSize: 16 }} />
             <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{t('startFromSavedList')}</Typography>
           </Box>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.75 }}>

@@ -27,9 +27,10 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   const [draft, setDraft] = useState<SavedList[]>(savedLists);
   const draftRef = useRef(draft);
   const savedJsonRef = useRef(JSON.stringify(savedLists));
-  // שמות מקוריים - כדי לשחזר אם המשתמש מרוקן שדה שם ולא מקליד חדש
-  // (שם ריק היה נמחק ע"י השרת בשקט).
-  const originalNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
+  // השם התקין האחרון לכל רשימה - כדי לשחזר אם המשתמש מרוקן שדה ומאבד
+  // פוקוס בלי להקליד חדש (שם ריק היה נמחק ע"י השרת בשקט). מתעדכן בכל
+  // הקלדה תקינה ב-renameLocal.
+  const lastGoodNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
   const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
   const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
@@ -50,9 +51,9 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
     if (persistNow) persist(next);
   }, [persist]);
 
-  // החזרת שם ריק לערכו המקורי (שם ריק היה נמחק ע"י השרת בשקט).
+  // החזרת שם ריק לערכו התקין האחרון (שם ריק היה נמחק ע"י השרת בשקט).
   const withNamesFixed = useCallback((lists: SavedList[]) =>
-    lists.map(l => (l.name.trim() ? l : { ...l, name: originalNames.current.get(l.id) ?? l.name })),
+    lists.map(l => (l.name.trim() ? l : { ...l, name: lastGoodNames.current.get(l.id) ?? l.name })),
   []);
 
   // מתקן שמות ריקים ואז שומר - משמש ב-blur וב-close (מעדכן גם את ה-UI).
@@ -72,8 +73,11 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
     setExpandedId(prev => (prev === id ? null : id));
   };
 
-  const renameLocal = (id: string, name: string) =>
-    apply(lists => lists.map(l => (l.id === id ? { ...l, name: name.slice(0, 40) } : l)), false);
+  const renameLocal = (id: string, name: string) => {
+    const clipped = name.slice(0, 40);
+    if (clipped.trim()) lastGoodNames.current.set(id, clipped);
+    apply(lists => lists.map(l => (l.id === id ? { ...l, name: clipped } : l)), false);
+  };
 
   const setEmoji = (id: string, emoji: string) => {
     haptic('light');
@@ -88,12 +92,10 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
     const item = nameToSavedItem(newItemText);
     if (!item) return;
     setNewItemText('');
-    apply(lists => lists.map(l => {
-      if (l.id !== id) return l;
-      if (l.items.length >= MAX_SAVED_LIST_ITEMS) return l;
-      if (l.items.some(it => it.name.trim().toLowerCase() === item.name.toLowerCase())) return l;
-      return { ...l, items: [...l.items, item] };
-    }), true);
+    const target = draftRef.current.find(l => l.id === id);
+    if (!target || target.items.length >= MAX_SAVED_LIST_ITEMS) return;
+    if (target.items.some(it => it.name.trim().toLowerCase() === item.name.toLowerCase())) return;
+    apply(lists => lists.map(l => (l.id === id ? { ...l, items: [...l.items, item] } : l)), true);
   };
 
   const confirmDelete = () => {
@@ -176,7 +178,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           onBlur={commitNames}
                           placeholder={t('savedListNameExample')}
                           size="small"
-                          sx={{ flex: 1 }}
+                          sx={{ flex: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper' } }}
                         />
                       </Box>
 
@@ -223,7 +225,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(sl.id); } }}
                           placeholder={t('savedListAddItemPlaceholder')}
                           size="small"
-                          sx={{ flex: 1 }}
+                          sx={{ flex: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper' } }}
                         />
                         <IconButton
                           size="small"

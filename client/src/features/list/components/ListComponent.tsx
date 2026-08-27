@@ -111,13 +111,16 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // ===== רשימות קבועות =====
   const [showSavedLists, setShowSavedLists] = useState(false);
   const [showSaveAsSavedList, setShowSaveAsSavedList] = useState(false);
-  const [applyingSavedListId, setApplyingSavedListId] = useState<string | null>(null);
+  // מונע הזרקה כפולה (טאפ מהיר על אותו צ'יפ / כמה צ'יפים) - ref כי צריך
+  // עדכון סינכרוני לפני שה-state מספיק להתרנדר.
+  const applyingSavedListRef = useRef(false);
   const savedLists = useMemo(() => user.savedLists ?? [], [user.savedLists]);
 
   // הזרקת רשימה קבועה שלמה - סדרתית (כמו handleScanListConfirm), מדלגת על
   // מוצרים שכבר קיימים ברשימה (לא ממתינים) ומשמרת כמות/יחידה/קטגוריה.
   // אחרי ההוספה - טוסט עם "בטל" שמסיר בדיוק את מה שנוסף (לפי שם).
   const handleApplySavedList = useCallback(async (sl: SavedList) => {
+    if (applyingSavedListRef.current) return;
     const present = new Set(list.products.filter(p => !p.isPurchased).map(p => p.name.trim().toLowerCase()));
     const toAdd = sl.items.filter(it => !present.has(it.name.trim().toLowerCase()));
     setShowSavedLists(false);
@@ -125,13 +128,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       showToast(t('savedListAllPresent'), 'info');
       return;
     }
-    setApplyingSavedListId(sl.id);
+    applyingSavedListRef.current = true;
     try {
       for (const it of toAdd) {
         await addProductToServer({ name: it.name, quantity: it.quantity || 1, unit: it.unit, category: it.category }, false);
       }
     } finally {
-      setApplyingSavedListId(null);
+      applyingSavedListRef.current = false;
     }
 
     const addedNames = new Set(toAdd.map(it => it.name.trim().toLowerCase()));
@@ -355,7 +358,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onScanList={stableScanList}
         savedLists={savedLists}
         pendingNames={pendingNames}
-        applyingSavedListId={applyingSavedListId}
         onApplySavedList={handleApplySavedList}
         onManageSavedLists={stableManageSavedLists}
         onSaveAsSavedList={stableSaveAsSavedList}

@@ -1,5 +1,5 @@
 import { memo, useMemo, useCallback } from 'react';
-import { Box, Chip, CircularProgress } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import type { SavedList } from '../../../../global/types';
 import { haptic } from '../../../../global/helpers';
@@ -14,9 +14,11 @@ import { haptic } from '../../../../global/helpers';
 //     מה לתרום. רשימה ריקה לגמרי מטופלת ע"י EmptyState (כדי לא להציג
 //     כפילות), ומרגע שהמשתמש התחיל לעבוד ברצינות - הבר נעלם. מי שאין לו
 //     רשימות קבועות לא רואה כלום. הזרקה ידנית תמיד זמינה מתפריט ה-⋮.
+//  4. משוב הזרקה: הצ'יפ מתרוקן מעצמו - ככל שפריטי החבילה נכנסים לרשימה
+//     הוא כבר לא "רלוונטי" ונעלם, ואז טוסט "נוספו X" עם "בטל".
 
 // טווח הפריטים הממתינים שבו הבר מוצג. מתחת ל-1: EmptyState מטפל.
-// מעל SETUP_MAX: המשתמש כבר "בתוך" הרשימה, לא מקים אותה.
+// מ-SETUP_MAX ומעלה: המשתמש כבר "בתוך" הרשימה, לא מקים אותה.
 const SETUP_MAX = 5;
 
 const rowSx = {
@@ -50,12 +52,10 @@ interface SavedListsBarProps {
   savedLists: SavedList[];
   /** שמות המוצרים שעדיין לא נקנו ברשימה הנוכחית (ממואיזציה ב-ListComponent). */
   pendingNames: string[];
-  /** id של רשימה קבועה שכרגע מוזרקת (מציג ספינר על הצ'יפ). */
-  applyingId?: string | null;
   onApply: (savedList: SavedList) => void;
 }
 
-export const SavedListsBar = memo(({ savedLists, pendingNames, applyingId, onApply }: SavedListsBarProps) => {
+export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedListsBarProps) => {
   // רשימות קבועות שעוד יש בהן פריט שלא נמצא כרגע ברשימה.
   const relevant = useMemo(() => {
     const present = new Set(pendingNames.map(n => n.trim().toLowerCase()));
@@ -72,26 +72,21 @@ export const SavedListsBar = memo(({ savedLists, pendingNames, applyingId, onApp
 
   return (
     <Box sx={rowSx}>
-      {relevant.map(sl => {
-        const applying = applyingId === sl.id;
-        return (
-          <Chip
-            key={sl.id}
-            onClick={() => !applying && handleApply(sl)}
-            size="small"
-            sx={{ ...chipSx, opacity: applying ? 0.75 : 1, pointerEvents: applying ? 'none' : 'auto' }}
-            icon={applying
-              ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
-              : <PlaylistAddRoundedIcon sx={{ fontSize: 15 }} />}
-            label={
-              <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
-                {sl.name}
-              </Box>
-            }
-          />
-        );
-      })}
+      {relevant.map(sl => (
+        <Chip
+          key={sl.id}
+          onClick={() => handleApply(sl)}
+          size="small"
+          sx={chipSx}
+          icon={<PlaylistAddRoundedIcon sx={{ fontSize: 15 }} />}
+          label={
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+              <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
+              {sl.name}
+            </Box>
+          }
+        />
+      ))}
     </Box>
   );
 });

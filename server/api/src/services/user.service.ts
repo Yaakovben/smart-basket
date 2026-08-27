@@ -108,23 +108,38 @@ export async function updateSavedLists(
 
   // אורכים נגזרים מ-User.model (savedListSchema): שם רשימה 40, שם פריט 60,
   // אמוג׳י 16. הוולידטור (Joi) מקבל טווח רחב יותר ואנחנו חותכים כאן, כדי
-  // לא להחזיר 400 על גלישת אורך אלא פשוט לנרמל.
+  // לא להחזיר 400 על גלישת אורך אלא פשוט לנרמל. בנוסף - דה-דופ לפי id
+  // (רשימות) ולפי שם (פריטים בתוך רשימה), כדי שהמסמך יישאר נקי גם אם
+  // הקליינט שלח כפילויות.
+  const seenIds = new Set<string>();
   const cleaned: ISavedListResponse[] = savedLists
-    .map(sl => ({
-      id: sanitizeText(sl.id).slice(0, 64),
-      emoji: sanitizeText(sl.emoji || '').slice(0, 16) || '📋',
-      name: sanitizeText(sl.name).slice(0, 40),
-      items: (sl.items || [])
-        .slice(0, MAX_SAVED_LIST_ITEMS)
-        .map(it => ({
-          name: sanitizeText(it.name).slice(0, 60),
-          quantity: typeof it.quantity === 'number' && it.quantity > 0 ? it.quantity : 1,
-          unit: sanitizeText(it.unit || '').slice(0, 16) || 'יח׳',
-          category: sanitizeText(it.category || '').slice(0, 32) || 'אחר',
-        }))
-        .filter(it => it.name.length > 0),
-    }))
-    .filter(sl => sl.id.length > 0 && sl.name.length > 0);
+    .map(sl => {
+      const seenItemNames = new Set<string>();
+      return {
+        id: sanitizeText(sl.id).slice(0, 64),
+        emoji: sanitizeText(sl.emoji || '').slice(0, 16) || '📋',
+        name: sanitizeText(sl.name).slice(0, 40),
+        items: (sl.items || [])
+          .map(it => ({
+            name: sanitizeText(it.name).slice(0, 60),
+            quantity: typeof it.quantity === 'number' && it.quantity > 0 ? it.quantity : 1,
+            unit: sanitizeText(it.unit || '').slice(0, 16) || 'יח׳',
+            category: sanitizeText(it.category || '').slice(0, 32) || 'אחר',
+          }))
+          .filter(it => {
+            const key = it.name.toLowerCase();
+            if (!it.name || seenItemNames.has(key)) return false;
+            seenItemNames.add(key);
+            return true;
+          })
+          .slice(0, MAX_SAVED_LIST_ITEMS),
+      };
+    })
+    .filter(sl => {
+      if (!sl.id || !sl.name || seenIds.has(sl.id)) return false;
+      seenIds.add(sl.id);
+      return true;
+    });
 
   const updated = await UserDAL.updateSavedLists(userId, cleaned);
   if (!updated) throw NotFoundError.user();

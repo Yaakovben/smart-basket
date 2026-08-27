@@ -51,7 +51,6 @@ interface ListHeaderProps {
   onScanList?: () => void;
   savedLists?: SavedList[];
   pendingNames?: string[];
-  applyingSavedListId?: string | null;
   onApplySavedList?: (savedList: SavedList) => void;
   onManageSavedLists?: () => void;
   onSaveAsSavedList?: () => void;
@@ -65,7 +64,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  savedLists = [], pendingNames = [], applyingSavedListId, onApplySavedList, onManageSavedLists, onSaveAsSavedList,
+  savedLists = [], pendingNames = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
   costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
@@ -295,7 +294,6 @@ export const ListHeader = memo(({
         <SavedListsBar
           savedLists={savedLists}
           pendingNames={pendingNames}
-          applyingId={applyingSavedListId}
           onApply={onApplySavedList}
         />
       )}
