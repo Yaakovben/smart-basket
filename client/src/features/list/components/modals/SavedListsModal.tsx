@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Box, Typography, Chip, IconButton, Button, Collapse } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Button, Collapse, TextField, InputAdornment } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -182,7 +182,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         placeholder={t('savedListNameExample')}
                         size="small"
                         fullWidth
-                        sx={{ mb: 1.75 }}
+                        sx={{ mb: 1.75, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                       />
 
                       <Collapse in={emojiOpenId === sl.id} unmountOnExit>
@@ -219,37 +219,58 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           ))}
                         </Box>
                       )}
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <ClearableTextField
-                          value={newItemText}
-                          onChange={e => setNewItemText(e.target.value)}
-                          onClear={() => setNewItemText('')}
-                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(sl.id); } }}
-                          placeholder={t('savedListAddItemPlaceholder')}
-                          size="small"
-                          sx={{ flex: 1 }}
-                        />
-                        <IconButton
-                          onClick={() => addItem(sl.id)}
-                          aria-label={t('savedListAddItemPlaceholder')}
-                          sx={{
-                            flexShrink: 0, color: 'primary.main',
-                            bgcolor: 'rgba(20,184,166,0.1)',
-                            '&:hover': { bgcolor: 'rgba(20,184,166,0.18)' },
-                          }}
-                        >
-                          <AddRoundedIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Box>
+                      {/* הוספת מוצר - בסגנון "הוספה מהירה": מעוגל, רקע לבן,
+                          צל עדין, וכפתור + מודגש בתוך השדה */}
+                      <TextField
+                        fullWidth
+                        value={newItemText}
+                        onChange={e => setNewItemText(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(sl.id); } }}
+                        placeholder={t('savedListAddItemPlaceholder')}
+                        size="small"
+                        inputProps={{ autoCapitalize: 'sentences', autoCorrect: 'off', spellCheck: false }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'background.paper', borderRadius: '12px', height: 46, pr: 0.5,
+                            boxShadow: '0 1px 5px rgba(0,0,0,0.07)',
+                            '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(20,184,166,0.18)' },
+                          },
+                          '& .MuiOutlinedInput-input': { fontSize: 15, py: 0 },
+                        }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start"><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => addItem(sl.id)}
+                                disabled={newItemText.trim().length < 2}
+                                aria-label={t('savedListAddItemPlaceholder')}
+                                sx={{
+                                  width: 34, height: 34, flexShrink: 0, borderRadius: '9px', color: 'white',
+                                  background: newItemText.trim().length >= 2
+                                    ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
+                                    : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
+                                  '&.Mui-disabled': { color: 'white', opacity: 0.7 },
+                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
+                                }}
+                              >
+                                <AddRoundedIcon sx={{ fontSize: 20 }} />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2.25 }}>
                         <Button
                           size="small"
                           onClick={() => setPendingDelete(sl)}
                           startIcon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}
-                          sx={{ textTransform: 'none', fontSize: 13, fontWeight: 500, color: 'text.secondary', px: 1 }}
+                          sx={{ textTransform: 'none', fontSize: 13, fontWeight: 500, color: 'error.main', px: 1 }}
                         >
-                          {t('delete')}
+                          {t('deleteSavedListAction')}
                         </Button>
                         <Box sx={{ flex: 1 }} />
                         <Button
@@ -260,7 +281,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           startIcon={<PlaylistAddRoundedIcon sx={{ fontSize: 18 }} />}
                           sx={{ textTransform: 'none', fontSize: 13, fontWeight: 600, borderRadius: '10px', px: 2, py: 0.6 }}
                         >
-                          {t('savedListAddToList')}
+                          {`${t('add')} ${sl.items.length} ${t('items')}`}
                         </Button>
                       </Box>
                     </Box>
@@ -275,8 +296,8 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
       {pendingDelete && (
         <ConfirmModal
           title={t('deleteSavedListConfirm')}
-          message={`"${pendingDelete.emoji} ${pendingDelete.name}"`}
-          confirmText={t('delete')}
+          message={`"${pendingDelete.emoji} ${pendingDelete.name}" · ${pendingDelete.items.length} ${t('items')}`}
+          confirmText={t('deleteSavedListAction')}
           onConfirm={confirmDelete}
           onCancel={() => setPendingDelete(null)}
         />

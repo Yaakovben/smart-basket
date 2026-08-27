@@ -796,6 +796,7 @@ export const ru: Translations = {
   savedLists: 'Готовые списки',
   saveAsSavedList: 'Сохранить как готовый список',
   saveAsSavedListTitle: 'Сохранить многоразовый список',
+  saveAsSavedListHint: 'Товары сохранятся как список — добавляйте их все в любой список одним касанием.',
   savedListNameExample: 'Название списка',
   chooseIcon: 'Выберите значок',
   savedListSaved: 'Готовый список сохранён',
@@ -807,7 +808,7 @@ export const ru: Translations = {
   deleteSavedListConfirm: 'Удалить этот готовый список?',
   startFromSavedList: 'Начать с готового списка',
   savedListAddItemPlaceholder: 'Добавьте товар',
-  savedListAddToList: 'Добавить в список',
+  deleteSavedListAction: 'Удалить готовый список',
   // Индикатор соединения (отличает "нет интернета у вас" от "связь ненадолго прервалась")
   offlineTitle: 'Нет подключения к интернету',
   offlineDesc: 'Проверьте Wi-Fi или мобильные данные. Мы продолжим попытки автоматически.',

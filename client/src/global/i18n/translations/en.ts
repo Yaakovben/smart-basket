@@ -796,6 +796,7 @@ export const en: Translations = {
   savedLists: 'Saved lists',
   saveAsSavedList: 'Save as a saved list',
   saveAsSavedListTitle: 'Save a reusable list',
+  saveAsSavedListHint: 'These products are saved as a list - add them all to any list again with one tap.',
   savedListNameExample: 'List name',
   chooseIcon: 'Choose an icon',
   savedListSaved: 'Saved list stored',
@@ -807,7 +808,7 @@ export const en: Translations = {
   deleteSavedListConfirm: 'Delete this saved list?',
   startFromSavedList: 'Start from a saved list',
   savedListAddItemPlaceholder: 'Add an item',
-  savedListAddToList: 'Add to list',
+  deleteSavedListAction: 'Delete saved list',
   // Connection indicator (tells "your internet is down" apart from "connection dropped briefly")
   offlineTitle: 'No internet connection',
   offlineDesc: 'Check your Wi-Fi or mobile data. We\'ll keep retrying automatically.',

@@ -797,6 +797,7 @@ export const he: Translations = {
   savedLists: 'רשימות קבועות',
   saveAsSavedList: 'שמור כרשימה קבועה',
   saveAsSavedListTitle: 'שמירת רשימה קבועה',
+  saveAsSavedListHint: 'המוצרים יישמרו כרשימה קבועה — אפשר להוסיף אותם שוב לכל רשימה בלחיצה אחת.',
   savedListNameExample: 'שם הרשימה',
   chooseIcon: 'בחר אייקון',
   savedListSaved: 'הרשימה הקבועה נשמרה',
@@ -808,7 +809,7 @@ export const he: Translations = {
   deleteSavedListConfirm: 'למחוק את הרשימה הקבועה?',
   startFromSavedList: 'התחל מרשימה קבועה',
   savedListAddItemPlaceholder: 'הוסף פריט',
-  savedListAddToList: 'הוסף לרשימה',
+  deleteSavedListAction: 'מחק רשימה קבועה',
   // חיווי חיבור (מבדיל בין "אין אינטרנט אצל הלקוח" ל"חיבור נקטע רגעית")
   offlineTitle: 'אין חיבור לאינטרנט',
   offlineDesc: 'בדוק את ה-Wi-Fi או הנתונים הסלולריים. נמשיך לנסות אוטומטית.',

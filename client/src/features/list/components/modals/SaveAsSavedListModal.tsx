@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Button, Chip, CircularProgress, Collapse } from '@mui/material';
+import { Box, Typography, Button, Chip, CircularProgress, Collapse } from '@mui/material';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -41,15 +41,20 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
 
   return (
     <Modal title={t('saveAsSavedListTitle')} onClose={() => !saving && onClose()}>
-      {/* אמוג׳י (כפתור שפותח בורר) + שם, בשורה אחת */}
-      <Box sx={{ display: 'flex', gap: 1.25, mb: emojiOpen ? 1.5 : 2.5 }}>
+      {/* הסבר קצר */}
+      <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.55, mb: 2 }}>
+        {t('saveAsSavedListHint')}
+      </Typography>
+
+      {/* אמוג׳י (כפתור שפותח בורר) + שם, בשורה אחת - אותו גובה */}
+      <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1.25, mb: emojiOpen ? 1.5 : 2.5 }}>
         <Box
           onClick={() => { haptic('light'); setEmojiOpen(o => !o); }}
           aria-label={t('chooseIcon')}
           sx={{
-            width: 46, height: 46, flexShrink: 0, borderRadius: '12px',
+            width: 44, minHeight: 44, flexShrink: 0, borderRadius: '12px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 23, cursor: 'pointer',
+            fontSize: 22, cursor: 'pointer',
             bgcolor: emojiOpen ? 'rgba(20,184,166,0.1)' : 'action.hover',
             border: '1px solid', borderColor: emojiOpen ? 'primary.main' : 'divider',
             '&:active': { transform: 'scale(0.94)' }, transition: 'all 0.12s',
@@ -65,7 +70,10 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
           onChange={e => setName(e.target.value.slice(0, 40))}
           onClear={() => setName('')}
           size="small"
-          sx={{ '& .MuiOutlinedInput-root': { height: 46 } }}
+          sx={{
+            '& .MuiOutlinedInput-root': { height: 44, borderRadius: '12px' },
+            '& .MuiOutlinedInput-input': { py: 0, fontSize: 15 },
+          }}
         />
       </Box>
 
@@ -92,7 +100,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
 
       {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה */}
       <Box sx={{
-        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 2.5,
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 3.5,
         maxHeight: 156, overflowY: 'auto', overscrollBehavior: 'contain',
         p: 1.25, borderRadius: '12px', border: '1px solid', borderColor: 'divider',
       }}>
@@ -115,7 +123,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         disableElevation
         onClick={handleSave}
         disabled={!canSave}
-        sx={{ py: 1.2, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+        sx={{ mt: 1, py: 1.25, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
       >
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>
