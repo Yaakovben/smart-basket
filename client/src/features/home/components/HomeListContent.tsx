@@ -2,10 +2,12 @@ import { useMemo, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
+import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 import DoneIcon from '@mui/icons-material/Done';
 import type { List, User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { ShimmerBlock } from '../../../global/components';
+import { useConnectionStatus } from '../../../global/hooks/useConnectionStatus';
 import type { HomeTab } from '../types/home-types';
 import { ListCard } from './ListCard';
 
@@ -43,6 +45,10 @@ export const HomeListContent = ({
   reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
+  // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
+  // הבקשה נכשלה" - כדי לא לרמוז שהתקלה בשרת שלנו כשהמכשיר פשוט לא מחובר.
+  const { phase } = useConnectionStatus();
+  const isDeviceOffline = phase === 'offline';
   // ידיות גרירה יציבות לפי אינדקס - נמנע מיצירת פונקציה חדשה בכל רינדור
   // (שהייתה מבטלת את ה-React.memo של ListCard לכל הכרטיסים בכל תזוזת גרירה,
   // לא רק לכרטיס שבאמת זז).
@@ -63,65 +69,76 @@ export const HomeListContent = ({
 
   return (
     <Box ref={contentRef} sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', p: { xs: 2, sm: 2.5 }, pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(70px + env(safe-area-inset-bottom))' }, WebkitOverflowScrolling: 'touch' }}>
-      {/* מצב שגיאת חיבור: השרת למטה ואין רשימות. הקוד מנסה שוב אוטומטית
-          כל 4 שניות (useLists effect), ככה אין צורך בלחיצה ידנית - ברגע
-          שהחיבור חוזר, הרשימות מופיעות מעצמן. */}
+      {/* מצב "אין רשימות + הבקשה נכשלה". הקוד מנסה שוב אוטומטית כל 4 שניות
+          (useLists effect) - ברגע שהחיבור חוזר הרשימות מופיעות מעצמן, אין
+          צורך בלחיצה ידנית. הכרטיס מנוסח רגוע ולא מבהיל, ומבדיל בין מכשיר
+          ללא אינטרנט (isDeviceOffline) לבין בקשה שנכשלה כשיש חיבור - בלי
+          לרמוז שהתקלה בשרת שלנו. */}
       {listsFetchError && !hasAnyLists ? (
-        <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '60vh', p: { xs: 3, sm: 4 } }}>
           <Box sx={{
-            width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, borderRadius: '50%',
-            bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            mb: { xs: 2.5, sm: 3 },
-            animation: 'connBreath 2s ease-in-out infinite',
-            '@keyframes connBreath': {
-              '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(245,158,11,0.3)' },
-              '50%': { transform: 'scale(1.05)', boxShadow: '0 0 0 12px rgba(245,158,11,0)' },
-            },
+            width: '100%', maxWidth: 340,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+            p: { xs: 3, sm: 3.5 },
+            borderRadius: '20px',
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)',
           }}>
-            <CloudOffIcon sx={{ fontSize: { xs: 48, sm: 56 }, color: '#D97706', opacity: 0.85 }} />
-          </Box>
-          <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
-            {t('connectionErrorTitle')}
-          </Typography>
-          <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', mb: { xs: 2.5, sm: 3 }, maxWidth: { xs: 280, sm: 320 } }}>
-            {t('connectionErrorDesc')}
-          </Typography>
-          {/* חיווי "מנסה שוב" - 3 נקודות פעימות + טקסט */}
-          <Box sx={{
-            display: 'inline-flex', alignItems: 'center', gap: 1,
-            px: 2, py: 1, borderRadius: 999,
-            bgcolor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1',
-            border: '1px solid', borderColor: 'rgba(20,184,166,0.3)',
-          }}>
-            <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
-              {[0, 1, 2].map(i => (
-                <Box key={i} sx={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  bgcolor: '#0D9488',
-                  animation: 'connDot 1.2s ease-in-out infinite',
-                  animationDelay: `${i * 0.18}s`,
-                  '@keyframes connDot': {
-                    '0%, 100%': { opacity: 0.3, transform: 'scale(0.85)' },
-                    '50%': { opacity: 1, transform: 'scale(1)' },
-                  },
-                }} />
-              ))}
+            <Box sx={{
+              width: { xs: 72, sm: 80 }, height: { xs: 72, sm: 80 }, borderRadius: '50%',
+              bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.035)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              mb: 2,
+              animation: 'connBreath 2.4s ease-in-out infinite',
+              '@keyframes connBreath': {
+                '0%, 100%': { transform: 'scale(1)', opacity: 0.9 },
+                '50%': { transform: 'scale(1.06)', opacity: 1 },
+              },
+            }}>
+              {isDeviceOffline
+                ? <WifiOffRoundedIcon sx={{ fontSize: { xs: 34, sm: 38 }, color: 'text.secondary' }} />
+                : <CloudOffIcon sx={{ fontSize: { xs: 34, sm: 38 }, color: 'text.secondary' }} />}
             </Box>
-            <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: '#0D9488' }}>
-              מנסה שוב…
+            <Typography sx={{ fontSize: { xs: 16, sm: 17 }, fontWeight: 800, color: 'text.primary', mb: 0.75 }}>
+              {isDeviceOffline ? t('offlineTitle') : t('loadRetryTitle')}
             </Typography>
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, color: 'text.secondary', lineHeight: 1.5, mb: 2.25 }}>
+              {isDeviceOffline ? t('offlineDesc') : t('loadRetryDesc')}
+            </Typography>
+            {/* חיווי "מנסה שוב" - שקוף ומשולב בכרטיס, לא צ'יפ נפרד זועק */}
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.9, mb: 1.5 }}>
+              <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
+                {[0, 1, 2].map(i => (
+                  <Box key={i} sx={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    bgcolor: 'primary.main',
+                    animation: 'connDot 1.2s ease-in-out infinite',
+                    animationDelay: `${i * 0.18}s`,
+                    '@keyframes connDot': {
+                      '0%, 100%': { opacity: 0.25, transform: 'scale(0.8)' },
+                      '50%': { opacity: 1, transform: 'scale(1)' },
+                    },
+                  }} />
+                ))}
+              </Box>
+              <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
+                {t('retrying')}
+              </Typography>
+            </Box>
+            <Button
+              variant="text"
+              onClick={() => window.location.reload()}
+              sx={{
+                fontSize: 12, fontWeight: 600, color: 'text.secondary',
+                textTransform: 'none', borderRadius: '10px', px: 1.5,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              {t('reloadPageAction')}
+            </Button>
           </Box>
-          <Button
-            variant="text"
-            onClick={() => window.location.reload()}
-            sx={{
-              mt: 2, fontSize: 12, color: 'text.secondary', textDecoration: 'underline',
-              textTransform: 'none', '&:hover': { bgcolor: 'transparent', opacity: 0.7 },
-            }}
-          >
-            נסה לטעון מחדש את הדף
-          </Button>
         </Box>
       ) : listsLoading && orderedDisplay.length === 0 ? (
         // סקלטון בצורת כרטיסי רשימות - נותן ללקוח תחושה שמשהו טוען וכבר תופס

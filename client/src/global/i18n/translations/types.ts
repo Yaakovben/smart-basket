@@ -806,13 +806,22 @@ export type TranslationKeys =
   | 'savedListApplied'
   | 'savedListAllPresent'
   | 'manageSavedLists'
-  | 'newSavedList'
   | 'noSavedListsYet'
   | 'noSavedListsDesc'
   | 'deleteSavedListConfirm'
   | 'startFromSavedList'
   | 'savedListAddItemPlaceholder'
   | 'savedListNoItems'
-  | 'savedListSnapshotHint';
+  | 'savedListSnapshotHint'
+  // Connection indicator
+  | 'offlineTitle'
+  | 'offlineDesc'
+  | 'loadRetryTitle'
+  | 'loadRetryDesc'
+  | 'retrying'
+  | 'reloadPageAction'
+  | 'offlineShort'
+  | 'offlineWillSync'
+  | 'offlineActionsPending';
 
 export type Translations = Record<TranslationKeys, string>;

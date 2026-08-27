@@ -3,17 +3,23 @@ import { createPortal } from 'react-dom';
 import { Box, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useConnectionStatus } from '../hooks/useConnectionStatus';
+import { useSettings } from '../context/SettingsContext';
 import { WifiFadeIcon } from './icons/WifiFadeIcon';
 
 // פס חיבור גלובלי — נצמד לראש המסך (מעל כל תוכן), מוצג רק כשיש בעיה.
 // Portal ל-document.body כדי לעקוף ancestor עם transform שהיה שובר position:fixed.
+//
+// עיצוב מכוון להיות רגוע ולא מבהיל: פס דק, צבע עמום (לא אדום/כתום זועק),
+// כניסה חלקה מלמעלה, וניתן לסגירה בלחיצה. הניסוח מבדיל בין "אין אינטרנט
+// אצל הלקוח" (offline) ל"החיבור לזמן־אמת נקטע" (reconnecting) — בלי אף
+// פעם לרמוז שהתקלה בשרת שלנו.
 export const ConnectionStatusIcon = () => {
   const { phase, pendingCount } = useConnectionStatus();
+  const { t } = useSettings();
   const [dismissed, setDismissed] = useState(false);
 
   // כשהמצב חוזר ל-online — מאפסים את הסתרה כך שיוצג שוב בבעיה הבאה
-  const prevPhase = phase;
-  if (prevPhase === 'online' && dismissed) setDismissed(false);
+  if (phase === 'online' && dismissed) setDismissed(false);
 
   const handleDismiss = useCallback(() => setDismissed(true), []);
 
@@ -21,16 +27,18 @@ export const ConnectionStatusIcon = () => {
 
   const isOffline = phase === 'offline';
 
-  const borderColor = isOffline ? '#fb923c' : '#fbbf24';
+  const mainText = isOffline ? t('offlineShort') : t('reconnectingMessage');
 
-  const mainText = isOffline ? 'אין קליטה' : 'מחפש חיבור לשרת...';
-
-  // תת-כיתוב רק במצב אין קליטה (לא ב-reconnecting שזה רק socket)
+  // תת-כיתוב רק במצב אין קליטה (ב-reconnecting זה רק ה-socket, אין מה להסביר)
   const subText = isOffline
     ? (pendingCount > 0
-        ? `${pendingCount} פעולות ממתינות — יישלחו כשיחזור החיבור`
-        : 'הנתונים יישמרו וישלחו כשיחזור החיבור')
+        ? t('offlineActionsPending').replace('{count}', String(pendingCount))
+        : t('offlineWillSync'))
     : null;
+
+  // פלטת צבעים עמומה — נוכחת אך לא זועקת. offline מעט חם יותר מ-reconnecting.
+  const bg = isOffline ? 'rgba(120, 113, 108, 0.96)' : 'rgba(100, 116, 139, 0.96)';
+  const accent = isOffline ? '#fdba74' : '#cbd5e1';
 
   return createPortal(
     <Box
@@ -42,42 +50,45 @@ export const ConnectionStatusIcon = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        background: isOffline
-          ? 'rgba(194, 65, 12, 0.72)'
-          : 'rgba(161, 98, 7, 0.72)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        borderBottom: `1.5px solid ${borderColor}`,
-        pt: 'calc(env(safe-area-inset-top) + 8px)',
-        pb: '8px',
-        px: 2,
+        background: bg,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: `2px solid ${accent}`,
+        pt: 'calc(env(safe-area-inset-top) + 7px)',
+        pb: '7px',
+        px: 1.75,
         display: 'flex',
         alignItems: 'center',
-        gap: 1.25,
-        boxShadow: '0 4px 18px rgba(0,0,0,0.25)',
+        gap: 1.1,
+        boxShadow: '0 2px 14px rgba(0,0,0,0.18)',
+        '@keyframes connSlideDown': {
+          from: { transform: 'translateY(-100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        animation: 'connSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0 }} />
+      <WifiFadeIcon style={{ fontSize: 20, color: 'white', flexShrink: 0, opacity: 0.95 }} />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: 'white', lineHeight: 1.3 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3, letterSpacing: 0.1 }}>
           {mainText}
         </Typography>
         {subText && (
-          <Typography sx={{ fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.78)', lineHeight: 1.35, mt: '1px' }}>
             {subText}
           </Typography>
         )}
       </Box>
       {pendingCount > 0 && (
         <Box sx={{
-          minWidth: 20, height: 20, px: '4px',
+          minWidth: 19, height: 19, px: '4px',
           borderRadius: '999px',
-          bgcolor: 'rgba(255,255,255,0.22)',
+          bgcolor: 'rgba(255,255,255,0.2)',
           color: 'white',
           fontSize: 10.5,
           fontWeight: 800,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1.5px solid rgba(255,255,255,0.45)',
+          border: '1px solid rgba(255,255,255,0.4)',
           flexShrink: 0,
         }}>
           {pendingCount > 99 ? '99+' : pendingCount}
@@ -86,15 +97,15 @@ export const ConnectionStatusIcon = () => {
       <IconButton
         size="small"
         onClick={handleDismiss}
-        aria-label="סגור"
+        aria-label={t('close')}
         sx={{
-          color: 'rgba(255,255,255,0.8)',
-          p: '4px',
+          color: 'rgba(255,255,255,0.75)',
+          p: '3px',
           flexShrink: 0,
           '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.12)' },
         }}
       >
-        <CloseIcon sx={{ fontSize: 16 }} />
+        <CloseIcon sx={{ fontSize: 15 }} />
       </IconButton>
     </Box>,
     document.body
