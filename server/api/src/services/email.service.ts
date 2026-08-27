@@ -1,39 +1,43 @@
-import nodemailer, { type Transporter } from 'nodemailer';
+import MailComposer from 'nodemailer/lib/mail-composer';
 import { User } from '../models';
 import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-// שליחת מייל דרך Gmail SMTP ישירות (nodemailer), לא דרך ספק צד-שלישי.
+// שליחת מייל דרך Gmail API על HTTPS (לא SMTP).
 //
-// למה: קודם שלחנו דרך Brevo עם "From: ...@gmail.com" - כתובת בדומיין
-// שאנחנו לא הבעלים שלו. SPF/DKIM/DMARC של gmail.com לא יכולים לאמת שרת
-// שאינו של גוגל, אז Gmail/Outlook סימנו את המיילים כלא-מאומתים והעיפו
-// אותם לספאם (ומאז 2024 גוגל דורש אימות מפורש משולחים בכמות).
+// למה לא SMTP: Render (וספקי אירוח רבים) חוסמים/מגבילים חיבורים יוצאים
+// לפורטי SMTP (25/465/587). ה-repo הזה כבר עבר את הלולאה - nodemailer/SMTP
+// -> Resend -> Brevo -> חזרה. Gmail API עובד על פורט 443 שאף אחד לא חוסם,
+// ובכל זאת שולח *מהחשבון האמיתי* של Google - אז SPF/DKIM/DMARC עוברים
+// והמייל מגיע ל-Inbox, בלי דומיין משלנו ובלי תשלום.
 //
-// עם Gmail SMTP המייל נשלח *על ידי* גוגל, עבור תיבת Gmail אמיתית:
-//   - SPF עובר   (השרת השולח הוא של google.com)
-//   - DKIM עובר  (גוגל חותם עם המפתח של gmail.com)
-//   - DMARC עובר (יש alignment מלא)
-// => מגיע ל-Inbox, בלי דומיין משלנו ובלי תשלום.
+// הגדרה (חד-פעמי, ראו EMAIL_SETUP למטה):
+//   1. פרויקט ב-Google Cloud + הפעלת "Gmail API".
+//   2. OAuth consent screen (External, מצב Testing) + הוספת GMAIL_USER
+//      כ-test user.
+//   3. OAuth client (Web/Desktop) -> GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET.
+//   4. הרצה חד-פעמית של תהליך ה-consent עם scope
+//      https://www.googleapis.com/auth/gmail.send -> מקבלים GMAIL_REFRESH_TOKEN.
+//   5. env בשרת: GMAIL_USER, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN.
 //
-// דרישות הגדרה (חד-פעמי):
-//   1. חשבון הגוגל של GMAIL_USER חייב אימות דו-שלבי פעיל.
-//   2. ליצור "סיסמת אפליקציה": Google Account → Security → App passwords.
-//      זו הסיסמה שנכנסת ל-GMAIL_APP_PASSWORD (16 תווים, בלי רווחים).
-//   3. אין להשתמש בסיסמת החשבון הרגילה - היא לא תעבוד ל-SMTP.
-//
-// מגבלות Gmail רגיל: ~500 נמענים ליום (Workspace: ~2,000). מספיק לבסיס
-// המשתמשים הנוכחי; אם נגדל - עוברים ל-Workspace או לספק ייעודי עם דומיין.
+// מגבלת שליחה לחשבון Gmail רגיל: ~500 נמענים ליום (כמו SMTP).
 
+const GMAIL_SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
+const OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const FROM_NAME = 'Smart Basket';
 
-// מגבלת בטיחות - לא שולחים יותר מזה בקריאה אחת, כדי לא לשרוף את מכסת
-// היום של Gmail בטעות. אם צריך יותר - שולחים בכמה סבבים.
-const MAX_RECIPIENTS_PER_RUN = 450;
+// תקרת בטיחות לשליחה אחת. גם מגן על מכסת Gmail היומית, וגם שומר את משך
+// בקשת ה-HTTP מתחת ל-timeout של Render (100ש') - בקצב+concurrency למטה
+// 300 נמענים לוקחים ~40 שניות.
+const MAX_RECIPIENTS_PER_RUN = 300;
+
+// כמה מיילים לשלוח במקביל. Gmail API: 250 quota units/user/sec, שליחה = 100,
+// אז ~2.5 בשנייה. 4 במקביל עם round-trip של ~350ms ≈ בול בטווח.
+const SEND_CONCURRENCY = 4;
 
 export function isEmailEnabled(): boolean {
-  return !!(env.GMAIL_USER && env.GMAIL_APP_PASSWORD);
+  return !!(env.GMAIL_USER && env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN);
 }
 
 export interface EmailPayload {
@@ -56,39 +60,40 @@ export interface EmailBroadcastResult {
   perUser: EmailUserStatus[];
 }
 
-// טרנספורטר יחיד ברמת המודול, עם pool - נדרש כדי לא לפתוח חיבור SMTP
-// חדש לכל מייל (Gmail חוסם ריבוי חיבורים) ולקצב את השליחה.
-let transporter: Transporter | null = null;
-function getTransporter(): Transporter {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      // host/port מפורשים (לא service:'gmail') כדי לשלוט ב-IPv4 ובטיימאאוט.
-      // port 587 + STARTTLS: פורט ה-submission, לרוב פתוח יותר מ-465.
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      // כופה IPv4 - שרתי אירוח מסוימים (Render וכו') חוסמים IPv6 יוצא ל-SMTP.
-      family: 4,
-      auth: {
-        user: env.GMAIL_USER,
-        pass: env.GMAIL_APP_PASSWORD,
-      },
-      // טיימאאוטים קצרים - שכשל חיבור (SMTP חסום) ייכשל תוך ~15ש' במקום
-      // להיתקע 2 דקות על ברירת המחדל של nodemailer.
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
-      pool: true,
-      maxConnections: 3,
-      maxMessages: 100,
-      // קצב: עד 8 מיילים לכל 1000ms - הרבה מתחת למגבלות Gmail, מונע
-      // חסימה זמנית על "שליחה מהירה מדי".
-      rateDelta: 1000,
-      rateLimit: 8,
-    } as nodemailer.TransportOptions);
+// ===== OAuth2 access token (נשמר במטמון עד סמוך לתפוגה) =====
+let cachedToken: string | null = null;
+let cachedTokenExpiry = 0;
+
+async function getAccessToken(): Promise<string> {
+  if (cachedToken && Date.now() < cachedTokenExpiry - 60_000) return cachedToken;
+
+  let res: Response;
+  try {
+    res = await fetch(OAUTH_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: env.GMAIL_CLIENT_ID!,
+        client_secret: env.GMAIL_CLIENT_SECRET!,
+        refresh_token: env.GMAIL_REFRESH_TOKEN!,
+        grant_type: 'refresh_token',
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (err) {
+    throw new Error(`לא ניתן להתחבר ל-Google OAuth: ${(err as Error).message}`);
   }
-  return transporter;
+
+  const data = await res.json().catch(() => ({})) as { access_token?: string; expires_in?: number; error?: string; error_description?: string };
+  if (!res.ok || !data.access_token) {
+    const reason = data.error_description || data.error || `HTTP ${res.status}`;
+    logger.error('Gmail OAuth token refresh failed: %s', reason);
+    throw new Error(`רענון טוקן Gmail נכשל (${reason}). בדוק GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET / GMAIL_REFRESH_TOKEN.`);
+  }
+
+  cachedToken = data.access_token;
+  cachedTokenExpiry = Date.now() + (data.expires_in ?? 3600) * 1000;
+  return cachedToken;
 }
 
 function renderHtml(body: string): string {
@@ -108,31 +113,74 @@ function renderHtml(body: string): string {
 </div>`;
 }
 
-async function sendSingle(to: string, subject: string, body: string): Promise<void> {
+// בונה הודעת RFC822 מלאה (nodemailer מטפל ב-MIME + קידוד כותרות עברית)
+// ומחזיר אותה מקודדת base64url כפי שה-Gmail API דורש בשדה raw.
+async function buildRawMessage(to: string, subject: string, body: string): Promise<string> {
   const from = env.GMAIL_USER!;
-  await getTransporter().sendMail({
+  const composer = new MailComposer({
     from: { name: FROM_NAME, address: from },
     to,
     subject,
     text: body,
     html: renderHtml(body),
-    // List-Unsubscribe (RFC 8058) - נדרש מגוגל לשולחים בכמות, ומשפר אמון
-    // של פילטרים. הכתובת היא תיבת ה-Gmail עצמה (הסרה ידנית - אין לנו רשימת
-    // תפוצה מנוהלת נפרדת).
     list: {
-      unsubscribe: {
-        url: `mailto:${from}?subject=Unsubscribe`,
-        comment: 'Unsubscribe',
-      },
+      unsubscribe: { url: `mailto:${from}?subject=Unsubscribe`, comment: 'Unsubscribe' },
     },
-    headers: {
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-    },
+    headers: { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
   });
+  const buf = await composer.compile().build();
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function sendSingle(to: string, subject: string, body: string): Promise<void> {
+  const raw = await buildRawMessage(to, subject, body);
+  const token = await getAccessToken();
+
+  const res = await fetch(GMAIL_SEND_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw }),
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    // 401 = הטוקן התיישן; מנקים מטמון כדי שהניסיון הבא ירענן
+    if (res.status === 401) cachedToken = null;
+    throw new Error(`Gmail API ${res.status}: ${errText.slice(0, 300)}`);
+  }
+}
+
+// שולח למערך נמענים בקבוצות מקבילות קטנות, מחזיר סטטוס לכל אחד.
+async function sendBatch(
+  targets: { _id: { toString(): string }; name: string; email: string }[],
+  payload: EmailPayload,
+): Promise<EmailUserStatus[]> {
+  const out: EmailUserStatus[] = [];
+  for (let i = 0; i < targets.length; i += SEND_CONCURRENCY) {
+    const slice = targets.slice(i, i + SEND_CONCURRENCY);
+    const settled = await Promise.allSettled(
+      slice.map(u => sendSingle(u.email, payload.subject, payload.body)),
+    );
+    settled.forEach((r, idx) => {
+      const u = slice[idx];
+      if (r.status === 'fulfilled') {
+        out.push({ userId: u._id.toString(), name: u.name, email: u.email, status: 'sent' });
+      } else {
+        logger.warn('Gmail send failed to %s: %s', u.email, (r.reason as Error)?.message);
+        out.push({ userId: u._id.toString(), name: u.name, email: u.email, status: 'failed' });
+      }
+    });
+  }
+  return out;
 }
 
 export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = false): Promise<EmailBroadcastResult> {
   if (!isEmailEnabled()) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
+
+  // fail-fast: אם ה-OAuth שבור, נעצור עכשיו עם סיבה ברורה במקום לנסות
+  // לשלוח לכל הרשימה ולקבל N כשלונות זהים.
+  await getAccessToken();
 
   const users = await User.find({}, 'name email').lean();
 
@@ -145,7 +193,7 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
   const targets = users.filter(u => !(onlyWithoutPush && userIdsWithPush.has(u._id.toString())));
   if (targets.length > MAX_RECIPIENTS_PER_RUN) {
     throw new Error(
-      `${targets.length} נמענים - מעל מגבלת ${MAX_RECIPIENTS_PER_RUN} לשליחה אחת (מכסת Gmail היומית). שלח בכמה סבבים.`,
+      `${targets.length} נמענים - מעל מגבלת ${MAX_RECIPIENTS_PER_RUN} לשליחה אחת. שלח בכמה סבבים או צמצם עם "ללא push".`,
     );
   }
 
@@ -153,21 +201,9 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
     .filter(u => onlyWithoutPush && userIdsWithPush.has(u._id.toString()))
     .map(u => ({ userId: u._id.toString(), name: u.name, email: u.email, status: 'skipped' as const }));
 
-  // שליחה סדרתית - ה-pool מקצב ממילא, וסדרתי נותן שגיאות ברורות (למשל
-  // אימות שגוי נכשל על הראשון ולא מייצר 400 כשלים זהים).
-  const results: EmailUserStatus[] = [];
-  for (const u of targets) {
-    const userId = u._id.toString();
-    try {
-      await sendSingle(u.email, payload.subject, payload.body);
-      results.push({ userId, name: u.name, email: u.email, status: 'sent' });
-    } catch (err) {
-      logger.warn('Gmail send failed to %s: %s', u.email, (err as Error).message);
-      results.push({ userId, name: u.name, email: u.email, status: 'failed' });
-    }
-  }
-
+  const results = await sendBatch(targets, payload);
   const perUser = [...results, ...skipped];
+
   return {
     totalUsers: users.length,
     sent: perUser.filter(p => p.status === 'sent').length,

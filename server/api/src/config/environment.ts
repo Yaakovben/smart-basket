@@ -74,13 +74,14 @@ const envSchema = Joi.object({
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
   LOCATIONIQ_API_KEY: Joi.string().optional(),
 
-  // שליחת מיילים דרך Gmail SMTP ישירות (nodemailer). ראה email.service.ts
-  // להסבר מלא למה זה עוקף ספאם (SPF/DKIM/DMARC עוברים כי גוגל שולח בעצמו).
-  // הגדרה: אימות דו-שלבי + "App password" ב-Google Account → Security.
-  // GMAIL_USER = כתובת ה-Gmail המלאה, GMAIL_APP_PASSWORD = סיסמת האפליקציה
-  // (16 תווים, בלי רווחים). אם חסרים - שליחת המייל היא no-op שקט.
+  // שליחת מיילים דרך Gmail API על HTTPS (לא SMTP - Render חוסם פורטי SMTP).
+  // ראה email.service.ts + EMAIL_SETUP.md להסבר מלא ותהליך ההקמה.
+  // GMAIL_USER = כתובת ה-Gmail השולחת. שלושת האחרים מ-OAuth2 של Google Cloud
+  // (scope: gmail.send). אם אחד מהם חסר - שליחת המייל היא no-op שקט.
   GMAIL_USER: Joi.string().email().optional(),
-  GMAIL_APP_PASSWORD: Joi.string().optional(),
+  GMAIL_CLIENT_ID: Joi.string().optional(),
+  GMAIL_CLIENT_SECRET: Joi.string().optional(),
+  GMAIL_REFRESH_TOKEN: Joi.string().optional(),
 
   // OCR.space API key - "סרוק רשימה מהדף". מסלול חינמי, ללא כרטיס אשראי.
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
@@ -157,7 +158,9 @@ export interface Environment {
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL: string;
   GMAIL_USER?: string;
-  GMAIL_APP_PASSWORD?: string;
+  GMAIL_CLIENT_ID?: string;
+  GMAIL_CLIENT_SECRET?: string;
+  GMAIL_REFRESH_TOKEN?: string;
 }
 
 export const env = parseEnv();
