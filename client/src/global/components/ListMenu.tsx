@@ -30,6 +30,7 @@ interface ListMenuProps {
   onShoppingMode?: () => void;
   onDuplicate?: () => void;
   onSaveAsSavedList?: () => void;
+  saveAsSavedListIsNew?: boolean;
   onManageSavedLists?: () => void;
   hasProducts?: boolean;
   onLeave?: () => void;
@@ -53,6 +54,7 @@ export const ListMenu = memo(({
   onShoppingMode,
   onClearList,
   onSaveAsSavedList,
+  saveAsSavedListIsNew = false,
   onManageSavedLists,
   hasProducts = false,
   onLeave,
@@ -161,8 +163,18 @@ export const ListMenu = memo(({
       {onSaveAsSavedList && (
         <MenuItem onClick={() => { onClose(); onSaveAsSavedList(); }} sx={menuItemSx}>
           <BookmarkAddRoundedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-          <Typography sx={menuLabelSx}>
+          <Typography sx={{ ...menuLabelSx, display: 'flex', alignItems: 'center', gap: 0.75 }}>
             {t('saveAsSavedList')}
+            {saveAsSavedListIsNew && (
+              <Box component="span" sx={{
+                px: 0.7, py: 0.1, borderRadius: '999px',
+                background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+                color: 'white', fontSize: 9.5, fontWeight: 800, lineHeight: 1.5,
+                letterSpacing: 0.2,
+              }}>
+                חדש
+              </Box>
+            )}
           </Typography>
         </MenuItem>
       )}

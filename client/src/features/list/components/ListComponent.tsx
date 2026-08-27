@@ -4,7 +4,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
-import { authApi } from '../../../services/api';
+import { authApi, productsApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
 import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
@@ -111,10 +111,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // ===== רשימות קבועות =====
   const [showSavedLists, setShowSavedLists] = useState(false);
   const [showSaveAsSavedList, setShowSaveAsSavedList] = useState(false);
+  const [applyingSavedListId, setApplyingSavedListId] = useState<string | null>(null);
   const savedLists = useMemo(() => user.savedLists ?? [], [user.savedLists]);
 
   // הזרקת רשימה קבועה שלמה - סדרתית (כמו handleScanListConfirm), מדלגת על
   // מוצרים שכבר קיימים ברשימה (לא ממתינים) ומשמרת כמות/יחידה/קטגוריה.
+  // אחרי ההוספה - טוסט עם "בטל" שמסיר בדיוק את מה שנוסף (לפי שם).
   const handleApplySavedList = useCallback(async (sl: SavedList) => {
     const present = new Set(list.products.filter(p => !p.isPurchased).map(p => p.name.trim().toLowerCase()));
     const toAdd = sl.items.filter(it => !present.has(it.name.trim().toLowerCase()));
@@ -123,11 +125,29 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       showToast(t('savedListAllPresent'), 'info');
       return;
     }
-    for (const it of toAdd) {
-      await addProductToServer({ name: it.name, quantity: it.quantity || 1, unit: it.unit, category: it.category }, false);
+    setApplyingSavedListId(sl.id);
+    try {
+      for (const it of toAdd) {
+        await addProductToServer({ name: it.name, quantity: it.quantity || 1, unit: it.unit, category: it.category }, false);
+      }
+    } finally {
+      setApplyingSavedListId(null);
     }
-    showToast(`${toAdd.length} ${t('savedListApplied')}`);
-  }, [list.products, addProductToServer, showToast, t]);
+
+    const addedNames = new Set(toAdd.map(it => it.name.trim().toLowerCase()));
+    const undo = () => {
+      const ids = new Set<string>();
+      onUpdateProductsForList(list.id, (current) =>
+        current.filter(p => {
+          const isMine = !p.isPurchased && addedNames.has(p.name.trim().toLowerCase());
+          if (isMine && !p.id.startsWith('temp-')) ids.add(p.id);
+          return !isMine;
+        })
+      );
+      ids.forEach(id => productsApi.deleteProduct(list.id, id).catch(() => {}));
+    };
+    showToast(`${toAdd.length} ${t('savedListApplied')}`, 'success', undo);
+  }, [list.id, list.products, addProductToServer, onUpdateProductsForList, showToast, t]);
 
   const handleCreateSavedList = useCallback(async (sl: SavedList) => {
     try {
@@ -335,6 +355,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onScanList={stableScanList}
         savedLists={savedLists}
         pendingNames={pendingNames}
+        applyingSavedListId={applyingSavedListId}
         onApplySavedList={handleApplySavedList}
         onManageSavedLists={stableManageSavedLists}
         onSaveAsSavedList={stableSaveAsSavedList}

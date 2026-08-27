@@ -808,6 +808,8 @@ export const ru: Translations = {
   savedListAddItemPlaceholder: 'Добавьте товар и нажмите Enter',
   savedListNoItems: 'В этом списке пока нет товаров',
   savedListSnapshotHint: 'Все товары списка сохранятся как готовый список, который можно добавить одним касанием',
+  savedListSaveWhat: 'Что сохранится',
+  savedListAddToList: 'Добавить в список',
   // Индикатор соединения (отличает "нет интернета у вас" от "связь ненадолго прервалась")
   offlineTitle: 'Нет подключения к интернету',
   offlineDesc: 'Проверьте Wi-Fi или мобильные данные. Мы продолжим попытки автоматически.',

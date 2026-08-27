@@ -808,6 +808,8 @@ export const en: Translations = {
   savedListAddItemPlaceholder: 'Add an item and press Enter',
   savedListNoItems: 'No items in this list yet',
   savedListSnapshotHint: 'Every product in this list is stored as a saved list you can add again with one tap',
+  savedListSaveWhat: 'What gets saved',
+  savedListAddToList: 'Add to list',
   // Connection indicator (tells "your internet is down" apart from "connection dropped briefly")
   offlineTitle: 'No internet connection',
   offlineDesc: 'Check your Wi-Fi or mobile data. We\'ll keep retrying automatically.',

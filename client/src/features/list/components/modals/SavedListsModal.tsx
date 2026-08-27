@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Box, Typography, Chip, IconButton, Button } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Button, Collapse } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
 import type { SavedList } from '../../../../global/types';
 import { Modal, ConfirmModal, ClearableTextField } from '../../../../global/components';
@@ -30,6 +31,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   // (שם ריק היה נמחק ע"י השרת בשקט).
   const originalNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
   const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
+  const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
   const [newItemText, setNewItemText] = useState('');
 
@@ -64,16 +66,19 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
     onClose();
   }, [commitNames, onClose]);
 
+  const toggleExpand = (id: string) => {
+    setNewItemText('');
+    setEmojiOpenId(null);
+    setExpandedId(prev => (prev === id ? null : id));
+  };
+
   const renameLocal = (id: string, name: string) =>
     apply(lists => lists.map(l => (l.id === id ? { ...l, name: name.slice(0, 40) } : l)), false);
 
-  const cycleEmoji = (id: string) => {
+  const setEmoji = (id: string, emoji: string) => {
     haptic('light');
-    apply(lists => lists.map(l => {
-      if (l.id !== id) return l;
-      const i = SAVED_LIST_EMOJIS.indexOf(l.emoji);
-      return { ...l, emoji: SAVED_LIST_EMOJIS[(i + 1) % SAVED_LIST_EMOJIS.length] };
-    }), true);
+    setEmojiOpenId(null);
+    apply(lists => lists.map(l => (l.id === id ? { ...l, emoji } : l)), true);
   };
 
   const removeItem = (id: string, idx: number) =>
@@ -112,54 +117,92 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {draft.map(sl => {
               const open = expandedId === sl.id;
               return (
                 <Box key={sl.id} sx={{ borderRadius: '14px', bgcolor: 'action.hover', overflow: 'hidden' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
-                    <Box
-                      onClick={() => cycleEmoji(sl.id)}
-                      sx={{
-                        width: 36, height: 36, flexShrink: 0, borderRadius: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18, bgcolor: 'background.paper', cursor: 'pointer',
-                        '&:active': { transform: 'scale(0.9)' }, transition: 'transform 0.12s',
-                      }}
-                      aria-label={t('chooseIcon')}
-                    >
+                  {/* ראש הכרטיס - כולו לחיץ, פותח/סוגר */}
+                  <Box
+                    onClick={() => toggleExpand(sl.id)}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 1, p: 1, cursor: 'pointer',
+                      '&:active': { bgcolor: 'action.selected' }, transition: 'background-color 0.1s',
+                    }}
+                  >
+                    <Box sx={{
+                      width: 34, height: 34, flexShrink: 0, borderRadius: '10px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, bgcolor: 'background.paper',
+                    }}>
                       {sl.emoji}
                     </Box>
-                    <ClearableTextField
-                      value={sl.name}
-                      onChange={e => renameLocal(sl.id, e.target.value)}
-                      onClear={() => renameLocal(sl.id, '')}
-                      onBlur={commitNames}
-                      placeholder={t('savedListNameExample')}
-                      variant="standard"
-                      size="small"
-                      sx={{ flex: 1, '& .MuiInput-input': { fontSize: 14, fontWeight: 600 } }}
+                    <Typography sx={{
+                      flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: 'text.primary',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {sl.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
+                      {`${sl.items.length} ${t('items')}`}
+                    </Typography>
+                    <ExpandMoreRoundedIcon
+                      sx={{ fontSize: 22, color: 'text.secondary', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
                     />
-                    <IconButton size="small" onClick={() => setPendingDelete(sl)} aria-label={t('delete')}>
-                      <DeleteOutlineIcon sx={{ fontSize: 19, color: 'error.main' }} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => { setNewItemText(''); setExpandedId(open ? null : sl.id); }}
-                      aria-label={t('savedLists')}
-                      sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
-                    >
-                      <ExpandMoreRoundedIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
                   </Box>
 
-                  {open && (
+                  <Collapse in={open} unmountOnExit>
                     <Box sx={{ px: 1.25, pb: 1.25 }}>
-                      {sl.items.length === 0 ? (
-                        <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1 }}>
-                          {t('savedListNoItems')}
-                        </Typography>
-                      ) : (
+                      {/* שם + אמוג׳י */}
+                      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, mb: 1.25 }}>
+                        <Box
+                          onClick={() => setEmojiOpenId(id => (id === sl.id ? null : sl.id))}
+                          sx={{
+                            width: 40, height: 40, flexShrink: 0, borderRadius: '10px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 20, cursor: 'pointer', bgcolor: 'background.paper',
+                            border: '2px solid',
+                            borderColor: emojiOpenId === sl.id ? 'primary.main' : 'divider',
+                            '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
+                          }}
+                          aria-label={t('chooseIcon')}
+                        >
+                          {sl.emoji}
+                        </Box>
+                        <ClearableTextField
+                          value={sl.name}
+                          onChange={e => renameLocal(sl.id, e.target.value)}
+                          onClear={() => renameLocal(sl.id, '')}
+                          onBlur={commitNames}
+                          placeholder={t('savedListNameExample')}
+                          size="small"
+                          sx={{ flex: 1 }}
+                        />
+                      </Box>
+
+                      <Collapse in={emojiOpenId === sl.id} unmountOnExit>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.25 }}>
+                          {SAVED_LIST_EMOJIS.map(e => (
+                            <Box
+                              key={e}
+                              onClick={() => setEmoji(sl.id, e)}
+                              sx={{
+                                width: 34, height: 34, borderRadius: '9px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 17, cursor: 'pointer',
+                                bgcolor: sl.emoji === e ? 'rgba(20,184,166,0.15)' : 'background.paper',
+                                border: '2px solid',
+                                borderColor: sl.emoji === e ? 'primary.main' : 'transparent',
+                                '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
+                              }}
+                            >
+                              {e}
+                            </Box>
+                          ))}
+                        </Box>
+                      </Collapse>
+
+                      {sl.items.length > 0 && (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
                           {sl.items.map((it, idx) => (
                             <Chip
@@ -186,23 +229,35 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           size="small"
                           onClick={() => addItem(sl.id)}
                           aria-label={t('savedListAddItemPlaceholder')}
-                          sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' } }}
+                          sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, flexShrink: 0 }}
                         >
                           <AddRoundedIcon sx={{ fontSize: 18 }} />
                         </IconButton>
                       </Box>
-                      <Button
-                        fullWidth
-                        size="small"
-                        variant="outlined"
-                        onClick={() => { haptic('light'); onApply(sl); handleClose(); }}
-                        disabled={sl.items.length === 0}
-                        sx={{ mt: 1, textTransform: 'none', fontSize: 13, fontWeight: 700, borderRadius: '10px' }}
-                      >
-                        {`${t('add')} · ${sl.items.length} ${t('items')}`}
-                      </Button>
+
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1.25 }}>
+                        <Button
+                          size="small"
+                          onClick={() => setPendingDelete(sl)}
+                          startIcon={<DeleteOutlineIcon sx={{ fontSize: 17 }} />}
+                          sx={{ textTransform: 'none', fontSize: 12.5, fontWeight: 600, color: 'error.main', px: 1 }}
+                        >
+                          {t('delete')}
+                        </Button>
+                        <Box sx={{ flex: 1 }} />
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => { haptic('light'); onApply(sl); handleClose(); }}
+                          disabled={sl.items.length === 0}
+                          startIcon={<PlaylistAddRoundedIcon sx={{ fontSize: 17 }} />}
+                          sx={{ textTransform: 'none', fontSize: 12.5, fontWeight: 700, borderRadius: '10px' }}
+                        >
+                          {t('savedListAddToList')}
+                        </Button>
+                      </Box>
                     </Box>
-                  )}
+                  </Collapse>
                 </Box>
               );
             })}

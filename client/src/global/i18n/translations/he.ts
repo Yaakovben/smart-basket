@@ -809,6 +809,8 @@ export const he: Translations = {
   savedListAddItemPlaceholder: 'הוסף פריט ולחץ Enter',
   savedListNoItems: 'אין עדיין פריטים ברשימה הזו',
   savedListSnapshotHint: 'כל המוצרים ברשימה יישמרו כרשימה קבועה שאפשר להוסיף שוב בלחיצה',
+  savedListSaveWhat: 'מה יישמר',
+  savedListAddToList: 'הוסף לרשימה',
   // חיווי חיבור (מבדיל בין "אין אינטרנט אצל הלקוח" ל"חיבור נקטע רגעית")
   offlineTitle: 'אין חיבור לאינטרנט',
   offlineDesc: 'בדוק את ה-Wi-Fi או הנתונים הסלולריים. נמשיך לנסות אוטומטית.',

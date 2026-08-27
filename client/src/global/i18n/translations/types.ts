@@ -813,6 +813,8 @@ export type TranslationKeys =
   | 'savedListAddItemPlaceholder'
   | 'savedListNoItems'
   | 'savedListSnapshotHint'
+  | 'savedListSaveWhat'
+  | 'savedListAddToList'
   // Connection indicator
   | 'offlineTitle'
   | 'offlineDesc'

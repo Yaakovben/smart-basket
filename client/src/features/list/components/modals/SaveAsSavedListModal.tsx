@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Chip, CircularProgress } from '@mui/material';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -43,22 +43,35 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         {t('savedListSnapshotHint')}
       </Typography>
 
-      <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary', mb: 0.75 }}>
+      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>
+        {t('savedListNameLabel')}
+      </Typography>
+      <ClearableTextField
+        autoFocus
+        fullWidth
+        placeholder={t('savedListNameExample')}
+        value={name}
+        onChange={e => setName(e.target.value.slice(0, 40))}
+        onClear={() => setName('')}
+        size="small"
+      />
+
+      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', mb: 0.5, mt: 2 }}>
         {t('chooseIcon')}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
         {SAVED_LIST_EMOJIS.map(e => (
           <Box
             key={e}
-            onClick={() => setEmoji(e)}
+            onClick={() => { haptic('light'); setEmoji(e); }}
             sx={{
-              width: 38, height: 38, borderRadius: '10px',
+              width: 36, height: 36, borderRadius: '10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 19, cursor: 'pointer',
-              bgcolor: emoji === e ? 'primary.main' : 'action.hover',
+              fontSize: 18, cursor: 'pointer',
+              bgcolor: emoji === e ? 'rgba(20,184,166,0.15)' : 'action.hover',
               border: '2px solid',
               borderColor: emoji === e ? 'primary.main' : 'transparent',
-              '&:active': { transform: 'scale(0.92)' },
+              '&:active': { transform: 'scale(0.9)' },
               transition: 'all 0.12s ease',
             }}
           >
@@ -67,24 +80,24 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         ))}
       </Box>
 
-      <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary', mb: 0.75 }}>
-        {t('savedListNameLabel')}
-      </Typography>
-      <Box sx={{ mb: 2 }}>
-        <ClearableTextField
-          autoFocus
-          fullWidth
-          placeholder={t('savedListNameExample')}
-          value={name}
-          onChange={e => setName(e.target.value.slice(0, 40))}
-          onClear={() => setName('')}
-          size="small"
-        />
+      {/* תצוגה מקדימה של מה שיישמר */}
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, mb: 0.75 }}>
+        <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary' }}>
+          {t('savedListSaveWhat')}
+        </Typography>
+        <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
+          {`${items.length} ${t('items')}`}
+        </Typography>
       </Box>
-
-      <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 1.5 }}>
-        {`${items.length} ${t('items')}`}
-      </Typography>
+      <Box sx={{
+        display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2.5,
+        maxHeight: 132, overflowY: 'auto', overscrollBehavior: 'contain',
+        p: 1, borderRadius: '12px', bgcolor: 'action.hover',
+      }}>
+        {items.map(it => (
+          <Chip key={it.name} label={it.name} size="small" sx={{ fontSize: 11.5, bgcolor: 'background.paper' }} />
+        ))}
+      </Box>
 
       <Button
         variant="contained"

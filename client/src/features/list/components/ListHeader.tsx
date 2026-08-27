@@ -51,6 +51,7 @@ interface ListHeaderProps {
   onScanList?: () => void;
   savedLists?: SavedList[];
   pendingNames?: string[];
+  applyingSavedListId?: string | null;
   onApplySavedList?: (savedList: SavedList) => void;
   onManageSavedLists?: () => void;
   onSaveAsSavedList?: () => void;
@@ -64,7 +65,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  savedLists = [], pendingNames = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
+  savedLists = [], pendingNames = [], applyingSavedListId, onApplySavedList, onManageSavedLists, onSaveAsSavedList,
   costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
@@ -89,6 +90,18 @@ export const ListHeader = memo(({
     }
     onScanList?.();
   }, [showScanItemNewBadge, onScanList]);
+
+  // תג "חדש" על "שמור כרשימה קבועה" - נעלם לצמיתות ברגע שהמשתמש לוחץ עליו.
+  const [showSavedListNewBadge, setShowSavedListNewBadge] = useState(
+    () => !!onSaveAsSavedList && safeStorage.get('sb_savedlist_used') !== 'true'
+  );
+  const handleSaveAsSavedList = useCallback(() => {
+    if (showSavedListNewBadge) {
+      setShowSavedListNewBadge(false);
+      safeStorage.set('sb_savedlist_used', 'true');
+    }
+    onSaveAsSavedList?.();
+  }, [showSavedListNewBadge, onSaveAsSavedList]);
   const handleOpenMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(e.currentTarget);
     if (showMenuNewBadge) {
@@ -230,7 +243,8 @@ export const ListHeader = memo(({
         onClearList={onClearList} onShoppingMode={onShoppingMode}
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
         scanListIsNew={showScanItemNewBadge}
-        onSaveAsSavedList={hasProducts ? onSaveAsSavedList : undefined}
+        onSaveAsSavedList={hasProducts && onSaveAsSavedList ? handleSaveAsSavedList : undefined}
+        saveAsSavedListIsNew={showSavedListNewBadge}
         onManageSavedLists={savedLists.length > 0 ? onManageSavedLists : undefined}
       />
 
@@ -281,6 +295,7 @@ export const ListHeader = memo(({
         <SavedListsBar
           savedLists={savedLists}
           pendingNames={pendingNames}
+          applyingId={applyingSavedListId}
           onApply={onApplySavedList}
         />
       )}

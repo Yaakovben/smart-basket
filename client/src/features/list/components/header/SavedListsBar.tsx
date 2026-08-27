@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback } from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, CircularProgress } from '@mui/material';
+import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import type { SavedList } from '../../../../global/types';
 import { haptic } from '../../../../global/helpers';
 
@@ -8,11 +9,14 @@ import { haptic } from '../../../../global/helpers';
 // עקרונות עיצוב (בעקבות הכישלון של StaplesBar הישן):
 //  1. צ'יפ אחד לכל *רשימה קבועה* (לא לכל מוצר) - בפועל 1-4 צ'יפים.
 //  2. לא כפילות של QuickAdd - זו הזרקת אוסף, לא הוספת פריט בודד.
-//  3. מנהלת את עצמה: מוצגת רק רשימה קבועה שעוד יש לה מה לתרום (יש בה
-//     פריט שלא נמצא כרגע ברשימה). ככל שמוסיפים את פריטי החבילה - המונה
-//     על הצ'יפ קטן ואז הצ'יפ נעלם. אם אין אף רשימה קבועה רלוונטית -
-//     הבר לא מרונדר כלל.
-//  4. ניהול (עריכה/מחיקה) נעשה מתפריט ה-⋮ ("רשימות קבועות"), לא מכאן.
+//  3. לא מציק: מוצג רק כשהרשימה הנוכחית עדיין ב"מצב הקמה" (מעט פריטים,
+//     ראו SETUP_MAX) *וגם* יש רשימה קבועה שעוד יש לה מה לתרום. ברגע
+//     שהמשתמש התחיל לעבוד על הרשימה - הבר נעלם. מי שאין לו רשימות
+//     קבועות לא רואה כלום. הזרקה ידנית תמיד זמינה מתפריט ה-⋮.
+
+// מספר הפריטים הממתינים שמעליו מפסיקים להציע רשימות קבועות בבר
+// (המשתמש כבר "בתוך" הרשימה, לא מקים אותה מאפס).
+const SETUP_MAX = 5;
 
 const rowSx = {
   display: 'flex',
@@ -29,12 +33,13 @@ const rowSx = {
 
 const chipSx = {
   flexShrink: 0,
-  height: 28,
+  height: 30,
   bgcolor: 'rgba(255,255,255,0.18)',
   color: 'white',
   fontWeight: 600,
   fontSize: 12.5,
   cursor: 'pointer',
+  '& .MuiChip-icon': { color: 'rgba(255,255,255,0.8)', ml: '7px', mr: '-3px' },
   '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
   '&:active': { transform: 'scale(0.96)' },
   transition: 'transform 0.12s ease, background-color 0.15s ease',
@@ -44,16 +49,16 @@ interface SavedListsBarProps {
   savedLists: SavedList[];
   /** שמות המוצרים שעדיין לא נקנו ברשימה הנוכחית (ממואיזציה ב-ListComponent). */
   pendingNames: string[];
+  /** id של רשימה קבועה שכרגע מוזרקת (מציג ספינר על הצ'יפ). */
+  applyingId?: string | null;
   onApply: (savedList: SavedList) => void;
 }
 
-export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedListsBarProps) => {
-  // רק רשימות קבועות שעוד יש בהן פריט שאינו נמצא כרגע ברשימה.
+export const SavedListsBar = memo(({ savedLists, pendingNames, applyingId, onApply }: SavedListsBarProps) => {
+  // רשימות קבועות שעוד יש בהן פריט שלא נמצא כרגע ברשימה.
   const relevant = useMemo(() => {
     const present = new Set(pendingNames.map(n => n.trim().toLowerCase()));
-    return savedLists
-      .map(sl => ({ sl, missing: sl.items.filter(it => !present.has(it.name.trim().toLowerCase())).length }))
-      .filter(e => e.missing > 0);
+    return savedLists.filter(sl => sl.items.some(it => !present.has(it.name.trim().toLowerCase())));
   }, [savedLists, pendingNames]);
 
   const handleApply = useCallback((sl: SavedList) => {
@@ -61,34 +66,31 @@ export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedL
     onApply(sl);
   }, [onApply]);
 
-  if (relevant.length === 0) return null;
+  // מוסתר ברגע שהמשתמש התחיל לעבוד על הרשימה (SETUP_MAX) או שאין מה להציע.
+  if (relevant.length === 0 || pendingNames.length >= SETUP_MAX) return null;
 
   return (
     <Box sx={rowSx}>
-      {relevant.map(({ sl, missing }) => (
-        <Chip
-          key={sl.id}
-          onClick={() => handleApply(sl)}
-          size="small"
-          sx={chipSx}
-          label={
-            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-              <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
-              {sl.name}
-              <Box
-                component="span"
-                sx={{
-                  minWidth: 16, px: 0.4, borderRadius: '999px',
-                  bgcolor: 'rgba(255,255,255,0.22)', fontSize: 10.5, fontWeight: 700,
-                  textAlign: 'center', lineHeight: '16px',
-                }}
-              >
-                {missing}
+      {relevant.map(sl => {
+        const applying = applyingId === sl.id;
+        return (
+          <Chip
+            key={sl.id}
+            onClick={() => !applying && handleApply(sl)}
+            size="small"
+            sx={{ ...chipSx, opacity: applying ? 0.75 : 1, pointerEvents: applying ? 'none' : 'auto' }}
+            icon={applying
+              ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
+              : <PlaylistAddRoundedIcon sx={{ fontSize: 15 }} />}
+            label={
+              <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
+                {sl.name}
               </Box>
-            </Box>
-          }
-        />
-      ))}
+            }
+          />
+        );
+      })}
     </Box>
   );
 });
