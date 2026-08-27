@@ -2,9 +2,65 @@ import { Box, Typography } from '@mui/material';
 import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
-import type { AiStatus } from '../../../services/api/admin.api';
+import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
 import { AdminAiStatusHeader } from './AdminAiStatusHeader';
 import { AdminAiProviderPanel } from './AdminAiProviderPanel';
+
+// שעות עגולות עד resetAt, לפחות 1. null אם אין/עבר.
+function hoursUntil(resetAt: string | null): number | null {
+  if (!resetAt) return null;
+  const ms = new Date(resetAt).getTime() - Date.now();
+  if (Number.isNaN(ms) || ms <= 0) return null;
+  return Math.max(1, Math.round(ms / 3_600_000));
+}
+
+// כרטיס "מכסה יומית משותפת" - כמה קריאות AI חיצוניות בוצעו היום מול התקציב.
+// מגן על המכסה החינמית של הספק (משותפת לכל האפליקציה). מעל התקציב הלקוחות
+// מקבלים 429 + "חוזר בעוד X שעות" במקום שהמכסה של הספק תישרף לגמרי.
+const AiBudgetCard = ({ budget, isDark }: { budget: AiDailyBudget; isDark: boolean }) => {
+  const unlimited = budget.limit <= 0;
+  const pct = unlimited ? 0 : Math.min(100, Math.round((budget.usedToday / budget.limit) * 100));
+  const hrs = hoursUntil(budget.resetAt);
+  const tone = budget.exceeded ? '#EF4444' : pct >= 80 ? '#D97706' : '#0D9488';
+
+  return (
+    <Box sx={{
+      mb: 1.5, p: 1.75, borderRadius: 2.5,
+      bgcolor: isDark ? 'rgba(255,255,255,0.03)' : '#fff',
+      border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.75 }}>
+        <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: 'text.primary' }}>מכסה יומית משותפת (AI)</Typography>
+        <Typography sx={{ fontSize: 12, fontWeight: 700, color: tone }}>
+          {unlimited ? 'ללא הגבלה' : `${budget.usedToday.toLocaleString()} / ${budget.limit.toLocaleString()}`}
+        </Typography>
+      </Box>
+
+      {!unlimited && (
+        <Box sx={{ height: 6, borderRadius: 3, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+          <Box sx={{ height: '100%', width: `${pct}%`, bgcolor: tone, borderRadius: 3, transition: 'width 0.3s' }} />
+        </Box>
+      )}
+
+      {budget.exceeded ? (
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0.75, mt: 1,
+          px: 1, py: 0.6, borderRadius: 1.5,
+          bgcolor: isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2',
+        }}>
+          <ErrorOutlineIcon sx={{ fontSize: 15, color: '#EF4444', flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 11, fontWeight: 700, color: isDark ? '#FCA5A5' : '#B91C1C' }}>
+            המכסה נגמרה - הלקוחות מקבלים "חוזר בעוד {hrs ?? '—'} שעות". מתחדשת בחצות UTC.
+          </Typography>
+        </Box>
+      ) : (
+        <Typography sx={{ fontSize: 10, color: 'text.disabled', mt: 0.75 }}>
+          משותף לכל המשתמשים · מתאפס בחצות UTC{hrs ? ` (בעוד ~${hrs} ש')` : ''}
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 interface Props {
   isDark: boolean;
@@ -71,6 +127,8 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
 
         {data && (
           <>
+            {data.dailyBudget && <AiBudgetCard budget={data.dailyBudget} isDark={isDark} />}
+
             {data.fallbackCount > 0 && (
               <Box sx={{
                 display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,

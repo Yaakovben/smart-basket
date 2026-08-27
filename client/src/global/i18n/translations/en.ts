@@ -668,6 +668,8 @@ export const en: Translations = {
   aiNotConfigured: 'The AI assistant is not configured on the server right now.',
   aiTooManyMessages: 'Too many messages in the last hour - try again later.',
   aiTryAgainInMinutes: 'Quota resets in about {minutes} minutes.',
+  aiTryAgainInHours: 'Quota resets in about {hours} hours.',
+  aiDailyLimitReached: 'The AI assistant hit its shared daily limit.',
   aiFallbackNotice: 'This reply came from a backup model',
   aiGenericError: 'Something went wrong, try again.',
   // Slow load indicator defaults

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { aiAssistantApi, AiAssistantStreamError, type AiChatMessage } from '../../../services/api';
+import { aiAssistantApi, type AiChatMessage } from '../../../services/api';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { aiErrorText } from '../helpers/aiErrorText';
 
 export interface ChatEntry extends AiChatMessage {
   id: string;
@@ -9,15 +10,6 @@ export interface ChatEntry extends AiChatMessage {
 }
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-// ממיר resetAt (ISO string מהשרת) למספר דקות עגול עד האיפוס, לא פחות מ-1
-// כדי שלא נציג "בעוד 0 דקות" רגע לפני שהמכסה בפועל מתחדשת.
-function minutesUntil(resetAt: string | null | undefined): number | null {
-  if (!resetAt) return null;
-  const ms = new Date(resetAt).getTime() - Date.now();
-  if (Number.isNaN(ms) || ms <= 0) return null;
-  return Math.max(1, Math.ceil(ms / 60_000));
-}
 
 // ניהול שיחת הצ'אט: היסטוריה, שליחה, מצב טעינה. שולח את כל ההיסטוריה
 // לשרת בכל פנייה (לא session בצד שרת) - כך אין state לנהל בין בקשות,
@@ -73,16 +65,9 @@ export function useAiAssistantChat() {
         setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: t('aiNoResponse'), error: true }]);
       }
     } catch (err) {
-      const status = err instanceof AiAssistantStreamError ? err.status : undefined;
-      const minutes = err instanceof AiAssistantStreamError ? minutesUntil(err.resetAt) : null;
-      const errorText = status === 503
-        ? t('aiNotConfigured')
-        : status === 429
-        ? t('aiTooManyMessages') + (minutes ? ` ${t('aiTryAgainInMinutes').replace('{minutes}', String(minutes))}` : '')
-        : t('aiGenericError');
       // אם כבר התחיל להגיע טקסט לפני שהחיבור נקטע - משאירים אותו ומוסיפים
       // הודעת שגיאה נפרדת, במקום למחוק תשובה חלקית שכבר הוצגה למשתמש.
-      setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: errorText, error: true }]);
+      setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: aiErrorText(err, t), error: true }]);
     } finally {
       setSending(false);
     }

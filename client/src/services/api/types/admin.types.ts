@@ -103,9 +103,17 @@ export interface AiProviderStatus {
   rateLimit: AiProviderRateLimit | null;
 }
 
+export interface AiDailyBudget {
+  limit: number;          // 0 = ללא הגבלה
+  usedToday: number;
+  exceeded: boolean;
+  resetAt: string | null; // חצות UTC הבא; null כשאין הגבלה
+}
+
 export interface AiStatus {
   providers: AiProviderStatus[];
   fallbackCount: number;
   serverStartedAt: string;
   configured: boolean;
+  dailyBudget: AiDailyBudget;
 }

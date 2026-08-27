@@ -3,7 +3,7 @@ import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHeal
 
 // DbHealth/DbHealthCollection ממשיכים להיות מיובאים ישירות מהקובץ הזה
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
-export type { DbHealthCollection, DbHealth, AiStatus, AiProviderStatus, AiProviderRateLimit } from './types/admin.types';
+export type { DbHealthCollection, DbHealth, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
 
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {

@@ -7,13 +7,17 @@ export interface AiChatMessage {
 
 export class AiAssistantStreamError extends Error {
   status?: number;
-  // מתי המכסה (rate limit) מתחדשת - רק על שגיאת 429, מגיע מה-body (resetAt)
-  // ששרת ה-API מצרף (ראו aiAssistantLimiter ב-rateLimiter.middleware.ts).
+  // מתי המכסה (rate limit) מתחדשת - מגיע מה-body (resetAt) ששרת ה-API מצרף
+  // על 429 (aiAssistantLimiter פר-משתמש, או ה-guard של התקציב היומי).
   resetAt?: string | null;
-  constructor(message: string, status?: number, resetAt?: string | null) {
+  // code מהשרת - מבדיל בין "יותר מדי הודעות השעה" ל-'AI_DAILY_LIMIT'
+  // (המכסה היומית הגלובלית נגמרה), כדי להציג את ההודעה הנכונה.
+  code?: string | null;
+  constructor(message: string, status?: number, resetAt?: string | null, code?: string | null) {
     super(message);
     this.status = status;
     this.resetAt = resetAt;
+    this.code = code;
   }
 }
 
@@ -42,11 +46,13 @@ export const aiAssistantApi = {
     });
 
     if (!response.ok || !response.body) {
-      let resetAt: string | null = null;
-      if (response.status === 429) {
-        resetAt = await response.json().then(b => b?.resetAt ?? null).catch(() => null);
-      }
-      throw new AiAssistantStreamError('AI assistant request failed', response.status, resetAt);
+      const body = await response.json().catch(() => null);
+      throw new AiAssistantStreamError(
+        'AI assistant request failed',
+        response.status,
+        body?.resetAt ?? null,
+        body?.code ?? null,
+      );
     }
 
     const reader = response.body.getReader();

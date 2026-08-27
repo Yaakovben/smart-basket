@@ -672,6 +672,8 @@ export type TranslationKeys =
   | 'aiNotConfigured'
   | 'aiTooManyMessages'
   | 'aiTryAgainInMinutes'
+  | 'aiTryAgainInHours'
+  | 'aiDailyLimitReached'
   | 'aiFallbackNotice'
   | 'aiGenericError'
   // Slow load indicator defaults

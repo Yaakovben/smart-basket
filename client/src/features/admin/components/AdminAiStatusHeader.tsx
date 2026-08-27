@@ -50,6 +50,16 @@ export const AdminAiStatusHeader = ({ data, loading, refreshing, lastFetchAt, on
                   </Typography>
                 </Box>
               )}
+              {data.dailyBudget?.exceeded && (
+                <Box sx={{
+                  px: 0.7, py: 0.1, borderRadius: 0.75,
+                  bgcolor: 'rgba(239,68,68,0.14)', border: '1px solid', borderColor: '#EF4444',
+                }}>
+                  <Typography sx={{ fontSize: 9.5, fontWeight: 800, color: '#EF4444', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
+                    מכסה יומית נגמרה
+                  </Typography>
+                </Box>
+              )}
               {lastUpdatedText && (
                 <Typography sx={{ fontSize: 10, color: 'text.disabled' }} title="מתי המסך הזה נטען בפועל - לא בהכרח אותו רגע שבו המודל נבדק, ראו 'נבדק לאחרונה' למטה">
                   · המסך נטען {lastUpdatedText}

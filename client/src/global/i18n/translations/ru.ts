@@ -668,6 +668,8 @@ export const ru: Translations = {
   aiNotConfigured: 'ИИ-помощник сейчас не настроен на сервере.',
   aiTooManyMessages: 'Слишком много сообщений за последний час - попробуйте позже.',
   aiTryAgainInMinutes: 'Лимит обновится примерно через {minutes} мин.',
+  aiTryAgainInHours: 'Лимит обновится примерно через {hours} ч.',
+  aiDailyLimitReached: 'AI-помощник исчерпал общий дневной лимит.',
   aiFallbackNotice: 'Этот ответ от резервной модели',
   aiGenericError: 'Что-то пошло не так, попробуйте снова.',
   // Slow load indicator defaults

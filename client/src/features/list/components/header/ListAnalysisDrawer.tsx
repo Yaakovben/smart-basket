@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
 import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
+import { aiErrorText } from '../../../aiAssistant/helpers/aiErrorText';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
 import { AiAssistantIcon } from '../../../../global/components';
 import { renderInlineBold } from '../../../../global/helpers';
@@ -19,15 +20,6 @@ interface ListAnalysisDrawerProps {
   listId: string;
   listName: string;
   productNames: string[];
-}
-
-// ממיר resetAt (ISO string מהשרת) למספר דקות עגול עד האיפוס - אותה לוגיקה
-// כמו ב-useAiAssistantChat.ts, לא ייצאנו hook משותף כי זה state קטן מקומי.
-function minutesUntil(resetAt: string | null | undefined): number | null {
-  if (!resetAt) return null;
-  const ms = new Date(resetAt).getTime() - Date.now();
-  if (Number.isNaN(ms) || ms <= 0) return null;
-  return Math.max(1, Math.ceil(ms / 60_000));
 }
 
 function buildAnalysisPrompt(listName: string, productNames: string[], language: string): string {
@@ -124,13 +116,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           await runAnalysis(attemptNum + 1);
           return;
         }
-        const minutes = err instanceof AiAssistantStreamError ? minutesUntil(err.resetAt) : null;
-        const message = status === 503
-          ? t('aiNotConfigured')
-          : status === 429
-          ? t('aiTooManyMessages') + (minutes ? ` ${t('aiTryAgainInMinutes').replace('{minutes}', String(minutes))}` : '')
-          : t('aiGenericError');
-        setError(message);
+        setError(aiErrorText(err, t));
         setLoading(false);
       }
     };
