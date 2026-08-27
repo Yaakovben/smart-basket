@@ -42,16 +42,17 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
   return (
     <Modal title={t('saveAsSavedListTitle')} onClose={() => !saving && onClose()}>
       {/* אמוג׳י (כפתור שפותח בורר) + שם, בשורה אחת */}
-      <Box sx={{ display: 'flex', gap: 1, mb: emojiOpen ? 1 : 2 }}>
+      <Box sx={{ display: 'flex', gap: 1.25, mb: emojiOpen ? 1.5 : 2.5 }}>
         <Box
           onClick={() => { haptic('light'); setEmojiOpen(o => !o); }}
           aria-label={t('chooseIcon')}
           sx={{
-            width: 44, height: 44, flexShrink: 0, borderRadius: '12px',
+            width: 46, height: 46, flexShrink: 0, borderRadius: '12px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, cursor: 'pointer', bgcolor: 'action.hover',
-            border: '2px solid', borderColor: emojiOpen ? 'primary.main' : 'divider',
-            '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
+            fontSize: 23, cursor: 'pointer',
+            bgcolor: emojiOpen ? 'rgba(20,184,166,0.1)' : 'action.hover',
+            border: '1px solid', borderColor: emojiOpen ? 'primary.main' : 'divider',
+            '&:active': { transform: 'scale(0.94)' }, transition: 'all 0.12s',
           }}
         >
           {emoji}
@@ -64,22 +65,22 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
           onChange={e => setName(e.target.value.slice(0, 40))}
           onClear={() => setName('')}
           size="small"
-          sx={{ '& .MuiOutlinedInput-root': { height: 44 } }}
+          sx={{ '& .MuiOutlinedInput-root': { height: 46 } }}
         />
       </Box>
 
       <Collapse in={emojiOpen} unmountOnExit>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2.5 }}>
           {SAVED_LIST_EMOJIS.map(e => (
             <Box
               key={e}
               onClick={() => { haptic('light'); setEmoji(e); setEmojiOpen(false); }}
               sx={{
-                width: 36, height: 36, borderRadius: '10px',
+                width: 38, height: 38, borderRadius: '10px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 18, cursor: 'pointer',
-                bgcolor: emoji === e ? 'rgba(20,184,166,0.15)' : 'action.hover',
-                border: '2px solid', borderColor: emoji === e ? 'primary.main' : 'transparent',
+                bgcolor: emoji === e ? 'rgba(20,184,166,0.12)' : 'action.hover',
+                border: '1px solid', borderColor: emoji === e ? 'primary.main' : 'transparent',
                 '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
               }}
             >
@@ -91,29 +92,30 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
 
       {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה */}
       <Box sx={{
-        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5, mb: 2.5,
-        maxHeight: 148, overflowY: 'auto', overscrollBehavior: 'contain',
-        p: 1, borderRadius: '12px', bgcolor: 'action.hover',
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 2.5,
+        maxHeight: 156, overflowY: 'auto', overscrollBehavior: 'contain',
+        p: 1.25, borderRadius: '12px', border: '1px solid', borderColor: 'divider',
       }}>
         <Box sx={{
-          flexShrink: 0, minWidth: 22, height: 22, px: 0.75,
+          flexShrink: 0, minWidth: 24, height: 22, px: 0.75,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: '999px', bgcolor: 'primary.main', color: 'white',
-          fontSize: 11, fontWeight: 800,
+          borderRadius: '999px', bgcolor: 'rgba(20,184,166,0.14)', color: 'primary.main',
+          fontSize: 12, fontWeight: 700,
         }}>
           {items.length}
         </Box>
         {items.map(it => (
-          <Chip key={it.name} label={it.name} size="small" sx={{ fontSize: 11.5, bgcolor: 'background.paper' }} />
+          <Chip key={it.name} label={it.name} sx={{ fontSize: 13, height: 30, bgcolor: 'action.hover' }} />
         ))}
       </Box>
 
       <Button
         variant="contained"
         fullWidth
+        disableElevation
         onClick={handleSave}
         disabled={!canSave}
-        sx={{ py: 1.25, fontSize: 15 }}
+        sx={{ py: 1.2, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
       >
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>

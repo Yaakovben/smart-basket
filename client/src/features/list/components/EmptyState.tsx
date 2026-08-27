@@ -151,18 +151,18 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
 
       {showSavedLists && (
         <Box sx={{ width: '100%', maxWidth: 340 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 1, color: 'text.secondary' }}>
-            <PlaylistAddRoundedIcon sx={{ fontSize: 16 }} />
-            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{t('startFromSavedList')}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.5, color: 'text.secondary' }}>
+            <PlaylistAddRoundedIcon sx={{ fontSize: 17 }} />
+            <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>{t('startFromSavedList')}</Typography>
           </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.75 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
             {savedLists.map(sl => (
               <Chip
                 key={sl.id}
                 onClick={() => { haptic('light'); onApplySavedList!(sl); }}
-                label={`${sl.emoji} ${sl.name}`}
+                label={`${sl.emoji}  ${sl.name}`}
                 sx={{
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  fontSize: 13.5, fontWeight: 500, height: 34, px: 0.5, cursor: 'pointer',
                   bgcolor: 'action.hover',
                   '&:active': { transform: 'scale(0.96)' },
                 }}

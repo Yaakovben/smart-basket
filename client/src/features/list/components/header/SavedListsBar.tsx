@@ -24,7 +24,7 @@ const SETUP_MAX = 5;
 const rowSx = {
   display: 'flex',
   alignItems: 'center',
-  gap: 0.75,
+  gap: 1,
   overflowX: 'auto',
   pb: 0.25,
   mb: { xs: 0.75, sm: 1 },
@@ -36,14 +36,15 @@ const rowSx = {
 
 const chipSx = {
   flexShrink: 0,
-  height: 30,
-  bgcolor: 'rgba(255,255,255,0.18)',
+  height: 32,
+  bgcolor: 'rgba(255,255,255,0.16)',
   color: 'white',
-  fontWeight: 600,
-  fontSize: 12.5,
+  fontWeight: 500,
+  fontSize: 13,
+  px: 0.25,
   cursor: 'pointer',
-  '& .MuiChip-icon': { color: 'rgba(255,255,255,0.8)', ml: '7px', mr: '-3px' },
-  '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+  '& .MuiChip-icon': { color: 'rgba(255,255,255,0.75)', ml: '8px', mr: '-2px' },
+  '&:hover': { bgcolor: 'rgba(255,255,255,0.26)' },
   '&:active': { transform: 'scale(0.96)' },
   transition: 'transform 0.12s ease, background-color 0.15s ease',
 };
@@ -76,12 +77,11 @@ export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedL
         <Chip
           key={sl.id}
           onClick={() => handleApply(sl)}
-          size="small"
           sx={chipSx}
-          icon={<PlaylistAddRoundedIcon sx={{ fontSize: 15 }} />}
+          icon={<PlaylistAddRoundedIcon sx={{ fontSize: 16 }} />}
           label={
-            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-              <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.6, px: 0.25 }}>
+              <Box component="span" sx={{ fontSize: 14 }}>{sl.emoji}</Box>
               {sl.name}
             </Box>
           }
