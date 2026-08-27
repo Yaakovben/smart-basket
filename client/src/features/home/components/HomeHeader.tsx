@@ -1,6 +1,8 @@
-import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge } from '@mui/material';
+import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import SearchIcon from '@mui/icons-material/Search';
+import { ClearableTextField } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -12,6 +14,8 @@ interface HomeHeaderProps {
   user: User;
   greeting: { label: string; emoji: string; weekdayMsg: string | null };
   isDark: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
   tab: HomeTab;
   onTabChange: (tab: HomeTab) => void;
   allCount: number;
@@ -27,17 +31,26 @@ interface HomeHeaderProps {
 
 // כותרת מסך הבית: אווטאר + ברכה, כפתורי התראות/הגדרות, חיפוש וטאבים.
 export const HomeHeader = ({
-  user, greeting, isDark, tab, onTabChange,
+  user, greeting, isDark, search, onSearchChange, tab, onTabChange,
   allCount, myCount, groupsCount, totalUnreadCount, notificationsLoading,
   onAvatarClick, onNotificationsClick, onSettingsClick, t,
 }: HomeHeaderProps) => {
   const notificationsTap = useReliableTap(onNotificationsClick);
   const settingsTap = useReliableTap(onSettingsClick);
+  // מצב ריק (אף רשימה) - נותנים לחלק הירוק קצת יותר גובה בתחתית כדי שלא
+  // ייראה "קטוע" ליד ה-empty state הגדול מתחתיו (אין שם שדה חיפוש שממלא
+  // את המקום). חיפוש עצמו מוצג רק מ-2 רשימות ומעלה - לא שימושי עם רשימה
+  // אחת או אפס.
+  const isEmpty = allCount === 0;
+  const showSearch = allCount > 1;
 
   return (
     <Box sx={{
       background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,
-      p: { xs: 'max(48px, env(safe-area-inset-top) + 12px) 16px 20px', sm: '48px 20px 20px' },
+      p: {
+        xs: `max(48px, env(safe-area-inset-top) + 12px) 16px ${isEmpty ? 32 : 20}px`,
+        sm: `48px 20px ${isEmpty ? 32 : 20}px`,
+      },
       borderRadius: '0 0 24px 24px',
       flexShrink: 0,
       boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(20, 184, 166, 0.15)',
@@ -123,6 +136,19 @@ export const HomeHeader = ({
           </IconButton>
         </Box>
       </Box>
+
+      {showSearch && (
+        <ClearableTextField
+          fullWidth
+          placeholder={t('search')}
+          value={search}
+          onChange={e => onSearchChange(e.target.value)}
+          onClear={() => onSearchChange('')}
+          size="small"
+          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
+        />
+      )}
 
       <Tabs
         value={tab}

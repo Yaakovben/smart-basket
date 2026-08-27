@@ -112,6 +112,7 @@ export const ru: Translations = {
   exitShoppingMode: 'Выйти из режима покупок',
   listReset: 'Список сброшен',
   resetListConfirm: 'Все купленные товары вернутся в список',
+  savedListApplyButton: 'Добавить {count} в текущий список',
   clearList: 'Очистить список',
   clearAll: 'Удалить всё',
   clearAllDesc: 'Удалить все товары из списка',

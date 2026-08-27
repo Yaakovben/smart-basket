@@ -277,6 +277,7 @@ export type TranslationKeys =
   | 'categoryBreakdown'
   | 'maybeForgot'
   | 'resetListConfirm'
+  | 'savedListApplyButton'
   | 'noProductsInCategory'
   | 'showAll'
   | 'errorOccurred'

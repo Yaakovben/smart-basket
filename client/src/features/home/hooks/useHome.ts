@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { List, Member, User, ToastType } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
+import { useDebounce } from '../../../global/hooks';
 import { generatePassword } from '../helpers/home-helpers';
 import { haptic } from '../../../global/helpers';
 import type {
@@ -51,6 +52,7 @@ export const useHome = ({
 
   // ===== מצב UI =====
   const [tab, setTab] = useState<HomeTab>('all');
+  const [search, setSearch] = useState('');
 
   // ===== מצב מודאלים =====
   const [showMenu, setShowMenu] = useState(false);
@@ -124,9 +126,13 @@ export const useHome = ({
     groups: userLists.filter((l: List) => l.isGroup)
   }), [userLists]);
 
+  // Debounce לחיפוש
+  const debouncedSearch = useDebounce(search, 300);
+
   const display = useMemo(() => {
-    return tab === 'all' ? userLists : tab === 'my' ? my : groups;
-  }, [tab, userLists, my, groups]);
+    const base = tab === 'all' ? userLists : tab === 'my' ? my : groups;
+    return debouncedSearch ? base.filter((l: List) => l.name.toLowerCase().includes(debouncedSearch.toLowerCase())) : base;
+  }, [tab, userLists, my, groups, debouncedSearch]);
 
   // ===== טיפול ביצירת רשימה =====
   const validateListName = useCallback((): boolean => {
@@ -271,6 +277,7 @@ export const useHome = ({
 
   return {
     tab,
+    search,
     showMenu,
     showCreate,
     showCreateGroup,
@@ -295,6 +302,7 @@ export const useHome = ({
     display,
 
     setTab,
+    setSearch,
     setShowMenu,
     setShowCreate,
     setShowCreateGroup,

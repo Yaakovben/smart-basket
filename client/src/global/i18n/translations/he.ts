@@ -111,6 +111,7 @@ export const he: Translations = {
   exitShoppingMode: 'יציאה ממצב קנייה',
   listReset: 'הרשימה אופסה',
   resetListConfirm: 'כל המוצרים שסומנו כנקנו יחזרו לרשימה',
+  savedListApplyButton: 'הוסף {count} לרשימה הנוכחית',
   clearList: 'נקה רשימה',
   clearAll: 'מחק הכל',
   clearAllDesc: 'מחיקת כל המוצרים מהרשימה',

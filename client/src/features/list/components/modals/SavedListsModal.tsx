@@ -189,15 +189,18 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         <Typography sx={{
                           minWidth: 0, fontSize: 15.5, fontWeight: 600, color: 'text.primary',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          // קו מקווקו מתחת לשם רק כשהכרטיס פתוח - בדיוק המצב
+                          // שבו לחיצה כאן באמת נכנסת לעריכה (כרטיס סגור:
+                          // לחיצה רק פותחת, לא עורכת - אין טעם לרמוז "ערוך").
+                          ...(open && { borderBottom: '1.5px dashed', borderColor: 'text.disabled', pb: '1px' }),
                         }}>
                           {sl.name}
                         </Typography>
-                        {/* עט תמיד מוצג - רמז מתמיד שהשם ניתן לעריכה, מודגש
-                            (opacity גבוה) כשהכרטיס פתוח, מעומעם כשסגור. */}
-                        <EditRoundedIcon sx={{
-                          fontSize: 13, color: 'text.disabled', flexShrink: 0,
-                          opacity: open ? 0.85 : 0.45, transition: 'opacity 0.15s',
-                        }} />
+                        {/* עט מוצג רק כשהכרטיס פתוח - עדין (opacity חלקי) אבל
+                            יחד עם הקו המקווקו למעלה, מספיק ברור שלחיצה כאן עורכת את השם. */}
+                        {open && (
+                          <EditRoundedIcon sx={{ fontSize: 13, color: 'text.disabled', flexShrink: 0, opacity: 0.75 }} />
+                        )}
                       </Box>
                     )}
                     <Box sx={{
@@ -349,7 +352,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                             },
                           }}
                         >
-                          {`${t('add')} ${sl.items.length} ${t('items')}`}
+                          {t('savedListApplyButton').replace('{count}', String(sl.items.length))}
                         </Button>
                       </Box>
                     </Box>

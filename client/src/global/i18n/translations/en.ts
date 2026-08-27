@@ -112,6 +112,7 @@ export const en: Translations = {
   exitShoppingMode: 'Exit shopping mode',
   listReset: 'List has been reset',
   resetListConfirm: 'All purchased items will be returned to the list',
+  savedListApplyButton: 'Add {count} to current list',
   clearList: 'Clear list',
   clearAll: 'Delete all',
   clearAllDesc: 'Delete all products from the list',
