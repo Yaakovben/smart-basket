@@ -130,15 +130,26 @@ export function useLists(user: User | null, initialLists?: ApiList[] | null, aut
   // הרשמה לאירועי socket לעדכונים בזמן אמת
   useListsSocketSync(user, listIds, setLists);
 
-  // טעינת כל הרשימות מחדש כשהאפליקציה חוזרת לחזית (למשל אחרי לחיצה על התראה)
-  // אירועי socket שנשלחו בזמן שהאפליקציה ברקע אבדו, לכן צריך טעינה חדשה
+  // טעינת כל הרשימות מחדש כשהאפליקציה חוזרת לחזית (למשל אחרי לחיצה על התראה) -
+  // אירועי socket שנשלחו בזמן שהאפליקציה ברקע אבדו, לכן צריך טעינה חדשה.
+  // רק אם היא באמת הייתה ברקע זמן משמעותי (MIN_AWAY_MS): הצצה קצרה לאפליקציה
+  // אחרת (וואטסאפ, מצלמה) וחזרה מיידית לא באמת יכולה לפספס הרבה, ובלי הסף
+  // הזה כל הצצה כזו הייתה מרעננת מחדש את כל רשימת הכרטיסים בדף הבית - נראה
+  // כמו "רענון פתאומי" למרות שהנתונים כמעט תמיד זהים.
+  const MIN_AWAY_MS = 10_000;
   useEffect(() => {
     if (!user?.id) return;
+    let hiddenAt = 0;
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchLists();
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now();
+        return;
       }
+      if (document.visibilityState !== 'visible' || hiddenAt === 0) return;
+      const awayMs = Date.now() - hiddenAt;
+      hiddenAt = 0;
+      if (awayMs >= MIN_AWAY_MS) fetchLists();
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
