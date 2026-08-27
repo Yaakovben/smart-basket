@@ -99,6 +99,13 @@ const envSchema = Joi.object({
   // רק במשתני סביבה בשרת, אף פעם לא בקוד/בקליינט.
   GROQ_API_KEY: Joi.string().optional(),
   GROQ_MODEL: Joi.string().default('openai/gpt-oss-120b'),
+  // תקציב יומי גלובלי לקריאות AI חיצוניות (לכל האפליקציה יחד, לא פר-משתמש).
+  // המכסה החינמית של Groq/NIM משותפת - aiAssistantLimiter חוסם פר-משתמש אבל
+  // לא את הסכום הכולל. כשמגיעים לתקציב, העוזר מגיש תשובת fallback מקומית עם
+  // הודעה ברורה במקום להמשיך לירות בקשות שנכשלות. כדאי לכוון לפי המכסה
+  // האמיתית של הספק (ראו remainingTokens/remainingRequests בפאנל האדמין),
+  // עם מרווח ביטחון. 0 = בלי תקרה.
+  AI_DAILY_REQUEST_BUDGET: Joi.number().integer().min(0).default(2000),
   // NVIDIA NIM (build.nvidia.com) - ספק גיבוי לעוזר ה-AI, לא ראשי. Groq הוא
   // הראשי (מהיר יותר), אבל לטייר החינמי שלו יש מכסה יומית/דקתית - אם היא
   // נגמרת (429) או ש-Groq לא זמין רגעית, השירות עובר אוטומטית ל-NIM כדי
@@ -146,6 +153,7 @@ export interface Environment {
   REDIS_URL?: string;
   GROQ_API_KEY?: string;
   GROQ_MODEL: string;
+  AI_DAILY_REQUEST_BUDGET: number;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL: string;
   GMAIL_USER?: string;

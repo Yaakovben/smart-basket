@@ -107,6 +107,33 @@ const providerStats = new Map<string, ProviderStats>();
 const serverStartedAt = Date.now();
 let fallbackCount = 0;
 
+// ===== תקציב יומי גלובלי לקריאות AI חיצוניות =====
+// המכסה החינמית של Groq/NIM היא לכל האפליקציה, לא פר-משתמש. aiAssistantLimiter
+// חוסם 20/משתמש/שעה אבל לא את הסכום - מספיק ~30 משתמשים פעילים כדי לרוקן את
+// המכסה היומית ואז כולם נופלים לגיבוי (וגם הוא נשרף). כשמגיעים לתקציב מגישים
+// fallback מקומי עם הודעה ברורה במקום להמשיך לירות בקשות שנכשלות.
+// state ברמת המודול - עקבי עם providerStats/fallbackCount (תהליך יחיד).
+const AI_DAILY_BUDGET = env.AI_DAILY_REQUEST_BUDGET;
+let aiDayKey = '';
+let aiRequestsToday = 0;
+
+function rolloverAiDay(): void {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  if (today !== aiDayKey) {
+    aiDayKey = today;
+    aiRequestsToday = 0;
+  }
+}
+function aiBudgetExceeded(): boolean {
+  if (AI_DAILY_BUDGET <= 0) return false; // 0 = בלי תקרה
+  rolloverAiDay();
+  return aiRequestsToday >= AI_DAILY_BUDGET;
+}
+function recordAiRequest(): void {
+  rolloverAiDay();
+  aiRequestsToday++;
+}
+
 function getProviderStats(name: string): ProviderStats {
   let s = providerStats.get(name);
   if (!s) {
@@ -386,6 +413,14 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     return makeFallbackStream(fallbackText);
   }
 
+  // התקציב היומי הגלובלי נגמר - לא שולחים לספקים החיצוניים (המכסה שלהם
+  // כנראה כבר על הקצה); מגישים תשובה מקומית במקום להיכשל.
+  if (aiBudgetExceeded()) {
+    logger.warn('aiAssistant: global daily budget (%d) reached, serving local fallback', AI_DAILY_BUDGET);
+    const fallbackText = await buildLocalFallbackText(userId, messages);
+    return makeFallbackStream(fallbackText);
+  }
+
   const trimmedHistory = messages.slice(-MAX_HISTORY_MESSAGES);
   for (const m of trimmedHistory) {
     if (m.content.length > MAX_MESSAGE_LENGTH) {
@@ -432,6 +467,10 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     max_tokens: 700,
     stream: true,
   };
+
+  // נספר לפני הקריאה בפועל - בקשה שנכשלת על Groq ועוברת ל-NIM עדיין
+  // נחשבת אחת לצורך התקציב (הערכה גסה, מספיקה כדי לא לחרוג בהרבה).
+  recordAiRequest();
 
   const providers = await getProviders();
   let lastError: string | null = null;
@@ -535,6 +574,8 @@ export interface AiStatus {
   fallbackCount: number;
   serverStartedAt: string;
   configured: boolean;
+  // תקציב יומי גלובלי לקריאות AI חיצוניות (0 = בלי תקרה)
+  dailyBudget: { limit: number; usedToday: number; exceeded: boolean };
 }
 
 /** נתוני סטטוס לפאנל "פרטי AI" באדמין - איזה מודל פעיל, מתי עודכן, כמה נוצל ומתי מתאפס. */
@@ -545,6 +586,8 @@ export async function getAiStatus(): Promise<AiStatus> {
   const nimStats = getProviderStats('NVIDIA NIM');
 
   const toIso = (ms: number | null) => (ms ? new Date(ms).toISOString() : null);
+
+  rolloverAiDay();
 
   return {
     providers: [
@@ -580,6 +623,11 @@ export async function getAiStatus(): Promise<AiStatus> {
     fallbackCount,
     serverStartedAt: new Date(serverStartedAt).toISOString(),
     configured: groqConfigured || nimConfigured,
+    dailyBudget: {
+      limit: AI_DAILY_BUDGET,
+      usedToday: aiRequestsToday,
+      exceeded: aiBudgetExceeded(),
+    },
   };
 }
 
