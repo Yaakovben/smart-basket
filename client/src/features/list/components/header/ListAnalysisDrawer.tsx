@@ -30,9 +30,26 @@ function minutesUntil(resetAt: string | null | undefined): number | null {
   return Math.max(1, Math.ceil(ms / 60_000));
 }
 
-function buildAnalysisPrompt(listName: string, productNames: string[]): string {
+function buildAnalysisPrompt(listName: string, productNames: string[], language: string): string {
   const items = productNames.slice(0, 30).join(', ');
   const isSmallList = productNames.length <= 3;
+  if (language !== 'he') {
+    const langName = language === 'ru' ? 'Russian' : 'English';
+    return (
+      `Analyze the shopping list "${listName}" which contains: ${items}.\n` +
+      `Use my real history and habits data that already appears in the context (frequent products, products I forgot, categories due for restock, spending by category) - do not invent data and do not write generic answers that would fit any list.\n` +
+      (isSmallList
+        ? `Note: this list has only ${productNames.length} products - too few for a full, forced analysis. Do not "stretch" content to fill all three sections - if you genuinely have nothing to say in a section (e.g. nothing else to add, or no relevant saving tip for these items), write explicitly "Not enough here to add" instead of a generic filler.\n`
+        : '') +
+      `If a product name in the list is vague, too generic, or it is unclear what exactly it is (e.g. the result of imprecise text recognition) - do not confidently guess the intent. Briefly note that the name is unclear instead of treating it as a specific, known product.\n` +
+      `Answer in ${langName} in a short, structured format with exactly 3 sections:\n` +
+      `🛒 **Summary**: what stands out about this specific list - main categories, unusual quantity, or a connection to my usual shopping habits (one concrete sentence, not a generic description).\n` +
+      `➕ **What to add**: up to 3 specific missing products - first check against the forgotten products / restock categories in the context, and only if there is no match, suggest by logic (a short line for each + a brief reason).\n` +
+      `💡 **Saving tip**: one recommendation that refers specifically to a product or category that IS in this list (e.g. price comparison to the cheapest chain, quantity, alternative brand) - not a generic tip that fits any list.\n` +
+      `If there is not enough specific information for a section - say so briefly instead of filling it with generalities.\n` +
+      `Do not add extra headings, do not explain yourself, only the 3 sections.`
+    );
+  }
   return (
     `נתח את רשימת הקניות "${listName}" שמכילה: ${items}.\n` +
     `השתמש בנתוני ההיסטוריה וההרגלים האמיתיים שלי שכבר מופיעים בהקשר (מוצרים שכיחים, מוצרים ששכחתי, קטגוריות לחידוש, הוצאה לפי קטגוריה) - אל תמציא נתונים ואל תכתוב תשובות כלליות שמתאימות לכל רשימה.\n` +
@@ -76,7 +93,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     setFallback(false);
     setLoading(true);
 
-    const prompt = buildAnalysisPrompt(listName, productNames);
+    const prompt = buildAnalysisPrompt(listName, productNames, settings.language);
     const MAX_ATTEMPTS = 2;
 
     // מודל ה-reasoning (gpt-oss) לפעמים "נכשל" חד-פעמית - stream ריק/מתנתק
@@ -128,7 +145,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       })
       .catch(() => { setPriceGroup(null); setChainTotals([]); })
       .finally(() => setPriceLoading(false));
-  }, [open, listId, listName, productNames]);
+  }, [open, listId, listName, productNames, settings.language]);
 
   // איפוס כשהdrawer נסגר - מוכן לפתיחה הבאה
   const handleClose = () => {
@@ -147,7 +164,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
   const goToChat = () => {
     handleClose();
     navigate('/assistant', {
-      state: { initialPrompt: `ספר לי עוד על הרשימה "${listName}" ואיך לשפר אותה` },
+      state: { initialPrompt: t('tellMeMoreAboutList').replace('{name}', listName) },
     });
   };
 
@@ -195,7 +212,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontSize: 15, fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-            ניתוח הרשימה
+            {t('listAnalysisTitle')}
           </Typography>
           <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
             {listName}
@@ -211,7 +228,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
         {loading && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 3 }}>
             <AiThinkingIndicator />
-            <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>מנתח את הרשימה...</Typography>
+            <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{t('analyzingList')}</Typography>
           </Box>
         )}
         {error && (
@@ -225,7 +242,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
             ונראה כאילו הניתוח נעלם/לא רץ בכלל. */}
         {done && !text && !error && (
           <Typography sx={{ fontSize: 13, color: 'text.secondary', py: 1.5 }}>
-            לא התקבל ניתוח טקסטואלי הפעם - נסה שוב מאוחר יותר. הערכת המחיר למטה עדיין מדויקת.
+            {t('noAnalysisThisTime')}
           </Typography>
         )}
 
@@ -299,14 +316,14 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
               }}>
                 <Box>
                   <Typography sx={{ fontSize: 11, fontWeight: 600, color: isDark ? '#5EEAD4' : '#0F766E', mb: 0.1, letterSpacing: 0.3 }}>
-                    עלות משוערת לסל
+                    {t('estimatedBasketCost')}
                   </Typography>
                   <Typography sx={{ fontSize: 22, fontWeight: 800, color: isDark ? '#2DD4BF' : '#0F766E', lineHeight: 1.1 }}>
                     ₪{Math.round(displayTotal)}
                   </Typography>
                   {totalItems > 0 && (
                     <Typography sx={{ fontSize: 10.5, color: isDark ? 'rgba(94,234,212,0.7)' : '#0F766E', opacity: 0.8, mt: 0.2 }}>
-                      {matchedCount} מתוך {totalItems} פריטים זוהו
+                      {t('itemsIdentifiedOfTotal').replace('{matched}', String(matchedCount)).replace('{total}', String(totalItems))}
                     </Typography>
                   )}
                 </Box>
@@ -324,7 +341,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
               {chainsWithMatches.length > 1 && (
                 <Box sx={{ px: 2, py: 1, borderTop: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1' }}>
                   <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: 'text.secondary', mb: 0.75 }}>
-                    השוואת מחירים
+                    {t('priceComparisonShort')}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                     {chainsWithMatches.slice(0, 4).map((c) => {

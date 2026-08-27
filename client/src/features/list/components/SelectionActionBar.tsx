@@ -63,7 +63,7 @@ export const SelectionActionBar = memo(({
             {selectedCount}
           </Typography>
           <Typography component="span" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: 13 }}>
-            {` מתוך ${totalCount}`}
+            {` ${t('selectedOfCount').replace('{total}', String(totalCount))}`}
           </Typography>
         </Typography>
         <Box
@@ -85,7 +85,7 @@ export const SelectionActionBar = memo(({
             fontSize: 13, fontWeight: 700,
             color: allSelected ? 'white' : 'primary.main',
           }}>
-            בחר הכל
+            {t('selectAllItems')}
           </Typography>
         </Box>
       </Box>

@@ -353,7 +353,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
           pointerEvents: offset >= SWIPE_ACTIONS_WIDTH * 0.3 ? 'none' : 'auto',
           WebkitTapHighlightColor: 'transparent',
-          // אינדיקטור ההערה הוא צ'יפ אלכסוני "קיימת הערה" בעיצוב הפתק -
+          // אינדיקטור ההערה הוא צ'יפ אלכסוני בעיצוב הפתק (הטקסט t('note')) -
           // ראה למטה ליד שם המוצר. (אין יותר פס צד.)
           '@media (max-width: 360px)': { px: '10px', gap: '8px', borderRadius: '11px' },
           '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
@@ -410,7 +410,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 ה-popup). ממוקם ליד השם, נטוי קלות, לא דורש מקום קבוע. */}
             {product.note && (
               <Box
-                aria-label="למוצר זה יש הערה"
+                aria-label={t('itemHasNote')}
                 sx={{
                   flexShrink: 0,
                   display: 'inline-flex', alignItems: 'center',
@@ -432,7 +432,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                   '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
                 }}
               >
-                ✎ קיימת הערה
+                ✎ {t('note')}
               </Box>
             )}
           </Box>

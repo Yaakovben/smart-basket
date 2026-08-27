@@ -27,35 +27,40 @@ export const QuickAddBar = memo(({ list, onQuickAdd }: QuickAddBarProps) => {
     onFinalResult: onQuickAdd,
   });
 
+  // היסטוריית המוצרים נקראת ומפוענחת מ-localStorage פעם אחת בלבד (lazy init),
+  // לא בכל הקשה כמו קודם. saveToHistory מעדכן את ה-state ואת האחסון יחד.
+  const [history, setHistory] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('sb_product_history');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  // סט השמות הקיימים ברשימה - נבנה מחדש רק כשהמוצרים משתנים, לא בכל הקשה
+  const existingNames = useMemo(
+    () => new Set(list.products.map(p => p.name.toLowerCase())),
+    [list.products]
+  );
+
   // הצעות השלמה אוטומטית מהמוצרים הקיימים
   const suggestions = useMemo(() => {
     const val = quickAddValue.trim().toLowerCase();
     if (val.length < 1) return [];
-    const existing = new Set(list.products.map(p => p.name.toLowerCase()));
-    // היסטוריית מוצרים מ-localStorage
-    let history: string[] = [];
-    try {
-      const stored = localStorage.getItem('sb_product_history');
-      if (stored) history = JSON.parse(stored);
-    } catch { /* */ }
     // סינון הצעות שמתחילות עם הטקסט ולא קיימות ברשימה
     return history
-      .filter(h => h.toLowerCase().startsWith(val) && !existing.has(h.toLowerCase()))
+      .filter(h => h.toLowerCase().startsWith(val) && !existingNames.has(h.toLowerCase()))
       .slice(0, 5);
-  }, [quickAddValue, list.products]);
+  }, [quickAddValue, existingNames, history]);
 
   // שמירת מוצר בהיסטוריה להשלמה אוטומטית
   const saveToHistory = useCallback((name: string) => {
-    try {
-      const stored = localStorage.getItem('sb_product_history');
-      const history: string[] = stored ? JSON.parse(stored) : [];
+    setHistory(prev => {
       const lower = name.toLowerCase();
-      if (!history.some(h => h.toLowerCase() === lower)) {
-        history.unshift(name);
-        if (history.length > 100) history.pop();
-        localStorage.setItem('sb_product_history', JSON.stringify(history));
-      }
-    } catch { /* */ }
+      if (prev.some(h => h.toLowerCase() === lower)) return prev;
+      const next = [name, ...prev].slice(0, 100);
+      try { localStorage.setItem('sb_product_history', JSON.stringify(next)); } catch { /* */ }
+      return next;
+    });
   }, []);
 
   const handleQuickAddButton = useCallback(() => {

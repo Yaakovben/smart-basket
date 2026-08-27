@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { Box, Typography, IconButton, keyframes } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { safeStorage } from '../../../global/helpers';
+import { useSettings } from '../../../global/context/SettingsContext';
 
 const HINT_KEY = 'sb_longpress_hint_seen';
 const EXIT_ANIM_MS = 250;
@@ -35,6 +36,7 @@ const slideOut = keyframes`
  * של היחשפות (כדי לא להישאר לעולם), עם אנימציית יציאה חלקה במקום היעלמות פתאומית.
  */
 export const LongPressHint = memo(() => {
+  const { t } = useSettings();
   const [show, setShow] = useState(() => safeStorage.get(HINT_KEY) !== 'true');
   const [closing, setClosing] = useState(false);
 
@@ -92,12 +94,12 @@ export const LongPressHint = memo(() => {
         </Typography>
       </Box>
       <Typography sx={{ flex: 1, fontSize: 11.5, fontWeight: 600, color: '#6D28D9', lineHeight: 1.35 }}>
-        טיפ: <b>לחיצה ארוכה</b> על פריט פותחת בחירה מרובה
+        {t('longPressMultiSelectHint')}
       </Typography>
       <IconButton
         size="small"
         onClick={dismiss}
-        aria-label="הסר רמז"
+        aria-label={t('dismissHint')}
         sx={{
           width: 22, height: 22, flexShrink: 0,
           color: '#8B5CF6',

@@ -11,12 +11,14 @@ import { ListAnalysisDrawer } from './ListAnalysisDrawer';
 interface ListCostEstimateBadgeProps {
   listId: string;
   listName: string;
-  estimate: ListCostEstimate | null;
+  /** נשמר בממשק לתאימות קריאה (ListHeader מעביר את זה) אך לא בשימוש -
+   *  התג רק פותח תפריט; הערכת המחיר עצמה מוצגת בתוך ListAnalysisDrawer. */
+  estimate?: ListCostEstimate | null;
   productNames?: string[];
   sx?: object;
 }
 
-export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, productNames = [], sx }: ListCostEstimateBadgeProps) => {
+export const ListCostEstimateBadge = memo(({ listId, listName, productNames = [], sx }: ListCostEstimateBadgeProps) => {
   const { t } = useSettings();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -41,7 +43,7 @@ export const ListCostEstimateBadge = memo(({ listId, listName, estimate: _, prod
 
   return (
     <>
-      <IconButton onClick={handleOpen} aria-label="AI ותובנות" sx={sx}>
+      <IconButton onClick={handleOpen} aria-label={t('aiAndInsights')} sx={sx}>
         <AiAssistantIcon sx={{ color: 'white', fontSize: 20 }} />
       </IconButton>
 
