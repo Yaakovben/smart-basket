@@ -62,11 +62,23 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter {
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      // host/port מפורשים (לא service:'gmail') כדי לשלוט ב-IPv4 ובטיימאאוט.
+      // port 587 + STARTTLS: פורט ה-submission, לרוב פתוח יותר מ-465.
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      // כופה IPv4 - שרתי אירוח מסוימים (Render וכו') חוסמים IPv6 יוצא ל-SMTP.
+      family: 4,
       auth: {
         user: env.GMAIL_USER,
         pass: env.GMAIL_APP_PASSWORD,
       },
+      // טיימאאוטים קצרים - שכשל חיבור (SMTP חסום) ייכשל תוך ~15ש' במקום
+      // להיתקע 2 דקות על ברירת המחדל של nodemailer.
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
       pool: true,
       maxConnections: 3,
       maxMessages: 100,
@@ -74,7 +86,7 @@ function getTransporter(): Transporter {
       // חסימה זמנית על "שליחה מהירה מדי".
       rateDelta: 1000,
       rateLimit: 8,
-    });
+    } as nodemailer.TransportOptions);
   }
   return transporter;
 }
