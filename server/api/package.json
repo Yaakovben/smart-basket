@@ -21,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@getbrevo/brevo": "^6.0.3",
     "@logtail/node": "^0.5.6",
     "@logtail/winston": "^0.5.6",
     "@sentry/node": "^10.38.0",
@@ -43,6 +42,7 @@
     "mongoose": "^8.0.0",
     "morgan": "^1.10.1",
     "node-cron": "^4.2.1",
+    "nodemailer": "^6.10.1",
     "sanitize-html": "^2.17.0",
     "tough-cookie": "^5.1.2",
     "web-push": "^3.6.7",
@@ -58,6 +58,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.10.0",
     "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.24",
     "@types/sanitize-html": "^2.16.0",
     "@types/web-push": "^3.6.4",
     "ts-node-dev": "^2.0.0",

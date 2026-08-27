@@ -1,13 +1,39 @@
+import nodemailer, { type Transporter } from 'nodemailer';
 import { User } from '../models';
 import { PushSubscriptionDAL } from '../dal';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
-const FROM = { name: 'Smart Basket', email: 'smartbasket129@gmail.com' };
+// שליחת מייל דרך Gmail SMTP ישירות (nodemailer), לא דרך ספק צד-שלישי.
+//
+// למה: קודם שלחנו דרך Brevo עם "From: ...@gmail.com" - כתובת בדומיין
+// שאנחנו לא הבעלים שלו. SPF/DKIM/DMARC של gmail.com לא יכולים לאמת שרת
+// שאינו של גוגל, אז Gmail/Outlook סימנו את המיילים כלא-מאומתים והעיפו
+// אותם לספאם (ומאז 2024 גוגל דורש אימות מפורש משולחים בכמות).
+//
+// עם Gmail SMTP המייל נשלח *על ידי* גוגל, עבור תיבת Gmail אמיתית:
+//   - SPF עובר   (השרת השולח הוא של google.com)
+//   - DKIM עובר  (גוגל חותם עם המפתח של gmail.com)
+//   - DMARC עובר (יש alignment מלא)
+// => מגיע ל-Inbox, בלי דומיין משלנו ובלי תשלום.
+//
+// דרישות הגדרה (חד-פעמי):
+//   1. חשבון הגוגל של GMAIL_USER חייב אימות דו-שלבי פעיל.
+//   2. ליצור "סיסמת אפליקציה": Google Account → Security → App passwords.
+//      זו הסיסמה שנכנסת ל-GMAIL_APP_PASSWORD (16 תווים, בלי רווחים).
+//   3. אין להשתמש בסיסמת החשבון הרגילה - היא לא תעבוד ל-SMTP.
+//
+// מגבלות Gmail רגיל: ~500 נמענים ליום (Workspace: ~2,000). מספיק לבסיס
+// המשתמשים הנוכחי; אם נגדל - עוברים ל-Workspace או לספק ייעודי עם דומיין.
+
+const FROM_NAME = 'Smart Basket';
+
+// מגבלת בטיחות - לא שולחים יותר מזה בקריאה אחת, כדי לא לשרוף את מכסת
+// היום של Gmail בטעות. אם צריך יותר - שולחים בכמה סבבים.
+const MAX_RECIPIENTS_PER_RUN = 450;
 
 export function isEmailEnabled(): boolean {
-  return !!env.BREVO_API_KEY;
+  return !!(env.GMAIL_USER && env.GMAIL_APP_PASSWORD);
 }
 
 export interface EmailPayload {
@@ -30,48 +56,71 @@ export interface EmailBroadcastResult {
   perUser: EmailUserStatus[];
 }
 
-async function sendSingle(to: string, subject: string, body: string): Promise<void> {
-  const res = await fetch(BREVO_URL, {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': env.BREVO_API_KEY!,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: FROM,
-      to: [{ email: to }],
-      subject,
-      // List-Unsubscribe (RFC 8058) - הסימן היחיד שאנחנו יכולים לתת לספאם
-      // פילטרים בלי דומיין מאומת משלנו (SPF/DKIM/DMARC על gmail.com לא
-      // באפשרותנו - אנחנו לא הבעלים של הדומיין). Gmail/Outlook מציגים
-      // "Unsubscribe" ליד מיילים המונית עם ה-header הזה, ומתייחסים
-      // בחשדנות פחותה למיילים שיש להם דרך הסרה ברורה.
-      headers: {
-        'List-Unsubscribe': `<mailto:${FROM.email}?subject=Unsubscribe>`,
-        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+// טרנספורטר יחיד ברמת המודול, עם pool - נדרש כדי לא לפתוח חיבור SMTP
+// חדש לכל מייל (Gmail חוסם ריבוי חיבורים) ולקצב את השליחה.
+let transporter: Transporter | null = null;
+function getTransporter(): Transporter {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: env.GMAIL_USER,
+        pass: env.GMAIL_APP_PASSWORD,
       },
-      textContent: body,
-      htmlContent: `
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
+      // קצב: עד 8 מיילים לכל 1000ms - הרבה מתחת למגבלות Gmail, מונע
+      // חסימה זמנית על "שליחה מהירה מדי".
+      rateDelta: 1000,
+      rateLimit: 8,
+    });
+  }
+  return transporter;
+}
+
+function renderHtml(body: string): string {
+  const safeBody = body
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br/>');
+  return `
 <div dir="rtl" style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:520px;margin:0 auto;padding:24px;">
-  <div style="white-space:pre-wrap;margin-bottom:32px;">${body.replace(/\n/g, '<br/>')}</div>
+  <div style="white-space:pre-wrap;margin-bottom:32px;">${safeBody}</div>
   <div style="text-align:center;">
     <a href="https://prod-smart-basket.vercel.app/" style="display:inline-block;background:linear-gradient(135deg,#0F766E,#14B8A6);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:12px;">
       פתח את Smart Basket
     </a>
   </div>
-</div>`,
-    }),
+</div>`;
+}
+
+async function sendSingle(to: string, subject: string, body: string): Promise<void> {
+  const from = env.GMAIL_USER!;
+  await getTransporter().sendMail({
+    from: { name: FROM_NAME, address: from },
+    to,
+    subject,
+    text: body,
+    html: renderHtml(body),
+    // List-Unsubscribe (RFC 8058) - נדרש מגוגל לשולחים בכמות, ומשפר אמון
+    // של פילטרים. הכתובת היא תיבת ה-Gmail עצמה (הסרה ידנית - אין לנו רשימת
+    // תפוצה מנוהלת נפרדת).
+    list: {
+      unsubscribe: {
+        url: `mailto:${from}?subject=Unsubscribe`,
+        comment: 'Unsubscribe',
+      },
+    },
+    headers: {
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
   });
-  if (!res.ok) {
-    const err = await res.text();
-    logger.warn('Brevo send failed to %s: %s', to, err);
-    throw new Error(err);
-  }
 }
 
 export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = false): Promise<EmailBroadcastResult> {
-  if (!env.BREVO_API_KEY) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
+  if (!isEmailEnabled()) return { totalUsers: 0, sent: 0, failed: 0, skipped: 0, perUser: [] };
 
   const users = await User.find({}, 'name email').lean();
 
@@ -81,19 +130,32 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
     userIdsWithPush = new Set(subs.map(s => s.userId.toString()));
   }
 
-  const perUser: EmailUserStatus[] = await Promise.all(users.map(async (u): Promise<EmailUserStatus> => {
+  const targets = users.filter(u => !(onlyWithoutPush && userIdsWithPush.has(u._id.toString())));
+  if (targets.length > MAX_RECIPIENTS_PER_RUN) {
+    throw new Error(
+      `${targets.length} נמענים - מעל מגבלת ${MAX_RECIPIENTS_PER_RUN} לשליחה אחת (מכסת Gmail היומית). שלח בכמה סבבים.`,
+    );
+  }
+
+  const skipped: EmailUserStatus[] = users
+    .filter(u => onlyWithoutPush && userIdsWithPush.has(u._id.toString()))
+    .map(u => ({ userId: u._id.toString(), name: u.name, email: u.email, status: 'skipped' as const }));
+
+  // שליחה סדרתית - ה-pool מקצב ממילא, וסדרתי נותן שגיאות ברורות (למשל
+  // אימות שגוי נכשל על הראשון ולא מייצר 400 כשלים זהים).
+  const results: EmailUserStatus[] = [];
+  for (const u of targets) {
     const userId = u._id.toString();
-    if (onlyWithoutPush && userIdsWithPush.has(userId)) {
-      return { userId, name: u.name, email: u.email, status: 'skipped' };
-    }
     try {
       await sendSingle(u.email, payload.subject, payload.body);
-      return { userId, name: u.name, email: u.email, status: 'sent' };
-    } catch {
-      return { userId, name: u.name, email: u.email, status: 'failed' };
+      results.push({ userId, name: u.name, email: u.email, status: 'sent' });
+    } catch (err) {
+      logger.warn('Gmail send failed to %s: %s', u.email, (err as Error).message);
+      results.push({ userId, name: u.name, email: u.email, status: 'failed' });
     }
-  }));
+  }
 
+  const perUser = [...results, ...skipped];
   return {
     totalUsers: users.length,
     sent: perUser.filter(p => p.status === 'sent').length,
@@ -106,7 +168,7 @@ export async function broadcastEmail(payload: EmailPayload, onlyWithoutPush = fa
 export async function sendEmailToUser(userId: string, payload: EmailPayload): Promise<{ sent: boolean; email: string }> {
   const user = await User.findById(userId, 'name email').lean();
   if (!user) return { sent: false, email: '' };
-  if (!env.BREVO_API_KEY) return { sent: false, email: user.email };
+  if (!isEmailEnabled()) return { sent: false, email: user.email };
   await sendSingle(user.email, payload.subject, payload.body);
   return { sent: true, email: user.email };
 }
