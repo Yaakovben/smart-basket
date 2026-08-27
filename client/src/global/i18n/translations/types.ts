@@ -801,7 +801,6 @@ export type TranslationKeys =
   | 'savedLists'
   | 'saveAsSavedList'
   | 'saveAsSavedListTitle'
-  | 'savedListNameLabel'
   | 'savedListNameExample'
   | 'chooseIcon'
   | 'savedListSaved'
@@ -813,9 +812,6 @@ export type TranslationKeys =
   | 'deleteSavedListConfirm'
   | 'startFromSavedList'
   | 'savedListAddItemPlaceholder'
-  | 'savedListNoItems'
-  | 'savedListSnapshotHint'
-  | 'savedListSaveWhat'
   | 'savedListAddToList'
   // Connection indicator
   | 'offlineTitle'

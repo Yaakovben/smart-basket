@@ -124,7 +124,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
               const open = expandedId === sl.id;
               return (
                 <Box key={sl.id} sx={{ borderRadius: '14px', bgcolor: 'action.hover', overflow: 'hidden' }}>
-                  {/* ראש הכרטיס - כולו לחיץ, פותח/סוגר */}
+                  {/* ראש הכרטיס - כולו לחיץ פותח/סוגר; האמוג׳י פותח בורר אמוג׳י */}
                   <Box
                     onClick={() => toggleExpand(sl.id)}
                     sx={{
@@ -132,11 +132,21 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                       '&:active': { bgcolor: 'action.selected' }, transition: 'background-color 0.1s',
                     }}
                   >
-                    <Box sx={{
-                      width: 34, height: 34, flexShrink: 0, borderRadius: '10px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18, bgcolor: 'background.paper',
-                    }}>
+                    <Box
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedId(sl.id);
+                        setEmojiOpenId(id => (id === sl.id ? null : sl.id));
+                      }}
+                      aria-label={t('chooseIcon')}
+                      sx={{
+                        width: 34, height: 34, flexShrink: 0, borderRadius: '10px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 18, bgcolor: 'background.paper', cursor: 'pointer',
+                        border: '2px solid', borderColor: emojiOpenId === sl.id ? 'primary.main' : 'transparent',
+                        '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
+                      }}
+                    >
                       {sl.emoji}
                     </Box>
                     <Typography sx={{
@@ -145,9 +155,13 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                     }}>
                       {sl.name}
                     </Typography>
-                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', flexShrink: 0 }}>
-                      {`${sl.items.length} ${t('items')}`}
-                    </Typography>
+                    <Box sx={{
+                      flexShrink: 0, minWidth: 20, px: 0.6, borderRadius: '999px',
+                      bgcolor: 'background.paper', color: 'text.secondary',
+                      fontSize: 11, fontWeight: 700, textAlign: 'center', lineHeight: '18px',
+                    }}>
+                      {sl.items.length}
+                    </Box>
                     <ExpandMoreRoundedIcon
                       sx={{ fontSize: 22, color: 'text.secondary', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
                     />
@@ -155,32 +169,16 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
 
                   <Collapse in={open} unmountOnExit>
                     <Box sx={{ px: 1.25, pb: 1.25 }}>
-                      {/* שם + אמוג׳י */}
-                      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, mb: 1.25 }}>
-                        <Box
-                          onClick={() => setEmojiOpenId(id => (id === sl.id ? null : sl.id))}
-                          sx={{
-                            width: 40, height: 40, flexShrink: 0, borderRadius: '10px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 20, cursor: 'pointer', bgcolor: 'background.paper',
-                            border: '2px solid',
-                            borderColor: emojiOpenId === sl.id ? 'primary.main' : 'divider',
-                            '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
-                          }}
-                          aria-label={t('chooseIcon')}
-                        >
-                          {sl.emoji}
-                        </Box>
-                        <ClearableTextField
-                          value={sl.name}
-                          onChange={e => renameLocal(sl.id, e.target.value)}
-                          onClear={() => renameLocal(sl.id, '')}
-                          onBlur={commitNames}
-                          placeholder={t('savedListNameExample')}
-                          size="small"
-                          sx={{ flex: 1, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper' } }}
-                        />
-                      </Box>
+                      <ClearableTextField
+                        value={sl.name}
+                        onChange={e => renameLocal(sl.id, e.target.value)}
+                        onClear={() => renameLocal(sl.id, '')}
+                        onBlur={commitNames}
+                        placeholder={t('savedListNameExample')}
+                        size="small"
+                        fullWidth
+                        sx={{ mb: 1.25, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper' } }}
+                      />
 
                       <Collapse in={emojiOpenId === sl.id} unmountOnExit>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.25 }}>
@@ -237,19 +235,20 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         </IconButton>
                       </Box>
 
-                      <Box sx={{ display: 'flex', gap: 1, mt: 1.25 }}>
-                        <Button
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.25 }}>
+                        <IconButton
                           size="small"
                           onClick={() => setPendingDelete(sl)}
-                          startIcon={<DeleteOutlineIcon sx={{ fontSize: 17 }} />}
-                          sx={{ textTransform: 'none', fontSize: 12.5, fontWeight: 600, color: 'error.main', px: 1 }}
+                          aria-label={t('delete')}
+                          sx={{ color: 'error.main', bgcolor: 'rgba(239,68,68,0.08)', '&:hover': { bgcolor: 'rgba(239,68,68,0.16)' } }}
                         >
-                          {t('delete')}
-                        </Button>
+                          <DeleteOutlineIcon sx={{ fontSize: 19 }} />
+                        </IconButton>
                         <Box sx={{ flex: 1 }} />
                         <Button
                           size="small"
-                          variant="outlined"
+                          variant="contained"
+                          disableElevation
                           onClick={() => { haptic('light'); onApply(sl); handleClose(); }}
                           disabled={sl.items.length === 0}
                           startIcon={<PlaylistAddRoundedIcon sx={{ fontSize: 17 }} />}

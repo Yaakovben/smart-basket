@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Box, Typography, Button, Chip, CircularProgress } from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Collapse } from '@mui/material';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -8,7 +8,8 @@ import { SAVED_LIST_EMOJIS, newSavedListId, productsToSavedItems } from '../../h
 
 // ===== מודל "שמור כרשימה קבועה" =====
 // מקפיא את המוצרים הנוכחיים של הרשימה כרשימה קבועה בעלת שם ואמוג׳י.
-// נפתח מתפריט ה-⋮ של הרשימה (כשיש מוצרים).
+// נפתח מתפריט ה-⋮ של הרשימה (כשיש מוצרים). מינימום טקסט - כותרת, שורת
+// אמוג׳י+שם, תצוגה מקדימה של הפריטים, כפתור שמירה.
 interface SaveAsSavedListModalProps {
   defaultName: string;
   products: Product[];
@@ -20,6 +21,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
   const { t } = useSettings();
   const [name, setName] = useState(defaultName.slice(0, 40));
   const [emoji, setEmoji] = useState(SAVED_LIST_EMOJIS[0]);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const items = useMemo(() => productsToSavedItems(products), [products]);
@@ -39,61 +41,68 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
 
   return (
     <Modal title={t('saveAsSavedListTitle')} onClose={() => !saving && onClose()}>
-      <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 2 }}>
-        {t('savedListSnapshotHint')}
-      </Typography>
-
-      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>
-        {t('savedListNameLabel')}
-      </Typography>
-      <ClearableTextField
-        autoFocus
-        fullWidth
-        placeholder={t('savedListNameExample')}
-        value={name}
-        onChange={e => setName(e.target.value.slice(0, 40))}
-        onClear={() => setName('')}
-        size="small"
-      />
-
-      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', mb: 0.5, mt: 2 }}>
-        {t('chooseIcon')}
-      </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-        {SAVED_LIST_EMOJIS.map(e => (
-          <Box
-            key={e}
-            onClick={() => { haptic('light'); setEmoji(e); }}
-            sx={{
-              width: 36, height: 36, borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, cursor: 'pointer',
-              bgcolor: emoji === e ? 'rgba(20,184,166,0.15)' : 'action.hover',
-              border: '2px solid',
-              borderColor: emoji === e ? 'primary.main' : 'transparent',
-              '&:active': { transform: 'scale(0.9)' },
-              transition: 'all 0.12s ease',
-            }}
-          >
-            {e}
-          </Box>
-        ))}
+      {/* אמוג׳י (כפתור שפותח בורר) + שם, בשורה אחת */}
+      <Box sx={{ display: 'flex', gap: 1, mb: emojiOpen ? 1 : 2 }}>
+        <Box
+          onClick={() => { haptic('light'); setEmojiOpen(o => !o); }}
+          aria-label={t('chooseIcon')}
+          sx={{
+            width: 44, height: 44, flexShrink: 0, borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, cursor: 'pointer', bgcolor: 'action.hover',
+            border: '2px solid', borderColor: emojiOpen ? 'primary.main' : 'divider',
+            '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
+          }}
+        >
+          {emoji}
+        </Box>
+        <ClearableTextField
+          autoFocus
+          fullWidth
+          placeholder={t('savedListNameExample')}
+          value={name}
+          onChange={e => setName(e.target.value.slice(0, 40))}
+          onClear={() => setName('')}
+          size="small"
+          sx={{ '& .MuiOutlinedInput-root': { height: 44 } }}
+        />
       </Box>
 
-      {/* תצוגה מקדימה של מה שיישמר */}
-      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, mb: 0.75 }}>
-        <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary' }}>
-          {t('savedListSaveWhat')}
-        </Typography>
-        <Typography sx={{ fontSize: 11.5, color: 'text.secondary' }}>
-          {`${items.length} ${t('items')}`}
-        </Typography>
-      </Box>
+      <Collapse in={emojiOpen} unmountOnExit>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+          {SAVED_LIST_EMOJIS.map(e => (
+            <Box
+              key={e}
+              onClick={() => { haptic('light'); setEmoji(e); setEmojiOpen(false); }}
+              sx={{
+                width: 36, height: 36, borderRadius: '10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, cursor: 'pointer',
+                bgcolor: emoji === e ? 'rgba(20,184,166,0.15)' : 'action.hover',
+                border: '2px solid', borderColor: emoji === e ? 'primary.main' : 'transparent',
+                '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
+              }}
+            >
+              {e}
+            </Box>
+          ))}
+        </Box>
+      </Collapse>
+
+      {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה */}
       <Box sx={{
-        display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2.5,
-        maxHeight: 132, overflowY: 'auto', overscrollBehavior: 'contain',
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5, mb: 2.5,
+        maxHeight: 148, overflowY: 'auto', overscrollBehavior: 'contain',
         p: 1, borderRadius: '12px', bgcolor: 'action.hover',
       }}>
+        <Box sx={{
+          flexShrink: 0, minWidth: 22, height: 22, px: 0.75,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '999px', bgcolor: 'primary.main', color: 'white',
+          fontSize: 11, fontWeight: 800,
+        }}>
+          {items.length}
+        </Box>
         {items.map(it => (
           <Chip key={it.name} label={it.name} size="small" sx={{ fontSize: 11.5, bgcolor: 'background.paper' }} />
         ))}
