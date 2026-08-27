@@ -19,13 +19,14 @@ export const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => stri
     // תיאום עם popups אחרים - לא להופיע אם החיזוק היומי הוצג היום או ששכנו אחר פעיל
     if (!canShowSecondaryPopup()) return;
 
-    // 3 שניות אחרי טעינת הבית
+    // 15 שניות אחרי טעינת הבית - נותן למשתמש רגע להסתכל/להתנסות באפליקציה
+    // לפני שמפריעים לו עם הצעת התקנה, במקום לקפוץ עליו מיד עם הכניסה.
     const timer = setTimeout(() => {
       // בדיקה מחודשת רגע לפני הצגה - שמא בינתיים הופיע popup אחר
       if (!canShowSecondaryPopup()) return;
       markPopupShown('pwa-install');
       setShow(true);
-    }, 3000);
+    }, 15000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -39,16 +40,33 @@ export const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => stri
   const ios = isIOS();
 
   return (
-    <Box sx={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300,
-      pb: 'max(16px, env(safe-area-inset-bottom))',
-      px: 2, pt: 0,
-      animation: 'pwaSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
-      '@keyframes pwaSlideUp': {
-        from: { transform: 'translateY(110%)', opacity: 0 },
-        to: { transform: 'translateY(0)', opacity: 1 },
-      },
-    }}>
+    <>
+      {/* רקע מטושטש - הופך את זה מ"בר צף" ל"רגע" מכוון, אותו דפוס בדיוק
+          כמו HomeMenuSheet ("מה תרצה ליצור?") - עקביות ויזואלית לתחושת
+          bottom-sheet מוכרת. לחיצה על הרקע דוחה, כמו סגירה ב-X. */}
+      <Box
+        onClick={handleDismiss}
+        sx={{
+          position: 'fixed', inset: 0, zIndex: 1299,
+          bgcolor: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(3px)',
+          animation: 'pwaBackdropIn 0.35s ease-out',
+          '@keyframes pwaBackdropIn': {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+        }}
+      />
+      <Box sx={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300,
+        pb: 'max(16px, env(safe-area-inset-bottom))',
+        px: 2, pt: 0,
+        animation: 'pwaSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+        '@keyframes pwaSlideUp': {
+          from: { transform: 'translateY(110%)', opacity: 0 },
+          to: { transform: 'translateY(0)', opacity: 1 },
+        },
+      }}>
       <Box sx={{
         bgcolor: isDark ? '#1E293B' : 'white',
         borderRadius: '22px',
@@ -73,14 +91,26 @@ export const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => stri
         <Box sx={{ p: 2.5 }}>
           {/* ראש: אייקון + כותרת + X */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-            <Box sx={{
-              width: 48, height: 48, borderRadius: '14px',
-              background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 24, flexShrink: 0,
-              boxShadow: '0 6px 16px rgba(20,184,166,0.35)',
-            }}>
-              📲
+            <Box sx={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+              {/* טבעת זוהרת פועמת מאחורי האייקון - נגיעה קטנה של חיות בלי להיות רועשת */}
+              <Box sx={{
+                position: 'absolute', inset: -4, borderRadius: '18px',
+                background: 'linear-gradient(135deg, rgba(20,184,166,0.35), rgba(13,148,136,0.15))',
+                animation: 'pwaIconGlow 2.4s ease-in-out infinite',
+                '@keyframes pwaIconGlow': {
+                  '0%, 100%': { transform: 'scale(1)', opacity: 0.6 },
+                  '50%': { transform: 'scale(1.12)', opacity: 1 },
+                },
+              }} />
+              <Box sx={{
+                position: 'relative', width: 48, height: 48, borderRadius: '14px',
+                background: 'linear-gradient(135deg, #14B8A6, #0D9488)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 24,
+                boxShadow: '0 6px 16px rgba(20,184,166,0.35)',
+              }}>
+                📲
+              </Box>
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontSize: 15.5, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
@@ -160,6 +190,7 @@ export const PwaInstallPrompt = memo(({ t }: { t: (key: TranslationKeys) => stri
         </Box>
       </Box>
     </Box>
+    </>
   );
 });
 PwaInstallPrompt.displayName = 'PwaInstallPrompt';
