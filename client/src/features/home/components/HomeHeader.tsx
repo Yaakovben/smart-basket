@@ -64,6 +64,8 @@ export const HomeHeader = ({
         p: 'max(28px, env(safe-area-inset-top) + 6px) 10px 10px',
         borderRadius: '0 0 14px 14px',
         '& .MuiAvatar-root': { width: '36px !important', height: '36px !important', fontSize: '14px !important' },
+        '& .MuiOutlinedInput-root': { minHeight: '34px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important' },
         '& .MuiTab-root': { minHeight: '28px !important', fontSize: '11.5px !important' },
         '& > .MuiBox-root': { marginBottom: '6px !important' },
         '& .MuiTabs-root': { marginBottom: '0px !important' },
@@ -74,6 +76,8 @@ export const HomeHeader = ({
         borderRadius: '0 0 8px 8px',
         '& .MuiAvatar-root': { width: '26px !important', height: '26px !important', fontSize: '12px !important' },
         '& > .MuiBox-root': { marginBottom: '3px !important' },
+        '& .MuiOutlinedInput-root': { minHeight: '28px !important' },
+        '& .MuiOutlinedInput-input': { fontSize: '13px !important', py: '2px !important' },
         '& .MuiTab-root': {
           minHeight: '24px !important', py: '0px !important', fontSize: '11.5px !important',
           position: 'relative',
