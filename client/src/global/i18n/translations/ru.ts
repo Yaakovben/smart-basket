@@ -96,6 +96,8 @@ export const ru: Translations = {
   bulkReturnedToList: 'возвращено в список',
   moveToList: 'Переместить в список',
   moveToListHint: 'Выбранные товары переместятся в список, который вы выберете — из текущего списка они будут удалены.',
+  moveToListNoOtherListsTitle: 'Больше нет списков',
+  moveToListNoOtherListsDesc: 'Чтобы переместить товары, сначала создайте ещё один список.',
   productsMoved: 'перемещено',
   installIosHint: 'Добавьте на главный экран для лучшего опыта',
   installStep1Ios: 'Нажмите ⋯ или ⬆️ (поделиться) внизу',

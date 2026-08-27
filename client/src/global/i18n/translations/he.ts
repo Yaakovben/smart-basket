@@ -95,6 +95,8 @@ export const he: Translations = {
   bulkReturnedToList: 'הוחזרו לרשימה',
   moveToList: 'העבר לרשימה',
   moveToListHint: 'המוצרים שבחרת יעברו לרשימה שתבחר/י — הם יימחקו מהרשימה הנוכחית.',
+  moveToListNoOtherListsTitle: 'אין עוד רשימות',
+  moveToListNoOtherListsDesc: 'כדי להעביר מוצרים, צריך קודם ליצור רשימה נוספת.',
   productsMoved: 'הועברו',
   installIosHint: 'הוסף למסך הבית לחוויה מלאה',
   installStep1Ios: 'לחץ על ⋯ או ⬆️ (שיתוף) בסרגל למטה',

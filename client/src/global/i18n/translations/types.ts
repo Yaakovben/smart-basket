@@ -93,6 +93,8 @@ export type TranslationKeys =
   | 'bulkReturnedToList'
   | 'moveToList'
   | 'moveToListHint'
+  | 'moveToListNoOtherListsTitle'
+  | 'moveToListNoOtherListsDesc'
   | 'productsMoved'
   | 'installIosHint'
   | 'installStep1Ios'

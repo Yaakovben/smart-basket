@@ -96,6 +96,8 @@ export const en: Translations = {
   bulkReturnedToList: 'returned to list',
   moveToList: 'Move to list',
   moveToListHint: 'The selected items will move to the list you choose — they\'ll be removed from this one.',
+  moveToListNoOtherListsTitle: 'No other lists yet',
+  moveToListNoOtherListsDesc: 'To move items, first create another list.',
   productsMoved: 'moved',
   clearPurchased: 'Clear purchased products',
   installIosHint: 'Add to home screen for the best experience',

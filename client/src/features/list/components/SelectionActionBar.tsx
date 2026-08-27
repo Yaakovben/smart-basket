@@ -16,7 +16,6 @@ interface SelectionActionBarProps {
   onBulkAction: () => void;
   onDelete: () => void;
   onMove: () => void;
-  canMove: boolean;
 }
 
 export const SelectionActionBar = memo(({
@@ -29,7 +28,6 @@ export const SelectionActionBar = memo(({
   onBulkAction,
   onDelete,
   onMove,
-  canMove,
 }: SelectionActionBarProps) => {
   const { t } = useSettings();
 
@@ -149,9 +147,11 @@ export const SelectionActionBar = memo(({
           {t('delete')}
         </Button>
         {/* העברה לרשימה אחרת - icon-only, מושתק (בלי גרדיאנט/צל כמו שני
-            הכפתורים הראשיים) ובקצה השורה, כי משתמשים בזה הרבה פחות. */}
+            הכפתורים הראשיים) ובקצה השורה, כי משתמשים בזה הרבה פחות. תמיד
+            פעיל (לא מושבת גם כשאין רשימות אחרות) - MoveToListModal עצמו
+            מסביר את המצב אם אין לאן להעביר, במקום כפתור מושתק בלי הסבר. */}
         <Button
-          disabled={selectedCount === 0 || !canMove}
+          disabled={selectedCount === 0}
           onClick={onMove}
           aria-label={t('moveToList')}
           sx={{

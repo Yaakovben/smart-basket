@@ -12,10 +12,27 @@ interface MoveToListModalProps {
 }
 
 // בורר רשימת יעד להעברת מוצרים - בשימוש מתוך בחירה מרובה (ראה
-// SelectionActionBar). מוצג רק כש-lists לא ריק - הכפתור שפותח אותו
-// מנוטרל אם למשתמש אין רשימות אחרות.
+// SelectionActionBar, שם הכפתור תמיד פעיל - לא מנוטרל גם כשאין רשימות
+// אחרות). אם אין לאן להעביר, המודל מציג הסבר במקום רשימת יעדים ריקה
+// בשקט - כדי שהמשתמש יבין שצריך קודם ליצור רשימה נוספת.
 export const MoveToListModal = memo(({ lists, onSelect, onClose }: MoveToListModalProps) => {
   const { t } = useSettings();
+
+  if (lists.length === 0) {
+    return (
+      <Modal title={t('moveToList')} onClose={onClose}>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography sx={{ fontSize: 36, mb: 1.5 }} role="img" aria-hidden="true">📋</Typography>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary', mb: 0.75 }}>
+            {t('moveToListNoOtherListsTitle')}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', maxWidth: 260, mx: 'auto', lineHeight: 1.6 }}>
+            {t('moveToListNoOtherListsDesc')}
+          </Typography>
+        </Box>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title={t('moveToList')} onClose={onClose}>

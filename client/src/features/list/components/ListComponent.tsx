@@ -616,11 +616,11 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           onBulkAction={() => bulkSetPurchased(filter !== 'purchased')}
           onDelete={bulkDelete}
           onMove={() => setShowMoveModal(true)}
-          canMove={otherLists.length > 0}
         />
       )}
 
-      {/* בורר רשימת יעד להעברת מוצרים */}
+      {/* בורר רשימת יעד להעברת מוצרים - אם אין רשימות אחרות, המודל עצמו
+          מציג הסבר שצריך להוסיף רשימה במקום שלא ייפתח כלל. */}
       {showMoveModal && (
         <MoveToListModal
           lists={otherLists}
