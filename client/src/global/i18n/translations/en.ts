@@ -109,8 +109,6 @@ export const en: Translations = {
   exitShoppingMode: 'Exit shopping mode',
   listReset: 'List has been reset',
   resetListConfirm: 'All purchased items will be returned to the list',
-  addStaple: 'Staple product',
-  addStapleHint: 'Something you always buy - it\'ll be added to this list and suggested in every other list too',
   clearList: 'Clear list',
   clearAll: 'Delete all',
   clearAllDesc: 'Delete all products from the list',

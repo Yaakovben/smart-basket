@@ -108,8 +108,6 @@ export const he: Translations = {
   exitShoppingMode: 'יציאה ממצב קנייה',
   listReset: 'הרשימה אופסה',
   resetListConfirm: 'כל המוצרים שסומנו כנקנו יחזרו לרשימה',
-  addStaple: 'מוצר קבוע',
-  addStapleHint: 'מוצר שתמיד קונה - יתווסף לרשימה הזו ויוצע גם בכל רשימה אחרת',
   clearList: 'נקה רשימה',
   clearAll: 'מחק הכל',
   clearAllDesc: 'מחיקת כל המוצרים מהרשימה',

@@ -89,30 +89,6 @@ export async function toggleMutedGroup(userId: string, groupId: string): Promise
   return (updated.mutedGroupIds || []).map(id => id.toString());
 }
 
-// תקרה על מספר "מוצרים קבועים" - מונע ניצול לרעה (רשימה אינסופית) ושומרת
-// על שורת הצ'יפים בתוך הרשימה קריאה וקצרה בפועל.
-const MAX_STAPLES = 40;
-
-/**
- * הוספה/הסרה של "מוצר קבוע" (שם מוצר שהמשתמש תמיד קונה). מחזיר את הרשימה המעודכנת.
- */
-export async function toggleStaple(userId: string, rawName: string): Promise<string[]> {
-  const name = sanitizeText(rawName);
-  if (!name) throw ValidationError.single('name', 'Staple name is required');
-
-  const user = await UserDAL.findById(userId);
-  if (!user) throw NotFoundError.user();
-
-  const alreadyExists = (user.staples || []).includes(name);
-  if (!alreadyExists && (user.staples?.length ?? 0) >= MAX_STAPLES) {
-    throw ValidationError.single('name', `Maximum ${MAX_STAPLES} staple products reached`);
-  }
-
-  const updated = await UserDAL.toggleStaple(userId, name);
-  if (!updated) throw NotFoundError.user();
-  return updated.staples || [];
-}
-
 /**
  * מחיקת חשבון בטוחה.
  * פעולה זו רצה בתוך טרנזקציה של Mongo:

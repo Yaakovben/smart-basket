@@ -56,11 +56,10 @@ interface ListPageProps {
   onDeleteList: (listId: string) => void;
   showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUserIds?: Set<string>;
-  onToggleStaple: (name: string) => Promise<void>;
 }
 
 // ===== קומפוננטה ראשית =====
-export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds, onToggleStaple }: ListPageProps) => {
+export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
   const isMuteToggling = useRef(false);
 
@@ -274,7 +273,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onScanList={stableScanList}
         costEstimate={costEstimate}
         productNames={[...pending, ...purchased].map(p => p.name)}
-        onToggleStaple={onToggleStaple}
       />
 
       {scanListMounted && (

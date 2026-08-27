@@ -7,9 +7,6 @@ export interface User {
   avatarColor?: string;
   avatarEmoji?: string;
   listOrder?: string[];
-  // מוצרים שהמשתמש תמיד קונה - עצמאי מרשימה ספציפית, מוצג כצ'יפים
-  // להוספה מהירה בתוך כל רשימה (ראו StaplesBar).
-  staples?: string[];
 }
 
 // ===== מוצר =====

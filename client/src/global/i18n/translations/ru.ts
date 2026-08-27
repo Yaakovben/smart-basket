@@ -109,8 +109,6 @@ export const ru: Translations = {
   exitShoppingMode: 'Выйти из режима покупок',
   listReset: 'Список сброшен',
   resetListConfirm: 'Все купленные товары вернутся в список',
-  addStaple: 'Постоянный товар',
-  addStapleHint: 'То, что вы всегда покупаете - добавится в этот список и будет предлагаться во всех остальных',
   clearList: 'Очистить список',
   clearAll: 'Удалить всё',
   clearAllDesc: 'Удалить все товары из списка',

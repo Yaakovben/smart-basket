@@ -23,10 +23,6 @@ export const userValidator = {
     listOrder: Joi.array().items(commonSchemas.objectId).required(),
   }),
 
-  toggleStaple: Joi.object({
-    name: Joi.string().trim().min(1).max(50).required(),
-  }),
-
   changePassword: Joi.object({
     currentPassword: Joi.string().min(1).required().messages({
       'string.min': 'Current password is required',
