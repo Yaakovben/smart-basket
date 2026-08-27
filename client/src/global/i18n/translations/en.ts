@@ -167,6 +167,8 @@ export const en: Translations = {
   noProductsDesc: 'Add new products to the list',
   noSearchResults: 'No results found',
   noSearchResultsDesc: 'Try a different search term',
+  noListSearchResults: 'No lists found',
+  noListSearchResultsDesc: 'Try a different list name',
   noPurchasedProducts: 'No purchased products',
   noPurchasedProductsDesc: 'Items you mark as purchased will appear here',
   swipeHint: 'Tip: Swipe left for actions • Tap for details',

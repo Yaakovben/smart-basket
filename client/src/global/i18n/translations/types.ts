@@ -161,6 +161,8 @@ export type TranslationKeys =
   | 'noProducts'
   | 'noProductsDesc'
   | 'noSearchResults'
+  | 'noListSearchResults'
+  | 'noListSearchResultsDesc'
   | 'noSearchResultsDesc'
   | 'noPurchasedProducts'
   | 'noPurchasedProductsDesc'

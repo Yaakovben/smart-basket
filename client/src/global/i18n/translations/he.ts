@@ -166,6 +166,8 @@ export const he: Translations = {
   noProductsDesc: 'הוסף מוצרים חדשים לרשימה',
   noSearchResults: 'לא נמצאו תוצאות',
   noSearchResultsDesc: 'נסה לחפש מילה אחרת',
+  noListSearchResults: 'לא נמצאו רשימות',
+  noListSearchResultsDesc: 'נסה לחפש שם רשימה אחר',
   noPurchasedProducts: 'אין מוצרים שנקנו',
   noPurchasedProductsDesc: 'מוצרים שתסמן כנקנו יופיעו כאן',
   swipeHint: 'טיפ: גרור שמאלה לפעולות • לחץ לפרטים',

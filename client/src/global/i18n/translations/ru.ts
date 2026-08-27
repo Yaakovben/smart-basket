@@ -167,6 +167,8 @@ export const ru: Translations = {
   noProductsDesc: 'Добавьте новые товары в список',
   noSearchResults: 'Ничего не найдено',
   noSearchResultsDesc: 'Попробуйте другой запрос',
+  noListSearchResults: 'Списки не найдены',
+  noListSearchResultsDesc: 'Попробуйте другое название списка',
   noPurchasedProducts: 'Нет купленных товаров',
   noPurchasedProductsDesc: 'Товары, отмеченные как купленные, появятся здесь',
   swipeHint: 'Совет: Свайп влево для действий • Нажмите для деталей',

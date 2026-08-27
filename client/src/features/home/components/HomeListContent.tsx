@@ -164,16 +164,52 @@ export const HomeListContent = ({
         </Box>
       ) : orderedDisplay.length === 0 && hasSearchQuery ? (
         // חיפוש בלי תוצאות - שונה מ"אין רשימות בכלל" (יש רשימות, פשוט לא
-        // תואמות את החיפוש). אותו דפוס בדיוק כמו חיפוש מוצר בתוך רשימה
-        // (EmptyState.tsx בפיצ'ר הרשימה) - אייקון זכוכית מגדלת, לא האנימציה
-        // הגדולה של "צור רשימה ראשונה".
-        <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '40vh' }}>
-          <Typography sx={{ fontSize: 44, mb: 1.5 }}>🔍</Typography>
+        // תואמות את החיפוש). אותו דפוס אנימציה בדיוק כמו חיפוש מוצר בתוך
+        // רשימה (EmptyState.tsx בפיצ'ר הרשימה - pulseRing/floatMain/floatItem,
+        // גרדיאנט ענבר, 4 אייקונים מרחפים) אבל עם טקסט מותאם לחיפוש רשימות.
+        <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '45vh' }}>
+          <Box sx={{ position: 'relative', width: 130, height: 130, mb: { xs: 1.75, sm: 2 } }}>
+            <Box sx={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              background: isDark ? 'linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1))' : 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+              animation: 'pulseRing 3s ease-in-out infinite',
+              '@keyframes pulseRing': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.05)' },
+              },
+            }} />
+            <Box sx={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 52,
+              animation: 'floatMain 3s ease-in-out infinite',
+              '@keyframes floatMain': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-6px)' },
+              },
+            }}>
+              🔍
+            </Box>
+            {['❓', '🔎', '💭', '✨'].map((emoji, i) => (
+              <Box key={i} sx={{
+                position: 'absolute', fontSize: 18,
+                top: ['10%', '12%', '70%', '68%'][i],
+                left: ['10%', '78%', '8%', '78%'][i],
+                animation: `floatItem 2.8s ease-in-out ${i * 0.3}s infinite`,
+                '@keyframes floatItem': {
+                  '0%, 100%': { transform: 'translateY(0) rotate(-5deg)', opacity: 0.85 },
+                  '50%': { transform: 'translateY(-8px) rotate(5deg)', opacity: 1 },
+                },
+              }}>
+                {emoji}
+              </Box>
+            ))}
+          </Box>
           <Typography sx={{ fontSize: { xs: 16, sm: 17 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
-            {t('noSearchResults')}
+            {t('noListSearchResults')}
           </Typography>
           <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', maxWidth: { xs: 260, sm: 280 } }}>
-            {t('noSearchResultsDesc')}
+            {t('noListSearchResultsDesc')}
           </Typography>
         </Box>
       ) : orderedDisplay.length === 0 ? (
