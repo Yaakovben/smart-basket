@@ -24,5 +24,6 @@ export const sendEmailToUser = async (req: Request, res: Response, _next: NextFu
 };
 
 export const getEmailStatus = (_req: Request, res: Response): void => {
-  res.json({ data: { enabled: emailService.isEmailEnabled() } });
+  // כולל missing[] - אילו משתני env חסרים בדיוק (לאבחון: "למה לא מוגדר?")
+  res.json({ data: emailService.emailConfigStatus() });
 };

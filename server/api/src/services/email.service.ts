@@ -36,8 +36,22 @@ const MAX_RECIPIENTS_PER_RUN = 300;
 // אז ~2.5 בשנייה. 4 במקביל עם round-trip של ~350ms ≈ בול בטווח.
 const SEND_CONCURRENCY = 4;
 
+// כל ארבעת משתני הסביבה הנדרשים לשליחת מייל, בשמם המדויק (name -> value).
+const REQUIRED_ENV: Record<string, string | undefined> = {
+  GMAIL_USER: env.GMAIL_USER,
+  GMAIL_CLIENT_ID: env.GMAIL_CLIENT_ID,
+  GMAIL_CLIENT_SECRET: env.GMAIL_CLIENT_SECRET,
+  GMAIL_REFRESH_TOKEN: env.GMAIL_REFRESH_TOKEN,
+};
+
 export function isEmailEnabled(): boolean {
-  return !!(env.GMAIL_USER && env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN);
+  return Object.values(REQUIRED_ENV).every(Boolean);
+}
+
+/** מצב הגדרת המייל - כולל אילו משתנים חסרים בדיוק, לאבחון בפאנל האדמין. */
+export function emailConfigStatus(): { enabled: boolean; missing: string[] } {
+  const missing = Object.entries(REQUIRED_ENV).filter(([, v]) => !v).map(([k]) => k);
+  return { enabled: missing.length === 0, missing };
 }
 
 export interface EmailPayload {

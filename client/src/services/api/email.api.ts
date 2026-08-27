@@ -20,12 +20,17 @@ export interface SendEmailResult {
   email: string;
 }
 
-const getEmailStatus = async (): Promise<boolean> => {
+export interface EmailConfigStatus {
+  enabled: boolean;
+  missing: string[]; // שמות משתני env שחסרים בשרת
+}
+
+const getEmailStatus = async (): Promise<EmailConfigStatus> => {
   try {
-    const r = await apiClient.get<{ data: { enabled: boolean } }>('/email/status');
-    return r.data.data.enabled;
+    const r = await apiClient.get<{ data: EmailConfigStatus }>('/email/status');
+    return { enabled: !!r.data.data.enabled, missing: r.data.data.missing ?? [] };
   } catch {
-    return false;
+    return { enabled: false, missing: [] };
   }
 };
 

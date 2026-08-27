@@ -34,10 +34,11 @@ export const EmailBroadcastManager = ({ isDark, users, onClose }: EmailBroadcast
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<Result>(null);
   const [confirming, setConfirming] = useState(false);
-  const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
+  const [emailCfg, setEmailCfg] = useState<{ enabled: boolean; missing: string[] } | null>(null);
+  const emailEnabled = emailCfg?.enabled ?? null;
 
   useEffect(() => {
-    emailApi.getEmailStatus().then(setEmailEnabled);
+    emailApi.getEmailStatus().then(setEmailCfg);
   }, []);
 
   const canSend = subject.trim() && body.trim() && (mode !== 'user' || selectedUser) && emailEnabled;
@@ -125,10 +126,13 @@ export const EmailBroadcastManager = ({ isDark, users, onClose }: EmailBroadcast
         </Typography>
 
         {emailEnabled === false && (
-          <Box sx={{ px: 1.5, py: 1, borderRadius: '12px', bgcolor: isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2', display: 'flex', gap: 1, alignItems: 'center' }}>
-            <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 18, flexShrink: 0 }} />
-            <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: '#B91C1C' }}>
-              שירות המייל לא מוגדר בשרת (GMAIL_USER / GMAIL_APP_PASSWORD חסרים)
+          <Box sx={{ px: 1.5, py: 1, borderRadius: '12px', bgcolor: isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2', display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+            <ErrorOutlineIcon sx={{ color: '#EF4444', fontSize: 18, flexShrink: 0, mt: '1px' }} />
+            <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: '#B91C1C', lineHeight: 1.5 }}>
+              שירות המייל לא מוגדר בשרת.
+              {emailCfg?.missing?.length
+                ? ` חסר ב-env: ${emailCfg.missing.join(', ')}`
+                : ' ייתכן שהשרת עדיין לא התעדכן לגרסה עם Gmail API.'}
             </Typography>
           </Box>
         )}
