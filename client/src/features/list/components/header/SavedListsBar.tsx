@@ -1,24 +1,18 @@
-import { memo, useMemo, useState, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { Box, Chip } from '@mui/material';
-import PlaylistAddCheckRoundedIcon from '@mui/icons-material/PlaylistAddCheckRounded';
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
-import type { Product, SavedList } from '../../../../global/types';
+import type { SavedList } from '../../../../global/types';
 import { haptic } from '../../../../global/helpers';
-import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שורת "רשימות קבועות" =====
-// נקודת הכניסה היחידה והקלה להזרקת רשימה קבועה שלמה לתוך הרשימה הנוכחית.
+// נקודת הכניסה הקלה להזרקת רשימה קבועה שלמה לרשימה הנוכחית בלחיצה אחת.
 // עקרונות עיצוב (בעקבות הכישלון של StaplesBar הישן):
-//  1. צ'יפ אחד לכל *רשימה קבועה* (לא לכל מוצר) - בפועל 1-4 צ'יפים, לא תריסר.
+//  1. צ'יפ אחד לכל *רשימה קבועה* (לא לכל מוצר) - בפועל 1-4 צ'יפים.
 //  2. לא כפילות של QuickAdd - זו הזרקת אוסף, לא הוספת פריט בודד.
-//  3. מתקפלת מעצמה: כשהרשימה כבר מבוססת (>= COLLAPSE_AT פריטים ממתינים)
-//     הבר מצטמצם לקישור זעיר בשורה אחת, כי "התחלה מרשימה קבועה" רלוונטית
-//     בעיקר ברשימה ריקה/קצרה. לחיצה פותחת אותו שוב.
-//  4. אם למשתמש אין רשימות קבועות בכלל - הבר לא מרונדר כלל (גילוי הפיצ'ר
-//     דרך תפריט ה-⋮ "שמור כרשימה קבועה").
-
-const COLLAPSE_AT = 6;
+//  3. מנהלת את עצמה: מוצגת רק רשימה קבועה שעוד יש לה מה לתרום (יש בה
+//     פריט שלא נמצא כרגע ברשימה). ככל שמוסיפים את פריטי החבילה - המונה
+//     על הצ'יפ קטן ואז הצ'יפ נעלם. אם אין אף רשימה קבועה רלוונטית -
+//     הבר לא מרונדר כלל.
+//  4. ניהול (עריכה/מחיקה) נעשה מתפריט ה-⋮ ("רשימות קבועות"), לא מכאן.
 
 const rowSx = {
   display: 'flex',
@@ -26,12 +20,16 @@ const rowSx = {
   gap: 0.75,
   overflowX: 'auto',
   pb: 0.25,
+  mb: { xs: 0.75, sm: 1 },
+  '@media (max-width: 360px)': { mb: 0.5 },
+  '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
   '&::-webkit-scrollbar': { display: 'none' },
   scrollbarWidth: 'none' as const,
 };
 
-const filledChipSx = {
+const chipSx = {
   flexShrink: 0,
+  height: 28,
   bgcolor: 'rgba(255,255,255,0.18)',
   color: 'white',
   fontWeight: 600,
@@ -42,92 +40,55 @@ const filledChipSx = {
   transition: 'transform 0.12s ease, background-color 0.15s ease',
 };
 
-const ghostChipSx = {
-  flexShrink: 0,
-  bgcolor: 'transparent',
-  border: '1px dashed rgba(255,255,255,0.5)',
-  color: 'rgba(255,255,255,0.9)',
-  fontWeight: 600,
-  fontSize: 12.5,
-  '& .MuiChip-icon': { color: 'rgba(255,255,255,0.85)' },
-};
-
 interface SavedListsBarProps {
   savedLists: SavedList[];
-  pendingProducts: Product[];
+  /** שמות המוצרים שעדיין לא נקנו ברשימה הנוכחית (ממואיזציה ב-ListComponent). */
+  pendingNames: string[];
   onApply: (savedList: SavedList) => void;
-  onManage: () => void;
 }
 
-export const SavedListsBar = memo(({ savedLists, pendingProducts, onApply, onManage }: SavedListsBarProps) => {
-  const { t } = useSettings();
-  const [expanded, setExpanded] = useState(false);
-
-  // כמה פריטים מכל רשימה קבועה עדיין חסרים ברשימה הנוכחית - כדי להסתיר
-  // צ'יפ של רשימה שכל פריטיה כבר נמצאים (אין מה להוסיף).
-  const enriched = useMemo(() => {
-    const present = new Set(pendingProducts.map(p => p.name.trim().toLowerCase()));
+export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedListsBarProps) => {
+  // רק רשימות קבועות שעוד יש בהן פריט שאינו נמצא כרגע ברשימה.
+  const relevant = useMemo(() => {
+    const present = new Set(pendingNames.map(n => n.trim().toLowerCase()));
     return savedLists
-      .map(sl => ({
-        savedList: sl,
-        missing: sl.items.filter(it => !present.has(it.name.trim().toLowerCase())).length,
-      }))
+      .map(sl => ({ sl, missing: sl.items.filter(it => !present.has(it.name.trim().toLowerCase())).length }))
       .filter(e => e.missing > 0);
-  }, [savedLists, pendingProducts]);
+  }, [savedLists, pendingNames]);
 
   const handleApply = useCallback((sl: SavedList) => {
     haptic('light');
     onApply(sl);
   }, [onApply]);
 
-  if (enriched.length === 0) return null;
-
-  const collapsed = pendingProducts.length >= COLLAPSE_AT && !expanded;
-
-  if (collapsed) {
-    return (
-      <Box sx={{ display: 'flex' }}>
-        <Box
-          onClick={() => setExpanded(true)}
-          sx={{
-            display: 'flex', alignItems: 'center', gap: 0.5,
-            cursor: 'pointer', py: 0.25,
-            color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 600,
-            '&:active': { opacity: 0.7 },
-          }}
-        >
-          <PlaylistAddCheckRoundedIcon sx={{ fontSize: 15 }} />
-          {t('savedLists')}
-          <ExpandMoreRoundedIcon sx={{ fontSize: 16 }} />
-        </Box>
-      </Box>
-    );
-  }
+  if (relevant.length === 0) return null;
 
   return (
     <Box sx={rowSx}>
-      {enriched.map(({ savedList, missing }) => (
+      {relevant.map(({ sl, missing }) => (
         <Chip
-          key={savedList.id}
-          onClick={() => handleApply(savedList)}
+          key={sl.id}
+          onClick={() => handleApply(sl)}
           size="small"
-          sx={filledChipSx}
+          sx={chipSx}
           label={
             <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-              <Box component="span" sx={{ fontSize: 13 }}>{savedList.emoji}</Box>
-              {savedList.name}
-              <Box component="span" sx={{ opacity: 0.65, fontWeight: 700, ml: 0.25 }}>{missing}</Box>
+              <Box component="span" sx={{ fontSize: 13.5 }}>{sl.emoji}</Box>
+              {sl.name}
+              <Box
+                component="span"
+                sx={{
+                  minWidth: 16, px: 0.4, borderRadius: '999px',
+                  bgcolor: 'rgba(255,255,255,0.22)', fontSize: 10.5, fontWeight: 700,
+                  textAlign: 'center', lineHeight: '16px',
+                }}
+              >
+                {missing}
+              </Box>
             </Box>
           }
         />
       ))}
-      <Chip
-        icon={<TuneRoundedIcon sx={{ fontSize: 14 }} />}
-        label={t('manageSavedLists')}
-        onClick={() => { haptic('light'); onManage(); }}
-        size="small"
-        sx={ghostChipSx}
-      />
     </Box>
   );
 });

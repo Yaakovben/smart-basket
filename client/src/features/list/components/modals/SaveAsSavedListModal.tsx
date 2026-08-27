@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
+import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { SAVED_LIST_EMOJIS, newSavedListId, productsToSavedItems } from '../../helpers/savedList-helpers';
 
@@ -21,11 +22,12 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
   const [emoji, setEmoji] = useState(SAVED_LIST_EMOJIS[0]);
   const [saving, setSaving] = useState(false);
 
-  const items = productsToSavedItems(products);
+  const items = useMemo(() => productsToSavedItems(products), [products]);
   const canSave = name.trim().length >= 2 && items.length > 0 && !saving;
 
   const handleSave = useCallback(async () => {
     if (name.trim().length < 2 || items.length === 0 || saving) return;
+    haptic('light');
     setSaving(true);
     try {
       await onSave({ id: newSavedListId(), emoji, name: name.trim(), items });
@@ -81,7 +83,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
       </Box>
 
       <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 1.5 }}>
-        {`${items.length} ${t('savedListApplied')}`}
+        {`${items.length} ${t('items')}`}
       </Typography>
 
       <Button

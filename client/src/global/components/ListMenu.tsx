@@ -10,6 +10,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import BookmarkAddRoundedIcon from '@mui/icons-material/BookmarkAddRounded';
+import BookmarksRoundedIcon from '@mui/icons-material/BookmarksRounded';
 import { useSettings } from '../context/SettingsContext';
 import { menuPaperSx, menuItemSx, menuLabelSx, dividerSx, muteToggleBoxSx, muteToggleLabelSx } from '../styles/ListMenu.styles';
 
@@ -29,6 +30,7 @@ interface ListMenuProps {
   onShoppingMode?: () => void;
   onDuplicate?: () => void;
   onSaveAsSavedList?: () => void;
+  onManageSavedLists?: () => void;
   hasProducts?: boolean;
   onLeave?: () => void;
   onScanList?: () => void;
@@ -51,6 +53,7 @@ export const ListMenu = memo(({
   onShoppingMode,
   onClearList,
   onSaveAsSavedList,
+  onManageSavedLists,
   hasProducts = false,
   onLeave,
   onScanList,
@@ -63,7 +66,7 @@ export const ListMenu = memo(({
   // קבוצות ולא בין פריטים בתוך אותה קבוצה: (1) רענון/מצב קנייה/סריקה,
   // (2) השתקה/עריכה/ניקוי, (3) מחיקה/עזיבה.
   const hasGroup1 = !!onRefresh || !!(onShoppingMode && hasProducts) || !!onScanList;
-  const hasGroup2 = isGroup || isOwner || !!(onClearList && hasProducts) || !!onSaveAsSavedList;
+  const hasGroup2 = isGroup || isOwner || !!(onClearList && hasProducts) || !!onSaveAsSavedList || !!onManageSavedLists;
   const hasGroup3 = isOwner || (!isOwner && isGroup && !!onLeave);
 
   return (
@@ -160,6 +163,16 @@ export const ListMenu = memo(({
           <BookmarkAddRoundedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
           <Typography sx={menuLabelSx}>
             {t('saveAsSavedList')}
+          </Typography>
+        </MenuItem>
+      )}
+
+      {/* ניהול רשימות קבועות קיימות */}
+      {onManageSavedLists && (
+        <MenuItem onClick={() => { onClose(); onManageSavedLists(); }} sx={menuItemSx}>
+          <BookmarksRoundedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography sx={menuLabelSx}>
+            {t('savedLists')}
           </Typography>
         </MenuItem>
       )}

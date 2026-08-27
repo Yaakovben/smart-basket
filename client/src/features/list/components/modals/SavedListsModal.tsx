@@ -6,16 +6,17 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
 import type { SavedList } from '../../../../global/types';
 import { Modal, ConfirmModal, ClearableTextField } from '../../../../global/components';
+import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { SAVED_LIST_EMOJIS, nameToSavedItem } from '../../helpers/savedList-helpers';
+import { SAVED_LIST_EMOJIS, MAX_SAVED_LIST_ITEMS, nameToSavedItem } from '../../helpers/savedList-helpers';
 
 // ===== מודל ניהול "רשימות קבועות" =====
-// נפתח מצ'יפ ⚙ בשורת SavedListsBar. עריכה מקומית (draft) עם flush לשרת:
-// שינויים מבניים (מחיקה/הוספת פריט/הסרת פריט/אמוג׳י) נשמרים מיד; שינוי שם
-// נשמר ב-blur. סגירת המודל שומרת כל שארית.
+// נפתח מתפריט ה-⋮ ("רשימות קבועות"). עריכה מקומית (draft) עם flush לשרת:
+// שינויים מבניים (מחיקה / הוספת פריט / הסרת פריט / אמוג׳י) נשמרים מיד;
+// שינוי שם נשמר ב-blur; סגירת המודל שומרת כל שארית.
 interface SavedListsModalProps {
   savedLists: SavedList[];
-  onChange: (next: SavedList[]) => Promise<void>;
+  onChange: (next: SavedList[]) => Promise<void> | void;
   onApply: (savedList: SavedList) => void;
   onClose: () => void;
 }
@@ -24,63 +25,77 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   const { t } = useSettings();
   const [draft, setDraft] = useState<SavedList[]>(savedLists);
   const draftRef = useRef(draft);
-  const savedRef = useRef(JSON.stringify(savedLists));
-  useEffect(() => { draftRef.current = draft; }, [draft]);
+  const savedJsonRef = useRef(JSON.stringify(savedLists));
+  // שמות מקוריים - כדי לשחזר אם המשתמש מרוקן שדה שם ולא מקליד חדש
+  // (שם ריק היה נמחק ע"י השרת בשקט).
+  const originalNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
   const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
   const [newItemText, setNewItemText] = useState('');
 
   const persist = useCallback((next: SavedList[]) => {
-    if (JSON.stringify(next) === savedRef.current) return;
-    savedRef.current = JSON.stringify(next);
+    const json = JSON.stringify(next);
+    if (json === savedJsonRef.current) return;
+    savedJsonRef.current = json;
     void onChange(next);
   }, [onChange]);
 
-  // flush שארית בסגירה / unmount
-  useEffect(() => () => { persist(draftRef.current); }, [persist]);
-
-  const mutate = useCallback((fn: (lists: SavedList[]) => SavedList[], commit = true) => {
-    setDraft(prev => {
-      const next = fn(prev);
-      if (commit) persist(next);
-      return next;
-    });
+  // מחיל שינוי על ה-draft (state + ref מסונכרן) ואופציונלית שומר מיד.
+  const apply = useCallback((producer: (lists: SavedList[]) => SavedList[], persistNow: boolean) => {
+    const next = producer(draftRef.current);
+    draftRef.current = next;
+    setDraft(next);
+    if (persistNow) persist(next);
   }, [persist]);
 
+  // החזרת שם ריק לערכו המקורי (שם ריק היה נמחק ע"י השרת בשקט).
+  const withNamesFixed = useCallback((lists: SavedList[]) =>
+    lists.map(l => (l.name.trim() ? l : { ...l, name: originalNames.current.get(l.id) ?? l.name })),
+  []);
+
+  // מתקן שמות ריקים ואז שומר - משמש ב-blur וב-close (מעדכן גם את ה-UI).
+  const commitNames = useCallback(() => apply(withNamesFixed, true), [apply, withNamesFixed]);
+
+  // flush שארית (שינויי שם שלא עברו blur) ב-unmount - בלי setState.
+  useEffect(() => () => persist(withNamesFixed(draftRef.current)), [persist, withNamesFixed]);
+
   const handleClose = useCallback(() => {
-    persist(draftRef.current);
+    commitNames();
     onClose();
-  }, [persist, onClose]);
+  }, [commitNames, onClose]);
 
   const renameLocal = (id: string, name: string) =>
-    mutate(lists => lists.map(l => (l.id === id ? { ...l, name: name.slice(0, 40) } : l)), false);
+    apply(lists => lists.map(l => (l.id === id ? { ...l, name: name.slice(0, 40) } : l)), false);
 
-  const cycleEmoji = (id: string) =>
-    mutate(lists => lists.map(l => {
+  const cycleEmoji = (id: string) => {
+    haptic('light');
+    apply(lists => lists.map(l => {
       if (l.id !== id) return l;
       const i = SAVED_LIST_EMOJIS.indexOf(l.emoji);
       return { ...l, emoji: SAVED_LIST_EMOJIS[(i + 1) % SAVED_LIST_EMOJIS.length] };
-    }));
+    }), true);
+  };
 
   const removeItem = (id: string, idx: number) =>
-    mutate(lists => lists.map(l => (l.id === id ? { ...l, items: l.items.filter((_, i) => i !== idx) } : l)));
+    apply(lists => lists.map(l => (l.id === id ? { ...l, items: l.items.filter((_, i) => i !== idx) } : l)), true);
 
   const addItem = (id: string) => {
     const item = nameToSavedItem(newItemText);
     if (!item) return;
     setNewItemText('');
-    mutate(lists => lists.map(l => {
+    apply(lists => lists.map(l => {
       if (l.id !== id) return l;
+      if (l.items.length >= MAX_SAVED_LIST_ITEMS) return l;
       if (l.items.some(it => it.name.trim().toLowerCase() === item.name.toLowerCase())) return l;
       return { ...l, items: [...l.items, item] };
-    }));
+    }), true);
   };
 
   const confirmDelete = () => {
     if (!pendingDelete) return;
     const id = pendingDelete.id;
     setPendingDelete(null);
-    mutate(lists => lists.filter(l => l.id !== id));
+    apply(lists => lists.filter(l => l.id !== id), true);
   };
 
   return (
@@ -109,7 +124,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         width: 36, height: 36, flexShrink: 0, borderRadius: '10px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 18, bgcolor: 'background.paper', cursor: 'pointer',
-                        '&:active': { transform: 'scale(0.92)' }, transition: 'transform 0.12s',
+                        '&:active': { transform: 'scale(0.9)' }, transition: 'transform 0.12s',
                       }}
                       aria-label={t('chooseIcon')}
                     >
@@ -119,7 +134,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                       value={sl.name}
                       onChange={e => renameLocal(sl.id, e.target.value)}
                       onClear={() => renameLocal(sl.id, '')}
-                      onBlur={() => persist(draftRef.current)}
+                      onBlur={commitNames}
                       placeholder={t('savedListNameExample')}
                       variant="standard"
                       size="small"
@@ -179,11 +194,12 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                       <Button
                         fullWidth
                         size="small"
-                        onClick={() => { onApply(sl); handleClose(); }}
+                        variant="outlined"
+                        onClick={() => { haptic('light'); onApply(sl); handleClose(); }}
                         disabled={sl.items.length === 0}
-                        sx={{ mt: 1, textTransform: 'none', fontSize: 13, fontWeight: 700 }}
+                        sx={{ mt: 1, textTransform: 'none', fontSize: 13, fontWeight: 700, borderRadius: '10px' }}
                       >
-                        {`${t('startFromSavedList')} · ${sl.items.length}`}
+                        {`${t('add')} · ${sl.items.length} ${t('items')}`}
                       </Button>
                     </Box>
                   )}

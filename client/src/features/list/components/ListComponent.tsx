@@ -268,6 +268,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     () => [...pending, ...purchased].map(p => p.name),
     [pending, purchased]
   );
+  // שמות המוצרים שעדיין לא נקנו - עבור SavedListsBar (החלטה אילו רשימות
+  // קבועות עדיין רלוונטיות). ממואיזציה כדי לא לשבור את ה-memo של ListHeader.
+  const pendingNames = useMemo(() => pending.map(p => p.name), [pending]);
 
   // הצעות מוצרים מהרשימה הנוכחית (שמות ייחודיים)
   const productSuggestions = useMemo(() => {
@@ -331,6 +334,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onLeave={!isOwner && list.isGroup ? stableLeaveList : undefined}
         onScanList={stableScanList}
         savedLists={savedLists}
+        pendingNames={pendingNames}
         onApplySavedList={handleApplySavedList}
         onManageSavedLists={stableManageSavedLists}
         onSaveAsSavedList={stableSaveAsSavedList}

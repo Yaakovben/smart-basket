@@ -50,6 +50,7 @@ interface ListHeaderProps {
   onLeave?: () => void;
   onScanList?: () => void;
   savedLists?: SavedList[];
+  pendingNames?: string[];
   onApplySavedList?: (savedList: SavedList) => void;
   onManageSavedLists?: () => void;
   onSaveAsSavedList?: () => void;
@@ -63,7 +64,7 @@ export const ListHeader = memo(({
   onToggleMute, isMuted, mainNotificationsOff, onShareList, onShowMembers,
   onShowInvite, onQuickAdd, onlineUserIds, onRefresh, refreshing = false,
   onClearList, onShoppingMode, hasProducts = false, onLeave, onScanList,
-  savedLists = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
+  savedLists = [], pendingNames = [], onApplySavedList, onManageSavedLists, onSaveAsSavedList,
   costEstimate, productNames = [],
 }: ListHeaderProps) => {
   const { t, settings } = useSettings();
@@ -230,6 +231,7 @@ export const ListHeader = memo(({
         hasProducts={hasProducts} onLeave={onLeave} onScanList={onScanList ? handleScanList : undefined}
         scanListIsNew={showScanItemNewBadge}
         onSaveAsSavedList={hasProducts ? onSaveAsSavedList : undefined}
+        onManageSavedLists={savedLists.length > 0 ? onManageSavedLists : undefined}
       />
 
       {/* ===== שורה 2 (קבוצות): משתתפים + הזמנה + חיפוש ===== */}
@@ -274,20 +276,13 @@ export const ListHeader = memo(({
       </Box>
 
       {/* ===== שורת רשימות קבועות - הזרקת אוסף מוצרים בלחיצה אחת.
-          מרונדרת רק אם יש למשתמש רשימות קבועות רלוונטיות (ראו SavedListsBar). ===== */}
-      {onApplySavedList && onManageSavedLists && savedLists.length > 0 && (
-        <Box sx={{
-          mb: { xs: 0.75, sm: 1 },
-          '@media (max-width: 360px)': { mb: 0.5 },
-          '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
-        }}>
-          <SavedListsBar
-            savedLists={savedLists}
-            pendingProducts={list.products.filter(p => !p.isPurchased)}
-            onApply={onApplySavedList}
-            onManage={onManageSavedLists}
-          />
-        </Box>
+          SavedListsBar מחזיר null (כולל המרווח שלו) אם אין מה להציג. ===== */}
+      {onApplySavedList && savedLists.length > 0 && (
+        <SavedListsBar
+          savedLists={savedLists}
+          pendingNames={pendingNames}
+          onApply={onApplySavedList}
+        />
       )}
 
       {/* ===== שדה חיפוש (מתקפל) - מתחת ל-QuickAdd ===== */}

@@ -4,6 +4,9 @@ import { detectCategory } from '../../../global/helpers/categoryDetector';
 // אמוג׳ים מוצעים לבחירה מהירה בעת יצירת/עריכת רשימה קבועה.
 export const SAVED_LIST_EMOJIS = ['📋', '🛒', '🧺', '🥦', '🍞', '🥛', '🧊', '🧻', '🎉', '🍗', '🐟', '☕'];
 
+// תואם לתקרות בשרת (user.service.ts) - מונע 400 מהוולידטור.
+export const MAX_SAVED_LIST_ITEMS = 80;
+
 export const newSavedListId = (): string =>
   `sl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -17,6 +20,7 @@ export const productsToSavedItems = (products: Product[]): SavedListItem[] => {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     items.push({ name: p.name.trim(), quantity: p.quantity || 1, unit: p.unit, category: p.category });
+    if (items.length >= MAX_SAVED_LIST_ITEMS) break;
   }
   return items;
 };
