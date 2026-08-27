@@ -1,10 +1,11 @@
-import type { Product, SavedList, SavedListItem } from '../../../global/types';
+import type { Product, SavedListItem } from '../../../global/types';
 import { detectCategory } from '../../../global/helpers/categoryDetector';
 
 // אמוג׳ים מוצעים לבחירה מהירה בעת יצירת/עריכת רשימה קבועה.
 export const SAVED_LIST_EMOJIS = ['📋', '🛒', '🧺', '🥦', '🍞', '🥛', '🧊', '🧻', '🎉', '🍗', '🐟', '☕'];
 
-// תואם לתקרות בשרת (user.service.ts) - מונע 400 מהוולידטור.
+// תואם ל-MAX_SAVED_LIST_ITEMS בשרת (user.service.ts) - כדי לא לבנות
+// רשימה שתיחתך בשקט בשמירה.
 export const MAX_SAVED_LIST_ITEMS = 80;
 
 export const newSavedListId = (): string =>
@@ -36,10 +37,4 @@ export const nameToSavedItem = (rawName: string): SavedListItem | null => {
     unit: 'יח׳',
     category: detectCategory(name) as SavedListItem['category'],
   };
-};
-
-// כמה מפריטי הרשימה הקבועה עדיין לא נמצאים ברשימת המוצרים הנתונה.
-export const savedListMissingCount = (savedList: SavedList, products: Product[]): number => {
-  const present = new Set(products.map(p => p.name.trim().toLowerCase()));
-  return savedList.items.filter(it => !present.has(it.name.trim().toLowerCase())).length;
 };

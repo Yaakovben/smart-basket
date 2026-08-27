@@ -145,7 +145,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => setExpandedId(open ? null : sl.id)}
+                      onClick={() => { setNewItemText(''); setExpandedId(open ? null : sl.id); }}
                       aria-label={t('savedLists')}
                       sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
                     >
@@ -163,7 +163,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
                           {sl.items.map((it, idx) => (
                             <Chip
-                              key={`${it.name}-${idx}`}
+                              key={it.name}
                               label={it.name}
                               size="small"
                               onDelete={() => removeItem(sl.id, idx)}
