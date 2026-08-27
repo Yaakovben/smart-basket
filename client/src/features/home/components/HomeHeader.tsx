@@ -40,9 +40,10 @@ export const HomeHeader = ({
   // מצב ריק (אף רשימה) - נותנים לחלק הירוק קצת יותר גובה בתחתית כדי שלא
   // ייראה "קטוע" ליד ה-empty state הגדול מתחתיו. שדה החיפוש מוצג תמיד
   // (גם עם 0/1 רשימות) לעקביות ויזואלית, אבל עם 0-1 רשימות הוא כמעט ולא
-  // שימושי - מוסיפים שורת הסבר קצרה מתחתיו במקום להסתיר אותו.
+  // שימושי - ברגע שהמשתמש בפועל מקליד בו (לא סתם כי הוא קיים) מוצגת שורת
+  // הסבר קצרה מתחתיו, כתגובה ישירה לניסיון החיפוש ולא כרעש קבוע.
   const isEmpty = allCount === 0;
-  const showFewListsHint = allCount <= 1;
+  const showFewListsHint = allCount <= 1 && search.trim().length > 0;
 
   return (
     <Box sx={{
@@ -152,11 +153,35 @@ export const HomeHeader = ({
         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
       />
       {/* פחות מ-2 רשימות - החיפוש עדיין מוצג תמיד (עקביות ויזואלית), אבל
-          כמעט ולא שימושי עם כל כך מעט רשימות - שורת הסבר קצרה מתחת לו. */}
+          כמעט ולא שימושי עם כל כך מעט רשימות. ברגע שהמשתמש בפועל מקליד -
+          שורת הסבר עם אייקון מונפש (pulse+float), אותו דפוס בדיוק כמו
+          "לא נמצאו תוצאות" בחיפוש מוצר (EmptyState.tsx). */}
       {showFewListsHint && (
-        <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', mb: 1.5, px: 0.5 }}>
-          {t('homeSearchFewListsHint')}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5, px: 0.5 }}>
+          <Box sx={{ position: 'relative', width: 20, height: 20, flexShrink: 0 }}>
+            <Box sx={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              bgcolor: 'rgba(255,255,255,0.2)',
+              animation: 'homeSearchHintPulse 2s ease-in-out infinite',
+              '@keyframes homeSearchHintPulse': {
+                '0%, 100%': { transform: 'scale(1)', opacity: 0.6 },
+                '50%': { transform: 'scale(1.2)', opacity: 1 },
+              },
+            }} />
+            <SearchIcon sx={{
+              position: 'absolute', inset: 0, margin: 'auto',
+              fontSize: 13, color: 'white',
+              animation: 'homeSearchHintFloat 2s ease-in-out infinite',
+              '@keyframes homeSearchHintFloat': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-2px)' },
+              },
+            }} />
+          </Box>
+          <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>
+            {t('homeSearchFewListsHint')}
+          </Typography>
+        </Box>
       )}
 
       <Tabs
