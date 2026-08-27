@@ -60,6 +60,7 @@ export const ru: Translations = {
   goodEvening: 'Добрый вечер,',
   goodNight: 'Доброй ночи,',
   search: 'Поиск...',
+  homeSearchFewListsHint: 'Поиск станет доступен, когда у вас будет несколько списков',
   all: 'Все',
   myLists: 'Мои списки',
   groups: 'Совместные',
@@ -674,7 +675,6 @@ export const ru: Translations = {
   aiTryAgainInMinutes: 'Лимит обновится примерно через {minutes} мин.',
   aiTryAgainInHours: 'Лимит обновится примерно через {hours} ч.',
   aiDailyLimitReached: 'AI-помощник исчерпал общий дневной лимит.',
-  aiFallbackNotice: 'Этот ответ от резервной модели',
   aiGenericError: 'Что-то пошло не так, попробуйте снова.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'Сбор цен из всех филиалов',

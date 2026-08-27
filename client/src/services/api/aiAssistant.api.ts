@@ -27,13 +27,10 @@ export const aiAssistantApi = {
    * בזמן אמת (SSE streaming, ראו aiAssistant.controller.ts בשרת) - במקום
    * לחכות לתשובה המלאה. fetch גולמי (לא apiClient/axios) כי axios לא תומך
    * טוב ב-streaming תגובות בדפדפן; ה-Authorization מוזרק ידנית.
-   * onFallback (אופציונלי) נקרא אם השרת דיווח שהתשובה הזו הגיעה ממודל
-   * גיבוי (הספק הראשי נכשל/נגמרה לו המכסה) - כדי שהצ'אט יציג חיווי עדין.
    */
   async chatStream(
     messages: AiChatMessage[],
-    onDelta: (text: string) => void,
-    onFallback?: () => void
+    onDelta: (text: string) => void
   ): Promise<void> {
     const token = getAccessToken();
     const response = await fetch(`${API_URL}/ai-assistant/chat`, {
@@ -72,14 +69,13 @@ export const aiAssistantApi = {
         const payload = trimmed.slice(5).trim();
         if (!payload) continue;
 
-        let parsed: { delta?: string; done?: boolean; error?: string; meta?: { fallback?: boolean } };
+        let parsed: { delta?: string; done?: boolean; error?: string };
         try {
           parsed = JSON.parse(payload);
         } catch {
           continue;
         }
         if (parsed.error) throw new AiAssistantStreamError(parsed.error, 502);
-        if (parsed.meta?.fallback) onFallback?.();
         if (parsed.delta) onDelta(parsed.delta);
         if (parsed.done) return;
       }

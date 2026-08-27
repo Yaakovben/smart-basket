@@ -24,18 +24,12 @@ export const chat = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const { messages } = req.body as { messages: ChatMessage[] };
 
-  const { reader, cleanup, isFallback } = await openAssistantStream(userId, messages);
+  const { reader, cleanup } = await openAssistantStream(userId, messages);
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
-
-  // חיווי עדין ללקוח שהתשובה הזו הגיעה ממודל הגיבוי, לא מהספק הראשי -
-  // נשלח לפני כל delta כדי שהצ'אט יוכל להציג תג קטן על ההודעה.
-  if (isFallback) {
-    res.write(`data: ${JSON.stringify({ meta: { fallback: true } })}\n\n`);
-  }
 
   const decoder = new TextDecoder();
   let buffer = '';

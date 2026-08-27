@@ -59,6 +59,7 @@ export const he: Translations = {
   goodEvening: 'ערב טוב,',
   goodNight: 'לילה טוב,',
   search: 'חיפוש רשימה...',
+  homeSearchFewListsHint: 'תוכל לחפש כאן ברגע שיהיו לך כמה רשימות',
   all: 'הכל',
   myLists: 'שלי',
   groups: 'משותפות',
@@ -675,7 +676,6 @@ export const he: Translations = {
   aiTryAgainInMinutes: 'המכסה מתחדשת בעוד כ-{minutes} דקות.',
   aiTryAgainInHours: 'המכסה מתחדשת בעוד כ-{hours} שעות.',
   aiDailyLimitReached: 'עוזר ה-AI הגיע למכסה היומית של כולם.',
-  aiFallbackNotice: 'התשובה הזו הגיעה ממודל גיבוי',
   aiGenericError: 'משהו השתבש, נסה שוב.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'אוסף מחירים מכל הסניפים',

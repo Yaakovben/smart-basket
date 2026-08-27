@@ -6,7 +6,6 @@ import { aiErrorText } from '../helpers/aiErrorText';
 export interface ChatEntry extends AiChatMessage {
   id: string;
   error?: boolean;
-  fallback?: boolean;
 }
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -36,10 +35,6 @@ export function useAiAssistantChat() {
     // ואז ממשיכה להתעדכן delta-אחר-delta באותה בועה עד שה-stream מסתיים.
     const assistantId = makeId();
     let started = false;
-    // אם ה-meta.fallback מגיע (כמעט תמיד) לפני ה-delta הראשון, מסמנים כאן
-    // ומצרפים ל-entry ברגע שהוא נוצר. אם הוא כבר קיים (מקרה קצה נדיר של
-    // תזמון), מעדכנים אותו ישירות.
-    let fallbackFlag = false;
 
     try {
       // ההיסטוריה שנשלחת לשרת - כולל ההודעה החדשה, בלי שדות פנימיים (id/error)
@@ -51,14 +46,10 @@ export function useAiAssistantChat() {
             started = true;
             // ברגע שמגיע טקסט אמיתי - מפסיקים להראות את אינדיקטור "חושב"
             setSending(false);
-            setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: delta, fallback: fallbackFlag }]);
+            setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: delta }]);
           } else {
             setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + delta } : m));
           }
-        },
-        () => {
-          fallbackFlag = true;
-          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, fallback: true } : m));
         }
       );
       if (!started) {

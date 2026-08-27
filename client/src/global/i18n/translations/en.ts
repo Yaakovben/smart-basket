@@ -60,6 +60,7 @@ export const en: Translations = {
   goodEvening: 'Good Evening,',
   goodNight: 'Good Night,',
   search: 'Search...',
+  homeSearchFewListsHint: "You'll be able to search here once you have a few lists",
   all: 'All',
   myLists: 'My Lists',
   groups: 'Shared',
@@ -674,7 +675,6 @@ export const en: Translations = {
   aiTryAgainInMinutes: 'Quota resets in about {minutes} minutes.',
   aiTryAgainInHours: 'Quota resets in about {hours} hours.',
   aiDailyLimitReached: 'The AI assistant hit its shared daily limit.',
-  aiFallbackNotice: 'This reply came from a backup model',
   aiGenericError: 'Something went wrong, try again.',
   // Slow load indicator defaults
   slowLoadDefaultMessage: 'Collecting prices from all branches',

@@ -38,11 +38,11 @@ export const HomeHeader = ({
   const notificationsTap = useReliableTap(onNotificationsClick);
   const settingsTap = useReliableTap(onSettingsClick);
   // מצב ריק (אף רשימה) - נותנים לחלק הירוק קצת יותר גובה בתחתית כדי שלא
-  // ייראה "קטוע" ליד ה-empty state הגדול מתחתיו (אין שם שדה חיפוש שממלא
-  // את המקום). חיפוש עצמו מוצג רק מ-2 רשימות ומעלה - לא שימושי עם רשימה
-  // אחת או אפס.
+  // ייראה "קטוע" ליד ה-empty state הגדול מתחתיו. שדה החיפוש מוצג תמיד
+  // (גם עם 0/1 רשימות) לעקביות ויזואלית, אבל עם 0-1 רשימות הוא כמעט ולא
+  // שימושי - מוסיפים שורת הסבר קצרה מתחתיו במקום להסתיר אותו.
   const isEmpty = allCount === 0;
-  const showSearch = allCount > 1;
+  const showFewListsHint = allCount <= 1;
 
   return (
     <Box sx={{
@@ -141,17 +141,22 @@ export const HomeHeader = ({
         </Box>
       </Box>
 
-      {showSearch && (
-        <ClearableTextField
-          fullWidth
-          placeholder={t('search')}
-          value={search}
-          onChange={e => onSearchChange(e.target.value)}
-          onClear={() => onSearchChange('')}
-          size="small"
-          sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
-        />
+      <ClearableTextField
+        fullWidth
+        placeholder={t('search')}
+        value={search}
+        onChange={e => onSearchChange(e.target.value)}
+        onClear={() => onSearchChange('')}
+        size="small"
+        sx={{ mb: showFewListsHint ? 0.5 : 1.5, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper', borderRadius: '12px' }, '& .MuiOutlinedInput-input': { fontSize: 16 } }}
+        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.disabled' }} /></InputAdornment> }}
+      />
+      {/* פחות מ-2 רשימות - החיפוש עדיין מוצג תמיד (עקביות ויזואלית), אבל
+          כמעט ולא שימושי עם כל כך מעט רשימות - שורת הסבר קצרה מתחת לו. */}
+      {showFewListsHint && (
+        <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', mb: 1.5, px: 0.5 }}>
+          {t('homeSearchFewListsHint')}
+        </Typography>
       )}
 
       <Tabs

@@ -112,7 +112,6 @@ export interface AiDailyBudget {
 
 export interface AiStatus {
   providers: AiProviderStatus[];
-  fallbackCount: number;
   serverStartedAt: string;
   configured: boolean;
   dailyBudget: AiDailyBudget;

@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { AiAssistantIcon, MemberAvatar } from '../../../global/components';
-import { useSettings } from '../../../global/context/SettingsContext';
 import { renderInlineBold } from '../../../global/helpers';
 import type { User } from '../../../global/types';
 import type { ChatEntry } from '../hooks/useAiAssistantChat';
@@ -27,7 +25,6 @@ function getCachedUser(): User | null {
 export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
   const isUser = entry.role === 'user';
   const currentUser = useMemo(getCachedUser, []);
-  const { t } = useSettings();
 
   return (
     <Box sx={{ mb: 1.5 }}>
@@ -93,20 +90,6 @@ export const ChatBubble = ({ entry, isDark }: ChatBubbleProps) => {
           </Typography>
         </Box>
       </Box>
-
-      {/* חיווי עדין - התשובה הזו הגיעה ממודל גיבוי (הספק הראשי נכשל/נגמרה
-          לו המכסה). מוצג רק כשרלוונטי, לא כשגיאה - השירות עדיין עבד. */}
-      {entry.fallback && !isUser && (
-        <Box sx={{
-          display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.4,
-          mt: 0.4, pe: 4.25,
-        }}>
-          <SyncAltRoundedIcon sx={{ fontSize: 12, color: isDark ? 'rgba(148,163,184,0.7)' : 'rgba(100,116,139,0.7)' }} />
-          <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: isDark ? 'rgba(148,163,184,0.85)' : 'rgba(100,116,139,0.85)' }}>
-            {t('aiFallbackNotice')}
-          </Typography>
-        </Box>
-      )}
     </Box>
   );
 };

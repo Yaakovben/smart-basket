@@ -57,6 +57,7 @@ export type TranslationKeys =
   | 'goodEvening'
   | 'goodNight'
   | 'search'
+  | 'homeSearchFewListsHint'
   | 'all'
   | 'myLists'
   | 'groups'
@@ -678,7 +679,6 @@ export type TranslationKeys =
   | 'aiTryAgainInMinutes'
   | 'aiTryAgainInHours'
   | 'aiDailyLimitReached'
-  | 'aiFallbackNotice'
   | 'aiGenericError'
   // Slow load indicator defaults
   | 'slowLoadDefaultMessage'

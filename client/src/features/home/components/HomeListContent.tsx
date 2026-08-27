@@ -15,6 +15,7 @@ interface HomeListContentProps {
   contentRef: RefObject<HTMLDivElement | null>;
   listsFetchError: boolean;
   hasAnyLists: boolean;
+  hasSearchQuery: boolean;
   listsLoading: boolean;
   tab: HomeTab;
   isDark: boolean;
@@ -40,7 +41,7 @@ interface HomeListContentProps {
 
 // אזור התוכן של מסך הבית: מצב שגיאת חיבור / סקלטון טעינה / ריק / רשימת כרטיסים עם סידור-מחדש.
 export const HomeListContent = ({
-  contentRef, listsFetchError, hasAnyLists, listsLoading, tab, isDark, orderedDisplay, user,
+  contentRef, listsFetchError, hasAnyLists, hasSearchQuery, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
   reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
@@ -160,6 +161,20 @@ export const HomeListContent = ({
               <ShimmerBlock width={28} height={28} radius={8} />
             </Box>
           ))}
+        </Box>
+      ) : orderedDisplay.length === 0 && hasSearchQuery ? (
+        // חיפוש בלי תוצאות - שונה מ"אין רשימות בכלל" (יש רשימות, פשוט לא
+        // תואמות את החיפוש). אותו דפוס בדיוק כמו חיפוש מוצר בתוך רשימה
+        // (EmptyState.tsx בפיצ'ר הרשימה) - אייקון זכוכית מגדלת, לא האנימציה
+        // הגדולה של "צור רשימה ראשונה".
+        <Box sx={{ textAlign: 'center', p: { xs: 4, sm: 5 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: '40vh' }}>
+          <Typography sx={{ fontSize: 44, mb: 1.5 }}>🔍</Typography>
+          <Typography sx={{ fontSize: { xs: 16, sm: 17 }, fontWeight: 700, color: 'text.primary', mb: 1 }}>
+            {t('noSearchResults')}
+          </Typography>
+          <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: 'text.secondary', maxWidth: { xs: 260, sm: 280 } }}>
+            {t('noSearchResultsDesc')}
+          </Typography>
         </Box>
       ) : orderedDisplay.length === 0 ? (
         // ממלא את כל הגובה כדי שהאייקון יהיה במרכז אנכי במסך, לא מעל באמצע

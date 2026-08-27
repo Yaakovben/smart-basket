@@ -1,5 +1,4 @@
 import { Box, Typography } from '@mui/material';
-import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { ShimmerBlock } from '../../../global/components';
 import type { AiStatus, AiDailyBudget } from '../../../services/api/admin.api';
@@ -128,20 +127,6 @@ export const AdminAiStatusCard = ({ isDark, data, loading, refreshing, lastFetch
         {data && (
           <>
             {data.dailyBudget && <AiBudgetCard budget={data.dailyBudget} isDark={isDark} />}
-
-            {data.fallbackCount > 0 && (
-              <Box sx={{
-                display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
-                px: 1.5, py: 1, borderRadius: 2,
-                bgcolor: isDark ? 'rgba(245,158,11,0.1)' : '#FFFBEB',
-                border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.3)' : '#FDE68A',
-              }}>
-                <SyncAltRoundedIcon sx={{ fontSize: 18, color: '#D97706', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: 12, fontWeight: 700, color: isDark ? '#FCD34D' : '#92400E' }}>
-                  {data.fallbackCount} בקשות עברו לספק הגיבוי מאז עליית השרת (הספק הראשי נכשל)
-                </Typography>
-              </Box>
-            )}
 
             {data.providers.map(p => (
               <AdminAiProviderPanel key={p.name} provider={p} isDark={isDark} />

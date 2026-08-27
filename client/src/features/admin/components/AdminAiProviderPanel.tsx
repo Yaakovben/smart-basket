@@ -19,7 +19,7 @@ const statRow = (label: string, value: React.ReactNode, isDark: boolean) => (
   </Box>
 );
 
-// כרטיס פירוט ספק AI יחיד (Groq ראשי / NVIDIA NIM גיבוי) - מודל, פעילות
+// כרטיס פירוט ספק ה-AI היחיד (Groq - אין יותר ספק גיבוי) - מודל, פעילות
 // אחרונה, ומכסת ה-rate-limit כפי שהספק עצמו מחזיר (לא ניחוש שלנו).
 export const AdminAiProviderPanel = ({ provider, isDark }: AdminAiProviderPanelProps) => {
   const rl = provider.rateLimit;

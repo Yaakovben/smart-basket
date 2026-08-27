@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Drawer, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
-import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import { aiAssistantApi, AiAssistantStreamError } from '../../../../services/api';
 import { aiErrorText } from '../../../aiAssistant/helpers/aiErrorText';
 import { AiThinkingIndicator } from '../../../aiAssistant/components/AiThinkingIndicator';
@@ -67,7 +66,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fallback, setFallback] = useState(false);
   const ranRef = useRef(false);
 
   // הערכת מחיר אמיתית (לא ניחוש של ה-AI) - מגיעה ממאגר המחירים הממשלתי,
@@ -82,7 +80,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     setText('');
     setDone(false);
     setError(null);
-    setFallback(false);
     setLoading(true);
 
     const prompt = buildAnalysisPrompt(listName, productNames, settings.language);
@@ -96,7 +93,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
     const runAnalysis = async (attemptNum: number): Promise<void> => {
       if (attemptNum > 1) {
         setText('');
-        setFallback(false);
       }
       try {
         await aiAssistantApi.chatStream(
@@ -104,8 +100,7 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           (delta) => {
             setLoading(false);
             setText(prev => prev + delta);
-          },
-          () => setFallback(true)
+          }
         );
         setDone(true);
         setLoading(false);
@@ -141,7 +136,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
       setText('');
       setDone(false);
       setError(null);
-      setFallback(false);
       setPriceGroup(null);
       setChainTotals([]);
     }, 300);
@@ -377,16 +371,6 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           );
         })()}
 
-        {/* חיווי עדין - הניתוח הזה הגיע ממודל גיבוי (הספק הראשי נכשל/נגמרה
-            לו המכסה). אותו חיווי כמו בצ'אט - ראו ChatBubble.tsx. */}
-        {fallback && done && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.75, px: 0.5 }}>
-            <SyncAltRoundedIcon sx={{ fontSize: 12, color: isDark ? 'rgba(148,163,184,0.7)' : 'rgba(100,116,139,0.7)' }} />
-            <Typography sx={{ fontSize: 10.5, fontWeight: 600, color: isDark ? 'rgba(148,163,184,0.85)' : 'rgba(100,116,139,0.85)' }}>
-              {t('aiFallbackNotice')}
-            </Typography>
-          </Box>
-        )}
       </Box>
 
       {/* כפתור המשך */}

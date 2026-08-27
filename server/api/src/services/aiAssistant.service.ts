@@ -3,14 +3,13 @@
  *
  * צ'אט עוזר AI: עונה על שאלות כלליות (סופרים, מחירים, טיפים לקנייה חכמה)
  * וגם נותן המלצות מבוססות-נתונים על סמך התובנות/ההוצאות האמיתיות של המשתמש.
- * מבוסס על Groq כספק ראשי - endpoint תואם OpenAI (console.groq.com), טייר
- * חינמי עם חומרת LPU ייעודית שמריצה מודלים כמו Llama 3.3 70B מהר משמעותית
- * מ-GPU רגיל. NVIDIA NIM משמש כספק גיבוי אוטומטי: אם Groq נכשל (מכסה
- * חינמית נגמרה, שגיאת שרת, timeout) עוברים אליו בלי שהמשתמש ירגיש. שני
- * המפתחות הם סוד אמיתי - נשמרים רק כמשתני סביבה בשרת, אף פעם לא נשלחים ללקוח.
- *
- * קובץ מבודד בכוונה: הוספת/החלפת ספק היא שינוי מקומי כאן בלבד (רשימת
- * PROVIDERS) - שום קוד אחר לא תלוי בספק ספציפי.
+ * מבוסס על Groq בלבד - endpoint תואם OpenAI (console.groq.com), טייר חינמי
+ * עם חומרת LPU ייעודית שמריצה מודלים כמו Llama 3.3 70B מהר משמעותית מ-GPU
+ * רגיל. אין יותר ספק גיבוי (NVIDIA NIM הוסר - בפועל כמעט אף פעם לא ענה
+ * בהצלחה כשGroq נכשל, רק הוסיף latency ובלבול בפאנל האדמין בלי תועלת
+ * אמיתית); כשGroq נכשל, מוגשת תשובת גיבוי מקומית קצרה (buildLocalFallbackText)
+ * במקום שגיאה אדומה. מפתח ה-API הוא סוד אמיתי - נשמר רק כמשתנה סביבה
+ * בשרת, אף פעם לא נשלח ללקוח.
  */
 
 import { logger } from '../config';
@@ -105,14 +104,14 @@ interface ProviderStats {
 }
 const providerStats = new Map<string, ProviderStats>();
 const serverStartedAt = Date.now();
-let fallbackCount = 0;
 
 // ===== תקציב יומי גלובלי לקריאות AI חיצוניות =====
-// המכסה החינמית של Groq/NIM היא לכל האפליקציה, לא פר-משתמש. aiAssistantLimiter
+// המכסה החינמית של Groq היא לכל האפליקציה, לא פר-משתמש. aiAssistantLimiter
 // חוסם 20/משתמש/שעה אבל לא את הסכום - מספיק ~30 משתמשים פעילים כדי לרוקן את
-// המכסה היומית ואז כולם נופלים לגיבוי (וגם הוא נשרף). כשמגיעים לתקציב ה-route
-// מחזיר 429 עם resetAt (חצות UTC הבא) כך שהלקוח מציג "חוזר בעוד X שעות".
-// state ברמת המודול - עקבי עם providerStats/fallbackCount (תהליך יחיד).
+// המכסה היומית. כשמגיעים לתקציב ה-route מחזיר 429 עם resetAt (חצות UTC
+// הבא) כך שהלקוח מציג "חוזר בעוד X שעות" - הכל ביחס ל-Groq בלבד, אין
+// ספק נוסף שיכול "לספוג" בקשות אחרי שהתקציב נגמר.
+// state ברמת המודול - עקבי עם providerStats (תהליך יחיד).
 const AI_DAILY_BUDGET = env.AI_DAILY_REQUEST_BUDGET;
 let aiDayKey = '';
 let aiRequestsToday = 0;
@@ -218,17 +217,10 @@ function readRateLimit(headers: Headers): AiProviderRateLimit | null {
   };
 }
 
-// סדר הניסיון: Groq ראשון (מהיר יותר), NIM כגיבוי.
-async function getProviders(): Promise<AiProvider[]> {
-  const list: AiProvider[] = [];
-  if (env.GROQ_API_KEY) {
-    const model = await resolveGroqModel(env.GROQ_API_KEY);
-    list.push({ name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', apiKey: env.GROQ_API_KEY, model });
-  }
-  if (env.NVIDIA_NIM_API_KEY) {
-    list.push({ name: 'NVIDIA NIM', url: 'https://integrate.api.nvidia.com/v1/chat/completions', apiKey: env.NVIDIA_NIM_API_KEY, model: env.NVIDIA_NIM_MODEL });
-  }
-  return list;
+async function getGroqProvider(): Promise<AiProvider | null> {
+  if (!env.GROQ_API_KEY) return null;
+  const model = await resolveGroqModel(env.GROQ_API_KEY);
+  return { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', apiKey: env.GROQ_API_KEY, model };
 }
 
 export interface ChatMessage {
@@ -253,7 +245,7 @@ const CONTEXT_CACHE_TTL_MS = 3 * 60 * 1000;
 const contextCache = new Map<string, { context: string; expiresAt: number }>();
 
 function isConfigured(): boolean {
-  return !!(env.GROQ_API_KEY || env.NVIDIA_NIM_API_KEY);
+  return !!env.GROQ_API_KEY;
 }
 
 // נקראת מ-controllers שמשנים מוצרים/רשימות (הוספה, מחיקה, סימון קנייה,
@@ -383,9 +375,6 @@ export interface AssistantStreamHandle {
   reader: ReadableStreamDefaultReader<Uint8Array>;
   cleanup: () => void;
   providerName: string;
-  // true אם זה לא הספק הראשון ברשימה (כלומר הספק הראשי נכשל ועברנו לגיבוי) -
-  // ה-controller משתמש בזה כדי לשדר ללקוח חיווי עדין "עברנו למודל גיבוי".
-  isFallback: boolean;
 }
 
 function makeFallbackStream(text: string): AssistantStreamHandle {
@@ -402,9 +391,6 @@ function makeFallbackStream(text: string): AssistantStreamHandle {
     reader: stream.getReader(),
     cleanup: () => undefined,
     providerName: 'local-fallback',
-    // לא isFallback:true - זו לא "תשובה ממודל גיבוי" אלא הודעת שירות קצרה.
-    // התג "מודל גיבוי" בלקוח שמור למקרה ש-NIM (ספק אמיתי) ענה במקום Groq.
-    isFallback: false,
   };
 }
 
@@ -427,7 +413,7 @@ function buildLocalFallbackText(lastError: string | null): string {
 
 /**
  * פותח חיבור streaming לעוזר ה-AI - מצרף את נתוני המשתמש האמיתיים כהקשר,
- * שולח ל-NVIDIA NIM עם stream:true ומחזיר reader לצריכת ה-SSE chunk-אחר-chunk.
+ * שולח ל-Groq עם stream:true ומחזיר reader לצריכת ה-SSE chunk-אחר-chunk.
  * כל שגיאות ה-setup/config/validation נזרקות כאן (לפני שנשלח דבר ללקוח) -
  * הצרכן (controller) אחראי רק על קריאת ה-stream והעברתו הלאה.
  */
@@ -496,70 +482,67 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     stream: true,
   };
 
-  // נספר לפני הקריאה בפועל - בקשה שנכשלת על Groq ועוברת ל-NIM עדיין
-  // נחשבת אחת לצורך התקציב (הערכה גסה, מספיקה כדי לא לחרוג בהרבה).
   recordAiRequest();
 
-  const providers = await getProviders();
+  const provider = await getGroqProvider();
+  if (!provider) {
+    // isConfigured() כבר בדק את זה למעלה - הענף הזה תיאורטי (race על env
+    // בזמן ריצה), אבל שומר על טיפוס לא-null בהמשך בלי non-null assertion.
+    return makeFallbackStream(buildLocalFallbackText(null));
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+  const providerBody: Record<string, unknown> = { ...body, model: provider.model };
+  if (isReasoningModel(provider.model)) providerBody.reasoning_effort = 'low';
+
   let lastError: string | null = null;
+  let response: Response | undefined;
+  try {
+    response = await fetch(provider.url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${provider.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(providerBody),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    lastError = (err as Error).message;
+    const stats = getProviderStats(provider.name);
+    stats.lastError = truncateRaw(lastError);
+    stats.lastErrorReason = classifyError(null, lastError);
+    stats.lastErrorAt = Date.now();
+    logger.warn('aiAssistant: request to %s failed: %s', provider.name, lastError);
+  }
 
-  // מנסים כל ספק לפי סדר (Groq, אחר כך NIM). כשל בספק אחד (מכסה חינמית
-  // נגמרה, שגיאת שרת, timeout) עובר לספק הבא במקום להיכשל למשתמש - כל עוד
-  // יש עוד ספק מוגדר לנסות. כשל בכולם זורק שגיאה אחת מרוכזת בסוף.
-  for (let providerIndex = 0; providerIndex < providers.length; providerIndex++) {
-    const provider = providers[providerIndex];
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  if (response && !response.ok) {
+    clearTimeout(timeoutId);
+    const errText = await response.text().catch(() => '');
+    lastError = `${response.status}: ${errText}`;
+    const stats = getProviderStats(provider.name);
+    stats.lastError = truncateRaw(lastError);
+    stats.lastErrorReason = classifyError(response.status, errText);
+    stats.lastErrorAt = Date.now();
+    const rl = readRateLimit(response.headers);
+    if (rl) stats.rateLimit = rl;
+    logger.warn('aiAssistant: %s returned %s', provider.name, lastError);
+    response = undefined;
+  } else if (response && !response.body) {
+    clearTimeout(timeoutId);
+    lastError = 'empty response body';
+    const stats = getProviderStats(provider.name);
+    stats.lastError = lastError;
+    stats.lastErrorReason = classifyError(null, lastError);
+    stats.lastErrorAt = Date.now();
+    logger.warn('aiAssistant: %s returned an empty response', provider.name);
+    response = undefined;
+  }
 
-    const providerBody: Record<string, unknown> = { ...body, model: provider.model };
-    if (isReasoningModel(provider.model)) providerBody.reasoning_effort = 'low';
-
-    let response: Response;
-    try {
-      response = await fetch(provider.url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(providerBody),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      clearTimeout(timeoutId);
-      lastError = (err as Error).message;
-      const stats = getProviderStats(provider.name);
-      stats.lastError = truncateRaw(lastError);
-      stats.lastErrorReason = classifyError(null, lastError);
-      stats.lastErrorAt = Date.now();
-      logger.warn('aiAssistant: request to %s failed, trying next provider if available: %s', provider.name, lastError);
-      continue;
-    }
-
-    if (!response.ok) {
-      clearTimeout(timeoutId);
-      const errText = await response.text().catch(() => '');
-      lastError = `${response.status}: ${errText}`;
-      const stats = getProviderStats(provider.name);
-      stats.lastError = truncateRaw(lastError);
-      stats.lastErrorReason = classifyError(response.status, errText);
-      stats.lastErrorAt = Date.now();
-      const rl = readRateLimit(response.headers);
-      if (rl) stats.rateLimit = rl;
-      logger.warn('aiAssistant: %s returned %s, trying next provider if available', provider.name, lastError);
-      continue;
-    }
-    if (!response.body) {
-      clearTimeout(timeoutId);
-      lastError = 'empty response body';
-      const stats = getProviderStats(provider.name);
-      stats.lastError = lastError;
-      stats.lastErrorReason = classifyError(null, lastError);
-      stats.lastErrorAt = Date.now();
-      logger.warn('aiAssistant: %s returned an empty response, trying next provider if available', provider.name);
-      continue;
-    }
-
+  if (response?.body) {
     const stats = getProviderStats(provider.name);
     stats.requestCount++;
     stats.lastSuccessAt = Date.now();
@@ -568,21 +551,17 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     stats.lastErrorAt = null;
     const rl = readRateLimit(response.headers);
     if (rl) stats.rateLimit = rl;
-    if (providerIndex > 0) fallbackCount++;
 
     return {
       reader: response.body.getReader(),
       cleanup: () => clearTimeout(timeoutId),
       providerName: provider.name,
-      isFallback: providerIndex > 0,
     };
   }
 
-  // כל הספקים נכשלו - במקום 502 + "משהו השתבש", מגישים תגובת גיבוי מקומית
-  // קצרה שמסבירה מה קרה ומתי לנסות שוב. isFallback:true -> הלקוח מסמן את
-  // הבועה כתשובת גיבוי (תג קטן), לא כשגיאה אדומה.
-  logger.error('aiAssistant: all providers failed (%s), serving local fallback', lastError);
-  fallbackCount++;
+  // Groq נכשל - במקום 502 + "משהו השתבש", מגישים תגובת גיבוי מקומית קצרה
+  // שמסבירה מה קרה ומתי לנסות שוב.
+  logger.error('aiAssistant: Groq failed (%s), serving local fallback', lastError);
   return makeFallbackStream(buildLocalFallbackText(lastError));
 }
 
@@ -603,19 +582,17 @@ export interface AiProviderStatus {
 
 export interface AiStatus {
   providers: AiProviderStatus[];
-  fallbackCount: number;
   serverStartedAt: string;
   configured: boolean;
-  // תקציב יומי גלובלי לקריאות AI חיצוניות (0 = בלי תקרה)
+  // תקציב יומי גלובלי לקריאות AI חיצוניות (0 = בלי תקרה) - היחיד ששולט
+  // ב"חוזר בעוד X" כלפי הלקוחות, ומתייחס אך ורק ל-Groq (הספק היחיד).
   dailyBudget: AiDailyBudgetStatus;
 }
 
 /** נתוני סטטוס לפאנל "פרטי AI" באדמין - איזה מודל פעיל, מתי עודכן, כמה נוצל ומתי מתאפס. */
 export async function getAiStatus(): Promise<AiStatus> {
   const groqConfigured = !!env.GROQ_API_KEY;
-  const nimConfigured = !!env.NVIDIA_NIM_API_KEY;
   const groqStats = getProviderStats('Groq');
-  const nimStats = getProviderStats('NVIDIA NIM');
 
   const toIso = (ms: number | null) => (ms ? new Date(ms).toISOString() : null);
 
@@ -635,24 +612,9 @@ export async function getAiStatus(): Promise<AiStatus> {
         lastErrorAt: toIso(groqStats.lastErrorAt),
         rateLimit: groqStats.rateLimit,
       },
-      {
-        name: 'NVIDIA NIM',
-        role: 'backup',
-        configured: nimConfigured,
-        model: nimConfigured ? env.NVIDIA_NIM_MODEL : null,
-        modelResolvedAt: null,
-        nextModelCheckAt: null,
-        requestCount: nimStats.requestCount,
-        lastSuccessAt: toIso(nimStats.lastSuccessAt),
-        lastError: nimStats.lastError,
-        lastErrorReason: nimStats.lastErrorReason,
-        lastErrorAt: toIso(nimStats.lastErrorAt),
-        rateLimit: nimStats.rateLimit,
-      },
     ],
-    fallbackCount,
     serverStartedAt: new Date(serverStartedAt).toISOString(),
-    configured: groqConfigured || nimConfigured,
+    configured: groqConfigured,
     dailyBudget: getAiDailyBudget(),
   };
 }
