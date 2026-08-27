@@ -402,24 +402,27 @@ function makeFallbackStream(text: string): AssistantStreamHandle {
     reader: stream.getReader(),
     cleanup: () => undefined,
     providerName: 'local-fallback',
-    isFallback: true,
+    // לא isFallback:true - זו לא "תשובה ממודל גיבוי" אלא הודעת שירות קצרה.
+    // התג "מודל גיבוי" בלקוח שמור למקרה ש-NIM (ספק אמיתי) ענה במקום Groq.
+    isFallback: false,
   };
 }
 
-async function buildLocalFallbackText(userId: string, messages: ChatMessage[]): Promise<string> {
-  const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')?.content?.trim() || 'המשתמש ביקש ניתוח של הרשימה.';
-
-  try {
-    const insights = await getUserInsights(userId, { includeSpending: false });
-    const summary = buildUserContext(insights, []);
-    if (summary && summary !== 'לא ניתן היה לטעון את נתוני המשתמש כרגע.') {
-      return `על סמך ההיסטוריה שלך: ${summary}\n\n${latestUserMessage}`;
-    }
-  } catch (err) {
-    logger.warn('aiAssistant: local fallback summary failed: %s', (err as Error).message);
+// טקסט גיבוי מקומי - קצר וכן. אין כאן LLM, אז לא מנסים "לענות" על השאלה,
+// רק מסבירים למה העוזר לא זמין ומתי בערך לנסות שוב. lastError (אם קיים)
+// מחדד את הסיבה: 429 = מכסת ספק נגמרה, timeout/network = עומס/תקלה זמנית.
+function buildLocalFallbackText(lastError: string | null): string {
+  if (!lastError) {
+    return 'עוזר ה-AI לא מוגדר בשרת כרגע. נסה שוב מאוחר יותר 🙏';
   }
-
-  return `לא הצלחתי להפעיל את עוזר ה-AI כרגע, אבל על פי הנתונים הזמינים אני ממליץ: ${latestUserMessage}`;
+  const statusMatch = lastError.match(/^(\d{3})[:\s]/);
+  if (statusMatch?.[1] === '429') {
+    return 'עוזר ה-AI עמוס כרגע — המכסה של הספק נגמרה זמנית ומתחדשת מעצמה. נסה שוב בעוד כמה דקות 🙏';
+  }
+  if (/abort|timeout|fetch failed|network|enotfound|econnrefused/i.test(lastError)) {
+    return 'עוזר ה-AI לא מגיב כרגע (עומס או תקלה זמנית אצל הספק). נסה שוב בעוד רגע.';
+  }
+  return 'עוזר ה-AI לא זמין כרגע. נסה שוב בעוד כמה דקות.';
 }
 
 /**
@@ -434,9 +437,8 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
   }
 
   if (!isConfigured()) {
-    logger.warn('aiAssistant: NVIDIA NIM key missing; using local fallback response');
-    const fallbackText = await buildLocalFallbackText(userId, messages);
-    return makeFallbackStream(fallbackText);
+    logger.warn('aiAssistant: no provider key configured; using local fallback response');
+    return makeFallbackStream(buildLocalFallbackText(null));
   }
 
   // התקציב היומי הגלובלי נגמר - הגנה אחרונה. בפועל ה-route guard
@@ -576,8 +578,12 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     };
   }
 
-  logger.error('aiAssistant: all providers failed, last error: %s', lastError);
-  throw new AppError('AI assistant request failed', 502, 'AI_ASSISTANT_UPSTREAM_ERROR');
+  // כל הספקים נכשלו - במקום 502 + "משהו השתבש", מגישים תגובת גיבוי מקומית
+  // קצרה שמסבירה מה קרה ומתי לנסות שוב. isFallback:true -> הלקוח מסמן את
+  // הבועה כתשובת גיבוי (תג קטן), לא כשגיאה אדומה.
+  logger.error('aiAssistant: all providers failed (%s), serving local fallback', lastError);
+  fallbackCount++;
+  return makeFallbackStream(buildLocalFallbackText(lastError));
 }
 
 export interface AiProviderStatus {

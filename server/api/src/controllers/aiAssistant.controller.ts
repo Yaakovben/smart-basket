@@ -71,9 +71,12 @@ export const chat = asyncHandler(async (req: AuthRequest, res: Response) => {
       }
     }
 
-    res.write(`data: ${JSON.stringify(
-      receivedAny ? { done: true } : { error: 'AI assistant returned an empty response' }
-    )}\n\n`);
+    // מודל reasoning יכול "לחשוב" עד סוף התקציב ולחזור בלי אף delta גלוי -
+    // מציגים הודעה קצרה וידידותית במקום שגיאה אדומה סתמית.
+    if (!receivedAny) {
+      res.write(`data: ${JSON.stringify({ delta: 'לא הצלחתי לנסח תשובה הפעם. נסה לנסח את השאלה קצת אחרת 🙏' })}\n\n`);
+    }
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
   } catch (err) {
     logger.warn('aiAssistant: stream interrupted: %s', (err as Error).message);
