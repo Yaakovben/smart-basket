@@ -5,6 +5,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import type { SavedList } from '../../../../global/types';
 import { Modal, ConfirmModal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
@@ -33,6 +34,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   const lastGoodNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
   const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
   const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
   const [newItemText, setNewItemText] = useState('');
 
@@ -70,8 +72,11 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   const toggleExpand = (id: string) => {
     setNewItemText('');
     setEmojiOpenId(null);
+    setEditingNameId(null);
     setExpandedId(prev => (prev === id ? null : id));
   };
+
+  const finishEditingName = () => { setEditingNameId(null); commitNames(); };
 
   const renameLocal = (id: string, name: string) => {
     const clipped = name.slice(0, 40);
@@ -154,12 +159,42 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                     >
                       {sl.emoji}
                     </Box>
-                    <Typography sx={{
-                      flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 600, color: 'text.primary',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {sl.name}
-                    </Typography>
+                    {editingNameId === sl.id ? (
+                      <ClearableTextField
+                        value={sl.name}
+                        onChange={e => renameLocal(sl.id, e.target.value)}
+                        onClear={() => renameLocal(sl.id, '')}
+                        onBlur={finishEditingName}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); finishEditingName(); } }}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        variant="standard"
+                        placeholder={t('savedListNameExample')}
+                        sx={{ flex: 1, '& .MuiInput-input': { fontSize: 14.5, fontWeight: 600, py: '2px' } }}
+                      />
+                    ) : (
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // כרטיס סגור: לחיצה על השם רק פותחת. פתוח: נכנסים לעריכה.
+                          if (!open) toggleExpand(sl.id);
+                          else setEditingNameId(sl.id);
+                        }}
+                        sx={{
+                          flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 0.5,
+                          cursor: open ? 'text' : 'pointer', borderRadius: '6px', px: 0.25, mx: -0.25,
+                          '&:active': { bgcolor: 'action.hover' }, transition: 'background-color 0.1s',
+                        }}
+                      >
+                        <Typography sx={{
+                          minWidth: 0, fontSize: 14.5, fontWeight: 600, color: 'text.primary',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {sl.name}
+                        </Typography>
+                        {open && <EditRoundedIcon sx={{ fontSize: 13, color: 'text.disabled', flexShrink: 0 }} />}
+                      </Box>
+                    )}
                     <Box sx={{
                       flexShrink: 0, minWidth: 22, px: 0.7, borderRadius: '999px',
                       bgcolor: 'action.hover', color: 'text.secondary',
@@ -173,18 +208,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                   </Box>
 
                   <Collapse in={open} unmountOnExit>
-                    <Box sx={{ px: 1.5, pb: 1.5, pt: 0.25 }}>
-                      <ClearableTextField
-                        value={sl.name}
-                        onChange={e => renameLocal(sl.id, e.target.value)}
-                        onClear={() => renameLocal(sl.id, '')}
-                        onBlur={commitNames}
-                        placeholder={t('savedListNameExample')}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1.75, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                      />
-
+                    <Box sx={{ px: 1.5, pb: 1.5, pt: 0.75 }}>
                       <Collapse in={emojiOpenId === sl.id} unmountOnExit>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.75 }}>
                           {SAVED_LIST_EMOJIS.map(e => (
@@ -215,10 +239,14 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                               label={it.name}
                               onDelete={() => removeItem(sl.id, idx)}
                               sx={{
-                                fontSize: 13, height: 30, bgcolor: 'action.hover',
+                                fontSize: 13, height: 31, bgcolor: 'action.hover', pr: '2px',
+                                '& .MuiChip-label': { pr: 0.5 },
                                 '& .MuiChip-deleteIcon': {
-                                  color: 'rgba(239,68,68,0.55)', fontSize: 17,
-                                  '&:hover': { color: 'error.main' },
+                                  color: 'rgba(239,68,68,0.7)', fontSize: 15,
+                                  m: 0, mr: '4px',
+                                  borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.1)',
+                                  transition: 'all 0.12s',
+                                  '&:hover': { color: 'white', bgcolor: 'error.main' },
                                 },
                               }}
                             />
@@ -237,7 +265,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         inputProps={{ autoCapitalize: 'sentences', autoCorrect: 'off', spellCheck: false }}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            bgcolor: 'background.paper', borderRadius: '12px', height: 46, pr: 0.5,
+                            bgcolor: 'background.paper', borderRadius: '12px', height: 48, pr: '5px',
                             boxShadow: '0 1px 5px rgba(0,0,0,0.07)',
                             '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(20,184,166,0.18)' },
                           },
@@ -245,24 +273,29 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                         }}
                         InputProps={{
                           startAdornment: (
-                            <InputAdornment position="start"><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
+                            <InputAdornment position="start" sx={{ mr: 1.25 }}><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
                           ),
                           endAdornment: (
-                            <InputAdornment position="end">
+                            <InputAdornment position="end" sx={{ ml: 0.75 }}>
                               <IconButton
                                 onClick={() => addItem(sl.id)}
                                 disabled={newItemText.trim().length < 2}
                                 aria-label={t('savedListAddItemPlaceholder')}
                                 sx={{
-                                  width: 34, height: 34, flexShrink: 0, borderRadius: '9px', color: 'white',
+                                  width: 38, height: 38, flexShrink: 0, borderRadius: '11px', color: 'white',
                                   background: newItemText.trim().length >= 2
-                                    ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
-                                    : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
-                                  '&.Mui-disabled': { color: 'white', opacity: 0.7 },
-                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
+                                    ? 'linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%)'
+                                    : 'action.disabledBackground',
+                                  boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20,184,166,0.45)' : 'none',
+                                  transition: 'all 0.15s',
+                                  '&.Mui-disabled': { color: 'text.disabled' },
+                                  '&:hover': {
+                                    background: newItemText.trim().length >= 2 ? 'linear-gradient(135deg, #0D9488 0%, #0891B2 100%)' : 'action.disabledBackground',
+                                  },
+                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.9)' : 'none' },
                                 }}
                               >
-                                <AddRoundedIcon sx={{ fontSize: 20 }} />
+                                <AddRoundedIcon sx={{ fontSize: 22 }} />
                               </IconButton>
                             </InputAdornment>
                           ),

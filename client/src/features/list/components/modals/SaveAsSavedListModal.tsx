@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Box, Typography, Button, Chip, CircularProgress, Collapse } from '@mui/material';
+import { Box, Typography, Button, Chip, CircularProgress, Collapse, TextField, InputAdornment, IconButton } from '@mui/material';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { SAVED_LIST_EMOJIS, newSavedListId, productsToSavedItems } from '../../helpers/savedList-helpers';
+import { SAVED_LIST_EMOJIS, MAX_SAVED_LIST_ITEMS, newSavedListId, nameToSavedItem, productsToSavedItems } from '../../helpers/savedList-helpers';
 
 // ===== מודל "שמור כרשימה קבועה" =====
 // מקפיא את המוצרים הנוכחיים של הרשימה כרשימה קבועה בעלת שם ואמוג׳י.
@@ -24,9 +25,20 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // ניתן להסיר פריטים לפני השמירה (init פעם אחת מהמוצרים הנוכחיים).
+  // אפשר להסיר *וגם להוסיף* פריטים לפני השמירה (init פעם אחת מהמוצרים הנוכחיים).
   const [items, setItems] = useState(() => productsToSavedItems(products));
-  const removeItem = (name: string) => { haptic('light'); setItems(prev => prev.filter(it => it.name !== name)); };
+  const [newItemText, setNewItemText] = useState('');
+  const removeItem = (n: string) => { haptic('light'); setItems(prev => prev.filter(it => it.name !== n)); };
+  const addItem = () => {
+    const item = nameToSavedItem(newItemText);
+    if (!item) return;
+    setNewItemText('');
+    setItems(prev => {
+      if (prev.length >= MAX_SAVED_LIST_ITEMS) return prev;
+      if (prev.some(it => it.name.trim().toLowerCase() === item.name.toLowerCase())) return prev;
+      return [...prev, item];
+    });
+  };
   const canSave = name.trim().length >= 2 && items.length > 0 && !saving;
 
   const handleSave = useCallback(async () => {
@@ -100,10 +112,10 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         </Box>
       </Collapse>
 
-      {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה. אפשר להסיר פריט לפני שמירה. */}
+      {/* תצוגה מקדימה: הצ'יפים שיישמרו, עם מונה. אפשר להסיר ולהוסיף. */}
       <Box sx={{
-        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 3.5,
-        maxHeight: 156, overflowY: 'auto', overscrollBehavior: 'contain',
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.75, mb: 1.25,
+        maxHeight: 152, overflowY: 'auto', overscrollBehavior: 'contain',
         p: 1.25, borderRadius: '12px', border: '1px solid', borderColor: 'divider',
       }}>
         <Box sx={{
@@ -120,15 +132,66 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
             label={it.name}
             onDelete={() => removeItem(it.name)}
             sx={{
-              fontSize: 13, height: 30, bgcolor: 'action.hover',
+              fontSize: 13, height: 31, bgcolor: 'action.hover', pr: '2px',
+              '& .MuiChip-label': { pr: 0.5 },
               '& .MuiChip-deleteIcon': {
-                color: 'rgba(239,68,68,0.55)', fontSize: 17,
-                '&:hover': { color: 'error.main' },
+                color: 'rgba(239,68,68,0.7)', fontSize: 15, m: 0, mr: '4px',
+                borderRadius: '50%', bgcolor: 'rgba(239,68,68,0.1)', transition: 'all 0.12s',
+                '&:hover': { color: 'white', bgcolor: 'error.main' },
               },
             }}
           />
         ))}
       </Box>
+
+      {/* הוספת פריט שלא ברשימה הנוכחית - בסגנון "הוספה מהירה" */}
+      <TextField
+        fullWidth
+        value={newItemText}
+        onChange={e => setNewItemText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }}
+        placeholder={t('savedListAddItemPlaceholder')}
+        size="small"
+        inputProps={{ autoCapitalize: 'sentences', autoCorrect: 'off', spellCheck: false }}
+        sx={{
+          mb: 3,
+          '& .MuiOutlinedInput-root': {
+            bgcolor: 'background.paper', borderRadius: '12px', height: 48, pr: '5px',
+            boxShadow: '0 1px 5px rgba(0,0,0,0.07)',
+            '&.Mui-focused': { boxShadow: '0 0 0 3px rgba(20,184,166,0.18)' },
+          },
+          '& .MuiOutlinedInput-input': { fontSize: 15, py: 0 },
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start" sx={{ mr: 1.25 }}><Box sx={{ fontSize: 17 }}>🛒</Box></InputAdornment>
+          ),
+          endAdornment: (
+            <InputAdornment position="end" sx={{ ml: 0.75 }}>
+              <IconButton
+                onClick={addItem}
+                disabled={newItemText.trim().length < 2}
+                aria-label={t('savedListAddItemPlaceholder')}
+                sx={{
+                  width: 38, height: 38, flexShrink: 0, borderRadius: '11px', color: 'white',
+                  background: newItemText.trim().length >= 2
+                    ? 'linear-gradient(135deg, #14B8A6 0%, #06B6D4 100%)'
+                    : 'action.disabledBackground',
+                  boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20,184,166,0.45)' : 'none',
+                  transition: 'all 0.15s',
+                  '&.Mui-disabled': { color: 'text.disabled' },
+                  '&:hover': {
+                    background: newItemText.trim().length >= 2 ? 'linear-gradient(135deg, #0D9488 0%, #0891B2 100%)' : 'action.disabledBackground',
+                  },
+                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.9)' : 'none' },
+                }}
+              >
+                <AddRoundedIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
 
       <Button
         variant="contained"
@@ -136,7 +199,7 @@ export const SaveAsSavedListModal = ({ defaultName, products, onSave, onClose }:
         disableElevation
         onClick={handleSave}
         disabled={!canSave}
-        sx={{ mt: 1, py: 1.25, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
+        sx={{ py: 1.25, fontSize: 15, fontWeight: 600, borderRadius: '12px' }}
       >
         {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
       </Button>

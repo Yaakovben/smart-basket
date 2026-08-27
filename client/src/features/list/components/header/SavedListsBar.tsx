@@ -1,15 +1,18 @@
-import { memo, useMemo, useCallback } from 'react';
-import { Box, Chip } from '@mui/material';
+import { memo, useMemo, useCallback, useState } from 'react';
+import { Box, Chip, IconButton } from '@mui/material';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import type { SavedList } from '../../../../global/types';
-import { haptic } from '../../../../global/helpers';
+import { haptic, safeStorage } from '../../../../global/helpers';
 
 // ===== שורת "רשימות קבועות" =====
-// נקודת הכניסה הקלה להזרקת רשימה קבועה שלמה לרשימה הנוכחית בלחיצה אחת.
-// כלל הצגה פשוט ועקבי: מוצג צ'יפ לכל רשימה קבועה שיש לה *עדיין מה לתרום*
-// (פריט שלא נמצא כרגע ברשימה). ככל שמוסיפים - הצ'יפ נעלם מעצמו. רשימה
-// ריקה לגמרי מטופלת ע"י EmptyState (כדי לא להציג כפילות). מי שאין לו
-// רשימות קבועות לא רואה כלום. ניהול נעשה מתפריט ה-⋮.
+// נקודת כניסה מהירה להזרקת רשימה קבועה שלמה לרשימה הנוכחית בלחיצה אחת.
+// מוצג צ'יפ לכל רשימה קבועה שיש לה עדיין מה לתרום (פריט שלא נמצא כרגע
+// ברשימה) - ככל שמוסיפים, הצ'יפ נעלם מעצמו. רשימה ריקה לגמרי מטופלת ע"י
+// EmptyState. המשתמש יכול לסגור את הבר לצמיתות (X) - אז נשארת רק הכניסה
+// דרך תפריט ה-⋮ ("רשימות קבועות").
+
+const DISMISS_KEY = 'sb_savedlists_bar_off';
 
 const rowSx = {
   display: 'flex',
@@ -47,6 +50,8 @@ interface SavedListsBarProps {
 }
 
 export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedListsBarProps) => {
+  const [dismissed, setDismissed] = useState(() => safeStorage.get(DISMISS_KEY) === 'true');
+
   // רשימות קבועות שעוד יש בהן פריט שלא נמצא כרגע ברשימה.
   const relevant = useMemo(() => {
     const present = new Set(pendingNames.map(n => n.trim().toLowerCase()));
@@ -58,8 +63,13 @@ export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedL
     onApply(sl);
   }, [onApply]);
 
-  // מוצג כשיש רשימה קבועה עם מה לתרום. רשימה ריקה -> EmptyState מטפל.
-  if (relevant.length === 0 || pendingNames.length === 0) return null;
+  const handleDismiss = useCallback(() => {
+    haptic('light');
+    safeStorage.set(DISMISS_KEY, 'true');
+    setDismissed(true);
+  }, []);
+
+  if (dismissed || relevant.length === 0 || pendingNames.length === 0) return null;
 
   return (
     <Box sx={rowSx}>
@@ -77,6 +87,18 @@ export const SavedListsBar = memo(({ savedLists, pendingNames, onApply }: SavedL
           }
         />
       ))}
+      <IconButton
+        onClick={handleDismiss}
+        aria-label="הסתר"
+        sx={{
+          flexShrink: 0, width: 26, height: 26,
+          color: 'rgba(255,255,255,0.7)',
+          bgcolor: 'rgba(255,255,255,0.1)',
+          '&:hover': { bgcolor: 'rgba(255,255,255,0.2)', color: 'white' },
+        }}
+      >
+        <CloseRoundedIcon sx={{ fontSize: 15 }} />
+      </IconButton>
     </Box>
   );
 });
