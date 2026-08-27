@@ -106,18 +106,21 @@ export async function updateSavedLists(
     throw ValidationError.single('savedLists', `Maximum ${MAX_SAVED_LISTS} saved lists reached`);
   }
 
+  // אורכים נגזרים מ-User.model (savedListSchema): שם רשימה 40, שם פריט 60,
+  // אמוג׳י 16. הוולידטור (Joi) מקבל טווח רחב יותר ואנחנו חותכים כאן, כדי
+  // לא להחזיר 400 על גלישת אורך אלא פשוט לנרמל.
   const cleaned: ISavedListResponse[] = savedLists
     .map(sl => ({
-      id: sanitizeText(sl.id),
-      emoji: sanitizeText(sl.emoji || '') || '📋',
-      name: sanitizeText(sl.name),
+      id: sanitizeText(sl.id).slice(0, 64),
+      emoji: sanitizeText(sl.emoji || '').slice(0, 16) || '📋',
+      name: sanitizeText(sl.name).slice(0, 40),
       items: (sl.items || [])
         .slice(0, MAX_SAVED_LIST_ITEMS)
         .map(it => ({
-          name: sanitizeText(it.name),
+          name: sanitizeText(it.name).slice(0, 60),
           quantity: typeof it.quantity === 'number' && it.quantity > 0 ? it.quantity : 1,
-          unit: sanitizeText(it.unit || '') || 'יח׳',
-          category: sanitizeText(it.category || '') || 'אחר',
+          unit: sanitizeText(it.unit || '').slice(0, 16) || 'יח׳',
+          category: sanitizeText(it.category || '').slice(0, 32) || 'אחר',
         }))
         .filter(it => it.name.length > 0),
     }))
