@@ -1,10 +1,41 @@
 import rateLimit from 'express-rate-limit';
 import type { Request } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../config';
 
-// הגבלת קצב כללית ל-API
+// מזהה לצורך rate-limit: משתמש מאומת נספר לפי ה-user id שלו, לא לפי IP.
+// קריטי בסקייל - מאות משתמשים ברשת סלולרית חולקים מעט כתובות IP (CGNAT),
+// ועם מפתח-IP הם היו ממלאים יחד דלי אחד ונחסמים בטעות ("יותר מדי בקשות"
+// כבר בטעינה הראשונה). בקשות לא-מאומתות (login/register/health/check-email)
+// עדיין נספרות לפי IP עם תקרה נמוכה יותר; ההגנה מ-brute-force מסופקת ע"י
+// loginLimiter/registerLimiter/authLimiter הייעודיים.
+interface RateIdentity { key: string; authed: boolean }
+
+function rateIdentity(req: Request): RateIdentity {
+  const cached = (req as Request & { _rateIdentity?: RateIdentity })._rateIdentity;
+  if (cached) return cached;
+
+  let identity: RateIdentity = { key: `ip:${req.ip ?? 'unknown'}`, authed: false };
+  const auth = req.headers.authorization;
+  if (auth?.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(auth.slice(7), env.JWT_ACCESS_SECRET) as { userId?: string };
+      if (decoded.userId) identity = { key: `u:${decoded.userId}`, authed: true };
+    } catch {
+      // טוקן פג/לא תקין - נשארים על מפתח IP
+    }
+  }
+
+  (req as Request & { _rateIdentity?: RateIdentity })._rateIdentity = identity;
+  return identity;
+}
+
+// הגבלת קצב כללית ל-API - תקרה נדיבה למשתמש מאומת (טעינת אפליקציה + רענוני
+// טוקן + שימוש פעיל לא מתקרבים לזה), הדוקה יותר לתעבורה אנונימית פר-IP.
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 דקות
-  max: 100, // 100 בקשות לחלון
+  max: (req: Request) => (rateIdentity(req).authed ? 1000 : 200),
+  keyGenerator: (req: Request) => rateIdentity(req).key,
   message: {
     success: false,
     message: 'Too many requests, please try again later',
