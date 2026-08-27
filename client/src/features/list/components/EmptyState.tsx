@@ -155,7 +155,8 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
         <Box sx={{
           width: '100%', maxWidth: 320, mt: 1.5,
           p: 1.5, borderRadius: '16px',
-          border: '1px solid', borderColor: 'divider',
+          bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)',
+          border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.18)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.25, color: 'primary.main' }}>
             <PlaylistAddRoundedIcon sx={{ fontSize: 18 }} />

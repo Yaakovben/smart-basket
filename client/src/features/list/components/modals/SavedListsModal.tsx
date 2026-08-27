@@ -181,7 +181,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           else setEditingNameId(sl.id);
                         }}
                         sx={{
-                          flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 0.5,
+                          flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1,
                           cursor: open ? 'text' : 'pointer', borderRadius: '6px', px: 0.25, mx: -0.25,
                           '&:active': { bgcolor: 'action.hover' }, transition: 'background-color 0.1s',
                         }}
