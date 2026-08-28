@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import { haptic } from '../../../global/helpers';
@@ -67,7 +67,18 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
   const config = getDisplayConfig();
 
   // הצעת "התחל מרשימה קבועה" - רק ברשימה ריקה לגמרי (טאב לקנות, בלי חיפוש).
-  const showSavedLists = !hasSearch && filter === 'pending' && totalProducts === 0 && savedLists.length > 0 && !!onApplySavedList;
+  const wantsSavedLists = !hasSearch && filter === 'pending' && totalProducts === 0 && savedLists.length > 0 && !!onApplySavedList;
+
+  // ההצעה נעלמת מעצמה אחרי כמה שניות - לא נשארת קבועה על המסך כל עוד
+  // הרשימה ריקה (שיכול להיות המון זמן), רק "רמז" חולף כשנכנסים לרשימה חדשה.
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    if (!wantsSavedLists) { setTimedOut(false); return; }
+    const timer = window.setTimeout(() => setTimedOut(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [wantsSavedLists]);
+
+  const showSavedLists = wantsSavedLists && !timedOut;
 
   // פריטים מרחפים סביב הדמות - שונים לפי סוג ה-empty state
   const floatingItems = hasSearch
