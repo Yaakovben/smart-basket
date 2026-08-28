@@ -136,10 +136,14 @@
       opacity: 0;
       transform-box: fill-box;
       transform-origin: center;
-      animation: itemDrop 2.8s cubic-bezier(0.4, 0, 1, 1) infinite;
+      /* דיליי בסיס של 0.15ש' (לא 0) - כדי שגם בטעינה כמעט-מיידית (פחות
+         מ-150ms) הפריים הראשון שנראה יהיה הלוגו/הילה השקטים, לא מוצר
+         תפוס באמצע נפילה. יחד עם ה-fade-out ב-initialLoader.ts זה מבטיח
+         שאין פריים "לא ברור" גם כשהטעינה ממש מהירה. */
+      animation: itemDrop 2.8s cubic-bezier(0.4, 0, 1, 1) 0.15s infinite;
     }
-    .splash-item.i2 { animation-delay: 0.15s; }
-    .splash-item.i3 { animation-delay: 0.3s; }
+    .splash-item.i2 { animation-delay: 0.3s; }
+    .splash-item.i3 { animation-delay: 0.45s; }
     @keyframes itemDrop {
       0%   { transform: translateY(0) scale(0.5); opacity: 0; }
       8%   { opacity: 1; }
