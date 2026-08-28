@@ -687,7 +687,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       )}
       {/* חיווי טעינה בזמן הזרקת רשימה קבועה - ההוספה עצמה סדרתית (מוצר
           אחר מוצר), בלי זה זה נראה כאילו פריטים "נוספים לאט" בלי סיבה. */}
-      <SlowLoadIndicator active={applyingSavedList} variant="toast" message={t('adding')} delayMs={200} />
+      <SlowLoadIndicator active={applyingSavedList} variant="toast" message={t('addingFromSavedList')} delayMs={200} />
     </Box>
   );
 });
