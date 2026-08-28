@@ -1,5 +1,6 @@
 import type { SxProps, Theme } from '@mui/material';
 import { COMMON_STYLES } from '../../../global/helpers';
+import { getIconGlow, SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
 
 export const glassButtonSx = COMMON_STYLES.glassIconButton;
 
@@ -26,21 +27,31 @@ export const contentAreaSx = (editing: boolean): SxProps<Theme> => ({
   WebkitOverflowScrolling: 'touch',
 });
 
+// glow עדין בצבע עצמו (getIconGlow, אותה פונקציה שמזינה IconTile/AvatarRing)
+// כשנבחר - עקביות עם שאר האריחים הצבעוניים באפליקציה, לא רק מסגרת שטוחה.
 export const colorSwatchSx = (color: string, isSelected: boolean): SxProps<Theme> => ({
   width: 36, height: 36, borderRadius: '50%',
   bgcolor: color,
   border: isSelected ? '3px solid' : '3px solid transparent',
   borderColor: isSelected ? 'text.primary' : 'transparent',
+  boxShadow: isSelected ? getIconGlow(color) : 'none',
   cursor: 'pointer',
-  transition: 'transform 0.15s',
+  transition: 'transform 0.15s, box-shadow 0.15s',
   '&:hover': { transform: 'scale(1.1)' },
 });
 
+// אותה "סקוויקל" (SQUIRCLE_RADIUS) כמו IconTile - היו ריבועים רגילים,
+// שפה צורנית שונה משאר האפליקציה. נבחר = רקע גרדיאנט טורקיז עדין + glow,
+// לא סתם primary.light שטוח.
 export const emojiSwatchSx = (isSelected: boolean): SxProps<Theme> => ({
-  width: 42, height: 42, borderRadius: '10px',
+  width: 42, height: 42, borderRadius: SQUIRCLE_RADIUS,
   border: isSelected ? '2px solid' : '1.5px solid',
   borderColor: isSelected ? 'primary.main' : 'divider',
-  bgcolor: isSelected ? 'primary.light' : 'background.paper',
+  background: isSelected
+    ? 'linear-gradient(135deg, rgba(20,184,166,0.18) 0%, rgba(13,148,136,0.1) 100%)'
+    : 'transparent',
+  bgcolor: isSelected ? undefined : 'background.paper',
+  boxShadow: isSelected ? '0 3px 10px rgba(20,184,166,0.25)' : 'none',
   fontSize: 22, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   transition: 'all 0.15s',

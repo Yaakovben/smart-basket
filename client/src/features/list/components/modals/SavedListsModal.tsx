@@ -22,8 +22,8 @@ interface SavedListsModalProps {
   onApply: (savedList: SavedList) => void;
   onClose: () => void;
   // רשימה שנוצרה הרגע (זרימת "צור רשימה קבועה חדשה" -> חוזרים לכאן במקום
-  // לסגור הכל) - נפתחת מורחבת אוטומטית כדי שאפשר יהיה ללחוץ "הוסף" עליה
-  // מיד, בלי לגלול ולפתוח ידנית.
+  // לסגור הכל). לא נפתחת אוטומטית (זה בדיוק מה שהרגיש עמוס) - רק מסומנת
+  // עם מסגרת מודגשת כדי שיהיה ברור איפה היא, פתיחה בפועל היא לחיצה מפורשת.
   initialFocusId?: string | null;
 }
 
@@ -36,7 +36,10 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
   // פוקוס בלי להקליד חדש (שם ריק היה נמחק ע"י השרת בשקט). מתעדכן בכל
   // הקלדה תקינה ב-renameLocal.
   const lastGoodNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
-  const [expandedId, setExpandedId] = useState<string | null>(initialFocusId ?? (savedLists.length === 1 ? savedLists[0].id : null));
+  // כל הכרטיסים תמיד מתחילים סגורים - פתיחה היא תמיד לחיצה מפורשת, גם
+  // כשיש רשימה קבועה יחידה וגם מיד אחרי יצירת רשימה חדשה (initialFocusId
+  // עדיין מסמן אותה במסגרת מודגשת למטה, רק לא פותח אותה בכוח).
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
@@ -131,10 +134,13 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
             {draft.map(sl => {
               const open = expandedId === sl.id;
+              // רשימה שנוצרה הרגע - מסגרת מודגשת כדי שיהיה ברור איפה היא
+              // בין כל הכרטיסים הסגורים, בלי לפתוח אותה בכוח.
+              const highlighted = open || sl.id === initialFocusId;
               return (
                 <Box key={sl.id} sx={{
                   borderRadius: '14px', overflow: 'hidden',
-                  border: '1px solid', borderColor: open ? 'rgba(20,184,166,0.4)' : 'divider',
+                  border: '1px solid', borderColor: highlighted ? 'rgba(20,184,166,0.4)' : 'divider',
                   transition: 'border-color 0.15s',
                 }}>
                   {/* ראש הכרטיס - כולו לחיץ פותח/סוגר; האמוג׳י פותח בורר אמוג׳י */}
