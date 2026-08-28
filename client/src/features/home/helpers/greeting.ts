@@ -25,12 +25,10 @@ export const getWeekdayMessage = (t: (k: TranslationKeys) => string): string | n
   const day = new Date().getDay(); // 0=ראשון, 5=שישי, 6=שבת
   const hour = new Date().getHours();
   // יום שישי בבוקר/צהריים - "מתכוננים לשבת?"
-  if (day === 5 && hour >= 6 && hour < 16) return 'מתכוננים לשבת? 🕯️';
+  if (day === 5 && hour >= 6 && hour < 16) return t('weekdayFridayPrep');
   // מוצ"ש - "סוף שבוע 🎉"
-  if (day === 6 && hour >= 19) return 'שבוע חדש 💪';
+  if (day === 6 && hour >= 19) return t('weekdaySaturdayNight');
   // ראשון בבוקר - התחלה חדשה
-  if (day === 0 && hour >= 6 && hour < 12) return 'שבוע חדש מתחיל 🚀';
+  if (day === 0 && hour >= 6 && hour < 12) return t('weekdaySundayMorning');
   return null;
-  // הפניה ל-t להתאמה עתידית לתרגום (כרגע לא בשימוש)
-  void t;
 };
