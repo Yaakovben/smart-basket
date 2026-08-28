@@ -81,6 +81,25 @@ export function getIconGlow(hex: string | undefined | null): string {
   ].join(', ');
 }
 
+// גרסה "בהירה" - צ'יפ פסטלי שקוף חלקית במקום גרדיאנט רווי מלא. משמש
+// לאייקוני מוצר בתוך שורת רשימה (SwipeItem) - עשרות מהם יחד באותו מסך,
+// אז לא נכון שיתחרו ויזואלית עם אריח-הרשימה הבודד (IconTile הרגיל,
+// ListCard/SavedListsModal) שאמור להיות הכי "חי" במסך. hex+alpha (8
+// ספרות) על stop הבהיר/כהה, לא shade נפרד - נשען על אותו STOPS_MAP.
+export function getIconTint(hex: string | undefined | null): string {
+  const [light, dark] = getIconStops(hex);
+  return `linear-gradient(135deg, ${light}45 0%, ${dark}22 100%)`;
+}
+
+// מסגרת עדינה בגוון הצבע במקום glow מלא - מספיק כדי לתת זהות-צבע
+// בלי "לצעוק" באותה עוצמה כמו אריח-הרשימה.
+export function getIconTintRing(hex: string | undefined | null): string {
+  const [, dark] = getIconStops(hex);
+  const rgb = hexToRgb(dark) ?? [13, 148, 136];
+  const [r, g, b] = rgb;
+  return `inset 0 0 0 1px rgba(${r},${g},${b},0.22)`;
+}
+
 // hash דטרמיניסטי קצר (djb2) - לבחירת וריאציית דפוס לפי מזהה יציב
 // (list.id / user.id), לא רנדומלי (אותה רשימה תמיד מקבלת אותה וריאציה).
 export function hashSeed(id: string): number {

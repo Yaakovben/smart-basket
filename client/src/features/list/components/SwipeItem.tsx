@@ -373,7 +373,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           </Box>
         )}
         {/* נקנה - נשאר שטוח/מושתק בכוונה (רמז ויזואלי "בוצע", לא צריך למשוך
-            עין). לא נקנה - אריח הגרדיאנט החי (IconTile), עקבי עם רשימות/אווטארים. */}
+            עין). לא נקנה - IconTile variant="light": צ'יפ פסטלי, לא
+            הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
+            אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
         {isPurchased ? (
           <Box sx={{
             width: 40, height: 40, borderRadius: '11px',
@@ -392,6 +394,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             seedId={product.id}
             size={40}
             fontSize={20}
+            variant="light"
             sx={{
               flexShrink: 0,
               '@media (max-width: 360px)': { width: 34, height: 34 },
