@@ -817,7 +817,7 @@ export const he: Translations = {
   startFromSavedList: 'התחל מרשימה קבועה',
   savedListAddItemPlaceholder: 'הוסף פריט',
   deleteSavedListAction: 'מחק רשימה קבועה',
-  savedListsChooserApplyTitle: 'הוסף רשימה קבועה',
+  savedListsChooserApplyTitle: 'הוסף מרשימה קבועה',
   savedListsChooserApplyDesc: 'הוסף פריטים מרשימה קבועה שכבר יש לך',
   savedListsChooserCreateTitle: 'צור רשימה קבועה חדשה',
   savedListsChooserCreateDesc: 'שמור את המוצרים ברשימה הנוכחית כרשימה קבועה חדשה',

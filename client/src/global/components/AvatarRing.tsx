@@ -12,7 +12,8 @@ interface AvatarRingProps {
   sx?: SxProps<Theme>;
 }
 
-// אווטאר עגול עם טבעת גרדיאנט מסתובבת לאט (בסגנון "story ring") - מחליף
+// אווטאר עגול עם טבעת גרדיאנט קבועה (בסגנון "story ring", בלי סיבוב -
+// היה מוסח מדי על מסך הפרופיל שבו האווטאר גדול ותפוס תשומת לב) - מחליף
 // את ה-Avatar{bgcolor:flat} הישן. שימוש: MemberAvatar.tsx (עוטף את זה +
 // נקודת "מחובר"), HomeHeader.tsx, ProfileComponent.tsx.
 export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick, sx }: AvatarRingProps) => {
@@ -32,11 +33,6 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
         flexShrink: 0, cursor: onClick ? 'pointer' : undefined,
         p: `${ringWidth}px`,
         background: `conic-gradient(from ${startDeg}deg, ${light}, ${dark}, ${light})`,
-        animation: 'avatarRingSpin 8s linear infinite',
-        '@keyframes avatarRingSpin': {
-          from: { transform: 'rotate(0deg)' },
-          to: { transform: 'rotate(360deg)' },
-        },
         boxShadow: getIconGlow(color),
         transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
         '&:active': onClick ? { transform: 'scale(0.9)' } : undefined,
@@ -44,6 +40,7 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
       }}
     >
       <Box sx={{
+        position: 'relative', overflow: 'hidden',
         width: '100%', height: '100%', borderRadius: '50%',
         background: gradient,
         border: '2px solid', borderColor: 'background.paper',
@@ -52,7 +49,13 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
         fontSize: emoji ? size * 0.5 : size * 0.4,
         fontWeight: 700, color: 'white', lineHeight: 1,
       }}>
-        {emoji || initials}
+        {/* אותו ברק זכוכיתי כמו IconTile - עקביות ויזואלית בכל האריחים/עיגולים */}
+        <Box aria-hidden="true" sx={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 45%)',
+          pointerEvents: 'none',
+        }} />
+        <Box component="span" sx={{ position: 'relative' }}>{emoji || initials}</Box>
       </Box>
     </Box>
   );

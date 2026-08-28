@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Box, Typography, Chip, Button, Collapse, TextField, InputAdornment } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Button, Collapse, TextField, InputAdornment } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -21,9 +21,13 @@ interface SavedListsModalProps {
   onChange: (next: SavedList[]) => Promise<void> | void;
   onApply: (savedList: SavedList) => void;
   onClose: () => void;
+  // רשימה שנוצרה הרגע (זרימת "צור רשימה קבועה חדשה" -> חוזרים לכאן במקום
+  // לסגור הכל) - נפתחת מורחבת אוטומטית כדי שאפשר יהיה ללחוץ "הוסף" עליה
+  // מיד, בלי לגלול ולפתוח ידנית.
+  initialFocusId?: string | null;
 }
 
-export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: SavedListsModalProps) => {
+export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initialFocusId }: SavedListsModalProps) => {
   const { t } = useSettings();
   const [draft, setDraft] = useState<SavedList[]>(savedLists);
   const draftRef = useRef(draft);
@@ -32,7 +36,7 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   // פוקוס בלי להקליד חדש (שם ריק היה נמחק ע"י השרת בשקט). מתעדכן בכל
   // הקלדה תקינה ב-renameLocal.
   const lastGoodNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
-  const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
+  const [expandedId, setExpandedId] = useState<string | null>(initialFocusId ?? (savedLists.length === 1 ? savedLists[0].id : null));
   const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
@@ -283,38 +287,32 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                           ),
                           endAdornment: (
                             <InputAdornment position="end" sx={{ ml: 0.75 }}>
-                              {/* עם טקסט, לא רק אייקון - "פלוס" בלי הסבר לצד כפתור
-                                  "הוסף X לרשימה הנוכחית" למטה בילבל בין השניים. */}
-                              <Button
+                              <IconButton
                                 onClick={() => addItem(sl.id)}
                                 disabled={newItemText.trim().length < 2}
-                                startIcon={<AddRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
+                                aria-label={t('savedListAddItemPlaceholder')}
                                 sx={{
                                   background: newItemText.trim().length >= 2
                                     ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
                                     : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                                   color: 'white',
-                                  height: { xs: 34, sm: 40 },
-                                  '@media (max-width: 360px)': { height: 28 },
-                                  px: 1.5, minWidth: 0,
+                                  width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
+                                  '@media (max-width: 360px)': { width: 28, height: 28 },
                                   borderRadius: '10px',
-                                  textTransform: 'none', fontSize: { xs: 12.5, sm: 13.5 }, fontWeight: 700,
-                                  whiteSpace: 'nowrap',
                                   boxShadow: newItemText.trim().length >= 2 ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
                                   transition: 'all 0.2s ease',
-                                  '& .MuiButton-startIcon': { marginInlineEnd: 0.5 },
                                   '&:hover': {
                                     background: newItemText.trim().length >= 2
                                       ? 'linear-gradient(135deg, #0D9488, #0F766E)'
                                       : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                                     boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20, 184, 166, 0.45)' : 'none'
                                   },
-                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.96)' : 'none' },
+                                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
                                   '&.Mui-disabled': { color: 'white', opacity: 0.7 }
                                 }}
                               >
-                                {t('add')}
-                              </Button>
+                                <AddRoundedIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                              </IconButton>
                             </InputAdornment>
                           ),
                         }}

@@ -816,7 +816,7 @@ export const en: Translations = {
   startFromSavedList: 'Start from a saved list',
   savedListAddItemPlaceholder: 'Add an item',
   deleteSavedListAction: 'Delete saved list',
-  savedListsChooserApplyTitle: 'Add a saved list',
+  savedListsChooserApplyTitle: 'Add from a saved list',
   savedListsChooserApplyDesc: 'Add items from a saved list you already have',
   savedListsChooserCreateTitle: 'Create a new saved list',
   savedListsChooserCreateDesc: 'Save the current list\'s products as a new saved list',

@@ -115,6 +115,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   const [showSavedListsChooser, setShowSavedListsChooser] = useState(false);
   const [showSavedLists, setShowSavedLists] = useState(false);
   const [showSaveAsSavedList, setShowSaveAsSavedList] = useState(false);
+  // רשימה שזה עתה נוצרה - ראו SaveAsSavedListModal.onSaved למטה
+  const [justCreatedSavedListId, setJustCreatedSavedListId] = useState<string | null>(null);
   // מונע הזרקה כפולה (טאפ מהיר על אותו צ'יפ / כמה צ'יפים) - ref כי צריך
   // עדכון סינכרוני לפני שה-state מספיק להתרנדר.
   const applyingSavedListRef = useRef(false);
@@ -664,7 +666,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           savedLists={savedLists}
           onChange={handleChangeSavedLists}
           onApply={handleApplySavedList}
-          onClose={() => setShowSavedLists(false)}
+          onClose={() => { setShowSavedLists(false); setJustCreatedSavedListId(null); }}
+          initialFocusId={justCreatedSavedListId}
         />
       )}
       {showSaveAsSavedList && (
@@ -672,6 +675,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           products={[...pending, ...purchased]}
           onSave={handleCreateSavedList}
           onClose={() => setShowSaveAsSavedList(false)}
+          onSaved={(sl) => { setJustCreatedSavedListId(sl.id); setShowSavedLists(true); }}
         />
       )}
     </Box>

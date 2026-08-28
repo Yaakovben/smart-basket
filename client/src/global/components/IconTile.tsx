@@ -42,6 +42,13 @@ export const IconTile = ({ emoji, color, seedId, size = 48, fontSize, onClick, a
       }}
     >
       <IconPattern seed={seed} size={size} />
+      {/* ברק זכוכיתי אלכסוני - טכניקת "glossy tile" קלאסית (אייקוני iOS
+          וכו') שנותנת עומק/פרימיום לגרדיאנט השטוח, בלי תלות בצבע/seed. */}
+      <Box aria-hidden="true" sx={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 45%)',
+        pointerEvents: 'none',
+      }} />
       <Box component="span" sx={{ fontSize: fontSize ?? Math.round(size * 0.5), lineHeight: 1, position: 'relative', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.15))' }}>
         {emoji}
       </Box>
