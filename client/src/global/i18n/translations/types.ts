@@ -207,6 +207,7 @@ export type TranslationKeys =
   // Toasts
   | 'added'
   | 'adding'
+  | 'addingFromSavedList'
   | 'saved'
   | 'deleted'
   | 'updated'

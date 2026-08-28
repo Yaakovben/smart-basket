@@ -212,6 +212,7 @@ export const ru: Translations = {
   // Toasts
   added: 'Добавлено',
   adding: 'Добавление...',
+  addingFromSavedList: 'Добавление товаров из готового списка...',
   saved: 'Сохранено',
   deleted: 'Удалено',
   updated: 'Обновлено',

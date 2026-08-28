@@ -211,6 +211,7 @@ export const he: Translations = {
   // Toasts
   added: 'נוסף',
   adding: 'מוסיף...',
+  addingFromSavedList: 'מוסיף מוצרים מרשימה קבועה...',
   saved: 'נשמר',
   deleted: 'נמחק',
   updated: 'עודכן',

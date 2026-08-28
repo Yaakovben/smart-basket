@@ -212,6 +212,7 @@ export const en: Translations = {
   // Toasts
   added: 'Added',
   adding: 'Adding...',
+  addingFromSavedList: 'Adding products from saved list...',
   saved: 'Saved',
   deleted: 'Deleted',
   updated: 'Updated',
