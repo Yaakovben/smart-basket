@@ -159,7 +159,9 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
                       ariaLabel={t('chooseIcon')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setExpandedId(sl.id);
+                        // רק בורר האמוג'י - לא פותח את שאר הכרטיס (פריטים
+                        // וכו') כדי שזה לא ירגיש עמוס. ה-Collapse שלו נמצא
+                        // מחוץ ל-Collapse הראשי של הכרטיס, ממש לצד הראש.
                         setEmojiOpenId(id => (id === sl.id ? null : sl.id));
                       }}
                       sx={{
@@ -223,30 +225,34 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
                     />
                   </Box>
 
+                  {/* בורר אמוג'י - עצמאי מהרחבת הכרטיס, נפתח רק בלחיצה על
+                      האייקון עצמו, בלי לגרור פתיחה של כל שאר הכרטיס. */}
+                  <Collapse in={emojiOpenId === sl.id} unmountOnExit>
+                    <Box sx={{ px: 1.5, pb: 1.25, pt: 0.25 }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                        {SAVED_LIST_EMOJIS.map(e => (
+                          <Box
+                            key={e}
+                            onClick={() => setEmoji(sl.id, e)}
+                            sx={{
+                              width: 38, height: 38, borderRadius: '10px',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 18, cursor: 'pointer',
+                              bgcolor: sl.emoji === e ? 'rgba(20,184,166,0.12)' : 'action.hover',
+                              border: '1px solid',
+                              borderColor: sl.emoji === e ? 'primary.main' : 'transparent',
+                              '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
+                            }}
+                          >
+                            {e}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  </Collapse>
+
                   <Collapse in={open} unmountOnExit>
                     <Box sx={{ px: 1.5, pb: 1.5, pt: 0.75 }}>
-                      <Collapse in={emojiOpenId === sl.id} unmountOnExit>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.75 }}>
-                          {SAVED_LIST_EMOJIS.map(e => (
-                            <Box
-                              key={e}
-                              onClick={() => setEmoji(sl.id, e)}
-                              sx={{
-                                width: 38, height: 38, borderRadius: '10px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 18, cursor: 'pointer',
-                                bgcolor: sl.emoji === e ? 'rgba(20,184,166,0.12)' : 'action.hover',
-                                border: '1px solid',
-                                borderColor: sl.emoji === e ? 'primary.main' : 'transparent',
-                                '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
-                              }}
-                            >
-                              {e}
-                            </Box>
-                          ))}
-                        </Box>
-                      </Collapse>
-
                       {sl.items.length > 0 && (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.75 }}>
                           {sl.items.map((it, idx) => (
