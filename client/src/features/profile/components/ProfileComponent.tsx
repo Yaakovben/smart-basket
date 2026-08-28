@@ -4,14 +4,17 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
-import { ConfirmModal, ClearableTextField } from '../../../global/components';
+import { ConfirmModal, ClearableTextField, AvatarRing } from '../../../global/components';
+import { getIconGradient } from '../../../global/theme/iconArt';
+import { formatDateShort } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useReliableTap } from '../../../global/hooks';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 import {
-  glassButtonSx, labelSx, headerSx, viewAvatarCircleSx, contentAreaSx,
-  editAvatarPreviewSx, colorSwatchSx, emojiSwatchSx, logoutButtonSx,
+  glassButtonSx, labelSx, headerSx, contentAreaSx,
+  colorSwatchSx, emojiSwatchSx, infoCardSx, infoRowSx, lastInfoRowSx,
+  infoIconSx, infoTextSx, logoutRowSx,
 } from '../styles/ProfileComponent.styles';
 
 // ===== ממשק Props =====
@@ -62,17 +65,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           )}
         </Box>
 
-        {/* Profile Avatar (View Mode) */}
+        {/* Profile Avatar (View Mode) - הדר נשאר קליל (אווטאר+שם בלבד),
+            אימייל/תאריך הצטרפות עברו לכרטיס מידע בתוכן למטה, אותה שפה
+            צורנית כמו כרטיסי ה-Settings, במקום להצטופף כטקסט על הגרדיאנט. */}
         {!editProfile && (
-          <>
-            <Box sx={viewAvatarCircleSx(user.avatarColor)}>
-              <Box component="span" sx={{ fontSize: 32, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
-                {user.avatarEmoji || user.name.charAt(0)}
-              </Box>
-            </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
-          </>
+          </Box>
         )}
       </Box>
 
@@ -82,11 +82,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           <Paper sx={{ borderRadius: '14px', p: 2.5 }}>
             {/* Avatar Preview */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-              <Box sx={editAvatarPreviewSx(editProfile.avatarColor)}>
-                <Box component="span" sx={{ fontSize: 38, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
-                  {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
-                </Box>
-              </Box>
+              <AvatarRing emoji={editProfile.avatarEmoji} initials={editProfile.name.charAt(0) || '?'} color={editProfile.avatarColor} seedId={user.id || user.name} size={88} />
             </Box>
 
             {/* Color Selection */}
@@ -96,7 +92,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 <Box
                   key={c}
                   onClick={() => updateEditField('avatarColor', c)}
-                  sx={colorSwatchSx(c, editProfile.avatarColor === c)}
+                  sx={{ ...colorSwatchSx(c, editProfile.avatarColor === c), background: getIconGradient(c) }}
                 />
               ))}
             </Box>
@@ -153,15 +149,29 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           </Paper>
         ) : (
           <>
-            {/* Logout Button */}
-            <Button
-              fullWidth
-              onClick={() => setConfirmLogout(true)}
-              startIcon={<LogoutIcon sx={{ fontSize: 20 }} />}
-              sx={logoutButtonSx(isDark)}
-            >
-              {t('logout')}
-            </Button>
+            {/* Account Info Card */}
+            <Paper sx={infoCardSx}>
+              <Box sx={infoRowSx}>
+                <Box sx={infoIconSx}>📧</Box>
+                <Typography sx={infoTextSx}>{user.email}</Typography>
+              </Box>
+              <Box sx={lastInfoRowSx}>
+                <Box sx={infoIconSx}>📅</Box>
+                <Typography sx={infoTextSx}>
+                  {user.createdAt
+                    ? t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))
+                    : '—'}
+                </Typography>
+              </Box>
+            </Paper>
+
+            {/* Logout Row - שורת-סכנה כמו ב-Settings, לא כפתור גדול נפרד */}
+            <Paper sx={{ ...infoCardSx, mt: 2 }}>
+              <Box sx={logoutRowSx(isDark)} onClick={() => setConfirmLogout(true)}>
+                <Box sx={infoIconSx}><LogoutIcon sx={{ fontSize: 17, color: 'inherit' }} /></Box>
+                <Typography sx={{ ...infoTextSx, color: 'inherit', fontWeight: 600 }}>{t('logout')}</Typography>
+              </Box>
+            </Paper>
           </>
         )}
       </Box>

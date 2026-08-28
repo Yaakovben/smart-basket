@@ -12,5 +12,8 @@ export const aiAssistantValidator = {
       .min(1)
       .max(20)
       .required(),
+    // שפת התגובה הרצויה - נגזרת מהגדרות הלקוח (SettingsContext), לא
+    // מזוהה מתוך תוכן ההודעה. אופציונלי - ברירת המחדל בשירות היא 'he'.
+    language: Joi.string().valid('he', 'en', 'ru').optional(),
   }),
 };

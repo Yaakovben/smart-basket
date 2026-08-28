@@ -56,6 +56,9 @@ export type TranslationKeys =
   | 'goodAfternoon'
   | 'goodEvening'
   | 'goodNight'
+  | 'weekdayFridayPrep'
+  | 'weekdaySaturdayNight'
+  | 'weekdaySundayMorning'
   | 'search'
   | 'homeSearchFewListsHint'
   | 'fewListsSearchTitle'
@@ -173,6 +176,7 @@ export type TranslationKeys =
   | 'editProfile'
   | 'name'
   | 'email'
+  | 'memberSince'
   | 'logout'
   | 'logoutConfirm'
   // Auth

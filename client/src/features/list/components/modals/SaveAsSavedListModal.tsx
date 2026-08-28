@@ -15,9 +15,13 @@ interface SaveAsSavedListModalProps {
   products: Product[];
   onSave: (savedList: SavedList) => Promise<void>;
   onClose: () => void;
+  // נקרא אחרי שמירה מוצלחת בלבד (לא בסגירה/ביטול) - ה-caller משתמש בזה
+  // כדי לחזור למודל ניהול הרשימות הקבועות עם הרשימה החדשה גלויה, במקום
+  // לסגור הכל ולהשאיר את המשתמש בלי דרך ישירה להוסיף ממנה מיד.
+  onSaved?: (savedList: SavedList) => void;
 }
 
-export const SaveAsSavedListModal = ({ products, onSave, onClose }: SaveAsSavedListModalProps) => {
+export const SaveAsSavedListModal = ({ products, onSave, onClose, onSaved }: SaveAsSavedListModalProps) => {
   const { t } = useSettings();
   // ריק בכוונה - השם לא נגזר משם הרשימה הנוכחית, המשתמש חייב לבחור בעצמו.
   // ה-placeholder (savedListNameExample) הוא הדגמה, לא ברירת מחדל אמיתית.
@@ -47,12 +51,14 @@ export const SaveAsSavedListModal = ({ products, onSave, onClose }: SaveAsSavedL
     haptic('light');
     setSaving(true);
     try {
-      await onSave({ id: newSavedListId(), emoji, name: name.trim(), items });
+      const savedList = { id: newSavedListId(), emoji, name: name.trim(), items };
+      await onSave(savedList);
+      onSaved?.(savedList);
       onClose();
     } finally {
       setSaving(false);
     }
-  }, [name, emoji, items, saving, onSave, onClose]);
+  }, [name, emoji, items, saving, onSave, onClose, onSaved]);
 
   return (
     <Modal title={t('saveAsSavedListTitle')} onClose={() => !saving && onClose()}>

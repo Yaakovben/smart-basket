@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
+import { IconTile } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -371,23 +372,36 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             {isSelected && '✓'}
           </Box>
         )}
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            borderRadius: '11px',
-            bgcolor: isPurchased ? 'action.hover' : `${CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}15`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 20,
-            flexShrink: 0,
+        {/* נקנה - נשאר שטוח/מושתק בכוונה (רמז ויזואלי "בוצע", לא צריך למשוך
+            עין). לא נקנה - IconTile variant="light": צ'יפ פסטלי, לא
+            הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
+            אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
+        {isPurchased ? (
+          <Box sx={{
+            width: 40, height: 40, borderRadius: '11px',
+            bgcolor: 'action.hover',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, flexShrink: 0,
             '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17, borderRadius: '9px' },
             '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15, borderRadius: '8px' },
-          }}
-        >
-          {icon}
-        </Box>
+          }}>
+            {icon}
+          </Box>
+        ) : (
+          <IconTile
+            emoji={icon}
+            color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+            seedId={product.id}
+            size={40}
+            fontSize={20}
+            variant="light"
+            sx={{
+              flexShrink: 0,
+              '@media (max-width: 360px)': { width: 34, height: 34 },
+              '@media (max-width: 320px)': { width: 30, height: 30 },
+            }}
+          />
+        )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography

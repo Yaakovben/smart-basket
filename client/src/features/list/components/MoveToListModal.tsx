@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { List } from '../../../global/types';
-import { Modal } from '../../../global/components';
+import { Modal, IconTile } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { haptic } from '../../../global/helpers';
 
@@ -56,13 +56,7 @@ export const MoveToListModal = memo(({ lists, onSelect, onClose }: MoveToListMod
               transition: 'background-color 0.15s',
             }}
           >
-            <Box sx={{
-              width: 40, height: 40, borderRadius: '12px', bgcolor: l.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, flexShrink: 0,
-            }}>
-              {l.icon}
-            </Box>
+            <IconTile emoji={l.icon} color={l.color} seedId={l.id} size={40} fontSize={20} />
             <Typography sx={{ fontSize: 14.5, fontWeight: 600, color: 'text.primary', flex: 1, minWidth: 0 }} noWrap>
               {l.name}
             </Typography>

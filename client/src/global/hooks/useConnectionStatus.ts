@@ -42,6 +42,11 @@ function subscribe(listener: () => void): () => void {
 let offlineTimer: ReturnType<typeof setTimeout> | null = null;
 let socketTimer: ReturnType<typeof setTimeout> | null = null;
 let socketDown = false;
+// true רק אחרי שה-socket הצליח פעם אחת. בלי זה, scheduleReconnecting
+// שרץ מיד בעליית האפליקציה (socket עוד לא הספיק להתחבר בכלל - handshake
+// רגיל, לא תקלה) היה מציג את הפס "החיבור נקטע" אחרי 4 שניות על כל כניסה
+// רגילה לאפליקציה, אפילו כשהכל תקין - "מתחבר" ראשוני הוצג כ"התנתק".
+let hasEverConnected = false;
 
 function clearOfflineTimer() {
   if (offlineTimer) { clearTimeout(offlineTimer); offlineTimer = null; }
@@ -70,6 +75,9 @@ if (!navigator.onLine) {
 
 function scheduleReconnecting() {
   clearSocketTimer();
+  // חיבור ראשוני שעדיין לא הצליח אף פעם - לא "התנתק", פשוט עדיין מתחבר.
+  // לא מתזמנים בכלל שום חיווי "reconnecting" עד שהיה חיבור אחד מוצלח.
+  if (!hasEverConnected) return;
   socketTimer = setTimeout(() => {
     socketDown = true;
     if (navigator.onLine && state.phase === 'online') setState({ phase: 'reconnecting' });
@@ -79,13 +87,13 @@ function scheduleReconnecting() {
 function handleSocketConnected() {
   clearSocketTimer();
   socketDown = false;
+  hasEverConnected = true;
   if (state.phase === 'reconnecting') setState({ phase: 'online' });
 }
 
 socketService.on('disconnect', scheduleReconnecting);
 socketService.on('connect_error', scheduleReconnecting);
 socketService.on('connect', handleSocketConnected);
-if (!socketService.isConnected()) scheduleReconnecting();
 
 subscribeToQueueCount(n => setState({ pendingCount: n }));
 

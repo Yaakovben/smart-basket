@@ -332,7 +332,28 @@ function buildUserContext(insights: Awaited<ReturnType<typeof getUserInsights>>,
   return lines.join('\n');
 }
 
-const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של אפליקציית SmartBasket לניהול רשימות קניות חכמות.
+// שפת תגובה - נגזרת מהגדרת השפה של המשתמש בלקוח (SettingsContext), לא
+// מזוהה מתוך תוכן ההודעה. לפני זה הפרומפט חייב "ענה תמיד בעברית" קשיח,
+// אז שאלה באנגלית בצ'אט הרגיל קיבלה תשובה בעברית - בניגוד לניתוח רשימה
+// (ListAnalysisDrawer.buildAnalysisPrompt) שכבר שלח הנחיית שפה בהודעת
+// המשתמש עצמה, ולכן "עבד" חלקית (המודל נטה להעדיף את ההנחיה המפורשת
+// והמאוחרת יותר בהודעת המשתמש על פני ההנחיה הכללית בפרומפט המערכת).
+export type AssistantLanguage = 'he' | 'en' | 'ru';
+
+const LANGUAGE_INSTRUCTION: Record<AssistantLanguage, string> = {
+  he: 'ענה תמיד בעברית, בטון ידידותי וממוקד.',
+  en: 'Always answer in English, in a friendly and focused tone.',
+  ru: 'Всегда отвечай на русском языке, в дружелюбном и лаконичном тоне.',
+};
+
+const OFF_TOPIC_REFUSAL: Record<AssistantLanguage, string> = {
+  he: 'אני כאן רק לענות על שאלות הקשורות לקניות ולרשימות שלך. נסה לשאול אותי על מוצרים, מחירים, או דרכי חיסכון בסופר 🛒',
+  en: "I'm only here to answer questions about your shopping and lists. Try asking me about products, prices, or ways to save at the supermarket 🛒",
+  ru: 'Я здесь только чтобы отвечать на вопросы о покупках и ваших списках. Спросите меня о товарах, ценах или способах сэкономить в супермаркете 🛒',
+};
+
+function buildSystemPromptHeader(language: AssistantLanguage): string {
+  return `אתה "סל חכם" - העוזר הרשמי של אפליקציית SmartBasket לניהול רשימות קניות חכמות.
 
 תפקידך הבלעדי הוא לעזור למשתמשים בנושאים הקשורים ישירות לקניות, אוכל וניהול הרשימות שלהם:
 • שאלות על רשימות הקניות, מוצרים, קטגוריות, הרגלי קנייה
@@ -355,14 +376,14 @@ const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של 
 • התראות Push - ניתן להפעיל התראות כדי לקבל עדכון כשחבר מוסיף מוצר לרשימה משותפת.
 • מצב אופליין - האפליקציה עובדת גם ללא אינטרנט ומסתנכרנת כשהחיבור חוזר.
 
-כשנשאלת על נושא שאינו קשור לקניות, אוכל, סופרים, או ניהול רשימות - ענה בנימוס:
-"אני כאן רק לענות על שאלות הקשורות לקניות ולרשימות שלך. נסה לשאול אותי על מוצרים, מחירים, או דרכי חיסכון בסופר 🛒"
+כשנשאלת על נושא שאינו קשור לקניות, אוכל, סופרים, או ניהול רשימות - ענה בנימוס (בשפת התגובה שנקבעה למטה):
+"${OFF_TOPIC_REFUSAL[language]}"
 
 כללי תגובה:
 - קצר זה הכלל, לא היוצא מן הכלל: ברירת המחדל היא 1-2 משפטים. עד 3 נקודות
   (•) קצרות רק כשממש יש כמה פריטים נפרדים לרשימה - לא כברירת מחדל.
   אל תוסיף משפט הסבר/סיכום נוסף בסוף אם התשובה כבר ניתנה.
-- ענה תמיד בעברית, בטון ידידותי וממוקד.
+- ${LANGUAGE_INSTRUCTION[language]}
 - אל תפתח במבוא ("שאלה מצוינת!" וכו') - עבור ישר לתשובה.
 - כשאתה מסתמך על נתוני המשתמש - ציין זאת ("על סמך הרשימות שלך...").
 - כשרלוונטי - הצע פיצ'ר באפליקציה שיכול לעזור ("אגב, אפשר גם...").
@@ -370,6 +391,7 @@ const SYSTEM_PROMPT_HEADER = `אתה "סל חכם" - העוזר הרשמי של 
 - אל תמציא נתונים שלא סופקו לך.
 
 נתוני הרשימות וההרגלים האמיתיים של המשתמש הנוכחי:`;
+}
 
 export interface AssistantStreamHandle {
   reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -417,7 +439,7 @@ function buildLocalFallbackText(lastError: string | null): string {
  * כל שגיאות ה-setup/config/validation נזרקות כאן (לפני שנשלח דבר ללקוח) -
  * הצרכן (controller) אחראי רק על קריאת ה-stream והעברתו הלאה.
  */
-export async function openAssistantStream(userId: string, messages: ChatMessage[]): Promise<AssistantStreamHandle> {
+export async function openAssistantStream(userId: string, messages: ChatMessage[], language: AssistantLanguage = 'he'): Promise<AssistantStreamHandle> {
   if (messages.length === 0) {
     throw new AppError('No messages provided', 400, 'AI_ASSISTANT_EMPTY');
   }
@@ -474,7 +496,7 @@ export async function openAssistantStream(userId: string, messages: ChatMessage[
     contextCache.set(userId, { context: userContext, expiresAt: Date.now() + CONTEXT_CACHE_TTL_MS });
   }
 
-  const systemMessage = { role: 'system' as const, content: `${SYSTEM_PROMPT_HEADER}\n${userContext}` };
+  const systemMessage = { role: 'system' as const, content: `${buildSystemPromptHeader(language)}\n${userContext}` };
   const body = {
     messages: [systemMessage, ...trimmedHistory],
     temperature: 0.6,

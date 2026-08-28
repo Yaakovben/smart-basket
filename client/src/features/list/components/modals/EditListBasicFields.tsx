@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
-import { ClearableTextField } from '../../../../global/components';
+import { ClearableTextField, IconTile } from '../../../../global/components';
 import { COMMON_STYLES, LIST_COLORS } from '../../../../global/helpers';
+import { getIconGradient } from '../../../../global/theme/iconArt';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { EditListForm } from '../../types/list-types';
 
@@ -21,20 +22,7 @@ export const EditListBasicFields = memo(({ editData, onUpdateData, icons }: Edit
     <>
       {/* Icon Preview */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-        <Box sx={{
-          width: 60,
-          height: 60,
-          borderRadius: '14px',
-          bgcolor: editData.color,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 28,
-          boxShadow: `0 4px 12px ${editData.color}40`,
-          transition: 'all 0.2s ease'
-        }}>
-          {editData.icon}
-        </Box>
+        <IconTile emoji={editData.icon} color={editData.color} seedId={`${editData.icon}${editData.color}`} size={60} fontSize={28} />
       </Box>
 
       <Box sx={{ mb: 2 }}>
@@ -90,7 +78,7 @@ export const EditListBasicFields = memo(({ editData, onUpdateData, icons }: Edit
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
-                bgcolor: c,
+                background: getIconGradient(c),
                 cursor: 'pointer',
                 border: '3px solid',
                 borderColor: editData.color === c ? 'text.primary' : 'transparent',

@@ -7,7 +7,7 @@ import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import type { SavedList } from '../../../../global/types';
-import { Modal, ConfirmModal, ClearableTextField } from '../../../../global/components';
+import { Modal, ConfirmModal, ClearableTextField, IconTile } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { SAVED_LIST_EMOJIS, MAX_SAVED_LIST_ITEMS, nameToSavedItem } from '../../helpers/savedList-helpers';
@@ -21,9 +21,13 @@ interface SavedListsModalProps {
   onChange: (next: SavedList[]) => Promise<void> | void;
   onApply: (savedList: SavedList) => void;
   onClose: () => void;
+  // רשימה שנוצרה הרגע (זרימת "צור רשימה קבועה חדשה" -> חוזרים לכאן במקום
+  // לסגור הכל). לא נפתחת אוטומטית (זה בדיוק מה שהרגיש עמוס) - רק מסומנת
+  // עם מסגרת מודגשת כדי שיהיה ברור איפה היא, פתיחה בפועל היא לחיצה מפורשת.
+  initialFocusId?: string | null;
 }
 
-export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: SavedListsModalProps) => {
+export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initialFocusId }: SavedListsModalProps) => {
   const { t } = useSettings();
   const [draft, setDraft] = useState<SavedList[]>(savedLists);
   const draftRef = useRef(draft);
@@ -32,7 +36,10 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
   // פוקוס בלי להקליד חדש (שם ריק היה נמחק ע"י השרת בשקט). מתעדכן בכל
   // הקלדה תקינה ב-renameLocal.
   const lastGoodNames = useRef(new Map(savedLists.map(l => [l.id, l.name])));
-  const [expandedId, setExpandedId] = useState<string | null>(savedLists.length === 1 ? savedLists[0].id : null);
+  // כל הכרטיסים תמיד מתחילים סגורים - פתיחה היא תמיד לחיצה מפורשת, גם
+  // כשיש רשימה קבועה יחידה וגם מיד אחרי יצירת רשימה חדשה (initialFocusId
+  // עדיין מסמן אותה במסגרת מודגשת למטה, רק לא פותח אותה בכוח).
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [emojiOpenId, setEmojiOpenId] = useState<string | null>(null);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SavedList | null>(null);
@@ -127,13 +134,19 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
             {draft.map(sl => {
               const open = expandedId === sl.id;
+              // רשימה שנוצרה הרגע - מסגרת מודגשת כדי שיהיה ברור איפה היא
+              // בין כל הכרטיסים הסגורים, בלי לפתוח אותה בכוח.
+              const highlighted = open || sl.id === initialFocusId;
               return (
                 <Box key={sl.id} sx={{
                   borderRadius: '14px', overflow: 'hidden',
-                  border: '1px solid', borderColor: open ? 'rgba(20,184,166,0.4)' : 'divider',
+                  border: '1px solid', borderColor: highlighted ? 'rgba(20,184,166,0.4)' : 'divider',
                   transition: 'border-color 0.15s',
                 }}>
-                  {/* ראש הכרטיס - כולו לחיץ פותח/סוגר; האמוג׳י פותח בורר אמוג׳י */}
+                  {/* ראש הכרטיס - כולו לחיץ פותח/סוגר. האמוג'י: כרטיס סגור -
+                      לחיצה עליו רק פותחת את הכרטיס (כמו כל מקום אחר בראש),
+                      בלי לגרור את בורר האמוג'י. רק כרטיס שכבר פתוח - לחיצה
+                      על האמוג'י פותחת את הבורר. */}
                   <Box
                     onClick={() => toggleExpand(sl.id)}
                     sx={{
@@ -141,24 +154,25 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                       '&:active': { bgcolor: 'action.hover' }, transition: 'background-color 0.1s',
                     }}
                   >
-                    <Box
+                    <IconTile
+                      emoji={sl.emoji}
+                      seedId={sl.id}
+                      size={36}
+                      fontSize={19}
+                      ariaLabel={t('chooseIcon')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setExpandedId(sl.id);
-                        setEmojiOpenId(id => (id === sl.id ? null : sl.id));
+                        if (open) {
+                          setEmojiOpenId(id => (id === sl.id ? null : sl.id));
+                        } else {
+                          toggleExpand(sl.id);
+                        }
                       }}
-                      aria-label={t('chooseIcon')}
                       sx={{
-                        width: 36, height: 36, flexShrink: 0, borderRadius: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 19, cursor: 'pointer',
-                        bgcolor: emojiOpenId === sl.id ? 'rgba(20,184,166,0.1)' : 'action.hover',
-                        border: '1px solid', borderColor: emojiOpenId === sl.id ? 'primary.main' : 'transparent',
-                        '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
+                        border: '2px solid',
+                        borderColor: emojiOpenId === sl.id ? 'primary.main' : 'transparent',
                       }}
-                    >
-                      {sl.emoji}
-                    </Box>
+                    />
                     {editingNameId === sl.id ? (
                       <ClearableTextField
                         value={sl.name}
@@ -215,30 +229,34 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                     />
                   </Box>
 
+                  {/* בורר אמוג'י - עצמאי מהרחבת הכרטיס, נפתח רק בלחיצה על
+                      האייקון עצמו, בלי לגרור פתיחה של כל שאר הכרטיס. */}
+                  <Collapse in={emojiOpenId === sl.id} unmountOnExit>
+                    <Box sx={{ px: 1.5, pb: 1.25, pt: 0.25 }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                        {SAVED_LIST_EMOJIS.map(e => (
+                          <Box
+                            key={e}
+                            onClick={() => setEmoji(sl.id, e)}
+                            sx={{
+                              width: 38, height: 38, borderRadius: '10px',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 18, cursor: 'pointer',
+                              bgcolor: sl.emoji === e ? 'rgba(20,184,166,0.12)' : 'action.hover',
+                              border: '1px solid',
+                              borderColor: sl.emoji === e ? 'primary.main' : 'transparent',
+                              '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
+                            }}
+                          >
+                            {e}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  </Collapse>
+
                   <Collapse in={open} unmountOnExit>
                     <Box sx={{ px: 1.5, pb: 1.5, pt: 0.75 }}>
-                      <Collapse in={emojiOpenId === sl.id} unmountOnExit>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.75 }}>
-                          {SAVED_LIST_EMOJIS.map(e => (
-                            <Box
-                              key={e}
-                              onClick={() => setEmoji(sl.id, e)}
-                              sx={{
-                                width: 38, height: 38, borderRadius: '10px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 18, cursor: 'pointer',
-                                bgcolor: sl.emoji === e ? 'rgba(20,184,166,0.12)' : 'action.hover',
-                                border: '1px solid',
-                                borderColor: sl.emoji === e ? 'primary.main' : 'transparent',
-                                '&:active': { transform: 'scale(0.9)' }, transition: 'all 0.12s',
-                              }}
-                            >
-                              {e}
-                            </Box>
-                          ))}
-                        </Box>
-                      </Collapse>
-
                       {sl.items.length > 0 && (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.75 }}>
                           {sl.items.map((it, idx) => (

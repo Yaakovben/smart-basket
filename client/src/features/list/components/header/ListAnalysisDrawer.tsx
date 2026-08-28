@@ -100,7 +100,8 @@ export const ListAnalysisDrawer = memo(({ open, onClose, listId, listName, produ
           (delta) => {
             setLoading(false);
             setText(prev => prev + delta);
-          }
+          },
+          settings.language
         );
         setDone(true);
         setLoading(false);

@@ -1,7 +1,10 @@
 export { AiAssistantIcon } from './AiAssistantIcon';
+export { AvatarRing } from './AvatarRing';
 export { ClearableTextField } from './ClearableTextField';
 export { ConfirmModal } from './ConfirmModal';
 export { ErrorBoundary } from './ErrorBoundary';
+export { IconPattern } from './IconPattern';
+export { IconTile } from './IconTile';
 export { ListMenu } from './ListMenu';
 export { MemberAvatar } from './MemberAvatar';
 export { MembersButton } from './MembersButton';
