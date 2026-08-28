@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { Box, Typography, Chip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import { haptic } from '../../../global/helpers';
+import { IconTile } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { ListFilter } from '../types/list-types';
 import type { SavedList } from '../../../global/types';
@@ -87,7 +88,9 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       justifyContent: 'center',
       minHeight: 'calc(100dvh - 320px)',
       // כשמוצגות רשימות קבועות - pb גדול יותר דוחף את הבלוק המרכזי מעלה,
-      // כדי שהצ'יפים לא ייחתכו ע"י ה-FAB (כפתור פלוס, מרחף מימין-למטה).
+      // כדי שהצ'יפים לא ייחתכו ע"י ה-FAB (כפתור פלוס, fixed בתחתית). מספיק
+      // אמין עכשיו כי קופסת הרשימות עצמה גובהה קבוע (גלילה אופקית בשורה
+      // אחת, לא flexWrap) - לא גדל עם כמות הרשימות/אורך השמות כמו קודם.
       pb: showSavedLists
         ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)'
         : 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
@@ -153,28 +156,45 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
 
       {showSavedLists && (
         <Box sx={{
-          width: '100%', maxWidth: 320, mt: 1.5,
+          width: '100%', maxWidth: 360, mt: 1.5,
           p: 1.5, borderRadius: '16px',
-          bgcolor: isDark ? 'rgba(20,184,166,0.08)' : 'rgba(20,184,166,0.05)',
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(13,148,136,0.05))'
+            : 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(13,148,136,0.03))',
           border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.18)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.25, color: 'primary.main' }}>
             <PlaylistAddRoundedIcon sx={{ fontSize: 18 }} />
             <Typography sx={{ fontSize: 13, fontWeight: 700 }}>{t('startFromSavedList')}</Typography>
           </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+          {/* גלילה אופקית בשורה אחת (לא flexWrap) - גובה הקופסה קבוע בלי
+              תלות בכמות הרשימות הקבועות, כדי שלא תגדל ותיכנס לאזור ה-FAB
+              (כפתור פלוס, fixed בתחתית) כשיש הרבה רשימות/שמות ארוכים. */}
+          <Box sx={{
+            display: 'flex', gap: 1, overflowX: 'auto', flexWrap: 'nowrap',
+            justifyContent: savedLists.length > 3 ? 'flex-start' : 'center',
+            mx: -1.5, px: 1.5, pb: 0.25,
+            '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none',
+            maskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',
+            WebkitMaskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',
+          }}>
             {savedLists.map(sl => (
-              <Chip
+              <Box
                 key={sl.id}
                 onClick={() => { haptic('light'); onApplySavedList!(sl); }}
-                label={`${sl.emoji}  ${sl.name}`}
                 sx={{
-                  fontSize: 13.5, fontWeight: 600, height: 36, px: 0.75, cursor: 'pointer',
-                  color: 'primary.main', bgcolor: 'rgba(20,184,166,0.1)',
-                  '&:hover': { bgcolor: 'rgba(20,184,166,0.16)' },
-                  '&:active': { transform: 'scale(0.96)' },
+                  display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0, cursor: 'pointer',
+                  height: 38, pl: 0.5, pr: 1.5, borderRadius: '999px',
+                  bgcolor: isDark ? 'rgba(20,184,166,0.14)' : 'rgba(20,184,166,0.1)',
+                  transition: 'transform 0.12s, background-color 0.15s',
+                  '&:active': { transform: 'scale(0.95)', bgcolor: isDark ? 'rgba(20,184,166,0.22)' : 'rgba(20,184,166,0.18)' },
                 }}
-              />
+              >
+                <IconTile emoji={sl.emoji} seedId={sl.id} size={28} fontSize={14} variant="light" />
+                <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: 'primary.main', whiteSpace: 'nowrap' }}>
+                  {sl.name}
+                </Typography>
+              </Box>
             ))}
           </Box>
         </Box>
