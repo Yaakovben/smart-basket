@@ -110,7 +110,9 @@
       width: 280px; height: 280px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
-      animation: haloPulse 3s ease-in-out infinite;
+      /* דיליי 0.4ש' - הרגע הראשון קפוא לגמרי (כמו הגרסה הישנה, בלי שום
+         תזוזה), ורק אז מתחילה התנועה העדינה. שלב מכוון, לא רק ביצועים. */
+      animation: haloPulse 3s ease-in-out 0.4s infinite;
     }
     @keyframes haloPulse {
       0%,100% { transform: scale(0.95); opacity: 0.7; }
@@ -120,7 +122,7 @@
       position: relative;
       width: 96px; height: 96px;
       filter: drop-shadow(0 12px 28px rgba(0,0,0,0.22));
-      animation: logoFloat 3.4s ease-in-out infinite;
+      animation: logoFloat 3.4s ease-in-out 0.4s infinite;
     }
     @keyframes logoFloat {
       0%,100% { transform: translateY(0); }
@@ -136,14 +138,15 @@
       opacity: 0;
       transform-box: fill-box;
       transform-origin: center;
-      /* דיליי בסיס של 0.15ש' (לא 0) - כדי שגם בטעינה כמעט-מיידית (פחות
-         מ-150ms) הפריים הראשון שנראה יהיה הלוגו/הילה השקטים, לא מוצר
-         תפוס באמצע נפילה. יחד עם ה-fade-out ב-initialLoader.ts זה מבטיח
-         שאין פריים "לא ברור" גם כשהטעינה ממש מהירה. */
-      animation: itemDrop 2.8s cubic-bezier(0.4, 0, 1, 1) 0.15s infinite;
+      /* סדר מכוון בכניסה: קודם קפוא לגמרי (0-0.4ש', כמו הגרסה הישנה),
+         אז הילה+לוגו מתחילים לזוז (0.4ש'), ורק אז - אחרי עוד רגע - הפריטים
+         מתחילים ליפול (0.9ש' ואילך). "בלי תזוזה" → "תזוזה עדינה" → "סיפור
+         (מוצרים+וי)", לא הכל בבת אחת. גם ממשיך לפתור את בעיית הפריים
+         ה"לא ברור" בטעינה מהירה - ביחד עם ה-fade-out ב-initialLoader.ts. */
+      animation: itemDrop 2.8s cubic-bezier(0.4, 0, 1, 1) 0.9s infinite;
     }
-    .splash-item.i2 { animation-delay: 0.3s; }
-    .splash-item.i3 { animation-delay: 0.45s; }
+    .splash-item.i2 { animation-delay: 1.05s; }
+    .splash-item.i3 { animation-delay: 1.2s; }
     @keyframes itemDrop {
       0%   { transform: translateY(0) scale(0.5); opacity: 0; }
       8%   { opacity: 1; }
@@ -155,7 +158,9 @@
       stroke-dasharray: 130;
       stroke-dashoffset: 130;
       opacity: 0;
-      animation: checkDraw 2.8s ease-in-out infinite;
+      /* מתחיל לצייר רק אחרי שכל הפריטים נחתו (ראו .splash-item) - "קודם
+         מוצרים, אז וי", לא בבת אחת. */
+      animation: checkDraw 2.8s ease-in-out 2s infinite;
     }
     @keyframes checkDraw {
       0%   { stroke-dashoffset: 130; opacity: 0; }
