@@ -159,8 +159,8 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
           width: '100%', maxWidth: 360, mt: 1.5,
           p: 1.5, borderRadius: '16px',
           background: isDark
-            ? 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(13,148,136,0.05))'
-            : 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(13,148,136,0.03))',
+            ? 'linear-gradient(135deg, rgba(20,184,166,0.09), rgba(13,148,136,0.04))'
+            : 'linear-gradient(135deg, rgba(20,184,166,0.055), rgba(13,148,136,0.025))',
           border: '1px solid', borderColor: isDark ? 'rgba(20,184,166,0.25)' : 'rgba(20,184,166,0.18)',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.6, mb: 1.25, color: 'primary.main' }}>

@@ -817,7 +817,7 @@ export const en: Translations = {
   noSavedListsYet: 'No saved lists yet',
   noSavedListsDesc: 'A list you buy again and again - saved once, added in a tap',
   deleteSavedListConfirm: 'Delete this saved list?',
-  startFromSavedList: 'Start from a saved list',
+  startFromSavedList: 'Want to start from a saved list?',
   savedListAddItemPlaceholder: 'Add an item',
   deleteSavedListAction: 'Delete saved list',
   savedListsChooserApplyTitle: 'Add from a saved list',

@@ -818,7 +818,7 @@ export const he: Translations = {
   noSavedListsYet: 'אין עדיין רשימות קבועות',
   noSavedListsDesc: 'רשימה שקונים שוב ושוב — נשמרת פעם אחת, נוספת בלחיצה',
   deleteSavedListConfirm: 'למחוק את הרשימה הקבועה?',
-  startFromSavedList: 'התחל מרשימה קבועה',
+  startFromSavedList: 'תרצה להתחיל מרשימה קבועה?',
   savedListAddItemPlaceholder: 'הוסף פריט',
   deleteSavedListAction: 'מחק רשימה קבועה',
   savedListsChooserApplyTitle: 'הוסף מרשימה קבועה',

@@ -817,7 +817,7 @@ export const ru: Translations = {
   noSavedListsYet: 'Пока нет готовых списков',
   noSavedListsDesc: 'Список, который покупаете снова и снова — сохраняется один раз, добавляется касанием',
   deleteSavedListConfirm: 'Удалить этот готовый список?',
-  startFromSavedList: 'Начать с готового списка',
+  startFromSavedList: 'Начать с готового списка?',
   savedListAddItemPlaceholder: 'Добавьте товар',
   deleteSavedListAction: 'Удалить готовый список',
   savedListsChooserApplyTitle: 'Добавить готовый список',
