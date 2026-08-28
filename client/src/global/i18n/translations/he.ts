@@ -180,6 +180,7 @@ export const he: Translations = {
   editProfile: 'עריכת פרופיל',
   name: 'שם',
   email: 'אימייל',
+  memberSince: 'חבר/ה מאז {date}',
   logout: 'התנתק',
   logoutConfirm: 'להתנתק מהחשבון?',
   // Auth

@@ -6,6 +6,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
 import { ConfirmModal, ClearableTextField, AvatarRing } from '../../../global/components';
 import { getIconGradient } from '../../../global/theme/iconArt';
+import { formatDateShort } from '../../../global/helpers';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useReliableTap } from '../../../global/hooks';
 import { useProfile } from '../hooks/useProfile';
@@ -71,6 +72,11 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
             </Box>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
+            {user.createdAt && (
+              <Typography sx={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, mt: 0.5 }}>
+                {t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))}
+              </Typography>
+            )}
           </>
         )}
       </Box>

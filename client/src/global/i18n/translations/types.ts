@@ -176,6 +176,7 @@ export type TranslationKeys =
   | 'editProfile'
   | 'name'
   | 'email'
+  | 'memberSince'
   | 'logout'
   | 'logoutConfirm'
   // Auth

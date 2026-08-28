@@ -181,6 +181,7 @@ export const en: Translations = {
   editProfile: 'Edit Profile',
   name: 'Name',
   email: 'Email',
+  memberSince: 'Member since {date}',
   logout: 'Logout',
   logoutConfirm: 'Logout from account?',
   // Auth

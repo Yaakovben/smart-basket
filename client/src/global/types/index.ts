@@ -27,6 +27,7 @@ export interface User {
   listOrder?: string[];
   // רשימות קבועות - עצמאיות ממחזור החיים של רשימה בודדת.
   savedLists?: SavedList[];
+  createdAt?: string;
 }
 
 // ===== מוצר =====

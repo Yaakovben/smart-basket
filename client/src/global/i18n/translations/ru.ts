@@ -181,6 +181,7 @@ export const ru: Translations = {
   editProfile: 'Редактировать профиль',
   name: 'Имя',
   email: 'Email',
+  memberSince: 'С нами с {date}',
   logout: 'Выйти',
   logoutConfirm: 'Выйти из аккаунта?',
   // Auth

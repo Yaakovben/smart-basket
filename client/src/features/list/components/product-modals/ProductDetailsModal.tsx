@@ -5,8 +5,8 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
-import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { Modal, TapToRevealText } from '../../../../global/components';
+import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
+import { Modal, TapToRevealText, IconTile } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -121,21 +121,15 @@ export const ProductDetailsModal = memo(({
   return (
     <Modal title={t('productDetails')} onClose={onClose}>
       <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        <Box sx={{
-          width: 72,
-          height: 72,
-          borderRadius: '18px',
-          bgcolor: 'action.hover',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mx: 'auto',
-          mb: 1.5,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
-        }}>
-          <Typography sx={{ fontSize: 36 }} role="img" aria-label={product.category}>
-            {CATEGORY_ICONS[product.category]}
-          </Typography>
+        <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
+          <IconTile
+            emoji={CATEGORY_ICONS[product.category]}
+            color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+            seedId={product.id}
+            size={72}
+            fontSize={36}
+            ariaLabel={product.category}
+          />
         </Box>
         <TapToRevealText
           text={product.name}
