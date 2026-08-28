@@ -58,12 +58,34 @@ export const emojiSwatchSx = (isSelected: boolean): SxProps<Theme> => ({
   '&:hover': { borderColor: 'primary.main' },
 });
 
-// isDark חסר היה גם כאן (אותו באג כמו headerSx) - כתום כהה על טקסט אדום
-// כהה על רקע כהה כללי של האפליקציה היה בניגודיות גרועה/כמעט בלתי קריא.
-export const logoutButtonSx = (isDark: boolean): SxProps<Theme> => ({
-  mt: 2.5, py: 1.5, borderRadius: '12px',
-  bgcolor: isDark ? 'rgba(220,38,38,0.15)' : '#FEE2E2',
+// כרטיס מידע (View Mode) - אותה שפה צורנית כמו כרטיסי ה-Settings
+// (Paper מעוגל + שורות עם קו מפריד) כדי שהמסך "יתאים לאפליקציה" במקום
+// להיראות כמו מסך נפרד עם שפה משלו.
+export const infoCardSx: SxProps<Theme> = {
+  borderRadius: '16px', overflow: 'hidden',
+  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+};
+export const infoRowSx: SxProps<Theme> = {
+  display: 'flex', alignItems: 'center', gap: 1.5, p: 2,
+  borderBottom: '1px solid', borderColor: 'divider',
+};
+export const lastInfoRowSx: SxProps<Theme> = { ...infoRowSx, borderBottom: 'none' };
+export const infoIconSx: SxProps<Theme> = {
+  width: 34, height: 34, borderRadius: '10px', flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 16, bgcolor: 'rgba(20,184,166,0.1)',
+};
+export const infoTextSx: SxProps<Theme> = {
+  flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 500,
+  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+};
+
+// שורת "התנתקות" - אותה שורת-סכנה מ-Settings (dangerSettingRowSx) בתוך
+// אותו Paper מעוגל, במקום כפתור-גלולה גדול שלא מתאים לשאר האפליקציה.
+export const logoutRowSx = (isDark: boolean): SxProps<Theme> => ({
+  ...lastInfoRowSx,
+  cursor: 'pointer',
   color: isDark ? '#FCA5A5' : '#DC2626',
-  fontWeight: 600, fontSize: 15, gap: 1,
-  '&:hover': { bgcolor: isDark ? 'rgba(220,38,38,0.22)' : '#FECACA' },
+  transition: 'background-color 0.15s ease',
+  '&:active': { bgcolor: 'action.selected' },
 });

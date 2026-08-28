@@ -13,7 +13,8 @@ import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 import {
   glassButtonSx, labelSx, headerSx, contentAreaSx,
-  colorSwatchSx, emojiSwatchSx, logoutButtonSx,
+  colorSwatchSx, emojiSwatchSx, infoCardSx, infoRowSx, lastInfoRowSx,
+  infoIconSx, infoTextSx, logoutRowSx,
 } from '../styles/ProfileComponent.styles';
 
 // ===== ממשק Props =====
@@ -64,20 +65,14 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           )}
         </Box>
 
-        {/* Profile Avatar (View Mode) */}
+        {/* Profile Avatar (View Mode) - הדר נשאר קליל (אווטאר+שם בלבד),
+            אימייל/תאריך הצטרפות עברו לכרטיס מידע בתוכן למטה, אותה שפה
+            צורנית כמו כרטיסי ה-Settings, במקום להצטופף כטקסט על הגרדיאנט. */}
         {!editProfile && (
-          <>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-              <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
-            </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
-            {user.createdAt && (
-              <Typography sx={{ color: 'rgba(255,255,255,0.65)', fontSize: 12, mt: 0.5 }}>
-                {t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))}
-              </Typography>
-            )}
-          </>
+          </Box>
         )}
       </Box>
 
@@ -154,15 +149,29 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           </Paper>
         ) : (
           <>
-            {/* Logout Button */}
-            <Button
-              fullWidth
-              onClick={() => setConfirmLogout(true)}
-              startIcon={<LogoutIcon sx={{ fontSize: 20 }} />}
-              sx={logoutButtonSx(isDark)}
-            >
-              {t('logout')}
-            </Button>
+            {/* Account Info Card */}
+            <Paper sx={infoCardSx}>
+              <Box sx={infoRowSx}>
+                <Box sx={infoIconSx}>📧</Box>
+                <Typography sx={infoTextSx}>{user.email}</Typography>
+              </Box>
+              <Box sx={lastInfoRowSx}>
+                <Box sx={infoIconSx}>📅</Box>
+                <Typography sx={infoTextSx}>
+                  {user.createdAt
+                    ? t('memberSince').replace('{date}', formatDateShort(user.createdAt, settings.language))
+                    : '—'}
+                </Typography>
+              </Box>
+            </Paper>
+
+            {/* Logout Row - שורת-סכנה כמו ב-Settings, לא כפתור גדול נפרד */}
+            <Paper sx={{ ...infoCardSx, mt: 2 }}>
+              <Box sx={logoutRowSx(isDark)} onClick={() => setConfirmLogout(true)}>
+                <Box sx={infoIconSx}><LogoutIcon sx={{ fontSize: 17, color: 'inherit' }} /></Box>
+                <Typography sx={{ ...infoTextSx, color: 'inherit', fontWeight: 600 }}>{t('logout')}</Typography>
+              </Box>
+            </Paper>
           </>
         )}
       </Box>
