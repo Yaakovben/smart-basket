@@ -8,7 +8,7 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../types';
 import { asyncHandler } from '../utils';
 import { logger } from '../config';
-import { openAssistantStream, type ChatMessage } from '../services/aiAssistant.service';
+import { openAssistantStream, type ChatMessage, type AssistantLanguage } from '../services/aiAssistant.service';
 
 /**
  * POST /api/ai-assistant/chat
@@ -22,9 +22,9 @@ import { openAssistantStream, type ChatMessage } from '../services/aiAssistant.s
  */
 export const chat = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { messages } = req.body as { messages: ChatMessage[] };
+  const { messages, language } = req.body as { messages: ChatMessage[]; language?: AssistantLanguage };
 
-  const { reader, cleanup } = await openAssistantStream(userId, messages);
+  const { reader, cleanup } = await openAssistantStream(userId, messages, language);
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');

@@ -14,7 +14,7 @@ const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 // לשרת בכל פנייה (לא session בצד שרת) - כך אין state לנהל בין בקשות,
 // והשרת נשאר stateless כמו שאר ה-API.
 export function useAiAssistantChat() {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   const [messages, setMessages] = useState<ChatEntry[]>([]);
   const [sending, setSending] = useState(false);
   const listEndRef = useRef<HTMLDivElement>(null);
@@ -50,7 +50,8 @@ export function useAiAssistantChat() {
           } else {
             setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + delta } : m));
           }
-        }
+        },
+        settings.language
       );
       if (!started) {
         setMessages(prev => [...prev, { id: makeId(), role: 'assistant', content: t('aiNoResponse'), error: true }]);
@@ -62,7 +63,7 @@ export function useAiAssistantChat() {
     } finally {
       setSending(false);
     }
-  }, [messages, sending, t]);
+  }, [messages, sending, t, settings.language]);
 
   return { messages, sending, sendMessage, listEndRef };
 }

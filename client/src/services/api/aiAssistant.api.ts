@@ -30,7 +30,8 @@ export const aiAssistantApi = {
    */
   async chatStream(
     messages: AiChatMessage[],
-    onDelta: (text: string) => void
+    onDelta: (text: string) => void,
+    language?: 'he' | 'en' | 'ru'
   ): Promise<void> {
     const token = getAccessToken();
     const response = await fetch(`${API_URL}/ai-assistant/chat`, {
@@ -39,7 +40,7 @@ export const aiAssistantApi = {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, language }),
     });
 
     if (!response.ok || !response.body) {

@@ -676,7 +676,7 @@ export const he: Translations = {
   aiSuggestion6: 'תן לי טיפים לקנייה חכמה בסופרמרקט',
   aiSuggestion7: 'מה ההבדל בין הרשתות הגדולות בישראל?',
   aiSuggestion8: 'איך אני יכול להפחית את ההוצאות על אוכל?',
-  aiSuggestion9: 'מה מוצרים שכחתי לאחרונה ואולי כדאי לחדש?',
+  aiSuggestion9: 'אילו מוצרים שכחתי לאחרונה ואולי כדאי לחדש?',
   aiNoResponse: 'לא התקבלה תשובה, נסה שוב.',
   aiNotConfigured: 'עוזר ה-AI לא מוגדר כרגע בשרת.',
   aiTooManyMessages: 'יותר מדי הודעות בשעה האחרונה - נסה שוב מאוחר יותר.',
