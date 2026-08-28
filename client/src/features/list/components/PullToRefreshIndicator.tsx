@@ -34,7 +34,7 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
     }}>
       <Box sx={{
         position: 'relative',
-        width: 30, height: 30,
+        width: 38, height: 38,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transform: !refreshing && ready ? 'scale(1.1)' : 'scale(1)',
         transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -42,7 +42,7 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
         <CircularProgress
           variant={refreshing ? 'indeterminate' : 'determinate'}
           value={refreshing ? undefined : progress * 100}
-          size={30}
+          size={38}
           thickness={4}
           sx={{
             color: ready || refreshing ? 'primary.main' : 'text.disabled',
@@ -56,8 +56,11 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
           transition: 'opacity 0.15s ease',
         }}>
           {ready ? (
+            // גדול יותר מהחץ - הצ'קמארק הוא ה"תוצאה" הסופית (רענון הצליח /
+            // אפשר לשחרר), צריך להיות בולט מספיק שנראה גם כשהחלק העליון של
+            // המסך חופף עם מצלמה קדמית שמכסה חלק מהתוכן במכשירים מסוימים.
             <CheckRoundedIcon sx={{
-              fontSize: 16, color: 'primary.main',
+              fontSize: 22, color: 'primary.main',
               animation: 'ptrPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
               '@keyframes ptrPop': {
                 from: { transform: 'scale(0.5)', opacity: 0 },
@@ -66,7 +69,7 @@ export const PullToRefreshIndicator = memo(({ pullDistance, refreshing, pullActi
             }} />
           ) : (
             <ArrowDownwardRoundedIcon sx={{
-              fontSize: 16, color: 'text.disabled',
+              fontSize: 18, color: 'text.disabled',
               transform: `rotate(${progress * 180}deg)`,
               transition: pullActive ? 'none' : 'transform 0.15s ease',
             }} />
