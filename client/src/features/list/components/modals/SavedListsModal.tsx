@@ -143,7 +143,10 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
                   border: '1px solid', borderColor: highlighted ? 'rgba(20,184,166,0.4)' : 'divider',
                   transition: 'border-color 0.15s',
                 }}>
-                  {/* ראש הכרטיס - כולו לחיץ פותח/סוגר; האמוג׳י פותח בורר אמוג׳י */}
+                  {/* ראש הכרטיס - כולו לחיץ פותח/סוגר. האמוג'י: כרטיס סגור -
+                      לחיצה עליו רק פותחת את הכרטיס (כמו כל מקום אחר בראש),
+                      בלי לגרור את בורר האמוג'י. רק כרטיס שכבר פתוח - לחיצה
+                      על האמוג'י פותחת את הבורר. */}
                   <Box
                     onClick={() => toggleExpand(sl.id)}
                     sx={{
@@ -159,10 +162,11 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose, initia
                       ariaLabel={t('chooseIcon')}
                       onClick={(e) => {
                         e.stopPropagation();
-                        // רק בורר האמוג'י - לא פותח את שאר הכרטיס (פריטים
-                        // וכו') כדי שזה לא ירגיש עמוס. ה-Collapse שלו נמצא
-                        // מחוץ ל-Collapse הראשי של הכרטיס, ממש לצד הראש.
-                        setEmojiOpenId(id => (id === sl.id ? null : sl.id));
+                        if (open) {
+                          setEmojiOpenId(id => (id === sl.id ? null : sl.id));
+                        } else {
+                          toggleExpand(sl.id);
+                        }
                       }}
                       sx={{
                         border: '2px solid',
