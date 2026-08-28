@@ -7,7 +7,7 @@ import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded';
 import BookmarkAddedRoundedIcon from '@mui/icons-material/BookmarkAddedRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import type { SavedList } from '../../../../global/types';
-import { Modal, ConfirmModal, ClearableTextField } from '../../../../global/components';
+import { Modal, ConfirmModal, ClearableTextField, IconTile } from '../../../../global/components';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { SAVED_LIST_EMOJIS, MAX_SAVED_LIST_ITEMS, nameToSavedItem } from '../../helpers/savedList-helpers';
@@ -141,24 +141,22 @@ export const SavedListsModal = ({ savedLists, onChange, onApply, onClose }: Save
                       '&:active': { bgcolor: 'action.hover' }, transition: 'background-color 0.1s',
                     }}
                   >
-                    <Box
+                    <IconTile
+                      emoji={sl.emoji}
+                      seedId={sl.id}
+                      size={36}
+                      fontSize={19}
+                      ariaLabel={t('chooseIcon')}
                       onClick={(e) => {
                         e.stopPropagation();
                         setExpandedId(sl.id);
                         setEmojiOpenId(id => (id === sl.id ? null : sl.id));
                       }}
-                      aria-label={t('chooseIcon')}
                       sx={{
-                        width: 36, height: 36, flexShrink: 0, borderRadius: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 19, cursor: 'pointer',
-                        bgcolor: emojiOpenId === sl.id ? 'rgba(20,184,166,0.1)' : 'action.hover',
-                        border: '1px solid', borderColor: emojiOpenId === sl.id ? 'primary.main' : 'transparent',
-                        '&:active': { transform: 'scale(0.92)' }, transition: 'all 0.12s',
+                        border: '2px solid',
+                        borderColor: emojiOpenId === sl.id ? 'primary.main' : 'transparent',
                       }}
-                    >
-                      {sl.emoji}
-                    </Box>
+                    />
                     {editingNameId === sl.id ? (
                       <ClearableTextField
                         value={sl.name}

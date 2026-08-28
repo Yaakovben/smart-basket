@@ -20,28 +20,10 @@ export const headerSx = (editing: boolean, isDark: boolean): SxProps<Theme> => (
   flexShrink: 0,
 });
 
-export const viewAvatarCircleSx = (bgColor: string | undefined): SxProps<Theme> => ({
-  width: 80, height: 80, borderRadius: '50%',
-  bgcolor: bgColor || 'rgba(255,255,255,0.2)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  mx: 'auto', mb: 1.5,
-  border: '3px solid rgba(255,255,255,0.3)',
-  color: 'white',
-});
-
 export const contentAreaSx = (editing: boolean): SxProps<Theme> => ({
   flex: 1, overflowY: 'auto', p: 2, pt: 2, pb: 'calc(24px + env(safe-area-inset-bottom))',
   mt: editing ? 0 : -3,
   WebkitOverflowScrolling: 'touch',
-});
-
-export const editAvatarPreviewSx = (bgColor: string): SxProps<Theme> => ({
-  width: 88, height: 88, borderRadius: '50%',
-  bgcolor: bgColor,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: 'white',
-  border: '3px solid', borderColor: 'divider',
-  boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
 });
 
 export const colorSwatchSx = (color: string, isSelected: boolean): SxProps<Theme> => ({

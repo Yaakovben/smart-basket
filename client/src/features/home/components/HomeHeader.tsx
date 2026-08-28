@@ -1,8 +1,8 @@
-import { Box, Typography, IconButton, Tabs, Tab, Avatar, Badge, InputAdornment } from '@mui/material';
+import { Box, Typography, IconButton, Tabs, Tab, Badge, InputAdornment } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
-import { ClearableTextField } from '../../../global/components';
+import { ClearableTextField, AvatarRing } from '../../../global/components';
 import type { User } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { COMMON_STYLES } from '../../../global/helpers';
@@ -94,12 +94,14 @@ export const HomeHeader = ({
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar
+          <AvatarRing
+            emoji={user.avatarEmoji}
+            initials={user.name.charAt(0)}
+            color={user.avatarColor}
+            seedId={user.id || user.name}
+            size={44}
             onClick={onAvatarClick}
-            sx={{ bgcolor: user.avatarColor || 'rgba(255,255,255,0.25)', cursor: 'pointer', width: 44, height: 44, fontSize: 18, border: '2px solid rgba(255,255,255,0.3)' }}
-          >
-            {user.avatarEmoji || user.name.charAt(0)}
-          </Avatar>
+          />
           <Box>
             {/* ברכה עם אימוג'י לפי שעה - הופך את הכניסה לאישית יותר */}
             <Typography sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: 0.4 }}>

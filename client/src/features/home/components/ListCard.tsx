@@ -6,7 +6,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { List, Product } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
-import { ListMenu } from '../../../global/components';
+import { ListMenu, IconTile } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface ListCardProps {
@@ -130,9 +130,7 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
           }} />
         </Box>
       )}
-      <Box sx={{ width: 48, height: 48, borderRadius: '14px', bgcolor: l.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-        {l.icon}
-      </Box>
+      <IconTile emoji={l.icon} color={l.color} seedId={l.id} size={48} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
           <Box

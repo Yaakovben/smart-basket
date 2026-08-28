@@ -4,14 +4,15 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import type { User } from '../../../global/types';
-import { ConfirmModal, ClearableTextField } from '../../../global/components';
+import { ConfirmModal, ClearableTextField, AvatarRing } from '../../../global/components';
+import { getIconGradient } from '../../../global/theme/iconArt';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { useReliableTap } from '../../../global/hooks';
 import { useProfile } from '../hooks/useProfile';
 import { AVATAR_COLORS, AVATAR_EMOJIS } from '../types/profile-types';
 import {
-  glassButtonSx, labelSx, headerSx, viewAvatarCircleSx, contentAreaSx,
-  editAvatarPreviewSx, colorSwatchSx, emojiSwatchSx, logoutButtonSx,
+  glassButtonSx, labelSx, headerSx, contentAreaSx,
+  colorSwatchSx, emojiSwatchSx, logoutButtonSx,
 } from '../styles/ProfileComponent.styles';
 
 // ===== ממשק Props =====
@@ -65,10 +66,8 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         {/* Profile Avatar (View Mode) */}
         {!editProfile && (
           <>
-            <Box sx={viewAvatarCircleSx(user.avatarColor)}>
-              <Box component="span" sx={{ fontSize: 32, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
-                {user.avatarEmoji || user.name.charAt(0)}
-              </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+              <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
             </Box>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
@@ -82,11 +81,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           <Paper sx={{ borderRadius: '14px', p: 2.5 }}>
             {/* Avatar Preview */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-              <Box sx={editAvatarPreviewSx(editProfile.avatarColor)}>
-                <Box component="span" sx={{ fontSize: 38, lineHeight: 1, fontWeight: 700, mt: '-2px' }}>
-                  {editProfile.avatarEmoji || editProfile.name.charAt(0) || '?'}
-                </Box>
-              </Box>
+              <AvatarRing emoji={editProfile.avatarEmoji} initials={editProfile.name.charAt(0) || '?'} color={editProfile.avatarColor} seedId={user.id || user.name} size={88} />
             </Box>
 
             {/* Color Selection */}
@@ -96,7 +91,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
                 <Box
                   key={c}
                   onClick={() => updateEditField('avatarColor', c)}
-                  sx={colorSwatchSx(c, editProfile.avatarColor === c)}
+                  sx={{ ...colorSwatchSx(c, editProfile.avatarColor === c), background: getIconGradient(c) }}
                 />
               ))}
             </Box>
