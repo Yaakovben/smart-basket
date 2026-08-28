@@ -2,7 +2,7 @@ import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
-import { ConfirmModal } from '../../../global/components';
+import { ConfirmModal, SlowLoadIndicator } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi, productsApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
@@ -120,6 +120,11 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   // מונע הזרקה כפולה (טאפ מהיר על אותו צ'יפ / כמה צ'יפים) - ref כי צריך
   // עדכון סינכרוני לפני שה-state מספיק להתרנדר.
   const applyingSavedListRef = useRef(false);
+  // state מקביל לref למעלה - רק כדי להציג חיווי טעינה (ref לבדו לא מרנדר
+  // מחדש). ההוספה עצמה סדרתית (await בלולאה, לא Promise.all) כי ה-toAdd
+  // כבר סונן פעם אחת לפני הלולאה - אין תלות הדדית בין הפריטים, אבל בלי
+  // חיווי כלשהו זה נראה כאילו פריטים "נוספים לאט" בלי סיבה נראית.
+  const [applyingSavedList, setApplyingSavedList] = useState(false);
   const savedLists = useMemo(() => user.savedLists ?? [], [user.savedLists]);
 
   // הזרקת רשימה קבועה שלמה - סדרתית (כמו handleScanListConfirm), מדלגת על
@@ -135,12 +140,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
       return;
     }
     applyingSavedListRef.current = true;
+    setApplyingSavedList(true);
     try {
       for (const it of toAdd) {
         await addProductToServer({ name: it.name, quantity: it.quantity || 1, unit: it.unit, category: it.category }, false);
       }
     } finally {
       applyingSavedListRef.current = false;
+      setApplyingSavedList(false);
     }
 
     const addedNames = new Set(toAdd.map(it => it.name.trim().toLowerCase()));
@@ -678,6 +685,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           onSaved={(sl) => { setJustCreatedSavedListId(sl.id); setShowSavedLists(true); }}
         />
       )}
+      {/* חיווי טעינה בזמן הזרקת רשימה קבועה - ההוספה עצמה סדרתית (מוצר
+          אחר מוצר), בלי זה זה נראה כאילו פריטים "נוספים לאט" בלי סיבה. */}
+      <SlowLoadIndicator active={applyingSavedList} variant="toast" message={t('adding')} delayMs={200} />
     </Box>
   );
 });

@@ -117,8 +117,11 @@ export const ToastUndoBar = ({ msg, onUndo, onDismiss }: ToastUndoBarProps) => {
         {/* רמז גרירה - פס אפור דק בראש הטוסט, מרמז שאפשר להחליק כדי לסגור */}
         <Box aria-hidden="true" sx={dragHandleSx} />
         <Box sx={undoContentRowSx}>
+          {/* אייקון "בטל" גנרי - הבר הזה משמש כל פעולה עם undo (מחיקה,
+              הוספה מרשימה קבועה וכו'), לא רק מחיקה - פח אשפה קבוע היה
+              מטעה אחרי פעולת הוספה. */}
           <Box sx={undoIconCircleSx}>
-            🗑️
+            ↩️
           </Box>
           <Typography sx={undoMsgSx}>
             {msg}
