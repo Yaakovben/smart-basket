@@ -129,48 +129,12 @@
       50%     { transform: translateY(-5px); }
     }
     .splash-logo { width: 100%; height: 100%; display: block; }
-    /* סיפור ויזואלי קטן וייחודי לאפליקציה, לא ספינר גנרי: 3 "פריטים"
-       נופלים לתוך הסל בזה אחר זה, ואז הוו הביקורת מצטייר בעצמו (כמו
-       שמסמנים "נקנה" ברשימה) - לולאה של 2.8ש' שמספרת בדיוק את הסיפור
-       של האפליקציה (למלא סל → לסמן וי) בזמן שממתינים. transform בלבד
-       (לא cy/cx) כדי שיהיה חלק וזול מבחינת ביצועים גם על מכשירים חלשים. */
-    .splash-item {
-      opacity: 0;
-      transform-box: fill-box;
-      transform-origin: center;
-      /* סדר מכוון בכניסה: קודם קפוא לגמרי (0-0.4ש', כמו הגרסה הישנה),
-         אז הילה+לוגו מתחילים לזוז (0.4ש'), ורק אז - אחרי עוד רגע - הפריטים
-         מתחילים ליפול (0.9ש' ואילך). "בלי תזוזה" → "תזוזה עדינה" → "סיפור
-         (מוצרים+וי)", לא הכל בבת אחת. גם ממשיך לפתור את בעיית הפריים
-         ה"לא ברור" בטעינה מהירה - ביחד עם ה-fade-out ב-initialLoader.ts. */
-      animation: itemDrop 2.8s cubic-bezier(0.4, 0, 1, 1) 0.9s infinite;
-    }
-    .splash-item.i2 { animation-delay: 1.05s; }
-    .splash-item.i3 { animation-delay: 1.2s; }
-    @keyframes itemDrop {
-      0%   { transform: translateY(0) scale(0.5); opacity: 0; }
-      8%   { opacity: 1; }
-      30%  { transform: translateY(120px) scale(1); opacity: 1; }
-      36%  { transform: translateY(129px) scale(0.7); opacity: 0; }
-      100% { opacity: 0; }
-    }
-    .splash-check {
-      stroke-dasharray: 130;
-      stroke-dashoffset: 130;
-      opacity: 0;
-      /* מתחיל לצייר רק אחרי שכל הפריטים נחתו (ראו .splash-item) - "קודם
-         מוצרים, אז וי", לא בבת אחת. */
-      animation: checkDraw 2.8s ease-in-out 2s infinite;
-    }
-    @keyframes checkDraw {
-      0%   { stroke-dashoffset: 130; opacity: 0; }
-      15%  { opacity: 1; }
-      45%  { stroke-dashoffset: 0; opacity: 1; }
-      70%  { stroke-dashoffset: 0; opacity: 1; }
-      85%  { stroke-dashoffset: 0; opacity: 0; }
-      86%  { stroke-dashoffset: 130; }
-      100% { stroke-dashoffset: 130; opacity: 0; }
-    }
+    /* הוו מצויר סטטית ומלאה - זהה לאייקון האמיתי (favicon.svg/icon-*.png),
+       גלוי מהפריים הראשון. בעבר היה מונפש (dasharray מתחיל ב-2 שניות
+       דיליי + פריטים צבעוניים נופלים לפני זה) - בטעינה מהירה (המקרה
+       הנפוץ) הלוגו נעלם עוד לפני שהוו הספיק להצטייר בכלל, כך שהמשתמש
+       ראה סל "שבור"/חסר לצמיתות. עדיף עקביות עם האייקון האמיתי על פני
+       סיפור אנימציה שרוב המשתמשים לא מגיעים לראות עד הסוף. */
     .splash-brand {
       margin-top: 28px;
       color: #fff;
@@ -287,11 +251,8 @@
             <path d="M150 228 L176 368 C178 380 187 392 200 392 L312 392 C325 392 334 380 336 368 L362 228 C363 222 359 217 353 217 L159 217 C153 217 149 222 150 228 Z" fill="white"/>
             <path d="M192 210 C192 178 210 142 256 142 C302 142 320 178 320 210" stroke="white" stroke-width="22" fill="none" stroke-linecap="round"/>
           </g>
-          <!-- 3 "פריטים" שנופלים לתוך הסל, זה אחרי זה -->
-          <circle class="splash-item i1" cx="222" cy="86" r="13" fill="#FDE68A"/>
-          <circle class="splash-item i2" cx="256" cy="80" r="12" fill="#FCA5A5"/>
-          <circle class="splash-item i3" cx="290" cy="88" r="13" fill="#86EFAC"/>
-          <path class="splash-check" d="M216 286 L248 318 L304 258" stroke="#14B8A6" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- וי - זהה לאייקון האמיתי, מצויר סטטית ומלאה (ראו הערה למעלה) -->
+          <path d="M216 286 L248 318 L304 258" stroke="#14B8A6" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
 
