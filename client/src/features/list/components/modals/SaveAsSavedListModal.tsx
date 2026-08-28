@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Box, Typography, Button, Chip, CircularProgress, Collapse, TextField, InputAdornment, IconButton } from '@mui/material';
+import { Box, Typography, Button, Chip, CircularProgress, Collapse, TextField, InputAdornment } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import type { Product, SavedList } from '../../../../global/types';
 import { Modal, ClearableTextField } from '../../../../global/components';
@@ -169,32 +169,39 @@ export const SaveAsSavedListModal = ({ products, onSave, onClose }: SaveAsSavedL
           ),
           endAdornment: (
             <InputAdornment position="end" sx={{ ml: 0.75 }}>
-              <IconButton
+              {/* עם טקסט, לא רק אייקון - "פלוס" בלי הסבר לצד כפתור "שמור"
+                  למטה בילבל מה כל אחד עושה (זה מוסיף פריט לתצוגה המקדימה,
+                  "שמור" שומר את כל הרשימה הקבועה). */}
+              <Button
                 onClick={addItem}
                 disabled={newItemText.trim().length < 2}
-                aria-label={t('savedListAddItemPlaceholder')}
+                startIcon={<AddRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                 sx={{
                   background: newItemText.trim().length >= 2
                     ? 'linear-gradient(135deg, #14B8A6, #0D9488)'
                     : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                   color: 'white',
-                  width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 },
-                  '@media (max-width: 360px)': { width: 28, height: 28 },
+                  height: { xs: 34, sm: 40 },
+                  '@media (max-width: 360px)': { height: 28 },
+                  px: 1.5, minWidth: 0,
                   borderRadius: '10px',
+                  textTransform: 'none', fontSize: { xs: 12.5, sm: 13.5 }, fontWeight: 700,
+                  whiteSpace: 'nowrap',
                   boxShadow: newItemText.trim().length >= 2 ? '0 2px 6px rgba(20, 184, 166, 0.35)' : 'none',
                   transition: 'all 0.2s ease',
+                  '& .MuiButton-startIcon': { marginInlineEnd: 0.5 },
                   '&:hover': {
                     background: newItemText.trim().length >= 2
                       ? 'linear-gradient(135deg, #0D9488, #0F766E)'
                       : 'linear-gradient(135deg, #D1D5DB, #9CA3AF)',
                     boxShadow: newItemText.trim().length >= 2 ? '0 3px 10px rgba(20, 184, 166, 0.45)' : 'none'
                   },
-                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.92)' : 'none' },
+                  '&:active': { transform: newItemText.trim().length >= 2 ? 'scale(0.96)' : 'none' },
                   '&.Mui-disabled': { color: 'white', opacity: 0.7 }
                 }}
               >
-                <AddRoundedIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
-              </IconButton>
+                {t('add')}
+              </Button>
             </InputAdornment>
           ),
         }}
