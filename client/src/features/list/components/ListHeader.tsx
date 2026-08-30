@@ -19,6 +19,24 @@ import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 
 const glassButtonSx = COMMON_STYLES.glassIconButton;
 
+// כפתורי שורה 2 (הזמנה / חיפוש) - מרובע מעוגל בגובה זהה לכדור החברים
+// שלצידם, כדי שהשורה תיראה כרצועה אחידה ולא ערבוב גדלים. שורה 1
+// (חזרה/שיתוף/תפריט) נשארת עיגולים גדולים - היררכיה מכוונת.
+const pillBtnSx = {
+  bgcolor: 'rgba(255,255,255,0.15)',
+  color: 'white',
+  width: 38,
+  height: 38,
+  borderRadius: '12px',
+  flexShrink: 0,
+  transition: 'background-color 0.2s ease',
+  '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+  '@media (max-width: 360px)': {
+    width: 32, height: 32,
+    '& .MuiSvgIcon-root': { fontSize: 17 },
+  },
+};
+
 interface ListHeaderProps {
   list: List;
   user: User;
@@ -118,16 +136,14 @@ export const ListHeader = memo(({
     <IconButton
       onClick={handleToggleSearch}
       sx={{
-        ...glassButtonSx,
+        ...pillBtnSx,
         bgcolor: showSearch ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
-        transition: 'all 0.2s ease',
-        flexShrink: 0,
       }}
       aria-label={showSearch ? t('close') : t('search')}
     >
       {showSearch
-        ? <SearchOffIcon sx={{ color: 'white', fontSize: 20 }} />
-        : <SearchIcon sx={{ color: 'white', fontSize: 20 }} />}
+        ? <SearchOffIcon sx={{ color: 'white', fontSize: 19 }} />
+        : <SearchIcon sx={{ color: 'white', fontSize: 19 }} />}
     </IconButton>
   );
 
@@ -245,13 +261,13 @@ export const ListHeader = memo(({
       {list.isGroup && (
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 0.75,
-          mb: { xs: 0.75, sm: 1 },
-          '@media (max-width: 360px)': { mb: 0.5, gap: 0.5 },
+          mb: { xs: 0.5, sm: 1 },
+          '@media (max-width: 360px)': { mb: 0.4, gap: 0.5 },
           '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
         }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
-          <IconButton onClick={onShowInvite} sx={glassButtonSx} aria-label={t('inviteFriends')}>
-            <PersonAddIcon sx={{ color: 'white', fontSize: 20 }} />
+          <IconButton onClick={onShowInvite} sx={pillBtnSx} aria-label={t('inviteFriends')}>
+            <PersonAddIcon sx={{ color: 'white', fontSize: 19 }} />
           </IconButton>
           <Box sx={{ flex: 1 }} />
           {searchButton}
@@ -275,8 +291,8 @@ export const ListHeader = memo(({
 
       {/* ===== שורת QuickAdd ===== */}
       <Box sx={{
-        mb: { xs: 0.75, sm: 1 },
-        '@media (max-width: 360px)': { mb: 0.5 },
+        mb: { xs: 0.5, sm: 1 },
+        '@media (max-width: 360px)': { mb: 0.4 },
         '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
       }}>
         <QuickAddBar list={list} onQuickAdd={onQuickAdd} />
