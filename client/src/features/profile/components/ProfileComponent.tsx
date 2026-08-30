@@ -68,7 +68,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
         {!editProfile && (
           <>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-              <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} sx={{ boxShadow: '0 4px 14px rgba(0,0,0,0.16)' }} />
+              <AvatarRing emoji={user.avatarEmoji} initials={user.name.charAt(0)} color={user.avatarColor} seedId={user.id || user.name} size={80} />
             </Box>
             <Typography sx={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{user.name}</Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, mt: 0.5 }}>{user.email}</Typography>
@@ -87,7 +87,7 @@ export const ProfileComponent = ({ user, onUpdateUser, onLogout }: ProfilePagePr
           <Paper sx={{ borderRadius: '14px', p: 2.5 }}>
             {/* Avatar Preview */}
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-              <AvatarRing emoji={editProfile.avatarEmoji} initials={editProfile.name.charAt(0) || '?'} color={editProfile.avatarColor} seedId={user.id || user.name} size={88} sx={{ boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }} />
+              <AvatarRing emoji={editProfile.avatarEmoji} initials={editProfile.name.charAt(0) || '?'} color={editProfile.avatarColor} seedId={user.id || user.name} size={88} />
             </Box>
 
             {/* Color Selection */}

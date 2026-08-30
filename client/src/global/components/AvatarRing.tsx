@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
-import { getIconStops, getIconGradient, getIconGlow, hashSeed } from '../theme/iconArt';
+import { getIconStops, getIconGradient, hashSeed } from '../theme/iconArt';
 
 interface AvatarRingProps {
   emoji?: string;
@@ -33,7 +33,10 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
         flexShrink: 0, cursor: onClick ? 'pointer' : undefined,
         p: `${ringWidth}px`,
         background: `conic-gradient(from ${startDeg}deg, ${light}, ${dark}, ${light})`,
-        boxShadow: getIconGlow(color),
+        // צל דק ונייטרלי בכל מקום שהאווטאר מוצג (פרופיל / כותרת רשימה / בית) -
+        // לא ה-glow הצבעוני העבה של אריח-רשימה (getIconGlow), שנראה כבד מדי
+        // על עיגול, במיוחד בגדלים קטנים.
+        boxShadow: '0 2px 8px rgba(0,0,0,0.14)',
         transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
         '&:active': onClick ? { transform: 'scale(0.9)' } : undefined,
         ...sx,
