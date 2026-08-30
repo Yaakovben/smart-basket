@@ -20,20 +20,36 @@ import { ListCostEstimateBadge } from './header/ListCostEstimateBadge';
 const glassButtonSx = COMMON_STYLES.glassIconButton;
 
 // כפתורי שורה 2 (הזמנה / חיפוש) - מרובע מעוגל בגובה זהה לכדור החברים
-// שלצידם, כדי שהשורה תיראה כרצועה אחידה ולא ערבוב גדלים. שורה 1
-// (חזרה/שיתוף/תפריט) נשארת עיגולים גדולים - היררכיה מכוונת.
+// שלצידם (36px), כדי שהשורה תיראה כרצועה אחידה. שורה 1 (חזרה/שיתוף/תפריט)
+// נשארת עיגולים גדולים - היררכיה מכוונת.
 const pillBtnSx = {
   bgcolor: 'rgba(255,255,255,0.15)',
   color: 'white',
-  width: 38,
-  height: 38,
+  width: 36,
+  height: 36,
   borderRadius: '12px',
   flexShrink: 0,
   transition: 'background-color 0.2s ease',
   '&:hover': { bgcolor: 'rgba(255,255,255,0.28)' },
+  '& .MuiSvgIcon-root': { fontSize: 20 },
   '@media (max-width: 360px)': {
     width: 32, height: 32,
-    '& .MuiSvgIcon-root': { fontSize: 17 },
+    '& .MuiSvgIcon-root': { fontSize: 18 },
+  },
+};
+
+// כפתור "הזמן חבר" - יושב בשורת החברים וצריך לקרוא כשווה-משקל לאווטארים
+// שלצידו (עיגולי גרדיאנט מלאים 28px), לא כאייקון קטן וחיוור. לכן: רקע חזק
+// יותר + מסגרת + אייקון גדול שממלא את הכפתור, בדיוק כמו שהאווטאר ממלא את שלו.
+const inviteBtnSx = {
+  ...pillBtnSx,
+  bgcolor: 'rgba(255,255,255,0.26)',
+  border: '1.5px solid rgba(255,255,255,0.5)',
+  '&:hover': { bgcolor: 'rgba(255,255,255,0.38)' },
+  '& .MuiSvgIcon-root': { fontSize: 23 },
+  '@media (max-width: 360px)': {
+    width: 32, height: 32,
+    '& .MuiSvgIcon-root': { fontSize: 20 },
   },
 };
 
@@ -142,8 +158,8 @@ export const ListHeader = memo(({
       aria-label={showSearch ? t('close') : t('search')}
     >
       {showSearch
-        ? <SearchOffIcon sx={{ color: 'white', fontSize: 19 }} />
-        : <SearchIcon sx={{ color: 'white', fontSize: 19 }} />}
+        ? <SearchOffIcon sx={{ color: 'white' }} />
+        : <SearchIcon sx={{ color: 'white' }} />}
     </IconButton>
   );
 
@@ -266,8 +282,8 @@ export const ListHeader = memo(({
           '@media (orientation: landscape) and (max-height: 500px)': { display: 'none' },
         }}>
           <MembersButton members={allMembers} currentUserId={user.id} onClick={onShowMembers} onlineUserIds={onlineUserIds} />
-          <IconButton onClick={onShowInvite} sx={pillBtnSx} aria-label={t('inviteFriends')}>
-            <PersonAddIcon sx={{ color: 'white', fontSize: 19 }} />
+          <IconButton onClick={onShowInvite} sx={inviteBtnSx} aria-label={t('inviteFriends')}>
+            <PersonAddIcon sx={{ color: 'white' }} />
           </IconButton>
           <Box sx={{ flex: 1 }} />
           {searchButton}

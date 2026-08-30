@@ -42,7 +42,9 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
         bgcolor: 'rgba(255,255,255,0.15)',
         borderRadius: '12px',
         px: 1,
-        py: '5px', // גובה הכדור ~38px - תואם לכפתורי ההזמנה/חיפוש שלצידו
+        py: 0,
+        height: 36,        // גובה קבוע - תואם בדיוק לכפתורי ההזמנה/חיפוש שלצידו
+        minHeight: 36,
         minWidth: 'auto',
         textTransform: 'none',
         '&:hover': {
