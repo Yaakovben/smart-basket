@@ -24,7 +24,10 @@ export const CategoryFilterChips = memo(({
   return (
     <Box sx={{
       display: 'flex', gap: 0.75, mb: 1.5, overflowX: 'auto', pb: 0.5,
-      mx: -1.5, px: 1.5,
+      // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent
+      // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
+      mx: { xs: -1.5, sm: -2.5 }, px: { xs: 1.5, sm: 2.5 },
+      scrollbarWidth: 'none',
       '&::-webkit-scrollbar': { display: 'none' },
       maskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',
       WebkitMaskImage: 'linear-gradient(to left, transparent, black 12px, black calc(100% - 12px), transparent)',

@@ -398,6 +398,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
+          // מסתירים את פס הגלילה - בדפדפן דסקטופ ב-RTL הוא יושב משמאל ותופס
+          // ~15px, מה שדוחף את כל התוכן ויוצר "רצועה" לא אחידה מול מובייל.
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
           p: { xs: 1.5, sm: 2.5 },
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch',
