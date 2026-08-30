@@ -129,9 +129,6 @@ export const ProductDetailsModal = memo(({
             size={72}
             fontSize={36}
             ariaLabel={product.category}
-            // אותו סגנון עדין כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
-            // לא הגרדיאנט הרווי + glow של אריח-רשימה, שנראה צעקני כאן.
-            variant="light"
           />
         </Box>
         <TapToRevealText
