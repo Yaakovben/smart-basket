@@ -1,5 +1,5 @@
 import { useMemo, memo } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, useMediaQuery } from '@mui/material';
 import { MemberAvatar } from './MemberAvatar';
 import type { Member, User } from '../types';
 
@@ -11,10 +11,17 @@ interface MembersButtonProps {
 }
 
 const MAX_VISIBLE = 3;
-const AVATAR_SIZE = 28;
-const AVATAR_OVERLAP = 10; // חפיפה בין אווטארים
 
 export const MembersButton = memo(({ members, currentUserId, onClick, onlineUserIds }: MembersButtonProps) => {
+  // גדלי האווטארים מתכווצים באותם ספי מסך כמו כפתורי הכותרת
+  // (COMMON_STYLES.glassIconButton: 44 → 34 ב-≤360 → 30 ב-≤320). בלי זה,
+  // במסך צר הכפתורים מתכווצים והאווטארים נשארים 28 - היחס ביניהם משתנה
+  // וזה נראה לא אחיד בין מכשירים.
+  const isTiny = useMediaQuery('(max-width:320px)');
+  const isNarrow = useMediaQuery('(max-width:360px)');
+  const avatarSize = isTiny ? 20 : isNarrow ? 24 : 28;
+  const avatarOverlap = Math.round(avatarSize * 0.36);
+
   // המשתמש הנוכחי ראשון (מוצג משמאל, מעל)
   const sortedMembers = useMemo(() => currentUserId
     ? [...members].sort((a, b) => {
@@ -30,7 +37,7 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
   const showExtra = extraCount > 0;
 
   // רוחב מיכל לפי מספר אווטארים
-  const containerWidth = AVATAR_SIZE + (visibleMembers.length - 1) * (AVATAR_SIZE - AVATAR_OVERLAP);
+  const containerWidth = avatarSize + (visibleMembers.length - 1) * (avatarSize - avatarOverlap);
 
   return (
     <Button
@@ -60,7 +67,7 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
           display: 'flex',
           alignItems: 'center',
           width: containerWidth,
-          height: AVATAR_SIZE,
+          height: avatarSize,
           position: 'relative'
         }}
       >
@@ -69,13 +76,13 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
             key={member.id}
             sx={{
               position: 'absolute',
-              left: index * (AVATAR_SIZE - AVATAR_OVERLAP),
+              left: index * (avatarSize - avatarOverlap),
               zIndex: MAX_VISIBLE - index
             }}
           >
             <MemberAvatar
               member={member}
-              size={AVATAR_SIZE}
+              size={avatarSize}
               index={index}
               isOnline={member.id !== currentUserId && onlineUserIds?.has(member.id)}
             />

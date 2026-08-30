@@ -398,10 +398,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          // מסתירים את פס הגלילה - בדפדפן דסקטופ ב-RTL הוא יושב משמאל ותופס
-          // ~15px, מה שדוחף את כל התוכן ויוצר "רצועה" לא אחידה מול מובייל.
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
+          // פס גלילה דק ומעודן - נותן חיווי "יש עוד ברשימה" בלי הגוש של
+          // ~15px של ברירת המחדל בדסקטופ. במובייל ממילא overlay שנעלם לבד.
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(120,120,120,0.35) transparent',
+          '&::-webkit-scrollbar': { width: '5px' },
+          '&::-webkit-scrollbar-thumb': { background: 'rgba(120,120,120,0.35)', borderRadius: '3px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
           p: { xs: 1.5, sm: 2.5 },
           pb: { xs: 'calc(80px + env(safe-area-inset-bottom))', sm: 'calc(90px + env(safe-area-inset-bottom))' },
           WebkitOverflowScrolling: 'touch',
