@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
-import { getIconStops, getIconGradient, getIconTintRing, hashSeed } from '../theme/iconArt';
+import { getIconStops, getIconGradient, getIconGlow, hashSeed } from '../theme/iconArt';
 
 interface AvatarRingProps {
   emoji?: string;
@@ -33,9 +33,7 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
         flexShrink: 0, cursor: onClick ? 'pointer' : undefined,
         p: `${ringWidth}px`,
         background: `conic-gradient(from ${startDeg}deg, ${light}, ${dark}, ${light})`,
-        // אווטארים הם UI משני - טבעת עדינה + צל דק נייטרלי, בלי ה-glow הצבעוני
-        // החזק של אריח-רשימה (getIconGlow). היה "צועק" יחסית לשאר האפליקציה.
-        boxShadow: `${getIconTintRing(color)}, 0 1px 4px rgba(0,0,0,0.14)`,
+        boxShadow: getIconGlow(color),
         transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
         '&:active': onClick ? { transform: 'scale(0.9)' } : undefined,
         ...sx,
@@ -51,10 +49,10 @@ export const AvatarRing = ({ emoji, initials, color, seedId, size = 44, onClick,
         fontSize: emoji ? size * 0.5 : size * 0.4,
         fontWeight: 700, color: 'white', lineHeight: 1,
       }}>
-        {/* ברק זכוכיתי עדין (מעומעם מ-IconTile - כאן הוא על עיגול קטן ומשני) */}
+        {/* אותו ברק זכוכיתי כמו IconTile - עקביות ויזואלית בכל האריחים/עיגולים */}
         <Box aria-hidden="true" sx={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 45%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 45%)',
           pointerEvents: 'none',
         }} />
         <Box component="span" sx={{ position: 'relative' }}>{emoji || initials}</Box>
