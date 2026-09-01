@@ -237,7 +237,7 @@ export const ProductDetailsModal = memo(({
                 </Box>
 
                 {canExpand && (
-                  <Collapse in={editsExpanded} sx={{ overflow: 'visible' }}>
+                  <Collapse in={editsExpanded}>
                     <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
                       {editEntries.map((edit, i) => (
                         <Box key={i} sx={{ mb: i < editEntries.length - 1 ? 1.1 : 0 }}>
@@ -262,50 +262,65 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - עיצוב "פתק" עם סרט ואשי ופינת דף מקופלת */}
+      {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
+          טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
       {product.note && (
         <Box sx={{
-          mt: 2, mb: 0.5,
           position: 'relative',
-          overflow: 'hidden',
-          borderRadius: '4px 16px 16px 4px',
-          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(253,246,227,0.06)' : '#FFFBEB',
-          border: '1px solid',
-          borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(251,191,36,0.15)' : '#FDE68A',
-          boxShadow: '2px 3px 10px rgba(0,0,0,0.07)',
+          mt: 3, mb: 0.5,
+          px: 2, pt: 2, pb: 1.4,
+          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
+          transform: 'rotate(-0.15deg)',
+          border: '1px solid rgba(20,184,166,0.18)',
+          boxShadow: [
+            'inset 0 1px 0 rgba(255,255,255,0.85)',
+            '0 1px 2px rgba(15,118,110,0.06)',
+            '0 8px 20px rgba(20,184,166,0.10)',
+            '0 22px 44px rgba(15,118,110,0.05)',
+          ].join(', '),
+          clipPath: 'polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)',
+          // קווי מחברת מאוד עדינים
+          '&::after': {
+            content: '""', position: 'absolute', inset: 0,
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
+            pointerEvents: 'none',
+          },
+          // פינה מקופלת בשמאל-עליון
+          '&::before': {
+            content: '""', position: 'absolute', top: 0, left: 0,
+            width: 20, height: 20,
+            bgcolor: 'rgba(13,148,136,0.18)',
+            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+            zIndex: 1,
+          },
         }}>
-          {/* סרט ואשי בראש הפתק */}
+          {/* סרט washi באמצע למעלה */}
           <Box sx={{
-            height: 6,
-            background: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 40%, #FCD34D 70%, #F59E0B 100%)',
-            opacity: 0.65,
+            position: 'absolute', top: -7, left: '50%',
+            transform: 'translateX(-50%) rotate(-1deg)',
+            width: 64, height: 12,
+            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
+            borderRadius: '1px',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
+            zIndex: 2,
           }} />
-          <Box sx={{ px: 2, pt: 1.25, pb: 2 }}>
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
             <Typography sx={{
-              fontSize: 10, fontWeight: 800,
-              color: (theme) => theme.palette.mode === 'dark' ? '#FCD34D' : '#B45309',
-              letterSpacing: 1.2, textTransform: 'uppercase', opacity: 0.85, mb: 0.75,
+              fontSize: 10, fontWeight: 800, color: '#0F766E',
+              letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
               {t('note')}
             </Typography>
-            <Typography sx={{
-              fontSize: 14.5, color: 'text.primary',
-              fontWeight: 500, lineHeight: 1.6,
-              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            }}>
-              {product.note}
-            </Typography>
           </Box>
-          {/* פינת דף מקופלת בפינה ימנית-תחתונה */}
-          <Box sx={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            width: 22,
-            height: 22,
-            background: (theme) =>
-              `linear-gradient(225deg, ${theme.palette.background.paper} 50%, rgba(245,158,11,0.12) 50%)`,
-          }} />
+          <Typography sx={{
+            position: 'relative', zIndex: 2,
+            fontSize: 14.5, color: '#134E4A',
+            fontWeight: 500,
+            lineHeight: 1.6,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          }}>
+            {product.note}
+          </Typography>
         </Box>
       )}
     </Modal>

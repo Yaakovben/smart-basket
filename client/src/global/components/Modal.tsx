@@ -44,8 +44,6 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
           m: 0,
           borderRadius: '20px 20px 0 0',
           maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
           maxWidth: { xs: '100%', sm: 480 },
           width: '100%',
           pb: 'env(safe-area-inset-bottom)',
@@ -125,9 +123,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
 
       <DialogContent sx={{
         px: 2.5, pb: 3, pt: 1.5,
-        flex: 1,
         overflowY: 'auto', overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch',
         borderTop: 'none',
         '&.MuiDialogContent-dividers': { borderTop: 'none' },
         '&::before': { display: 'none' },
