@@ -238,7 +238,7 @@ export const ProductDetailsModal = memo(({
                 </Box>
 
                 {canExpand && (
-                  <Collapse in={editsExpanded}>
+                  <Collapse in={editsExpanded} sx={{ overflow: 'visible' }}>
                     <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
                       {editEntries.map((edit, i) => (
                         <Box key={i} sx={{ mb: i < editEntries.length - 1 ? 1.1 : 0 }}>

@@ -361,6 +361,21 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
         }}
       >
+        {/* פינת דף מקופלת כאינדיקטור הערה - ממוקמת בפינה הימנית-עליונה של הפריט */}
+        {product.note && (
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 18,
+            height: 18,
+            borderRadius: '0 14px 0 8px',
+            background: (theme) => `linear-gradient(225deg, ${theme.palette.primary.main} 50%, transparent 50%)`,
+            opacity: isPurchased ? 0.25 : 0.45,
+            pointerEvents: 'none',
+            zIndex: 1,
+          }} />
+        )}
         {selectionMode && (
           <Box sx={{
             width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
