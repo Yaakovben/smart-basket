@@ -1,6 +1,5 @@
 import { memo, useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
-import PushPinIcon from '@mui/icons-material/PushPin';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -263,33 +262,50 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - עיצוב נקי עם אייקון סיכה */}
+      {/* הערה - עיצוב "פתק" עם סרט ואשי ופינת דף מקופלת */}
       {product.note && (
         <Box sx={{
           mt: 2, mb: 0.5,
-          px: 2, pt: 1.5, pb: 1.5,
-          bgcolor: 'background.default',
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: '4px 16px 16px 4px',
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(253,246,227,0.06)' : '#FFFBEB',
           border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: '12px',
+          borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(251,191,36,0.15)' : '#FDE68A',
+          boxShadow: '2px 3px 10px rgba(0,0,0,0.07)',
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-            <PushPinIcon sx={{ fontSize: 14, color: 'primary.main', opacity: 0.7, transform: 'rotate(45deg)' }} />
+          {/* סרט ואשי בראש הפתק */}
+          <Box sx={{
+            height: 6,
+            background: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 40%, #FCD34D 70%, #F59E0B 100%)',
+            opacity: 0.65,
+          }} />
+          <Box sx={{ px: 2, pt: 1.25, pb: 2 }}>
             <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: 'primary.main',
-              letterSpacing: 1.2, textTransform: 'uppercase', opacity: 0.8,
+              fontSize: 10, fontWeight: 800,
+              color: (theme) => theme.palette.mode === 'dark' ? '#FCD34D' : '#B45309',
+              letterSpacing: 1.2, textTransform: 'uppercase', opacity: 0.85, mb: 0.75,
             }}>
               {t('note')}
             </Typography>
+            <Typography sx={{
+              fontSize: 14.5, color: 'text.primary',
+              fontWeight: 500, lineHeight: 1.6,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>
+              {product.note}
+            </Typography>
           </Box>
-          <Typography sx={{
-            fontSize: 14.5, color: 'text.primary',
-            fontWeight: 500,
-            lineHeight: 1.6,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          }}>
-            {product.note}
-          </Typography>
+          {/* פינת דף מקופלת בפינה ימנית-תחתונה */}
+          <Box sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: 22,
+            height: 22,
+            background: (theme) =>
+              `linear-gradient(225deg, ${theme.palette.background.paper} 50%, rgba(245,158,11,0.12) 50%)`,
+          }} />
         </Box>
       )}
     </Modal>

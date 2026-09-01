@@ -361,20 +361,22 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           '@media (max-width: 320px)': { px: '8px', gap: '6px', borderRadius: '10px' },
         }}
       >
-        {/* פינת דף מקופלת כאינדיקטור הערה - ממוקמת בפינה הימנית-עליונה של הפריט */}
+        {/* נעץ בפינה שמאלית-עליונה (Physical left) כאינדיקטור הערה */}
         {product.note && (
-          <Box sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 18,
-            height: 18,
-            borderRadius: '0 14px 0 8px',
-            background: (theme) => `linear-gradient(225deg, ${theme.palette.primary.main} 50%, transparent 50%)`,
-            opacity: isPurchased ? 0.25 : 0.45,
-            pointerEvents: 'none',
-            zIndex: 1,
-          }} />
+          <PushPinIcon
+            aria-label={t('itemHasNote')}
+            sx={{
+              position: 'absolute',
+              top: 4,
+              left: 4,
+              fontSize: 14,
+              color: 'primary.main',
+              opacity: isPurchased ? 0.3 : 0.6,
+              transform: 'rotate(45deg)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
         )}
         {selectionMode && (
           <Box sx={{
@@ -419,38 +421,21 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           />
         )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography
-              sx={{
-                flex: 1, minWidth: 0,
-                fontSize: '15px',
-                fontWeight: 600,
-                color: isPurchased ? 'text.secondary' : 'text.primary',
-                textDecoration: isPurchased ? 'line-through' : 'none',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                '@media (max-width: 360px)': { fontSize: '13.5px' },
-                '@media (max-width: 320px)': { fontSize: '12.5px' },
-              }}
-            >
-              {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
-            </Typography>
-            {/* אינדיקטור הערה: אייקון סיכה קטן ליד שם המוצר */}
-            {product.note && (
-              <PushPinIcon
-                aria-label={t('itemHasNote')}
-                sx={{
-                  flexShrink: 0,
-                  fontSize: 15,
-                  color: 'primary.main',
-                  opacity: isPurchased ? 0.35 : 0.6,
-                  transform: 'rotate(45deg)',
-                  '@media (max-width: 360px)': { fontSize: 14 },
-                }}
-              />
-            )}
-          </Box>
+          <Typography
+            sx={{
+              fontSize: '15px',
+              fontWeight: 600,
+              color: isPurchased ? 'text.secondary' : 'text.primary',
+              textDecoration: isPurchased ? 'line-through' : 'none',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              '@media (max-width: 360px)': { fontSize: '13.5px' },
+              '@media (max-width: 320px)': { fontSize: '12.5px' },
+            }}
+          >
+            {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
+          </Typography>
           <Typography sx={{
             fontSize: '13px', color: 'text.secondary',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
