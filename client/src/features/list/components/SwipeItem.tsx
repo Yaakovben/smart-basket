@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
+import PushPinIcon from '@mui/icons-material/PushPin';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
@@ -420,34 +421,19 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             >
               {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
             </Typography>
-            {/* אינדיקטור הערה: צ'יפ אלכסוני בעיצוב פתק (תואם לכרטיס שבתוך
-                ה-popup). ממוקם ליד השם, נטוי קלות, לא דורש מקום קבוע. */}
+            {/* אינדיקטור הערה: אייקון סיכה קטן ליד שם המוצר */}
             {product.note && (
-              <Box
+              <PushPinIcon
                 aria-label={t('itemHasNote')}
                 sx={{
                   flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center',
-                  px: 0.65, py: 0.15,
-                  fontSize: 9.5, fontWeight: 800,
-                  fontStyle: 'italic',
-                  letterSpacing: 0.3,
-                  color: '#0F766E',
-                  backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #E6F9F5 100%)',
-                  border: '1px solid rgba(20,184,166,0.35)',
-                  borderRadius: '4px',
-                  // פינה מקופלת קטנה כמו בפתק שבפופ-אפ
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
-                  transform: 'rotate(-7deg)',
-                  boxShadow: '0 1px 2px rgba(15,118,110,0.18)',
-                  whiteSpace: 'nowrap',
-                  opacity: isPurchased ? 0.5 : 1,
-                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
-                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
+                  fontSize: 15,
+                  color: 'primary.main',
+                  opacity: isPurchased ? 0.35 : 0.6,
+                  transform: 'rotate(45deg)',
+                  '@media (max-width: 360px)': { fontSize: 14 },
                 }}
-              >
-                ✎ {t('note')}
-              </Box>
+              />
             )}
           </Box>
           <Typography sx={{

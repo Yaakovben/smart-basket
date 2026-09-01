@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { Box, Typography, Collapse } from '@mui/material';
+import PushPinIcon from '@mui/icons-material/PushPin';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -262,59 +263,27 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
-          טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
+      {/* הערה - עיצוב נקי עם אייקון סיכה */}
       {product.note && (
         <Box sx={{
-          position: 'relative',
-          mt: 3, mb: 0.5,
-          px: 2, pt: 2, pb: 1.4,
-          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
-          transform: 'rotate(-0.15deg)',
-          border: '1px solid rgba(20,184,166,0.18)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.85)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 8px 20px rgba(20,184,166,0.10)',
-            '0 22px 44px rgba(15,118,110,0.05)',
-          ].join(', '),
-          clipPath: 'polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)',
-          // קווי מחברת מאוד עדינים
-          '&::after': {
-            content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
-            pointerEvents: 'none',
-          },
-          // פינה מקופלת בשמאל-עליון
-          '&::before': {
-            content: '""', position: 'absolute', top: 0, left: 0,
-            width: 20, height: 20,
-            bgcolor: 'rgba(13,148,136,0.18)',
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-            zIndex: 1,
-          },
+          mt: 2, mb: 0.5,
+          px: 2, pt: 1.5, pb: 1.5,
+          bgcolor: 'background.default',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: '12px',
         }}>
-          {/* סרט washi באמצע למעלה */}
-          <Box sx={{
-            position: 'absolute', top: -7, left: '50%',
-            transform: 'translateX(-50%) rotate(-1deg)',
-            width: 64, height: 12,
-            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '1px',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
-            zIndex: 2,
-          }} />
-          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
+            <PushPinIcon sx={{ fontSize: 14, color: 'primary.main', opacity: 0.7, transform: 'rotate(45deg)' }} />
             <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: '#0F766E',
-              letterSpacing: 1.2, textTransform: 'uppercase',
+              fontSize: 10, fontWeight: 800, color: 'primary.main',
+              letterSpacing: 1.2, textTransform: 'uppercase', opacity: 0.8,
             }}>
               {t('note')}
             </Typography>
           </Box>
           <Typography sx={{
-            position: 'relative', zIndex: 2,
-            fontSize: 14.5, color: '#134E4A',
+            fontSize: 14.5, color: 'text.primary',
             fontWeight: 500,
             lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',

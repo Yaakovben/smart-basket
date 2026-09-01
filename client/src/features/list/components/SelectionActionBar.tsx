@@ -42,36 +42,18 @@ export const SelectionActionBar = memo(({
       animation: 'slideUp 0.25s ease-out',
       '@keyframes slideUp': { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
     }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
-        <Box
-          onClick={onExit}
-          sx={{
-            width: 36, height: 36, borderRadius: '50%',
-            bgcolor: 'action.hover',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
-            '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
-            transition: 'all 0.15s',
-          }}
-        >
-          <Typography sx={{ fontSize: 18, color: 'text.secondary', lineHeight: 1 }}>✕</Typography>
-        </Box>
-        <Typography sx={{ fontSize: 14, fontWeight: 700, flex: 1 }}>
-          <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800, fontSize: 17 }}>
-            {selectedCount}
-          </Typography>
-          <Typography component="span" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: 13 }}>
-            {` ${t('selectedOfCount').replace('{total}', String(totalCount))}`}
-          </Typography>
-        </Typography>
+      {/* שורת בחירה: ימין = "בחר הכל", שמאל = כפתור יציאה + מונה */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        {/* ימין (RTL start): כפתור בחר הכל */}
         <Box
           onClick={() => { haptic('light'); onToggleSelectAll(); }}
           sx={{
-            height: 36, px: 2,
+            height: 44, px: 2,
             borderRadius: '18px',
             bgcolor: allSelected ? 'primary.main' : 'rgba(20,184,166,0.1)',
             cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 0.75,
+            flexShrink: 0,
             '&:active': { transform: 'scale(0.95)' },
             transition: 'all 0.2s',
           }}
@@ -85,6 +67,30 @@ export const SelectionActionBar = memo(({
           }}>
             {t('selectAllItems')}
           </Typography>
+        </Box>
+        {/* שמאל (RTL end): כפתור יציאה + מונה */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
+            <Typography component="span" sx={{ color: 'primary.main', fontWeight: 800, fontSize: 17 }}>
+              {selectedCount}
+            </Typography>
+            <Typography component="span" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: 13 }}>
+              {` ${t('selectedOfCount').replace('{total}', String(totalCount))}`}
+            </Typography>
+          </Typography>
+          <Box
+            onClick={onExit}
+            sx={{
+              width: 44, height: 44, borderRadius: '50%',
+              bgcolor: 'action.hover',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', flexShrink: 0,
+              '&:active': { transform: 'scale(0.9)', bgcolor: 'action.selected' },
+              transition: 'all 0.15s',
+            }}
+          >
+            <Typography sx={{ fontSize: 18, color: 'text.secondary', lineHeight: 1 }}>✕</Typography>
+          </Box>
         </Box>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>

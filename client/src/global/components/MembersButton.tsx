@@ -49,12 +49,15 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
         bgcolor: 'rgba(255,255,255,0.15)',
         borderRadius: '16px',
         px: 1,
-        py: 0.5,
+        py: 0,
+        height: 44,
         minWidth: 'auto',
         textTransform: 'none',
         '&:hover': {
           bgcolor: 'rgba(255,255,255,0.25)'
-        }
+        },
+        '@media (max-width: 360px)': { height: 34 },
+        '@media (max-width: 320px)': { height: 30 },
       }}
     >
       {showExtra && (
