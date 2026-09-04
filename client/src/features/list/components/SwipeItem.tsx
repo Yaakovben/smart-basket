@@ -4,6 +4,7 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
+import { SQUIRCLE_RADIUS, getIconTintRing } from '../../../global/theme/iconArt';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -378,10 +379,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
         {product.image ? (
-          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת בצבע
-          // הקטגוריה כדי שקוד-הצבע של השורה לא ילך לאיבוד כשיש תמונה, ותג
-          // מצלמה קטן בפינה כרמז שזו תמונה שאפשר להקיש ולפתוח בגדול
-          // (בפרטי המוצר). כשנקנה - מעומעמת, אפורה, בלי תג.
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה, ומעוצבת *בדיוק*
+          // כמו האריח: אותו רדיוס (SQUIRCLE_RADIUS) ואותה טבעת פנימית עדינה
+          // בגוון הקטגוריה (getIconTintRing) - אותו "חריץ" במסך, רק שבמקום
+          // אימוג'י יש צילום. תג מצלמה זעיר בפינה מרמז שאפשר להקיש ולראותה
+          // בגדול. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
             width: 40, height: 40,
@@ -394,48 +396,43 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               alt=""
               loading="lazy"
               sx={{
-                width: '100%', height: '100%', borderRadius: '11px',
+                width: '100%', height: '100%',
+                borderRadius: SQUIRCLE_RADIUS,
                 objectFit: 'cover', display: 'block',
-                border: '2px solid',
-                borderColor: isPurchased
-                  ? 'divider'
-                  : (CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'),
+                boxShadow: isPurchased
+                  ? 'none'
+                  : getIconTintRing(CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'),
                 opacity: isPurchased ? 0.45 : 1,
                 filter: isPurchased ? 'grayscale(1)' : 'none',
-                '@media (max-width: 360px)': { borderRadius: '9px' },
-                '@media (max-width: 320px)': { borderRadius: '8px' },
               }}
             />
             {!isPurchased && (
-              // דיסק כהה עם טבעת בצבע הרקע (אפקט "חיתוך") ואייקון מצלמה
-              // לבן - קריא וחד גם בגודל הזעיר הזה, בניגוד לאימוג'י.
               <Box
                 aria-hidden="true"
                 sx={{
-                  position: 'absolute', bottom: -5, insetInlineEnd: -5,
-                  width: 18, height: 18, borderRadius: '50%',
-                  bgcolor: 'rgba(15,23,42,0.82)',
-                  border: '2px solid', borderColor: 'background.paper',
+                  position: 'absolute', bottom: -4, insetInlineEnd: -4,
+                  width: 15, height: 15, borderRadius: '50%',
+                  bgcolor: 'rgba(15,23,42,0.72)',
+                  border: '1.5px solid', borderColor: 'background.paper',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                  '@media (max-width: 360px)': { width: 16, height: 16, bottom: -4, insetInlineEnd: -4 },
+                  '@media (max-width: 360px)': { width: 13, height: 13, bottom: -3, insetInlineEnd: -3 },
                 }}
               >
                 <PhotoCameraRoundedIcon sx={{
-                  fontSize: 10, color: '#fff',
-                  '@media (max-width: 360px)': { fontSize: 9 },
+                  fontSize: 8.5, color: '#fff',
+                  '@media (max-width: 360px)': { fontSize: 7.5 },
                 }} />
               </Box>
             )}
           </Box>
         ) : isPurchased ? (
           <Box sx={{
-            width: 40, height: 40, borderRadius: '11px',
+            width: 40, height: 40, borderRadius: SQUIRCLE_RADIUS,
             bgcolor: 'action.hover',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 20, flexShrink: 0,
-            '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17, borderRadius: '9px' },
-            '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15, borderRadius: '8px' },
+            '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17 },
+            '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15 },
           }}>
             {icon}
           </Box>
@@ -455,61 +452,35 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           />
         )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography
-              sx={{
-                flex: 1, minWidth: 0,
-                fontSize: '15px',
-                fontWeight: 600,
-                color: isPurchased ? 'text.secondary' : 'text.primary',
-                textDecoration: isPurchased ? 'line-through' : 'none',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                '@media (max-width: 360px)': { fontSize: '13.5px' },
-                '@media (max-width: 320px)': { fontSize: '12.5px' },
-              }}
-            >
-              {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
-            </Typography>
-            {/* אינדיקטור הערה: צ'יפ אלכסוני בעיצוב פתק (תואם לכרטיס שבתוך
-                ה-popup). ממוקם ליד השם, נטוי קלות, לא דורש מקום קבוע. */}
-            {product.note && (
-              <Box
-                aria-label={t('itemHasNote')}
-                sx={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center',
-                  px: 0.65, py: 0.15,
-                  fontSize: 9.5, fontWeight: 800,
-                  fontStyle: 'italic',
-                  letterSpacing: 0.3,
-                  color: '#0F766E',
-                  backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #E6F9F5 100%)',
-                  border: '1px solid rgba(20,184,166,0.35)',
-                  borderRadius: '4px',
-                  // פינה מקופלת קטנה כמו בפתק שבפופ-אפ
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
-                  transform: 'rotate(-7deg)',
-                  boxShadow: '0 1px 2px rgba(15,118,110,0.18)',
-                  whiteSpace: 'nowrap',
-                  opacity: isPurchased ? 0.5 : 1,
-                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
-                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
-                }}
-              >
-                ✎ {t('note')}
-              </Box>
-            )}
-            {/* אין צ'יפ "תמונה" נפרד ליד השם - התמונה עצמה מחליפה את אריח
-                הקטגוריה בתחילת השורה ויש עליה תג 📷 קטן, אז צ'יפ נוסף רק
-                מכפיל סימון ודוחס את שם המוצר. */}
-          </Box>
+          <Typography
+            sx={{
+              fontSize: '15px',
+              fontWeight: 600,
+              color: isPurchased ? 'text.secondary' : 'text.primary',
+              textDecoration: isPurchased ? 'line-through' : 'none',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              '@media (max-width: 360px)': { fontSize: '13.5px' },
+              '@media (max-width: 320px)': { fontSize: '12.5px' },
+            }}
+          >
+            {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
+          </Typography>
+          {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה מציגים את *תוכן*
+              ההערה עצמה (עם ✎ קטן) במקום רק "מי הוסיף". עדיף לראות מיד
+              "דל לקטוז" מאשר תווית נטויה שרק אומרת שקיימת הערה. אין הערה -
+              נשאר שם המוסיף/הקונה כמו קודם. */}
           <Typography sx={{
             fontSize: '13px', color: 'text.secondary',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            '@media (max-width: 360px)': { fontSize: '12px' },
           }}>
-            {product.quantity} {product.unit} • {relevantName}
+            {product.quantity} {product.unit}
+            {' • '}
+            {product.note
+              ? <Box component="span" sx={{ opacity: isPurchased ? 0.7 : 1 }}>✎ {product.note}</Box>
+              : relevantName}
           </Typography>
         </Box>
         {isPurchased && (

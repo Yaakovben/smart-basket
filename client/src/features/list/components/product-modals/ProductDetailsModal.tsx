@@ -4,6 +4,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
@@ -72,6 +73,7 @@ export const ProductDetailsModal = memo(({
   const { t, settings } = useSettings();
   const [editsExpanded, setEditsExpanded] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
+  const [nameExpanded, setNameExpanded] = useState(false);
 
   // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
   // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
@@ -82,6 +84,7 @@ export const ProductDetailsModal = memo(({
     setSeenId(product?.id);
     setEditsExpanded(false);
     setShowPhoto(false);
+    setNameExpanded(false);
   }
 
   if (!product) return null;
@@ -133,63 +136,72 @@ export const ProductDetailsModal = memo(({
   return (
     <Modal title={t('productDetails')} onClose={onClose}>
       <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        {product.image ? (
-          // יש תמונה שהמשתמש העלה - היא ה"גיבור" של המודל במקום אריח
-          // הקטגוריה. הקשה פותחת אותה במסך מלא (ImageLightbox).
-          <Box
-            role="button"
-            aria-label={t('viewPhotoAria')}
-            onClick={() => setShowPhoto(true)}
-            sx={{
-              position: 'relative',
-              mx: 'auto', mb: 1.5,
-              width: '100%', maxWidth: 300,
-              borderRadius: '16px', overflow: 'hidden',
-              border: '1px solid', borderColor: 'divider',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-              '&:active': { transform: 'scale(0.99)' },
-            }}
-          >
+        {/* אזור עליון בגובה קבוע - שם המוצר וכל השדות שמתחת נשארים בדיוק
+            באותו מיקום בין מוצר עם תמונה למוצר בלי, בלי "קפיצת" גובה
+            דרמטית של המודל בכל פתיחה. */}
+        <Box sx={{
+          height: 148, mb: 1.5,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {product.image ? (
             <Box
-              component="img"
-              src={product.image}
-              alt={product.name}
-              sx={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }}
-            />
-            <Box sx={{
-              position: 'absolute', bottom: 6, insetInlineEnd: 6,
-              px: 0.9, py: 0.3, borderRadius: '999px',
-              bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
-              fontSize: 10.5, fontWeight: 700,
-              display: 'flex', alignItems: 'center', gap: 0.4,
-              backdropFilter: 'blur(2px)',
-            }}>
-              🔍 {t('photo')}
+              role="button"
+              aria-label={t('viewPhotoAria')}
+              onClick={() => setShowPhoto(true)}
+              sx={{
+                position: 'relative',
+                height: '100%', width: '100%', maxWidth: 300,
+                borderRadius: '16px', overflow: 'hidden',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.99)' },
+              }}
+            >
+              <Box
+                component="img"
+                src={product.image}
+                alt={product.name}
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+              {/* כפתור הגדלה - אייקון "פתח במלא" מוכר בפינה, במקום תווית
+                  "תמונה" שרק חוזרת על מה שכבר רואים. */}
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', top: 8, insetInlineEnd: 8,
+                width: 28, height: 28, borderRadius: '8px',
+                bgcolor: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(3px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <OpenInFullRoundedIcon sx={{ fontSize: 15, color: '#fff' }} />
+              </Box>
             </Box>
-          </Box>
-        ) : (
-          <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
+          ) : (
             <IconTile
               emoji={CATEGORY_ICONS[product.category]}
               color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
               seedId={product.id}
-              size={72}
-              fontSize={36}
+              size={76}
+              fontSize={38}
               ariaLabel={product.category}
-              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
-              // לא הגרדיאנט הכהה/רווי של אריח-רשימה.
+              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem).
               variant="light"
             />
-          </Box>
-        )}
-        {/* שם המוצר מוצג במלואו תמיד - נשבר לשורות (wordBreak) ולא נחתך
-            עם ellipsis. שם ארוך במיוחד פשוט מגדיל את הכותרת; המודל עצמו
-            גליל (DialogContent overflowY:auto), אז אין מצב של טקסט מוסתר. */}
-        <Typography sx={{
-          fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5,
-          lineHeight: 1.3, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-        }}>
+          )}
+        </Box>
+        {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;
+            הקשה מרחיבה לשם המלא (אין טקסט מוסתר לצמיתות). גופן רספונסיבי
+            לרוחב המסך. */}
+        <Typography
+          onClick={() => setNameExpanded(v => !v)}
+          title={product.name}
+          sx={{
+            fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary', mb: 0.5,
+            lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            wordBreak: 'break-word',
+            ...(nameExpanded
+              ? { whiteSpace: 'pre-wrap' }
+              : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+          }}
+        >
           {product.name}
         </Typography>
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
