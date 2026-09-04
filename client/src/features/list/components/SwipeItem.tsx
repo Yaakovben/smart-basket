@@ -478,10 +478,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           >
             {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
           </Typography>
-          {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה - תוכן ההערה עצמו
-              בתוך "פתק נייר" זעיר עם פינה מקופלת (paperNoteSx('chip')),
-              אותה שפת עיצוב בדיוק כמו הפתק במסך פרטי המוצר ובטופס העריכה,
-              רק בקטן. אין הערה - שם המוסיף/הקונה. */}
+          {/* שורה שנייה: כמות+יחידה + מי הוסיף/קנה - *תמיד* מוצג, גם כשיש
+              הערה (בעבר ההערה דרסה את זה לגמרי - לא ניתן היה לדעת מי הוסיף
+              ברגע שהייתה הערה, זה היה באג). אם יש הערה - פתק נייר זעיר
+              (paperNoteSx('chip')) נדחק לקצה השמאלי, מוצג עד שנגמר המקום
+              ואז מתקצר ל-ellipsis; הטקסט המלא תמיד ניתן לראות בפרטי המוצר. */}
           <Typography component="div" sx={{
             fontSize: '13px', color: 'text.secondary',
             display: 'flex', alignItems: 'center', gap: 0.6,
@@ -491,15 +492,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             <Box component="span" sx={{ flexShrink: 0 }}>
               {product.quantity} {product.unit}
             </Box>
-            {product.note ? (
+            <Box component="span" sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              • {relevantName}
+            </Box>
+            {product.note && (
               <Box component="span" sx={{
                 ...paperNoteSx('chip', isDark),
+                flexShrink: 0,
+                maxWidth: '48%',
                 minWidth: 0,
-                // marginInlineStart:auto - הפתק נדחף לקצה השמאלי של השורה
-                // (קצה ה-inline-end ב-RTL), רחוק מהכמות שיושבת בימין. כשההערה
-                // ארוכה המרווח מתאפס והפתק מתקצר עם ellipsis במקום.
-                // (ml:auto הקודם דחף אותו דווקא ימינה, צמוד לכמות.)
-                marginInlineStart: 'auto',
                 display: 'inline-flex', alignItems: 'center', gap: 0.3,
                 pl: '7px', pr: '5px', py: '1px',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
@@ -516,10 +517,6 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 }}>
                   {product.note}
                 </Box>
-              </Box>
-            ) : (
-              <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                • {relevantName}
               </Box>
             )}
           </Typography>
