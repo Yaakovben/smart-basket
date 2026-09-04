@@ -76,7 +76,15 @@ export const EditProductModal = memo(({
   if (!product) return null;
 
   return (
-    <Modal title={t('editProduct')} onClose={() => !saving && onClose()}>
+    <Modal
+      title={t('editProduct')}
+      onClose={() => !saving && onClose()}
+      footer={
+        <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
+          {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
+        </Button>
+      }
+    >
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="edit-product-name" sx={labelSx}>{t('name')}</Typography>
         <ClearableTextField
@@ -144,16 +152,13 @@ export const EditProductModal = memo(({
           onChange={(v) => onUpdateField('image', v as Product['image'])}
         />
       </Box>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 0.5 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <CategoryGrid
           selected={product.category}
           onSelect={(cat) => { haptic('light'); onUpdateField('category', cat); }}
         />
       </Box>
-      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
-        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
-      </Button>
     </Modal>
   );
 });

@@ -191,7 +191,21 @@ export const AddProductModal = memo(({
         />
       </Suspense>
     )}
-    <Modal title={t('newProduct')} onClose={onClose}>
+    <Modal
+      title={t('newProduct')}
+      onClose={onClose}
+      footer={
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={() => { haptic('medium'); onAdd(); }}
+          disabled={!isNameValid}
+          aria-label={t('add')}
+        >
+          {t('add')}
+        </Button>
+      }
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} role="alert">
           {error}
@@ -376,19 +390,10 @@ export const AddProductModal = memo(({
           onChange={(v) => onUpdateField('image', v)}
         />
       </Box>
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 0.5 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <CategoryGrid selected={newProduct.category} onSelect={handleCategoryClick} />
       </Box>
-      <Button
-        variant="contained"
-        fullWidth
-        onClick={() => { haptic('medium'); onAdd(); }}
-        disabled={!isNameValid}
-        aria-label={t('add')}
-      >
-        {t('add')}
-      </Button>
     </Modal>
     </>
   );
