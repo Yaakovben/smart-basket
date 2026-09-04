@@ -10,6 +10,8 @@ export { productsApi } from './products.api';
 
 export { ocrApi } from './ocr.api';
 
+export { uploadsApi } from './uploads.api';
+
 export { adminApi } from './admin.api';
 export type { AdminUser, AdminLoginActivity, AdminStats, AdminUserList } from './types/admin.types';
 

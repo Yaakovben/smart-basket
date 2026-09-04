@@ -28,6 +28,7 @@
     "adm-zip": "^0.5.17",
     "axios": "^1.15.2",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

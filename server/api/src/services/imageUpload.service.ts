@@ -1,0 +1,62 @@
+/**
+ * imageUpload.service.ts
+ *
+ * העלאת תמונת מוצר ל-Cloudinary דרך השרת. הלקוח שולח תמונה דחוסה
+ * (data URL) ל-POST /api/uploads/product-image, השרת מעלה אותה ל-Cloudinary
+ * עם ה-API secret (סוד אמיתי, אף פעם לא בקליינט) ומחזיר רק את כתובת ה-https.
+ *
+ * מבודד בכוונה לקובץ אחד: אם נחליף ספק אחסון (S3 וכו') - רק הקובץ הזה משתנה.
+ * אם משתני הסביבה של Cloudinary חסרים - זורק 503 וה-endpoint מחזיר שגיאה
+ * ברורה, והלקוח נופל לאחסון data-URL בתוך מסמך המוצר.
+ */
+
+import { v2 as cloudinary } from 'cloudinary';
+import { env } from '../config/environment';
+import { logger } from '../config/logger';
+import { AppError } from '../errors';
+
+let configured = false;
+
+export function isImageUploadConfigured(): boolean {
+  return !!(env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET);
+}
+
+function ensureConfigured(): void {
+  if (!isImageUploadConfigured()) {
+    throw new AppError('Image upload is not configured on this server', 503, 'IMAGE_UPLOAD_NOT_CONFIGURED');
+  }
+  if (!configured) {
+    cloudinary.config({
+      cloud_name: env.CLOUDINARY_CLOUD_NAME,
+      api_key: env.CLOUDINARY_API_KEY,
+      api_secret: env.CLOUDINARY_API_SECRET,
+      secure: true,
+    });
+    configured = true;
+  }
+}
+
+/**
+ * מעלה תמונת מוצר ומחזיר את כתובת ה-https הקבועה (secure_url).
+ * dataUri: "data:image/jpeg;base64,..." (כבר דחוס בצד לקוח).
+ */
+export async function uploadProductImage(dataUri: string): Promise<string> {
+  ensureConfigured();
+
+  try {
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: 'smart-basket/products',
+      resource_type: 'image',
+      // אופטימיזציה בצד Cloudinary: הגבלת מימדים + איכות/פורמט אוטומטיים.
+      // crop:'limit' לא מגדיל תמונות קטנות, רק מקטין גדולות.
+      transformation: [
+        { width: 1600, height: 1600, crop: 'limit' },
+        { quality: 'auto:good', fetch_format: 'auto' },
+      ],
+    });
+    return result.secure_url;
+  } catch (err) {
+    logger.warn('Cloudinary upload failed:', err);
+    throw new AppError('Image upload failed', 502, 'IMAGE_UPLOAD_FAILED');
+  }
+}

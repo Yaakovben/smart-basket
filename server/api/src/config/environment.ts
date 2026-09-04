@@ -87,6 +87,15 @@ const envSchema = Joi.object({
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
 
+  // Cloudinary - אחסון תמונות מוצר. ההעלאה עוברת דרך השרת הזה (POST
+  // /api/uploads/product-image): הלקוח שולח תמונה דחוסה, השרת מעלה
+  // ל-Cloudinary עם ה-API secret ומחזיר רק את כתובת ה-https. שלושתם
+  // סודות אמיתיים - רק במשתני סביבה, אף פעם לא בקליינט. אם אחד מהם חסר,
+  // ה-endpoint מחזיר 503 והלקוח נופל לאחסון data-URL במסמך המוצר.
+  CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
+  CLOUDINARY_API_KEY: Joi.string().optional(),
+  CLOUDINARY_API_SECRET: Joi.string().optional(),
+
   // Redis - אופציונלי. אם מוגדר, שרת ה-API מפרסם אירועי ניתוק/הוצאה בזמן
   // אמת (משתמש נמחק, חבר הוסר מקבוצה) לשרת ה-Socket. אם חסר - הפעולות
   // עדיין מצליחות ב-DB, פשוט בלי אפקט מיידי על sockets פעילים.
@@ -151,6 +160,9 @@ export interface Environment {
   VAPID_EMAIL: string;
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
+  CLOUDINARY_CLOUD_NAME?: string;
+  CLOUDINARY_API_KEY?: string;
+  CLOUDINARY_API_SECRET?: string;
   REDIS_URL?: string;
   GROQ_API_KEY?: string;
   GROQ_MODEL: string;

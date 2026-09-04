@@ -136,6 +136,22 @@ export const ocrLimiter = rateLimit({
   keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
 });
 
+// הגבלת העלאת תמונות מוצר - 40 העלאות לשעה למשתמש (fallback ל-IP). כל
+// העלאה עוברת דרך השרת ל-Cloudinary (מכסה חינמית משותפת לכל האפליקציה),
+// אותו עיקרון כמו ocrLimiter. 40 מספיק לשימוש לגיטימי (מעדכנים תמונה
+// למוצר בודד פה ושם) אבל חוסם ניסיון להטביע את המכסה.
+export const imageUploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 40,
+  message: {
+    success: false,
+    message: 'Too many image uploads, please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req as { user?: { id?: string } }).user?.id || req.ip || 'unknown',
+});
+
 // הגבלת עוזר ה-AI - 20 הודעות לשעה למשתמש (fallback ל-IP). קריאה לספקי
 // AI חיצוניים (מכסה משותפת לכל האפליקציה) - בלי הגבלה פר-משתמש בצד הספק,
 // משתמש בודד יכול לרוקן את כל המכסה, אותו עיקרון כמו ocrLimiter.
