@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
@@ -468,19 +469,37 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
           </Typography>
           {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה מציגים את *תוכן*
-              ההערה עצמה (עם ✎ קטן) במקום רק "מי הוסיף". עדיף לראות מיד
-              "דל לקטוז" מאשר תווית נטויה שרק אומרת שקיימת הערה. אין הערה -
-              נשאר שם המוסיף/הקונה כמו קודם. */}
-          <Typography sx={{
+              ההערה עצמה עם אייקון פתק תכלת קטן (אותו אייקון כמו הצ'יפ
+              "הוסף הערה" במודאל), ומפריד דק. עדיף לראות מיד "דל לקטוז"
+              מאשר תווית שרק אומרת שקיימת הערה. אין הערה - שם המוסיף/הקונה. */}
+          <Typography component="div" sx={{
             fontSize: '13px', color: 'text.secondary',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            display: 'flex', alignItems: 'center', gap: 0.5,
+            overflow: 'hidden', whiteSpace: 'nowrap',
             '@media (max-width: 360px)': { fontSize: '12px' },
           }}>
-            {product.quantity} {product.unit}
-            {' • '}
-            {product.note
-              ? <Box component="span" sx={{ opacity: isPurchased ? 0.7 : 1 }}>✎ {product.note}</Box>
-              : relevantName}
+            <Box component="span" sx={{ flexShrink: 0 }}>
+              {product.quantity} {product.unit}
+            </Box>
+            {product.note ? (
+              <>
+                <Box component="span" aria-hidden="true" sx={{ flexShrink: 0, color: 'divider', fontSize: '11px' }}>|</Box>
+                <EditNoteRoundedIcon sx={{
+                  fontSize: 15, flexShrink: 0,
+                  color: isPurchased ? 'text.disabled' : 'primary.main',
+                }} />
+                <Box component="span" sx={{
+                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
+                  fontWeight: 500,
+                }}>
+                  {product.note}
+                </Box>
+              </>
+            ) : (
+              <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                • {relevantName}
+              </Box>
+            )}
           </Typography>
         </Box>
         {isPurchased && (
