@@ -4,6 +4,7 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
+import { cldThumb } from '../../../global/helpers/cloudinaryImage';
 import { IconTile } from '../../../global/components';
 import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
 import { paperNoteSx, PAPER_NOTE } from '../helpers/paperNote';
@@ -393,9 +394,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           }}>
             <Box
               component="img"
-              src={product.image}
+              src={cldThumb(product.image)}
               alt=""
               loading="lazy"
+              decoding="async"
               sx={{
                 width: '100%', height: '100%',
                 borderRadius: '18%',

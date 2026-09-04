@@ -3,6 +3,7 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
+import { cldThumb, cldFull } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox } from '../../../../global/components';
@@ -120,7 +121,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 '&:active': { transform: 'scale(0.97)' },
               }}
             >
-              <Box component="img" src={value} alt={t('photo')} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <Box component="img" src={cldThumb(value)} alt={t('photo')} decoding="async" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
               <Box aria-hidden="true" sx={{
                 position: 'absolute', inset: 0, borderRadius: '10px',
@@ -199,7 +200,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       )}
 
       {lightbox && value && (
-        <ImageLightbox src={value} alt={t('photo')} onClose={() => setLightbox(false)} />
+        <ImageLightbox src={cldFull(value)} alt={t('photo')} onClose={() => setLightbox(false)} />
       )}
     </Box>
   );

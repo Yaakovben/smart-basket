@@ -7,6 +7,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
+import { cldPreview, cldFull } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
 import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -161,8 +162,10 @@ export const ProductDetailsModal = memo(({
             >
               <Box
                 component="img"
-                src={product.image}
+                src={cldPreview(product.image)}
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
               {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
@@ -402,7 +405,7 @@ export const ProductDetailsModal = memo(({
       )}
 
       {showPhoto && product.image && (
-        <ImageLightbox src={product.image} alt={product.name} onClose={() => setShowPhoto(false)} />
+        <ImageLightbox src={cldFull(product.image)} alt={product.name} onClose={() => setShowPhoto(false)} />
       )}
     </Modal>
   );
