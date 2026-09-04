@@ -116,6 +116,30 @@ if (typeof window !== 'undefined') {
       }
     }
   });
+  // ===== chunk ישן אחרי דיפלוי =====
+  // אחרי שגרסה חדשה נפרסת, שמות ה-chunks המפוצלים משתנים. לקוח שכבר היה
+  // פתוח עם הגרסה הישנה מנסה לטעון chunk בשם ישן שכבר לא קיים בשרת -
+  // 404 -> "Importing a module script failed" בכל לחיצה על רשימה / טאב
+  // (הדפים נטענים ב-lazy, ראו router/index.tsx). vite:preloadError נורה
+  // בדיוק במקרה הזה. רענון בודד מביא את index.html החדש (Cache-Control:
+  // no-cache ב-vercel.json) ואיתו את שמות ה-chunks הנכונים.
+  //
+  // רענון *בודד* בלבד: אם עוד preloadError קורה תוך 20 שניות מרענון קודם,
+  // כנראה שזו בעיה אמיתית ולא chunk ישן - נותנים לשגיאה להגיע ל-ErrorBoundary
+  // במקום להיכנס ללולאת רענון. sessionStorage (פר-טאב) ולא localStorage.
+  window.addEventListener('vite:preloadError', (e) => {
+    const now = Date.now();
+    let last = 0;
+    try { last = Number(sessionStorage.getItem('sb_preload_reload_at') || 0); } catch { /* ignore */ }
+    if (now - last < 20_000) {
+      diagLog('error', 'vite:preloadError again within 20s - not reloading, letting ErrorBoundary handle');
+      return;
+    }
+    try { sessionStorage.setItem('sb_preload_reload_at', String(now)); } catch { /* ignore */ }
+    (e as Event).preventDefault();
+    diagLog('boot', 'vite:preloadError - reloading once to pick up the new build');
+    window.location.reload();
+  });
   window.addEventListener('pagehide', () => diagLog('boot', 'pagehide fired'));
   window.addEventListener('beforeunload', () => diagLog('boot', 'beforeunload fired'));
   window.addEventListener('unhandledrejection', (e) => diagLog('error', `unhandled promise rejection: ${String(e.reason)}`));
