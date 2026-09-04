@@ -84,9 +84,9 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   };
 
   return (
-    // flexBasis: כשאין תמונה - צ'יפ צר שיושב בשורה אחת ליד "הוסף הערה";
-    // כשיש תמונה (תצוגה מקדימה) - תופס שורה מלאה.
-    <Box sx={{ flexBasis: value ? '100%' : 'auto', flexGrow: 0, minWidth: 0 }}>
+    // תמיד flexBasis:auto - גם צ'יפ "הוסף תמונה" וגם התצוגה המקדימה
+    // צרים מספיק לשבת ליד ההערה, לא מתחתיה.
+    <Box sx={{ flexBasis: 'auto', flexGrow: 0, minWidth: 0 }}>
       <input
         ref={inputRef}
         type="file"
@@ -96,67 +96,67 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - תצוגה מקדימה ממוסגרת. הקשה = מסך מלא. כפתור הסרה
-        // (אייקון פח אדום) יושב צמוד לתמונה.
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            role="button"
-            aria-label={t('viewPhotoAria')}
-            onClick={() => { haptic('light'); setLightbox(true); }}
-            sx={{
-              position: 'relative',
-              width: 72, height: 72, flexShrink: 0,
-              borderRadius: '10px', overflow: 'hidden',
-              boxShadow: '0 1.5px 5px rgba(0,0,0,0.12)',
-              cursor: 'pointer',
-              transform: 'rotate(-1.2deg)',
-              WebkitTapHighlightColor: 'transparent',
-              '&:active': { transform: 'rotate(-0.6deg) scale(0.97)' },
-            }}
-          >
-            <Box component="img" src={value} alt={t('photo')} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
-            <Box aria-hidden="true" sx={{
-              position: 'absolute', inset: 0, borderRadius: '10px',
-              border: '1.5px solid',
-              borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
-              pointerEvents: 'none',
-            }} />
-            {/* העלאה לשרת ברקע - חיווי עדין, לא חוסם. התמונה כבר שמישה. */}
-            {uploading && (
-              <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: 'rgba(0,0,0,0.32)',
-              }}>
-                <CircularProgress size={18} sx={{ color: '#fff' }} />
-              </Box>
-            )}
-          </Box>
-          <Box
-            role="button"
-            aria-label={t('removePhoto')}
-            onClick={remove}
-            sx={{
-              flexShrink: 0,
-              width: 32, height: 32, borderRadius: '8px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#DC2626',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-              transition: 'background-color 0.15s',
-              '&:hover': { bgcolor: 'rgba(239,68,68,0.12)' },
-              '&:active': { bgcolor: 'rgba(239,68,68,0.2)' },
-            }}
-          >
-            <DeleteOutlineRoundedIcon sx={{ fontSize: 19 }} />
-          </Box>
+        // יש תמונה - תצוגה מקדימה קומפקטית: תווית "תמונה" למעלה (כמו
+        // תווית "הערה" בפתק), התמונה מתחת, וכפתור הסרה אדום על פינתה.
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.4 }}>
           <Typography sx={{
-            flex: 1, minWidth: 0,
             fontSize: 10, fontWeight: 800, color: ink,
-            letterSpacing: 1, textTransform: 'uppercase',
+            letterSpacing: 1, textTransform: 'uppercase', px: 0.25,
           }}>
             {t('photo')}
           </Typography>
+          <Box sx={{ position: 'relative', width: 76, height: 76, transform: 'rotate(-1.2deg)' }}>
+            <Box
+              role="button"
+              aria-label={t('viewPhotoAria')}
+              onClick={() => { haptic('light'); setLightbox(true); }}
+              sx={{
+                position: 'relative',
+                width: '100%', height: '100%',
+                borderRadius: '10px', overflow: 'hidden',
+                boxShadow: '0 1.5px 5px rgba(0,0,0,0.12)',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.97)' },
+              }}
+            >
+              <Box component="img" src={value} alt={t('photo')} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', inset: 0, borderRadius: '10px',
+                border: '1.5px solid',
+                borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
+                pointerEvents: 'none',
+              }} />
+              {/* העלאה לשרת ברקע - חיווי עדין, לא חוסם. התמונה כבר שמישה. */}
+              {uploading && (
+                <Box aria-hidden="true" sx={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: 'rgba(0,0,0,0.32)',
+                }}>
+                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                </Box>
+              )}
+            </Box>
+            {/* כפתור הסרה - עיגול אדום על הפינה */}
+            <Box
+              role="button"
+              aria-label={t('removePhoto')}
+              onClick={remove}
+              sx={{
+                position: 'absolute', top: -7, insetInlineStart: -7,
+                width: 22, height: 22, borderRadius: '50%',
+                bgcolor: '#DC2626', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.9)' },
+              }}
+            >
+              <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+            </Box>
+          </Box>
         </Box>
       ) : (
         // אין תמונה - צ'יפ פתק מקופל (addChipSx - זהה לחלוטין ל"הוסף הערה")
