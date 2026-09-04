@@ -6,7 +6,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { Modal, TapToRevealText, IconTile } from '../../../../global/components';
+import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -71,6 +71,18 @@ export const ProductDetailsModal = memo(({
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
   const [editsExpanded, setEditsExpanded] = useState(false);
+  const [showPhoto, setShowPhoto] = useState(false);
+
+  // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
+  // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
+  // מפורש מצב "פתוח" היה נדבק בין מוצרים. איפוס בזמן רינדור (הדפוס
+  // המומלץ ב-React) ולא ב-useEffect.
+  const [seenId, setSeenId] = useState(product?.id);
+  if (product?.id !== seenId) {
+    setSeenId(product?.id);
+    setEditsExpanded(false);
+    setShowPhoto(false);
+  }
 
   if (!product) return null;
 
@@ -121,23 +133,65 @@ export const ProductDetailsModal = memo(({
   return (
     <Modal title={t('productDetails')} onClose={onClose}>
       <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
-          <IconTile
-            emoji={CATEGORY_ICONS[product.category]}
-            color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
-            seedId={product.id}
-            size={72}
-            fontSize={36}
-            ariaLabel={product.category}
-            // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
-            // לא הגרדיאנט הכהה/רווי של אריח-רשימה.
-            variant="light"
-          />
-        </Box>
-        <TapToRevealText
-          text={product.name}
-          sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5 }}
-        />
+        {product.image ? (
+          // יש תמונה שהמשתמש העלה - היא ה"גיבור" של המודל במקום אריח
+          // הקטגוריה. הקשה פותחת אותה במסך מלא (ImageLightbox).
+          <Box
+            role="button"
+            aria-label={t('viewPhotoAria')}
+            onClick={() => setShowPhoto(true)}
+            sx={{
+              position: 'relative',
+              mx: 'auto', mb: 1.5,
+              width: '100%', maxWidth: 300,
+              borderRadius: '16px', overflow: 'hidden',
+              border: '1px solid', borderColor: 'divider',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              '&:active': { transform: 'scale(0.99)' },
+            }}
+          >
+            <Box
+              component="img"
+              src={product.image}
+              alt={product.name}
+              sx={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }}
+            />
+            <Box sx={{
+              position: 'absolute', bottom: 6, insetInlineEnd: 6,
+              px: 0.9, py: 0.3, borderRadius: '999px',
+              bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
+              fontSize: 10.5, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 0.4,
+              backdropFilter: 'blur(2px)',
+            }}>
+              🔍 {t('photo')}
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
+            <IconTile
+              emoji={CATEGORY_ICONS[product.category]}
+              color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+              seedId={product.id}
+              size={72}
+              fontSize={36}
+              ariaLabel={product.category}
+              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
+              // לא הגרדיאנט הכהה/רווי של אריח-רשימה.
+              variant="light"
+            />
+          </Box>
+        )}
+        {/* שם המוצר מוצג במלואו תמיד - נשבר לשורות (wordBreak) ולא נחתך
+            עם ellipsis. שם ארוך במיוחד פשוט מגדיל את הכותרת; המודל עצמו
+            גליל (DialogContent overflowY:auto), אז אין מצב של טקסט מוסתר. */}
+        <Typography sx={{
+          fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5,
+          lineHeight: 1.3, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          {product.name}
+        </Typography>
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>
@@ -238,14 +292,21 @@ export const ProductDetailsModal = memo(({
 
                 {canExpand && (
                   <Collapse in={editsExpanded}>
-                    <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                    {/* לוג עריכות ארוך - גליל בתוך גובה מוגבל במקום לדחוף
+                        את שאר ציר הזמן. הטקסט של כל שינוי נשבר לשורות
+                        ומוצג במלואו (בלי ellipsis) כדי שכל הערך שנערך יהיה
+                        קריא. */}
+                    <Box sx={{
+                      mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider',
+                      maxHeight: 220, overflowY: 'auto', overscrollBehavior: 'contain',
+                    }}>
                       {editEntries.map((edit, i) => (
                         <Box key={i} sx={{ mb: i < editEntries.length - 1 ? 1.1 : 0 }}>
                           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mb: 0.3 }}>
                             {displayName(edit.editedBy)} · {getRelativeTime(edit.editedAt, settings.language)}
                           </Typography>
                           {edit.changes.map((change, ci) => (
-                            <Typography key={ci} sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Typography key={ci} sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                               {t(FIELD_LABEL_KEYS[change.field])}:{' '}
                               <Box component="span" sx={{ color: 'text.disabled' }}>{formatFieldValue(change.field, change.oldValue, t)}</Box>
                               {' ← '}
@@ -322,6 +383,10 @@ export const ProductDetailsModal = memo(({
             {product.note}
           </Typography>
         </Box>
+      )}
+
+      {showPhoto && product.image && (
+        <ImageLightbox src={product.image} alt={product.name} onClose={() => setShowPhoto(false)} />
       )}
     </Modal>
   );

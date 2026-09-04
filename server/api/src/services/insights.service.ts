@@ -3,7 +3,7 @@ import { ListDAL } from '../dal';
 import type { InsightsData } from './insights.types';
 import { emptyInsights, computeCategoryCycles, detectAnomalies, detectPersonality } from './insightsAnalytics';
 import { getGroupStats } from './insightsGroupStats';
-import { computeSpending, emptySpending } from './spending.service';
+import { computeSpending, emptySpending, invalidateSpendingCache } from './spending.service';
 
 export type { InsightsData } from './insights.types';
 
@@ -21,6 +21,10 @@ const insightsMemCache = new Map<string, { data: InsightsData; expiresAt: number
 
 export function invalidateInsightsCache(userId: string): void {
   insightsMemCache.delete(userId);
+  // ה-spending יושב על cache נפרד עם TTL ארוך יותר (20 דק') - חייבים לנקות
+  // גם אותו, אחרת חישוב ההוצאות ממשיך להחזיר נתונים ישנים אחרי שינוי אמיתי
+  // (סימון מוצר כנקנה) למרות שה-insightsMemCache התנקה.
+  invalidateSpendingCache(userId);
 }
 
 // הפונקציה הראשית - מחזירה את כל התובנות של המשתמש

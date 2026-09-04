@@ -45,16 +45,27 @@ export const MembersButton = memo(({ members, currentUserId, onClick, onlineUser
       sx={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 0.75,
-        bgcolor: 'rgba(255,255,255,0.15)',
-        borderRadius: '16px',
-        px: 1,
-        py: 0.5,
+        // גובה זהה *בדיוק* לכפתורי הזכוכית של הכותרת (כולל כפתור שיתוף
+        // הסיסמה/הזמנה) - COMMON_STYLES.glassIconButton: 44 → 34 ב-≤360
+        // → 30 ב-≤320. הרוחב נשאר לפי התוכן (אווטארים + "+N"). בלי זה
+        // הכפתור הזה יצא נמוך יותר ונוצרה "קפיצה" בשורה.
+        height: 44,
+        minHeight: 44,
+        py: 0,
+        px: 1.25,
         minWidth: 'auto',
+        flexShrink: 0,
+        borderRadius: '16px',
         textTransform: 'none',
+        bgcolor: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(10px)',
         '&:hover': {
-          bgcolor: 'rgba(255,255,255,0.25)'
-        }
+          bgcolor: 'rgba(255,255,255,0.3)'
+        },
+        '@media (max-width: 360px)': { height: 34, minHeight: 34, px: 1 },
+        '@media (max-width: 320px)': { height: 30, minHeight: 30, px: 0.75 },
       }}
     >
       {showExtra && (
