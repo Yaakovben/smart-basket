@@ -131,9 +131,10 @@ export const EditProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      {/* "הוסף הערה" ו"הוסף תמונה" יושבים זה לצד זה כששניהם סגורים;
-          כשאחד נפתח הוא תופס שורה מלאה והשני יורד מתחתיו (flexWrap). */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" סגורים: צ'יפ אחד בכל קצה של השורה
+          (justifyContent: space-between), במידה הנוכחית - רק עם רווח גדול
+          ביניהם. כשאחד נפתח הוא תופס שורה מלאה והשני יורד מתחתיו (flexWrap). */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 1.5 }}>
         <ProductNoteField
           value={product.note || ''}
           onChange={(v) => onUpdateField('note', v as Product['note'])}
