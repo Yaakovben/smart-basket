@@ -44,12 +44,20 @@ export async function uploadProductImage(dataUri: string): Promise<string> {
   ensureConfigured();
 
   try {
-    // בלי transformation סינכרוני - התמונה כבר דחוסה בצד לקוח, וטרנספורמציה
-    // בזמן העלאה מוסיפה המתנה (Cloudinary מעבד לפני שמחזיר). אופטימיזציית
-    // מסירה (f_auto/q_auto) אפשר להוסיף ל-URL בזמן הצגה.
+    // בלי transformation על ה-upload עצמו - זה יעכב את התשובה (Cloudinary
+    // מעבד לפני שמחזיר). במקום זה: eager_async יוצר ברקע, מיד אחרי
+    // ההעלאה, בדיוק את הגרסאות שהלקוח מבקש בפועל (ראו cloudinaryImage.ts:
+    // cldThumb/cldPreview) - כך שכשהתמונה מוצגת לראשונה (בדרך כלל בעוד רגע,
+    // לא באותו רגע) הגרסה הקטנה כבר מוכנה ב-CDN במקום שהבקשה הראשונה
+    // תחכה לעיבוד "on the fly".
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: 'smart-basket/products',
       resource_type: 'image',
+      eager: [
+        { crop: 'fill', width: 216, height: 216, fetch_format: 'auto', quality: 'auto' },
+        { crop: 'limit', width: 720, fetch_format: 'auto', quality: 'auto' },
+      ],
+      eager_async: true,
     });
     return result.secure_url;
   } catch (err) {

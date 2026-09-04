@@ -388,7 +388,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
-            width: 40, height: 40,
+            width: 40, height: 40, borderRadius: '18%',
+            // רקע עדין - נראה לרגע בזמן שהתמונה טוענת במקום הבזק ריק
+            bgcolor: 'action.hover',
             '@media (max-width: 360px)': { width: 34, height: 34 },
             '@media (max-width: 320px)': { width: 30, height: 30 },
           }}>

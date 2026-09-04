@@ -115,6 +115,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 position: 'relative',
                 width: '100%', height: '100%',
                 borderRadius: '10px', overflow: 'hidden',
+                bgcolor: 'action.hover',
                 boxShadow: '0 1.5px 5px rgba(0,0,0,0.12)',
                 cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',

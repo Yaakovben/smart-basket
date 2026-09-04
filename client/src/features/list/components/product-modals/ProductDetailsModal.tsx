@@ -153,8 +153,10 @@ export const ProductDetailsModal = memo(({
               onClick={() => setShowPhoto(true)}
               sx={{
                 position: 'relative',
-                height: '100%', width: '100%', maxWidth: 300,
+                // מרובעת (לא מלבן) - רוחב = גובה, לא נמתחת לרוחב המודל
+                height: '100%', width: 148,
                 borderRadius: '12px', overflow: 'hidden',
+                bgcolor: 'action.hover',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                 cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
                 '&:active': { transform: 'scale(0.99)' },
