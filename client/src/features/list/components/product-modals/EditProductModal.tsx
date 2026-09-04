@@ -139,10 +139,11 @@ export const EditProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      {/* "הוסף הערה" ו"הוסף תמונה" סגורים: צ'יפ אחד בכל קצה של השורה
-          (justifyContent: space-between), במידה הנוכחית - רק עם רווח גדול
-          ביניהם. כשאחד נפתח הוא תופס שורה מלאה והשני יורד מתחתיו (flexWrap). */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 1.5 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
+          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
+          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
+          במקום לשבת לצידה. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
         <ProductNoteField
           value={product.note || ''}
           onChange={(v) => onUpdateField('note', v as Product['note'])}

@@ -25,9 +25,11 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
   };
 
   return (
-    // flexBasis: כשסגור - צ'יפ צר שיושב בשורה אחת ליד "הוסף תמונה";
-    // כשפתוח - תופס שורה מלאה וה"הוסף תמונה" יורד לשורה מתחת.
-    <Box sx={{ flexBasis: isOpen ? '100%' : 'auto', flexGrow: 0, minWidth: 0 }}>
+    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal) - חצי קבוע
+    // מהרוחב, לא תלוי ב"הוסף תמונה". סגור - justifySelf:start כדי שהצ'יפ
+    // יישאר בגודלו הטבעי (לא יימתח לכל העמודה). פתוח - stretch כדי שהפתק
+    // ינצל את כל החצי שלו, בלי לדחוף את התמונה לשורה חדשה.
+    <Box sx={{ minWidth: 0, justifySelf: isOpen ? 'stretch' : 'start' }}>
       {!isOpen ? (
         // מצב סגור - צ'יפ פתק מקופל (addChipSx - זהה לחלוטין ל"הוסף תמונה")
         <Box
