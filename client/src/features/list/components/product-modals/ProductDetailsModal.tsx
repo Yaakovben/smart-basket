@@ -8,7 +8,7 @@ import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
-import { paperNoteSx, PAPER_NOTE, PHOTO_ACCENT } from '../../helpers/paperNote';
+import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -165,14 +165,13 @@ export const ProductDetailsModal = memo(({
                 alt={product.name}
                 sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
-              {/* מסגרת סגולה דקה (PHOTO_ACCENT) - צבע-הזהות של תמונה,
-                  overlay עם border (לא box-shadow על img, שלא נצבע בחלק
-                  מגרסאות Safari). */}
+              {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
+                  (לא box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}
               <Box aria-hidden="true" sx={{
                 position: 'absolute', inset: 0,
                 borderRadius: '12px',
                 border: '1.5px solid',
-                borderColor: isDark ? PHOTO_ACCENT.ringDark : PHOTO_ACCENT.ringLight,
+                borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                 pointerEvents: 'none',
               }} />
               {/* כפתור הגדלה - אייקון "פתח במלא" מוכר בפינה, במקום תווית

@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import { haptic } from '../../../../global/helpers';
-import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
+import { paperNoteSx, PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
@@ -29,34 +29,13 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
     // כשפתוח - תופס שורה מלאה וה"הוסף תמונה" יורד לשורה מתחת.
     <Box sx={{ flexBasis: isOpen ? '100%' : 'auto', flexGrow: 0, minWidth: 0 }}>
       {!isOpen ? (
-        // מצב סגור - פתק מיני מקופל, יצירתי וקטן עם הטיה
+        // מצב סגור - צ'יפ פתק מקופל (addChipSx - זהה לחלוטין ל"הוסף תמונה")
         <Box
           role="button"
           tabIndex={0}
           onClick={() => { haptic('light'); setExpanded(true); }}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setExpanded(true); } }}
-          sx={{
-            position: 'relative',
-            display: 'inline-flex', alignItems: 'center', gap: 0.6,
-            py: 0.55, pl: 1.1, pr: 1.4,
-            cursor: 'pointer', userSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            color: '#0D9488',
-            bgcolor: '#E0F7F4',
-            transform: 'rotate(-1.2deg)',
-            boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
-            transition: 'all 0.18s',
-            // פינה מקופלת בצד שמאל-עליון
-            clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
-            '&::before': {
-              content: '""',
-              position: 'absolute', top: 0, left: 0,
-              width: 8, height: 8,
-              bgcolor: 'rgba(13,148,136,0.25)',
-              clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-            },
-            '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
-          }}
+          sx={{ ...addChipSx(isDark), cursor: 'pointer' }}
         >
           <EditNoteRoundedIcon sx={{ fontSize: 15 }} />
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
@@ -66,7 +45,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           <Box sx={{
             width: 14, height: 14, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            bgcolor: '#0D9488', color: '#fff',
+            bgcolor: ink, color: isDark ? '#0b1220' : '#fff',
             fontSize: 11, fontWeight: 800, lineHeight: 1,
           }}>+</Box>
         </Box>

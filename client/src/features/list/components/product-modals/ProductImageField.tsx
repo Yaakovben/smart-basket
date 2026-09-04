@@ -3,22 +3,28 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
-import { PHOTO_ACCENT } from '../../helpers/paperNote';
+import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox } from '../../../../global/components';
-import { uploadProductImage, ImageUploadError } from '../../../../global/services/imageUpload';
+import { compressProductImage, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
 
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
-// אותה *צורה* כמו הצ'יפ "הוסף הערה" (פינה מקופלת, אייקון, "+"), אבל בצבע
-// סגול (PHOTO_ACCENT) כדי להבדיל תמונה מהערה ולא להטביע הכל בתכלת.
+// עיצוב אחיד לחלוטין עם ProductNoteField: אותו צ'יפ תכלת סגור, אותם
+// גוונים (PAPER_NOTE), אותה מסגרת נייר. הערה ותמונה = אותה שפה, אותו צבע.
 export const ProductImageField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const accent = isDark ? PHOTO_ACCENT.inkDark : PHOTO_ACCENT.inkLight;
+  const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // busy = שלב הדחיסה (חוסם, ~שנייה). uploading = העלאה לשרת ברקע
+  // (לא חוסם - התמונה כבר מוצגת ושמישה, רק מוחלפת בכתובת מתארחת אם יצליח).
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState(false);
+  // מזהה בקשה - מתעלמים מתוצאה של דחיסה/העלאה שהמשתמש כבר "עקף"
+  // (בחר קובץ אחר, או הסיר את התמונה) לפני שהסתיימה.
+  const reqIdRef = useRef(0);
 
   const pick = () => {
     if (busy) return;
@@ -31,22 +37,47 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    const myId = ++reqIdRef.current;
     setBusy(true);
     setError(null);
+
+    // שלב 1 - דחיסה מקומית. מציגים מיד.
+    let local: string;
     try {
-      const stored = await uploadProductImage(file);
-      onChange(stored);
-      haptic('medium');
+      local = await compressProductImage(file);
     } catch (err) {
-      const code = err instanceof ImageUploadError ? err.code : 'unknown';
-      setError(code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'));
-      haptic('heavy');
+      if (myId === reqIdRef.current) {
+        const code = err instanceof ImageUploadError ? err.code : 'unknown';
+        setError(code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'));
+        haptic('heavy');
+        setBusy(false);
+      }
+      return;
+    }
+    if (myId !== reqIdRef.current) return;
+    onChange(local);
+    haptic('medium');
+    setBusy(false);
+
+    // שלב 2 - העלאה לשרת ברקע. אם מצליח, מחליפים ל-URL קצר. אם השרת בלי
+    // Cloudinary (או כל כשל) - נשארים עם ה-data URL שכבר נשמר, בשקט.
+    setUploading(true);
+    try {
+      const url = await uploadToServer(local);
+      if (myId === reqIdRef.current) onChange(url);
+    } catch (err) {
+      if (!isNotConfiguredError(err) && import.meta.env.DEV) {
+        console.warn('product image server upload failed, keeping local copy', err);
+      }
     } finally {
-      setBusy(false);
+      if (myId === reqIdRef.current) setUploading(false);
     }
   };
 
   const remove = () => {
+    reqIdRef.current++; // מבטל דחיסה/העלאה שרצה
+    setUploading(false);
+    setBusy(false);
     haptic('light');
     setError(null);
     onChange('');
@@ -84,13 +115,23 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
             }}
           >
             <Box component="img" src={value} alt={t('photo')} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            {/* מסגרת סגולה דקה - מצוירת מעל התמונה */}
+            {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
             <Box aria-hidden="true" sx={{
               position: 'absolute', inset: 0, borderRadius: '10px',
               border: '1.5px solid',
-              borderColor: isDark ? PHOTO_ACCENT.ringDark : PHOTO_ACCENT.ringLight,
+              borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
               pointerEvents: 'none',
             }} />
+            {/* העלאה לשרת ברקע - חיווי עדין, לא חוסם. התמונה כבר שמישה. */}
+            {uploading && (
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: 'rgba(0,0,0,0.32)',
+              }}>
+                <CircularProgress size={18} sx={{ color: '#fff' }} />
+              </Box>
+            )}
           </Box>
           <Box
             role="button"
@@ -111,14 +152,14 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           </Box>
           <Typography sx={{
             flex: 1, minWidth: 0,
-            fontSize: 10, fontWeight: 800, color: accent,
+            fontSize: 10, fontWeight: 800, color: ink,
             letterSpacing: 1, textTransform: 'uppercase',
           }}>
             {t('photo')}
           </Typography>
         </Box>
       ) : (
-        // אין תמונה - צ'יפ באותה צורה כמו "הוסף הערה", אבל בסגול (PHOTO_ACCENT)
+        // אין תמונה - צ'יפ פתק מקופל (addChipSx - זהה לחלוטין ל"הוסף הערה")
         <Box
           role="button"
           tabIndex={0}
@@ -126,23 +167,14 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           onClick={pick}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pick(); }}
           sx={{
-            position: 'relative',
-            display: 'inline-flex', alignItems: 'center', gap: 0.6,
-            py: 0.55, pl: 1.1, pr: 1.4,
-            cursor: busy ? 'default' : 'pointer', userSelect: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            color: accent,
-            bgcolor: isDark ? PHOTO_ACCENT.chipBgDark : PHOTO_ACCENT.chipBgLight,
-            transform: 'rotate(-1.2deg)',
-            boxShadow: '0 1.5px 4px rgba(139,92,246,0.18)',
-            transition: 'all 0.18s',
-            clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
+            ...addChipSx(isDark),
+            cursor: busy ? 'default' : 'pointer',
             opacity: busy ? 0.75 : 1,
-            '&:hover': busy ? {} : { transform: 'rotate(-0.6deg) translateY(-1px)' },
+            ...(busy ? { '&:hover': {} } : {}),
           }}
         >
           {busy ? (
-            <CircularProgress size={13} sx={{ color: accent }} />
+            <CircularProgress size={13} sx={{ color: ink }} />
           ) : (
             <PhotoCameraRoundedIcon sx={{ fontSize: 15 }} />
           )}
@@ -153,8 +185,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
             <Box sx={{
               width: 14, height: 14, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: isDark ? PHOTO_ACCENT.inkDark : PHOTO_ACCENT.inkLight,
-              color: isDark ? '#1e1b4b' : '#fff',
+              bgcolor: ink, color: isDark ? '#0b1220' : '#fff',
               fontSize: 11, fontWeight: 800, lineHeight: 1,
             }}>+</Box>
           )}

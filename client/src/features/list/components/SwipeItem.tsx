@@ -6,7 +6,7 @@ import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
 import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
-import { paperNoteSx, PAPER_NOTE, PHOTO_ACCENT } from '../helpers/paperNote';
+import { paperNoteSx, PAPER_NOTE } from '../helpers/paperNote';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -381,11 +381,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
         {product.image ? (
-          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת סגולה
-          // דקה (PHOTO_ACCENT) - צבע-הזהות של תמונה, מבדיל אותה מהתכלת
-          // של ההערה. רדיוס מרובע יותר מאריח האייקון - "צילום" נקרא טוב
-          // יותר כשהוא פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת
-          // ואפורה, בלי תג.
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת תכלת
+          // דקה (PAPER_NOTE.frame) - אותו תכלת של ההערה, לא צבע הקטגוריה.
+          // רדיוס מרובע יותר מאריח האייקון - "צילום" נקרא טוב יותר כשהוא
+          // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
             width: 40, height: 40,
@@ -407,13 +406,13 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             />
             {!isPurchased && (
               <>
-                {/* מסגרת סגולה דקה - שכבת overlay (border ולא box-shadow
+                {/* מסגרת תכלת דקה - שכבת overlay (border ולא box-shadow
                     על img, שלא נצבע בחלק מגרסאות Safari). */}
                 <Box aria-hidden="true" sx={{
                   position: 'absolute', inset: 0,
                   borderRadius: '18%',
                   border: '1.5px solid',
-                  borderColor: isDark ? PHOTO_ACCENT.ringDark : PHOTO_ACCENT.ringLight,
+                  borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                   pointerEvents: 'none',
                 }} />
                 <Box
@@ -421,7 +420,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                   sx={{
                     position: 'absolute', bottom: -4, insetInlineEnd: -4,
                     width: 15, height: 15, borderRadius: '50%',
-                    bgcolor: '#7C3AED',
+                    bgcolor: '#0D9488',
                     border: '1.5px solid', borderColor: 'background.paper',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     '@media (max-width: 360px)': { width: 13, height: 13, bottom: -3, insetInlineEnd: -3 },

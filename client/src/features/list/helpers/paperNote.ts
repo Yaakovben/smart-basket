@@ -1,14 +1,13 @@
-// ===== "פתק נייר" - שפת עיצוב אחת להערות בכל האפליקציה =====
+// ===== "פתק נייר" - שפת עיצוב אחת להערה *ולתמונה* בכל האפליקציה =====
 //
-// הערה תמיד נראית כמו פיסת נייר תכלת קטנה עם פינה מקופלת (dog-ear)
-// בקצה העליון. אותו גוון נייר, אותה פינה, אותו אייקון (EditNoteRounded)
-// ואותה הטיה כמעט-שטוחה - רק הגודל ורמת הפירוט משתנים לפי הקשר:
-//   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem), מציג את תוכן ההערה
-//   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר (ProductNoteField)
-//   'card'  - הפתק המלא במסך פרטי המוצר (ProductDetailsModal)
+// גם הערה וגם תמונה נראות כמו פיסת נייר תכלת עם פינה מקופלת (dog-ear).
+// אותו גוון, אותה פינה, אותה הטיה כמעט-שטוחה - רק הגודל ורמת הפירוט
+// משתנים לפי הקשר:
+//   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem)
+//   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר (הערה ותמונה)
+//   'card'  - הפתק המלא במסך פרטי המוצר
 //
-// לפני האיחוד: השורה הציגה שבב תכלת שטוח בלי פינה, והמסך/הטופס נייר
-// מקופל - שתי שפות שונות לאותו דבר.
+// צבע אחד (תכלת המותג), עיצוב אחד - אין "זהות צבע" נפרדת לתמונה.
 
 export const PAPER_NOTE = {
   fillLight: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
@@ -23,24 +22,44 @@ export const PAPER_NOTE = {
   // גוף הטקסט
   textLight: '#134E4A',
   textDark: '#B9F0E6',
+  // הצ'יפ הסגור ("הוסף הערה" / "הוסף תמונה") - מלא, לא גרדיאנט
+  chipBgLight: '#E0F7F4',
+  chipBgDark: 'rgba(20,184,166,0.22)',
+  // מסגרת דקה סביב תמונת מוצר (שורה + מודאל) - תכלת, לא צבע הקטגוריה
+  frameLight: 'rgba(20,184,166,0.45)',
+  frameDark: 'rgba(45,212,191,0.5)',
   tilt: 'rotate(-0.15deg)',
-} as const;
-
-// ===== צבע-זהות לתמונה =====
-// ההערה מדברת בתכלת (צבע המותג). התמונה מקבלת סגול - מבדיל בין השניים
-// (הצ'יפ "הוסף הערה" תכלת מול "הוסף תמונה" סגול), ומונע "ים של תכלת".
-// דק ומאופק, באותה עוצמה כמו טבעת התכלת - לא הוורוד/סגול הבולט שהיה קודם.
-export const PHOTO_ACCENT = {
-  ringLight: 'rgba(139,92,246,0.42)',
-  ringDark: 'rgba(167,139,250,0.5)',
-  chipBgLight: '#F1ECFE',
-  chipBgDark: 'rgba(139,92,246,0.22)',
-  inkLight: '#7C3AED',
-  inkDark: '#C4B5FD',
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
 const FOLD: Record<PaperSize, number> = { chip: 6, field: 16, card: 18 };
+
+// הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
+// צורה, אותו צבע, אותה פינה מקופלת). הקומפוננטה מוסיפה רק אייקון, טקסט,
+// עיגול "+", ו-cursor/opacity לפי מצב.
+export const addChipSx = (isDark: boolean) => ({
+  position: 'relative' as const,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 0.6,
+  py: 0.55, pl: 1.1, pr: 1.4,
+  userSelect: 'none' as const,
+  WebkitTapHighlightColor: 'transparent',
+  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+  bgcolor: isDark ? PAPER_NOTE.chipBgDark : PAPER_NOTE.chipBgLight,
+  transform: 'rotate(-1.2deg)',
+  boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
+  transition: 'all 0.18s',
+  clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
+  '&::before': {
+    content: '""',
+    position: 'absolute', top: 0, left: 0,
+    width: 8, height: 8,
+    bgcolor: isDark ? PAPER_NOTE.flapDark : 'rgba(13,148,136,0.25)',
+    clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+  },
+  '&:hover': { transform: 'rotate(-0.6deg) translateY(-1px)' },
+});
 
 // סגנון הבסיס של הפתק (רקע, מסגרת, פינה מקופלת, הטיה). מרכיבים ייחודיים
 // להקשר - סרט washi, קווי מחברת, תווית - נשארים בקומפוננטה עצמה.
