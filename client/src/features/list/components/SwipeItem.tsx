@@ -495,10 +495,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               <Box component="span" sx={{
                 ...paperNoteSx('chip', isDark),
                 minWidth: 0,
-                // ml:auto - הפתק נדחף לקצה השמאלי של השורה (ב-RTL), לא
-                // צמוד לכמות מימין. כשההערה ארוכה - המרווח מתאפס והוא
-                // מתקצר במקום.
-                ml: 'auto',
+                // marginInlineStart:auto - הפתק נדחף לקצה השמאלי של השורה
+                // (קצה ה-inline-end ב-RTL), רחוק מהכמות שיושבת בימין. כשההערה
+                // ארוכה המרווח מתאפס והפתק מתקצר עם ellipsis במקום.
+                // (ml:auto הקודם דחף אותו דווקא ימינה, צמוד לכמות.)
+                marginInlineStart: 'auto',
                 display: 'inline-flex', alignItems: 'center', gap: 0.3,
                 pl: '7px', pr: '5px', py: '1px',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
