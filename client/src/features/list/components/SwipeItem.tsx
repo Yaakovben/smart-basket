@@ -377,23 +377,50 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
         {product.image ? (
-          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. כשנקנה - מעומעמת
-          // ובגווני אפור, כמו שאר שורת המוצר הנקנה.
-          <Box
-            component="img"
-            src={product.image}
-            alt=""
-            loading="lazy"
-            sx={{
-              width: 40, height: 40, borderRadius: '11px',
-              objectFit: 'cover', flexShrink: 0, display: 'block',
-              border: '1px solid', borderColor: 'divider',
-              opacity: isPurchased ? 0.45 : 1,
-              filter: isPurchased ? 'grayscale(1)' : 'none',
-              '@media (max-width: 360px)': { width: 34, height: 34, borderRadius: '9px' },
-              '@media (max-width: 320px)': { width: 30, height: 30, borderRadius: '8px' },
-            }}
-          />
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת בצבע
+          // הקטגוריה כדי שקוד-הצבע של השורה לא ילך לאיבוד כשיש תמונה, ותג
+          // 📷 זעיר בפינה כרמז שזו תמונה שאפשר להקיש ולפתוח בגדול (בפרטי
+          // המוצר). כשנקנה - מעומעמת, אפורה, בלי תג.
+          <Box sx={{
+            position: 'relative', flexShrink: 0,
+            width: 40, height: 40,
+            '@media (max-width: 360px)': { width: 34, height: 34 },
+            '@media (max-width: 320px)': { width: 30, height: 30 },
+          }}>
+            <Box
+              component="img"
+              src={product.image}
+              alt=""
+              loading="lazy"
+              sx={{
+                width: '100%', height: '100%', borderRadius: '11px',
+                objectFit: 'cover', display: 'block',
+                border: '2px solid',
+                borderColor: isPurchased
+                  ? 'divider'
+                  : (CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'),
+                opacity: isPurchased ? 0.45 : 1,
+                filter: isPurchased ? 'grayscale(1)' : 'none',
+                '@media (max-width: 360px)': { borderRadius: '9px' },
+                '@media (max-width: 320px)': { borderRadius: '8px' },
+              }}
+            />
+            {!isPurchased && (
+              <Box
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute', bottom: -4, insetInlineEnd: -4,
+                  width: 16, height: 16, borderRadius: '50%',
+                  bgcolor: 'background.paper',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 9, lineHeight: 1,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.28)',
+                }}
+              >
+                📷
+              </Box>
+            )}
+          </Box>
         ) : isPurchased ? (
           <Box sx={{
             width: 40, height: 40, borderRadius: '11px',
@@ -467,34 +494,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 ✎ {t('note')}
               </Box>
             )}
-            {/* אינדיקטור תמונה - אותו צ'יפ אלכסוני כמו ההערה, בגוון סגול
-                כדי להבחין ביניהם. מוצג לצד ההערה אם יש שתיהן. */}
-            {product.image && (
-              <Box
-                aria-label={t('itemHasPhoto')}
-                sx={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center',
-                  px: 0.65, py: 0.15,
-                  fontSize: 9.5, fontWeight: 800,
-                  fontStyle: 'italic',
-                  letterSpacing: 0.3,
-                  color: '#6D28D9',
-                  backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
-                  border: '1px solid rgba(109,40,217,0.35)',
-                  borderRadius: '4px',
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
-                  transform: 'rotate(-7deg)',
-                  boxShadow: '0 1px 2px rgba(109,40,217,0.18)',
-                  whiteSpace: 'nowrap',
-                  opacity: isPurchased ? 0.5 : 1,
-                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
-                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
-                }}
-              >
-                📷 {t('photo')}
-              </Box>
-            )}
+            {/* אין צ'יפ "תמונה" נפרד ליד השם - התמונה עצמה מחליפה את אריח
+                הקטגוריה בתחילת השורה ויש עליה תג 📷 קטן, אז צ'יפ נוסף רק
+                מכפיל סימון ודוחס את שם המוצר. */}
           </Box>
           <Typography sx={{
             fontSize: '13px', color: 'text.secondary',
