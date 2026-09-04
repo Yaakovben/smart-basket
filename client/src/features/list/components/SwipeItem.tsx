@@ -468,13 +468,13 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           >
             {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
           </Typography>
-          {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה מציגים את *תוכן*
-              ההערה עצמה עם אייקון פתק תכלת קטן (אותו אייקון כמו הצ'יפ
-              "הוסף הערה" במודאל), ומפריד דק. עדיף לראות מיד "דל לקטוז"
-              מאשר תווית שרק אומרת שקיימת הערה. אין הערה - שם המוסיף/הקונה. */}
+          {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה - תוכן ההערה עצמו
+              בתוך שבב תכלת עדין ומעוגל (בלי הטיה), עם אותו אייקון פתק
+              (EditNoteRounded) כמו הצ'יפ "הוסף הערה" במודאל. אותה שפת-עיצוב
+              של הפתק בכל האפליקציה, רק שקט. אין הערה - שם המוסיף/הקונה. */}
           <Typography component="div" sx={{
             fontSize: '13px', color: 'text.secondary',
-            display: 'flex', alignItems: 'center', gap: 0.5,
+            display: 'flex', alignItems: 'center', gap: 0.6,
             overflow: 'hidden', whiteSpace: 'nowrap',
             '@media (max-width: 360px)': { fontSize: '12px' },
           }}>
@@ -482,19 +482,22 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               {product.quantity} {product.unit}
             </Box>
             {product.note ? (
-              <>
-                <Box component="span" aria-hidden="true" sx={{ flexShrink: 0, color: 'divider', fontSize: '11px' }}>|</Box>
-                <EditNoteRoundedIcon sx={{
-                  fontSize: 15, flexShrink: 0,
-                  color: isPurchased ? 'text.disabled' : 'primary.main',
-                }} />
+              <Box component="span" sx={{
+                minWidth: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 0.4,
+                px: 0.7, py: '1px',
+                borderRadius: '7px',
+                bgcolor: isPurchased ? 'action.hover' : 'rgba(20,184,166,0.12)',
+                color: isPurchased ? 'text.disabled' : 'primary.main',
+              }}>
+                <EditNoteRoundedIcon sx={{ fontSize: 14, flexShrink: 0 }} />
                 <Box component="span" sx={{
                   minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
                   fontWeight: 500,
                 }}>
                   {product.note}
                 </Box>
-              </>
+              </Box>
             ) : (
               <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 • {relevantName}
