@@ -3,10 +3,10 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
-import { cldThumb, cldFull } from '../../../../global/helpers/cloudinaryImage';
+import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { ImageLightbox } from '../../../../global/components';
+import { ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { compressProductImage, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
 
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
@@ -85,9 +85,10 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   };
 
   return (
-    // תמיד flexBasis:auto - גם צ'יפ "הוסף תמונה" וגם התצוגה המקדימה
-    // צרים מספיק לשבת ליד ההערה, לא מתחתיה.
-    <Box sx={{ flexBasis: 'auto', flexGrow: 0, minWidth: 0 }}>
+    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal) - חצי קבוע
+    // מהרוחב. justifySelf:start תמיד - גם הצ'יפ הסגור וגם התצוגה המקדימה
+    // הם בגודל טבעי קבוע (76px), אין להם למה למתוח לכל העמודה.
+    <Box sx={{ minWidth: 0, justifySelf: 'start' }}>
       <input
         ref={inputRef}
         type="file"
@@ -122,7 +123,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 '&:active': { transform: 'scale(0.97)' },
               }}
             >
-              <Box component="img" src={cldThumb(value)} alt={t('photo')} decoding="async" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
               {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
               <Box aria-hidden="true" sx={{
                 position: 'absolute', inset: 0, borderRadius: '10px',

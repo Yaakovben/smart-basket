@@ -58,6 +58,9 @@ export async function uploadProductImage(dataUri: string): Promise<string> {
       eager: [
         { crop: 'fill', width: 160, height: 160, fetch_format: 'auto', quality: 'auto:eco' },
         { crop: 'limit', width: 720, fetch_format: 'auto', quality: 'auto' },
+        // blur-up placeholder (32x32, q:1) - נטען כמעט מיידית, מוצג עד
+        // שהגרסה החדה נטענת (ProgressiveImage). ראו cldBlur ב-cloudinaryImage.ts.
+        { crop: 'fill', width: 32, height: 32, effect: 'blur:1000', quality: 1, fetch_format: 'auto' },
       ],
       eager_async: true,
     });

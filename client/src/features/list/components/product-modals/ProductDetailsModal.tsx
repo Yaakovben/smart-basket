@@ -7,8 +7,8 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { cldPreview, cldFull } from '../../../../global/helpers/cloudinaryImage';
-import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
+import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
+import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
@@ -162,16 +162,14 @@ export const ProductDetailsModal = memo(({
                 '&:active': { transform: 'scale(0.99)' },
               }}
             >
-              <Box
-                component="img"
+              <ProgressiveImage
                 src={cldPreview(product.image)}
+                blurSrc={cldBlur(product.image)}
                 alt={product.name}
                 // בלי loading="lazy" - התמונה תמיד גלויה מיד עם פתיחת המודל
                 // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
                 // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
                 fetchPriority="high"
-                decoding="async"
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
               {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
                   (לא box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}

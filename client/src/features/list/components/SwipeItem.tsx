@@ -4,8 +4,8 @@ import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
-import { cldThumb } from '../../../global/helpers/cloudinaryImage';
-import { IconTile } from '../../../global/components';
+import { cldThumb, cldBlur } from '../../../global/helpers/cloudinaryImage';
+import { IconTile, ProgressiveImage } from '../../../global/components';
 import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
 import { paperNoteSx, PAPER_NOTE } from '../helpers/paperNote';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -388,23 +388,20 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
-            width: 40, height: 40, borderRadius: '18%',
+            width: 40, height: 40, borderRadius: '18%', overflow: 'hidden',
             // רקע עדין - נראה לרגע בזמן שהתמונה טוענת במקום הבזק ריק
             bgcolor: 'action.hover',
             '@media (max-width: 360px)': { width: 34, height: 34 },
             '@media (max-width: 320px)': { width: 30, height: 30 },
           }}>
-            <Box
-              component="img"
+            <ProgressiveImage
               src={cldThumb(product.image)}
+              blurSrc={cldBlur(product.image)}
               alt=""
               loading="lazy"
-              decoding="async"
+              finalOpacity={isPurchased ? 0.45 : 1}
               sx={{
-                width: '100%', height: '100%',
                 borderRadius: '18%',
-                objectFit: 'cover', display: 'block',
-                opacity: isPurchased ? 0.45 : 1,
                 filter: isPurchased ? 'grayscale(1)' : 'none',
               }}
             />

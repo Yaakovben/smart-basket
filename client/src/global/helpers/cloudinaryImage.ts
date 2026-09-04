@@ -33,3 +33,11 @@ export const cldPreview = (url: string) => variant(url, 'c_limit,w_720,f_auto,q_
 
 // מסך מלא
 export const cldFull = (url: string) => variant(url, 'c_limit,w_1600,f_auto,q_auto');
+
+// ===== blur-up placeholder =====
+// גרסה זעירה ומטושטשת (32x32, q_1) - נטענת כמעט מיידית (כמה מאות בייטים)
+// ומוצגת עד שהגרסה החדה נטענת, כדי שהתמונה "מוצגת" כבר מהרגע הראשון
+// במקום ריבוע ריק שמחכה לרשת. ראו ProgressiveImage. data URL (נפילה בלי
+// Cloudinary, כבר בזיכרון) לא צריך בלור - undefined.
+export const cldBlur = (url: string): string | undefined =>
+  CLD_UPLOAD_RE.test(url) ? variant(url, 'c_fill,w_32,h_32,e_blur:1000,q_1,f_auto') : undefined;
