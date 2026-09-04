@@ -102,10 +102,16 @@ if (typeof window !== 'undefined') {
     } else if (document.visibilityState === 'visible' && hiddenAt > 0) {
       const awayMs = Date.now() - hiddenAt;
       hiddenAt = 0;
-      diagLog('boot', `visible again after ${Math.round(awayMs / 1000)}s away, rootEmpty=${isRootEmpty()}`);
-      // אחרי 30 דק' מחוץ לאפליקציה, רק אם המסך באמת לבן - לא רענון גורף
-      if (awayMs > 30 * 60 * 1000 && isRootEmpty()) {
-        diagLog('boot', 'visibilitychange: reloading (long background + empty root)');
+      const empty = isRootEmpty();
+      diagLog('boot', `visible again after ${Math.round(awayMs / 1000)}s away, rootEmpty=${empty}`);
+      // מסך לבן (root ריק) בחזרה לחזית - מרעננים תמיד, בלי קשר לכמה זמן
+      // היינו בחוץ. זה בדיוק מה שקורה כשיוצאים לשיתוף / וואטסאפ / Share
+      // Sheet (למשל שיתוף קוד+סיסמה) וחוזרים: ב-iOS ה-WKWebView של ה-PWA
+      // נהרג, וחוזרים למסך לבן אחרי כמה שניות בלבד. מגבלת 30 הדקות
+      // הקודמת פספסה בדיוק את המקרה הנפוץ הזה. כש-root ריק React לא רץ
+      // בכלל, אז אין שום בקשת רשת / רענון-טוקן שהרענון עלול לקטוע.
+      if (empty) {
+        diagLog('boot', `visibilitychange: reloading (empty root after ${Math.round(awayMs / 1000)}s away)`);
         window.location.reload();
       }
     }
