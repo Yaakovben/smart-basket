@@ -35,6 +35,7 @@ export interface Product {
   createdAt: string;
   updatedAt?: string;
   note?: string;
+  image?: string;
   editHistory?: ProductEditEntry[];
 }
 

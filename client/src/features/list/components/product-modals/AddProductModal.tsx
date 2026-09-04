@@ -12,6 +12,7 @@ import { priceComparisonApi } from '../../../priceComparison';
 import { trackEvent } from '../../../../global/services/analytics';
 import type { NewProductForm } from '../../types/list-types';
 import { ProductNoteField } from './ProductNoteField';
+import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
 
 // ===== סגנונות =====
@@ -365,6 +366,10 @@ export const AddProductModal = memo(({
       <ProductNoteField
         value={newProduct.note}
         onChange={(v) => onUpdateField('note', v)}
+      />
+      <ProductImageField
+        value={newProduct.image}
+        onChange={(v) => onUpdateField('image', v)}
       />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>

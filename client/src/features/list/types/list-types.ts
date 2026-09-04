@@ -7,6 +7,8 @@ export interface NewProductForm {
   unit: ProductUnit;
   category: ProductCategory;
   note: string;
+  // תמונת מוצר (URL / data URL). ריק = אין תמונה.
+  image: string;
 }
 
 export interface EditListForm {
@@ -95,7 +97,7 @@ export interface UseListReturn {
   handleAdd: () => void;
   handleQuickAdd: (name: string) => void;
   addProductToServer: (
-    productData: { name: string; quantity: number; unit: Product['unit']; category: Product['category']; note?: string },
+    productData: { name: string; quantity: number; unit: Product['unit']; category: Product['category']; note?: string; image?: string },
     showToastOnAdd?: boolean
   ) => Promise<void>;
   handleEditList: () => void;

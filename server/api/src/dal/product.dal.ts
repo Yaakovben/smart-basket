@@ -11,6 +11,7 @@ export interface CreateProductInput {
   addedBy: string;
   position?: number;
   note?: string;
+  image?: string;
   clientId?: string;
 }
 

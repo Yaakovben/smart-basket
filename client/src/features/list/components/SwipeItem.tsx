@@ -376,7 +376,25 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             עין). לא נקנה - IconTile variant="light": צ'יפ פסטלי, לא
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
-        {isPurchased ? (
+        {product.image ? (
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. כשנקנה - מעומעמת
+          // ובגווני אפור, כמו שאר שורת המוצר הנקנה.
+          <Box
+            component="img"
+            src={product.image}
+            alt=""
+            loading="lazy"
+            sx={{
+              width: 40, height: 40, borderRadius: '11px',
+              objectFit: 'cover', flexShrink: 0, display: 'block',
+              border: '1px solid', borderColor: 'divider',
+              opacity: isPurchased ? 0.45 : 1,
+              filter: isPurchased ? 'grayscale(1)' : 'none',
+              '@media (max-width: 360px)': { width: 34, height: 34, borderRadius: '9px' },
+              '@media (max-width: 320px)': { width: 30, height: 30, borderRadius: '8px' },
+            }}
+          />
+        ) : isPurchased ? (
           <Box sx={{
             width: 40, height: 40, borderRadius: '11px',
             bgcolor: 'action.hover',
@@ -447,6 +465,34 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 }}
               >
                 ✎ {t('note')}
+              </Box>
+            )}
+            {/* אינדיקטור תמונה - אותו צ'יפ אלכסוני כמו ההערה, בגוון סגול
+                כדי להבחין ביניהם. מוצג לצד ההערה אם יש שתיהן. */}
+            {product.image && (
+              <Box
+                aria-label={t('itemHasPhoto')}
+                sx={{
+                  flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center',
+                  px: 0.65, py: 0.15,
+                  fontSize: 9.5, fontWeight: 800,
+                  fontStyle: 'italic',
+                  letterSpacing: 0.3,
+                  color: '#6D28D9',
+                  backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+                  border: '1px solid rgba(109,40,217,0.35)',
+                  borderRadius: '4px',
+                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
+                  transform: 'rotate(-7deg)',
+                  boxShadow: '0 1px 2px rgba(109,40,217,0.18)',
+                  whiteSpace: 'nowrap',
+                  opacity: isPurchased ? 0.5 : 1,
+                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
+                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
+                }}
+              >
+                📷 {t('photo')}
               </Box>
             )}
           </Box>

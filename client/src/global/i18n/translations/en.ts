@@ -475,6 +475,16 @@ export const en: Translations = {
   noteHintKosherTypeBrand: 'Kosher · Type · Brand',
   closeNoteAria: 'Close note',
   productNotePlaceholder: 'Details about the product - kosher, type, etc.',
+  // Product photo
+  photo: 'Photo',
+  addPhoto: 'Add photo',
+  removePhoto: 'Remove photo',
+  viewPhotoAria: 'View full-size photo',
+  closePhotoAria: 'Close photo',
+  photoProcessing: 'Uploading photo…',
+  photoUploadError: 'Photo upload failed. Please try again.',
+  photoTooLarge: 'The photo is too large even after compression. Try another one.',
+  itemHasPhoto: 'This item has a photo',
   // Scan list photo (OCR)
   ocrNoTextDetected: "We couldn't detect clear text in the image. Try a clearer, sharper photo with good lighting.",
   ocrGenericError: 'Something went wrong recognizing the text. Try again, or add the items manually.',

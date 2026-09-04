@@ -73,6 +73,9 @@ export interface Product {
   createdAt: string;
   updatedAt?: string;
   note?: string;
+  // תמונת מוצר שהמשתמש צילם/העלה - כתובת URL (Cloudinary וכו') או data URL
+  // דחוס כשאין אחסון חיצוני מוגדר. ריק/undefined = מציגים אריח קטגוריה.
+  image?: string;
   // לוג עריכות תוכן - עד 10 האחרונות (ראו MAX_EDIT_HISTORY בשרת). לא חובה
   // כי מוצר שמעולם לא נערך פשוט לא מכיל את השדה.
   editHistory?: ProductEditEntry[];

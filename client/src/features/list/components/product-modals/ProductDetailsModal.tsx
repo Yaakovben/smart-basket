@@ -6,7 +6,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { Modal, IconTile } from '../../../../global/components';
+import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -71,6 +71,7 @@ export const ProductDetailsModal = memo(({
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
   const [editsExpanded, setEditsExpanded] = useState(false);
+  const [showPhoto, setShowPhoto] = useState(false);
 
   // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
   // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
@@ -80,6 +81,7 @@ export const ProductDetailsModal = memo(({
   if (product?.id !== seenId) {
     setSeenId(product?.id);
     setEditsExpanded(false);
+    setShowPhoto(false);
   }
 
   if (!product) return null;
@@ -131,19 +133,56 @@ export const ProductDetailsModal = memo(({
   return (
     <Modal title={t('productDetails')} onClose={onClose}>
       <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
-          <IconTile
-            emoji={CATEGORY_ICONS[product.category]}
-            color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
-            seedId={product.id}
-            size={72}
-            fontSize={36}
-            ariaLabel={product.category}
-            // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
-            // לא הגרדיאנט הכהה/רווי של אריח-רשימה.
-            variant="light"
-          />
-        </Box>
+        {product.image ? (
+          // יש תמונה שהמשתמש העלה - היא ה"גיבור" של המודל במקום אריח
+          // הקטגוריה. הקשה פותחת אותה במסך מלא (ImageLightbox).
+          <Box
+            role="button"
+            aria-label={t('viewPhotoAria')}
+            onClick={() => setShowPhoto(true)}
+            sx={{
+              position: 'relative',
+              mx: 'auto', mb: 1.5,
+              width: '100%', maxWidth: 300,
+              borderRadius: '16px', overflow: 'hidden',
+              border: '1px solid', borderColor: 'divider',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              '&:active': { transform: 'scale(0.99)' },
+            }}
+          >
+            <Box
+              component="img"
+              src={product.image}
+              alt={product.name}
+              sx={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }}
+            />
+            <Box sx={{
+              position: 'absolute', bottom: 6, insetInlineEnd: 6,
+              px: 0.9, py: 0.3, borderRadius: '999px',
+              bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
+              fontSize: 10.5, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 0.4,
+              backdropFilter: 'blur(2px)',
+            }}>
+              🔍 {t('photo')}
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
+            <IconTile
+              emoji={CATEGORY_ICONS[product.category]}
+              color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+              seedId={product.id}
+              size={72}
+              fontSize={36}
+              ariaLabel={product.category}
+              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem) -
+              // לא הגרדיאנט הכהה/רווי של אריח-רשימה.
+              variant="light"
+            />
+          </Box>
+        )}
         {/* שם המוצר מוצג במלואו תמיד - נשבר לשורות (wordBreak) ולא נחתך
             עם ellipsis. שם ארוך במיוחד פשוט מגדיל את הכותרת; המודל עצמו
             גליל (DialogContent overflowY:auto), אז אין מצב של טקסט מוסתר. */}
@@ -344,6 +383,10 @@ export const ProductDetailsModal = memo(({
             {product.note}
           </Typography>
         </Box>
+      )}
+
+      {showPhoto && product.image && (
+        <ImageLightbox src={product.image} alt={product.name} onClose={() => setShowPhoto(false)} />
       )}
     </Modal>
   );

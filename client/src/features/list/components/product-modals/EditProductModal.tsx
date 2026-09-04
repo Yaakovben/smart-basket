@@ -5,6 +5,7 @@ import { haptic, COMMON_STYLES } from '../../../../global/helpers';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ProductNoteField } from './ProductNoteField';
+import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
 
 // ===== סגנונות =====
@@ -133,6 +134,10 @@ export const EditProductModal = memo(({
       <ProductNoteField
         value={product.note || ''}
         onChange={(v) => onUpdateField('note', v as Product['note'])}
+      />
+      <ProductImageField
+        value={product.image || ''}
+        onChange={(v) => onUpdateField('image', v as Product['image'])}
       />
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>

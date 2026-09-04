@@ -476,6 +476,16 @@ export const he: Translations = {
   noteHintKosherTypeBrand: 'כשרות · סוג · מותג',
   closeNoteAria: 'סגור הערה',
   productNotePlaceholder: 'פרט על המוצר - כשרות, סוג וכו׳',
+  // Product photo
+  photo: 'תמונה',
+  addPhoto: 'הוסף תמונה',
+  removePhoto: 'הסר תמונה',
+  viewPhotoAria: 'הצג תמונה בגודל מלא',
+  closePhotoAria: 'סגור תמונה',
+  photoProcessing: 'מעלה תמונה…',
+  photoUploadError: 'העלאת התמונה נכשלה. נסה שוב.',
+  photoTooLarge: 'התמונה גדולה מדי גם אחרי דחיסה. נסה תמונה אחרת.',
+  itemHasPhoto: 'למוצר זה יש תמונה',
   // Scan list photo (OCR)
   ocrNoTextDetected: 'לא זיהינו טקסט ברור בתמונה. נסה תמונה ברורה וחדה יותר, עם תאורה טובה.',
   ocrGenericError: 'משהו השתבש בזיהוי הטקסט. נסה שוב, או הוסף את הפריטים ידנית.',

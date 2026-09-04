@@ -479,6 +479,16 @@ export type TranslationKeys =
   | 'noteHintKosherTypeBrand'
   | 'closeNoteAria'
   | 'productNotePlaceholder'
+  // Product photo
+  | 'photo'
+  | 'addPhoto'
+  | 'removePhoto'
+  | 'viewPhotoAria'
+  | 'closePhotoAria'
+  | 'photoProcessing'
+  | 'photoUploadError'
+  | 'photoTooLarge'
+  | 'itemHasPhoto'
   // Scan list photo (OCR)
   | 'ocrNoTextDetected'
   | 'ocrGenericError'

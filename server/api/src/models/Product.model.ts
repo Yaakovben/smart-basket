@@ -44,6 +44,11 @@ export interface IProductDoc extends Document {
   editHistory?: IProductEditEntry[];
   position: number;
   note?: string;
+  // תמונת מוצר שהמשתמש צילם/העלה. או כתובת URL (Cloudinary וכו') או
+  // data URL (data:image/...;base64,...) כשאין אחסון חיצוני מוגדר. ריק =
+  // אין תמונה, והלקוח נופל לאריח הקטגוריה כרגיל. ה-maxlength מכסה גם
+  // data URL של תמונה דחוסה (~200-400KB אחרי base64).
+  image?: string;
   // מזהה זמני מהלקוח (temp id) - idempotency key להוספת מוצר. אופציונלי כי
   // רק בקשות דרך תור ה-offline sync שולחות אותו; שאר הנתיבים (undo וכו') לא.
   clientId?: string;
@@ -130,6 +135,11 @@ const productSchema = new Schema<IProductDoc>(
       type: String,
       trim: true,
       maxlength: 200,
+      default: '',
+    },
+    image: {
+      type: String,
+      maxlength: 500000,
       default: '',
     },
     clientId: {

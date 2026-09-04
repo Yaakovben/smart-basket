@@ -148,6 +148,7 @@ export const useProductMutations = ({
                 unit: item.product.unit,
                 category: item.product.category,
                 note: item.product.note,
+                image: item.product.image,
               }).then(async (serverProduct) => {
                 onUpdateProductsForList(list.id, (c) =>
                   c.map(p => p.id === tempId ? { ...p, id: serverProduct.id } : p)
@@ -255,6 +256,7 @@ export const useProductMutations = ({
     if (editData.unit !== original.unit) changes.unit = editData.unit;
     if (editData.category !== original.category) changes.category = editData.category;
     if ((editData.note || '') !== (original.note || '')) changes.note = editData.note || '';
+    if ((editData.image || '') !== (original.image || '')) changes.image = editData.image || '';
 
     // עדכון אופטימיסטי - סגירת מודאל ועדכון UI מיידי. updatedBy מתעדכן רק אם
     // באמת יש שינוי בתוכן (אותה בדיקה כמו product.service.ts בשרת), כדי לא
@@ -265,11 +267,15 @@ export const useProductMutations = ({
     setShowEdit(null);
     setOriginalEditProduct(null);
     const hasContentChange = Object.keys(changes).length > 0;
+    // image לא נכלל ב-editHistory (השרת גם לא רושם אותו - ראה
+    // product.service.ts) - שמירת base64 שלם פעמיים בכל רשומת עריכה מנפחת.
+    // updatedBy כן מתעדכן גם על שינוי תמונה בלבד, תואם ל-hasContentEdit בשרת.
     const fieldLabels: Record<string, ProductEditChange['field']> = { name: 'name', quantity: 'quantity', unit: 'unit', category: 'category', note: 'note' };
-    const optimisticEditEntry: ProductEditEntry | null = hasContentChange ? {
+    const historyChangeEntries = Object.entries(changes).filter(([field]) => field !== 'image');
+    const optimisticEditEntry: ProductEditEntry | null = historyChangeEntries.length > 0 ? {
       editedBy: user.name,
       editedAt: new Date().toISOString(),
-      changes: Object.entries(changes).map(([field, newValue]) => ({
+      changes: historyChangeEntries.map(([field, newValue]) => ({
         field: fieldLabels[field],
         oldValue: original[field as keyof Product] as string | number,
         newValue: newValue as string | number,
@@ -278,8 +284,9 @@ export const useProductMutations = ({
     onUpdateProductsForList(list.id, (current) =>
       current.map(p => p.id === editData.id
         ? {
-          ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note,
-          ...(hasContentChange ? { updatedBy: user.name, editHistory: [...(p.editHistory ?? []), optimisticEditEntry!].slice(-10) } : {}),
+          ...p, name: editData.name, quantity: editData.quantity, unit: editData.unit, category: editData.category, note: editData.note, image: editData.image,
+          ...(hasContentChange ? { updatedBy: user.name } : {}),
+          ...(optimisticEditEntry ? { editHistory: [...(p.editHistory ?? []), optimisticEditEntry].slice(-10) } : {}),
         }
         : p)
     );
@@ -301,7 +308,7 @@ export const useProductMutations = ({
       }
       if (import.meta.env.DEV) console.error('Failed to update product:', error);
       onUpdateProductsForList(list.id, (current) =>
-        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note, updatedBy: original.updatedBy, editHistory: original.editHistory } : p)
+        current.map(p => p.id === editData.id ? { ...p, name: original.name, quantity: original.quantity, unit: original.unit, category: original.category, note: original.note, image: original.image, updatedBy: original.updatedBy, editHistory: original.editHistory } : p)
       );
       showToast(t('errorOccurred'), 'error');
     }
