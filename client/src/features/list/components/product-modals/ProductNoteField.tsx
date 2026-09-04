@@ -2,13 +2,19 @@ import { memo, useState } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import { haptic } from '../../../../global/helpers';
+import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
-// עיצוב פתק יצירתי: סלוטייפ באמצע למעלה, פינה מקופלת בשמאל-עליון,
-// הטיה קלה, קווי מחברת עדינים, וגופן Caveat איטלי.
+// עיצוב "פתק נייר" (paperNoteSx) - אותה שפה בדיוק כמו הפתק בשורת הרשימה
+// ובמסך פרטי המוצר: סרט washi למעלה, פינה מקופלת, הטיה כמעט-שטוחה,
+// קווי מחברת עדינים.
 export const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
+  const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;       // אייקון + תוויות + מונה
+  const noteText = isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight; // גוף הטקסט שנכתב
+  const inkMuted = isDark ? 'rgba(185,240,230,0.65)' : 'rgba(15,118,110,0.7)';
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
 
@@ -65,35 +71,25 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           }}>+</Box>
         </Box>
       ) : (
-        // מצב פתוח - גרסה מבוגרת ומלוטשת: סרט washi עדין במקום סלוטייפ מקווקו,
-        // הטיה כמעט-שטוחה (-0.15deg), גופן sans-serif מקצועי, ריווח בין X לטקסט.
+        // מצב פתוח - "פתק נייר" מלא (paperNoteSx 'field') עם סרט washi עדין
+        // באמצע למעלה וקווי מחברת ברקע.
         <Box sx={{
-          position: 'relative',
+          ...paperNoteSx('field', isDark),
           mt: 2, mb: 0.5,
           px: 1.5, pt: 1.6, pb: 1.1,
-          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
-          transform: 'rotate(-0.15deg)',
-          border: '1px solid rgba(20,184,166,0.18)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.85)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 6px 16px rgba(20,184,166,0.10)',
-            '0 16px 32px rgba(15,118,110,0.05)',
-          ].join(', '),
-          clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px)',
+          boxShadow: isDark
+            ? '0 6px 16px rgba(0,0,0,0.35)'
+            : [
+                'inset 0 1px 0 rgba(255,255,255,0.85)',
+                '0 1px 2px rgba(15,118,110,0.06)',
+                '0 6px 16px rgba(20,184,166,0.10)',
+                '0 16px 32px rgba(15,118,110,0.05)',
+              ].join(', '),
           // קווי מחברת מאוד עדינים ברקע
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
             backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 23px, rgba(20,184,166,0.06) 23px, rgba(20,184,166,0.06) 24px)',
             pointerEvents: 'none',
-          },
-          // משולש פינה מקופלת בשמאל-עליון
-          '&::before': {
-            content: '""', position: 'absolute', top: 0, left: 0,
-            width: 18, height: 18,
-            bgcolor: 'rgba(13,148,136,0.18)',
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-            zIndex: 1,
           },
         }}>
           {/* סרט washi עדין באמצע למעלה - מינימליסטי, בלי קווים מקווקווים */}
@@ -109,29 +105,26 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.6 }}>
             <Box sx={{ flex: 1, lineHeight: 1.15 }}>
               <Typography sx={{
-                fontSize: 10, fontWeight: 800, color: '#0F766E',
+                fontSize: 10, fontWeight: 800, color: ink,
                 letterSpacing: 1, textTransform: 'uppercase',
               }}>
                 {t('note')}
               </Typography>
-              <Typography sx={{ fontSize: 9.5, color: 'rgba(15,118,110,0.7)', fontWeight: 500, mt: 0.15 }}>
+              <Typography sx={{ fontSize: 9.5, color: inkMuted, fontWeight: 500, mt: 0.15 }}>
                 {t('noteHintKosherTypeBrand')}
               </Typography>
             </Box>
-            <Box sx={{
-              px: 0.7, py: 0.15, borderRadius: '999px',
-              bgcolor: value.length >= 180 ? 'rgba(239,68,68,0.10)' : 'rgba(20,184,166,0.10)',
-              border: '1px solid',
-              borderColor: value.length >= 180 ? 'rgba(239,68,68,0.3)' : 'rgba(20,184,166,0.22)',
+            {/* מונה תווים - טקסט פשוט בגוון הפתק (לא שבב מעוגל שנלחם עם
+                שפת הנייר). מסמן אדום כשמתקרבים לגבול. */}
+            <Typography sx={{
+              fontSize: 10, fontWeight: 700,
+              color: value.length >= 180 ? '#DC2626' : ink,
+              opacity: value.length >= 180 ? 1 : 0.7,
+              fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
+              flexShrink: 0,
             }}>
-              <Typography sx={{
-                fontSize: 9.5, fontWeight: 700,
-                color: value.length >= 180 ? '#DC2626' : '#0F766E',
-                fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
-              }}>
-                {value.length}/200
-              </Typography>
-            </Box>
+              {value.length}/200
+            </Typography>
             {/* רווח 1.25 בין הספירה ל-X כדי שלא יהיו דבוקים */}
             <Box
               role="button"
@@ -141,12 +134,12 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
                 ml: 1.25,
                 width: 22, height: 22, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#0F766E',
+                color: ink,
                 cursor: 'pointer', userSelect: 'none',
                 WebkitTapHighlightColor: 'transparent',
                 fontSize: 12, fontWeight: 700, lineHeight: 1,
                 transition: 'all 0.15s',
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)', color: '#0D9488' },
+                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
               }}
             >
               ✕
@@ -169,13 +162,13 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
                 bgcolor: 'transparent',
                 fontSize: 13.5,
                 fontWeight: 500,
-                color: '#134E4A',
+                color: noteText,
                 py: 0.1,
                 '& fieldset': { border: 'none' },
                 '&.Mui-focused fieldset': { border: 'none' },
               },
               '& textarea::placeholder': {
-                color: 'rgba(15,118,110,0.5)',
+                color: inkMuted,
                 opacity: 1,
               },
             }}

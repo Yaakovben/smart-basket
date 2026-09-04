@@ -6,6 +6,7 @@ import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
 import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
+import { paperNoteSx, PAPER_NOTE } from '../helpers/paperNote';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -476,9 +477,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
           </Typography>
           {/* שורה שנייה: כמות+יחידה, ואז - אם יש הערה - תוכן ההערה עצמו
-              בתוך שבב תכלת עדין ומעוגל (בלי הטיה), עם אותו אייקון פתק
-              (EditNoteRounded) כמו הצ'יפ "הוסף הערה" במודאל. אותה שפת-עיצוב
-              של הפתק בכל האפליקציה, רק שקט. אין הערה - שם המוסיף/הקונה. */}
+              בתוך "פתק נייר" זעיר עם פינה מקופלת (paperNoteSx('chip')),
+              אותה שפת עיצוב בדיוק כמו הפתק במסך פרטי המוצר ובטופס העריכה,
+              רק בקטן. אין הערה - שם המוסיף/הקונה. */}
           <Typography component="div" sx={{
             fontSize: '13px', color: 'text.secondary',
             display: 'flex', alignItems: 'center', gap: 0.6,
@@ -490,14 +491,18 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             </Box>
             {product.note ? (
               <Box component="span" sx={{
+                ...paperNoteSx('chip', isDark),
                 minWidth: 0,
-                display: 'inline-flex', alignItems: 'center', gap: 0.4,
-                px: 0.7, py: '1px',
-                borderRadius: '7px',
-                bgcolor: isPurchased ? 'action.hover' : 'rgba(20,184,166,0.12)',
-                color: isPurchased ? 'text.disabled' : 'primary.main',
+                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                pl: '7px', pr: '5px', py: '1px',
+                color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
+                opacity: isPurchased ? 0.55 : 1,
+                filter: isPurchased ? 'grayscale(0.6)' : 'none',
               }}>
-                <EditNoteRoundedIcon sx={{ fontSize: 14, flexShrink: 0 }} />
+                <EditNoteRoundedIcon sx={{
+                  fontSize: 13, flexShrink: 0,
+                  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                }} />
                 <Box component="span" sx={{
                   minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
                   fontWeight: 500,

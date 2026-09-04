@@ -8,6 +8,7 @@ import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { Modal, IconTile, ImageLightbox } from '../../../../global/components';
+import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -71,6 +72,7 @@ export const ProductDetailsModal = memo(({
   onClose
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const [editsExpanded, setEditsExpanded] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
   const [nameExpanded, setNameExpanded] = useState(false);
@@ -343,36 +345,27 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
-          טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
+      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
+          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
+          קווי מחברת ותווית. */}
       {product.note && (
         <Box sx={{
-          position: 'relative',
+          ...paperNoteSx('card', isDark),
           mt: 3, mb: 0.5,
           px: 2, pt: 2, pb: 1.4,
-          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
-          transform: 'rotate(-0.15deg)',
-          border: '1px solid rgba(20,184,166,0.18)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.85)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 8px 20px rgba(20,184,166,0.10)',
-            '0 22px 44px rgba(15,118,110,0.05)',
-          ].join(', '),
-          clipPath: 'polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)',
+          boxShadow: isDark
+            ? '0 8px 20px rgba(0,0,0,0.35)'
+            : [
+                'inset 0 1px 0 rgba(255,255,255,0.85)',
+                '0 1px 2px rgba(15,118,110,0.06)',
+                '0 8px 20px rgba(20,184,166,0.10)',
+                '0 22px 44px rgba(15,118,110,0.05)',
+              ].join(', '),
           // קווי מחברת מאוד עדינים
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
             backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
             pointerEvents: 'none',
-          },
-          // פינה מקופלת בשמאל-עליון
-          '&::before': {
-            content: '""', position: 'absolute', top: 0, left: 0,
-            width: 20, height: 20,
-            bgcolor: 'rgba(13,148,136,0.18)',
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-            zIndex: 1,
           },
         }}>
           {/* סרט washi באמצע למעלה */}
@@ -387,7 +380,8 @@ export const ProductDetailsModal = memo(({
           }} />
           <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
             <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: '#0F766E',
+              fontSize: 10, fontWeight: 800,
+              color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
               letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
               {t('note')}
@@ -395,7 +389,8 @@ export const ProductDetailsModal = memo(({
           </Box>
           <Typography sx={{
             position: 'relative', zIndex: 2,
-            fontSize: 14.5, color: '#134E4A',
+            fontSize: 14.5,
+            color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
             fontWeight: 500,
             lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
