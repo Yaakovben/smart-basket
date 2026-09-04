@@ -62,6 +62,8 @@ export const ImageLightbox = ({ src, alt, onClose }: ImageLightboxProps) => {
         component="img"
         src={src}
         alt={alt || t('photo')}
+        fetchPriority="high"
+        decoding="async"
         onClick={(e) => e.stopPropagation()}
         sx={{
           maxWidth: '100%', maxHeight: '100%',

@@ -53,8 +53,10 @@ export async function uploadProductImage(dataUri: string): Promise<string> {
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: 'smart-basket/products',
       resource_type: 'image',
+      // חייב להישאר זהה בדיוק לפרמטרים ב-cloudinaryImage.ts (לקוח) - אחרת
+      // אין cache hit על הגרסה שבאמת מבוקשת.
       eager: [
-        { crop: 'fill', width: 216, height: 216, fetch_format: 'auto', quality: 'auto' },
+        { crop: 'fill', width: 160, height: 160, fetch_format: 'auto', quality: 'auto:eco' },
         { crop: 'limit', width: 720, fetch_format: 'auto', quality: 'auto' },
       ],
       eager_async: true,

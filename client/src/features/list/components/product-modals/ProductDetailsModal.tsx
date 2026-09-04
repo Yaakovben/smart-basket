@@ -166,7 +166,10 @@ export const ProductDetailsModal = memo(({
                 component="img"
                 src={cldPreview(product.image)}
                 alt={product.name}
-                loading="lazy"
+                // בלי loading="lazy" - התמונה תמיד גלויה מיד עם פתיחת המודל
+                // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
+                // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
+                fetchPriority="high"
                 decoding="async"
                 sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />

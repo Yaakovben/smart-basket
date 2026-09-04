@@ -42,6 +42,13 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
+    <!-- חיבור מוקדם ל-CDN של Cloudinary (תמונות מוצר) - אותו origin קבוע
+         לכל חשבון (שם הענן הוא segment בנתיב, לא בדומיין), אז אין צורך
+         בסקריפט תלוי-env כמו למטה. אם אין תמונות ב-Cloudinary בכלל
+         (fallback ל-data URL) - החיבור הזה פשוט לא נוצל, בלי עלות ממשית. -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
     <!--
       חיבור מוקדם לשרת ה-API והסוקט — רץ לפני טעינת ה-bundle כדי שה-TCP/TLS
       handshake יתחיל בזמן שה-JS עדיין נטען. הקוד המקביל ב-main.tsx רץ מאוחר
