@@ -44,15 +44,12 @@ export async function uploadProductImage(dataUri: string): Promise<string> {
   ensureConfigured();
 
   try {
+    // בלי transformation סינכרוני - התמונה כבר דחוסה בצד לקוח, וטרנספורמציה
+    // בזמן העלאה מוסיפה המתנה (Cloudinary מעבד לפני שמחזיר). אופטימיזציית
+    // מסירה (f_auto/q_auto) אפשר להוסיף ל-URL בזמן הצגה.
     const result = await cloudinary.uploader.upload(dataUri, {
       folder: 'smart-basket/products',
       resource_type: 'image',
-      // אופטימיזציה בצד Cloudinary: הגבלת מימדים + איכות/פורמט אוטומטיים.
-      // crop:'limit' לא מגדיל תמונות קטנות, רק מקטין גדולות.
-      transformation: [
-        { width: 1600, height: 1600, crop: 'limit' },
-        { quality: 'auto:good', fetch_format: 'auto' },
-      ],
     });
     return result.secure_url;
   } catch (err) {

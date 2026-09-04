@@ -20,12 +20,15 @@ export const MAX_INPUT_BYTES = 25 * 1024 * 1024;
 // יעד דחיסה בצד לקוח. השרת + Cloudinary עושים אופטימיזציה נוספת, אבל
 // שולחים כבר משהו סביר כדי שה-POST לא יהיה כבד. הנפילה ל-data URL
 // (כשאין Cloudinary) חייבת להיות קטנה כי היא נשמרת ב-DB.
-const UPLOAD_MAX_DIM = 1400;
-const UPLOAD_QUALITY = 0.82;
-const DATAURL_MAX_DIM = 900;
-const DATAURL_QUALITY = 0.7;
-// תקרת בטיחות ל-data URL (השרת חוסם ב-500KB; משאירים שוליים).
-const DATAURL_MAX_BYTES = 450 * 1024;
+const UPLOAD_MAX_DIM = 1280;
+const UPLOAD_QUALITY = 0.8;
+const DATAURL_MAX_DIM = 820;
+const DATAURL_QUALITY = 0.68;
+// תקרת בטיחות ל-data URL. השרת חוסם את שדה product.image ב-500,000 תווים,
+// וזה כולל את קידוד ה-base64 (~1.37x מהבייטים הגולמיים) + התחילית. לכן
+// התקרה כאן על הבייטים הגולמיים חייבת להיות ~340KB כדי שה-data URL השלם
+// יישאר מתחת ל-500K תווים ולא יידחה בשמירת המוצר.
+const DATAURL_MAX_BYTES = 340 * 1024;
 
 export type ImageUploadErrorCode = 'too-large' | 'decode' | 'network' | 'unknown';
 
