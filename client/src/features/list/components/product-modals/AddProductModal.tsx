@@ -363,14 +363,18 @@ export const AddProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      <ProductNoteField
-        value={newProduct.note}
-        onChange={(v) => onUpdateField('note', v)}
-      />
-      <ProductImageField
-        value={newProduct.image}
-        onChange={(v) => onUpdateField('image', v)}
-      />
+      {/* "הוסף הערה" ו"הוסף תמונה" יושבים זה לצד זה כששניהם סגורים;
+          כשאחד נפתח הוא תופס שורה מלאה והשני יורד מתחתיו (flexWrap). */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+        <ProductNoteField
+          value={newProduct.note}
+          onChange={(v) => onUpdateField('note', v)}
+        />
+        <ProductImageField
+          value={newProduct.image}
+          onChange={(v) => onUpdateField('image', v)}
+        />
+      </Box>
       <Box sx={{ mb: 2 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <CategoryGrid selected={newProduct.category} onSelect={handleCategoryClick} />

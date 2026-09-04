@@ -50,7 +50,9 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   };
 
   return (
-    <Box sx={{ mb: 1.25 }}>
+    // flexBasis: כשאין תמונה - צ'יפ צר שיושב בשורה אחת ליד "הוסף הערה";
+    // כשיש תמונה (תצוגה מקדימה) - תופס שורה מלאה.
+    <Box sx={{ flexBasis: value ? '100%' : 'auto', flexGrow: 0, minWidth: 0 }}>
       <input
         ref={inputRef}
         type="file"
@@ -126,7 +128,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           {busy ? (
             <CircularProgress size={13} sx={{ color: '#0D9488' }} />
           ) : (
-            <PhotoCameraRoundedIcon sx={{ fontSize: 14 }} />
+            <PhotoCameraRoundedIcon sx={{ fontSize: 15 }} />
           )}
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             {busy ? t('photoProcessing') : t('addPhoto')}

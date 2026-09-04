@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import { haptic } from '../../../../global/helpers';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
@@ -18,7 +19,9 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
   };
 
   return (
-    <Box sx={{ mb: 1.25 }}>
+    // flexBasis: כשסגור - צ'יפ צר שיושב בשורה אחת ליד "הוסף תמונה";
+    // כשפתוח - תופס שורה מלאה וה"הוסף תמונה" יורד לשורה מתחת.
+    <Box sx={{ flexBasis: isOpen ? '100%' : 'auto', flexGrow: 0, minWidth: 0 }}>
       {!isOpen ? (
         // מצב סגור - פתק מיני מקופל, יצירתי וקטן עם הטיה
         <Box
@@ -28,7 +31,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { haptic('light'); setExpanded(true); } }}
           sx={{
             position: 'relative',
-            display: 'inline-flex', alignItems: 'center', gap: 0.5,
+            display: 'inline-flex', alignItems: 'center', gap: 0.6,
             py: 0.55, pl: 1.1, pr: 1.4,
             cursor: 'pointer', userSelect: 'none',
             WebkitTapHighlightColor: 'transparent',
@@ -49,6 +52,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             '&:hover': { bgcolor: '#CCF1EC', transform: 'rotate(-0.6deg) translateY(-1px)' },
           }}
         >
+          <EditNoteRoundedIcon sx={{ fontSize: 15 }} />
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             {t('addNote')}
           </Typography>
