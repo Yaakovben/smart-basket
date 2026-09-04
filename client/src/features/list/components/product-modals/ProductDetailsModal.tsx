@@ -151,7 +151,7 @@ export const ProductDetailsModal = memo(({
               sx={{
                 position: 'relative',
                 height: '100%', width: '100%', maxWidth: 300,
-                borderRadius: '16px', overflow: 'hidden',
+                borderRadius: '12px', overflow: 'hidden',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                 cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
                 '&:active': { transform: 'scale(0.99)' },
@@ -163,6 +163,14 @@ export const ProductDetailsModal = memo(({
                 alt={product.name}
                 sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
+              {/* מסגרת תכלת דקה של האפליקציה - overlay עם border (לא
+                  box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', inset: 0,
+                borderRadius: '12px',
+                border: '1.5px solid rgba(20,184,166,0.45)',
+                pointerEvents: 'none',
+              }} />
               {/* כפתור הגדלה - אייקון "פתח במלא" מוכר בפינה, במקום תווית
                   "תמונה" שרק חוזרת על מה שכבר רואים. */}
               <Box aria-hidden="true" sx={{

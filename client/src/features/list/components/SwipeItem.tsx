@@ -5,7 +5,7 @@ import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
-import { SQUIRCLE_RADIUS, getIconTintRing } from '../../../global/theme/iconArt';
+import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -380,11 +380,11 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
         {product.image ? (
-          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה, ומעוצבת *בדיוק*
-          // כמו האריח: אותו רדיוס (SQUIRCLE_RADIUS) ואותה טבעת פנימית עדינה
-          // בגוון הקטגוריה (getIconTintRing) - אותו "חריץ" במסך, רק שבמקום
-          // אימוג'י יש צילום. תג מצלמה זעיר בפינה מרמז שאפשר להקיש ולראותה
-          // בגדול. כשנקנה - מעומעמת ואפורה, בלי תג.
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת תכלת
+          // דקה של האפליקציה (לא צבע הקטגוריה), ורדיוס מרובע יותר מאריח
+          // האייקון - "צילום" נקרא טוב יותר כשהוא פחות עגול. תג מצלמה
+          // זעיר בפינה מרמז שאפשר להקיש ולראותה בגדול. כשנקנה - מעומעמת
+          // ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
             width: 40, height: 40,
@@ -398,32 +398,39 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               loading="lazy"
               sx={{
                 width: '100%', height: '100%',
-                borderRadius: SQUIRCLE_RADIUS,
+                borderRadius: '18%',
                 objectFit: 'cover', display: 'block',
-                boxShadow: isPurchased
-                  ? 'none'
-                  : getIconTintRing(CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'),
                 opacity: isPurchased ? 0.45 : 1,
                 filter: isPurchased ? 'grayscale(1)' : 'none',
               }}
             />
             {!isPurchased && (
-              <Box
-                aria-hidden="true"
-                sx={{
-                  position: 'absolute', bottom: -4, insetInlineEnd: -4,
-                  width: 15, height: 15, borderRadius: '50%',
-                  bgcolor: 'rgba(15,23,42,0.72)',
-                  border: '1.5px solid', borderColor: 'background.paper',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  '@media (max-width: 360px)': { width: 13, height: 13, bottom: -3, insetInlineEnd: -3 },
-                }}
-              >
-                <PhotoCameraRoundedIcon sx={{
-                  fontSize: 8.5, color: '#fff',
-                  '@media (max-width: 360px)': { fontSize: 7.5 },
+              <>
+                {/* מסגרת תכלת דקה של האפליקציה - שכבת overlay (border ולא
+                    box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}
+                <Box aria-hidden="true" sx={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: '18%',
+                  border: '1.5px solid rgba(20,184,166,0.45)',
+                  pointerEvents: 'none',
                 }} />
-              </Box>
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    position: 'absolute', bottom: -4, insetInlineEnd: -4,
+                    width: 15, height: 15, borderRadius: '50%',
+                    bgcolor: 'rgba(15,23,42,0.72)',
+                    border: '1.5px solid', borderColor: 'background.paper',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    '@media (max-width: 360px)': { width: 13, height: 13, bottom: -3, insetInlineEnd: -3 },
+                  }}
+                >
+                  <PhotoCameraRoundedIcon sx={{
+                    fontSize: 8.5, color: '#fff',
+                    '@media (max-width: 360px)': { fontSize: 7.5 },
+                  }} />
+                </Box>
+              </>
             )}
           </Box>
         ) : isPurchased ? (
