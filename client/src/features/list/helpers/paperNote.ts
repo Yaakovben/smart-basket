@@ -26,6 +26,19 @@ export const PAPER_NOTE = {
   tilt: 'rotate(-0.15deg)',
 } as const;
 
+// ===== צבע-זהות לתמונה =====
+// ההערה מדברת בתכלת (צבע המותג). התמונה מקבלת סגול - מבדיל בין השניים
+// (הצ'יפ "הוסף הערה" תכלת מול "הוסף תמונה" סגול), ומונע "ים של תכלת".
+// דק ומאופק, באותה עוצמה כמו טבעת התכלת - לא הוורוד/סגול הבולט שהיה קודם.
+export const PHOTO_ACCENT = {
+  ringLight: 'rgba(139,92,246,0.42)',
+  ringDark: 'rgba(167,139,250,0.5)',
+  chipBgLight: '#F1ECFE',
+  chipBgDark: 'rgba(139,92,246,0.22)',
+  inkLight: '#7C3AED',
+  inkDark: '#C4B5FD',
+} as const;
+
 type PaperSize = 'chip' | 'field' | 'card';
 const FOLD: Record<PaperSize, number> = { chip: 6, field: 16, card: 18 };
 
