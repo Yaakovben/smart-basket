@@ -65,9 +65,9 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - תצוגה מקדימה ממוסגרת. הקשה = מסך מלא. כפתור ההסרה
-        // הוא אייקון פח שקט (לא שבב אדום בולט).
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        // יש תמונה - תצוגה מקדימה ממוסגרת. הקשה = מסך מלא. כפתור הסרה
+        // (אייקון פח אדום) יושב צמוד לתמונה.
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box
             role="button"
             aria-label={t('viewPhotoAria')}
@@ -92,30 +92,30 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
               pointerEvents: 'none',
             }} />
           </Box>
-          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-            <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: accent,
-              letterSpacing: 1, textTransform: 'uppercase',
-            }}>
-              {t('photo')}
-            </Typography>
-            <Box
-              role="button"
-              aria-label={t('removePhoto')}
-              onClick={remove}
-              sx={{
-                flexShrink: 0,
-                width: 30, height: 30, borderRadius: '8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'text.secondary',
-                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                transition: 'all 0.15s',
-                '&:hover': { bgcolor: 'rgba(239,68,68,0.10)', color: '#DC2626' },
-              }}
-            >
-              <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
-            </Box>
+          <Box
+            role="button"
+            aria-label={t('removePhoto')}
+            onClick={remove}
+            sx={{
+              flexShrink: 0,
+              width: 32, height: 32, borderRadius: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#DC2626',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              transition: 'background-color 0.15s',
+              '&:hover': { bgcolor: 'rgba(239,68,68,0.12)' },
+              '&:active': { bgcolor: 'rgba(239,68,68,0.2)' },
+            }}
+          >
+            <DeleteOutlineRoundedIcon sx={{ fontSize: 19 }} />
           </Box>
+          <Typography sx={{
+            flex: 1, minWidth: 0,
+            fontSize: 10, fontWeight: 800, color: accent,
+            letterSpacing: 1, textTransform: 'uppercase',
+          }}>
+            {t('photo')}
+          </Typography>
         </Box>
       ) : (
         // אין תמונה - צ'יפ באותה צורה כמו "הוסף הערה", אבל בסגול (PHOTO_ACCENT)
