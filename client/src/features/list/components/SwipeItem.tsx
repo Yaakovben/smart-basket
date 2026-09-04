@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
+import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { IconTile } from '../../../global/components';
@@ -379,8 +380,8 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
         {product.image ? (
           // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת בצבע
           // הקטגוריה כדי שקוד-הצבע של השורה לא ילך לאיבוד כשיש תמונה, ותג
-          // 📷 זעיר בפינה כרמז שזו תמונה שאפשר להקיש ולפתוח בגדול (בפרטי
-          // המוצר). כשנקנה - מעומעמת, אפורה, בלי תג.
+          // מצלמה קטן בפינה כרמז שזו תמונה שאפשר להקיש ולפתוח בגדול
+          // (בפרטי המוצר). כשנקנה - מעומעמת, אפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
             width: 40, height: 40,
@@ -406,18 +407,24 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               }}
             />
             {!isPurchased && (
+              // דיסק כהה עם טבעת בצבע הרקע (אפקט "חיתוך") ואייקון מצלמה
+              // לבן - קריא וחד גם בגודל הזעיר הזה, בניגוד לאימוג'י.
               <Box
                 aria-hidden="true"
                 sx={{
-                  position: 'absolute', bottom: -4, insetInlineEnd: -4,
-                  width: 16, height: 16, borderRadius: '50%',
-                  bgcolor: 'background.paper',
+                  position: 'absolute', bottom: -5, insetInlineEnd: -5,
+                  width: 18, height: 18, borderRadius: '50%',
+                  bgcolor: 'rgba(15,23,42,0.82)',
+                  border: '2px solid', borderColor: 'background.paper',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 9, lineHeight: 1,
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.28)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                  '@media (max-width: 360px)': { width: 16, height: 16, bottom: -4, insetInlineEnd: -4 },
                 }}
               >
-                📷
+                <PhotoCameraRoundedIcon sx={{
+                  fontSize: 10, color: '#fff',
+                  '@media (max-width: 360px)': { fontSize: 9 },
+                }} />
               </Box>
             )}
           </Box>
