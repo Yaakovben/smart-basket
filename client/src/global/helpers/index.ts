@@ -23,6 +23,20 @@ export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
   navigator.vibrate(style === 'heavy' ? 28 : 14);
 };
 
+// ניקוי התראות של רשימה מסוימת שנכנסים אליה - גם ב-DB/state (markAllAsRead,
+// ראו useNotifications.ts) וגם ב-service worker (סוגר כל push ממתין לרשימה
+// הזו, ראו sw.ts). משותף בין שתי נקודות כניסה (כרטיס רשימה בבית, שורת
+// התראה בפעמון) כדי שלא יהיו שני עותקים כמעט-זהים שעלולים להתפצל בהמשך.
+// navigator.serviceWorker.ready (לא .controller) - .controller יכול
+// להיות null רגע אחרי טעינה ראשונה/החלפת SW, לפני שהוא "תפס" את הדף;
+// .ready ממתין לאותו SW פעיל בפועל ולא מפספס את ההודעה במקרה הזה.
+export function clearListNotifications(listId: string, markAllAsRead?: (listId?: string) => void) {
+  markAllAsRead?.(listId);
+  navigator.serviceWorker?.ready.then(registration => {
+    registration.active?.postMessage({ type: 'CLEAR_LIST_NOTIFICATIONS', listId });
+  });
+}
+
 // ייצוא חוזר של קבועים
 export {
   CATEGORY_ICONS,

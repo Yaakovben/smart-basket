@@ -11,6 +11,7 @@ import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
+import { clearListNotifications } from "../global/helpers";
 import { setFetchIssue } from "../global/services/connectionIssue";
 import { writeCache } from "../features/insights/helpers/insightsCache";
 import { INSIGHTS_CACHE_KEY } from "../features/insights/helpers/insightsCache";
@@ -336,11 +337,10 @@ export const AppRouter = () => {
   }, [updateList]);
 
   const handleSelectList = useCallback((list: List) => {
-    // כניסה לרשימה מסמנת מיד את כל ההתראות שלה כנקראו - גם ב-DB (badge
-    // הפעמון + NotificationsModal) וגם ב-service worker (כל התראות ה-OS
-    // הממתינות לרשימה הזו נסגרות, ולא רק זו שנלחצה בפועל אם היה יותר מאחת).
-    clearAllPersistedNotifications(list.id);
-    navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_LIST_NOTIFICATIONS', listId: list.id });
+    // כניסה לרשימה מסמנת מיד את כל ההתראות שלה כנקראו - ראו
+    // clearListNotifications ב-global/helpers (אותה קריאה גם משורת התראה
+    // בפעמון, ב-HomeComponent).
+    clearListNotifications(list.id, clearAllPersistedNotifications);
     navigate(`/list/${list.id}`);
   }, [navigate, clearAllPersistedNotifications]);
 
