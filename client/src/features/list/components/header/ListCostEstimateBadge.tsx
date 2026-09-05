@@ -33,7 +33,9 @@ export const ListCostEstimateBadge = memo(({ listId, listName, productNames = []
   const goToInsights = () => {
     handleClose();
     safeStorage.setJSON('sb_insights_selected_list', listId);
-    navigate('/insights?tab=price');
+    // scrollToPriceList - מסך התובנות גולל אוטומטית עד הפס "ניתוח מחירים על
+    // <רשימה>" כדי שברור מיד על מה ההשוואה (ראו InsightsPage).
+    navigate('/insights?tab=price', { state: { scrollToPriceList: true } });
   };
 
   const openAnalysis = () => {
