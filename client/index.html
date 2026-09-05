@@ -275,7 +275,9 @@
       </div>
 
       <script>
-        // Error handler גלובלי
+        // Error handler גלובלי - שגיאות ריצה בתוך JS שכבר רץ (window.onerror
+        // *לא* נורה על כשל טעינת <script> עצמו - זה resource error, לא
+        // exception - ראו הandler הנפרד למטה).
         window.onerror = function(msg, url, line) {
           var error = document.getElementById('load-error');
           var errorText = document.getElementById('error-text');
@@ -289,6 +291,30 @@
           var error = document.getElementById('load-error');
           if (error) error.style.display = 'block';
         }, 15000);
+
+        // ===== כשל טעינת ה-entry script עצמו ("Importing a module script
+        // failed" ב-Safari / "Failed to fetch dynamically imported module"
+        // בדפדפנים אחרים) =====
+        // main.tsx מטפל כבר ב-vite:preloadError (chunk ישן אחרי דיפלוי
+        // בניווט בתוך האפליקציה, אחרי טעינה מוצלחת) - אבל אם ה-<script
+        // type="module"> הראשי עצמו (למטה, /src/main.tsx בבנייה) נכשל
+        // בטעינה - שום JS שלנו עוד לא רץ בכלל, אז שום listener במקום אחר
+        // לא יכול לתפוס את זה. חייב handler מוקדם כזה, כאן, לפני תג
+        // ה-module. שגיאת טעינת <script> היא resource error (Event, לא
+        // ErrorEvent) - לא מבעבעת ולא נתפסת ע"י window.onerror; רק
+        // capturing-phase addEventListener('error', fn, true) תופס אותה.
+        // רענון בודד בלבד (sessionStorage, פר-טאב) - כמו ב-main.tsx,
+        // כדי לא להיכנס ללולאת רענון אם השגיאה אמיתית ולא chunk/רשת חולפת.
+        window.addEventListener('error', function(e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'SCRIPT' || t.type !== 'module') return;
+          var now = Date.now();
+          var last = 0;
+          try { last = Number(sessionStorage.getItem('sb_entry_reload_at') || 0); } catch (err) {}
+          if (now - last < 20000) return;
+          try { sessionStorage.setItem('sb_entry_reload_at', String(now)); } catch (err) {}
+          location.reload();
+        }, true);
       </script>
 
       <!-- סגנון ה-splash הועבר ל-<head> -->

@@ -335,6 +335,10 @@ export const en: Translations = {
   copyErrorDetails: 'Copy error details',
   copiedToClipboard: 'Copied!',
   copyAndSendToSupport: 'Copy and send error details to support',
+  emailErrorDetails: 'Email error details',
+  needHelpContactSupport: 'Still having trouble? Contact support',
+  errorReportEmailSubject: 'Smart Basket - App error report',
+  errorReportEmailBody: 'Hi,\n\nI ran into an error in the app. Error details:\n',
   clearCacheAndReload: 'Clear cache & reload',
   updatingVersion: 'Updating version...',
   // Auth

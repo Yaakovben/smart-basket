@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import type { LocationStatus } from '../../../priceComparison/hooks/useUserLocation';
 import { PriceComparisonCard, type PriceComparisonData } from '../../../priceComparison';
@@ -30,6 +30,23 @@ export const PriceTab = memo(({
   selectedListId, onSelectListId, allUserLists,
 }: PriceTabProps) => {
   const { t } = useSettings();
+
+  // בורר הרשימות הוא פס אופקי נגלל. אחרי כניסה מ"פירוט מלא בתובנות" של
+  // רשימה מסוימת, הצ'יפ שלה עלול להיות מחוץ למסך בפס - ממרכזים אותו לתוך
+  // הבורר (scrollLeft של הבורר בלבד, בלי לגעת בגלילה האנכית של העמוד).
+  const chipScrollerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const scroller = chipScrollerRef.current;
+    if (!scroller) return;
+    const key = selectedListId ?? '';
+    const chip = scroller.querySelector<HTMLElement>(`[data-list-id="${key}"]`);
+    if (!chip) return;
+    const sRect = scroller.getBoundingClientRect();
+    const cRect = chip.getBoundingClientRect();
+    const delta = (cRect.left - sRect.left) - (scroller.clientWidth - cRect.width) / 2;
+    if (Math.abs(delta) > 4) scroller.scrollBy({ left: delta, behavior: 'smooth' });
+  }, [selectedListId, allUserLists.length, priceData]);
+
   if (!priceData) {
     // אין cache - מצב ראשוני. מציגים לודר/שגיאה/ריק בהתאם.
     if (priceError) {
@@ -66,7 +83,7 @@ export const PriceTab = memo(({
           (למשל אחרי כניסה ישירה לתובנות מתוך רשימה מסוימת). רקע אטום +
           zIndex כדי שהתוכן שנגלל מתחת לא יציץ דרכו. */}
       {allUserLists.length > 0 && (
-        <Box id="insights-price-list-context" sx={{
+        <Box sx={{
           position: 'sticky',
           top: 'env(safe-area-inset-top, 0px)',
           zIndex: 5,
@@ -105,7 +122,7 @@ export const PriceTab = memo(({
               <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'text.secondary', mb: 0.75, px: 0.5 }}>
                 {t('whichListToCompare')}
               </Typography>
-              <Box sx={{
+              <Box ref={chipScrollerRef} sx={{
                 display: 'flex', flexWrap: 'nowrap', gap: 0.75,
                 overflowX: 'auto', WebkitOverflowScrolling: 'touch',
                 '&::-webkit-scrollbar': { display: 'none' },
@@ -113,6 +130,7 @@ export const PriceTab = memo(({
                 {/* "כל הרשימות" - אפשרי, אבל לא דיפולט (אפקט auto-select בוחר רשימה ראשונה
                     כדי למנוע עומס בכניסה). המשתמש יכול לבחור 'הכל' באופן יזום. */}
                 <Box
+                  data-list-id=""
                   onClick={() => { haptic('light'); onSelectListId(null); }}
                   sx={{
                     flexShrink: 0,
@@ -138,6 +156,7 @@ export const PriceTab = memo(({
                 {allUserLists.map(l => (
                   <Box
                     key={l.id}
+                    data-list-id={l.id}
                     onClick={() => { haptic('light'); onSelectListId(l.id); }}
                     sx={{
                       flexShrink: 0,

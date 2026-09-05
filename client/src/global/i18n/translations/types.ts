@@ -333,6 +333,10 @@ export type TranslationKeys =
   | 'copyErrorDetails'
   | 'copiedToClipboard'
   | 'copyAndSendToSupport'
+  | 'emailErrorDetails'
+  | 'needHelpContactSupport'
+  | 'errorReportEmailSubject'
+  | 'errorReportEmailBody'
   | 'clearCacheAndReload'
   | 'updatingVersion'
   // Auth

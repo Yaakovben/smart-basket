@@ -335,6 +335,10 @@ export const he: Translations = {
   copyErrorDetails: 'העתק פרטי שגיאה',
   copiedToClipboard: 'הועתק!',
   copyAndSendToSupport: 'העתק ושלח את פרטי השגיאה לתמיכה',
+  emailErrorDetails: 'שלח פרטי שגיאה במייל',
+  needHelpContactSupport: 'הבעיה נמשכת? צור קשר עם התמיכה',
+  errorReportEmailSubject: 'Smart Basket - דיווח על שגיאה באפליקציה',
+  errorReportEmailBody: 'שלום,\n\nנתקלתי בשגיאה באפליקציה. פרטי השגיאה:\n',
   clearCacheAndReload: 'נקה מטמון ורענן',
   updatingVersion: 'מעדכן גרסה...',
   // Auth
