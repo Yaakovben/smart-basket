@@ -236,16 +236,16 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל (border-radius) עם פינה
-          תחתונה-ימנית "מגולגלת" (page-curl) במקום הפינה החתוכה של paperNoteSx
-          (שם ה-clipPath ביטל לגמרי את העיגול, וה"קיפול" היה סתם פינה חתוכה
-          שטוחה). אותם גוונים (PAPER_NOTE) + סרט washi כדי שיישאר מאותה משפחה.
-          מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב חשוב יותר מציר הפעולות. */}
+      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל לגמרי עם פינה תחתונה-
+          שמאלית מגולגלת (roll) שמבצבצת קצת מחוץ לכרטיס. הגלגול הוא אליפסה
+          מסובבת (קצוות עגולים - בלי שפיץ, בלי ריבוע) עם גרדיאנט: הארה על
+          קודקוד הגלגול, כהה מתחת (גב הדף), + צל רך שהוא מטיל. אותם גוונים
+          (PAPER_NOTE) + סרט washi. מוצגת מעל ההיסטוריה. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
-          mt: 1, mb: 2,
-          pt: 2, pb: 2, pl: 2, pr: 2.5,
+          mt: 1, mb: 2.5,
+          pt: 2, pr: 2, pl: 2.5, pb: 2.5,
           borderRadius: '16px',
           backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
           border: '1px solid',
@@ -258,23 +258,35 @@ export const ProductDetailsModal = memo(({
                 '0 2px 6px rgba(15,118,110,0.08)',
                 '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // פינה מגולגלת (page-curl) בתחתית-ימין: גרדיאנט שמדמה קצה נייר
-          // שנגלל כלפי מעלה - הקצה עצמו כהה (גב הדף), הארה לבנה על הגלגול,
-          // קו קיפול מוצל, ואז שקוף (הכרטיס השטוח). ה-box-shadow (למעלה-
-          // שמאלה) הוא הצל שהגלגול מטיל על הפתק שמתחתיו.
+          // ::before - הצל הרך שהפינה המגולגלת מטילה על המשטח שמתחת לכרטיס.
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            left: 2, bottom: -7,
+            width: 44, height: 15,
+            borderRadius: '50%',
+            transform: 'rotate(-38deg)',
+            background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(15,118,110,0.26)',
+            filter: 'blur(5px)',
+            pointerEvents: 'none',
+          },
+          // ::after - הגלגול עצמו: אליפסה מסובבת ב-45° לאורך אלכסון הפינה,
+          // קצוות עגולים לגמרי. גרדיאנט מאונך לציר הגלגול = הארה בקודקוד,
+          // כהה בצד הפנימי (גב הדף המגולגל).
           '&::after': {
             content: '""',
             position: 'absolute',
-            bottom: -1, right: -1,
-            width: 46, height: 46,
-            borderRadius: '0 0 16px 0',
+            left: -13, bottom: -13,
+            width: 58, height: 26,
+            borderRadius: '50%',
+            transform: 'rotate(-45deg)',
             pointerEvents: 'none',
             background: isDark
-              ? 'linear-gradient(315deg, rgba(4,47,43,0.92) 0%, rgba(94,234,212,0.5) 26%, rgba(45,212,191,0.35) 40%, rgba(0,0,0,0.4) 47%, transparent 52% 100%)'
-              : 'linear-gradient(315deg, #A9DFD5 0%, #FFFFFF 28%, #EAFBF7 41%, rgba(15,118,110,0.16) 48%, transparent 53% 100%)',
+              ? 'linear-gradient(to top, rgba(4,47,43,0.95) 0%, rgba(20,184,166,0.4) 42%, rgba(94,234,212,0.7) 100%)'
+              : 'linear-gradient(to top, #93D8CC 0%, #DDF6F1 45%, #FFFFFF 100%)',
             boxShadow: isDark
-              ? '-4px -4px 9px -3px rgba(0,0,0,0.5)'
-              : '-4px -4px 9px -3px rgba(15,118,110,0.25)',
+              ? 'inset 0 -2px 4px rgba(0,0,0,0.45)'
+              : 'inset 0 -2px 4px rgba(15,118,110,0.16)',
           },
         }}>
           {/* סרט washi באמצע למעלה */}
