@@ -9,7 +9,7 @@ import type { Product, ProductEditChange, ProductCategory } from '../../../../gl
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
-import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
+import { PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -236,28 +236,41 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
-          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
-          קווי מחברת ותווית. מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב
-          חשוב יותר מציר הפעולות, ולא צריך לגלול כדי להגיע אליו. */}
+      {/* הערה - פתק נייר, אבל בגרסת הפרטים: כרטיס מעוגל (border-radius) עם
+          פינה עליונה-שמאלית "מגולגלת" (page-curl) במקום הפינה החתוכה של
+          paperNoteSx - שם ה-clipPath ביטל לגמרי את העיגול. אותם גוונים
+          (PAPER_NOTE) + סרט washi כדי שיישאר מאותה משפחה. מוצגת מעל
+          ההיסטוריה - התוכן שהמשתמש כתב חשוב יותר מציר הפעולות. */}
       {product.note && (
         <Box sx={{
-          ...paperNoteSx('card', isDark),
+          position: 'relative',
           mt: 1, mb: 2,
-          px: 2, pt: 2, pb: 1.4,
+          px: 2, pt: 2, pb: 1.5,
+          borderRadius: '4px 16px 16px 16px',
+          backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
+          border: '1px solid',
+          borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+          transform: 'rotate(-0.5deg)',
           boxShadow: isDark
-            ? '0 8px 20px rgba(0,0,0,0.35)'
+            ? '0 12px 28px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.28)'
             : [
-                'inset 0 1px 0 rgba(255,255,255,0.85)',
-                '0 1px 2px rgba(15,118,110,0.06)',
-                '0 8px 20px rgba(20,184,166,0.10)',
-                '0 22px 44px rgba(15,118,110,0.05)',
+                'inset 0 1px 0 rgba(255,255,255,0.8)',
+                '0 2px 6px rgba(15,118,110,0.08)',
+                '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // קווי מחברת מאוד עדינים
-          '&::after': {
-            content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
-            pointerEvents: 'none',
+          // פינה מגולגלת בפינה העליונה-שמאלית: משולש בגוון "גב הדף" עם קו
+          // קיפול מוצל (drop-shadow) - נקרא כקצה נייר שהתקפל פנימה. פינה
+          // חיצונית מעוגלת קלות (4px) כדי להשתלב עם ה-border-radius.
+          '&::before': {
+            content: '""',
+            position: 'absolute', top: -1, left: -1,
+            width: 0, height: 0,
+            borderStyle: 'solid',
+            borderWidth: '22px 22px 0 0',
+            borderColor: 'transparent',
+            borderTopColor: isDark ? 'rgba(45,212,191,0.5)' : '#9BDFD4',
+            borderTopLeftRadius: '4px',
+            filter: `drop-shadow(1.5px 2px 1px ${isDark ? 'rgba(0,0,0,0.5)' : 'rgba(15,118,110,0.3)'})`,
           },
         }}>
           {/* סרט washi באמצע למעלה */}
@@ -266,7 +279,7 @@ export const ProductDetailsModal = memo(({
             transform: 'translateX(-50%) rotate(-1deg)',
             width: 64, height: 12,
             backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '1px',
+            borderRadius: '2px',
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />
