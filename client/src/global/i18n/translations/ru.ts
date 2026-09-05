@@ -335,6 +335,10 @@ export const ru: Translations = {
   copyErrorDetails: 'Копировать детали ошибки',
   copiedToClipboard: 'Скопировано!',
   copyAndSendToSupport: 'Скопируйте и отправьте детали ошибки в поддержку',
+  emailErrorDetails: 'Отправить детали ошибки по email',
+  needHelpContactSupport: 'Проблема не решается? Свяжитесь с поддержкой',
+  errorReportEmailSubject: 'Smart Basket - отчёт об ошибке',
+  errorReportEmailBody: 'Здравствуйте,\n\nЯ столкнулся с ошибкой в приложении. Детали ошибки:\n',
   clearCacheAndReload: 'Очистить кэш и обновить',
   updatingVersion: 'Обновление версии...',
   // Auth

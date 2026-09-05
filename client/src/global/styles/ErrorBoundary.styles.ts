@@ -136,5 +136,14 @@ export const detailsErrorTextSx: SxProps<Theme> = {
 export const detailsStackTextSx: SxProps<Theme> = {
   fontSize: 10, color: 'text.secondary', fontFamily: 'monospace', mt: 1, maxHeight: 100, overflow: 'auto', wordBreak: 'break-word',
 };
-export const copyBtnSx: SxProps<Theme> = { mt: 1.5, fontSize: 12, borderRadius: '8px' };
+export const detailsButtonsRowSx: SxProps<Theme> = { display: 'flex', gap: 1, mt: 1.5, justifyContent: 'center', flexWrap: 'wrap' };
+export const copyBtnSx: SxProps<Theme> = { fontSize: 12, borderRadius: '8px' };
 export const copyHintSx: SxProps<Theme> = { fontSize: 11, color: 'text.secondary', mt: 1 };
+
+// קישור "צור קשר עם תמיכה" - תמיד גלוי (לא רק בתוך "הצג פרטי שגיאה"),
+// כדי שמישהו שנתקע לגמרי ידע שיש למי לפנות בלי לחפור בפרטים טכניים.
+export const supportLinkSx: SxProps<Theme> = {
+  fontSize: 12.5, color: '#0D9488', fontWeight: 600, textDecoration: 'none',
+  mb: 2,
+  '&:hover': { textDecoration: 'underline' },
+};
