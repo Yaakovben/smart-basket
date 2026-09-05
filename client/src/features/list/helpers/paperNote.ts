@@ -14,8 +14,10 @@ export const PAPER_NOTE = {
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  flapLight: 'rgba(13,148,136,0.20)',
-  flapDark: 'rgba(45,212,191,0.30)',
+  // הפינה המקופלת (dog-ear) - גרדיאנט (לא צבע שטוח) כדי שהפינה תיראה
+  // כמו נייר שמתקפל ומרים קצה, לא סתם פינה חתוכה באלכסון.
+  flapLight: 'linear-gradient(135deg, rgba(94,234,212,0.9) 0%, rgba(13,148,136,0.35) 100%)',
+  flapDark: 'linear-gradient(135deg, rgba(94,234,212,0.55) 0%, rgba(45,212,191,0.25) 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -32,34 +34,41 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-const FOLD: Record<PaperSize, number> = { chip: 6, field: 16, card: 18 };
+const FOLD: Record<PaperSize, number> = { chip: 9, field: 16, card: 18 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
-// צורה, אותו צבע, אותה פינה מקופלת). הקומפוננטה מוסיפה רק אייקון, טקסט,
-// עיגול "+", ו-cursor/opacity לפי מצב.
-export const addChipSx = (isDark: boolean) => ({
-  position: 'relative' as const,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 0.6,
-  py: 0.55, pl: 1.1, pr: 1.4,
-  userSelect: 'none' as const,
-  WebkitTapHighlightColor: 'transparent',
-  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-  bgcolor: isDark ? PAPER_NOTE.chipBgDark : PAPER_NOTE.chipBgLight,
-  transform: 'rotate(-1.2deg)',
-  boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
-  transition: 'all 0.18s',
-  clipPath: 'polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px)',
-  '&::before': {
-    content: '""',
-    position: 'absolute', top: 0, left: 0,
-    width: 8, height: 8,
-    bgcolor: isDark ? PAPER_NOTE.flapDark : 'rgba(13,148,136,0.25)',
-    clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-  },
-  '&:hover': { transform: 'rotate(-0.6deg) translateY(-1px)' },
-});
+// צורה, אותו צבע, אותה פינה מקופלת). הקומפוננטה מוסיפה רק אייקון, טקסט
+// ו-cursor/opacity לפי מצב (בלי עיגול "+" נפרד - האייקון עצמו כבר מסמן
+// "הוספה", ה-+ היה כפול).
+export const addChipSx = (isDark: boolean) => {
+  const fold = FOLD.chip;
+  return {
+    position: 'relative' as const,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 0.6,
+    py: 0.55, px: 1.1,
+    userSelect: 'none' as const,
+    WebkitTapHighlightColor: 'transparent',
+    color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+    bgcolor: isDark ? PAPER_NOTE.chipBgDark : PAPER_NOTE.chipBgLight,
+    transform: 'rotate(-1.2deg)',
+    boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
+    transition: 'all 0.18s',
+    clipPath: `polygon(${fold}px 0, 100% 0, 100% 100%, 0 100%, 0 ${fold}px)`,
+    '&::before': {
+      content: '""',
+      position: 'absolute', top: 0, left: 0,
+      width: fold + 1, height: fold + 1,
+      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      // צל קטן על קו הקיפול - בלעדיו זו סתם פינה חתוכה באלכסון, איתו
+      // זה קורא כפינת נייר שמתקפלת ומטילה צל על הדף שמתחתיה.
+      filter: `drop-shadow(0.5px 0.5px 0.5px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(15,118,110,0.35)'})`,
+    },
+    '&:hover': { transform: 'rotate(-0.6deg) translateY(-1px)' },
+  };
+};
 
 // סגנון הבסיס של הפתק (רקע, מסגרת, פינה מקופלת, הטיה). מרכיבים ייחודיים
 // להקשר - סרט washi, קווי מחברת, תווית - נשארים בקומפוננטה עצמה.
@@ -74,14 +83,16 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
     transform: PAPER_NOTE.tilt,
     clipPath: `polygon(${fold}px 0, 100% 0, 100% 100%, 0 100%, 0 ${fold}px)`,
-    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית)
+    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - גרדיאנט
+    // + צל קטן על קו הקיפול, כדי שזה יקרא כנייר שמתקפל ולא כפינה חתוכה.
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
       width: fold + (size === 'chip' ? 1 : 2),
       height: fold + (size === 'chip' ? 1 : 2),
-      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      filter: `drop-shadow(1px 1px 1px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(15,118,110,0.3)'})`,
       zIndex: 1,
     },
   };

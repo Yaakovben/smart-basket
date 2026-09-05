@@ -187,14 +187,6 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             {busy ? t('photoProcessing') : t('addPhoto')}
           </Typography>
-          {!busy && (
-            <Box sx={{
-              width: 14, height: 14, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: ink, color: isDark ? '#0b1220' : '#fff',
-              fontSize: 11, fontWeight: 800, lineHeight: 1,
-            }}>+</Box>
-          )}
         </Box>
       )}
 

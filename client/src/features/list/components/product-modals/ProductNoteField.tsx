@@ -43,13 +43,6 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             {t('addNote')}
           </Typography>
-          {/* תג + עגול בסוף הצ'יפ (צד שמאל ב-RTL) - מבהיר שזה כפתור הוספה לחיץ */}
-          <Box sx={{
-            width: 14, height: 14, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            bgcolor: ink, color: isDark ? '#0b1220' : '#fff',
-            fontSize: 11, fontWeight: 800, lineHeight: 1,
-          }}>+</Box>
         </Box>
       ) : (
         // מצב פתוח - "פתק נייר" מלא (paperNoteSx 'field') עם סרט washi עדין
