@@ -847,4 +847,9 @@ export const he: Translations = {
   offlineShort: 'אין חיבור',
   offlineWillSync: 'הנתונים יישמרו וישלחו כשיחזור החיבור',
   offlineActionsPending: '{count} פעולות ממתינות — יישלחו כשיחזור החיבור',
+  joinLandingTitle: 'הצטרפות לרשימה',
+  joinLandingHaveApp: 'כבר יש לך את SmartBasket במסך הבית?',
+  joinLandingOpenApp: 'העתק קוד ופתח את האפליקציה',
+  joinLandingContinueHere: 'המשך כאן בדפדפן',
+  joinLandingCopiedHint: 'הקוד הועתק — פתח את SmartBasket ולחץ "הצטרף לרשימה"',
 };

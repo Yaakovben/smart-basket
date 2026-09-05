@@ -850,6 +850,11 @@ export type TranslationKeys =
   | 'reloadPageAction'
   | 'offlineShort'
   | 'offlineWillSync'
-  | 'offlineActionsPending';
+  | 'offlineActionsPending'
+  | 'joinLandingTitle'
+  | 'joinLandingHaveApp'
+  | 'joinLandingOpenApp'
+  | 'joinLandingContinueHere'
+  | 'joinLandingCopiedHint';
 
 export type Translations = Record<TranslationKeys, string>;

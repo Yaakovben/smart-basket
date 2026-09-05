@@ -846,4 +846,9 @@ export const en: Translations = {
   offlineShort: 'Offline',
   offlineWillSync: 'Your changes are saved and will sync when you\'re back online',
   offlineActionsPending: '{count} actions queued — they\'ll send when you\'re back online',
+  joinLandingTitle: 'Join a list',
+  joinLandingHaveApp: 'Already have SmartBasket on your home screen?',
+  joinLandingOpenApp: 'Copy code & open the app',
+  joinLandingContinueHere: 'Continue here in the browser',
+  joinLandingCopiedHint: 'Code copied — open SmartBasket and tap "Join List"',
 };

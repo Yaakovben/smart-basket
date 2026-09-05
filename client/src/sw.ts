@@ -105,6 +105,23 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('notificationclose', () => {});
 
+// הודעה מהאפליקציה - נכנסים לרשימה מסוימת (מכרטיס בבית או מהתראה
+// בפעמון), סוגרים כל התראת OS ממתינה לאותה רשימה. בלי זה, מספר push
+// שהגיעו לאותה רשימה בזמנים שונים (tag שונה לכל אחת, ראו showNotification
+// למעלה) נשארים תלויים במגירת ההתראות של המכשיר גם אחרי שכבר נכנסו
+// ונקראו בפועל בתוך האפליקציה.
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'CLEAR_LIST_NOTIFICATIONS' || !event.data.listId) return;
+  const { listId } = event.data;
+  event.waitUntil(
+    self.registration.getNotifications().then((notifications) => {
+      notifications
+        .filter((n) => n.data?.listId === listId)
+        .forEach((n) => n.close());
+    })
+  );
+});
+
 // התקנה, דילוג על המתנה להפעלה מיידית
 self.addEventListener('install', () => {
   console.log('[sw] install event, calling skipWaiting()');

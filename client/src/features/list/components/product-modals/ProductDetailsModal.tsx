@@ -236,6 +236,62 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
+      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
+          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
+          קווי מחברת ותווית. מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב
+          חשוב יותר מציר הפעולות, ולא צריך לגלול כדי להגיע אליו. */}
+      {product.note && (
+        <Box sx={{
+          ...paperNoteSx('card', isDark),
+          mt: 1, mb: 2,
+          px: 2, pt: 2, pb: 1.4,
+          boxShadow: isDark
+            ? '0 8px 20px rgba(0,0,0,0.35)'
+            : [
+                'inset 0 1px 0 rgba(255,255,255,0.85)',
+                '0 1px 2px rgba(15,118,110,0.06)',
+                '0 8px 20px rgba(20,184,166,0.10)',
+                '0 22px 44px rgba(15,118,110,0.05)',
+              ].join(', '),
+          // קווי מחברת מאוד עדינים
+          '&::after': {
+            content: '""', position: 'absolute', inset: 0,
+            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
+            pointerEvents: 'none',
+          },
+        }}>
+          {/* סרט washi באמצע למעלה */}
+          <Box sx={{
+            position: 'absolute', top: -7, left: '50%',
+            transform: 'translateX(-50%) rotate(-1deg)',
+            width: 64, height: 12,
+            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
+            borderRadius: '1px',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
+            zIndex: 2,
+          }} />
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
+            <Typography sx={{
+              fontSize: 10, fontWeight: 800,
+              color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+              letterSpacing: 1.2, textTransform: 'uppercase',
+            }}>
+              {t('note')}
+            </Typography>
+          </Box>
+          <Typography sx={{
+            position: 'relative', zIndex: 2,
+            fontSize: 14.5,
+            color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
+            fontWeight: 500,
+            lineHeight: 1.6,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          }}>
+            {product.note}
+          </Typography>
+        </Box>
+      )}
+
       {/* היסטוריית הפעולות על המוצר (נוסף/עודכן/נקנה) - ציר פעילות עם
           "אווטאר" ראשי-תיבות צבעוני לכל פעולה (צבע+גליף קבועים לפי הסוג,
           ACTION_STYLE) וקו מחבר דק ביניהם - דפוס מוכר מכלי עבודה מקצועיים
@@ -352,60 +408,6 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
-          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
-          קווי מחברת ותווית. */}
-      {product.note && (
-        <Box sx={{
-          ...paperNoteSx('card', isDark),
-          mt: 3, mb: 0.5,
-          px: 2, pt: 2, pb: 1.4,
-          boxShadow: isDark
-            ? '0 8px 20px rgba(0,0,0,0.35)'
-            : [
-                'inset 0 1px 0 rgba(255,255,255,0.85)',
-                '0 1px 2px rgba(15,118,110,0.06)',
-                '0 8px 20px rgba(20,184,166,0.10)',
-                '0 22px 44px rgba(15,118,110,0.05)',
-              ].join(', '),
-          // קווי מחברת מאוד עדינים
-          '&::after': {
-            content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
-            pointerEvents: 'none',
-          },
-        }}>
-          {/* סרט washi באמצע למעלה */}
-          <Box sx={{
-            position: 'absolute', top: -7, left: '50%',
-            transform: 'translateX(-50%) rotate(-1deg)',
-            width: 64, height: 12,
-            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '1px',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
-            zIndex: 2,
-          }} />
-          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
-            <Typography sx={{
-              fontSize: 10, fontWeight: 800,
-              color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-              letterSpacing: 1.2, textTransform: 'uppercase',
-            }}>
-              {t('note')}
-            </Typography>
-          </Box>
-          <Typography sx={{
-            position: 'relative', zIndex: 2,
-            fontSize: 14.5,
-            color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
-            fontWeight: 500,
-            lineHeight: 1.6,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          }}>
-            {product.note}
-          </Typography>
-        </Box>
-      )}
 
       {showPhoto && product.image && (
         <ImageLightbox src={cldFull(product.image)} alt={product.name} onClose={() => setShowPhoto(false)} />
