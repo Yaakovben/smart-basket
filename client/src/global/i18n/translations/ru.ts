@@ -846,4 +846,9 @@ export const ru: Translations = {
   offlineShort: 'Не в сети',
   offlineWillSync: 'Изменения сохранены и синхронизируются, когда вы снова будете в сети',
   offlineActionsPending: '{count} действий в очереди — отправятся, когда вы снова будете в сети',
+  joinLandingTitle: 'Присоединение к списку',
+  joinLandingHaveApp: 'SmartBasket уже установлен на главном экране?',
+  joinLandingOpenApp: 'Скопировать код и открыть приложение',
+  joinLandingContinueHere: 'Продолжить здесь, в браузере',
+  joinLandingCopiedHint: 'Код скопирован — откройте SmartBasket и нажмите «Присоединиться к списку»',
 };

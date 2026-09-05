@@ -17,6 +17,8 @@ import { INSIGHTS_CACHE_KEY } from "../features/insights/helpers/insightsCache";
 
 // טעינה ישירה של דף התחברות בלבד
 import { LoginPage } from "../features/auth/pages/LoginPage";
+// דף נחיתה של /join - קטן, נטען ישירות (לא lazy) כדי שקישור הצטרפות ייפתח מיד
+import { JoinLanding } from "../features/home/components/JoinLanding";
 
 // טעינה עצלה של כל הדפים כולל דף הבית (prefetch מיידי)
 const homeImport = () => import("../features/home/home").then(m => ({ default: m.HomePage }));
@@ -46,19 +48,6 @@ if (typeof requestIdleCallback === 'function') {
   setTimeout(() => { profileImport(); settingsImport(); insightsImport(); }, 2000);
 }
 const AiAssistantPage = lazy(() => import("../features/aiAssistant/aiAssistant").then(m => ({ default: m.AiAssistantPage })));
-
-// ניתוב QR - שומר code+password ומפנה לדף הבית
-const JoinRedirect = () => {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code') || '';
-  const password = params.get('password') || '';
-  if (code) {
-    // localStorage כדי שהנתונים יהיו זמינים גם ב-PWA
-    localStorage.setItem('sb_join_code', code);
-    if (password) localStorage.setItem('sb_join_password', password);
-  }
-  return <Navigate to="/" replace />;
-};
 
 const PageLoader = PageSkeleton;
 
@@ -347,8 +336,13 @@ export const AppRouter = () => {
   }, [updateList]);
 
   const handleSelectList = useCallback((list: List) => {
+    // כניסה לרשימה מסמנת מיד את כל ההתראות שלה כנקראו - גם ב-DB (badge
+    // הפעמון + NotificationsModal) וגם ב-service worker (כל התראות ה-OS
+    // הממתינות לרשימה הזו נסגרות, ולא רק זו שנלחצה בפועל אם היה יותר מאחת).
+    clearAllPersistedNotifications(list.id);
+    navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_LIST_NOTIFICATIONS', listId: list.id });
     navigate(`/list/${list.id}`);
-  }, [navigate]);
+  }, [navigate, clearAllPersistedNotifications]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -492,7 +486,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="/join" element={<JoinRedirect />} />
+        <Route path="/join" element={<JoinLanding />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Box>

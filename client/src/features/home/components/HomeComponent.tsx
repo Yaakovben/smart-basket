@@ -284,7 +284,14 @@ export const HomeComponent = memo(({
           dismissingNotifications={dismissingNotifications}
           onClose={() => setShowNotifications(false)}
           onDismiss={handleDismissNotification}
-          onNavigate={(listId) => { setShowNotifications(false); setTimeout(() => navigate(`/list/${listId}`), 300); }}
+          onNavigate={(listId) => {
+            // אותו טיפול כמו כניסה לרשימה מכרטיס בבית - כל ההתראות של
+            // הרשימה הזו מסומנות כנקראו, לא רק זו שנלחצה בפועל.
+            onClearAllPersistedNotifications?.(listId);
+            navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_LIST_NOTIFICATIONS', listId });
+            setShowNotifications(false);
+            setTimeout(() => navigate(`/list/${listId}`), 300);
+          }}
           onMarkAllRead={handleMarkAllRead}
           t={t}
         />
