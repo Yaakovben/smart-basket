@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
-import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
+import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
@@ -162,7 +162,10 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           </Box>
         </Box>
       ) : (
-        // אין תמונה - צ'יפ פתק מקופל (addChipSx - זהה לחלוטין ל"הוסף הערה")
+        // אין תמונה - צ'יפ פתק מקופל (addChipSx - זהה ל"הוסף הערה", חוץ
+        // מהאייקון: AddPhotoAlternateRoundedIcon במקום מצלמה גנרית - סימן
+        // "הוספת תמונה" מוכר ומיידי יותר, כדי שהצ'יפ יזוהה כתמונה גם כשהוא
+        // ליד "הוסף הערה" הכמעט-זהה באותה שורה.
         <Box
           role="button"
           tabIndex={0}
@@ -179,7 +182,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           {busy ? (
             <CircularProgress size={13} sx={{ color: ink }} />
           ) : (
-            <PhotoCameraRoundedIcon sx={{ fontSize: 15 }} />
+            <AddPhotoAlternateRoundedIcon sx={{ fontSize: 16 }} />
           )}
           <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
             {busy ? t('photoProcessing') : t('addPhoto')}
