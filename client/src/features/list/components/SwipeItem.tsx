@@ -388,23 +388,31 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
             position: 'relative', flexShrink: 0,
-            width: 40, height: 40, borderRadius: '18%', overflow: 'hidden',
-            // רקע עדין - נראה לרגע בזמן שהתמונה טוענת במקום הבזק ריק
-            bgcolor: 'action.hover',
+            width: 40, height: 40,
             '@media (max-width: 360px)': { width: 34, height: 34 },
             '@media (max-width: 320px)': { width: 30, height: 30 },
           }}>
-            <ProgressiveImage
-              src={cldThumb(product.image)}
-              blurSrc={cldBlur(product.image)}
-              alt=""
-              loading="lazy"
-              finalOpacity={isPurchased ? 0.45 : 1}
-              sx={{
-                borderRadius: '18%',
-                filter: isPurchased ? 'grayscale(1)' : 'none',
-              }}
-            />
+            {/* עוטף פנימי - רק הוא clip-ם (overflow:hidden), כדי שתג
+                המצלמה (שנשען קצת מחוץ לגבולות הריבוע, ליצור אפקט "תלוי
+                בפינה") לא ייחתך. קודם הוא היה בתוך אותה קופסה עם ה-clip
+                והתג נחתך בפועל - "מוסתר" חלקית ע"י ה-overflow עצמו. */}
+            <Box sx={{
+              width: '100%', height: '100%', borderRadius: '18%', overflow: 'hidden',
+              // רקע עדין - נראה לרגע בזמן שהתמונה טוענת במקום הבזק ריק
+              bgcolor: 'action.hover',
+            }}>
+              <ProgressiveImage
+                src={cldThumb(product.image)}
+                blurSrc={cldBlur(product.image)}
+                alt=""
+                loading="lazy"
+                finalOpacity={isPurchased ? 0.45 : 1}
+                sx={{
+                  borderRadius: '18%',
+                  filter: isPurchased ? 'grayscale(1)' : 'none',
+                }}
+              />
+            </Box>
             {!isPurchased && (
               <>
                 {/* מסגרת תכלת דקה - שכבת overlay (border ולא box-shadow
