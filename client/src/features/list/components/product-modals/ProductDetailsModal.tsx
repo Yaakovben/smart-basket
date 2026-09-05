@@ -236,17 +236,18 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל לגמרי עם פינה תחתונה-
-          שמאלית מגולגלת (roll) שמבצבצת קצת מחוץ לכרטיס. הגלגול הוא אליפסה
-          מסובבת (קצוות עגולים - בלי שפיץ, בלי ריבוע) עם גרדיאנט: הארה על
-          קודקוד הגלגול, כהה מתחת (גב הדף), + צל רך שהוא מטיל. אותם גוונים
-          (PAPER_NOTE) + סרט washi. מוצגת מעל ההיסטוריה. */}
+      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל עם פינה תחתונה-שמאלית
+          מקופלת. הקיפול הוא משולש (clip-path) בגוון "גב הדף" עם גרדיאנט רדיאלי
+          רך (בהיר בקודקוד, כהה בפינה) + drop-shadow על קו הקיפול - נקרא כפינת
+          נייר שקופלה, בלי קופסה וקצה חד. הפינה התחתונה-שמאלית של הכרטיס כמעט
+          מרובעת (2px) כדי שהקיפול יישב עליה. אותם גוונים (PAPER_NOTE) + סרט
+          washi. מוצגת מעל ההיסטוריה. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
-          mt: 1, mb: 2.5,
+          mt: 1, mb: 2,
           pt: 2, pr: 2, pl: 2.5, pb: 2.5,
-          borderRadius: '16px',
+          borderRadius: '16px 16px 16px 2px',
           backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
           border: '1px solid',
           borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
@@ -258,35 +259,21 @@ export const ProductDetailsModal = memo(({
                 '0 2px 6px rgba(15,118,110,0.08)',
                 '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // ::before - הצל הרך שהפינה המגולגלת מטילה על המשטח שמתחת לכרטיס.
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            left: 2, bottom: -7,
-            width: 44, height: 15,
-            borderRadius: '50%',
-            transform: 'rotate(-38deg)',
-            background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(15,118,110,0.26)',
-            filter: 'blur(5px)',
-            pointerEvents: 'none',
-          },
-          // ::after - הגלגול עצמו: אליפסה מסובבת ב-45° לאורך אלכסון הפינה,
-          // קצוות עגולים לגמרי. גרדיאנט מאונך לציר הגלגול = הארה בקודקוד,
-          // כהה בצד הפנימי (גב הדף המגולגל).
+          // הפינה המקופלת - משולש תחתון-שמאלי (clip-path), גרדיאנט רדיאלי רך,
+          // drop-shadow (עוקב אחרי צורת ה-clip) לצל קו הקיפול.
           '&::after': {
             content: '""',
             position: 'absolute',
-            left: -13, bottom: -13,
-            width: 58, height: 26,
-            borderRadius: '50%',
-            transform: 'rotate(-45deg)',
+            left: -1, bottom: -1,
+            width: 34, height: 34,
+            clipPath: 'polygon(0 100%, 100% 100%, 0 0)',
             pointerEvents: 'none',
             background: isDark
-              ? 'linear-gradient(to top, rgba(4,47,43,0.95) 0%, rgba(20,184,166,0.4) 42%, rgba(94,234,212,0.7) 100%)'
-              : 'linear-gradient(to top, #93D8CC 0%, #DDF6F1 45%, #FFFFFF 100%)',
-            boxShadow: isDark
-              ? 'inset 0 -2px 4px rgba(0,0,0,0.45)'
-              : 'inset 0 -2px 4px rgba(15,118,110,0.16)',
+              ? 'radial-gradient(140% 140% at 100% 0%, rgba(94,234,212,0.7) 0%, rgba(45,212,191,0.4) 45%, rgba(4,47,43,0.9) 100%)'
+              : 'radial-gradient(140% 140% at 100% 0%, #E4F6F2 0%, #B9E6DD 45%, #8ACFC2 75%, #72BEB0 100%)',
+            filter: isDark
+              ? 'drop-shadow(2px -2px 2px rgba(0,0,0,0.5))'
+              : 'drop-shadow(2px -2px 2px rgba(15,118,110,0.3))',
           },
         }}>
           {/* סרט washi באמצע למעלה */}
