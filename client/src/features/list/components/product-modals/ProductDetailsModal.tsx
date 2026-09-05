@@ -236,17 +236,17 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - פתק נייר, אבל בגרסת הפרטים: כרטיס מעוגל (border-radius) עם
-          פינה עליונה-שמאלית "מגולגלת" (page-curl) במקום הפינה החתוכה של
-          paperNoteSx - שם ה-clipPath ביטל לגמרי את העיגול. אותם גוונים
-          (PAPER_NOTE) + סרט washi כדי שיישאר מאותה משפחה. מוצגת מעל
-          ההיסטוריה - התוכן שהמשתמש כתב חשוב יותר מציר הפעולות. */}
+      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל (border-radius) עם פינה
+          תחתונה-ימנית "מגולגלת" (page-curl) במקום הפינה החתוכה של paperNoteSx
+          (שם ה-clipPath ביטל לגמרי את העיגול, וה"קיפול" היה סתם פינה חתוכה
+          שטוחה). אותם גוונים (PAPER_NOTE) + סרט washi כדי שיישאר מאותה משפחה.
+          מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב חשוב יותר מציר הפעולות. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
           mt: 1, mb: 2,
-          px: 2, pt: 2, pb: 1.5,
-          borderRadius: '4px 16px 16px 16px',
+          pt: 2, pb: 2, pl: 2, pr: 2.5,
+          borderRadius: '16px',
           backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
           border: '1px solid',
           borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
@@ -258,19 +258,23 @@ export const ProductDetailsModal = memo(({
                 '0 2px 6px rgba(15,118,110,0.08)',
                 '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // פינה מגולגלת בפינה העליונה-שמאלית: משולש בגוון "גב הדף" עם קו
-          // קיפול מוצל (drop-shadow) - נקרא כקצה נייר שהתקפל פנימה. פינה
-          // חיצונית מעוגלת קלות (4px) כדי להשתלב עם ה-border-radius.
-          '&::before': {
+          // פינה מגולגלת (page-curl) בתחתית-ימין: גרדיאנט שמדמה קצה נייר
+          // שנגלל כלפי מעלה - הקצה עצמו כהה (גב הדף), הארה לבנה על הגלגול,
+          // קו קיפול מוצל, ואז שקוף (הכרטיס השטוח). ה-box-shadow (למעלה-
+          // שמאלה) הוא הצל שהגלגול מטיל על הפתק שמתחתיו.
+          '&::after': {
             content: '""',
-            position: 'absolute', top: -1, left: -1,
-            width: 0, height: 0,
-            borderStyle: 'solid',
-            borderWidth: '22px 22px 0 0',
-            borderColor: 'transparent',
-            borderTopColor: isDark ? 'rgba(45,212,191,0.5)' : '#9BDFD4',
-            borderTopLeftRadius: '4px',
-            filter: `drop-shadow(1.5px 2px 1px ${isDark ? 'rgba(0,0,0,0.5)' : 'rgba(15,118,110,0.3)'})`,
+            position: 'absolute',
+            bottom: -1, right: -1,
+            width: 46, height: 46,
+            borderRadius: '0 0 16px 0',
+            pointerEvents: 'none',
+            background: isDark
+              ? 'linear-gradient(315deg, rgba(4,47,43,0.92) 0%, rgba(94,234,212,0.5) 26%, rgba(45,212,191,0.35) 40%, rgba(0,0,0,0.4) 47%, transparent 52% 100%)'
+              : 'linear-gradient(315deg, #A9DFD5 0%, #FFFFFF 28%, #EAFBF7 41%, rgba(15,118,110,0.16) 48%, transparent 53% 100%)',
+            boxShadow: isDark
+              ? '-4px -4px 9px -3px rgba(0,0,0,0.5)'
+              : '-4px -4px 9px -3px rgba(15,118,110,0.25)',
           },
         }}>
           {/* סרט washi באמצע למעלה */}
