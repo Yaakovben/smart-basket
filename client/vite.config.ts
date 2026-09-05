@@ -76,13 +76,20 @@ export default defineConfig({
         // קישורי הצטרפות (/join?code=...) שנפתחים ממקום אחר: באנדרואיד
         // כרום מעביר קישורים בתוך ה-scope ל-PWA המותקן במקום ללשונית
         // דפדפן. 'navigate-existing' (ולא 'focus-existing') כדי שאם כבר יש
-        // חלון פתוח - הוא ינווט בפועל ל-/join ויעבד את קוד ההצטרפות; עם
-        // 'focus-existing' החלון רק קופץ לפנים והקוד לא נקלט (אין
-        // launchQueue consumer).
+        // חלון פתוח - הקוד נקלט דרך launchQueue consumer (ראו router/index.tsx),
+        // שמנווט בעצמו ל-/join עם ה-query המקורי - בלי לגרום לניווט/רענון
+        // מסמך אמיתי. היה כאן 'navigate-existing' (ניווט מסמך אמיתי כדי
+        // "לאלץ" את הדפדפן לטעון /join) - עבד, אבל ה-service worker לא
+        // עושה שום caching (בכוונה, ראו sw.ts), אז ניווט מסמך אמיתי בלי
+        // רשת (לינק הצטרפות שנלחץ בלי קליטה) היה נכשל עם שגיאת רשת במקום
+        // סתם לפתוח את האפליקציה שכבר פתוחה. launchQueue הוא הפתרון
+        // הסטנדרטי בדיוק בשביל המקרה הזה - "focus-existing" + לוגיקת
+        // ניווט משלך בתוך ה-SPA, כמו notificationclick ב-sw.ts (client.focus()
+        // + postMessage לניווט, בלי שום ניווט/רענון מסמך אמיתי).
         // (iOS מתעלם מזה - שם קישור https תמיד נפתח ב-Safari; אין דרך
         //  להפנות ל-PWA מותקן בלי אפליקציה נייטיב + Universal Links.
         //  ה-fallback שם הוא מסך הביניים ב-/join - ראו JoinLanding.tsx.)
-        launch_handler: { client_mode: 'navigate-existing' },
+        launch_handler: { client_mode: 'focus-existing' },
         handle_links: 'preferred',
         // רק purpose: any — האייקונים הנוכחיים ללא safe-zone של 10%, ולכן אסור להכריז עליהם
         // כ-maskable (אחרת אנדרואיד מודרני חותך את הלוגו ומוצג לא עקבי בין מכשירים).

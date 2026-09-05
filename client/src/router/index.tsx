@@ -199,6 +199,21 @@ export const AppRouter = () => {
     return () => navigator.serviceWorker?.removeEventListener('message', handler);
   }, [navigate]);
 
+  // Launch Handler API - קישור כמו /join?code=... שנפתח כשה-PWA כבר פתוח
+  // (launch_handler.client_mode: 'focus-existing' ב-vite.config.ts) מגיע
+  // הנה בלי שום ניווט/רענון מסמך אמיתי - החלון הקיים רק מקבל אירוע עם
+  // ה-URL, וניווט ה-SPA (navigate) הוא זה שבפועל מציג את /join. זה מה
+  // שמאפשר ל-client_mode להישאר 'focus-existing' (בלי לסכן ניווט מסמך
+  // אמיתי בלי רשת, כשה-service worker לא עושה שום caching).
+  useEffect(() => {
+    if (!window.launchQueue) return;
+    window.launchQueue.setConsumer((launchParams) => {
+      if (!launchParams.targetURL) return;
+      const url = new URL(launchParams.targetURL);
+      navigate(url.pathname + url.search);
+    });
+  }, [navigate]);
+
   // התראות שמורות, נטענות מהשרת ומתעדכנות בזמן אמת
   const {
     notifications: persistedNotifications,
