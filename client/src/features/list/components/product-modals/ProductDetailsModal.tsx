@@ -237,11 +237,12 @@ export const ProductDetailsModal = memo(({
       </Box>
 
       {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל עם פינה תחתונה-שמאלית
-          מקופלת. הקיפול הוא משולש (clip-path) בגוון "גב הדף" עם גרדיאנט רדיאלי
-          רך (בהיר בקודקוד, כהה בפינה) + drop-shadow על קו הקיפול - נקרא כפינת
-          נייר שקופלה, בלי קופסה וקצה חד. הפינה התחתונה-שמאלית של הכרטיס כמעט
-          מרובעת (2px) כדי שהקיפול יישב עליה. אותם גוונים (PAPER_NOTE) + סרט
-          washi. מוצגת מעל ההיסטוריה. */}
+          מגולגלת (page-curl). ה"גלגול" הוא סהרון (mask רדיאלי חותך את הקצה
+          הפנימי לעקומה) עם גרדיאנט אלכסוני: כהה בקצה החיצוני (גב הדף
+          המגולגל) -> בהיר/לבן בקודקוד (קצה הגלגול שתופס אור). drop-shadow
+          עוקב אחרי הצורה. בלי משולש חד, בלי קופסה. הפינה התחתונה-שמאלית של
+          הכרטיס כמעט מרובעת (2px) כדי שהגלגול יישב עליה. אותם גוונים
+          (PAPER_NOTE) + סרט washi. מוצגת מעל ההיסטוריה. */}
       {product.note && (
         <Box sx={{
           position: 'relative',
@@ -259,21 +260,20 @@ export const ProductDetailsModal = memo(({
                 '0 2px 6px rgba(15,118,110,0.08)',
                 '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // הפינה המקופלת - משולש תחתון-שמאלי (clip-path), גרדיאנט רדיאלי רך,
-          // drop-shadow (עוקב אחרי צורת ה-clip) לצל קו הקיפול.
           '&::after': {
             content: '""',
             position: 'absolute',
-            left: -1, bottom: -1,
-            width: 34, height: 34,
-            clipPath: 'polygon(0 100%, 100% 100%, 0 0)',
+            left: -3, bottom: -3,
+            width: 40, height: 40,
             pointerEvents: 'none',
             background: isDark
-              ? 'radial-gradient(140% 140% at 100% 0%, rgba(94,234,212,0.7) 0%, rgba(45,212,191,0.4) 45%, rgba(4,47,43,0.9) 100%)'
-              : 'radial-gradient(140% 140% at 100% 0%, #E4F6F2 0%, #B9E6DD 45%, #8ACFC2 75%, #72BEB0 100%)',
+              ? 'linear-gradient(48deg, rgba(4,47,43,0.92) 0%, rgba(20,184,166,0.42) 34%, rgba(94,234,212,0.7) 74%, rgba(190,247,239,0.92) 100%)'
+              : 'linear-gradient(48deg, #5FB4A6 0%, #86CEC1 30%, #E6F6F2 62%, #FFFFFF 88%, #F0FDFA 100%)',
+            WebkitMaskImage: 'radial-gradient(circle 37px at 100% 0, transparent 36px, #000 37px)',
+            maskImage: 'radial-gradient(circle 37px at 100% 0, transparent 36px, #000 37px)',
             filter: isDark
-              ? 'drop-shadow(2px -2px 2px rgba(0,0,0,0.5))'
-              : 'drop-shadow(2px -2px 2px rgba(15,118,110,0.3))',
+              ? 'drop-shadow(2px -2px 3px rgba(0,0,0,0.5))'
+              : 'drop-shadow(2px -2px 3px rgba(15,118,110,0.32))',
           },
         }}>
           {/* סרט washi באמצע למעלה */}
