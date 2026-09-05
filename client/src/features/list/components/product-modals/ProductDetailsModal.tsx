@@ -9,7 +9,7 @@ import type { Product, ProductEditChange, ProductCategory } from '../../../../gl
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
-import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
+import { PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -236,28 +236,45 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
-          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
-          קווי מחברת ותווית. מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב
-          חשוב יותר מציר הפעולות, ולא צריך לגלול כדי להגיע אליו. */}
+      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל (border-radius) עם פינה
+          תחתונה-ימנית "מגולגלת" (page-curl) במקום הפינה החתוכה של paperNoteSx
+          (שם ה-clipPath ביטל לגמרי את העיגול, וה"קיפול" היה סתם פינה חתוכה
+          שטוחה). אותם גוונים (PAPER_NOTE) + סרט washi כדי שיישאר מאותה משפחה.
+          מוצגת מעל ההיסטוריה - התוכן שהמשתמש כתב חשוב יותר מציר הפעולות. */}
       {product.note && (
         <Box sx={{
-          ...paperNoteSx('card', isDark),
+          position: 'relative',
           mt: 1, mb: 2,
-          px: 2, pt: 2, pb: 1.4,
+          pt: 2, pb: 2, pl: 2, pr: 2.5,
+          borderRadius: '16px',
+          backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
+          border: '1px solid',
+          borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+          transform: 'rotate(-0.5deg)',
           boxShadow: isDark
-            ? '0 8px 20px rgba(0,0,0,0.35)'
+            ? '0 12px 28px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.28)'
             : [
-                'inset 0 1px 0 rgba(255,255,255,0.85)',
-                '0 1px 2px rgba(15,118,110,0.06)',
-                '0 8px 20px rgba(20,184,166,0.10)',
-                '0 22px 44px rgba(15,118,110,0.05)',
+                'inset 0 1px 0 rgba(255,255,255,0.8)',
+                '0 2px 6px rgba(15,118,110,0.08)',
+                '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          // קווי מחברת מאוד עדינים
+          // פינה מגולגלת (page-curl) בתחתית-ימין: גרדיאנט שמדמה קצה נייר
+          // שנגלל כלפי מעלה - הקצה עצמו כהה (גב הדף), הארה לבנה על הגלגול,
+          // קו קיפול מוצל, ואז שקוף (הכרטיס השטוח). ה-box-shadow (למעלה-
+          // שמאלה) הוא הצל שהגלגול מטיל על הפתק שמתחתיו.
           '&::after': {
-            content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
+            content: '""',
+            position: 'absolute',
+            bottom: -1, right: -1,
+            width: 46, height: 46,
+            borderRadius: '0 0 16px 0',
             pointerEvents: 'none',
+            background: isDark
+              ? 'linear-gradient(315deg, rgba(4,47,43,0.92) 0%, rgba(94,234,212,0.5) 26%, rgba(45,212,191,0.35) 40%, rgba(0,0,0,0.4) 47%, transparent 52% 100%)'
+              : 'linear-gradient(315deg, #A9DFD5 0%, #FFFFFF 28%, #EAFBF7 41%, rgba(15,118,110,0.16) 48%, transparent 53% 100%)',
+            boxShadow: isDark
+              ? '-4px -4px 9px -3px rgba(0,0,0,0.5)'
+              : '-4px -4px 9px -3px rgba(15,118,110,0.25)',
           },
         }}>
           {/* סרט washi באמצע למעלה */}
@@ -266,7 +283,7 @@ export const ProductDetailsModal = memo(({
             transform: 'translateX(-50%) rotate(-1deg)',
             width: 64, height: 12,
             backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '1px',
+            borderRadius: '2px',
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />

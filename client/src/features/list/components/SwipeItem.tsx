@@ -509,7 +509,10 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 maxWidth: '48%',
                 minWidth: 0,
                 display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                pl: '7px', pr: '5px', py: '1px',
+                // pl הוגדל 7→10 - FOLD.chip ב-paperNote.ts גדל 6→9 (קיפול
+                // ברור יותר), והפינה הישנה של האייקון כבר לא מספיק רחוקה
+                // מקו החיתוך החדש ונחתכת בפועל.
+                pl: '10px', pr: '5px', py: '1px',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
                 opacity: isPurchased ? 0.55 : 1,
                 filter: isPurchased ? 'grayscale(0.6)' : 'none',

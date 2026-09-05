@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useCallback, useMemo, memo, lazy, Suspense
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import type { List } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
+import { clearListNotifications } from '../../../global/helpers';
 // טעינה עצלה: @zxing נטען רק כשהמשתמש בפועל פותח את הסורק, לא בכל טעינת דף הבית
 const QRScanner = lazy(() => import('../../../global/components/QRScanner').then(m => ({ default: m.QRScanner })));
 import { EditListModal } from '../../list/components/ListModals';
@@ -285,10 +286,9 @@ export const HomeComponent = memo(({
           onClose={() => setShowNotifications(false)}
           onDismiss={handleDismissNotification}
           onNavigate={(listId) => {
-            // אותו טיפול כמו כניסה לרשימה מכרטיס בבית - כל ההתראות של
-            // הרשימה הזו מסומנות כנקראו, לא רק זו שנלחצה בפועל.
-            onClearAllPersistedNotifications?.(listId);
-            navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_LIST_NOTIFICATIONS', listId });
+            // אותו טיפול כמו כניסה לרשימה מכרטיס בבית - ראו
+            // clearListNotifications ב-global/helpers.
+            clearListNotifications(listId, onClearAllPersistedNotifications);
             setShowNotifications(false);
             setTimeout(() => navigate(`/list/${listId}`), 300);
           }}

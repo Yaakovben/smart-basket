@@ -37,3 +37,18 @@ interface Window {
   SpeechRecognition: typeof SpeechRecognition;
   webkitSpeechRecognition: typeof SpeechRecognition;
 }
+
+// Launch Handler API - עדיין לא ב-lib.dom.d.ts הרגיל. נצרך ב-router/index.tsx
+// כדי לקלוט קישורי /join כשה-PWA כבר פתוח (launch_handler.client_mode:
+// 'focus-existing' ב-vite.config.ts) בלי ניווט/רענון מסמך אמיתי.
+// files תמיד ריק במקרה שלנו (לא Web Share Target) - לא צריך FileSystemHandle.
+interface LaunchParams {
+  readonly targetURL: string | null;
+  readonly files: readonly unknown[];
+}
+interface LaunchQueue {
+  setConsumer(consumer: (params: LaunchParams) => void): void;
+}
+interface Window {
+  launchQueue?: LaunchQueue;
+}
