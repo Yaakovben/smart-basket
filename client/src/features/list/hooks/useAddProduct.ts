@@ -51,6 +51,7 @@ export const useAddProduct = ({
     unit: Product['unit'];
     category: Product['category'];
     note?: string;
+    image?: string;
   }, showToastOnAdd = true) => {
     setOpenItemId(null);
 
@@ -66,6 +67,7 @@ export const useAddProduct = ({
       addedBy: user.name,
       createdAt: new Date().toISOString(),
       note: productData.note,
+      image: productData.image,
     };
     onUpdateProductsForList(list.id, (current) => [...current, tempProduct]);
 
@@ -158,6 +160,7 @@ export const useAddProduct = ({
         ? detectCategory(newProduct.name.trim()) as Product['category']
         : newProduct.category,
       note: newProduct.note.trim() || undefined,
+      image: newProduct.image || undefined,
     };
 
     // בדיקת כפילות

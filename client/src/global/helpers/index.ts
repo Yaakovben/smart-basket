@@ -1,11 +1,26 @@
 // ===== רטט מישוש (משותף לכל הפיצ'רים) =====
 // עובד רק על Android. ב iOS Safari אין תמיכה ב Vibration API באפליקציות PWA.
+//
+// מדיניות מכוונת: רוב הקריאות באפליקציה הן haptic('light') על *כל* טאץ'
+// (החלפת טאב, פתיחת/סגירת סקשן, לחיצה על צ'יפ). זה נתפס כ"רוטט בכל פעולה".
+// לכן 'light' הושתק כברירת מחדל - רטט קורה רק על פעולות שבאמת *קורה בהן משהו*:
+// 'medium' (הוספה/שמירה/בחירה) ו-'heavy' (מחיקה/שגיאה/חגיגה/לחיצה ארוכה).
+// throttle של 120ms מונע "סדרת רטטים" ברצף פעולות (למשל בחירה מרובה).
+// prefers-reduced-motion מכבה לגמרי.
+let _lastHapticAt = 0;
+
 export const haptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
-  // רטט מקורי (Android בלבד)
-  if ('vibrate' in navigator) {
-    const patterns = { light: 10, medium: 20, heavy: 40 };
-    navigator.vibrate(patterns[style]);
-  }
+  if (style === 'light') return; // מושתק בכוונה - ראו הערה למעלה
+  if (!('vibrate' in navigator)) return;
+  try {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  } catch { /* matchMedia לא זמין - ממשיכים */ }
+
+  const now = Date.now();
+  if (now - _lastHapticAt < 120) return;
+  _lastHapticAt = now;
+
+  navigator.vibrate(style === 'heavy' ? 28 : 14);
 };
 
 // ייצוא חוזר של קבועים

@@ -475,6 +475,16 @@ export const ru: Translations = {
   noteHintKosherTypeBrand: 'Кошер · Тип · Бренд',
   closeNoteAria: 'Закрыть заметку',
   productNotePlaceholder: 'Подробности о товаре — кошер, тип и т.д.',
+  // Product photo
+  photo: 'Фото',
+  addPhoto: 'Добавить фото',
+  removePhoto: 'Удалить фото',
+  viewPhotoAria: 'Открыть фото в полном размере',
+  closePhotoAria: 'Закрыть фото',
+  photoProcessing: 'Загрузка фото…',
+  photoUploadError: 'Не удалось загрузить фото. Попробуйте ещё раз.',
+  photoTooLarge: 'Фото слишком большое даже после сжатия. Попробуйте другое.',
+  itemHasPhoto: 'У этого товара есть фото',
   // Scan list photo (OCR)
   ocrNoTextDetected: 'Не удалось распознать чёткий текст на изображении. Попробуйте более чёткое фото с хорошим освещением.',
   ocrGenericError: 'Что-то пошло не так при распознавании текста. Попробуйте снова или добавьте товары вручную.',

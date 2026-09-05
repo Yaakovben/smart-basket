@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
+import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
+import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
-import { IconTile } from '../../../global/components';
+import { cldThumb, cldBlur } from '../../../global/helpers/cloudinaryImage';
+import { IconTile, ProgressiveImage } from '../../../global/components';
+import { SQUIRCLE_RADIUS } from '../../../global/theme/iconArt';
+import { paperNoteSx, PAPER_NOTE } from '../helpers/paperNote';
 import { useSettings } from '../../../global/context/SettingsContext';
 
 interface SwipeItemProps {
@@ -376,14 +381,68 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             עין). לא נקנה - IconTile variant="light": צ'יפ פסטלי, לא
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
-        {isPurchased ? (
+        {product.image ? (
+          // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת תכלת
+          // דקה (PAPER_NOTE.frame) - אותו תכלת של ההערה, לא צבע הקטגוריה.
+          // רדיוס מרובע יותר מאריח האייקון - "צילום" נקרא טוב יותר כשהוא
+          // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
           <Box sx={{
-            width: 40, height: 40, borderRadius: '11px',
+            position: 'relative', flexShrink: 0,
+            width: 40, height: 40, borderRadius: '18%', overflow: 'hidden',
+            // רקע עדין - נראה לרגע בזמן שהתמונה טוענת במקום הבזק ריק
+            bgcolor: 'action.hover',
+            '@media (max-width: 360px)': { width: 34, height: 34 },
+            '@media (max-width: 320px)': { width: 30, height: 30 },
+          }}>
+            <ProgressiveImage
+              src={cldThumb(product.image)}
+              blurSrc={cldBlur(product.image)}
+              alt=""
+              loading="lazy"
+              finalOpacity={isPurchased ? 0.45 : 1}
+              sx={{
+                borderRadius: '18%',
+                filter: isPurchased ? 'grayscale(1)' : 'none',
+              }}
+            />
+            {!isPurchased && (
+              <>
+                {/* מסגרת תכלת דקה - שכבת overlay (border ולא box-shadow
+                    על img, שלא נצבע בחלק מגרסאות Safari). */}
+                <Box aria-hidden="true" sx={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: '18%',
+                  border: '1.5px solid',
+                  borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
+                  pointerEvents: 'none',
+                }} />
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    position: 'absolute', bottom: -4, insetInlineEnd: -4,
+                    width: 15, height: 15, borderRadius: '50%',
+                    bgcolor: '#0D9488',
+                    border: '1.5px solid', borderColor: 'background.paper',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    '@media (max-width: 360px)': { width: 13, height: 13, bottom: -3, insetInlineEnd: -3 },
+                  }}
+                >
+                  <PhotoCameraRoundedIcon sx={{
+                    fontSize: 8.5, color: '#fff',
+                    '@media (max-width: 360px)': { fontSize: 7.5 },
+                  }} />
+                </Box>
+              </>
+            )}
+          </Box>
+        ) : isPurchased ? (
+          <Box sx={{
+            width: 40, height: 40, borderRadius: SQUIRCLE_RADIUS,
             bgcolor: 'action.hover',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 20, flexShrink: 0,
-            '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17, borderRadius: '9px' },
-            '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15, borderRadius: '8px' },
+            '@media (max-width: 360px)': { width: 34, height: 34, fontSize: 17 },
+            '@media (max-width: 320px)': { width: 30, height: 30, fontSize: 15 },
           }}>
             {icon}
           </Box>
@@ -403,58 +462,62 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           />
         )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography
-              sx={{
-                flex: 1, minWidth: 0,
-                fontSize: '15px',
-                fontWeight: 600,
-                color: isPurchased ? 'text.secondary' : 'text.primary',
-                textDecoration: isPurchased ? 'line-through' : 'none',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                '@media (max-width: 360px)': { fontSize: '13.5px' },
-                '@media (max-width: 320px)': { fontSize: '12.5px' },
-              }}
-            >
-              {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
-            </Typography>
-            {/* אינדיקטור הערה: צ'יפ אלכסוני בעיצוב פתק (תואם לכרטיס שבתוך
-                ה-popup). ממוקם ליד השם, נטוי קלות, לא דורש מקום קבוע. */}
+          <Typography
+            sx={{
+              fontSize: '15px',
+              fontWeight: 600,
+              color: isPurchased ? 'text.secondary' : 'text.primary',
+              textDecoration: isPurchased ? 'line-through' : 'none',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              '@media (max-width: 360px)': { fontSize: '13.5px' },
+              '@media (max-width: 320px)': { fontSize: '12.5px' },
+            }}
+          >
+            {searchTerm ? renderHighlighted(product.name, searchTerm) : product.name}
+          </Typography>
+          {/* שורה שנייה: כמות+יחידה + מי הוסיף/קנה - *תמיד* מוצג, גם כשיש
+              הערה (בעבר ההערה דרסה את זה לגמרי - לא ניתן היה לדעת מי הוסיף
+              ברגע שהייתה הערה, זה היה באג). אם יש הערה - פתק נייר זעיר
+              (paperNoteSx('chip')) נדחק לקצה השמאלי, מוצג עד שנגמר המקום
+              ואז מתקצר ל-ellipsis; הטקסט המלא תמיד ניתן לראות בפרטי המוצר. */}
+          <Typography component="div" sx={{
+            fontSize: '13px', color: 'text.secondary',
+            display: 'flex', alignItems: 'center', gap: 0.6,
+            overflow: 'hidden', whiteSpace: 'nowrap',
+            '@media (max-width: 360px)': { fontSize: '12px' },
+          }}>
+            <Box component="span" sx={{ flexShrink: 0 }}>
+              {product.quantity} {product.unit}
+            </Box>
+            <Box component="span" sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              • {relevantName}
+            </Box>
             {product.note && (
-              <Box
-                aria-label={t('itemHasNote')}
-                sx={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center',
-                  px: 0.65, py: 0.15,
-                  fontSize: 9.5, fontWeight: 800,
-                  fontStyle: 'italic',
-                  letterSpacing: 0.3,
-                  color: '#0F766E',
-                  backgroundImage: 'linear-gradient(135deg, #F0FDFA 0%, #E6F9F5 100%)',
-                  border: '1px solid rgba(20,184,166,0.35)',
-                  borderRadius: '4px',
-                  // פינה מקופלת קטנה כמו בפתק שבפופ-אפ
-                  clipPath: 'polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)',
-                  transform: 'rotate(-7deg)',
-                  boxShadow: '0 1px 2px rgba(15,118,110,0.18)',
-                  whiteSpace: 'nowrap',
-                  opacity: isPurchased ? 0.5 : 1,
-                  '@media (max-width: 360px)': { fontSize: 9, px: 0.5 },
-                  '@media (max-width: 320px)': { fontSize: 8.5, px: 0.4 },
-                }}
-              >
-                ✎ {t('note')}
+              <Box component="span" sx={{
+                ...paperNoteSx('chip', isDark),
+                flexShrink: 0,
+                maxWidth: '48%',
+                minWidth: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                pl: '7px', pr: '5px', py: '1px',
+                color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
+                opacity: isPurchased ? 0.55 : 1,
+                filter: isPurchased ? 'grayscale(0.6)' : 'none',
+              }}>
+                <EditNoteRoundedIcon sx={{
+                  fontSize: 13, flexShrink: 0,
+                  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                }} />
+                <Box component="span" sx={{
+                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
+                  fontWeight: 500,
+                }}>
+                  {product.note}
+                </Box>
               </Box>
             )}
-          </Box>
-          <Typography sx={{
-            fontSize: '13px', color: 'text.secondary',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {product.quantity} {product.unit} • {relevantName}
           </Typography>
         </Box>
         {isPurchased && (

@@ -4,9 +4,12 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { Modal, TapToRevealText, IconTile } from '../../../../global/components';
+import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
+import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
+import { paperNoteSx, PAPER_NOTE } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -70,7 +73,22 @@ export const ProductDetailsModal = memo(({
   onClose
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   const [editsExpanded, setEditsExpanded] = useState(false);
+  const [showPhoto, setShowPhoto] = useState(false);
+  const [nameExpanded, setNameExpanded] = useState(false);
+
+  // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
+  // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
+  // מפורש מצב "פתוח" היה נדבק בין מוצרים. איפוס בזמן רינדור (הדפוס
+  // המומלץ ב-React) ולא ב-useEffect.
+  const [seenId, setSeenId] = useState(product?.id);
+  if (product?.id !== seenId) {
+    setSeenId(product?.id);
+    setEditsExpanded(false);
+    setShowPhoto(false);
+    setNameExpanded(false);
+  }
 
   if (!product) return null;
 
@@ -121,20 +139,88 @@ export const ProductDetailsModal = memo(({
   return (
     <Modal title={t('productDetails')} onClose={onClose}>
       <Box sx={{ textAlign: 'center', mb: 2.5 }}>
-        <Box sx={{ mx: 'auto', mb: 1.5, width: 72 }}>
-          <IconTile
-            emoji={CATEGORY_ICONS[product.category]}
-            color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
-            seedId={product.id}
-            size={72}
-            fontSize={36}
-            ariaLabel={product.category}
-          />
+        {/* אזור עליון בגובה קבוע - שם המוצר וכל השדות שמתחת נשארים בדיוק
+            באותו מיקום בין מוצר עם תמונה למוצר בלי, בלי "קפיצת" גובה
+            דרמטית של המודל בכל פתיחה. */}
+        <Box sx={{
+          height: 148, mb: 1.5,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {product.image ? (
+            <Box
+              role="button"
+              aria-label={t('viewPhotoAria')}
+              onClick={() => setShowPhoto(true)}
+              sx={{
+                position: 'relative',
+                // מרובעת (לא מלבן) - רוחב = גובה, לא נמתחת לרוחב המודל
+                height: '100%', width: 148,
+                borderRadius: '12px', overflow: 'hidden',
+                bgcolor: 'action.hover',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.99)' },
+              }}
+            >
+              <ProgressiveImage
+                src={cldPreview(product.image)}
+                blurSrc={cldBlur(product.image)}
+                alt={product.name}
+                // בלי loading="lazy" - התמונה תמיד גלויה מיד עם פתיחת המודל
+                // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
+                // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
+                fetchPriority="high"
+              />
+              {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
+                  (לא box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', inset: 0,
+                borderRadius: '12px',
+                border: '1.5px solid',
+                borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
+                pointerEvents: 'none',
+              }} />
+              {/* כפתור הגדלה - אייקון "פתח במלא" מוכר בפינה, במקום תווית
+                  "תמונה" שרק חוזרת על מה שכבר רואים. */}
+              <Box aria-hidden="true" sx={{
+                position: 'absolute', top: 8, insetInlineEnd: 8,
+                width: 28, height: 28, borderRadius: '8px',
+                bgcolor: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(3px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <OpenInFullRoundedIcon sx={{ fontSize: 15, color: '#fff' }} />
+              </Box>
+            </Box>
+          ) : (
+            <IconTile
+              emoji={CATEGORY_ICONS[product.category]}
+              color={CATEGORY_COLORS[product.category as keyof typeof CATEGORY_COLORS] || '#6B7280'}
+              seedId={product.id}
+              size={76}
+              fontSize={38}
+              ariaLabel={product.category}
+              // אותו טינט בהיר כמו אייקון המוצר בשורת הרשימה (SwipeItem).
+              variant="light"
+            />
+          )}
         </Box>
-        <TapToRevealText
-          text={product.name}
-          sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary', mb: 0.5 }}
-        />
+        {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;
+            הקשה מרחיבה לשם המלא (אין טקסט מוסתר לצמיתות). גופן רספונסיבי
+            לרוחב המסך. */}
+        <Typography
+          onClick={() => setNameExpanded(v => !v)}
+          title={product.name}
+          sx={{
+            fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary', mb: 0.5,
+            lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            wordBreak: 'break-word',
+            ...(nameExpanded
+              ? { whiteSpace: 'pre-wrap' }
+              : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+          }}
+        >
+          {product.name}
+        </Typography>
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>
@@ -235,14 +321,21 @@ export const ProductDetailsModal = memo(({
 
                 {canExpand && (
                   <Collapse in={editsExpanded}>
-                    <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                    {/* לוג עריכות ארוך - גליל בתוך גובה מוגבל במקום לדחוף
+                        את שאר ציר הזמן. הטקסט של כל שינוי נשבר לשורות
+                        ומוצג במלואו (בלי ellipsis) כדי שכל הערך שנערך יהיה
+                        קריא. */}
+                    <Box sx={{
+                      mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider',
+                      maxHeight: 220, overflowY: 'auto', overscrollBehavior: 'contain',
+                    }}>
                       {editEntries.map((edit, i) => (
                         <Box key={i} sx={{ mb: i < editEntries.length - 1 ? 1.1 : 0 }}>
                           <Typography sx={{ fontSize: 10.5, color: 'text.disabled', mb: 0.3 }}>
                             {displayName(edit.editedBy)} · {getRelativeTime(edit.editedAt, settings.language)}
                           </Typography>
                           {edit.changes.map((change, ci) => (
-                            <Typography key={ci} sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Typography key={ci} sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                               {t(FIELD_LABEL_KEYS[change.field])}:{' '}
                               <Box component="span" sx={{ color: 'text.disabled' }}>{formatFieldValue(change.field, change.oldValue, t)}</Box>
                               {' ← '}
@@ -259,36 +352,27 @@ export const ProductDetailsModal = memo(({
           );
         })}
       </Box>
-      {/* הערה - גרסה מבוגרת ומלוטשת: סרט washi עדין, הטיה כמעט-שטוחה,
-          טיפוגרפיה מינימלית. תואם למצב הפתוח של ProductNoteField. */}
+      {/* הערה - "פתק נייר" מלא: אותה שפת עיצוב בדיוק כמו הפתק בשורת
+          הרשימה (paperNoteSx) ובטופס העריכה, בגרסת 'card' עם סרט washi,
+          קווי מחברת ותווית. */}
       {product.note && (
         <Box sx={{
-          position: 'relative',
+          ...paperNoteSx('card', isDark),
           mt: 3, mb: 0.5,
           px: 2, pt: 2, pb: 1.4,
-          backgroundImage: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
-          transform: 'rotate(-0.15deg)',
-          border: '1px solid rgba(20,184,166,0.18)',
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.85)',
-            '0 1px 2px rgba(15,118,110,0.06)',
-            '0 8px 20px rgba(20,184,166,0.10)',
-            '0 22px 44px rgba(15,118,110,0.05)',
-          ].join(', '),
-          clipPath: 'polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)',
+          boxShadow: isDark
+            ? '0 8px 20px rgba(0,0,0,0.35)'
+            : [
+                'inset 0 1px 0 rgba(255,255,255,0.85)',
+                '0 1px 2px rgba(15,118,110,0.06)',
+                '0 8px 20px rgba(20,184,166,0.10)',
+                '0 22px 44px rgba(15,118,110,0.05)',
+              ].join(', '),
           // קווי מחברת מאוד עדינים
           '&::after': {
             content: '""', position: 'absolute', inset: 0,
             backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 25px, rgba(20,184,166,0.06) 25px, rgba(20,184,166,0.06) 26px)',
             pointerEvents: 'none',
-          },
-          // פינה מקופלת בשמאל-עליון
-          '&::before': {
-            content: '""', position: 'absolute', top: 0, left: 0,
-            width: 20, height: 20,
-            bgcolor: 'rgba(13,148,136,0.18)',
-            clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-            zIndex: 1,
           },
         }}>
           {/* סרט washi באמצע למעלה */}
@@ -303,7 +387,8 @@ export const ProductDetailsModal = memo(({
           }} />
           <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
             <Typography sx={{
-              fontSize: 10, fontWeight: 800, color: '#0F766E',
+              fontSize: 10, fontWeight: 800,
+              color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
               letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
               {t('note')}
@@ -311,7 +396,8 @@ export const ProductDetailsModal = memo(({
           </Box>
           <Typography sx={{
             position: 'relative', zIndex: 2,
-            fontSize: 14.5, color: '#134E4A',
+            fontSize: 14.5,
+            color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
             fontWeight: 500,
             lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
@@ -319,6 +405,10 @@ export const ProductDetailsModal = memo(({
             {product.note}
           </Typography>
         </Box>
+      )}
+
+      {showPhoto && product.image && (
+        <ImageLightbox src={cldFull(product.image)} alt={product.name} onClose={() => setShowPhoto(false)} />
       )}
     </Modal>
   );

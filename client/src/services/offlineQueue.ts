@@ -7,7 +7,7 @@ export type QueuedMutation =
   | { id: string; type: 'toggle'; listId: string; productId: string; isPurchased: boolean; timestamp: number }
   | { id: string; type: 'update'; listId: string; productId: string; changes: Record<string, unknown>; timestamp: number }
   | { id: string; type: 'delete'; listId: string; productId: string; timestamp: number }
-  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number }
+  | { id: string; type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string; image?: string }; tempId: string; pendingIsPurchased?: boolean; timestamp: number }
   | { id: string; type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending'; timestamp: number }
   | { id: string; type: 'reset'; listId: string; timestamp: number };
 
@@ -48,7 +48,7 @@ type QueueInput =
   | { type: 'toggle'; listId: string; productId: string; isPurchased: boolean }
   | { type: 'update'; listId: string; productId: string; changes: Record<string, unknown> }
   | { type: 'delete'; listId: string; productId: string }
-  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string }; tempId: string; pendingIsPurchased?: boolean }
+  | { type: 'add'; listId: string; productData: { name: string; quantity: number; unit: string; category: string; note?: string; image?: string }; tempId: string; pendingIsPurchased?: boolean }
   | { type: 'clear'; listId: string; filter: 'all' | 'purchased' | 'pending' }
   | { type: 'reset'; listId: string };
 
@@ -107,7 +107,7 @@ export const enqueueDelete = (listId: string, productId: string) =>
 
 export const enqueueAdd = (
   listId: string,
-  productData: { name: string; quantity: number; unit: string; category: string; note?: string },
+  productData: { name: string; quantity: number; unit: string; category: string; note?: string; image?: string },
   tempId: string,
   pendingIsPurchased?: boolean,
 ) => enqueue({ type: 'add', listId, productData, tempId, pendingIsPurchased });

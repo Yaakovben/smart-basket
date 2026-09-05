@@ -12,6 +12,7 @@ import { priceComparisonApi } from '../../../priceComparison';
 import { trackEvent } from '../../../../global/services/analytics';
 import type { NewProductForm } from '../../types/list-types';
 import { ProductNoteField } from './ProductNoteField';
+import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
 
 // ===== סגנונות =====
@@ -190,7 +191,21 @@ export const AddProductModal = memo(({
         />
       </Suspense>
     )}
-    <Modal title={t('newProduct')} onClose={onClose}>
+    <Modal
+      title={t('newProduct')}
+      onClose={onClose}
+      footer={
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={() => { haptic('medium'); onAdd(); }}
+          disabled={!isNameValid}
+          aria-label={t('add')}
+        >
+          {t('add')}
+        </Button>
+      }
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }} role="alert">
           {error}
@@ -362,23 +377,24 @@ export const AddProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      <ProductNoteField
-        value={newProduct.note}
-        onChange={(v) => onUpdateField('note', v)}
-      />
-      <Box sx={{ mb: 2 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
+          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
+          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
+          במקום לשבת לצידה. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+        <ProductNoteField
+          value={newProduct.note}
+          onChange={(v) => onUpdateField('note', v)}
+        />
+        <ProductImageField
+          value={newProduct.image}
+          onChange={(v) => onUpdateField('image', v)}
+        />
+      </Box>
+      <Box sx={{ mb: 0.5 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <CategoryGrid selected={newProduct.category} onSelect={handleCategoryClick} />
       </Box>
-      <Button
-        variant="contained"
-        fullWidth
-        onClick={() => { haptic('medium'); onAdd(); }}
-        disabled={!isNameValid}
-        aria-label={t('add')}
-      >
-        {t('add')}
-      </Button>
     </Modal>
     </>
   );

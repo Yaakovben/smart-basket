@@ -51,6 +51,10 @@ export async function addProduct(
       category: data.category ?? 'אחר',
       addedBy: userId,
       ...(data.note !== undefined ? { note: sanitizeText(data.note) } : {}),
+      // image לא עובר sanitizeText - הוא לא טקסט חופשי אלא URL/data-URL שכבר
+      // אומת ב-productValidator (https בלבד או data:image/...). sanitizeText
+      // היה שובר את ה-base64.
+      ...(data.image ? { image: data.image } : {}),
       ...(data.clientId ? { clientId: data.clientId } : {}),
     });
   } catch (err) {
@@ -80,7 +84,7 @@ export async function updateProduct(
   await checkListAccessLean(listId, userId);
 
   const hasContentEdit = data.name !== undefined || data.quantity !== undefined || data.unit !== undefined ||
-    data.category !== undefined || data.note !== undefined;
+    data.category !== undefined || data.note !== undefined || data.image !== undefined;
 
   const updates: Record<string, unknown> = {};
   if (data.name !== undefined) updates.name = sanitizeText(data.name);
@@ -88,6 +92,10 @@ export async function updateProduct(
   if (data.unit !== undefined) updates.unit = data.unit;
   if (data.category !== undefined) updates.category = data.category;
   if (data.note !== undefined) updates.note = sanitizeText(data.note);
+  // image: לא עובר sanitizeText (ראה addProduct). לא נכנס ל-editHistory
+  // diff למטה - שמירת base64 שלם פעמיים בכל רשומת עריכה מנפחת את המסמך;
+  // מספיק ש-updatedBy מתעדכן (hasContentEdit above).
+  if (data.image !== undefined) updates.image = data.image;
   // עריכת תוכן (לא סימון קנייה) - מי ערך לאחרונה
   if (hasContentEdit) {
     updates.updatedBy = userId;

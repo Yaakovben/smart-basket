@@ -71,21 +71,8 @@ export const ConnectionStatusIcon = () => {
         animation: 'connSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      <Box sx={{
-        position: 'relative', width: 30, height: 30, flexShrink: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Box sx={{
-          position: 'absolute', inset: 0, borderRadius: '50%',
-          bgcolor: 'rgba(255,255,255,0.14)',
-          animation: 'connIconPulse 2s ease-in-out infinite',
-          '@keyframes connIconPulse': {
-            '0%, 100%': { transform: 'scale(0.85)', opacity: 0.6 },
-            '50%': { transform: 'scale(1.05)', opacity: 1 },
-          },
-        }} />
-        <WifiFadeIcon style={{ fontSize: 20, color: 'white', flexShrink: 0, opacity: 0.95, position: 'relative' }} />
-      </Box>
+      {/* האייקון עצמו כבר מונפש (fade) - בלי עיגול/רקע מאחוריו */}
+      <WifiFadeIcon style={{ fontSize: 22, color: 'white', flexShrink: 0, opacity: 0.95 }} />
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3, letterSpacing: 0.1 }}>
           {mainText}

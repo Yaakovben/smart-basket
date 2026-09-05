@@ -2,6 +2,25 @@ import Joi from 'joi';
 import { commonSchemas } from './common.validator';
 import { PRODUCT_UNITS, PRODUCT_CATEGORIES, DEFAULT_UNIT, DEFAULT_CATEGORY } from '../constants';
 
+// תמונת מוצר: או כתובת https חיצונית (Cloudinary וכו') או data URL של
+// תמונה דחוסה כשאין אחסון חיצוני מוגדר. כל דבר אחר נדחה - חוסם הזרקת
+// javascript:/data:text ל-src של <img> בלקוח. 500KB תואם ל-maxlength
+// של השדה במודל.
+const IMAGE_MAX = 500000;
+const productImageSchema = Joi.string()
+  .allow('')
+  .max(IMAGE_MAX)
+  .custom((value: string, helpers) => {
+    if (value === '') return value;
+    if (/^https:\/\/\S+$/i.test(value)) return value;
+    if (/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value)) return value;
+    return helpers.error('any.invalid');
+  }, 'product image')
+  .messages({
+    'any.invalid': 'Invalid image - must be an https URL or an image data URL',
+    'string.max': 'Image is too large',
+  });
+
 export const productValidator = {
   create: Joi.object({
     name: Joi.string().min(2).max(100).trim().required().messages({
@@ -22,6 +41,7 @@ export const productValidator = {
     note: Joi.string().allow('').max(200).messages({
       'string.max': 'Note cannot exceed 200 characters',
     }),
+    image: productImageSchema,
     // מזהה זמני מהלקוח (idempotency) - ראה product.service.ts:addProduct
     clientId: Joi.string().max(100).optional(),
   }),
@@ -41,6 +61,7 @@ export const productValidator = {
     note: Joi.string().allow('').max(200).messages({
       'string.max': 'Note cannot exceed 200 characters',
     }),
+    image: productImageSchema,
   }).min(1).messages({
     'object.min': 'At least one field must be provided',
   }),
@@ -87,6 +108,7 @@ export type CreateProductInput = {
   unit?: ProductUnit;
   category?: ProductCategory;
   note?: string;
+  image?: string;
   clientId?: string;
 };
 
@@ -97,6 +119,7 @@ export type UpdateProductInput = {
   category?: ProductCategory;
   isPurchased?: boolean;
   note?: string;
+  image?: string;
 };
 
 export type ReorderProductsInput = {

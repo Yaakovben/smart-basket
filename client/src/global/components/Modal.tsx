@@ -10,6 +10,11 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  // פס פעולה קבוע בתחתית המודל, *מחוץ* לאזור הגלילה - נשאר גלוי תמיד גם
+  // כשה-children ארוכים (טופס עם הרבה שדות/הרחבות, כמו הוסף/ערוך מוצר).
+  // בלי זה, כפתור "שמור"/"הוסף" בסוף children היה נעלם מתחת לקיפול וגורם
+  // למשתמש לא לדעת איך לסיים - ראו AddProductModal/EditProductModal.
+  footer?: React.ReactNode;
 }
 
 const Transition = forwardRef(function Transition(
@@ -19,7 +24,7 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} timeout={180} {...props} />;
 });
 
-export const Modal = ({ title, onClose, children }: ModalProps) => {
+export const Modal = ({ title, onClose, children, footer }: ModalProps) => {
   // נעילת ה-body מטופלת אוטומטית ע"י MUI Dialog (disableScrollLock=false ברירת מחדל).
   // אסור להוסיף נעילה משלנו - שתי שכבות נועלות מתנגשות וגורמות לתוכן הפנימי להיחתך.
   const handleClose = useCallback(() => {
@@ -132,6 +137,23 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
       }}>
         {children}
       </DialogContent>
+
+      {/* פס הפעולה הקבוע - DialogContent כבר מקבל מ-MUI ‏flex:1 בברירת
+          מחדל, אז הוא זה שמתכווץ/גולל; ה-Box הזה יושב מתחתיו כאח קבוע
+          בתוך עמודת ה-flex של ה-Paper ותמיד נשאר גלוי. */}
+      {footer && (
+        <Box sx={{
+          flexShrink: 0,
+          px: 2.5, pt: 1.25, pb: 1.5,
+          borderTop: '1px solid', borderColor: 'divider',
+          bgcolor: 'background.paper',
+          boxShadow: '0 -6px 16px rgba(0,0,0,0.06)',
+          '@media (max-width: 360px)': { px: 1.75, pt: 1, pb: 1.25 },
+          '@media (max-width: 320px)': { px: 1.25, pt: 0.75, pb: 1 },
+        }}>
+          {footer}
+        </Box>
+      )}
     </Dialog>
   );
 };

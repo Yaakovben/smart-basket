@@ -5,6 +5,8 @@ export { ConfirmModal } from './ConfirmModal';
 export { ErrorBoundary } from './ErrorBoundary';
 export { IconPattern } from './IconPattern';
 export { IconTile } from './IconTile';
+export { ImageLightbox } from './ImageLightbox';
+export { ProgressiveImage } from './ProgressiveImage';
 export { ListMenu } from './ListMenu';
 export { MemberAvatar } from './MemberAvatar';
 export { MembersButton } from './MembersButton';

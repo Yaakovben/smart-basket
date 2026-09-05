@@ -63,6 +63,8 @@ export interface IProductResponse {
   updatedBy?: string | null;
   purchasedBy?: string | null;
   createdAt: Date;
+  note?: string;
+  image?: string;
 }
 
 // ===== טיפוסי חבר =====

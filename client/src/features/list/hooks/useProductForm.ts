@@ -25,7 +25,8 @@ export const useProductForm = () => {
       showEdit.quantity !== originalEditProduct.quantity ||
       showEdit.unit !== originalEditProduct.unit ||
       showEdit.category !== originalEditProduct.category ||
-      (showEdit.note || '') !== (originalEditProduct.note || '')
+      (showEdit.note || '') !== (originalEditProduct.note || '') ||
+      (showEdit.image || '') !== (originalEditProduct.image || '')
     );
   }, [showEdit, originalEditProduct]);
 

@@ -47,6 +47,15 @@ const DISCLAIMER = 'ההוצאה מבוססת על התאמת שמות המוצ�
 const SPENDING_CACHE_TTL_MS = 20 * 60 * 1000;
 const spendingCache = new Map<string, { data: SpendingData; expiresAt: number }>();
 
+// ניקוי ה-cache של הוצאה חודשית למשתמש - נקרא מ-invalidateInsightsCache
+// כשמסמנים/מבטלים מוצר כנקנה. בלי זה, ה-TTL של 20 דק' משאיר את מסך
+// ההוצאות על נתונים ישנים ("עדיין לא סימנת קניות החודש") גם אחרי שסימנת
+// קנייה - ה-insightsMemCache התנקה אבל computeSpending עדיין החזיר את
+// הערך השמור.
+export function invalidateSpendingCache(userId: string): void {
+  spendingCache.delete(userId);
+}
+
 export function emptySpending(enabled = false): SpendingData {
   const now = new Date();
   return {

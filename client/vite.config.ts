@@ -73,6 +73,13 @@ export default defineConfig({
         start_url: '/',
         dir: 'rtl',
         lang: 'he',
+        // קישורי הצטרפות (/join?code=...) שנפתחים ממקום אחר: באנדרואיד
+        // כרום מעביר קישורים בתוך ה-scope ל-PWA המותקן במקום ללשונית
+        // דפדפן, ואם כבר יש חלון פתוח - ממקד אותו במקום לפתוח חדש.
+        // (iOS מתעלם מזה - שם קישור https תמיד נפתח ב-Safari; אין דרך
+        //  להפנות ל-PWA מותקן בלי אפליקציה נייטיב + Universal Links.)
+        launch_handler: { client_mode: 'focus-existing' },
+        handle_links: 'preferred',
         // רק purpose: any — האייקונים הנוכחיים ללא safe-zone של 10%, ולכן אסור להכריז עליהם
         // כ-maskable (אחרת אנדרואיד מודרני חותך את הלוגו ומוצג לא עקבי בין מכשירים).
         // כשתוחלף תמונה עם padding מתאים, אפשר להוסיף maskable בקובץ נפרד.

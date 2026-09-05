@@ -5,6 +5,7 @@ import { haptic, COMMON_STYLES } from '../../../../global/helpers';
 import { Modal, ClearableTextField } from '../../../../global/components';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ProductNoteField } from './ProductNoteField';
+import { ProductImageField } from './ProductImageField';
 import { CategoryGrid } from './CategoryGrid';
 
 // ===== סגנונות =====
@@ -75,7 +76,15 @@ export const EditProductModal = memo(({
   if (!product) return null;
 
   return (
-    <Modal title={t('editProduct')} onClose={() => !saving && onClose()}>
+    <Modal
+      title={t('editProduct')}
+      onClose={() => !saving && onClose()}
+      footer={
+        <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
+          {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
+        </Button>
+      }
+    >
       <Box sx={{ mb: 2 }}>
         <Typography component="label" htmlFor="edit-product-name" sx={labelSx}>{t('name')}</Typography>
         <ClearableTextField
@@ -130,20 +139,27 @@ export const EditProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      <ProductNoteField
-        value={product.note || ''}
-        onChange={(v) => onUpdateField('note', v as Product['note'])}
-      />
-      <Box sx={{ mb: 2 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
+          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
+          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
+          במקום לשבת לצידה. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+        <ProductNoteField
+          value={product.note || ''}
+          onChange={(v) => onUpdateField('note', v as Product['note'])}
+        />
+        <ProductImageField
+          value={product.image || ''}
+          onChange={(v) => onUpdateField('image', v as Product['image'])}
+        />
+      </Box>
+      <Box sx={{ mb: 0.5 }}>
         <Typography sx={labelSx}>{t('category')}</Typography>
         <CategoryGrid
           selected={product.category}
           onSelect={(cat) => { haptic('light'); onUpdateField('category', cat); }}
         />
       </Box>
-      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!canSave}>
-        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('save')}
-      </Button>
     </Modal>
   );
 });
