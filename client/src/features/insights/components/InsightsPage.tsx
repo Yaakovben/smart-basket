@@ -50,6 +50,15 @@ export const InsightsPage = memo(() => {
 
   const tStr = t as (k: string) => string;
 
+  // שם הרשימה שעליה מתבצע ניתוח המחירים - מוצג בשורת המשנה של ההדר (שגלוי
+  // מיד בכניסה) כדי שברור על מה הניתוח גם בלי לגלול עד הפס הדביק שבתוכן.
+  // נקרא מ-cache (allUserLists) אז זמין כבר ברינדור הראשון, גם בזמן טעינה.
+  const priceListLabel = (() => {
+    if (tab !== 'price' || !selectedListId) return undefined;
+    const l = allUserLists.find(x => x.id === selectedListId);
+    return l ? `${l.icon} ${l.name}` : undefined;
+  })();
+
   if (loading) return <InsightsLoadingState isDark={isDark} />;
 
   // מסך שגיאה - חיבור נכשל. נפרד ממצב "משתמש חדש" שמטופל למטה.
@@ -95,7 +104,7 @@ export const InsightsPage = memo(() => {
         delayMs={5000}
       />
 
-      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
+      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} subtitle={priceListLabel} onBack={() => navigate(-1)} />
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
       <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} t={tStr} />
 
