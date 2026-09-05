@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { memo, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { SlowLoadIndicator, ErrorBoundary } from '../../../global/components';
@@ -50,14 +50,27 @@ export const InsightsPage = memo(() => {
 
   const tStr = t as (k: string) => string;
 
-  // שם הרשימה שעליה מתבצע ניתוח המחירים - מוצג בשורת המשנה של ההדר (שגלוי
-  // מיד בכניסה) כדי שברור על מה הניתוח גם בלי לגלול עד הפס הדביק שבתוכן.
-  // נקרא מ-cache (allUserLists) אז זמין כבר ברינדור הראשון, גם בזמן טעינה.
-  const priceListLabel = (() => {
-    if (tab !== 'price' || !selectedListId) return undefined;
-    const l = allUserLists.find(x => x.id === selectedListId);
-    return l ? `${l.icon} ${l.name}` : undefined;
-  })();
+  // כניסה מקישור "פירוט מלא בתובנות" של רשימה מסוימת: גוללים אוטומטית עד
+  // הפס הדביק שמציג "ניתוח מחירים על <רשימה>", כדי שברור מיד על מה ההשוואה
+  // בלי לגלול ידנית. ה-state מגיע מ-ListCostEstimateBadge. גולל פעם אחת בלבד,
+  // אחרי ש-priceData נטען (רק אז הפס מרונדר - ראו PriceTab).
+  const location = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const didAutoScrollRef = useRef(false);
+  const wantScrollToPriceList = !!(location.state as { scrollToPriceList?: boolean } | null)?.scrollToPriceList;
+  useEffect(() => {
+    if (!wantScrollToPriceList || didAutoScrollRef.current) return;
+    if (tab !== 'price' || !priceData) return;
+    const container = scrollContainerRef.current;
+    const target = document.getElementById('insights-price-list-context');
+    if (!container || !target) return;
+    didAutoScrollRef.current = true;
+    // rAF - מחכים שהפריסה תתייצב אחרי רינדור הפס
+    requestAnimationFrame(() => {
+      const top = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 8;
+      container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }, [wantScrollToPriceList, tab, priceData]);
 
   if (loading) return <InsightsLoadingState isDark={isDark} />;
 
@@ -94,7 +107,7 @@ export const InsightsPage = memo(() => {
   );
 
   return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+    <Box ref={scrollContainerRef} sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
@@ -104,7 +117,7 @@ export const InsightsPage = memo(() => {
         delayMs={5000}
       />
 
-      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} subtitle={priceListLabel} onBack={() => navigate(-1)} />
+      <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={() => navigate(-1)} />
       <InsightsTabsBar isDark={isDark} tab={tab} onTabChange={setTab} />
       <InsightsHeroCard tab={tab} groupStats={data.groupStats} shoppingScore={data.shoppingScore} t={tStr} />
 

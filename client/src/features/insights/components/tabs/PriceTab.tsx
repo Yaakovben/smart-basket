@@ -66,7 +66,7 @@ export const PriceTab = memo(({
           (למשל אחרי כניסה ישירה לתובנות מתוך רשימה מסוימת). רקע אטום +
           zIndex כדי שהתוכן שנגלל מתחת לא יציץ דרכו. */}
       {allUserLists.length > 0 && (
-        <Box sx={{
+        <Box id="insights-price-list-context" sx={{
           position: 'sticky',
           top: 'env(safe-area-inset-top, 0px)',
           zIndex: 5,
