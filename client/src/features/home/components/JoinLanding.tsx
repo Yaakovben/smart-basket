@@ -6,7 +6,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { COMMON_STYLES, haptic } from '../../../global/helpers';
-import { isInBrowser } from '../helpers/pwaDetection';
+import { isInBrowser, isIOS, isInAppBrowser } from '../helpers/pwaDetection';
 
 // דף נחיתה של קישור הצטרפות: /join?code=...&password=...
 //
@@ -39,8 +39,11 @@ export const JoinLanding = () => {
   };
 
   // אין קוד / כבר רצים באפליקציה המותקנת / המשתמש בחר להמשיך בדפדפן -
-  // התנהגות המקור: שמור והפנה הביתה.
-  if (!code || !isInBrowser() || proceed) {
+  // התנהגות המקור: שמור והפנה הביתה. מסך-הביניים ("העתק קוד ופתח את
+  // האפליקציה") מוצג רק כשבאמת יש לזה טעם: iOS (שם אין דרך אחרת לפתוח
+  // PWA מותקן מקישור) או WebView מוגבל של אפליקציה אחרת (WhatsApp וכו') -
+  // דפדפן רגיל כמו כרום פשוט ממשיך ישר לזרימה הרגילה, בלי מסך מיותר.
+  if (!code || !isInBrowser() || proceed || (!isIOS() && !isInAppBrowser())) {
     persist();
     return <Navigate to="/" replace />;
   }
