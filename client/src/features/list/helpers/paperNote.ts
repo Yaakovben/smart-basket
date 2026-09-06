@@ -14,12 +14,11 @@ export const PAPER_NOTE = {
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת (dog-ear) - גרדיאנט אטום/רווי (לא rgba שקוף) כדי שהפינה
-  // תיראה כמו נייר מוצק שמתקפל ומרים קצה, בניגוד ברור לגוף הבהיר של
-  // הפתק - לא כתם דהוי-כמעט-שקוף שנבלע ברקע (זו הייתה הבעיה: ה-stop
-  // הכהה היה ב-0.35 alpha בלבד, כמעט לא נראה).
-  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #0D9488 100%)',
-  flapDark: 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)',
+  // הפינה המקופלת (dog-ear) - צבע שטוח אחיד, לא גרדיאנט ולא drop-shadow.
+  // שתי הגרסאות הקודמות (rgba שקוף, ואז גרדיאנט+צל) יצאו מרוחות/מלוכלכות
+  // ("מעפן") - צבע אחיד נקי הוא הכי קרוב למקור (פינת נייר מוצקה, ברורה).
+  flapLight: '#0D9488',
+  flapDark: '#2DD4BF',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -32,14 +31,13 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-const FOLD: Record<PaperSize, number> = { chip: 14, field: 20, card: 22 };
-// מלבן מעוגל רגיל - חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש
-// ישב עליה נקי (כמו "פתק" אמיתי - לא ריבוע עם קרע גס באלכסון בכל הפינות,
-// שזו הייתה הבעיה בגרסה הקודמת עם clip-path פנטגון).
+const FOLD: Record<PaperSize, number> = { chip: 11, field: 16, card: 18 };
+// רדיוס מתון - לא כמעט-פילה/עיגול מלא (זה נראה גרוע, פחות "פתק" ויותר
+// כפתור). חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש ישב עליה נקי.
 const RADIUS: Record<PaperSize, string> = {
-  chip: '4px 12px 12px 12px',
-  field: '4px 16px 16px 16px',
-  card: '4px 18px 18px 18px',
+  chip: '3px 8px 8px 8px',
+  field: '3px 10px 10px 10px',
+  card: '3px 12px 12px 12px',
 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
@@ -66,11 +64,8 @@ export const addChipSx = (isDark: boolean) => {
       content: '""',
       position: 'absolute', top: 0, left: 0,
       width: fold + 1, height: fold + 1,
-      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-      // צל קטן על קו הקיפול - בלעדיו זו סתם פינה חתוכה באלכסון, איתו
-      // זה קורא כפינת נייר שמתקפלת ומטילה צל על הדף שמתחתיה.
-      filter: `drop-shadow(0.5px 0.5px 0.5px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(15,118,110,0.35)'})`,
     },
     '&:hover': { transform: 'translateY(-1px)' },
     '&:active': { transform: 'scale(0.97)' },
@@ -95,16 +90,15 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     // 'card' *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top
     // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
     ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
-    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - גרדיאנט
-    // + צל קטן על קו הקיפול, כדי שזה יקרא כנייר שמתקפל ולא כפינה חתוכה.
+    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - צבע
+    // שטוח אחיד, בלי גרדיאנט/צל (אלה יצאו מרוחים/מלוכלכים בגרסאות קודמות).
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
       width: fold + (size === 'chip' ? 1 : 2),
       height: fold + (size === 'chip' ? 1 : 2),
-      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-      filter: `drop-shadow(1px 1px 1px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(15,118,110,0.3)'})`,
       zIndex: 1,
     },
   };
