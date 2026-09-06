@@ -24,8 +24,8 @@ export const PAPER_NOTE = {
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
-  // גוף הטקסט
-  textLight: '#134E4A',
+  // גוף הטקסט - הובהר מ-#134E4A (היה כהה מדי, קשה לקריאה במבט מהיר)
+  textLight: '#0F6B62',
   textDark: '#B9F0E6',
   // מסגרת דקה סביב תמונת מוצר (שורה + מודאל) - תכלת, לא צבע הקטגוריה
   frameLight: 'rgba(20,184,166,0.45)',
@@ -35,25 +35,27 @@ export const PAPER_NOTE = {
 type PaperSize = 'chip' | 'field' | 'card';
 // גודל תיבת הקיפול. 'field' אין לו כלי כיול נפרד - מוערך יחסית בין chip
 // ל-card לפי אותו יחס גודל (~0.82 מ-card, כמו שהיה בכיולים קודמים).
-const FOLD: Record<PaperSize, number> = { chip: 20, field: 31, card: 38 };
+// הוקטן כ-25% מהכיול הקודם - הפינה הייתה גדולה מספיק כדי להסתיר תוכן
+// (תווית/טקסט) בפועל, לא רק "בולטת".
+const FOLD: Record<PaperSize, number> = { chip: 15, field: 24, card: 29 };
 const RADIUS: Record<PaperSize, string> = {
-  chip: '3px 5px 5px 5px',
-  field: '3px 8px 8px 8px',
-  card: '3px 10px 10px 10px',
+  chip: '3px 4px 4px 4px',
+  field: '3px 6px 6px 6px',
+  card: '3px 8px 8px 8px',
 };
 // צורת הקיפול - clip-path עם קשת SVG (לא border-radius) כדי לקבל בדיוק
 // את העקומה שכוילה (curve~75%, קרוב לעיגול). 'field' מחושב באותה נוסחה
 // על הגודל המוערך שלו.
 const CLIP_PATH: Record<PaperSize, string> = {
-  chip: 'path("M0,0 L20,0 A15,15 0 0,1 0,20 Z")',
-  field: 'path("M0,0 L31,0 A23,23 0 0,1 0,31 Z")',
-  card: 'path("M0,0 L38,0 A29,29 0 0,1 0,38 Z")',
+  chip: 'path("M0,0 L15,0 A11,11 0 0,1 0,15 Z")',
+  field: 'path("M0,0 L24,0 A18,18 0 0,1 0,24 Z")',
+  card: 'path("M0,0 L29,0 A22,22 0 0,1 0,29 Z")',
 };
 // צל כפול (קו הקיפול + הרמה קלה מעל הדף) - כוילו יחד עם הגודל/צורה.
 const FOLD_SHADOW: Record<PaperSize, string> = {
-  chip: 'inset -4px -4px 5px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
-  field: 'inset -6px -6px 8px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
-  card: 'inset -7px -7px 10px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
+  chip: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+  field: 'inset -4px -4px 6px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+  card: 'inset -5px -5px 7px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה

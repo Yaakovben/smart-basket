@@ -508,9 +508,9 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 maxWidth: '48%',
                 minWidth: 0,
                 display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                // pl == FOLD.chip (20) בדיוק - התוכן מתחיל בדיוק איפה
+                // pl == FOLD.chip (15) בדיוק - התוכן מתחיל בדיוק איפה
                 // שתיבת הקיפול נגמרת, בלי חפיפה בלי קשר לצורת העקומה בפועל.
-                pl: '20px', pr: '5px', py: '1px',
+                pl: '15px', pr: '5px', py: '1px',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
                 opacity: isPurchased ? 0.55 : 1,
                 filter: isPurchased ? 'grayscale(0.6)' : 'none',
