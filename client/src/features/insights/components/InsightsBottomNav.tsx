@@ -14,7 +14,9 @@ interface InsightsBottomNavProps {
 export const InsightsBottomNav = ({ isDark, onNavigateHome, t }: InsightsBottomNavProps) => {
   return (
     <Box sx={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
+      // bottom: var(--nav-bottom) - גובה סרגל הדפדפן ב-iOS (ראו index.html /
+      // HomeBottomNav), כדי שהבר לא ייחתך מאחוריו. 0 ב-PWA/דסקטופ.
+      position: 'fixed', bottom: 'var(--nav-bottom, 0px)', left: 0, right: 0,
       zIndex: 1000,
       bgcolor: 'background.paper',
       borderTop: '1px solid',

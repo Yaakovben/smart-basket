@@ -15,7 +15,7 @@ interface InsightsEmptyScreenProps {
 // halo גדול עם 💡, כותרת ברכה, סקירת 3 התובנות שיופיעו, ו-CTA לחזרה ליצירת רשימה ראשונה.
 export const InsightsEmptyScreen = ({ isDark, t, onBack, onNavigateHome }: InsightsEmptyScreenProps) => {
   return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
+    <Box sx={{ height: 'var(--app-height, 100dvh)', bgcolor: 'background.default', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(80px + env(safe-area-inset-bottom))' }}>
       <InsightsHeader isDark={isDark} title={`💡 ${t('insights')}`} onBack={onBack} mb={2} />
 
       {/* פשטות: empty-state עם CTA + טיפים מובנים. נקודה. */}

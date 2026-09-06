@@ -34,7 +34,7 @@ const LoginComponentImpl = ({ onLogin }: LoginPageProps) => {
 
   return (
     <Box sx={{
-      height: { xs: '100dvh', sm: '100vh' },
+      height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' },
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

@@ -53,7 +53,7 @@ export const AiAssistantPage = memo(() => {
   };
 
   return (
-    <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+    <Box sx={{ height: 'var(--app-height, 100dvh)', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* כותרת */}
       <Box sx={{
         position: 'relative',

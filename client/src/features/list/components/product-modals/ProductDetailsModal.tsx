@@ -9,7 +9,7 @@ import type { Product, ProductEditChange, ProductCategory } from '../../../../gl
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
 import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
-import { PAPER_NOTE } from '../../helpers/paperNote';
+import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -18,6 +18,8 @@ interface ProductDetailsModalProps {
   product: Product | null;
   currentUserName: string;
   onClose: () => void;
+  // פותח את מודל עריכת המוצר (סוגר את מודל הפרטים). ראו ListComponent.
+  onEdit: () => void;
 }
 
 interface HistoryEntry {
@@ -70,7 +72,8 @@ const initials = (name: string): string => {
 export const ProductDetailsModal = memo(({
   product,
   currentUserName,
-  onClose
+  onClose,
+  onEdit
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -206,21 +209,44 @@ export const ProductDetailsModal = memo(({
         </Box>
         {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;
             הקשה מרחיבה לשם המלא (אין טקסט מוסתר לצמיתות). גופן רספונסיבי
-            לרוחב המסך. */}
-        <Typography
-          onClick={() => setNameExpanded(v => !v)}
-          title={product.name}
-          sx={{
-            fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary', mb: 0.5,
-            lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-            wordBreak: 'break-word',
-            ...(nameExpanded
-              ? { whiteSpace: 'pre-wrap' }
-              : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
-          }}
-        >
-          {product.name}
-        </Typography>
+            לרוחב המסך. עיפרון העריכה צמוד לשם עצמו (לא שורה נפרדת מתחתיו) -
+            סוגר את מודל הפרטים ופותח את מודל עריכת המוצר (ListComponent). */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+          <Typography
+            onClick={() => setNameExpanded(v => !v)}
+            title={product.name}
+            sx={{
+              fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary',
+              lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              wordBreak: 'break-word', minWidth: 0,
+              ...(nameExpanded
+                ? { whiteSpace: 'pre-wrap' }
+                : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+            }}
+          >
+            {product.name}
+          </Typography>
+          {/* alignItems:'center' על השורה - העיפרון ממורכז בגובה מול הטקסט
+              (בשם חד-שורתי, המקרה הנפוץ; בשם דו-שורתי הוא ממורכז מול שתי
+              השורות יחד - פשרה סבירה, לא דורש מדידה ידנית לפי שורה ראשונה). */}
+          <Box
+            component="button"
+            type="button"
+            onClick={onEdit}
+            aria-label={t('editProduct')}
+            sx={{
+              flexShrink: 0, width: 22, height: 22, p: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', borderRadius: '50%', bgcolor: 'transparent',
+              color: 'text.secondary', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              transition: 'color 0.15s',
+              '&:hover': { color: 'primary.main' },
+              '&:active': { opacity: 0.6 },
+            }}
+          >
+            <EditRoundedIcon sx={{ fontSize: 16 }} />
+          </Box>
+        </Box>
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>
@@ -236,23 +262,14 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - פתק נייר, בגרסת הפרטים: כרטיס מעוגל עם פינה תחתונה-שמאלית
-          מגולגלת (page-curl). ה"גלגול" הוא סהרון (mask רדיאלי חותך את הקצה
-          הפנימי לעקומה) עם גרדיאנט אלכסוני: כהה בקצה החיצוני (גב הדף
-          המגולגל) -> בהיר/לבן בקודקוד (קצה הגלגול שתופס אור). drop-shadow
-          עוקב אחרי הצורה. בלי משולש חד, בלי קופסה. הפינה התחתונה-שמאלית של
-          הכרטיס כמעט מרובעת (2px) כדי שהגלגול יישב עליה. אותם גוונים
-          (PAPER_NOTE) + סרט washi. מוצגת מעל ההיסטוריה. */}
+      {/* הערה - אותה "בועת-פתק" תכלת מעוגלת עם פינה מקופלת כמו בכל מקום
+          אחר בהערה/תמונה (paperNoteSx('card') - ראו paperNote.ts), לא
+          עיצוב נפרד משלה. סרט washi באמצע למעלה נשאר כפרט דקורטיבי. */}
       {product.note && (
         <Box sx={{
-          position: 'relative',
+          ...paperNoteSx('card', isDark),
           mt: 1, mb: 2,
-          pt: 2, pr: 2, pl: 2.5, pb: 2.5,
-          borderRadius: '16px 16px 16px 2px',
-          backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
-          border: '1px solid',
-          borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
-          transform: 'rotate(-0.5deg)',
+          pt: 2, px: 2, pb: 2.5,
           boxShadow: isDark
             ? '0 12px 28px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.28)'
             : [
@@ -260,21 +277,6 @@ export const ProductDetailsModal = memo(({
                 '0 2px 6px rgba(15,118,110,0.08)',
                 '0 14px 32px rgba(20,184,166,0.16)',
               ].join(', '),
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            left: -3, bottom: -3,
-            width: 40, height: 40,
-            pointerEvents: 'none',
-            background: isDark
-              ? 'linear-gradient(48deg, rgba(4,47,43,0.92) 0%, rgba(20,184,166,0.42) 34%, rgba(94,234,212,0.7) 74%, rgba(190,247,239,0.92) 100%)'
-              : 'linear-gradient(48deg, #5FB4A6 0%, #86CEC1 30%, #E6F6F2 62%, #FFFFFF 88%, #F0FDFA 100%)',
-            WebkitMaskImage: 'radial-gradient(circle 37px at 100% 0, transparent 36px, #000 37px)',
-            maskImage: 'radial-gradient(circle 37px at 100% 0, transparent 36px, #000 37px)',
-            filter: isDark
-              ? 'drop-shadow(2px -2px 3px rgba(0,0,0,0.5))'
-              : 'drop-shadow(2px -2px 3px rgba(15,118,110,0.32))',
-          },
         }}>
           {/* סרט washi באמצע למעלה */}
           <Box sx={{

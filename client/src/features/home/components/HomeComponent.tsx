@@ -54,7 +54,7 @@ export const HomeComponent = memo(({
   const [menuClosing, setMenuClosing] = useState(false);
 
   const {
-    tab, search, showMenu, showCreate, showCreateGroup, showJoin,
+    tab, search, showMenu, showCreate, showCreateGroup, showJoin, joinedFromLink,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
@@ -125,7 +125,7 @@ export const HomeComponent = memo(({
 
   return (
     <>
-    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', maxWidth: { xs: '100%', sm: 500, md: 600 }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
       <HomeHeader
         user={user}
         greeting={greeting}
@@ -214,6 +214,7 @@ export const HomeComponent = memo(({
           joinPass={joinPass}
           joinError={joinError}
           joinCooldown={joinCooldown}
+          joinedFromLink={joinedFromLink}
           joiningGroup={joiningGroup}
           passwordInputRef={passwordInputRef}
           onClose={closeJoinModal}

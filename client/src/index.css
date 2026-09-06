@@ -13,7 +13,11 @@ button, a, [role="button"], input[type="button"], input[type="submit"] {
 }
 
 html, body {
+  /* --app-height = window.innerHeight (נקבע ב-index.html) - האזור הנראה
+     בפועל, כי 100%/100dvh יוצאים לא נכון ב-Chrome/Safari ל-iOS והמסך נחתך
+     מלמטה. fallback ל-100% אם הסקריפט לא רץ. */
   height: 100%;
+  height: var(--app-height, 100%);
   width: 100%;
   overflow: hidden;
   overflow-anchor: none;
@@ -38,7 +42,7 @@ body.app-loaded {
 
 #root {
   min-height: 100%;
-  min-height: 100dvh;
+  min-height: var(--app-height, 100dvh);
   width: 100%;
   position: relative;
 }

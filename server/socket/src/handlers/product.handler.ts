@@ -48,7 +48,7 @@ export const registerProductHandlers = (
   });
 
   // עדכון מוצר
-  socket.on('product:update', (data: { listId: string; product: ProductData & { id: string }; userName: string }) => {
+  socket.on('product:update', (data: { listId: string; product: ProductData & { id: string }; userName: string; photoChange?: 'add' | 'remove' }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
       if (!isValidString(data?.listId) || !isValidProduct(data?.product)) {
@@ -57,17 +57,26 @@ export const registerProductHandlers = (
       }
       if (!socket.rooms.has(`list:${data.listId}`)) return;
 
+      // עריכה שהיא הוספה/הסרה של תמונה - התראה ייעודית במקום "עדכן/ה" גנרי.
+      const photoChange = data.photoChange === 'add' || data.photoChange === 'remove' ? data.photoChange : undefined;
+      const notifType = photoChange === 'add'
+        ? 'product_photo_add'
+        : photoChange === 'remove'
+          ? 'product_photo_remove'
+          : 'product_update';
+
       socket.to(`list:${data.listId}`).emit('product:updated', {
         listId: data.listId,
         product: { ...data.product, id: data.product.id },
         userId,
         userName, // מהטוקן
         timestamp: new Date(),
+        ...(photoChange ? { photoChange } : {}),
       });
 
       ApiService.broadcastNotification({
         listId: data.listId,
-        type: 'product_update',
+        type: notifType,
         actorId: userId,
         productId: data.product.id,
         productName: data.product.name,

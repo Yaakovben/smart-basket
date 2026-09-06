@@ -19,7 +19,7 @@ export interface ClientToServerEvents {
   'leave:list': (listId: string) => void;
   'get:presence': (listIds: string[]) => void;
   'product:add': (data: { listId: string; product: ProductData & { id?: string }; userName: string }) => void;
-  'product:update': (data: { listId: string; product: ProductData & { id: string }; userName: string }) => void;
+  'product:update': (data: { listId: string; product: ProductData & { id: string }; userName: string; photoChange?: 'add' | 'remove' }) => void;
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;
   'product:delete': (data: { listId: string; productId: string; productName: string; userName: string }) => void;
   'products:clear': (data: { listId: string; productIds: string[]; filter: 'all' | 'purchased' | 'pending'; userName: string }) => void;
@@ -73,6 +73,9 @@ export interface ProductEventData {
   userId: string;
   userName: string;
   timestamp: Date;
+  // מוגדר רק ב-product:updated כשהעריכה הייתה הוספה/הסרה של תמונה - הלקוח
+  // מציג התראה ייעודית ("הוסיף/ה תמונה") במקום "עדכן/ה".
+  photoChange?: 'add' | 'remove';
 }
 
 export interface ProductDeletedData {
@@ -112,7 +115,7 @@ export interface ListUpdatedData {
 
 export interface NotificationData {
   id: string;
-  type: 'join' | 'leave' | 'removed' | 'product_add' | 'product_update' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
+  type: 'join' | 'leave' | 'removed' | 'product_add' | 'product_update' | 'product_photo_add' | 'product_photo_remove' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
   listId: string;
   userId: string;
   userName: string;

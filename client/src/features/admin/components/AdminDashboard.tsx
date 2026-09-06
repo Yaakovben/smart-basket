@@ -55,7 +55,7 @@ export const AdminDashboard = () => {
   }, [refreshData]);
 
   return (
-    <Box sx={{ height: '100dvh', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+    <Box sx={{ height: 'var(--app-height, 100dvh)', bgcolor: isDark ? '#0F1419' : '#F8FAFB', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
       <AdminDashboardHeader
         isDark={isDark}
         isRtl={isRtl}

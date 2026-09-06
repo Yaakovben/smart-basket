@@ -12,7 +12,7 @@
  *  - כל popup שומר דחייה משלו ב-localStorage (לצמיתות)
  */
 
-type PopupKind = 'daily-faith' | 'pwa-install' | 'push-notify';
+type PopupKind = 'daily-faith' | 'pwa-install' | 'push-notify' | 'feature-tip';
 
 const SESSION_KEY = 'sb_popup_shown_session';
 

@@ -381,7 +381,7 @@ export const AddProductModal = memo(({
           לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
           flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
           במקום לשבת לצידה. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 2.5, mb: 1.5 }}>
         <ProductNoteField
           value={newProduct.note}
           onChange={(v) => onUpdateField('note', v)}

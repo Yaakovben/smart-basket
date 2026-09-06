@@ -70,6 +70,9 @@ export function getSettingsKeyForType(type: string): keyof NotifSettingsIDB | nu
     case 'list_update': return 'listUpdate';
     case 'product_add': return 'productAdd';
     case 'product_update': return 'productEdit';
+    case 'product_photo_add': return 'productEdit';
+    case 'product_photo_remove': return 'productEdit';
+    case 'product_edit': return 'productEdit';
     case 'product_delete': return 'productDelete';
     case 'product_purchase': return 'productPurchase';
     case 'product_unpurchase': return 'productPurchase';

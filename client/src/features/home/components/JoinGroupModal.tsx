@@ -12,6 +12,7 @@ interface JoinGroupModalProps {
   joinPass: string;
   joinError: string;
   joinCooldown: number;
+  joinedFromLink?: boolean;
   joiningGroup: boolean;
   passwordInputRef: RefObject<HTMLInputElement | null>;
   onClose: () => void;
@@ -24,7 +25,7 @@ interface JoinGroupModalProps {
 }
 
 export const JoinGroupModal = ({
-  joinCode, joinPass, joinError, joinCooldown, joiningGroup, passwordInputRef,
+  joinCode, joinPass, joinError, joinCooldown, joinedFromLink, joiningGroup, passwordInputRef,
   onClose, onCodeChange, onPassChange, onClearError, onSubmit, onOpenQRScanner, t,
 }: JoinGroupModalProps) => {
   return (
@@ -49,6 +50,21 @@ export const JoinGroupModal = ({
           {t('enterCodeAndPasswordHint')}
         </Typography>
       </Box>
+
+      {/* רמז קטן, לא חוסם - רק כשהמודאל נפתח מקישור הצטרפות (JoinLanding),
+          לא כשנפתח ידנית מהתפריט "הצטרף לרשימה". יושב מתחת לכותרת (הקשר
+          "איך הגעת לכאן") ולא נדחק בין סריקת ה-QR לכפתור ההצטרפות. */}
+      {joinedFromLink && (
+        <Box sx={{
+          mb: 2, px: 1.5, py: 0.85, borderRadius: '10px',
+          bgcolor: 'rgba(20,184,166,0.08)',
+          border: '1px solid rgba(20,184,166,0.2)',
+        }}>
+          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', textAlign: 'center', lineHeight: 1.5 }}>
+            {t('preferInstalledAppHint')}
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>

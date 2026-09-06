@@ -64,6 +64,12 @@ export const useHome = ({
   const [editList, setEditList] = useState<List | null>(null);
   const [confirmDeleteList, setConfirmDeleteList] = useState<List | null>(null);
 
+  // נפתח מקישור הצטרפות (/join, ראו JoinLanding.tsx) ולא מהתפריט הרגיל -
+  // מבדיל בין שני מקורות הפתיחה כדי להציג רמז קטן ("אם האפליקציה כבר
+  // מותקנת, עדיף להיכנס דרכה") רק כשזה רלוונטי, לא בכל פתיחת "הצטרף
+  // לרשימה" ידנית מהתפריט.
+  const [joinedFromLink, setJoinedFromLink] = useState(false);
+
   // פתיחת הצטרפות מ-QR code (localStorage משותף בין דפדפן ל-PWA)
   useEffect(() => {
     const code = localStorage.getItem('sb_join_code');
@@ -72,6 +78,7 @@ export const useHome = ({
       const password = localStorage.getItem('sb_join_password') || '';
       localStorage.removeItem('sb_join_password');
       setShowJoin(true);
+      setJoinedFromLink(true);
       setTimeout(() => {
         setJoinCode(code.toUpperCase());
         if (password) setJoinPass(password);
@@ -189,6 +196,7 @@ export const useHome = ({
         setShowJoin(false);
         setJoinCode('');
         setJoinPass('');
+        setJoinedFromLink(false);
         joinAttemptsRef.current = 0;
       } else {
         joinAttemptsRef.current++;
@@ -231,6 +239,7 @@ export const useHome = ({
     setJoinError('');
     setJoinCode('');
     setJoinPass('');
+    setJoinedFromLink(false);
   }, []);
 
   // ===== טיפול בשדות טופס =====
@@ -282,6 +291,7 @@ export const useHome = ({
     showCreate,
     showCreateGroup,
     showJoin,
+    joinedFromLink,
     showNotifications,
     confirmLogout,
     editList,

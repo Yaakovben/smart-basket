@@ -79,6 +79,20 @@ export interface DbHealth {
   collections: DbHealthCollection[];
 }
 
+// חיווי שימוש ב-Cloudinary (טאב שני בכרטיס בריאות ה-DB).
+export interface CloudinaryHealth {
+  configured: boolean;
+  plan?: string;
+  lastUpdated?: string;
+  credits?: { used: number; limit: number; pct: number };
+  storage?: { usedBytes: number; limitBytes: number | null; pct: number | null };
+  bandwidth?: { usedBytes: number; limitBytes: number | null; pct: number | null };
+  transformations?: { used: number; limit: number | null; pct: number | null };
+  objects?: number;
+  requests?: number;
+  status?: 'ok' | 'warning' | 'critical';
+}
+
 export interface AiProviderRateLimit {
   limitRequests: string | null;
   remainingRequests: string | null;

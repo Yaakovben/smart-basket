@@ -10,8 +10,8 @@ type UserLoginStats = {
   lastAppOpenAt: Date | null;
 };
 
-const LOGIN_STATS_CACHE_TTL_MS = 60 * 1000;
-const loginStatsCache = new Map<string, { data: UserLoginStats[]; expiresAt: number }>();
+const LOGIN_STATS_CACHE_TTL_MS = 5 * 60 * 1000;
+const loginStatsCache = new Map<string, { data: UserLoginStats[]; expiresAt: number; refreshing?: boolean }>();
 
 async function computeStatsByUser(userIds: string[]): Promise<UserLoginStats[]> {
   return LoginActivity.aggregate([
@@ -91,11 +91,14 @@ export const LoginActivityDAL = {
   // גם עם הסינון, זה $group על כל היסטוריית ההתחברויות של כל המשתמשים
   // (הקורא היחיד היום, admin.controller.getUsers, תמיד מעביר את כל
   // המשתמשים) - זה מה שגורם לדף האדמין להיפתח לאט, ומחמיר ככל שהיסטוריית
-  // ההתחברויות גדלה. cache קצר בזיכרון, פר-userIds (לא סתם slot גלובלי
-  // כמו activeChainsCache ב-price.dal.ts, כדי שקריאה עתידית עם תת-קבוצה
-  // שונה של משתמשים לא תקבל בטעות תוצאה של קבוצה אחרת), הופך פתיחות חוזרות
-  // של דף האדמין (רענון, ניווט חזרה) לכמעט מיידיות בלי לפגוע משמעותית
-  // בטריות - נתוני "כניסה אחרונה" לא צריכים דיוק לשנייה.
+  // ההתחברויות גדלה.
+  //
+  // stale-while-revalidate: כשיש נתונים ב-cache (גם אם פגו) מחזירים אותם
+  // *מיד* ומריצים את ה-aggregation ברקע לרענון. כך אף פתיחה של דף האדמין
+  // לא מחכה ל-$group - רק הקריאה הראשונה אי-פעם (או אחרי restart של השרת)
+  // חוסמת. נתוני "כניסה אחרונה" ממילא לא צריכים דיוק לשנייה.
+  // cache פר-userIds (לא slot גלובלי) כדי שקריאה עם תת-קבוצה שונה של
+  // משתמשים לא תקבל תוצאה של קבוצה אחרת.
   async getStatsByUser(userIds: string[]): Promise<Array<{
     userId: string;
     totalLogins: number;
@@ -106,9 +109,27 @@ export const LoginActivityDAL = {
     if (userIds.length === 0) return [];
 
     const cacheKey = [...userIds].sort().join(',');
+    const now = Date.now();
     const cached = loginStatsCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) return cached.data;
 
+    // cache טרי - מחזירים מיד
+    if (cached && cached.expiresAt > now) return cached.data;
+
+    // cache פג אבל קיים - מחזירים ישן מיד, מרעננים ברקע (בלי לחסום)
+    if (cached) {
+      if (!cached.refreshing) {
+        cached.refreshing = true;
+        void computeStatsByUser(userIds)
+          .then(fresh => {
+            loginStatsCache.clear(); // slot יחיד בפועל - מונע הצטברות מפתחות ישנים
+            loginStatsCache.set(cacheKey, { data: fresh, expiresAt: Date.now() + LOGIN_STATS_CACHE_TTL_MS });
+          })
+          .catch(() => { cached.refreshing = false; /* משאירים את הישן, ננסה שוב בקריאה הבאה */ });
+      }
+      return cached.data;
+    }
+
+    // אין כלום ב-cache - חייבים לחשב (חוסם, קורה רק בקריאה הראשונה)
     const data = await computeStatsByUser(userIds);
     loginStatsCache.clear(); // slot יחיד בפועל (קורא יחיד) - מונע דליפת זיכרון מ-cacheKey-ים ישנים
     loginStatsCache.set(cacheKey, { data, expiresAt: Date.now() + LOGIN_STATS_CACHE_TTL_MS });

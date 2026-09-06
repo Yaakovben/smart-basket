@@ -291,6 +291,14 @@ export const useProductMutations = ({
         : p)
     );
 
+    // התראה ייעודית ("הוסיף/ה תמונה" / "הסיר/ה תמונה") רק כשהתמונה הייתה
+    // *השינוי היחיד* - עריכה מעורבת (תמונה + שם וכו') נשארת "עדכן/ה" גנרי.
+    // תמונה שהוחלפה באחרת נחשבת "הוספה" (יש עכשיו תמונה חדשה לראות).
+    const photoChange: 'add' | 'remove' | undefined =
+      Object.keys(changes).length === 1 && 'image' in changes
+        ? (editData.image ? 'add' : 'remove')
+        : undefined;
+
     try {
       await productsApi.updateProduct(list.id, editData.id, changes);
       showToast(t('saved'));
@@ -300,7 +308,7 @@ export const useProductMutations = ({
         quantity: editData.quantity,
         unit: editData.unit,
         category: editData.category,
-      }, user.name);
+      }, user.name, photoChange);
     } catch (error) {
       if (isNetworkError(error)) {
         void enqueueUpdate(list.id, editData.id, changes);

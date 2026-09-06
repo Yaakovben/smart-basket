@@ -258,6 +258,8 @@ export type TranslationKeys =
   // Socket notifications
   | 'addedProductNotif'
   | 'editedProductNotif'
+  | 'photoAddedNotif'
+  | 'photoRemovedNotif'
   | 'deletedProductNotif'
   | 'clearedListNotif'
   | 'purchasedNotif'
@@ -611,6 +613,8 @@ export type TranslationKeys =
   | 'priceDbNotLoadedDesc'
   | 'noPurchasesThisMonthTitle'
   | 'noPurchasesThisMonthDesc'
+  | 'purchasesNoPricesTitle'
+  | 'purchasesNoPricesDesc'
   | 'spentThisMonth'
   | 'monthSummaryTitle'
   | 'spentThisMonthLabel'
@@ -680,6 +684,7 @@ export type TranslationKeys =
   | 'clearCacheConfirmButton'
   // Join group via QR
   | 'joinViaQr'
+  | 'preferInstalledAppHint'
   // AI Assistant
   | 'aiAssistantTitle'
   | 'aiAssistantIntro'
@@ -859,6 +864,24 @@ export type TranslationKeys =
   | 'joinLandingHaveApp'
   | 'joinLandingOpenApp'
   | 'joinLandingContinueHere'
-  | 'joinLandingCopiedHint';
+  | 'joinLandingCopiedHint'
+  | 'tipEyebrow'
+  | 'tipGotIt'
+  | 'tipScanListTitle'
+  | 'tipScanListBody'
+  | 'tipProductPhotoTitle'
+  | 'tipProductPhotoBody'
+  | 'tipShareQrTitle'
+  | 'tipShareQrBody'
+  | 'tipMoveProductsTitle'
+  | 'tipMoveProductsBody'
+  | 'tipLongPressTitle'
+  | 'tipLongPressBody'
+  | 'tipSwipeTitle'
+  | 'tipSwipeBody'
+  | 'tipSavedListsTitle'
+  | 'tipSavedListsBody'
+  | 'tipInsightsTitle'
+  | 'tipInsightsBody';
 
 export type Translations = Record<TranslationKeys, string>;

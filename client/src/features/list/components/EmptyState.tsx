@@ -97,7 +97,7 @@ export const EmptyState = memo(({ filter, totalProducts, hasSearch, savedLists =
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 'calc(100dvh - 320px)',
+      minHeight: 'calc(var(--app-height, 100dvh) - 320px)',
       // כשמוצגות רשימות קבועות - pb גדול יותר דוחף את הבלוק המרכזי מעלה,
       // כדי שהצ'יפים לא ייחתכו ע"י ה-FAB (כפתור פלוס, fixed בתחתית). מספיק
       // אמין עכשיו כי קופסת הרשימות עצמה גובהה קבוע (גלילה אופקית בשורה
