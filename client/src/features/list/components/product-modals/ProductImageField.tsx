@@ -102,7 +102,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
         // אחידות ומסגרת תכלת דקה (בדיוק כמו תמונת מוצר בשורת הרשימה
         // ובמסך הפרטים - PAPER_NOTE.frame). בלי הטיה, בלי תווית, בלי פינה
         // מקופלת. כפתור הסרה אדום על הפינה.
-        <Box sx={{ position: 'relative', width: 76, display: 'inline-block' }}>
+        <Box sx={{ position: 'relative', width: 76, display: 'inline-block', transform: 'translateX(-8px)' }}>
           <Box
             role="button"
             aria-label={t('viewPhotoAria')}
