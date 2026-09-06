@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Box, Typography, Collapse, Button } from '@mui/material';
+import { Box, Typography, Collapse } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -209,41 +209,44 @@ export const ProductDetailsModal = memo(({
         </Box>
         {/* שם - עד 2 שורות כברירת מחדל כדי לא לדחוף את שאר התוכן למטה;
             הקשה מרחיבה לשם המלא (אין טקסט מוסתר לצמיתות). גופן רספונסיבי
-            לרוחב המסך. */}
-        <Typography
-          onClick={() => setNameExpanded(v => !v)}
-          title={product.name}
-          sx={{
-            fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary', mb: 0.5,
-            lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-            wordBreak: 'break-word',
-            ...(nameExpanded
-              ? { whiteSpace: 'pre-wrap' }
-              : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
-          }}
-        >
-          {product.name}
-        </Typography>
+            לרוחב המסך. עיפרון העריכה צמוד לשם עצמו (לא שורה נפרדת מתחתיו) -
+            סוגר את מודל הפרטים ופותח את מודל עריכת המוצר (ListComponent). */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+          <Typography
+            onClick={() => setNameExpanded(v => !v)}
+            title={product.name}
+            sx={{
+              fontSize: { xs: 17, sm: 20 }, fontWeight: 700, color: 'text.primary',
+              lineHeight: 1.3, cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              wordBreak: 'break-word', minWidth: 0,
+              ...(nameExpanded
+                ? { whiteSpace: 'pre-wrap' }
+                : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }),
+            }}
+          >
+            {product.name}
+          </Typography>
+          <Box
+            component="button"
+            type="button"
+            onClick={onEdit}
+            aria-label={t('editProduct')}
+            sx={{
+              flexShrink: 0, width: 26, height: 26, mt: '2px', p: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', borderRadius: '50%', bgcolor: 'transparent',
+              color: 'text.secondary', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              transition: 'color 0.15s',
+              '&:hover': { color: 'primary.main' },
+              '&:active': { opacity: 0.6 },
+            }}
+          >
+            <EditRoundedIcon sx={{ fontSize: 16 }} />
+          </Box>
+        </Box>
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>
-        {/* לחצן עריכה עדין - קישור טקסט שקט, לא כפתור מלא. סוגר את מודל
-            הפרטים ופותח את מודל עריכת המוצר (ListComponent). */}
-        <Button
-          onClick={onEdit}
-          disableRipple
-          startIcon={<EditRoundedIcon sx={{ fontSize: 15 }} />}
-          sx={{
-            mt: 0.75, py: 0.25, px: 1, minWidth: 0,
-            color: 'text.secondary', fontSize: 12, fontWeight: 600,
-            textTransform: 'none', borderRadius: '999px',
-            '& .MuiButton-startIcon': { mr: 0.4, ml: 0 },
-            '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
-            '&:active': { opacity: 0.6 },
-          }}
-        >
-          {t('editProduct')}
-        </Button>
       </Box>
       <Box sx={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
