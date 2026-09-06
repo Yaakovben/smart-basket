@@ -537,6 +537,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         product={showDetails ? (list.products.find(p => p.id === showDetails.id) ?? showDetails) : null}
         currentUserName={user.name}
         onClose={() => setShowDetails(null)}
+        onEdit={() => {
+          // סוגר את מודל הפרטים ופותח את מודל העריכה על הגרסה החיה של המוצר.
+          const live = showDetails ? (list.products.find(p => p.id === showDetails.id) ?? showDetails) : null;
+          if (!live) return;
+          setShowDetails(null);
+          openEditProduct(live);
+        }}
       />
 
       {/* List Modals */}

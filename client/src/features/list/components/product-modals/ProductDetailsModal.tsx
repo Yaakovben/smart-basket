@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Box, Typography, Collapse } from '@mui/material';
+import { Box, Typography, Collapse, Button } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -18,6 +18,8 @@ interface ProductDetailsModalProps {
   product: Product | null;
   currentUserName: string;
   onClose: () => void;
+  // פותח את מודל עריכת המוצר (סוגר את מודל הפרטים). ראו ListComponent.
+  onEdit: () => void;
 }
 
 interface HistoryEntry {
@@ -70,7 +72,8 @@ const initials = (name: string): string => {
 export const ProductDetailsModal = memo(({
   product,
   currentUserName,
-  onClose
+  onClose,
+  onEdit
 }: ProductDetailsModalProps) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
@@ -224,6 +227,23 @@ export const ProductDetailsModal = memo(({
         <Typography sx={{ fontSize: 15, color: 'primary.main', fontWeight: 600 }}>
           {product.quantity} {product.unit}
         </Typography>
+        {/* לחצן עריכה עדין - קישור טקסט שקט, לא כפתור מלא. סוגר את מודל
+            הפרטים ופותח את מודל עריכת המוצר (ListComponent). */}
+        <Button
+          onClick={onEdit}
+          disableRipple
+          startIcon={<EditRoundedIcon sx={{ fontSize: 15 }} />}
+          sx={{
+            mt: 0.75, py: 0.25, px: 1, minWidth: 0,
+            color: 'text.secondary', fontSize: 12, fontWeight: 600,
+            textTransform: 'none', borderRadius: '999px',
+            '& .MuiButton-startIcon': { mr: 0.4, ml: 0 },
+            '&:hover': { bgcolor: 'transparent', color: 'primary.main' },
+            '&:active': { opacity: 0.6 },
+          }}
+        >
+          {t('editProduct')}
+        </Button>
       </Box>
       <Box sx={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
