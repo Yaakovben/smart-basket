@@ -10,7 +10,7 @@ interface InsightsLoadingStateProps {
 // כדי למנוע קפיצה ויזואלית ברגע שהנתונים מגיעים.
 export const InsightsLoadingState = ({ isDark }: InsightsLoadingStateProps) => {
   return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 4, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+    <Box sx={{ height: 'var(--app-height, 100dvh)', bgcolor: 'background.default', pb: 4, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* הדר: באנר עליון - גרדיאנט תואם בדיוק לעמוד האמיתי, מונע קפיצה ויזואלית.
           הבלוקים בפנים משתמשים ב-ShimmerBlock לעקביות עם שאר האפליקציה. */}
       <Box sx={{

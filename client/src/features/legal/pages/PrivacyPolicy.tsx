@@ -29,7 +29,7 @@ export const PrivacyPolicy = memo(() => {
   const isDark = settings.theme === 'dark';
 
   return (
-    <Box sx={{ height: { xs: '100dvh', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
+    <Box sx={{ height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' }, display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       {/* Header */}
       <Box sx={{
         background: isDark ? COMMON_STYLES.gradients.header.dark : COMMON_STYLES.gradients.header.light,

@@ -30,8 +30,10 @@ export const HomeBottomNav = ({ contentRef, onOpenMenu, t }: HomeBottomNavProps)
         sx={{
           // fixed - נעול לויאופורט. הבר נמצא מחוץ ל-root Box כך שאין ancestor
           // עם transform/filter שיהפוך אותו לפעול כ-absolute.
+          // bottom: var(--nav-bottom) - גובה סרגל הדפדפן ב-iOS (נקבע ב-index.html
+          // מ-visualViewport), כדי שהבר לא ייחתך מאחוריו. 0 ב-PWA/דסקטופ.
           position: 'fixed',
-          bottom: 0, left: 0, right: 0,
+          bottom: 'var(--nav-bottom, 0px)', left: 0, right: 0,
           zIndex: 1000,
           bgcolor: 'background.paper',
           borderTop: '1px solid',
@@ -187,7 +189,7 @@ export const HomeBottomNav = ({ contentRef, onOpenMenu, t }: HomeBottomNavProps)
           // יבטיח שה-FAB יהיה מעל ה-indicator ולא יחפוף.
           // על Android safe-area=0 → max(32, 0) = 32 → FAB מתואם בדיוק לבר.
           position: 'fixed',
-          bottom: 'max(32px, env(safe-area-inset-bottom))',
+          bottom: 'calc(var(--nav-bottom, 0px) + max(32px, env(safe-area-inset-bottom)))',
           left: 0, right: 0,
           display: 'flex', justifyContent: 'center',
           zIndex: 1100,

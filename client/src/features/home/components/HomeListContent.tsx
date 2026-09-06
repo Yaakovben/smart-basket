@@ -40,6 +40,25 @@ interface HomeListContentProps {
   t: (key: TranslationKeys) => string;
 }
 
+// שלוש נקודות מהבהבות לחיווי "מנסה שוב". reverse הופך את סדר ה-delay כדי
+// שבצד שמאל של הכיתוב הן "יזרמו" פנימה לכיוון הטקסט (סימטריה עם צד ימין).
+const RetryDots = ({ reverse = false }: { reverse?: boolean }) => (
+  <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
+    {[0, 1, 2].map(i => (
+      <Box key={i} sx={{
+        width: 5, height: 5, borderRadius: '50%',
+        bgcolor: 'primary.main',
+        animation: 'connDot 1.2s ease-in-out infinite',
+        animationDelay: `${(reverse ? 2 - i : i) * 0.18}s`,
+        '@keyframes connDot': {
+          '0%, 100%': { opacity: 0.25, transform: 'scale(0.8)' },
+          '50%': { opacity: 1, transform: 'scale(1)' },
+        },
+      }} />
+    ))}
+  </Box>
+);
+
 // אזור התוכן של מסך הבית: מצב שגיאת חיבור / סקלטון טעינה / ריק / רשימת כרטיסים עם סידור-מחדש.
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
@@ -109,25 +128,14 @@ export const HomeListContent = ({
             <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, color: 'text.secondary', lineHeight: 1.5, mb: 2.25 }}>
               {isDeviceOffline ? t('offlineDesc') : t('loadRetryDesc')}
             </Typography>
-            {/* חיווי "מנסה שוב" - שקוף ומשולב בכרטיס, לא צ'יפ נפרד זועק */}
+            {/* חיווי "מנסה שוב" - שקוף ומשולב בכרטיס, לא צ'יפ נפרד זועק.
+                נקודות משני צדי הכיתוב. */}
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.9, mb: 1.5 }}>
-              <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
-                {[0, 1, 2].map(i => (
-                  <Box key={i} sx={{
-                    width: 5, height: 5, borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    animation: 'connDot 1.2s ease-in-out infinite',
-                    animationDelay: `${i * 0.18}s`,
-                    '@keyframes connDot': {
-                      '0%, 100%': { opacity: 0.25, transform: 'scale(0.8)' },
-                      '50%': { opacity: 1, transform: 'scale(1)' },
-                    },
-                  }} />
-                ))}
-              </Box>
+              <RetryDots reverse />
               <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
                 {t('retrying')}
               </Typography>
+              <RetryDots />
             </Box>
             <Button
               variant="text"

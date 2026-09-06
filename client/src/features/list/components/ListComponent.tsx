@@ -333,7 +333,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   return (
     <Box sx={{
-      height: { xs: '100dvh', sm: '100vh' },
+      height: { xs: 'var(--app-height, 100dvh)', sm: '100vh' },
       display: 'flex',
       flexDirection: 'column',
       bgcolor: 'background.default',

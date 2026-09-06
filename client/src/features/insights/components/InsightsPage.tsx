@@ -85,7 +85,7 @@ export const InsightsPage = memo(() => {
   );
 
   return (
-    <Box sx={{ height: '100dvh', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+    <Box sx={{ height: 'var(--app-height, 100dvh)', bgcolor: 'background.default', pb: 'calc(80px + env(safe-area-inset-bottom))', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
       {/* חיווי טעינה איטית - בועה קטנה (toast) במסך השוואת מחירים. ה-cache
           המקומי מציג נתונים מיד, החיווי הוא רק לרענון רקע איטי. */}
       <SlowLoadIndicator
