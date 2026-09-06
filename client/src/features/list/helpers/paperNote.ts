@@ -87,10 +87,12 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     border: '1px solid',
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
     borderRadius: RADIUS[size],
-    // בלי overflow:hidden - 'field'/'card' מוסיפים סרט washi שיושב חלקית
-    // *מעל* הקופסה (top שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx);
-    // המשולש של הקיפול לא צריך את זה בכלל - הוא כבר תחום לגמרי בפינה
-    // (0,0 בגודל fold) בלי קשר לרדיוס של שאר הקופסה.
+    // overflow:hidden רק ב-'chip' (אין שם סרט washi) - בלעדיו הפינה
+    // המרובעת-חדה של משולש הקיפול בולטת מעבר לעיגול הפינה של הקופסה
+    // עצמה ונראית כמו פיסה נפרדת שצפה ליד הצ'יפ, לא חלק ממנו. ב-'field'/
+    // 'card' *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top
+    // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
+    ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
     // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - גרדיאנט
     // + צל קטן על קו הקיפול, כדי שזה יקרא כנייר שמתקפל ולא כפינה חתוכה.
     '&::before': {
