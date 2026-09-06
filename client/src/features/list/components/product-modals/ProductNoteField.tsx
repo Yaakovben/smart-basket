@@ -77,21 +77,22 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />
-          {/* כפתור סגירה - עיגול בפינה העליונה-שמאלית של הפתק, בולט קצת
-              החוצה (הפתק בלי overflow:hidden ב-'field'). */}
+          {/* כפתור סגירה - עיגול בפינה העליונה-שמאלית (הפיזית) של הפתק,
+              בולט קצת החוצה (ב-'field' אין overflow:hidden). יושב מעל
+              משולש הקיפול הדקורטיבי. */}
           <Box
             role="button"
             aria-label={t('closeNoteAria')}
             onClick={closeAndClear}
             sx={{
-              position: 'absolute', top: -9, insetInlineStart: -9, zIndex: 3,
-              width: 26, height: 26, borderRadius: '50%',
+              position: 'absolute', top: -12, left: -12, zIndex: 3,
+              width: 30, height: 30, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               bgcolor: isDark ? '#1E293B' : '#FFFFFF',
               color: ink,
               border: '1.5px solid',
               borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
-              boxShadow: '0 1px 5px rgba(15,118,110,0.22)',
+              boxShadow: '0 1.5px 6px rgba(15,118,110,0.28)',
               cursor: 'pointer', userSelect: 'none',
               WebkitTapHighlightColor: 'transparent',
               transition: 'transform 0.12s, background-color 0.15s',
@@ -99,31 +100,29 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
               '&:hover': { bgcolor: isDark ? '#293548' : '#F0FDFA' },
             }}
           >
-            <CloseRoundedIcon sx={{ fontSize: 16 }} />
+            <CloseRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
 
-          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'flex-start', gap: 0.7, mb: 0.6 }}>
-            <Box sx={{ flex: 1, lineHeight: 1.15 }}>
-              <Typography sx={{
-                fontSize: 10, fontWeight: 800, color: ink,
-                letterSpacing: 1, textTransform: 'uppercase',
-              }}>
-                {t('note')}
-              </Typography>
-              <Typography sx={{ fontSize: 9.5, color: inkMuted, fontWeight: 500, mt: 0.15 }}>
-                {t('noteHintKosherTypeBrand')}
-              </Typography>
-            </Box>
-            {/* מונה תווים - טקסט פשוט בגוון הפתק (לא שבב מעוגל שנלחם עם
-                שפת הנייר). מסמן אדום כשמתקרבים לגבול. */}
+          {/* מונה תווים - בפינה הימנית העליונה (מול ה-X שבשמאל). */}
+          <Typography sx={{
+            position: 'absolute', top: 6, right: 8, zIndex: 2,
+            fontSize: 10, fontWeight: 700,
+            color: value.length >= 180 ? '#DC2626' : ink,
+            opacity: value.length >= 180 ? 1 : 0.7,
+            fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
+          }}>
+            {value.length}/200
+          </Typography>
+
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.6, pr: 5, lineHeight: 1.15 }}>
             <Typography sx={{
-              fontSize: 10, fontWeight: 700,
-              color: value.length >= 180 ? '#DC2626' : ink,
-              opacity: value.length >= 180 ? 1 : 0.7,
-              fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
-              flexShrink: 0,
+              fontSize: 10, fontWeight: 800, color: ink,
+              letterSpacing: 1, textTransform: 'uppercase',
             }}>
-              {value.length}/200
+              {t('note')}
+            </Typography>
+            <Typography sx={{ fontSize: 9.5, color: inkMuted, fontWeight: 500, mt: 0.15 }}>
+              {t('noteHintKosherTypeBrand')}
             </Typography>
           </Box>
           <TextField
