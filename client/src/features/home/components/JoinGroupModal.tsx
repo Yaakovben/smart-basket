@@ -51,6 +51,21 @@ export const JoinGroupModal = ({
         </Typography>
       </Box>
 
+      {/* רמז קטן, לא חוסם - רק כשהמודאל נפתח מקישור הצטרפות (JoinLanding),
+          לא כשנפתח ידנית מהתפריט "הצטרף לרשימה". יושב מתחת לכותרת (הקשר
+          "איך הגעת לכאן") ולא נדחק בין סריקת ה-QR לכפתור ההצטרפות. */}
+      {joinedFromLink && (
+        <Box sx={{
+          mb: 2, px: 1.5, py: 0.85, borderRadius: '10px',
+          bgcolor: 'rgba(20,184,166,0.08)',
+          border: '1px solid rgba(20,184,166,0.2)',
+        }}>
+          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', textAlign: 'center', lineHeight: 1.5 }}>
+            {t('preferInstalledAppHint')}
+          </Typography>
+        </Box>
+      )}
+
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{t('groupCode')}</Typography>
@@ -169,14 +184,6 @@ export const JoinGroupModal = ({
           {t('joinViaQr')}
         </Box>
       </Box>
-
-      {/* רמז קטן, לא חוסם - רק כשהמודאל נפתח מקישור הצטרפות (JoinLanding),
-          לא כשנפתח ידנית מהתפריט "הצטרף לרשימה". */}
-      {joinedFromLink && (
-        <Typography sx={{ fontSize: 11.5, color: 'text.disabled', textAlign: 'center', mb: 2, mt: -1 }}>
-          {t('preferInstalledAppHint')}
-        </Typography>
-      )}
 
       {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
         {joinCooldown > 0 ? `${joinError} (${joinCooldown}s)` : joinError}
