@@ -4,7 +4,7 @@ import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateR
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
-import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
+import { PAPER_NOTE, addChipSx, paperNoteSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { compressProductImage, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
@@ -98,67 +98,52 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - תצוגה מקדימה קומפקטית: תווית "תמונה" למעלה (כמו
-        // תווית "הערה" בפתק), התמונה מתחת, וכפתור הסרה אדום על פינתה.
-        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.4 }}>
-          <Typography sx={{
-            fontSize: 10, fontWeight: 800, color: ink,
-            letterSpacing: 1, textTransform: 'uppercase', px: 0.25,
-          }}>
-            {t('photo')}
-          </Typography>
-          <Box sx={{ position: 'relative', width: 76, height: 76, transform: 'rotate(-1.2deg)' }}>
-            <Box
-              role="button"
-              aria-label={t('viewPhotoAria')}
-              onClick={() => { haptic('light'); setLightbox(true); }}
-              sx={{
-                position: 'relative',
-                width: '100%', height: '100%',
-                borderRadius: '10px', overflow: 'hidden',
-                bgcolor: 'action.hover',
-                boxShadow: '0 1.5px 5px rgba(0,0,0,0.12)',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-                '&:active': { transform: 'scale(0.97)' },
-              }}
-            >
-              <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
-              {/* מסגרת תכלת דקה - מצוירת מעל התמונה */}
+        // יש תמונה - "פתק" בדיוק באותה שפה כמו הצ'יפ הסגור/פתק ההערה:
+        // שטוח (בלי הטיה), אותו רדיוס, אותה פינה מקופלת (paperNoteSx 'chip'),
+        // רק שבתוכו התמונה במקום אייקון+טקסט. כפתור הסרה אדום על הפינה
+        // הנגדית (מחוץ ל-overflow:hidden).
+        <Box sx={{ position: 'relative', width: 76, display: 'inline-block' }}>
+          <Box
+            role="button"
+            aria-label={t('viewPhotoAria')}
+            onClick={() => { haptic('light'); setLightbox(true); }}
+            sx={{
+              ...paperNoteSx('chip', isDark),
+              width: 76, height: 76,
+              boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'transform 0.15s',
+              '&:active': { transform: 'scale(0.97)' },
+            }}
+          >
+            <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
+            {uploading && (
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0, borderRadius: '10px',
-                border: '1.5px solid',
-                borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
-                pointerEvents: 'none',
-              }} />
-              {/* העלאה לשרת ברקע - חיווי עדין, לא חוסם. התמונה כבר שמישה. */}
-              {uploading && (
-                <Box aria-hidden="true" sx={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: 'rgba(0,0,0,0.32)',
-                }}>
-                  <CircularProgress size={18} sx={{ color: '#fff' }} />
-                </Box>
-              )}
-            </Box>
-            {/* כפתור הסרה - עיגול אדום על הפינה */}
-            <Box
-              role="button"
-              aria-label={t('removePhoto')}
-              onClick={remove}
-              sx={{
-                position: 'absolute', top: -7, insetInlineStart: -7,
-                width: 22, height: 22, borderRadius: '50%',
-                bgcolor: '#DC2626', color: '#fff',
+                position: 'absolute', inset: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                '&:active': { transform: 'scale(0.9)' },
-              }}
-            >
-              <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
-            </Box>
+                bgcolor: 'rgba(0,0,0,0.32)',
+              }}>
+                <CircularProgress size={18} sx={{ color: '#fff' }} />
+              </Box>
+            )}
+          </Box>
+          {/* כפתור הסרה - עיגול אדום על הפינה השמאלית-עליונה (מחוץ ל-overflow) */}
+          <Box
+            role="button"
+            aria-label={t('removePhoto')}
+            onClick={remove}
+            sx={{
+              position: 'absolute', top: -7, insetInlineStart: -7,
+              width: 22, height: 22, borderRadius: '50%',
+              bgcolor: '#DC2626', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+              '&:active': { transform: 'scale(0.9)' },
+            }}
+          >
+            <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
           </Box>
         </Box>
       ) : (
