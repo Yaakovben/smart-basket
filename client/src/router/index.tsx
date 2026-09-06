@@ -6,6 +6,7 @@ import type { User, List, Product, LoginMethod, ToastType, SavedList } from "../
 import { useAuth, useLists, useToast, useSocketNotifications, useNotifications, usePushNotifications, usePresence, useOfflineSync } from "../global/hooks";
 import { Toast, PageSkeleton, ErrorBoundary, ConnectionStatusIcon } from "../global/components";
 import { DailyFaithAutoPopup } from "../features/daily-faith";
+import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
 import { ADMIN_CONFIG } from "../global/constants";
@@ -514,6 +515,9 @@ export const AppRouter = () => {
           useConnectionStatus - ראו ConnectionStatusIcon.tsx. */}
       <ConnectionStatusIcon />
       <DailyFaithAutoPopup enabled={!!user && !authLoading} />
+      {/* טיפ "ידעת ש...?" - פעם בכמה פתיחות, אחרי 12ש', רק אם לא הוצג פופאפ
+          אחר בסשן (popupCoordinator) ורק במסך הבית. */}
+      <FeatureTipAutoPopup enabled={!!user && !authLoading} />
       {/* OnboardingGate (פופאפ הסבר על האפליקציה) הוסר לפי בקשת המשתמש */}
     </>
   );

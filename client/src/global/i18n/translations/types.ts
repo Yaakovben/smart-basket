@@ -864,6 +864,24 @@ export type TranslationKeys =
   | 'joinLandingHaveApp'
   | 'joinLandingOpenApp'
   | 'joinLandingContinueHere'
-  | 'joinLandingCopiedHint';
+  | 'joinLandingCopiedHint'
+  | 'tipEyebrow'
+  | 'tipGotIt'
+  | 'tipScanListTitle'
+  | 'tipScanListBody'
+  | 'tipProductPhotoTitle'
+  | 'tipProductPhotoBody'
+  | 'tipShareQrTitle'
+  | 'tipShareQrBody'
+  | 'tipMoveProductsTitle'
+  | 'tipMoveProductsBody'
+  | 'tipLongPressTitle'
+  | 'tipLongPressBody'
+  | 'tipSwipeTitle'
+  | 'tipSwipeBody'
+  | 'tipSavedListsTitle'
+  | 'tipSavedListsBody'
+  | 'tipInsightsTitle'
+  | 'tipInsightsBody';
 
 export type Translations = Record<TranslationKeys, string>;
