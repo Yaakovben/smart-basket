@@ -154,17 +154,6 @@ export const AppRouter = () => {
   const onlineUsers = usePresence(listIdsForPresence);
   useOfflineSync(user?.id, updateProductsForList, showToast, t('syncItemFailed'));
 
-  // prefetch מיידי של ה-admin chunk - רק למנהל בפועל, כדי לא לבזבז רוחב
-  // פס לכל שאר המשתמשים. עד עכשיו ה-chunk (lazy, ~99KB) נטען רק בלחיצה
-  // בפועל על "לוח בקרה" ב-Settings, מה שהרגיש כמו פתיחה איטית - בקשת
-  // רשת + פרסור בדיוק ברגע הניווט. עכשיו, למנהל, הוא כבר בקאש הדפדפן
-  // הרבה לפני שהוא בכלל נכנס להגדרות.
-  useEffect(() => {
-    if (user?.email === ADMIN_CONFIG.adminEmail) {
-      import("../features/admin/admin").catch(() => {});
-    }
-  }, [user?.email]);
-
   // הסתרת loader ראשוני כשבדיקת האימות הושלמה.
   // ממתינים לפריים הבא (requestAnimationFrame) כדי לוודא שתוכן React
   // צויר בפועל לפני שמסירים את ה-loader — מונע הבהוב לבן של שבריר שנייה.
