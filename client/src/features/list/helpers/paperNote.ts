@@ -14,10 +14,12 @@ export const PAPER_NOTE = {
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת (dog-ear) - גרדיאנט (לא צבע שטוח) כדי שהפינה תיראה
-  // כמו נייר שמתקפל ומרים קצה, לא סתם פינה חתוכה באלכסון.
-  flapLight: 'linear-gradient(135deg, rgba(94,234,212,0.9) 0%, rgba(13,148,136,0.35) 100%)',
-  flapDark: 'linear-gradient(135deg, rgba(94,234,212,0.55) 0%, rgba(45,212,191,0.25) 100%)',
+  // הפינה המקופלת (dog-ear) - גרדיאנט אטום/רווי (לא rgba שקוף) כדי שהפינה
+  // תיראה כמו נייר מוצק שמתקפל ומרים קצה, בניגוד ברור לגוף הבהיר של
+  // הפתק - לא כתם דהוי-כמעט-שקוף שנבלע ברקע (זו הייתה הבעיה: ה-stop
+  // הכהה היה ב-0.35 alpha בלבד, כמעט לא נראה).
+  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #0D9488 100%)',
+  flapDark: 'linear-gradient(135deg, #2DD4BF 0%, #0F766E 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -30,7 +32,7 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-const FOLD: Record<PaperSize, number> = { chip: 9, field: 16, card: 18 };
+const FOLD: Record<PaperSize, number> = { chip: 14, field: 20, card: 22 };
 // מלבן מעוגל רגיל - חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש
 // ישב עליה נקי (כמו "פתק" אמיתי - לא ריבוע עם קרע גס באלכסון בכל הפינות,
 // שזו הייתה הבעיה בגרסה הקודמת עם clip-path פנטגון).
@@ -51,7 +53,7 @@ export const addChipSx = (isDark: boolean) => {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 0.6,
-    py: 0.6, pl: 1.3, pr: 1.1,
+    py: 0.7, pl: 1.7, pr: 1.1,
     userSelect: 'none' as const,
     WebkitTapHighlightColor: 'transparent',
     color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
