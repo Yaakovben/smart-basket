@@ -69,9 +69,13 @@ export const addChipSx = (isDark: boolean) => {
       position: 'absolute', top: 0, left: 0,
       width: fold + 1, height: fold + 1,
       bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
-      // צל פנימי לאורך קו האלכסון - box-shadow:inset מכובד ע"י clip-path,
-      // נותן טיפת עומק לקיפול בלי לחזור לגרדיאנט/mask שנכשלו קודם.
+      // רדיוס 100% רק על הפינה הפנימית (הפוכה מהפינה החדה של הקופסה עצמה,
+      // ראו RADIUS למעלה) - הופך את המשולש החד לגזרת-רבע-עיגול: קצוות
+      // ישרים לאורך שפת הקופסה (למעלה/שמאל), וקשת קעורה חלקה בפנים - נראה
+      // כמו נייר שמתגלגל פנימה, לא כמו פינה חתוכה באלכסון ישר.
+      borderRadius: '0 0 100% 0',
+      // צל פנימי לאורך הקשת - box-shadow:inset עוקב אחרי border-radius,
+      // נותן טיפת עומק לגלילה בלי לחזור לגרדיאנט/mask שנכשלו קודם.
       boxShadow: 'inset -3px -3px 4px rgba(0,0,0,0.18)',
     },
     '&:hover': { transform: 'translateY(-1px)' },
@@ -97,16 +101,16 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     // 'card' *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top
     // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
     ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
-    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - צבע
-    // שטוח אחיד + צל פנימי קטן לאורך קו האלכסון לטיפת עומק (לא גרדיאנט/
-    // mask - אלה יצאו מרוחים/שבורים בגרסאות קודמות).
+    // הפינה המקופלת - גזרת-רבע-עיגול (border-radius, לא clip-path/mask):
+    // קצוות ישרים לאורך שפת הקופסה, קשת קעורה חלקה בפנים - נראה כמו נייר
+    // שמתגלגל פנימה (dog-ear אמיתי), לא פינה חתוכה באלכסון ישר.
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
       width: fold + (size === 'chip' ? 1 : 2),
       height: fold + (size === 'chip' ? 1 : 2),
       bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      borderRadius: '0 0 100% 0',
       boxShadow: `inset -${Math.round(fold * 0.18)}px -${Math.round(fold * 0.18)}px ${Math.round(fold * 0.25)}px rgba(0,0,0,0.18)`,
       zIndex: 1,
     },
