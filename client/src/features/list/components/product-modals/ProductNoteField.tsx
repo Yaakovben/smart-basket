@@ -121,9 +121,6 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             }}>
               {t('note')}
             </Typography>
-            <Typography sx={{ fontSize: 9.5, color: inkMuted, fontWeight: 500, mt: 0.15 }}>
-              {t('noteHintKosherTypeBrand')}
-            </Typography>
           </Box>
           <TextField
             fullWidth
