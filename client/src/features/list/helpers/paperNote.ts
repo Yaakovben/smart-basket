@@ -31,7 +31,11 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-const FOLD: Record<PaperSize, number> = { chip: 11, field: 16, card: 18 };
+// 'chip' כבר תואם לרפרנס (המשולש תופס נתח ניכר מגובה הצ'יפ הקטן).
+// 'field'/'card' היו יחסית זעירים מול הקופסאות הגדולות בהרבה שלהם -
+// נראה כמו קרצוף קטן בפינה במקום קיפול מכוון. הוגדלו לשמור על אותה
+// יחס-גודל בקירוב (משולש ≈ שליש מגובה הקופסה), לא רק אותו מספר פיקסלים.
+const FOLD: Record<PaperSize, number> = { chip: 11, field: 36, card: 50 };
 // רדיוס מתון - לא כמעט-פילה/עיגול מלא (זה נראה גרוע, פחות "פתק" ויותר
 // כפתור). חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש ישב עליה נקי.
 const RADIUS: Record<PaperSize, string> = {
