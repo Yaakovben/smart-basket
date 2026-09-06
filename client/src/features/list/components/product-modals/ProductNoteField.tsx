@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { haptic } from '../../../../global/helpers';
 import { paperNoteSx, PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -76,7 +77,32 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
             zIndex: 2,
           }} />
-          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 0.7, mb: 0.6 }}>
+          {/* כפתור סגירה - עיגול בפינה העליונה-שמאלית של הפתק, בולט קצת
+              החוצה (הפתק בלי overflow:hidden ב-'field'). */}
+          <Box
+            role="button"
+            aria-label={t('closeNoteAria')}
+            onClick={closeAndClear}
+            sx={{
+              position: 'absolute', top: -9, insetInlineStart: -9, zIndex: 3,
+              width: 26, height: 26, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: isDark ? '#1E293B' : '#FFFFFF',
+              color: ink,
+              border: '1.5px solid',
+              borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+              boxShadow: '0 1px 5px rgba(15,118,110,0.22)',
+              cursor: 'pointer', userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'transform 0.12s, background-color 0.15s',
+              '&:active': { transform: 'scale(0.88)' },
+              '&:hover': { bgcolor: isDark ? '#293548' : '#F0FDFA' },
+            }}
+          >
+            <CloseRoundedIcon sx={{ fontSize: 16 }} />
+          </Box>
+
+          <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'flex-start', gap: 0.7, mb: 0.6 }}>
             <Box sx={{ flex: 1, lineHeight: 1.15 }}>
               <Typography sx={{
                 fontSize: 10, fontWeight: 800, color: ink,
@@ -99,25 +125,6 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             }}>
               {value.length}/200
             </Typography>
-            {/* רווח 1.25 בין הספירה ל-X כדי שלא יהיו דבוקים */}
-            <Box
-              role="button"
-              aria-label={t('closeNoteAria')}
-              onClick={closeAndClear}
-              sx={{
-                ml: 1.25,
-                width: 22, height: 22, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: ink,
-                cursor: 'pointer', userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                fontSize: 12, fontWeight: 700, lineHeight: 1,
-                transition: 'all 0.15s',
-                '&:hover': { bgcolor: 'rgba(20,184,166,0.14)' },
-              }}
-            >
-              ✕
-            </Box>
           </Box>
           <TextField
             fullWidth
