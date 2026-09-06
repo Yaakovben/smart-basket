@@ -211,7 +211,7 @@ export const ProductDetailsModal = memo(({
             הקשה מרחיבה לשם המלא (אין טקסט מוסתר לצמיתות). גופן רספונסיבי
             לרוחב המסך. עיפרון העריכה צמוד לשם עצמו (לא שורה נפרדת מתחתיו) -
             סוגר את מודל הפרטים ופותח את מודל עריכת המוצר (ListComponent). */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.5 }}>
           <Typography
             onClick={() => setNameExpanded(v => !v)}
             title={product.name}
@@ -226,13 +226,16 @@ export const ProductDetailsModal = memo(({
           >
             {product.name}
           </Typography>
+          {/* alignItems:'center' על השורה - העיפרון ממורכז בגובה מול הטקסט
+              (בשם חד-שורתי, המקרה הנפוץ; בשם דו-שורתי הוא ממורכז מול שתי
+              השורות יחד - פשרה סבירה, לא דורש מדידה ידנית לפי שורה ראשונה). */}
           <Box
             component="button"
             type="button"
             onClick={onEdit}
             aria-label={t('editProduct')}
             sx={{
-              flexShrink: 0, width: 26, height: 26, mt: '2px', p: 0,
+              flexShrink: 0, width: 22, height: 22, p: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: 'none', borderRadius: '50%', bgcolor: 'transparent',
               color: 'text.secondary', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
