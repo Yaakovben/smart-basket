@@ -85,10 +85,10 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   };
 
   return (
-    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal) - חצי קבוע
-    // מהרוחב. justifySelf:start תמיד - גם הצ'יפ הסגור וגם התצוגה המקדימה
-    // הם בגודל טבעי קבוע (76px), אין להם למה למתוח לכל העמודה.
-    <Box sx={{ minWidth: 0, justifySelf: 'start' }}>
+    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal). סגור - start
+    // (הצ'יפ בגודלו הטבעי). יש תמונה - stretch כדי שנוכל לדחוף את התמונה
+    // עד קצה שמאל של העמודה ולשים "תמונה:" מימינה.
+    <Box sx={{ minWidth: 0, justifySelf: value ? 'stretch' : 'start' }}>
       <input
         ref={inputRef}
         type="file"
@@ -98,61 +98,70 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - תצוגה מקדימה נקייה: תמונה מרובעת עם פינות מעוגלות
-        // אחידות ומסגרת תכלת דקה (בדיוק כמו תמונת מוצר בשורת הרשימה
-        // ובמסך הפרטים - PAPER_NOTE.frame). בלי הטיה, בלי תווית, בלי פינה
-        // מקופלת. כפתור הסרה אדום על הפינה.
-        <Box sx={{ position: 'relative', width: 76, display: 'inline-block', transform: 'translateX(-28px)' }}>
-          <Box
-            role="button"
-            aria-label={t('viewPhotoAria')}
-            onClick={() => { haptic('light'); setLightbox(true); }}
-            sx={{
-              position: 'relative',
-              width: 76, height: 76,
-              borderRadius: '12px', overflow: 'hidden',
-              bgcolor: 'action.hover',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-              transition: 'transform 0.15s',
-              '&:active': { transform: 'scale(0.97)' },
-            }}
-          >
-            <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
-            {/* מסגרת תכלת דקה מעל התמונה - עקבי עם SwipeItem / ProductDetailsModal */}
-            <Box aria-hidden="true" sx={{
-              position: 'absolute', inset: 0, borderRadius: '12px',
-              border: '1.5px solid',
-              borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
-              pointerEvents: 'none',
-            }} />
-            {uploading && (
+        // יש תמונה - שורה: התמונה נדחקת עד קצה שמאל של העמודה
+        // (justifyContent flex-end = שמאל ב-RTL), ותווית "תמונה:" מימינה.
+        // התמונה עצמה: מרובעת, פינות מעוגלות אחידות, מסגרת תכלת דקה
+        // (עקבי עם SwipeItem / ProductDetailsModal). כפתור הסרה אדום על הפינה.
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+          <Typography sx={{
+            fontSize: 11, fontWeight: 700, color: ink,
+            letterSpacing: 0.3, whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            {t('photo')}:
+          </Typography>
+          <Box sx={{ position: 'relative', width: 76, flexShrink: 0 }}>
+            <Box
+              role="button"
+              aria-label={t('viewPhotoAria')}
+              onClick={() => { haptic('light'); setLightbox(true); }}
+              sx={{
+                position: 'relative',
+                width: 76, height: 76,
+                borderRadius: '12px', overflow: 'hidden',
+                bgcolor: 'action.hover',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'transform 0.15s',
+                '&:active': { transform: 'scale(0.97)' },
+              }}
+            >
+              <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
+              {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0,
+                position: 'absolute', inset: 0, borderRadius: '12px',
+                border: '1.5px solid',
+                borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
+                pointerEvents: 'none',
+              }} />
+              {uploading && (
+                <Box aria-hidden="true" sx={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: 'rgba(0,0,0,0.32)',
+                }}>
+                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                </Box>
+              )}
+            </Box>
+            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית),
+                מבצבץ החוצה מהתווית "תמונה:" שמימין. */}
+            <Box
+              role="button"
+              aria-label={t('removePhoto')}
+              onClick={remove}
+              sx={{
+                position: 'absolute', top: -7, left: -7,
+                width: 22, height: 22, borderRadius: '50%',
+                bgcolor: '#DC2626', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: 'rgba(0,0,0,0.32)',
-              }}>
-                <CircularProgress size={18} sx={{ color: '#fff' }} />
-              </Box>
-            )}
-          </Box>
-          {/* כפתור הסרה - עיגול אדום על הפינה */}
-          <Box
-            role="button"
-            aria-label={t('removePhoto')}
-            onClick={remove}
-            sx={{
-              position: 'absolute', top: -7, insetInlineStart: -7,
-              width: 22, height: 22, borderRadius: '50%',
-              bgcolor: '#DC2626', color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-              '&:active': { transform: 'scale(0.9)' },
-            }}
-          >
-            <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                '&:active': { transform: 'scale(0.9)' },
+              }}
+            >
+              <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+            </Box>
           </Box>
         </Box>
       ) : (
