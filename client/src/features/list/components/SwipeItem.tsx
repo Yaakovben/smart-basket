@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import PhotoCameraRoundedIcon from '@mui/icons-material/PhotoCameraRounded';
-import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import type { Product, ProductCategory } from '../../../global/types';
 import { haptic, CATEGORY_ICONS, SWIPE_ACTIONS_WIDTH, SWIPE_CONFIG, CATEGORY_COLORS } from '../../../global/helpers';
 import { cldThumb, cldBlur } from '../../../global/helpers/cloudinaryImage';
@@ -509,18 +508,21 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 maxWidth: '48%',
                 minWidth: 0,
                 display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                // pl הוגדל שוב 10→16 - FOLD.chip ב-paperNote.ts גדל 9→14
-                // (פינה בולטת/רוויה יותר), והפינה הישנה של האייקון כבר לא
-                // מספיק רחוקה מקו החיתוך החדש ונחתכת בפועל.
-                pl: '16px', pr: '5px', py: '1px',
+                // pl == FOLD.chip (20) בדיוק - התוכן מתחיל בדיוק איפה
+                // שתיבת הקיפול נגמרת, בלי חפיפה בלי קשר לצורת העקומה בפועל.
+                pl: '20px', pr: '5px', py: '1px',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
                 opacity: isPurchased ? 0.55 : 1,
                 filter: isPurchased ? 'grayscale(0.6)' : 'none',
               }}>
-                <EditNoteRoundedIcon sx={{
-                  fontSize: 13, flexShrink: 0,
+                {/* בלי אייקון - תווית "הערה:" קטנה במקומו, אותו גוון "ink"
+                    כמו האייקון הישן. */}
+                <Box component="span" sx={{
+                  flexShrink: 0, fontSize: 10.5, fontWeight: 700,
                   color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-                }} />
+                }}>
+                  {t('note')}:
+                </Box>
                 <Box component="span" sx={{
                   minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
                   fontWeight: 500,
