@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import './appHeight' // קובע --app-height / --nav-bottom (לא ב-<head>, ראו הקובץ)
 import './index.css'
 import App from './App.tsx'
 import { initAnalytics } from './global/services/analytics'

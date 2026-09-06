@@ -80,54 +80,8 @@
         addPreconnect('%VITE_SOCKET_URL%');
       })();
     </script>
-  <!--
-    גובה חלון אמיתי כ-CSS variable (--app-height).
-    ב-Chrome ל-iOS (וגם Safari) היחידות 100dvh/100vh מחושבות לא נכון - המסך
-    יוצא חתוך מלמטה (הבר התחתון מוסתר מאחורי סרגל הדפדפן, או פס ריק).
-    window.innerHeight תמיד = האזור הנראה בפועל. רץ ב-<head> כדי שהערך ייקבע
-    לפני הצביעה הראשונה. מתעלמים מ-resize בזמן ששדה קלט ממוקד (מקלדת
-    וירטואלית). fallback ל-100dvh למקרה שהסקריפט לא רץ.
-  -->
-  <script>
-    (function () {
-      var d = document.documentElement;
-      var vv = window.visualViewport;
-      var raf = 0;
-      function set() {
-        var a = document.activeElement;
-        if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
-        // האזור הנראה בפועל = visualViewport.height (מתכווץ כשסרגלי הדפדפן
-        // פתוחים). innerHeight ב-iOS הוא הגודל ה"גדול" הקבוע - לא מתאים.
-        var visible = (vv && vv.height) ? vv.height : (window.innerHeight || d.clientHeight);
-        if (visible > 0) d.style.setProperty('--app-height', Math.round(visible) + 'px');
-        // --nav-bottom = גובה סרגל הדפדפן שמתחת לאזור הנראה. הבר התחתון
-        // (position:fixed) יושב ב-bottom: var(--nav-bottom) כדי לא להיחתך
-        // מאחוריו ב-iOS. 0 ב-PWA/דסקטופ/כשהסרגל מוסתר בגלילה.
-        if (vv) {
-          var layoutH = window.innerHeight || d.clientHeight;
-          var nb = Math.max(0, Math.round(layoutH - vv.height - vv.offsetTop));
-          d.style.setProperty('--nav-bottom', nb + 'px');
-        }
-      }
-      function schedule() {
-        if (raf) return;
-        raf = requestAnimationFrame(function () { raf = 0; set(); });
-      }
-      set();
-      window.addEventListener('resize', schedule);
-      window.addEventListener('orientationchange', function () { setTimeout(set, 300); });
-      window.addEventListener('load', set);
-      if (vv) {
-        vv.addEventListener('resize', schedule);
-        vv.addEventListener('scroll', schedule);
-      }
-    })();
-  </script>
-
   <!-- רקע טורקיז קבוע + סגנון מסך הטעינה - חייב להיות ב-<head> כדי שיוחל לפני כל רינדור -->
   <style>
-    :root { --app-height: 100vh; }
-    @supports (height: 100dvh) { :root { --app-height: 100dvh; } }
     html, body {
       margin: 0;
       padding: 0;
@@ -138,7 +92,7 @@
        וחוזרים, הלקוח יראה את הצבע של האפליקציה ולא מסך לבן ריק. */
     #root {
       min-height: 100vh;
-      min-height: var(--app-height, 100dvh);
+      min-height: 100dvh;
       background: #14B8A6;
     }
     /* כשהתמה נטענת ולוקחת פיקוד, מסירים את הרקע מתחת התוכן */
