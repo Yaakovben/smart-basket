@@ -14,11 +14,11 @@ export const PAPER_NOTE = {
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת (dog-ear) - צבע שטוח אחיד, לא גרדיאנט ולא drop-shadow.
-  // שתי הגרסאות הקודמות (rgba שקוף, ואז גרדיאנט+צל) יצאו מרוחות/מלוכלכות
-  // ("מעפן") - צבע אחיד נקי הוא הכי קרוב למקור (פינת נייר מוצקה, ברורה).
-  flapLight: '#0D9488',
-  flapDark: '#2DD4BF',
+  // "קיפול" הפינה (dog-ear) - גרדיאנט אלכסוני מבהיר (קצה הקיפול, קולט
+  // אור) לכהה (קו הקיפול/הצל שמתחתיו), ממוסך ברדיאלי (ראו curlMask
+  // למטה) כדי לקבל קשת מעוגלת - לא משולש שטוח באלכסון ישר.
+  curlLight: 'linear-gradient(to bottom right, #FFFFFF 0%, #E6F6F2 24%, #86CEC1 58%, #5FB4A6 82%, #0D9488 100%)',
+  curlDark: 'linear-gradient(to bottom right, rgba(190,247,239,0.95) 0%, rgba(94,234,212,0.75) 30%, rgba(20,184,166,0.5) 65%, rgba(4,47,43,0.9) 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -31,13 +31,25 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-const FOLD: Record<PaperSize, number> = { chip: 11, field: 16, card: 18 };
+// גודל תיבת הקיפול (לא "רוחב הפינה החתוכה" כמו קודם) - הקשת הנראית
+// בפועל היא רק פלח קטן ממנה, ראו curlMask.
+const CURL: Record<PaperSize, number> = { chip: 22, field: 30, card: 36 };
 // רדיוס מתון - לא כמעט-פילה/עיגול מלא (זה נראה גרוע, פחות "פתק" ויותר
-// כפתור). חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש ישב עליה נקי.
+// כפתור). הפינה עם הקיפול נשארת כמעט חדה כדי שה-mask למטה לא ייחתך
+// ע"י העיגול של הקופסה עצמה (overflow:hidden ב-'chip').
 const RADIUS: Record<PaperSize, string> = {
   chip: '3px 8px 8px 8px',
   field: '3px 10px 10px 10px',
   card: '3px 12px 12px 12px',
+};
+
+// ממיר גרדיאנט מרובע לקשת מעוגלת (page-curl אמיתי, לא משולש עם אלכסון
+// ישר): עיגול שמרכזו בפינה הנגדית לקיפול (100% 100% - "הציר" שהדף
+// מקופל עליו), ברדיוס כמעט כגודל התיבה - כך שהחלק הגלוי הוא רק קשת דקה
+// בפינה הנגדית (0,0), בדיוק שם שיושבת הפינה המקופלת.
+const curlMask = (size: number) => {
+  const r = Math.round(size * 0.925);
+  return `radial-gradient(circle ${r}px at 100% 100%, transparent ${r - 1}px, #000 ${r}px)`;
 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
@@ -45,7 +57,7 @@ const RADIUS: Record<PaperSize, string> = {
 // ו-cursor/opacity לפי מצב (בלי עיגול "+" נפרד - האייקון עצמו כבר מסמן
 // "הוספה", ה-+ היה כפול).
 export const addChipSx = (isDark: boolean) => {
-  const fold = FOLD.chip;
+  const curl = CURL.chip;
   return {
     position: 'relative' as const,
     display: 'inline-flex',
@@ -63,9 +75,12 @@ export const addChipSx = (isDark: boolean) => {
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
-      width: fold + 1, height: fold + 1,
-      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      width: curl, height: curl,
+      pointerEvents: 'none' as const,
+      background: isDark ? PAPER_NOTE.curlDark : PAPER_NOTE.curlLight,
+      WebkitMaskImage: curlMask(curl),
+      maskImage: curlMask(curl),
+      filter: `drop-shadow(1px 1px 1.5px ${isDark ? 'rgba(0,0,0,0.45)' : 'rgba(15,118,110,0.35)'})`,
     },
     '&:hover': { transform: 'translateY(-1px)' },
     '&:active': { transform: 'scale(0.97)' },
@@ -77,7 +92,7 @@ export const addChipSx = (isDark: boolean) => {
 // מחזיר אובייקט קונקרטי (לא SxProps) כדי שאפשר יהיה לפרוס אותו (...) לתוך
 // sx יחד עם מאפיינים נוספים.
 export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
-  const fold = FOLD[size];
+  const curl = CURL[size];
   return {
     position: 'relative',
     backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
@@ -85,20 +100,24 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
     borderRadius: RADIUS[size],
     // overflow:hidden רק ב-'chip' (אין שם סרט washi) - בלעדיו הפינה
-    // המרובעת-חדה של משולש הקיפול בולטת מעבר לעיגול הפינה של הקופסה
-    // עצמה ונראית כמו פיסה נפרדת שצפה ליד הצ'יפ, לא חלק ממנו. ב-'field'/
-    // 'card' *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top
-    // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
+    // כמעט-חדה של הקופסה (RADIUS[size]) הייתה נראית כפיסה נפרדת ליד
+    // הקיפול. ב-'field'/'card' *אסור* overflow:hidden - הסרט יושב חלקית
+    // *מעל* הקופסה (top שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx)
+    // והוא היה נחתך.
     ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
-    // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - צבע
-    // שטוח אחיד, בלי גרדיאנט/צל (אלה יצאו מרוחים/מלוכלכים בגרסאות קודמות).
+    // page-curl אמיתי בפינה השמאלית-עליונה - גרדיאנט אלכסוני (בהיר בקצה
+    // הקיפול -> כהה בקו הקיפול) ממוסך לקשת מעוגלת (curlMask), עם
+    // drop-shadow שעוקב אחרי צורת הקשת בפועל (לא מלבן) - נותן עומק
+    // תלת-ממדי אמיתי, לא משולש שטוח.
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
-      width: fold + (size === 'chip' ? 1 : 2),
-      height: fold + (size === 'chip' ? 1 : 2),
-      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      width: curl, height: curl,
+      pointerEvents: 'none' as const,
+      background: isDark ? PAPER_NOTE.curlDark : PAPER_NOTE.curlLight,
+      WebkitMaskImage: curlMask(curl),
+      maskImage: curlMask(curl),
+      filter: `drop-shadow(1.5px 1.5px 2px ${isDark ? 'rgba(0,0,0,0.45)' : 'rgba(15,118,110,0.3)'})`,
       zIndex: 1,
     },
   };
