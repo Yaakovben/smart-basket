@@ -680,6 +680,7 @@ export type TranslationKeys =
   | 'clearCacheConfirmButton'
   // Join group via QR
   | 'joinViaQr'
+  | 'preferInstalledAppHint'
   // AI Assistant
   | 'aiAssistantTitle'
   | 'aiAssistantIntro'

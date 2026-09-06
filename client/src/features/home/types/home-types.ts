@@ -19,6 +19,7 @@ export interface UseHomeReturn {
   showCreate: boolean;
   showCreateGroup: boolean;
   showJoin: boolean;
+  joinedFromLink: boolean;
   showNotifications: boolean;
   confirmLogout: boolean;
   editList: List | null;

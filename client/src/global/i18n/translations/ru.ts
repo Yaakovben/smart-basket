@@ -676,6 +676,7 @@ export const ru: Translations = {
   clearCacheConfirmButton: 'Очистить',
   // Join group via QR
   joinViaQr: 'Присоединиться через QR',
+  preferInstalledAppHint: 'Совет: если SmartBasket уже установлен, лучше открыть его вместо браузера',
   // AI Assistant
   aiAssistantTitle: 'Умный помощник по покупкам',
   aiAssistantIntro: 'Спросите меня о супермаркетах, ценах, советах по экономии - или получите рекомендации на основе ваших реальных покупок',

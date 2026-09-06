@@ -12,6 +12,7 @@ interface JoinGroupModalProps {
   joinPass: string;
   joinError: string;
   joinCooldown: number;
+  joinedFromLink?: boolean;
   joiningGroup: boolean;
   passwordInputRef: RefObject<HTMLInputElement | null>;
   onClose: () => void;
@@ -24,7 +25,7 @@ interface JoinGroupModalProps {
 }
 
 export const JoinGroupModal = ({
-  joinCode, joinPass, joinError, joinCooldown, joiningGroup, passwordInputRef,
+  joinCode, joinPass, joinError, joinCooldown, joinedFromLink, joiningGroup, passwordInputRef,
   onClose, onCodeChange, onPassChange, onClearError, onSubmit, onOpenQRScanner, t,
 }: JoinGroupModalProps) => {
   return (
@@ -168,6 +169,14 @@ export const JoinGroupModal = ({
           {t('joinViaQr')}
         </Box>
       </Box>
+
+      {/* רמז קטן, לא חוסם - רק כשהמודאל נפתח מקישור הצטרפות (JoinLanding),
+          לא כשנפתח ידנית מהתפריט "הצטרף לרשימה". */}
+      {joinedFromLink && (
+        <Typography sx={{ fontSize: 11.5, color: 'text.disabled', textAlign: 'center', mb: 2, mt: -1 }}>
+          {t('preferInstalledAppHint')}
+        </Typography>
+      )}
 
       {joinError && <Alert severity={joinCooldown > 0 ? 'warning' : 'error'} sx={{ mb: 2, borderRadius: '12px', fontSize: 13 }}>
         {joinCooldown > 0 ? `${joinError} (${joinCooldown}s)` : joinError}

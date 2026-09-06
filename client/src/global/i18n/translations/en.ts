@@ -676,6 +676,7 @@ export const en: Translations = {
   clearCacheConfirmButton: 'Clear',
   // Join group via QR
   joinViaQr: 'Join via QR',
+  preferInstalledAppHint: "Tip: if SmartBasket is already installed, it's better to open it there instead of the browser",
   // AI Assistant
   aiAssistantTitle: 'Smart shopping assistant',
   aiAssistantIntro: 'Ask me about supermarkets, prices, saving tips - or get recommendations based on your actual purchases',

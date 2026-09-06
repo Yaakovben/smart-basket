@@ -677,6 +677,7 @@ export const he: Translations = {
   clearCacheConfirmButton: 'נקה',
   // Join group via QR
   joinViaQr: 'הצטרף באמצעות QR',
+  preferInstalledAppHint: 'טיפ: אם SmartBasket כבר מותקן אצלך, עדיף להיכנס דרכה במקום בדפדפן',
   // AI Assistant
   aiAssistantTitle: 'עוזר קניות חכם',
   aiAssistantIntro: 'שאל אותי על סופרים, מחירים, טיפים לחיסכון - או בקש המלצות מבוססות על הקניות האמיתיות שלך',

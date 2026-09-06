@@ -54,7 +54,7 @@ export const HomeComponent = memo(({
   const [menuClosing, setMenuClosing] = useState(false);
 
   const {
-    tab, search, showMenu, showCreate, showCreateGroup, showJoin,
+    tab, search, showMenu, showCreate, showCreateGroup, showJoin, joinedFromLink,
     showNotifications, confirmLogout, editList, confirmDeleteList,
     newL, joinCode, joinPass, joinError, createError, joiningGroup, joinCooldown, creatingList, savingList,
     userLists, my, groups, display,
@@ -214,6 +214,7 @@ export const HomeComponent = memo(({
           joinPass={joinPass}
           joinError={joinError}
           joinCooldown={joinCooldown}
+          joinedFromLink={joinedFromLink}
           joiningGroup={joiningGroup}
           passwordInputRef={passwordInputRef}
           onClose={closeJoinModal}
