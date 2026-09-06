@@ -613,6 +613,8 @@ export type TranslationKeys =
   | 'priceDbNotLoadedDesc'
   | 'noPurchasesThisMonthTitle'
   | 'noPurchasesThisMonthDesc'
+  | 'purchasesNoPricesTitle'
+  | 'purchasesNoPricesDesc'
   | 'spentThisMonth'
   | 'monthSummaryTitle'
   | 'spentThisMonthLabel'

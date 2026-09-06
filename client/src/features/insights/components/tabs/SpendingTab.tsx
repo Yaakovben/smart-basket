@@ -408,14 +408,19 @@ export const SpendingTab = memo(({ data, isDark, t, dataFresh = false }: Props) 
   }
 
   if (spending.monthTotal === null) {
+    // הבחנה בין "לא סימנת שום מוצר כנקנה" לבין "סימנת מוצרים אבל אף אחד מהם
+    // עדיין לא מזוהה עם מחיר" - במקרה השני זו הודעה מטעה שאתה לא קנית כלום.
+    const purchasedButNoPrices = spending.monthUnmatchedCount > 0;
     return (
       <InsightsEmptyState
         isDark={isDark}
         accent="#14B8A6"
         mainEmoji="🧾"
         floatingItems={['💰', '📊', '🛒', '📈']}
-        title={t('noPurchasesThisMonthTitle')}
-        description={t('noPurchasesThisMonthDesc')}
+        title={purchasedButNoPrices ? t('purchasesNoPricesTitle') : t('noPurchasesThisMonthTitle')}
+        description={purchasedButNoPrices
+          ? t('purchasesNoPricesDesc').replace('{count}', String(spending.monthUnmatchedCount))
+          : t('noPurchasesThisMonthDesc')}
       />
     );
   }

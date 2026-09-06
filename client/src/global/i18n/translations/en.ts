@@ -609,6 +609,8 @@ export const en: Translations = {
   priceDbNotLoadedDesc: "Spending analysis is based on the real government price database. Once it loads, you'll see how much you spent this month, on what mostly, and how much you're projected to spend.",
   noPurchasesThisMonthTitle: "You haven't marked purchases this month yet",
   noPurchasesThisMonthDesc: "Once you mark ✅ products you bought, your spending analysis will appear here - how much you spent, on what mostly, and how much you're projected to spend by month end.",
+  purchasesNoPricesTitle: 'No spending estimate yet',
+  purchasesNoPricesDesc: "You marked {count} items as bought this month, but none of them are matched to a price yet - so there's nothing to total. The estimate will appear once prices are found for these items.",
   spentThisMonth: 'You spent about {amount} this month',
   monthSummaryTitle: '📊 Month summary',
   spentThisMonthLabel: 'Spent this month',

@@ -610,6 +610,8 @@ export const he: Translations = {
   priceDbNotLoadedDesc: 'ניתוח ההוצאות מבוסס על מאגר המחירים הממשלתי האמיתי. ברגע שהוא ייטען, כאן תראה כמה הוצאת החודש, על מה הכי הרבה, וכמה אתה צפוי להוציא.',
   noPurchasesThisMonthTitle: 'עדיין לא סימנת קניות החודש',
   noPurchasesThisMonthDesc: 'ברגע שתסמן ✅ מוצרים שקנית, כאן יופיע ניתוח ההוצאות שלך - כמה הוצאת, על מה הכי הרבה, וכמה אתה צפוי להוציא עד סוף החודש.',
+  purchasesNoPricesTitle: 'אין עדיין הערכת הוצאה',
+  purchasesNoPricesDesc: 'סימנת {count} מוצרים כנקנו החודש, אבל אף אחד מהם עדיין לא מזוהה עם מחיר במאגר - לכן אין מה לסכם. ההערכה תופיע ברגע שיימצאו מחירים למוצרים האלה.',
   spentThisMonth: 'הוצאת כ-{amount} החודש',
   monthSummaryTitle: '📊 סיכום החודש',
   spentThisMonthLabel: 'הוצאה החודש',
