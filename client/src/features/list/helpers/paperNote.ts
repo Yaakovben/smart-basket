@@ -1,8 +1,8 @@
 // ===== "פתק נייר" - שפת עיצוב אחת להערה *ולתמונה* בכל האפליקציה =====
 //
-// גם הערה וגם תמונה נראות כמו פיסת נייר תכלת עם פינה מקופלת (dog-ear).
-// אותו גוון, אותה פינה, אותה הטיה כמעט-שטוחה - רק הגודל ורמת הפירוט
-// משתנים לפי הקשר:
+// גם הערה וגם תמונה נראות כמו בועת-פתק תכלת מעוגלת, שטוחה (בלי הטיה),
+// עם פינה מקופלת (dog-ear) קטנה בפינה השמאלית-עליונה. אותו גוון, אותה
+// פינה, אותו רדיוס - רק הגודל ורמת הפירוט משתנים לפי הקשר:
 //   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem)
 //   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר (הערה ותמונה)
 //   'card'  - הפתק המלא במסך פרטי המוצר
@@ -24,17 +24,21 @@ export const PAPER_NOTE = {
   // גוף הטקסט
   textLight: '#134E4A',
   textDark: '#B9F0E6',
-  // הצ'יפ הסגור ("הוסף הערה" / "הוסף תמונה") - מלא, לא גרדיאנט
-  chipBgLight: '#E0F7F4',
-  chipBgDark: 'rgba(20,184,166,0.22)',
   // מסגרת דקה סביב תמונת מוצר (שורה + מודאל) - תכלת, לא צבע הקטגוריה
   frameLight: 'rgba(20,184,166,0.45)',
   frameDark: 'rgba(45,212,191,0.5)',
-  tilt: 'rotate(-0.15deg)',
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
 const FOLD: Record<PaperSize, number> = { chip: 9, field: 16, card: 18 };
+// מלבן מעוגל רגיל - חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש
+// ישב עליה נקי (כמו "פתק" אמיתי - לא ריבוע עם קרע גס באלכסון בכל הפינות,
+// שזו הייתה הבעיה בגרסה הקודמת עם clip-path פנטגון).
+const RADIUS: Record<PaperSize, string> = {
+  chip: '4px 12px 12px 12px',
+  field: '4px 16px 16px 16px',
+  card: '4px 18px 18px 18px',
+};
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
 // צורה, אותו צבע, אותה פינה מקופלת). הקומפוננטה מוסיפה רק אייקון, טקסט
@@ -47,15 +51,15 @@ export const addChipSx = (isDark: boolean) => {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 0.6,
-    py: 0.55, px: 1.1,
+    py: 0.6, pl: 1.3, pr: 1.1,
     userSelect: 'none' as const,
     WebkitTapHighlightColor: 'transparent',
     color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-    bgcolor: isDark ? PAPER_NOTE.chipBgDark : PAPER_NOTE.chipBgLight,
-    transform: 'rotate(-1.2deg)',
+    backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
+    borderRadius: RADIUS.chip,
+    overflow: 'hidden',
     boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
     transition: 'all 0.18s',
-    clipPath: `polygon(${fold}px 0, 100% 0, 100% 100%, 0 100%, 0 ${fold}px)`,
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
@@ -66,11 +70,12 @@ export const addChipSx = (isDark: boolean) => {
       // זה קורא כפינת נייר שמתקפלת ומטילה צל על הדף שמתחתיה.
       filter: `drop-shadow(0.5px 0.5px 0.5px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(15,118,110,0.35)'})`,
     },
-    '&:hover': { transform: 'rotate(-0.6deg) translateY(-1px)' },
+    '&:hover': { transform: 'translateY(-1px)' },
+    '&:active': { transform: 'scale(0.97)' },
   };
 };
 
-// סגנון הבסיס של הפתק (רקע, מסגרת, פינה מקופלת, הטיה). מרכיבים ייחודיים
+// סגנון הבסיס של הפתק (רקע, מסגרת, פינה מקופלת). מרכיבים ייחודיים
 // להקשר - סרט washi, קווי מחברת, תווית - נשארים בקומפוננטה עצמה.
 // מחזיר אובייקט קונקרטי (לא SxProps) כדי שאפשר יהיה לפרוס אותו (...) לתוך
 // sx יחד עם מאפיינים נוספים.
@@ -81,8 +86,11 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
     border: '1px solid',
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
-    transform: PAPER_NOTE.tilt,
-    clipPath: `polygon(${fold}px 0, 100% 0, 100% 100%, 0 100%, 0 ${fold}px)`,
+    borderRadius: RADIUS[size],
+    // בלי overflow:hidden - 'field'/'card' מוסיפים סרט washi שיושב חלקית
+    // *מעל* הקופסה (top שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx);
+    // המשולש של הקיפול לא צריך את זה בכלל - הוא כבר תחום לגמרי בפינה
+    // (0,0 בגודל fold) בלי קשר לרדיוס של שאר הקופסה.
     // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - גרדיאנט
     // + צל קטן על קו הקיפול, כדי שזה יקרא כנייר שמתקפל ולא כפינה חתוכה.
     '&::before': {
