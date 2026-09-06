@@ -109,15 +109,15 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           }}>
             {t('photo')}:
           </Typography>
-          <Box sx={{ position: 'relative', width: 76, flexShrink: 0 }}>
+          <Box sx={{ position: 'relative', width: 62, flexShrink: 0 }}>
             <Box
               role="button"
               aria-label={t('viewPhotoAria')}
               onClick={() => { haptic('light'); setLightbox(true); }}
               sx={{
                 position: 'relative',
-                width: 76, height: 76,
-                borderRadius: '12px', overflow: 'hidden',
+                width: 62, height: 62,
+                borderRadius: '11px', overflow: 'hidden',
                 bgcolor: 'action.hover',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                 cursor: 'pointer',
@@ -129,7 +129,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
               <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0, borderRadius: '12px',
+                position: 'absolute', inset: 0, borderRadius: '11px',
                 border: '1.5px solid',
                 borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                 pointerEvents: 'none',
