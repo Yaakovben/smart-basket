@@ -263,6 +263,8 @@ export const ru: Translations = {
   // Socket notifications
   addedProductNotif: 'добавил(а)',
   editedProductNotif: 'изменил(а)',
+  photoAddedNotif: 'добавил(а) фото к товару',
+  photoRemovedNotif: 'удалил(а) фото товара',
   deletedProductNotif: 'удалил(а)',
   clearedListNotif: 'очистил(а) список',
   purchasedNotif: 'отметил(а) как купленный',

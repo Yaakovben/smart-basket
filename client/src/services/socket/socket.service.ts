@@ -312,8 +312,10 @@ class SocketService {
     this.socket?.emit('product:add', { listId, product, userName });
   }
 
-  emitProductUpdated(listId: string, product: { id: string; name: string; quantity: number; unit: string; category: string }, userName: string) {
-    this.socket?.emit('product:update', { listId, product, userName });
+  // photoChange - מוגדר רק כשהעריכה הייתה הוספה/הסרה של תמונה, כדי שהשרת
+  // ישלח התראה ייעודית ("הוסיף/ה תמונה") במקום "עדכן/ה" גנרי.
+  emitProductUpdated(listId: string, product: { id: string; name: string; quantity: number; unit: string; category: string }, userName: string, photoChange?: 'add' | 'remove') {
+    this.socket?.emit('product:update', { listId, product, userName, ...(photoChange ? { photoChange } : {}) });
   }
 
   emitProductDeleted(listId: string, productId: string, productName: string, userName: string) {

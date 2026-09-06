@@ -262,6 +262,8 @@ export const he: Translations = {
   // Socket notifications
   addedProductNotif: 'הוסיף/ה',
   editedProductNotif: 'ערך/ה',
+  photoAddedNotif: 'הוסיף/ה תמונה למוצר',
+  photoRemovedNotif: 'הסיר/ה תמונה מהמוצר',
   deletedProductNotif: 'מחק/ה',
   clearedListNotif: 'ניקה/תה את הרשימה',
   purchasedNotif: 'סימן/ה כנקנה',

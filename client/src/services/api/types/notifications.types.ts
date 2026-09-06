@@ -4,6 +4,8 @@ export type NotificationType =
   | 'removed'
   | 'product_add'
   | 'product_update'
+  | 'product_photo_add'
+  | 'product_photo_remove'
   | 'product_delete'
   | 'product_purchase'
   | 'product_unpurchase'

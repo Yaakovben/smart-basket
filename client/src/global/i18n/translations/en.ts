@@ -263,6 +263,8 @@ export const en: Translations = {
   // Socket notifications
   addedProductNotif: 'added',
   editedProductNotif: 'edited',
+  photoAddedNotif: 'added a photo to',
+  photoRemovedNotif: 'removed the photo from',
   deletedProductNotif: 'deleted',
   clearedListNotif: 'cleared the list',
   purchasedNotif: 'marked as purchased',

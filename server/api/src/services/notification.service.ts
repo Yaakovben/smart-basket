@@ -72,6 +72,8 @@ const generatePushMessage = (
       case 'list_deleted':    return `${firstName} מחק/ה את הקבוצה`;
       case 'product_add':     return `${firstName} הוסיף/ה "${productName}"`;
       case 'product_update':  return `${firstName} עדכן/ה "${productName}"`;
+      case 'product_photo_add':    return `${firstName} הוסיף/ה תמונה ל"${productName}"`;
+      case 'product_photo_remove': return `${firstName} הסיר/ה תמונה מ"${productName}"`;
       case 'product_delete':  return `${firstName} מחק/ה "${productName}"`;
       case 'product_purchase':   return `${firstName} סימן/ה "${productName}" כנקנה`;
       case 'product_unpurchase': return `${firstName} החזיר/ה "${productName}" לרשימה`;

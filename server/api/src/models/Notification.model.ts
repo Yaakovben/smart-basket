@@ -6,6 +6,8 @@ export type NotificationType =
   | 'removed'  // כשחבר הוסר על ידי מנהל (שונה מעזיבה שהיא וולנטרית)
   | 'product_add'
   | 'product_update'
+  | 'product_photo_add'     // הוספת/החלפת תמונה למוצר
+  | 'product_photo_remove'  // הסרת תמונה ממוצר
   | 'product_delete'
   | 'product_purchase'
   | 'product_unpurchase'  // כשמוצר שנרכש מוחזר לרשימה
@@ -32,7 +34,7 @@ const notificationSchema = new Schema<INotification>(
   {
     type: {
       type: String,
-      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_delete', 'product_purchase', 'product_unpurchase', 'member_removed', 'list_deleted', 'list_update', 'list_clear'],
+      enum: ['join', 'leave', 'removed', 'product_add', 'product_update', 'product_photo_add', 'product_photo_remove', 'product_delete', 'product_purchase', 'product_unpurchase', 'member_removed', 'list_deleted', 'list_update', 'list_clear'],
       required: true,
     },
     listId: {

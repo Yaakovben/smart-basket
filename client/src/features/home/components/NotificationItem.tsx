@@ -30,6 +30,8 @@ const getEmoji = (type: LocalNotification['type']): string => {
     case 'join': return '🎉';
     case 'product_add': return '🛒';
     case 'product_edit': return '✏️';
+    case 'product_photo_add': return '📷';
+    case 'product_photo_remove': return '🚫';
     case 'product_delete': return '❌';
     case 'product_purchase': return '✅';
     case 'product_unpurchase': return '↩️';
@@ -45,6 +47,8 @@ const getAccentColor = (type: LocalNotification['type']): string => {
     case 'join': return '#10B981';
     case 'product_add': return '#3B82F6';
     case 'product_edit': return '#F59E0B';
+    case 'product_photo_add': return '#3B82F6';
+    case 'product_photo_remove': return '#EF4444';
     case 'product_purchase': case 'product_unpurchase': return '#14B8A6';
     case 'list_update': return '#8B5CF6';
     case 'list_clear': return '#F59E0B';
@@ -85,6 +89,8 @@ export const NotificationItem = memo(({ notification: n, index, isDismissing, on
       case 'join': return t('memberJoined');
       case 'product_add': return `${t('addedProductNotif')} "${n.productName}"`;
       case 'product_edit': return `${t('editedProductNotif')} "${n.productName}"`;
+      case 'product_photo_add': return `${t('photoAddedNotif')} "${n.productName}"`;
+      case 'product_photo_remove': return `${t('photoRemovedNotif')} "${n.productName}"`;
       case 'product_delete': return `${t('deletedProductNotif')} "${n.productName}"`;
       case 'product_purchase': return `${t('purchasedNotif')} "${n.productName}"`;
       case 'product_unpurchase': return `${t('unmarkedPurchasedNotif')} "${n.productName}"`;

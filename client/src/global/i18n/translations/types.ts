@@ -258,6 +258,8 @@ export type TranslationKeys =
   // Socket notifications
   | 'addedProductNotif'
   | 'editedProductNotif'
+  | 'photoAddedNotif'
+  | 'photoRemovedNotif'
   | 'deletedProductNotif'
   | 'clearedListNotif'
   | 'purchasedNotif'

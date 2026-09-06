@@ -11,6 +11,8 @@ interface ProductEventData {
   isPurchased?: boolean;
   userId: string;
   userName: string;
+  // מוגדר ב-product:updated כשהעריכה הייתה הוספה/הסרה של תמונה בלבד.
+  photoChange?: 'add' | 'remove';
 }
 
 interface NotificationEventData {
@@ -44,7 +46,7 @@ interface ListDeletedEventData {
 // התראה מקומית לפאנל הפופאפ
 export interface LocalNotification {
   id: string;
-  type: 'product_add' | 'product_edit' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
+  type: 'product_add' | 'product_edit' | 'product_photo_add' | 'product_photo_remove' | 'product_delete' | 'product_purchase' | 'product_unpurchase' | 'join' | 'leave' | 'removed' | 'member_removed' | 'list_deleted' | 'list_update' | 'list_clear';
   listId: string;
   listName: string;
   userId: string;
@@ -146,7 +148,19 @@ export function useSocketNotifications(
     });
 
     const unsubProductUpdated = socketService.on('product:updated', (data: unknown) => {
-      handleProductEvent(data as ProductEventData, 'productEdit', 'product_edit',
+      const ev = data as ProductEventData;
+      // הוספה/הסרה של תמונה - התראה ייעודית (אותה הגדרת "עריכת מוצר").
+      if (ev?.photoChange === 'add') {
+        handleProductEvent(ev, 'productEdit', 'product_photo_add',
+          (name, product) => `${name} ${tRef.current('photoAddedNotif')} "${product}"`);
+        return;
+      }
+      if (ev?.photoChange === 'remove') {
+        handleProductEvent(ev, 'productEdit', 'product_photo_remove',
+          (name, product) => `${name} ${tRef.current('photoRemovedNotif')} "${product}"`);
+        return;
+      }
+      handleProductEvent(ev, 'productEdit', 'product_edit',
         (name, product) => `${name} ${tRef.current('editedProductNotif')} "${product}"`);
     });
 
