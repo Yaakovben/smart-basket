@@ -2,6 +2,7 @@ import { memo, useRef } from 'react';
 import { Box, Fab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { haptic } from '../../../global/helpers';
+import { useReliableTap } from '../../../global/hooks';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { FabPosition } from '../types/list-types';
 
@@ -48,6 +49,10 @@ export const AddProductFab = memo(({
     }
   };
 
+  // onClick לבדו לא אמין על חלק מהמכשירים - דורש הקשה כפולה (הראשונה רק
+  // "ממקדת"). onPointerUp + onClick fallback, אותו דפוס כמו HomeHeader/Modal.
+  const addTap = useReliableTap(handleClick);
+
   // מצב FAB עגול עם גרירה
   if (isDraggable) {
     return (
@@ -59,7 +64,7 @@ export const AddProductFab = memo(({
             top: fabPosition.y - 28,
             left: fabPosition.x - 28,
           } : {
-            bottom: 'calc(24px + env(safe-area-inset-bottom))',
+            bottom: 'calc(var(--nav-bottom, 0px) + 24px + env(safe-area-inset-bottom))',
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
@@ -78,7 +83,8 @@ export const AddProductFab = memo(({
       >
         <Fab
           color="primary"
-          onClick={handleClick}
+          onPointerUp={addTap.onPointerUp}
+          onClick={addTap.onClick}
           aria-label={t('addProduct')}
           sx={{
             cursor: isDragging ? 'grabbing' : 'grab',
@@ -93,11 +99,12 @@ export const AddProductFab = memo(({
     );
   }
 
-  // מצב כפתור רגיל - fixed, ממורכז, לא מגיב לנגיעה על ה-wrapper
+  // מצב כפתור רגיל - fixed, ממורכז, לא מגיב לנגיעה על ה-wrapper.
+  // bottom כולל var(--nav-bottom) כדי שלא ייחתך/יוסתר מאחורי סרגל הדפדפן ב-iOS.
   return (
     <Box sx={{
       position: 'fixed',
-      bottom: 'calc(20px + env(safe-area-inset-bottom))',
+      bottom: 'calc(var(--nav-bottom, 0px) + 20px + env(safe-area-inset-bottom))',
       left: 0,
       right: 0,
       display: 'flex',
@@ -108,7 +115,8 @@ export const AddProductFab = memo(({
       <Fab
         color="primary"
         variant="extended"
-        onClick={handleClick}
+        onPointerUp={addTap.onPointerUp}
+        onClick={addTap.onClick}
         aria-label={t('addProduct')}
         sx={{
           px: 2.5,
