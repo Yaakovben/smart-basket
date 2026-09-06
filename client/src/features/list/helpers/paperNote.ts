@@ -14,11 +14,13 @@ export const PAPER_NOTE = {
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת (dog-ear) - צבע שטוח אחיד, לא גרדיאנט ולא drop-shadow.
-  // שתי הגרסאות הקודמות (rgba שקוף, ואז גרדיאנט+צל) יצאו מרוחות/מלוכלכות
-  // ("מעפן") - צבע אחיד נקי הוא הכי קרוב למקור (פינת נייר מוצקה, ברורה).
-  flapLight: '#0D9488',
-  flapDark: '#2DD4BF',
+  // הפינה המקופלת (dog-ear) - גרדיאנט אלכסוני: בהיר בפינה (0,0, "קצה
+  // הקיפול" שקולט הכי הרבה אור) -> כהה לכיוון הקשת (איפה שהיא "מתקפלת
+  // בחזרה"). הגרסאות הקודמות עם גרדיאנט נכשלו כי הצורה עצמה הייתה שבורה
+  // (mask/clip-path) - עכשיו שהצורה תקינה (border-radius), גרדיאנט על
+  // גביה בטוח לגמרי ונותן עומק אמיתי בלי לסכן שום דבר גיאומטרי.
+  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #0D9488 55%, #0F766E 100%)',
+  flapDark: 'linear-gradient(135deg, #99F6E4 0%, #2DD4BF 55%, #0D9488 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -68,15 +70,16 @@ export const addChipSx = (isDark: boolean) => {
       content: '""',
       position: 'absolute', top: 0, left: 0,
       width: fold + 1, height: fold + 1,
-      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       // רדיוס 100% רק על הפינה הפנימית (הפוכה מהפינה החדה של הקופסה עצמה,
       // ראו RADIUS למעלה) - הופך את המשולש החד לגזרת-רבע-עיגול: קצוות
       // ישרים לאורך שפת הקופסה (למעלה/שמאל), וקשת קעורה חלקה בפנים - נראה
       // כמו נייר שמתגלגל פנימה, לא כמו פינה חתוכה באלכסון ישר.
       borderRadius: '0 0 100% 0',
-      // צל פנימי לאורך הקשת - box-shadow:inset עוקב אחרי border-radius,
-      // נותן טיפת עומק לגלילה בלי לחזור לגרדיאנט/mask שנכשלו קודם.
-      boxShadow: 'inset -3px -3px 4px rgba(0,0,0,0.18)',
+      // שני צללים: inset לאורך הקשת (קו הקיפול, "מתקפל בחזרה" לתוך הפתק)
+      // + drop-shadow חיצוני קטן (הפינה "מורמת" מעל שאר הדף) - יחד עם
+      // הגרדיאנט למעלה זה מה שנותן עומק תלת-ממדי אמיתי, לא צבע שטוח.
+      boxShadow: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
     },
     '&:hover': { transform: 'translateY(-1px)' },
     '&:active': { transform: 'scale(0.97)' },
@@ -109,9 +112,12 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
       position: 'absolute', top: 0, left: 0,
       width: fold + (size === 'chip' ? 1 : 2),
       height: fold + (size === 'chip' ? 1 : 2),
-      bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
+      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       borderRadius: '0 0 100% 0',
-      boxShadow: `inset -${Math.round(fold * 0.18)}px -${Math.round(fold * 0.18)}px ${Math.round(fold * 0.25)}px rgba(0,0,0,0.18)`,
+      boxShadow: [
+        `inset -${Math.round(fold * 0.18)}px -${Math.round(fold * 0.18)}px ${Math.round(fold * 0.25)}px rgba(0,0,0,0.22)`,
+        `${Math.round(fold * 0.06)}px ${Math.round(fold * 0.06)}px ${Math.round(fold * 0.1)}px rgba(0,0,0,0.18)`,
+      ].join(', '),
       zIndex: 1,
     },
   };
