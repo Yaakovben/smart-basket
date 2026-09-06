@@ -4,7 +4,7 @@ import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateR
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
-import { PAPER_NOTE, addChipSx, paperNoteSx } from '../../helpers/paperNote';
+import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { compressProductImage, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
@@ -98,19 +98,21 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - "פתק" בדיוק באותה שפה כמו הצ'יפ הסגור/פתק ההערה:
-        // שטוח (בלי הטיה), אותו רדיוס, אותה פינה מקופלת (paperNoteSx 'chip'),
-        // רק שבתוכו התמונה במקום אייקון+טקסט. כפתור הסרה אדום על הפינה
-        // הנגדית (מחוץ ל-overflow:hidden).
+        // יש תמונה - תצוגה מקדימה נקייה: תמונה מרובעת עם פינות מעוגלות
+        // אחידות ומסגרת תכלת דקה (בדיוק כמו תמונת מוצר בשורת הרשימה
+        // ובמסך הפרטים - PAPER_NOTE.frame). בלי הטיה, בלי תווית, בלי פינה
+        // מקופלת. כפתור הסרה אדום על הפינה.
         <Box sx={{ position: 'relative', width: 76, display: 'inline-block' }}>
           <Box
             role="button"
             aria-label={t('viewPhotoAria')}
             onClick={() => { haptic('light'); setLightbox(true); }}
             sx={{
-              ...paperNoteSx('chip', isDark),
+              position: 'relative',
               width: 76, height: 76,
-              boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
+              borderRadius: '12px', overflow: 'hidden',
+              bgcolor: 'action.hover',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
               cursor: 'pointer',
               WebkitTapHighlightColor: 'transparent',
               transition: 'transform 0.15s',
@@ -118,6 +120,13 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
             }}
           >
             <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
+            {/* מסגרת תכלת דקה מעל התמונה - עקבי עם SwipeItem / ProductDetailsModal */}
+            <Box aria-hidden="true" sx={{
+              position: 'absolute', inset: 0, borderRadius: '12px',
+              border: '1.5px solid',
+              borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
+              pointerEvents: 'none',
+            }} />
             {uploading && (
               <Box aria-hidden="true" sx={{
                 position: 'absolute', inset: 0,
@@ -128,7 +137,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
               </Box>
             )}
           </Box>
-          {/* כפתור הסרה - עיגול אדום על הפינה השמאלית-עליונה (מחוץ ל-overflow) */}
+          {/* כפתור הסרה - עיגול אדום על הפינה */}
           <Box
             role="button"
             aria-label={t('removePhoto')}
