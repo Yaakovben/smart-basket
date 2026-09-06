@@ -75,7 +75,7 @@ export const addChipSx = (isDark: boolean) => {
     borderRadius: RADIUS.chip,
     overflow: 'hidden',
     boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
-    transition: 'all 0.18s',
+    transition: 'transform 0.14s ease, box-shadow 0.18s ease',
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
@@ -84,7 +84,11 @@ export const addChipSx = (isDark: boolean) => {
       clipPath: CLIP_PATH.chip,
       boxShadow: FOLD_SHADOW.chip,
     },
-    '&:hover': { transform: 'translateY(-1px)' },
+    // hover רק במכשירים עם עכבר אמיתי - במגע ה-:hover "נדבק" אחרי הקשה
+    // (למשל כשנפתח בורר הקבצים) והצ'יפ נשאר מוזז 1px עד הקשה אחרת = "קופץ".
+    '@media (hover: hover)': {
+      '&:hover': { transform: 'translateY(-1px)' },
+    },
     '&:active': { transform: 'scale(0.97)' },
   };
 };
