@@ -2,25 +2,25 @@
 //
 // גם הערה וגם תמונה נראות כמו בועת-פתק תכלת מעוגלת, שטוחה (בלי הטיה),
 // עם פינה מקופלת (dog-ear) קטנה בפינה השמאלית-עליונה. אותו גוון, אותה
-// פינה, אותו רדיוס - רק הגודל ורמת הפירוט משתנים לפי הקשר:
+// פינה - רק הגודל ורמת הפירוט משתנים לפי הקשר:
 //   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem)
 //   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר (הערה ותמונה)
 //   'card'  - הפתק המלא במסך פרטי המוצר
 //
 // צבע אחד (תכלת המותג), עיצוב אחד - אין "זהות צבע" נפרדת לתמונה.
+//
+// הפינה המקופלת (גודל/צורה/גרדיאנט/צל) כוילה ידנית מול רפרנס אמיתי דרך
+// כלי אינטראקטיבי חי (לא ניחוש) - ראו CLIP_PATH/FOLD_SHADOW למטה.
 
 export const PAPER_NOTE = {
   fillLight: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת (dog-ear) - גרדיאנט אלכסוני: בהיר בפינה (0,0, "קצה
-  // הקיפול" שקולט הכי הרבה אור) -> כהה לכיוון הקשת (איפה שהיא "מתקפלת
-  // בחזרה"). הגרסאות הקודמות עם גרדיאנט נכשלו כי הצורה עצמה הייתה שבורה
-  // (mask/clip-path) - עכשיו שהצורה תקינה (border-radius), גרדיאנט על
-  // גביה בטוח לגמרי ונותן עומק אמיתי בלי לסכן שום דבר גיאומטרי.
-  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #0D9488 55%, #0F766E 100%)',
-  flapDark: 'linear-gradient(135deg, #99F6E4 0%, #2DD4BF 55%, #0D9488 100%)',
+  // הפינה המקופלת - גרדיאנט תלת-גוני עם פס "ברק" (shine) לבן באמצע: זה
+  // מה שנותן תחושת גליל/דף מגולגל אמיתית במקום גרדיאנט דו-גוני שטוח.
+  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #FFFFFF 55%, #0F766E 100%)',
+  flapDark: 'linear-gradient(135deg, #2DD4BF 0%, #FFFFFF 55%, #0D9488 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
@@ -33,17 +33,27 @@ export const PAPER_NOTE = {
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-// 'chip' תואם לרפרנס. 50 על 'card' התברר להיות בערך כפול ממה שנחוץ בפועל
-// (המשולש כיסה מעל חצי מגובה הכרטיס בצילום אמיתי) - הגובה בפועל של
-// הכרטיס/השדה הפתוח קטן משמעותית ממה שהוערך. תוקן לפי הצילום בפועל,
-// לא לפי הערכה תיאורטית של הגובה.
-const FOLD: Record<PaperSize, number> = { chip: 11, field: 28, card: 34 };
-// רדיוס מתון - לא כמעט-פילה/עיגול מלא (זה נראה גרוע, פחות "פתק" ויותר
-// כפתור). חוץ מהפינה עם הקיפול, שנשארת כמעט חדה כדי שהמשולש ישב עליה נקי.
+// גודל תיבת הקיפול. 'field' אין לו כלי כיול נפרד - מוערך יחסית בין chip
+// ל-card לפי אותו יחס גודל (כמו שהיה קודם: ~0.82 מ-card).
+const FOLD: Record<PaperSize, number> = { chip: 16, field: 32, card: 39 };
 const RADIUS: Record<PaperSize, string> = {
-  chip: '3px 8px 8px 8px',
+  chip: '3px 9px 9px 9px',
   field: '3px 10px 10px 10px',
   card: '3px 12px 12px 12px',
+};
+// צורת הקיפול - clip-path עם קשת SVG (לא border-radius) כדי לקבל בדיוק
+// את העקומה שכוילה (לא מעגל מלא ולא משולש חד - משהו ביניהם). 'field'
+// מחושב באותה נוסחה (curve~77%) על הגודל המוערך שלו.
+const CLIP_PATH: Record<PaperSize, string> = {
+  chip: 'path("M0,0 L16,0 A12,12 0 0,1 0,16 Z")',
+  field: 'path("M0,0 L32,0 A25,25 0 0,1 0,32 Z")',
+  card: 'path("M0,0 L39,0 A30,30 0 0,1 0,39 Z")',
+};
+// צל כפול (קו הקיפול + הרמה קלה מעל הדף) - כוילו יחד עם הגודל/צורה.
+const FOLD_SHADOW: Record<PaperSize, string> = {
+  chip: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+  field: 'inset -6px -6px 8px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
+  card: 'inset -7px -7px 10px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
@@ -69,17 +79,10 @@ export const addChipSx = (isDark: boolean) => {
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
-      width: fold + 1, height: fold + 1,
+      width: fold, height: fold,
       background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      // רדיוס 100% רק על הפינה הפנימית (הפוכה מהפינה החדה של הקופסה עצמה,
-      // ראו RADIUS למעלה) - הופך את המשולש החד לגזרת-רבע-עיגול: קצוות
-      // ישרים לאורך שפת הקופסה (למעלה/שמאל), וקשת קעורה חלקה בפנים - נראה
-      // כמו נייר שמתגלגל פנימה, לא כמו פינה חתוכה באלכסון ישר.
-      borderRadius: '0 0 100% 0',
-      // שני צללים: inset לאורך הקשת (קו הקיפול, "מתקפל בחזרה" לתוך הפתק)
-      // + drop-shadow חיצוני קטן (הפינה "מורמת" מעל שאר הדף) - יחד עם
-      // הגרדיאנט למעלה זה מה שנותן עומק תלת-ממדי אמיתי, לא צבע שטוח.
-      boxShadow: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+      clipPath: CLIP_PATH.chip,
+      boxShadow: FOLD_SHADOW.chip,
     },
     '&:hover': { transform: 'translateY(-1px)' },
     '&:active': { transform: 'scale(0.97)' },
@@ -98,26 +101,17 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     border: '1px solid',
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
     borderRadius: RADIUS[size],
-    // overflow:hidden רק ב-'chip' (אין שם סרט washi) - בלעדיו הפינה
-    // המרובעת-חדה של משולש הקיפול בולטת מעבר לעיגול הפינה של הקופסה
-    // עצמה ונראית כמו פיסה נפרדת שצפה ליד הצ'יפ, לא חלק ממנו. ב-'field'/
-    // 'card' *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top
-    // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
+    // overflow:hidden רק ב-'chip' (אין שם סרט washi) - ב-'field'/'card'
+    // *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top שלילי,
+    // ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
     ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
-    // הפינה המקופלת - גזרת-רבע-עיגול (border-radius, לא clip-path/mask):
-    // קצוות ישרים לאורך שפת הקופסה, קשת קעורה חלקה בפנים - נראה כמו נייר
-    // שמתגלגל פנימה (dog-ear אמיתי), לא פינה חתוכה באלכסון ישר.
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
-      width: fold + (size === 'chip' ? 1 : 2),
-      height: fold + (size === 'chip' ? 1 : 2),
+      width: fold, height: fold,
       background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      borderRadius: '0 0 100% 0',
-      boxShadow: [
-        `inset -${Math.round(fold * 0.18)}px -${Math.round(fold * 0.18)}px ${Math.round(fold * 0.25)}px rgba(0,0,0,0.22)`,
-        `${Math.round(fold * 0.06)}px ${Math.round(fold * 0.06)}px ${Math.round(fold * 0.1)}px rgba(0,0,0,0.18)`,
-      ].join(', '),
+      clipPath: CLIP_PATH[size],
+      boxShadow: FOLD_SHADOW[size],
       zIndex: 1,
     },
   };
