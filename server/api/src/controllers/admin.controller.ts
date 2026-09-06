@@ -20,6 +20,7 @@ import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
+import { getCloudinaryUsage } from '../services/imageUpload.service';
 
 /**
  * GET /api/admin/users
@@ -212,6 +213,16 @@ export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response)
       collections: perCollection,
     },
   });
+});
+
+/**
+ * GET /api/admin/cloudinary-health
+ * חיווי שימוש ב-Cloudinary (credits/אחסון/תעבורה/טרנספורמציות) לפאנל האדמין.
+ * מחזיר { configured: false } אם משתני הסביבה של Cloudinary לא מוגדרים.
+ */
+export const getCloudinaryHealth = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const data = await getCloudinaryUsage();
+  res.json({ success: true, data });
 });
 
 /**

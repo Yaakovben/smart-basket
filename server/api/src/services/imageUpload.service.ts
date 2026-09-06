@@ -40,6 +40,72 @@ function ensureConfigured(): void {
  * מעלה תמונת מוצר ומחזיר את כתובת ה-https הקבועה (secure_url).
  * dataUri: "data:image/jpeg;base64,..." (כבר דחוס בצד לקוח).
  */
+export interface CloudinaryUsage {
+  configured: boolean;
+  plan?: string;
+  lastUpdated?: string;
+  credits?: { used: number; limit: number; pct: number };
+  storage?: { usedBytes: number; limitBytes: number | null; pct: number | null };
+  bandwidth?: { usedBytes: number; limitBytes: number | null; pct: number | null };
+  transformations?: { used: number; limit: number | null; pct: number | null };
+  objects?: number;
+  requests?: number;
+  status?: 'ok' | 'warning' | 'critical';
+}
+
+// חיווי שימוש ב-Cloudinary לפאנל האדמין. משתמש ב-Admin API (api.usage) -
+// אותם מפתחות/סוד של ההעלאה. במסלול Free המדד המאוחד הוא "credits"
+// (1 קרדיט = 1GB אחסון / 1GB תעבורה / 1000 טרנספורמציות), אז status נגזר
+// ממנו. storage/bandwidth/transformations עשויים לבוא בלי limit במסלולים
+// מסוימים - מטופל כ-null.
+export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
+  if (!isImageUploadConfigured()) return { configured: false };
+  ensureConfigured();
+
+  const u = await cloudinary.api.usage() as Record<string, any>;
+
+  const pctFromField = (f: any): number | null => {
+    if (typeof f?.used_percent === 'number') return Math.round(f.used_percent * 10) / 10;
+    if (typeof f?.usage === 'number' && typeof f?.limit === 'number' && f.limit > 0) {
+      return Math.round((f.usage / f.limit) * 1000) / 10;
+    }
+    return null;
+  };
+
+  const creditsPct = pctFromField(u.credits) ?? 0;
+  const status: 'ok' | 'warning' | 'critical' =
+    creditsPct < 70 ? 'ok' : creditsPct < 90 ? 'warning' : 'critical';
+
+  return {
+    configured: true,
+    plan: typeof u.plan === 'string' ? u.plan : undefined,
+    lastUpdated: typeof u.last_updated === 'string' ? u.last_updated : undefined,
+    credits: {
+      used: Number(u.credits?.usage ?? 0),
+      limit: Number(u.credits?.limit ?? 0),
+      pct: creditsPct,
+    },
+    storage: {
+      usedBytes: Number(u.storage?.usage ?? 0),
+      limitBytes: typeof u.storage?.limit === 'number' ? u.storage.limit : null,
+      pct: pctFromField(u.storage),
+    },
+    bandwidth: {
+      usedBytes: Number(u.bandwidth?.usage ?? 0),
+      limitBytes: typeof u.bandwidth?.limit === 'number' ? u.bandwidth.limit : null,
+      pct: pctFromField(u.bandwidth),
+    },
+    transformations: {
+      used: Number(u.transformations?.usage ?? 0),
+      limit: typeof u.transformations?.limit === 'number' ? u.transformations.limit : null,
+      pct: pctFromField(u.transformations),
+    },
+    objects: typeof u.objects?.usage === 'number' ? u.objects.usage : (typeof u.resources === 'number' ? u.resources : undefined),
+    requests: typeof u.requests === 'number' ? u.requests : undefined,
+    status,
+  };
+}
+
 export async function uploadProductImage(dataUri: string): Promise<string> {
   ensureConfigured();
 

@@ -1,9 +1,9 @@
 import apiClient from './client';
-import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, AiStatus } from './types/admin.types';
+import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, CloudinaryHealth, AiStatus } from './types/admin.types';
 
 // DbHealth/DbHealthCollection ממשיכים להיות מיובאים ישירות מהקובץ הזה
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
-export type { DbHealthCollection, DbHealth, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
+export type { DbHealthCollection, DbHealth, CloudinaryHealth, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
 
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
@@ -30,6 +30,11 @@ export const adminApi = {
 
   async getDbHealth(): Promise<DbHealth> {
     const response = await apiClient.get<{ data: DbHealth }>('/admin/db-health');
+    return response.data.data;
+  },
+
+  async getCloudinaryHealth(): Promise<CloudinaryHealth> {
+    const response = await apiClient.get<{ data: CloudinaryHealth }>('/admin/cloudinary-health');
     return response.data.data;
   },
 

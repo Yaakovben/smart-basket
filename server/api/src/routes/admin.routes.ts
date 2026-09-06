@@ -14,6 +14,7 @@ import {
   getUserDetails,
   deleteUser,
   getDbHealth,
+  getCloudinaryHealth,
   getAiStatusHandler,
   refreshAiStatusHandler,
 } from '../controllers/admin.controller';
@@ -32,6 +33,7 @@ router.get('/users', getUsers);
 router.get('/activity', validate({ query: adminValidator.paginationQuery }), getLoginActivity);
 router.get('/stats', getStats);
 router.get('/db-health', getDbHealth);
+router.get('/cloudinary-health', getCloudinaryHealth);
 router.get('/ai-status', getAiStatusHandler);
 router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
