@@ -70,6 +70,9 @@ export const addChipSx = (isDark: boolean) => {
       width: fold + 1, height: fold + 1,
       bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      // צל פנימי לאורך קו האלכסון - box-shadow:inset מכובד ע"י clip-path,
+      // נותן טיפת עומק לקיפול בלי לחזור לגרדיאנט/mask שנכשלו קודם.
+      boxShadow: 'inset -3px -3px 4px rgba(0,0,0,0.18)',
     },
     '&:hover': { transform: 'translateY(-1px)' },
     '&:active': { transform: 'scale(0.97)' },
@@ -95,7 +98,8 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
     // שלילי, ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
     ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
     // המשולש של הפינה המקופלת (הדף "מורם" בפינה העליונה-שמאלית) - צבע
-    // שטוח אחיד, בלי גרדיאנט/צל (אלה יצאו מרוחים/מלוכלכים בגרסאות קודמות).
+    // שטוח אחיד + צל פנימי קטן לאורך קו האלכסון לטיפת עומק (לא גרדיאנט/
+    // mask - אלה יצאו מרוחים/שבורים בגרסאות קודמות).
     '&::before': {
       content: '""',
       position: 'absolute', top: 0, left: 0,
@@ -103,6 +107,7 @@ export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
       height: fold + (size === 'chip' ? 1 : 2),
       bgcolor: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
       clipPath: 'polygon(0 0, 100% 100%, 0 100%)',
+      boxShadow: `inset -${Math.round(fold * 0.18)}px -${Math.round(fold * 0.18)}px ${Math.round(fold * 0.25)}px rgba(0,0,0,0.18)`,
       zIndex: 1,
     },
   };
