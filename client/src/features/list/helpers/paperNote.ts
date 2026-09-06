@@ -13,13 +13,13 @@
 // כלי אינטראקטיבי חי (לא ניחוש) - ראו CLIP_PATH/FOLD_SHADOW למטה.
 
 export const PAPER_NOTE = {
-  fillLight: 'linear-gradient(180deg, #F0FDFA 0%, #E6F9F5 100%)',
+  fillLight: 'linear-gradient(310deg, #C7F5EA 0%, #E6F9F5 100%)',
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.22)',
   edgeDark: 'rgba(45,212,191,0.32)',
   // הפינה המקופלת - גרדיאנט תלת-גוני עם פס "ברק" (shine) לבן באמצע: זה
   // מה שנותן תחושת גליל/דף מגולגל אמיתית במקום גרדיאנט דו-גוני שטוח.
-  flapLight: 'linear-gradient(135deg, #5EEAD4 0%, #FFFFFF 55%, #0F766E 100%)',
+  flapLight: 'linear-gradient(135deg, #F5FAF9 0%, #FFFFFF 55%, #0F766E 100%)',
   flapDark: 'linear-gradient(135deg, #2DD4BF 0%, #FFFFFF 55%, #0D9488 100%)',
   // אייקון + תוויות
   inkLight: '#0F766E',
@@ -34,26 +34,26 @@ export const PAPER_NOTE = {
 
 type PaperSize = 'chip' | 'field' | 'card';
 // גודל תיבת הקיפול. 'field' אין לו כלי כיול נפרד - מוערך יחסית בין chip
-// ל-card לפי אותו יחס גודל (כמו שהיה קודם: ~0.82 מ-card).
-const FOLD: Record<PaperSize, number> = { chip: 16, field: 32, card: 39 };
+// ל-card לפי אותו יחס גודל (~0.82 מ-card, כמו שהיה בכיולים קודמים).
+const FOLD: Record<PaperSize, number> = { chip: 13, field: 28, card: 34 };
 const RADIUS: Record<PaperSize, string> = {
-  chip: '3px 9px 9px 9px',
-  field: '3px 10px 10px 10px',
-  card: '3px 12px 12px 12px',
+  chip: '3px 5px 5px 5px',
+  field: '3px 8px 8px 8px',
+  card: '3px 10px 10px 10px',
 };
 // צורת הקיפול - clip-path עם קשת SVG (לא border-radius) כדי לקבל בדיוק
-// את העקומה שכוילה (לא מעגל מלא ולא משולש חד - משהו ביניהם). 'field'
-// מחושב באותה נוסחה (curve~77%) על הגודל המוערך שלו.
+// את העקומה שכוילה (curve~40%, בין משולש חד לעיגול מלא). 'field' מחושב
+// באותה נוסחה על הגודל המוערך שלו.
 const CLIP_PATH: Record<PaperSize, string> = {
-  chip: 'path("M0,0 L16,0 A12,12 0 0,1 0,16 Z")',
-  field: 'path("M0,0 L32,0 A25,25 0 0,1 0,32 Z")',
-  card: 'path("M0,0 L39,0 A30,30 0 0,1 0,39 Z")',
+  chip: 'path("M0,0 L13,0 A5,5 0 0,1 0,13 Z")',
+  field: 'path("M0,0 L28,0 A11,11 0 0,1 0,28 Z")',
+  card: 'path("M0,0 L34,0 A14,14 0 0,1 0,34 Z")',
 };
 // צל כפול (קו הקיפול + הרמה קלה מעל הדף) - כוילו יחד עם הגודל/צורה.
 const FOLD_SHADOW: Record<PaperSize, string> = {
-  chip: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
-  field: 'inset -6px -6px 8px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
-  card: 'inset -7px -7px 10px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
+  chip: 'inset -2px -2px 3px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+  field: 'inset -5px -5px 7px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
+  card: 'inset -6px -6px 9px rgba(0,0,0,0.22), 2px 2px 3px rgba(0,0,0,0.18)',
 };
 
 // הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
