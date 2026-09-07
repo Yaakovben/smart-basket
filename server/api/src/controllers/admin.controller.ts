@@ -45,10 +45,24 @@ export const getUsers = asyncHandler(async (_req: AuthRequest, res: Response) =>
     const userId = String(userObj._id || userObj.id);
     const stats = statsMap.get(userId);
     const { _id, __v, password, ...rest } = userObj as Record<string, unknown>;
+
+    // totalLogins המוצג לא יכול פשוט להיות ה-live count מ-LoginActivity:
+    // לרשומות שם יש TTL של 90 יום (ראו LoginActivity.model.ts) - ברגע
+    // שרשומת כניסה ישנה של משתמש מתפוגגת, ה-live count שלו יורד גם בלי
+    // שהוא "איבד" כניסה בפועל (זה מה שגרם ל"אתמול 70, היום 69"). לכן
+    // שומרים ב-DB "שיא" קבוע (totalLogins על ה-User עצמו) שרק עולה - אף
+    // פעם לא יורד, גם כשה-live count מתחתיו בגלל תפוגה.
+    const liveCount = stats?.totalLogins || 0;
+    const persistedFloor = (rest.totalLogins as number) || 0;
+    const totalLogins = Math.max(persistedFloor, liveCount);
+    if (totalLogins > persistedFloor) {
+      void UserDAL.updateById(userId, { totalLogins } as Partial<typeof user>).catch(() => {});
+    }
+
     return {
       ...rest,
       id: userId,
-      totalLogins: stats?.totalLogins || 0,
+      totalLogins,
       lastLoginAt: stats?.lastLoginAt || null,
       lastLoginMethod: stats?.lastLoginMethod || null,
       lastAppOpenAt: stats?.lastAppOpenAt || null,

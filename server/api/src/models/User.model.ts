@@ -36,6 +36,11 @@ export interface IUser extends Document {
   // (JWT הוא stateless - זו הדרך היחידה לבטל טוקן לפני שפג תוקפו).
   // מוטמע ב-payload של ה-JWT ונבדק מול הערך ב-DB בכל בקשה מאומתת.
   tokenVersion: number;
+  // "שיא" קבוע של מספר הכניסות שהוצג אי-פעם למשתמש בפאנל האדמין - ראו
+  // ההערה המפורטת ליד השימוש ב-admin.controller.ts (getUsers). לא נספר
+  // ישירות בכל login; רק "מתעדכן כלפי מעלה" כשה-live count (המחושב מתוך
+  // LoginActivity, שמתנקה אוטומטית אחרי 90 יום) עולה מעליו.
+  totalLogins: number;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -112,6 +117,10 @@ const userSchema = new Schema<IUser>(
       default: [],
     },
     tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+    totalLogins: {
       type: Number,
       default: 0,
     },
