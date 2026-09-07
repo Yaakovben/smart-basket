@@ -12,6 +12,18 @@ interface Props {
 const fmtNum = (n: number): string =>
   n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : n.toLocaleString('he-IL');
 
+// last_updated מ-Cloudinary הוא לרוב תאריך בלבד ("2026-09-07") - הצגת
+// שעה עליו נתנה תמיד "00:00" ובלבלה. מציגים תאריך; רק אם המחרוזת כוללת
+// שעה אמיתית (ISO datetime) מוסיפים אותה.
+const formatCloudinaryAsOf = (raw: string): string => {
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(raw.trim());
+  return dateOnly
+    ? d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : d.toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 // שורת מדד עם פס התקדמות - אחסון / תעבורה / טרנספורמציות.
 const MetricBar = ({ label, valueText, pct, color, isDark }: { label: string; valueText: string; pct: number | null; color: string; isDark: boolean }) => (
   <Box sx={{ mb: 1.25 }}>
@@ -73,7 +85,7 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
         </Typography>
         {data.lastUpdated && (
           <Typography sx={{ fontSize: 9.5, color: 'text.disabled', mt: 0.5 }}>
-            נתוני Cloudinary נכונים ל-{new Date(data.lastUpdated).toLocaleString('he-IL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            Cloudinary מרענן את נתוני השימוש פעם ביום · נכון ל-{formatCloudinaryAsOf(data.lastUpdated)}
           </Typography>
         )}
       </Box>

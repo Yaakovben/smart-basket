@@ -21,6 +21,9 @@ interface Props {
 
 type HealthTab = 'mongo' | 'cloudinary';
 
+// שעת הטעינה של המסך (זמן הדפדפן) - "מתי משכנו את הנתונים מהשרת", לא
+// גיל הנתונים עצמם. הניסוח "נטען" (ולא "עודכן") כדי לא לבלבל עם שורת
+// ה"נכון ל-" של Cloudinary שמדברת על גיל נתוני המקור.
 const timeText = (d: Date | null): string | null =>
   d ? d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : null;
 
@@ -49,13 +52,13 @@ export const DbHealthCard = ({ isDark, onClose }: Props) => {
         <>
           {metaChip(`Atlas ${tierName(mongo.data.limitMB)}`)}
           <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>· {mongo.data.limitMB} MB</Typography>
-          {lastUpdatedText && <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>· עודכן {lastUpdatedText}</Typography>}
+          {lastUpdatedText && <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>· נטען {lastUpdatedText}</Typography>}
         </>
       ) : undefined)
     : (cloud.data?.configured ? (
         <>
           {metaChip(cloud.data.plan || 'Cloudinary')}
-          {lastUpdatedText && <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>· עודכן {lastUpdatedText}</Typography>}
+          {lastUpdatedText && <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>· נטען {lastUpdatedText}</Typography>}
         </>
       ) : undefined);
 

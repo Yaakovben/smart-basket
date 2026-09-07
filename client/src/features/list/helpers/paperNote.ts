@@ -19,9 +19,9 @@ export const PAPER_NOTE = {
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
-  // גוף הטקסט שנכתב בהערה
-  textLight: '#1C9A89',
-  textDark: '#B9F0E6',
+  // גוף הטקסט שנכתב בהערה - הובהר שוב (עדיין נקרא כהה מדי מול הרקע התכלת).
+  textLight: '#2AAE99',
+  textDark: '#C6F3EA',
   // מסגרת דקה סביב תמונת מוצר (שורה + מודאל) - תכלת, לא צבע הקטגוריה
   frameLight: 'rgba(20,184,166,0.45)',
   frameDark: 'rgba(45,212,191,0.5)',

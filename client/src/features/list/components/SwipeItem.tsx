@@ -385,12 +385,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
           // דקה (PAPER_NOTE.frame) - אותו תכלת של ההערה, לא צבע הקטגוריה.
           // רדיוס מרובע יותר מאריח האייקון - "צילום" נקרא טוב יותר כשהוא
           // פחות עגול. תג מצלמה זעיר בפינה. כשנקנה - מעומעמת ואפורה, בלי תג.
-          <Box sx={{
-            position: 'relative', flexShrink: 0,
-            width: 40, height: 40,
-            '@media (max-width: 360px)': { width: 34, height: 34 },
-            '@media (max-width: 320px)': { width: 30, height: 30 },
-          }}>
+          <Box
+            onContextMenu={(e) => e.preventDefault()}
+            sx={{
+              position: 'relative', flexShrink: 0,
+              width: 40, height: 40,
+              '@media (max-width: 360px)': { width: 34, height: 34 },
+              '@media (max-width: 320px)': { width: 30, height: 30 },
+            }}
+          >
             {/* עוטף פנימי - רק הוא clip-ם (overflow:hidden), כדי שתג
                 המצלמה (שנשען קצת מחוץ לגבולות הריבוע, ליצור אפקט "תלוי
                 בפינה") לא ייחתך. קודם הוא היה בתוך אותה קופסה עם ה-clip
@@ -409,6 +412,14 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 sx={{
                   borderRadius: '18%',
                   filter: isPurchased ? 'grayscale(1)' : 'none',
+                  // מונע את תפריט ה-OS הילידי ל"שמור/שתף תמונה" בלחיצה
+                  // ארוכה על <img> - בלעדיו הוא "חוטף" את הרצף מהמחווה
+                  // המותאמת-אישית שלנו (לחיצה ארוכה = בחירה מרובה), ואז
+                  // touchend של האפליקציה אף פעם לא יורה - בדיוק המקרה
+                  // שדווח: לחיצה ארוכה עובדת בכל מקום בשורה חוץ מעל התמונה.
+                  WebkitTouchCallout: 'none',
+                  WebkitUserSelect: 'none', userSelect: 'none',
+                  WebkitUserDrag: 'none',
                 }}
               />
             </Box>

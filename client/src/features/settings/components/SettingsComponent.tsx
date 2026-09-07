@@ -5,6 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
+import { useReliableTap } from '../../../global/hooks/useReliableTap';
 import { ADMIN_CONFIG } from '../../../global/constants';
 import type { User, ToastType } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
@@ -31,6 +32,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isDark = settings.theme === 'dark';
   const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
+  // onClick רגיל על שורת המנהל התגלה כלא-אמין (דרש הקשה כפולה) - אותו
+  // תיקון כמו ב-HomeHeader/ProfileComponent/Modal.
+  const openAdmin = useReliableTap(() => navigate('/admin'));
   const { isSupported: pushSupported, isPwaInstalled, isSubscribed: pushSubscribed, loading: pushLoading, error: pushError, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   // זיהוי סוג מכשיר להנחיות התקנה
@@ -125,7 +129,7 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
         {/* Admin Dashboard */}
         {isAdmin && (
           <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2 }}>
-            <Box sx={lastSettingRowSx} onClick={() => navigate('/admin')}>
+            <Box sx={{ ...lastSettingRowSx, touchAction: 'manipulation' }} onPointerUp={openAdmin.onPointerUp} onClick={openAdmin.onClick}>
               <Box component="span" sx={{ fontSize: 22 }}>👑</Box>
               <Typography sx={rowLabelSx}>{t('adminDashboard')}</Typography>
               <ChevronLeftIcon sx={{ color: 'text.disabled' }} />
