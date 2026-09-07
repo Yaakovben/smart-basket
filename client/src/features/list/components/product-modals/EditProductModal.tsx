@@ -142,8 +142,10 @@ export const EditProductModal = memo(({
       {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
           לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
           flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
-          במקום לשבת לצידה. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'flex-start', gap: 2.5, mb: 1.5 }}>
+          במקום לשבת לצידה. alignItems:'center' (היה 'flex-start') - כשההערה
+          פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה קטנה, top-align גרם לתמונה
+          להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'center', gap: 2.5, mb: 1.5 }}>
         <ProductNoteField
           value={product.note || ''}
           onChange={(v) => onUpdateField('note', v as Product['note'])}
