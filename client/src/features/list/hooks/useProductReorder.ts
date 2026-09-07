@@ -11,6 +11,10 @@ import { getCategoryOrder } from '../helpers/list-helpers';
 const DRAG_ACTIVATION_DELAY_MS = 180;
 const DRAG_CANCEL_VERTICAL_PX = 8;
 const DRAG_CANCEL_HORIZONTAL_PX = 12;
+// גובה שורה + מרווח (ProductReorderRow: height:64 + mb:'6px') - קבוע כאן
+// כדי לחשב הזזות פיקסליות של שורות שכנות בלי למדוד DOM בכל תזוזה. אם
+// המידות של ProductReorderRow משתנות, לעדכן גם כאן.
+const ROW_HEIGHT_PX = 70;
 
 interface Params {
   listId: string;
@@ -25,29 +29,29 @@ interface Params {
   t: (key: TranslationKeys) => string;
 }
 
-// גרירה-לסידור-מחדש של מוצרים בתוך רשימה. אותה מכניקה כמו useListReorder
-// (long-press → drag, גלילה אוטומטית בקצוות, throttle) אבל על מוצרים.
+// גרירה-לסידור-מחדש של מוצרים בתוך רשימה - חופשית לגמרי, כולל בין
+// קטגוריות. סדר ה-DOM (reorderedIds) נשאר יציב לאורך כל הגרירה - הסידור
+// המחודש עצמו לא נשלף שוב עד ה-drop; מה שנראה זז זה רק transform:
+//   - השורה הנגררת: translateY רציף (בלי throttle) שעוקב אחרי האצבע 1:1.
+//   - שורות אחרות: מוזזות בדיוק גובה-שורה אחד (עם transition) כדי "לפנות
+//     מקום" ליעד הנוכחי (targetIndex, מתעדכן ב-throttle קל לפי מיקום
+//     האצבע האמיתי - ראו getTargetIndex).
+// זה מה שנותן תחושת גרירה חלקה בלי "קפיצות" - בניגוד לגישה הקודמת שסיפרה
+// מחדש את המערך (ורינדרה הכל מחדש) בכל מעבר בין שורות.
 export function useProductReorder({ listId, items, userName, contentRef, applyLocalOrder, showToast, t }: Params) {
   const [reorderMode, setReorderMode] = useState(false);
   const [reorderedIds, setReorderedIds] = useState<string[] | null>(null);
   const [dragIndex, setDragIndex] = useState(-1);
-  const [dragOverIndex, setDragOverIndex] = useState(-1);
+  const [targetIndex, setTargetIndex] = useState(-1);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
   const [saving, setSaving] = useState(false);
   const dragIndexRef = useRef(-1);
+  const targetIndexRef = useRef(-1);
+  const dragStartYRef = useRef(0);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
   const lastMoveTimeRef = useRef(0);
-  // עותק חי של reorderedIds לשימוש בתוך handleDragMove בלי להפוך אותו
-  // ל-dependency (היה יוצר closure מיושן/מפעיל re-subscribe מיותר של
-  // event listeners בכל תזוזה - ראו useEffect למטה).
-  const reorderedIdsRef = useRef<string[] | null>(null);
-  // קטגוריה לכל מוצר, לפי id - לחישוב גבולות הקטגוריה שדרך useList כבר
-  // קיבצה את הרשימה לפיה (ראו הבהרה למטה ב-getCategoryBounds).
-  const categoryById = useMemo(
-    () => new Map(items.map((p) => [p.id, getCategoryOrder(p.category)])),
-    [items]
-  );
 
   const pendingDragRef = useRef<{
     index: number; startY: number; startX: number; timer: ReturnType<typeof setTimeout>;
@@ -61,6 +65,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   }, []);
 
   // הסדר להצגה במצב סידור - lookup לפי id כדי לשרוד עדכוני מוצר תוך כדי.
+  // נשאר יציב לאורך כל הגרירה הפעילה - ראו הסבר למעלה.
   const orderedItems = useMemo(() => {
     if (!reorderMode || !reorderedIds) return items;
     const byId = new Map(items.map((p) => [p.id, p]));
@@ -74,8 +79,6 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     return result;
   }, [reorderMode, reorderedIds, items]);
 
-  useEffect(() => { reorderedIdsRef.current = reorderedIds; }, [reorderedIds]);
-
   const getTargetIndex = useCallback((clientY: number): number => {
     for (let i = 0; i < rowRefs.current.length; i++) {
       const el = rowRefs.current[i];
@@ -86,23 +89,24 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     return rowRefs.current.length - 1;
   }, []);
 
-  // גבולות בלוק הקטגוריה שהמוצר הנגרר שייך אליו, בתוך המערך הנוכחי (arr).
-  // הרשימה שמגיעה מ-useList כבר מקובצת קטגוריה-קודם (ראו ההערה שם) - כל
-  // עוד גוררים רק בתוך הבלוק, ההנחה הזו נשמרת אחרי כל תזוזה. כך אי אפשר
-  // לגרור מוצר לתוך קטגוריה אחרת (שגם ככה יוחזר למקומו במיון הבא) - במקום
-  // "לקפוץ בחזרה" מבלבל אחרי שמירה, הגרירה עצמה פשוט לא חוצה את הגבול.
-  const getCategoryBounds = useCallback((idx: number, arr: string[]): [number, number] => {
-    const cat = categoryById.get(arr[idx]);
-    let lo = idx, hi = idx;
-    while (lo > 0 && categoryById.get(arr[lo - 1]) === cat) lo--;
-    while (hi < arr.length - 1 && categoryById.get(arr[hi + 1]) === cat) hi++;
-    return [lo, hi];
-  }, [categoryById]);
+  // ההזזה (px) שיש להחיל על שורה שאינה נגררת, כדי לפנות מקום ל-targetIndex
+  // הנוכחי. שורות בין dragIndex ל-targetIndex זזות בדיוק גובה-שורה אחד
+  // בכיוון ההפוך לתנועת הגרירה.
+  const getRowShift = useCallback((index: number): number => {
+    if (dragIndex < 0 || targetIndex < 0 || index === dragIndex) return 0;
+    if (dragIndex < targetIndex) {
+      return index > dragIndex && index <= targetIndex ? -ROW_HEIGHT_PX : 0;
+    }
+    return index >= targetIndex && index < dragIndex ? ROW_HEIGHT_PX : 0;
+  }, [dragIndex, targetIndex]);
 
-  const activateDrag = useCallback((index: number) => {
+  const activateDrag = useCallback((index: number, startY: number) => {
     dragIndexRef.current = index;
+    targetIndexRef.current = index;
+    dragStartYRef.current = startY;
     setDragIndex(index);
-    setDragOverIndex(index);
+    setTargetIndex(index);
+    setDragOffsetY(0);
     haptic('medium');
   }, []);
 
@@ -110,7 +114,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     cancelPending();
     const timer = setTimeout(() => {
       pendingDragRef.current = null;
-      activateDrag(index);
+      activateDrag(index, clientY);
     }, DRAG_ACTIVATION_DELAY_MS);
     pendingDragRef.current = { index, startY: clientY, startX: clientX, timer };
   }, [cancelPending, activateDrag]);
@@ -125,6 +129,10 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
 
     const currentIdx = dragIndexRef.current;
     if (currentIdx < 0) return;
+
+    // עוקב אחרי האצבע ברציפות, בלי throttle - זה מה שנותן תחושת גרירה
+    // חלקה. שורות שכנות מגיבות לפי targetIndex, שמתעדכן בנפרד למטה.
+    setDragOffsetY(clientY - dragStartYRef.current);
 
     const SCROLL_ZONE = 100;
     const SCROLL_SPEED = 6;
@@ -142,24 +150,13 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     }
 
     const now = Date.now();
-    if (now - lastMoveTimeRef.current < 50) return;
+    if (now - lastMoveTimeRef.current < 16) return;
     lastMoveTimeRef.current = now;
 
-    const arr = reorderedIdsRef.current;
-    const rawTargetIdx = getTargetIndex(clientY);
-    const [lo, hi] = arr ? getCategoryBounds(currentIdx, arr) : [rawTargetIdx, rawTargetIdx];
-    const targetIdx = Math.min(hi, Math.max(lo, rawTargetIdx));
-    if (targetIdx !== currentIdx && targetIdx >= 0) {
-      setReorderedIds((prev) => {
-        if (!prev) return prev;
-        const next = [...prev];
-        const [moved] = next.splice(currentIdx, 1);
-        next.splice(targetIdx, 0, moved);
-        return next;
-      });
-      dragIndexRef.current = targetIdx;
-      setDragIndex(targetIdx);
-      setDragOverIndex(targetIdx);
+    const targetIdx = getTargetIndex(clientY);
+    if (targetIdx !== targetIndexRef.current && targetIdx >= 0) {
+      targetIndexRef.current = targetIdx;
+      setTargetIndex(targetIdx);
       haptic('light');
     }
   }, [contentRef, getTargetIndex, cancelPending]);
@@ -167,9 +164,22 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   const handleDragEnd = useCallback(() => {
     cancelPending();
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+    const from = dragIndexRef.current;
+    const to = targetIndexRef.current;
+    if (from >= 0 && to >= 0 && from !== to) {
+      setReorderedIds((prev) => {
+        if (!prev) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        return next;
+      });
+    }
     dragIndexRef.current = -1;
+    targetIndexRef.current = -1;
     setDragIndex(-1);
-    setDragOverIndex(-1);
+    setTargetIndex(-1);
+    setDragOffsetY(0);
   }, [cancelPending]);
 
   const isActive = dragIndex >= 0 || pendingDragRef.current !== null;
@@ -212,10 +222,19 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   }, [items]);
 
   const handleCancel = useCallback(() => {
+    // איפוס ישיר של ה-refs (לא דרך handleDragEnd) - הוא מבצע את ה-splice
+    // הסופי של הגרירה הפעילה, וסדר-הביצוע מול setReorderedIds(null) כאן
+    // לא שווה לסמוך עליו. ביטול אמיתי חייב להישאר בלי שום commit.
+    cancelPending();
+    if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+    dragIndexRef.current = -1;
+    targetIndexRef.current = -1;
     setReorderMode(false);
     setReorderedIds(null);
-    handleDragEnd();
-  }, [handleDragEnd]);
+    setDragIndex(-1);
+    setTargetIndex(-1);
+    setDragOffsetY(0);
+  }, [cancelPending]);
 
   const persist = useCallback(async (ids: string[], manual: boolean) => {
     setSaving(true);
@@ -254,7 +273,8 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     orderedItems,
     reorderMode,
     dragIndex,
-    dragOverIndex,
+    dragOffsetY,
+    getRowShift,
     rowRefs,
     hasChanges,
     saving,

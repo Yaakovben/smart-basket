@@ -10,7 +10,10 @@ interface Props {
   product: Product;
   index: number;
   isDragging: boolean;
-  isDragOver: boolean;
+  // הזזה אנכית (px) - translateY רציף לשורה הנגררת (עוקב אחרי האצבע),
+  // או קפיצה של גובה-שורה אחד לשורות שכנות שמתפנות מקום (ראו
+  // useProductReorder.getRowShift).
+  translateY: number;
   rowRef: (el: HTMLDivElement | null) => void;
   onHandleTouch: (e: React.TouchEvent) => void;
   onHandleMouse: (e: React.MouseEvent) => void;
@@ -18,7 +21,7 @@ interface Props {
 
 // שורת מוצר במצב "סידור מחדש" - פשוטה ונקייה, בלי מחוות ההחלקה של
 // SwipeItem. גרירה מתחילה מהידית (long-press), כמו סידור רשימות בבית.
-export const ProductReorderRow = memo(({ product, index, isDragging, isDragOver, rowRef, onHandleTouch, onHandleMouse }: Props) => {
+export const ProductReorderRow = memo(({ product, index, isDragging, translateY, rowRef, onHandleTouch, onHandleMouse }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
@@ -34,13 +37,18 @@ export const ProductReorderRow = memo(({ product, index, isDragging, isDragOver,
         borderRadius: '14px',
         bgcolor: 'background.paper',
         border: '1px solid',
-        borderColor: isDragOver ? 'primary.main' : 'transparent',
+        borderColor: 'transparent',
         boxShadow: isDragging
           ? (isDark ? '0 10px 28px rgba(0,0,0,0.5)' : '0 10px 28px rgba(20,184,166,0.28)')
           : (isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'),
-        transform: isDragging ? 'scale(1.03)' : 'none',
+        transform: `translateY(${translateY}px)${isDragging ? ' scale(1.03)' : ''}`,
         opacity: isDragging ? 0.97 : 1,
-        transition: 'transform 0.16s ease, box-shadow 0.16s ease, border-color 0.12s ease',
+        // בלי transition על transform בשורה הנגררת - היא חייבת לעקוב אחרי
+        // האצבע מיידית, בלי עיכוב. שורות שכנות כן מקבלות transition, כדי
+        // שההזזה שלהן (לפנות מקום) תיראה חלקה ולא קפיצה.
+        transition: isDragging
+          ? 'box-shadow 0.16s ease'
+          : 'transform 0.18s ease, box-shadow 0.16s ease',
         position: 'relative',
         zIndex: isDragging ? 5 : 1,
         touchAction: 'pan-y',

@@ -14,7 +14,7 @@ import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useListCostEstimate } from '../hooks/useListCostEstimate';
 import { PULL_MAX } from '../helpers/list-helpers';
-import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS } from '../../../global/constants';
+import { CATEGORY_ICONS } from '../../../global/constants';
 
 // ===== קומפוננטות משנה =====
 import { ListHeader } from './ListHeader';
@@ -210,7 +210,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   const {
     orderedItems: reorderOrderedItems,
-    reorderMode, dragIndex: reorderDragIndex, dragOverIndex: reorderDragOverIndex,
+    reorderMode, dragIndex: reorderDragIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
     rowRefs: reorderRowRefs, hasChanges: reorderHasChanges, saving: reorderSaving,
     handleDragStart: reorderHandleDragStart,
     handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
@@ -581,37 +581,18 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         {/* Products List or Empty State */}
         {reorderMode ? (
           <>
-            {reorderOrderedItems.map((p: Product, idx: number) => {
-              // כותרת קטגוריה קטנה בין בלוקים - הרשימה כבר מקובצת קטגוריה-
-              // קודם (ראו useList), הכותרת רק מבהירה למה גרירה נעצרת בגבול.
-              const showCategoryHeader = idx === 0 || reorderOrderedItems[idx - 1].category !== p.category;
-              return (
-                <Box key={p.id}>
-                  {showCategoryHeader && (
-                    <Box sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.6,
-                      mt: idx > 0 ? 1.5 : 0, mb: 0.75, px: 0.5,
-                    }}>
-                      <Typography component="span" sx={{ fontSize: 14 }}>
-                        {CATEGORY_ICONS[p.category as keyof typeof CATEGORY_ICONS] || '📦'}
-                      </Typography>
-                      <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: 'text.secondary', letterSpacing: 0.3 }}>
-                        {t(CATEGORY_TRANSLATION_KEYS[p.category])}
-                      </Typography>
-                    </Box>
-                  )}
-                  <ProductReorderRow
-                    product={p}
-                    index={idx}
-                    isDragging={reorderDragIndex === idx}
-                    isDragOver={reorderDragOverIndex === idx && reorderDragIndex !== idx}
-                    rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
-                    onHandleTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
-                    onHandleMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
-                  />
-                </Box>
-              );
-            })}
+            {reorderOrderedItems.map((p: Product, idx: number) => (
+              <ProductReorderRow
+                key={p.id}
+                product={p}
+                index={idx}
+                isDragging={reorderDragIndex === idx}
+                translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
+                rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
+                onHandleTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
+                onHandleMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
+              />
+            ))}
           </>
         ) : items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} savedLists={savedLists} onApplySavedList={handleApplySavedList} />
