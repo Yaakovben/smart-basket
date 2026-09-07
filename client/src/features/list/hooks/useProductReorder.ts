@@ -38,6 +38,16 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
   const lastMoveTimeRef = useRef(0);
+  // עותק חי של reorderedIds לשימוש בתוך handleDragMove בלי להפוך אותו
+  // ל-dependency (היה יוצר closure מיושן/מפעיל re-subscribe מיותר של
+  // event listeners בכל תזוזה - ראו useEffect למטה).
+  const reorderedIdsRef = useRef<string[] | null>(null);
+  // קטגוריה לכל מוצר, לפי id - לחישוב גבולות הקטגוריה שדרך useList כבר
+  // קיבצה את הרשימה לפיה (ראו הבהרה למטה ב-getCategoryBounds).
+  const categoryById = useMemo(
+    () => new Map(items.map((p) => [p.id, getCategoryOrder(p.category)])),
+    [items]
+  );
 
   const pendingDragRef = useRef<{
     index: number; startY: number; startX: number; timer: ReturnType<typeof setTimeout>;
@@ -64,6 +74,8 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     return result;
   }, [reorderMode, reorderedIds, items]);
 
+  useEffect(() => { reorderedIdsRef.current = reorderedIds; }, [reorderedIds]);
+
   const getTargetIndex = useCallback((clientY: number): number => {
     for (let i = 0; i < rowRefs.current.length; i++) {
       const el = rowRefs.current[i];
@@ -73,6 +85,19 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     }
     return rowRefs.current.length - 1;
   }, []);
+
+  // גבולות בלוק הקטגוריה שהמוצר הנגרר שייך אליו, בתוך המערך הנוכחי (arr).
+  // הרשימה שמגיעה מ-useList כבר מקובצת קטגוריה-קודם (ראו ההערה שם) - כל
+  // עוד גוררים רק בתוך הבלוק, ההנחה הזו נשמרת אחרי כל תזוזה. כך אי אפשר
+  // לגרור מוצר לתוך קטגוריה אחרת (שגם ככה יוחזר למקומו במיון הבא) - במקום
+  // "לקפוץ בחזרה" מבלבל אחרי שמירה, הגרירה עצמה פשוט לא חוצה את הגבול.
+  const getCategoryBounds = useCallback((idx: number, arr: string[]): [number, number] => {
+    const cat = categoryById.get(arr[idx]);
+    let lo = idx, hi = idx;
+    while (lo > 0 && categoryById.get(arr[lo - 1]) === cat) lo--;
+    while (hi < arr.length - 1 && categoryById.get(arr[hi + 1]) === cat) hi++;
+    return [lo, hi];
+  }, [categoryById]);
 
   const activateDrag = useCallback((index: number) => {
     dragIndexRef.current = index;
@@ -120,7 +145,10 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     if (now - lastMoveTimeRef.current < 50) return;
     lastMoveTimeRef.current = now;
 
-    const targetIdx = getTargetIndex(clientY);
+    const arr = reorderedIdsRef.current;
+    const rawTargetIdx = getTargetIndex(clientY);
+    const [lo, hi] = arr ? getCategoryBounds(currentIdx, arr) : [rawTargetIdx, rawTargetIdx];
+    const targetIdx = Math.min(hi, Math.max(lo, rawTargetIdx));
     if (targetIdx !== currentIdx && targetIdx >= 0) {
       setReorderedIds((prev) => {
         if (!prev) return prev;

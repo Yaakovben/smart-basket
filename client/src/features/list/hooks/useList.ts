@@ -84,9 +84,10 @@ export const useList = ({
   const debouncedSearch = useDebounce(search, 300);
 
   // רשימת המוצרים המוצגת ב-UI: מסוננת לפי חיפוש וממוינת.
-  //  - list.productsManuallyOrdered=true: מיון לפי position (הסדר שהמשתמש
-  //    גרר), tie-break לפי createdAt. מוצר חדש מקבל position גדול בשרת
-  //    (Date.now) ולכן נופל לסוף.
+  //  - list.productsManuallyOrdered=true: קטגוריה קודם (אותו סדר קבוע כמו
+  //    במיון האוטומטי) ובתוך קטגוריה לפי position (הסדר שהמשתמש גרר), עם
+  //    tie-break לפי createdAt. כך גרירה מסדרת מוצרים בתוך הקטגוריה שלהם
+  //    בלבד - הרשימה תמיד מוצגת "בשורה של הקטגוריות", לא מפוזרת ביניהן.
   //  - אחרת (ברירת מחדל): מיון אוטומטי לפי קטגוריה (ירקות → פירות → חלב...
   //    זרימת קניות טבעית), ובתוך קטגוריה לפי שם בא"ב.
   const items = useMemo(() => {
@@ -97,6 +98,8 @@ export const useList = ({
       : source;
     if (list.productsManuallyOrdered) {
       return [...filtered].sort((a, b) => {
+        const catDiff = getCategoryOrder(a.category) - getCategoryOrder(b.category);
+        if (catDiff !== 0) return catDiff;
         const pa = a.position ?? Number.MAX_SAFE_INTEGER;
         const pb = b.position ?? Number.MAX_SAFE_INTEGER;
         if (pa !== pb) return pa - pb;
