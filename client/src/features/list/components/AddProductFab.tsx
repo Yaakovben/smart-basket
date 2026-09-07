@@ -1,13 +1,15 @@
-import { memo, useRef } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { Box, Fab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { haptic } from '../../../global/helpers';
-import { useReliableTap } from '../../../global/hooks';
 import { useSettings } from '../../../global/context/SettingsContext';
 import type { FabPosition } from '../types/list-types';
 
 // ===== קבועים =====
 const FAB_DRAGGABLE_THRESHOLD = 3;
+// חלון דדופ - מונע פתיחה כפולה כשגם touchend וגם click (סינתטי או אמיתי)
+// מגיעים מאותה הקשה.
+const SAME_TAP_MS = 600;
 
 // ===== Props =====
 interface AddProductFabProps {
@@ -33,6 +35,7 @@ export const AddProductFab = memo(({
   const { t } = useSettings();
   const isDraggable = itemCount > FAB_DRAGGABLE_THRESHOLD;
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef(0);
 
   // מדידת מרכז הכפתור בפועל לפי DOM - מונע קפיצה כשמתחילים לגרור מ-bottom-center למצב top/left
   const measureCenter = (): { x: number; y: number } | undefined => {
@@ -42,16 +45,29 @@ export const AddProductFab = memo(({
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   };
 
-  const handleClick = () => {
-    if (!isDragging) {
-      haptic('medium');
-      onAddProduct();
-    }
-  };
+  // פתיחה אחת בדיוק להקשה, עם guard. isDragging נבדק ע"י הקוראים.
+  const fireAdd = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < SAME_TAP_MS) return;
+    lastTapRef.current = now;
+    haptic('medium');
+    onAddProduct();
+  }, [onAddProduct]);
 
-  // onClick לבדו לא אמין על חלק מהמכשירים - דורש הקשה כפולה (הראשונה רק
-  // "ממקדת"). onPointerUp + onClick fallback, אותו דפוס כמו HomeHeader/Modal.
-  const addTap = useReliableTap(handleClick);
+  // הקשה במגע: מטופלת ב-touchend + preventDefault. זה חוסם את ה"קליק
+  // הרפאים" שהדפדפן מסנתז ~300ms אחרי touchend - בלעדיו, אם האצבע נגעה
+  // קרוב לשפת הכפתור, הקליק הסינתטי נופל על שורת המוצר שמתחת ל-FAB
+  // ו"פותח" אותה במקום. onClick נשאר לעכבר/מקלדת בלבד.
+  const onFabTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (isDragging) return;         // סוף גרירה - לא הקשה
+    e.preventDefault();             // אין קליק סינתטי, אין דליפה למוצר שמתחת
+    fireAdd();
+  }, [isDragging, fireAdd]);
+
+  const onFabClick = useCallback(() => {
+    if (isDragging) return;
+    fireAdd();
+  }, [isDragging, fireAdd]);
 
   // מצב FAB עגול עם גרירה
   if (isDraggable) {
@@ -83,8 +99,8 @@ export const AddProductFab = memo(({
       >
         <Fab
           color="primary"
-          onPointerUp={addTap.onPointerUp}
-          onClick={addTap.onClick}
+          onTouchEnd={onFabTouchEnd}
+          onClick={onFabClick}
           aria-label={t('addProduct')}
           sx={{
             cursor: isDragging ? 'grabbing' : 'grab',
@@ -115,8 +131,8 @@ export const AddProductFab = memo(({
       <Fab
         color="primary"
         variant="extended"
-        onPointerUp={addTap.onPointerUp}
-        onClick={addTap.onClick}
+        onTouchEnd={onFabTouchEnd}
+        onClick={onFabClick}
         aria-label={t('addProduct')}
         sx={{
           px: 2.5,
