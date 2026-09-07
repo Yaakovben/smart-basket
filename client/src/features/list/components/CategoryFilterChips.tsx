@@ -26,7 +26,11 @@ export const CategoryFilterChips = memo(({
   const { t } = useSettings();
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
+    // alignItems:'flex-start' (לא center) - הקופסה הפנימית של הצ'יפים
+    // כוללת pb:0.5 (מקום לסרגל גלילה) שגבוה מ-32px בפועל; עם center
+    // trailing היה מתמרכז בתוך הגובה הזה וזז ~2px למטה מהצ'יפים. עם
+    // flex-start שניהם מתחילים באותו y בדיוק - אותו גובה, בלי קפיצה.
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 1.5 }}>
       <Box sx={{
         display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, flex: 1, minWidth: 0,
         // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent

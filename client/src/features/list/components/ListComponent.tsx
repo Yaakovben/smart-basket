@@ -498,6 +498,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
+              // עיגול מלא (לא ריבוע מעוגל) - אותה גובה מדויק (32) ואותו
+              // bgcolor כמו הצ'יפים, כדי שיישב באותה שורה כאילו הוא חלק
+              // ממנה ולא רכיב זר שהודבק לצד.
               <Box
                 role="button"
                 tabIndex={0}
@@ -505,9 +508,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
                 sx={{
-                  width: 32, height: 32, borderRadius: '10px',
+                  width: 32, height: 32, borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   bgcolor: 'action.hover', color: 'text.secondary',
+                  border: '1.5px solid transparent',
                   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
                   transition: 'transform 0.12s',
                   '&:active': { transform: 'scale(0.9)' },
