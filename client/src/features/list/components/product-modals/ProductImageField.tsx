@@ -65,7 +65,21 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     setUploading(true);
     try {
       const url = await uploadToServer(local);
-      if (myId === reqIdRef.current) onChange(url);
+      if (myId === reqIdRef.current) {
+        // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
+        // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
+        // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
+        // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
+        // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
+        // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
+        await new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = cldThumb(url);
+        });
+        if (myId === reqIdRef.current) onChange(url);
+      }
     } catch (err) {
       if (!isNotConfiguredError(err) && import.meta.env.DEV) {
         console.warn('product image server upload failed, keeping local copy', err);
@@ -85,10 +99,10 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   };
 
   return (
-    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal). סגור - start
-    // (הצ'יפ בגודלו הטבעי). יש תמונה - stretch כדי שנוכל לדחוף את התמונה
-    // עד קצה שמאל של העמודה ולשים "תמונה:" מימינה.
-    <Box sx={{ minWidth: 0, justifySelf: value ? 'stretch' : 'start' }}>
+    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal) - stretch
+    // תמיד (לא רק כשיש תמונה) כדי ששני המצבים ייצמדו לאותה קצה קבועה
+    // (flex-end בשורה הפנימית למטה) ולא "יקפצו" כשמוסיפים תמונה.
+    <Box sx={{ minWidth: 0, justifySelf: 'stretch' }}>
       <input
         ref={inputRef}
         type="file"
@@ -109,15 +123,15 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           }}>
             {t('photo')}:
           </Typography>
-          <Box sx={{ position: 'relative', width: 62, flexShrink: 0 }}>
+          <Box sx={{ position: 'relative', width: 78, flexShrink: 0 }}>
             <Box
               role="button"
               aria-label={t('viewPhotoAria')}
               onClick={() => { haptic('light'); setLightbox(true); }}
               sx={{
                 position: 'relative',
-                width: 62, height: 62,
-                borderRadius: '11px', overflow: 'hidden',
+                width: 78, height: 78,
+                borderRadius: '13px', overflow: 'hidden',
                 bgcolor: 'action.hover',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                 cursor: 'pointer',
@@ -129,7 +143,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
               <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0, borderRadius: '11px',
+                position: 'absolute', inset: 0, borderRadius: '13px',
                 border: '1.5px solid',
                 borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                 pointerEvents: 'none',
@@ -165,31 +179,33 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           </Box>
         </Box>
       ) : (
-        // אין תמונה - צ'יפ פתק מקופל (addChipSx - זהה ל"הוסף הערה", חוץ
-        // מהאייקון: AddPhotoAlternateRoundedIcon במקום מצלמה גנרית - סימן
-        // "הוספת תמונה" מוכר ומיידי יותר, כדי שהצ'יפ יזוהה כתמונה גם כשהוא
-        // ליד "הוסף הערה" הכמעט-זהה באותה שורה.
-        <Box
-          role="button"
-          tabIndex={0}
-          aria-label={t('addPhoto')}
-          onClick={pick}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pick(); }}
-          sx={{
-            ...addChipSx(isDark),
-            cursor: busy ? 'default' : 'pointer',
-            opacity: busy ? 0.75 : 1,
-            ...(busy ? { '&:hover': {} } : {}),
-          }}
-        >
-          {busy ? (
-            <CircularProgress size={13} sx={{ color: ink }} />
-          ) : (
-            <AddPhotoAlternateRoundedIcon sx={{ fontSize: 16 }} />
-          )}
-          <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
-            {busy ? t('photoProcessing') : t('addPhoto')}
-          </Typography>
+        // אין תמונה - אותה שורה (justifyContent:'flex-end') כמו מצב "יש
+        // תמונה" למעלה, כדי שהצ'יפ יישב כבר עכשיו באותה קצה שהתמונה תתפוס
+        // ברגע שתיבחר - בלי זה הצ'יפ ישב במרכז/התחלה ואז "יקפוץ" שמאלה
+        // כשמוסיפים תמונה בפועל.
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Box
+            role="button"
+            tabIndex={0}
+            aria-label={t('addPhoto')}
+            onClick={pick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pick(); }}
+            sx={{
+              ...addChipSx(isDark),
+              cursor: busy ? 'default' : 'pointer',
+              opacity: busy ? 0.75 : 1,
+              ...(busy ? { '&:hover': {} } : {}),
+            }}
+          >
+            {busy ? (
+              <CircularProgress size={13} sx={{ color: ink }} />
+            ) : (
+              <AddPhotoAlternateRoundedIcon sx={{ fontSize: 16 }} />
+            )}
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
+              {busy ? t('photoProcessing') : t('addPhoto')}
+            </Typography>
+          </Box>
         </Box>
       )}
 
