@@ -7,7 +7,7 @@ import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinar
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox, ProgressiveImage } from '../../../../global/components';
-import { compressProductImage, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
+import { compressProductImage, buildUploadMaster, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
 
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
 // עיצוב אחיד לחלוטין עם ProductNoteField: אותו צ'יפ תכלת סגור, אותם
@@ -60,11 +60,14 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     haptic('medium');
     setBusy(false);
 
-    // שלב 2 - העלאה לשרת ברקע. אם מצליח, מחליפים ל-URL קצר. אם השרת בלי
-    // Cloudinary (או כל כשל) - נשארים עם ה-data URL שכבר נשמר, בשקט.
+    // שלב 2 - העלאה ברקע. בונים "מאסטר" איכותי *מהקובץ המקורי* (לא מ-local
+    // שכבר דחוס אגרסיבית לתצוגה) ומעלים אותו ל-Cloudinary, שגוזר ממנו את
+    // כל הגרסאות. אם השרת בלי Cloudinary / כל כשל - נשארים עם ה-data URL.
     setUploading(true);
     try {
-      const url = await uploadToServer(local);
+      const master = await buildUploadMaster(file);
+      if (myId !== reqIdRef.current) return;
+      const url = await uploadToServer(master);
       if (myId === reqIdRef.current) {
         // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
         // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע

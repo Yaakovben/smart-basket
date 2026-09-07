@@ -20,16 +20,15 @@ const variant = (url: string, transform: string): string => {
   return `${m[1]}${transform}/${m[2]}`;
 };
 
-// אריח קטן בשורת הרשימה / תצוגה מקדימה (~40-76px, פי ~2 לרינה - מספיק חד
-// לגודל הזה, וקטן משמעותית מ-w_216). q_auto:eco - אגרסיבי יותר מ-q_auto
-// הרגיל; באריח כזה זעיר אין הבדל נראה לעין אבל המשקל קטן עוד. הפרמטרים
-// כאן חייבים להיות זהים ל-eager ב-imageUpload.service.ts (שרת) - אחרת
-// ה-eager מייצר גרסה שאף בקשה בפועל לא מבקשת, וזו שכן מבוקשת נוצרת
-// "on the fly" בפעם הראשונה בכל זאת.
-export const cldThumb = (url: string) => variant(url, 'c_fill,w_160,h_160,f_auto,q_auto:eco');
+// אריח קטן בשורת הרשימה / בטופס (~38-80px CSS). w_256 מכסה תצוגה של עד
+// ~85px במסך פי-3 (רינה) - w_160 הקודם היה קטן מדי לזה ונראה מטושטש.
+// q_auto (לא :eco - :eco היה אגרסיבי מדי וריכך את האריח). הפרמטרים כאן
+// חייבים להיות זהים ל-eager ב-imageUpload.service.ts (שרת) - אחרת ה-eager
+// מייצר גרסה שאף בקשה לא מבקשת, וזו שכן מבוקשת נוצרת "on the fly" בכל זאת.
+export const cldThumb = (url: string) => variant(url, 'c_fill,w_256,h_256,f_auto,q_auto');
 
-// תמונת "גיבור" בפרטי מוצר (~300px רוחב)
-export const cldPreview = (url: string) => variant(url, 'c_limit,w_720,f_auto,q_auto');
+// תמונת "גיבור" בפרטי מוצר (~150-300px CSS, מכסה גם רינה פי-3)
+export const cldPreview = (url: string) => variant(url, 'c_limit,w_800,f_auto,q_auto');
 
 // מסך מלא
 export const cldFull = (url: string) => variant(url, 'c_limit,w_1600,f_auto,q_auto');
