@@ -19,6 +19,10 @@ export interface IList extends Document {
   members: IMember[];
   inviteCode?: string;
   password?: string; // סיסמת קבוצה - 4 תווים בטקסט פשוט
+  // האם המשתמשים סידרו ידנית את סדר המוצרים ברשימה (גרירה). false =
+  // מיון אוטומטי לפי קטגוריה→א״ב (ברירת מחדל). true = הלקוח ממיין לפי
+  // Product.position. משותף לכל חברי הקבוצה.
+  productsManuallyOrdered: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -79,6 +83,10 @@ const listSchema = new Schema<IList>(
     },
     password: {
       type: String,
+    },
+    productsManuallyOrdered: {
+      type: Boolean,
+      default: false,
     },
   },
   {

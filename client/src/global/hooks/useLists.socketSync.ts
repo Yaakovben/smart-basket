@@ -84,6 +84,11 @@ export function useListsSocketSync(user: User | null, listIds: string, setLists:
       scheduleRefetch(eventData.listId);
     });
 
+    const unsubscribeProductsReordered = socketService.on('products:reordered', (data: unknown) => {
+      const eventData = data as { listId: string };
+      scheduleRefetch(eventData.listId);
+    });
+
     const unsubscribeProductToggled = socketService.on('product:toggled', (data: unknown) => {
       const eventData = data as { listId: string };
       scheduleRefetch(eventData.listId);
@@ -108,6 +113,7 @@ export function useListsSocketSync(user: User | null, listIds: string, setLists:
       unsubscribeProductUpdated();
       unsubscribeProductDeleted();
       unsubscribeProductsCleared();
+      unsubscribeProductsReordered();
       unsubscribeProductToggled();
       unsubscribeNotificationNew();
       // יציאה מכל החדרים בניקוי

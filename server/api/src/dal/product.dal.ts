@@ -143,11 +143,18 @@ export const ProductDAL = {
     return result.deletedCount;
   },
 
-  async reorderProducts(listId: string, productIds: string[]): Promise<void> {
+  // סידור מחדש. manual=true: position רץ 0,1,2... לפי הסדר שנשלח (הלקוח
+  // ממיין לפיו). manual=false (חזרה למיון אוטומטי): position חוזר לערכי
+  // timestamp גדולים ורצופים לפי הסדר שנשלח (הסדר לפי קטגוריה), כדי
+  // שגם מיון השרת (position:1) יישאר עקבי - אבל הלקוח ממילא ממיין לפי
+  // קטגוריה כש-list.productsManuallyOrdered=false.
+  async reorderProducts(listId: string, productIds: string[], manual = true): Promise<void> {
+    const base = manual ? 0 : Date.now();
+    const step = manual ? 1 : 1000;
     const bulkOps = productIds.map((id, index) => ({
       updateOne: {
         filter: { _id: new mongoose.Types.ObjectId(id), listId: new mongoose.Types.ObjectId(listId) },
-        update: { $set: { position: index } },
+        update: { $set: { position: base + index * step } },
       },
     }));
 

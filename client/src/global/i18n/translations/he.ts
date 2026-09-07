@@ -442,6 +442,13 @@ export const he: Translations = {
   reorderDone: 'שמור סדר',
   reorderHint: 'גרור ☰ כדי לשנות סדר',
   orderSaved: 'הסדר נשמר',
+  // Product reorder (בתוך רשימה)
+  reorderProducts: 'סדר מוצרים',
+  reorderProductsActive: 'סידור מוצרים',
+  reorderProductsHint: 'גרור מהידית כדי לשנות את הסדר',
+  productsWord: 'מוצרים',
+  sortByCategory: 'מיין לפי קטגוריה',
+  productOrderAuto: 'הרשימה חזרה למיון לפי קטגוריה',
   // פרטי משתמש למנהל
   moreDetails: 'פרטים נוספים',
   lists: 'רשימות',

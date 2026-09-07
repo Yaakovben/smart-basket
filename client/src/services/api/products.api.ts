@@ -33,6 +33,13 @@ export const productsApi = {
     await apiClient.delete(`/lists/${listId}/products/${productId}`);
   },
 
+  // סידור מוצרים מחדש. manual=true שומר את הסדר שנשלח כסדר ידני; manual=false
+  // מחזיר את הרשימה למיון אוטומטי לפי קטגוריה (productIds = הסדר לפי קטגוריה).
+  async reorderProducts(listId: string, productIds: string[], manual = true): Promise<void> {
+    validateId(listId, 'listId');
+    await apiClient.put(`/lists/${listId}/products/reorder`, { productIds, manual });
+  },
+
   async moveProducts(sourceListId: string, targetListId: string, productIds: string[]): Promise<number> {
     validateId(sourceListId, 'listId');
     validateId(targetListId, 'targetListId');

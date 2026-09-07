@@ -178,6 +178,28 @@ export const registerProductHandlers = (
       logger.error('Error in products:clear handler:', error);
     }
   });
+
+  // סידור מחדש של מוצרים - רק מודיע לשאר חברי החדר לרענן (בלי התראה,
+  // כמו סידור רשימות במסך הבית). ה-position כבר נשמר ב-DB דרך REST.
+  socket.on('product:reorder', (data: { listId: string; userName: string }) => {
+    try {
+      if (!checkRateLimit(socket.id)) return;
+      if (!isValidString(data?.listId)) {
+        logger.warn('Invalid product:reorder data from user:', userId);
+        return;
+      }
+      if (!socket.rooms.has(`list:${data.listId}`)) return;
+
+      socket.to(`list:${data.listId}`).emit('products:reordered', {
+        listId: data.listId,
+        userId,
+        userName,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      logger.error('Error in product:reorder handler:', error);
+    }
+  });
 };
 
 // פונקציות שידור (נקראות משרת ה-API דרך Redis)

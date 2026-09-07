@@ -23,6 +23,7 @@ export interface ClientToServerEvents {
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;
   'product:delete': (data: { listId: string; productId: string; productName: string; userName: string }) => void;
   'products:clear': (data: { listId: string; productIds: string[]; filter: 'all' | 'purchased' | 'pending'; userName: string }) => void;
+  'product:reorder': (data: { listId: string; userName: string }) => void;
   'member:join': (data: { listId: string; listName: string; userName: string }) => void;
   'member:leave': (data: { listId: string; listName: string; userName: string }, callback?: () => void) => void;
   'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
@@ -42,6 +43,7 @@ export interface ServerToClientEvents {
   'product:updated': (data: ProductEventData) => void;
   'product:deleted': (data: ProductDeletedData) => void;
   'products:cleared': (data: ProductsClearedData) => void;
+  'products:reordered': (data: ProductsReorderedData) => void;
   'product:toggled': (data: ProductToggledData) => void;
   'list:updated': (data: ListUpdatedData) => void;
   'notification:new': (data: NotificationData) => void;
@@ -91,6 +93,13 @@ export interface ProductsClearedData {
   listId: string;
   productIds: string[];
   filter: 'all' | 'purchased' | 'pending';
+  userId: string;
+  userName: string;
+  timestamp: Date;
+}
+
+export interface ProductsReorderedData {
+  listId: string;
   userId: string;
   userName: string;
   timestamp: Date;

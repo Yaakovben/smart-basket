@@ -444,6 +444,12 @@ export type TranslationKeys =
   | 'reorderDone'
   | 'reorderHint'
   | 'orderSaved'
+  | 'reorderProducts'
+  | 'reorderProductsActive'
+  | 'reorderProductsHint'
+  | 'productsWord'
+  | 'sortByCategory'
+  | 'productOrderAuto'
   // Admin user details
   | 'moreDetails'
   | 'lists'

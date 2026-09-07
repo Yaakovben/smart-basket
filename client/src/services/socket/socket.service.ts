@@ -212,6 +212,7 @@ class SocketService {
       'product:updated',
       'product:deleted',
       'products:cleared',
+      'products:reordered',
       'product:toggled',
       'list:updated',
       'list:deleted',
@@ -324,6 +325,10 @@ class SocketService {
 
   emitProductsCleared(listId: string, productIds: string[], filter: 'all' | 'purchased' | 'pending', userName: string) {
     this.socket?.emit('products:clear', { listId, productIds, filter, userName });
+  }
+
+  emitProductsReordered(listId: string, userName: string) {
+    this.socket?.emit('product:reorder', { listId, userName });
   }
 
   emitProductToggled(listId: string, productId: string, productName: string, isPurchased: boolean, userName: string) {

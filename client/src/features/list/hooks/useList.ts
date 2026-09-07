@@ -83,22 +83,33 @@ export const useList = ({
   // Debounce לחיפוש
   const debouncedSearch = useDebounce(search, 300);
 
-  // רשימת המוצרים המוצגת ב-UI: מסוננת לפי חיפוש וממוינת לפי קטגוריה
-  // (ירקות → פירות → חלב וכו' לפי זרימה טבעית של קניות).
-  // בתוך אותה קטגוריה - מיון לפי שם לעקביות.
+  // רשימת המוצרים המוצגת ב-UI: מסוננת לפי חיפוש וממוינת.
+  //  - list.productsManuallyOrdered=true: מיון לפי position (הסדר שהמשתמש
+  //    גרר), tie-break לפי createdAt. מוצר חדש מקבל position גדול בשרת
+  //    (Date.now) ולכן נופל לסוף.
+  //  - אחרת (ברירת מחדל): מיון אוטומטי לפי קטגוריה (ירקות → פירות → חלב...
+  //    זרימת קניות טבעית), ובתוך קטגוריה לפי שם בא"ב.
   const items = useMemo(() => {
     const source = filter === 'pending' ? pending : purchased;
     const needle = debouncedSearch.toLowerCase();
     const filtered = needle
       ? source.filter((p: Product) => p.name.toLowerCase().includes(needle))
       : source;
+    if (list.productsManuallyOrdered) {
+      return [...filtered].sort((a, b) => {
+        const pa = a.position ?? Number.MAX_SAFE_INTEGER;
+        const pb = b.position ?? Number.MAX_SAFE_INTEGER;
+        if (pa !== pb) return pa - pb;
+        return a.createdAt.localeCompare(b.createdAt);
+      });
+    }
     // מיון יציב: קודם לפי קטגוריה (סדר קבוע), אח"כ לפי שם בסדר א"ב
     return [...filtered].sort((a, b) => {
       const diff = getCategoryOrder(a.category) - getCategoryOrder(b.category);
       if (diff !== 0) return diff;
       return a.name.localeCompare(b.name, 'he');
     });
-  }, [filter, pending, purchased, debouncedSearch]);
+  }, [filter, pending, purchased, debouncedSearch, list.productsManuallyOrdered]);
 
   const allMembers = useMemo(
     () => [list.owner, ...list.members],

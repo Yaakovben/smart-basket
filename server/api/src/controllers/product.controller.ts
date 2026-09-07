@@ -64,8 +64,8 @@ export const resetProducts = asyncHandler(async (req: AuthRequest, res: Response
 export const reorderProducts = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const { listId } = req.params;
-  const { productIds } = req.body as ReorderProductsInput;
-  await productService.reorderProducts(listId, userId, productIds);
+  const { productIds, manual = true } = req.body as ReorderProductsInput;
+  await productService.reorderProducts(listId, userId, productIds, manual);
   res.json({ success: true });
 });
 

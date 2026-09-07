@@ -65,6 +65,7 @@ export interface IProductResponse {
   createdAt: Date;
   note?: string;
   image?: string;
+  position?: number;
 }
 
 // ===== טיפוסי חבר =====
@@ -91,6 +92,7 @@ export interface IListResponse {
   inviteCode?: string;
   password?: string;
   hasPassword: boolean;
+  productsManuallyOrdered?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

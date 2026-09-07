@@ -84,6 +84,8 @@ export const productValidator = {
         'array.min': 'At least one product ID is required',
         'any.required': 'Product IDs are required',
       }),
+    // true = סידור ידני (ברירת מחדל), false = חזרה למיון אוטומטי לפי קטגוריה
+    manual: Joi.boolean().default(true),
   }),
 
   move: Joi.object({
@@ -124,6 +126,7 @@ export type UpdateProductInput = {
 
 export type ReorderProductsInput = {
   productIds: string[];
+  manual?: boolean;
 };
 
 export type MoveProductsInput = {

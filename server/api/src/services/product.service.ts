@@ -206,10 +206,15 @@ export async function resetProducts(
 export async function reorderProducts(
   listId: string,
   userId: string,
-  productIds: string[]
+  productIds: string[],
+  manual = true
 ): Promise<void> {
   await checkListAccessLean(listId, userId);
-  await ProductDAL.reorderProducts(listId, productIds);
+  await ProductDAL.reorderProducts(listId, productIds, manual);
+  // דגל ברמת הרשימה - הלקוח ממיין לפי position רק כשהוא true. גם מעדכן
+  // updatedAt כדי שסנכרון ה-socket (products:reordered → refetch) יביא את
+  // הסדר החדש לשאר חברי הקבוצה.
+  await ListDAL.setProductsManuallyOrdered(listId, manual);
 }
 
 export async function moveProducts(
