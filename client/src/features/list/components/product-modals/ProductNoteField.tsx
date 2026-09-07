@@ -4,6 +4,8 @@ import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { haptic } from '../../../../global/helpers';
 import { paperNoteSx, PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
+import { useScrollHint } from '../../helpers/useScrollHint';
+import { NoteScrollHint } from './NoteScrollHint';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
@@ -18,6 +20,8 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
   const inkMuted = isDark ? 'rgba(185,240,230,0.65)' : 'rgba(15,118,110,0.7)';
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
+  // חיווי גלילה - ההערה מוגבלת ל-3 שורות ואז גוללת; החץ מופיע כשיש עוד.
+  const { ref: taRef, showHint, onScroll } = useScrollHint<HTMLTextAreaElement>(value);
 
   const closeAndClear = () => {
     haptic('light');
@@ -46,40 +50,15 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
           </Typography>
         </Box>
       ) : (
-        // מצב פתוח - "פתק נייר" מלא (paperNoteSx 'field') עם סרט washi עדין
-        // באמצע למעלה וקווי מחברת ברקע.
+        // מצב פתוח - "פתק נייר" נקי (paperNoteSx 'field'): משטח תכלת, מסגרת
+        // דקה, קווי מחברת חיוורים ברקע. בלי קיפול, בלי סרט washi.
         <Box sx={{
           ...paperNoteSx('field', isDark),
           mt: 2, mb: 0.5,
           px: 1.5, pt: 1.6, pb: 1.1,
-          boxShadow: isDark
-            ? '0 6px 16px rgba(0,0,0,0.35)'
-            : [
-                'inset 0 1px 0 rgba(255,255,255,0.85)',
-                '0 1px 2px rgba(15,118,110,0.06)',
-                '0 6px 16px rgba(20,184,166,0.10)',
-                '0 16px 32px rgba(15,118,110,0.05)',
-              ].join(', '),
-          // קווי מחברת מאוד עדינים ברקע
-          '&::after': {
-            content: '""', position: 'absolute', inset: 0,
-            backgroundImage: 'repeating-linear-gradient(transparent 0, transparent 23px, rgba(20,184,166,0.06) 23px, rgba(20,184,166,0.06) 24px)',
-            pointerEvents: 'none',
-          },
         }}>
-          {/* סרט washi עדין באמצע למעלה - מינימליסטי, בלי קווים מקווקווים */}
-          <Box sx={{
-            position: 'absolute', top: -6, left: '50%',
-            transform: 'translateX(-50%) rotate(-1deg)',
-            width: 56, height: 10,
-            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '1px',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
-            zIndex: 2,
-          }} />
           {/* כפתור סגירה - עיגול בפינה העליונה-שמאלית (הפיזית) של הפתק,
-              בולט קצת החוצה (ב-'field' אין overflow:hidden). יושב מעל
-              משולש הקיפול הדקורטיבי. */}
+              בולט קצת החוצה (ב-'field' אין overflow:hidden). */}
           <Box
             role="button"
             aria-label={t('closeNoteAria')}
@@ -119,7 +98,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
               fontSize: 10, fontWeight: 800, color: ink,
               letterSpacing: 1, textTransform: 'uppercase',
             }}>
-              {t('note')}
+              {t('note')}:
             </Typography>
           </Box>
           <TextField
@@ -132,7 +111,8 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
             placeholder={t('productNotePlaceholder')}
-            inputProps={{ maxLength: 200 }}
+            inputRef={taRef}
+            inputProps={{ maxLength: 200, onScroll }}
             sx={{
               position: 'relative', zIndex: 2,
               '& .MuiOutlinedInput-root': {
@@ -150,6 +130,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
               },
             }}
           />
+          <NoteScrollHint show={showHint} isDark={isDark} />
         </Box>
       )}
     </Box>

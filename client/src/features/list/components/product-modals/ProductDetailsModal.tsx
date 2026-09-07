@@ -10,6 +10,8 @@ import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateS
 import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
+import { useScrollHint } from '../../helpers/useScrollHint';
+import { NoteScrollHint } from './NoteScrollHint';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -80,6 +82,8 @@ export const ProductDetailsModal = memo(({
   const [editsExpanded, setEditsExpanded] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
   const [nameExpanded, setNameExpanded] = useState(false);
+  // חיווי גלילה על ההערה - היא מוגבלת בגובה ואז גוללת בתוך הפתק.
+  const { ref: noteRef, showHint: noteShowHint, onScroll: onNoteScroll } = useScrollHint<HTMLDivElement>(product?.note);
 
   // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
   // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
@@ -262,51 +266,51 @@ export const ProductDetailsModal = memo(({
         </Typography>
       </Box>
 
-      {/* הערה - אותה "בועת-פתק" תכלת מעוגלת עם פינה מקופלת כמו בכל מקום
-          אחר בהערה/תמונה (paperNoteSx('card') - ראו paperNote.ts), לא
-          עיצוב נפרד משלה. סרט washi באמצע למעלה נשאר כפרט דקורטיבי. */}
+      {/* הערה - אותו "נייר" תכלת נקי כמו בטופס ובשורת הרשימה
+          (paperNoteSx('card') - ראו paperNote.ts). בלי קיפול, בלי סרט
+          washi. טקסט ארוך גולל בתוך הפתק עם חיווי חץ למטה. */}
       {product.note && (
         <Box sx={{
           ...paperNoteSx('card', isDark),
           mt: 1, mb: 2,
-          pt: 2, px: 2, pb: 2.5,
-          boxShadow: isDark
-            ? '0 12px 28px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.28)'
-            : [
-                'inset 0 1px 0 rgba(255,255,255,0.8)',
-                '0 2px 6px rgba(15,118,110,0.08)',
-                '0 14px 32px rgba(20,184,166,0.16)',
-              ].join(', '),
+          pt: 2, px: 2, pb: 2,
         }}>
-          {/* סרט washi באמצע למעלה */}
-          <Box sx={{
-            position: 'absolute', top: -7, left: '50%',
-            transform: 'translateX(-50%) rotate(-1deg)',
-            width: 64, height: 12,
-            backgroundImage: 'linear-gradient(180deg, rgba(20,184,166,0.45) 0%, rgba(13,148,136,0.55) 100%)',
-            borderRadius: '2px',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(15,118,110,0.2)',
-            zIndex: 2,
-          }} />
           <Box sx={{ position: 'relative', zIndex: 2, mb: 0.85 }}>
             <Typography sx={{
               fontSize: 10, fontWeight: 800,
               color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
               letterSpacing: 1.2, textTransform: 'uppercase',
             }}>
-              {t('note')}
+              {t('note')}:
             </Typography>
           </Box>
-          <Typography sx={{
-            position: 'relative', zIndex: 2,
-            fontSize: 14.5,
-            color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
-            fontWeight: 500,
-            lineHeight: 1.6,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          }}>
-            {product.note}
-          </Typography>
+          <Box
+            ref={noteRef}
+            onScroll={onNoteScroll}
+            sx={{
+              position: 'relative', zIndex: 2,
+              maxHeight: 168, overflowY: 'auto', overscrollBehavior: 'contain',
+              // מקום ל"פייד" של חיווי הגלילה שלא יחתוך שורה באמצע
+              pb: 0.5,
+              // סרגל גלילה דק ודיסקרטי
+              '&::-webkit-scrollbar': { width: 4 },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+                borderRadius: 4,
+              },
+            }}
+          >
+            <Typography sx={{
+              fontSize: 14.5,
+              color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
+              fontWeight: 500,
+              lineHeight: 1.6,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>
+              {product.note}
+            </Typography>
+          </Box>
+          <NoteScrollHint show={noteShowHint} isDark={isDark} />
         </Box>
       )}
 
