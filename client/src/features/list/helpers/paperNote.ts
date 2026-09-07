@@ -12,7 +12,7 @@
 //   'card'  - הפתק המלא במסך פרטי המוצר
 
 export const PAPER_NOTE = {
-  fillLight: 'linear-gradient(310deg, #C7F5EA 0%, #E6F9F5 100%)',
+  fillLight: 'linear-gradient(310deg, #D9FAF2 0%, #F2FDFB 100%)',
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
   edgeLight: 'rgba(20,184,166,0.28)',
   edgeDark: 'rgba(45,212,191,0.34)',
@@ -35,7 +35,7 @@ type PaperSize = 'chip' | 'field' | 'card';
 // פינות מעוגלות אחידות (כל הפינות שוות - אין יותר פינה "חדה" בצד הקיפול).
 const RADIUS: Record<PaperSize, number> = { chip: 8, field: 12, card: 16 };
 
-// צל אחיד ורך ל"נייר" - הדגשה פנימית בקצה העליון + הרמה עדינה מעל הרקע.
+// צל אחיד ורך ל"נייר" - הרמה עדינה מעל הרקע.
 const paperShadow = (isDark: boolean, size: PaperSize): string => {
   if (isDark) {
     return size === 'card'
@@ -44,13 +44,13 @@ const paperShadow = (isDark: boolean, size: PaperSize): string => {
         ? '0 6px 16px rgba(0,0,0,0.35)'
         : '0 1.5px 5px rgba(0,0,0,0.3)';
   }
-  const lift =
-    size === 'card'
-      ? '0 14px 32px rgba(20,184,166,0.16), 0 2px 6px rgba(15,118,110,0.08)'
-      : size === 'field'
-        ? '0 6px 16px rgba(20,184,166,0.10), 0 1px 2px rgba(15,118,110,0.06)'
-        : '0 1.5px 4px rgba(20,184,166,0.18)';
-  return `inset 0 1px 0 rgba(255,255,255,0.85), ${lift}`;
+  // בלי הדגשה פנימית לבנה בקצה העליון - היא יצרה רצועה דקה שנראתה כמו
+  // "חסר צבע תכלת" בקצה הפתק. הרמה עדינה מסביב מספיקה לתחושת "דף".
+  return size === 'card'
+    ? '0 14px 32px rgba(20,184,166,0.16), 0 2px 6px rgba(15,118,110,0.08)'
+    : size === 'field'
+      ? '0 6px 16px rgba(20,184,166,0.10), 0 1px 2px rgba(15,118,110,0.06)'
+      : '0 1.5px 4px rgba(20,184,166,0.18)';
 };
 
 // קווי מחברת חיוורים מאוד ברקע - הרמז ל"נייר" (רק ב-'field'/'card').
