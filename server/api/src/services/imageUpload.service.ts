@@ -1,9 +1,9 @@
 /**
  * imageUpload.service.ts
  *
- * העלאת תמונת מוצר ל-Cloudinary דרך השרת. הלקוח שולח תמונה דחוסה
- * (data URL) ל-POST /api/uploads/product-image, השרת מעלה אותה ל-Cloudinary
- * עם ה-API secret (סוד אמיתי, אף פעם לא בקליינט) ומחזיר רק את כתובת ה-https.
+ * תמונת מוצר עולה ישירות מהלקוח ל-Cloudinary (ראו getUploadSignature) -
+ * השרת רק חותם את הבקשה עם ה-API secret (סוד אמיתי, אף פעם לא בקליינט),
+ * בלי בייטי התמונה עצמם לעבור דרכו.
  *
  * מבודד בכוונה לקובץ אחד: אם נחליף ספק אחסון (S3 וכו') - רק הקובץ הזה משתנה.
  * אם משתני הסביבה של Cloudinary חסרים - זורק 503 וה-endpoint מחזיר שגיאה
@@ -12,8 +12,8 @@
 
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../config/environment';
-import { logger } from '../config/logger';
 import { AppError } from '../errors';
+import { Product } from '../models/Product.model';
 
 let configured = false;
 
@@ -36,10 +36,6 @@ function ensureConfigured(): void {
   }
 }
 
-/**
- * מעלה תמונת מוצר ומחזיר את כתובת ה-https הקבועה (secure_url).
- * dataUri: "data:image/jpeg;base64,..." (כבר דחוס בצד לקוח).
- */
 export interface CloudinaryUsage {
   configured: boolean;
   plan?: string;
@@ -50,6 +46,11 @@ export interface CloudinaryUsage {
   transformations?: { used: number; limit: number | null; pct: number | null };
   objects?: number;
   requests?: number;
+  // ספירה חיה מה-DB (לא מ-Cloudinary) - Cloudinary.api.usage() הוא מצרף
+  // מתעדכן בעיכוב מצדם (שעות, לפי התיעוד שלהם), אז "objects" למעלה יכול
+  // להישאר קבוע לזמן-מה גם אחרי העלאה אמיתית - "מוסיף ולא רואה שהשתנה".
+  // liveObjectCount תמיד מדויק לרגע הבקשה, בלי תלות בעיכוב הדיווח שלהם.
+  liveObjectCount?: number;
   status?: 'ok' | 'warning' | 'critical';
 }
 
@@ -62,7 +63,12 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
   if (!isImageUploadConfigured()) return { configured: false };
   ensureConfigured();
 
-  const u = await cloudinary.api.usage() as Record<string, any>;
+  // מקבילית ל-Cloudinary עצמו - ספירה חיה של מוצרים עם תמונה מאוחסנת שם
+  // (לא data URL), בשביל מדד שמתעדכן מיד אחרי העלאה אמיתית.
+  const [u, liveObjectCount] = await Promise.all([
+    cloudinary.api.usage() as Promise<Record<string, any>>,
+    Product.countDocuments({ image: { $regex: '^https://res.cloudinary.com/' } }),
+  ]);
 
   const pctFromField = (f: any): number | null => {
     if (typeof f?.used_percent === 'number') return Math.round(f.used_percent * 10) / 10;
@@ -102,37 +108,48 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
     },
     objects: typeof u.objects?.usage === 'number' ? u.objects.usage : (typeof u.resources === 'number' ? u.resources : undefined),
     requests: typeof u.requests === 'number' ? u.requests : undefined,
+    liveObjectCount,
     status,
   };
 }
 
-export async function uploadProductImage(dataUri: string): Promise<string> {
-  ensureConfigured();
+// תיקייה + eager קבועים, זהים בדיוק לפרמטרים שהלקוח מזריק דרך
+// cloudinaryImage.ts (cldThumb/cldPreview/cldBlur) - אחרת אין cache hit
+// על הגרסה שבאמת מבוקשת. משותפים בין ההעלאה (למטה) לבין החתימה.
+const UPLOAD_FOLDER = 'smart-basket/products';
+const UPLOAD_EAGER =
+  'c_fill,w_160,h_160,f_auto,q_auto:eco|c_limit,w_720,f_auto,q_auto|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
 
-  try {
-    // בלי transformation על ה-upload עצמו - זה יעכב את התשובה (Cloudinary
-    // מעבד לפני שמחזיר). במקום זה: eager_async יוצר ברקע, מיד אחרי
-    // ההעלאה, בדיוק את הגרסאות שהלקוח מבקש בפועל (ראו cloudinaryImage.ts:
-    // cldThumb/cldPreview) - כך שכשהתמונה מוצגת לראשונה (בדרך כלל בעוד רגע,
-    // לא באותו רגע) הגרסה הקטנה כבר מוכנה ב-CDN במקום שהבקשה הראשונה
-    // תחכה לעיבוד "on the fly".
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: 'smart-basket/products',
-      resource_type: 'image',
-      // חייב להישאר זהה בדיוק לפרמטרים ב-cloudinaryImage.ts (לקוח) - אחרת
-      // אין cache hit על הגרסה שבאמת מבוקשת.
-      eager: [
-        { crop: 'fill', width: 160, height: 160, fetch_format: 'auto', quality: 'auto:eco' },
-        { crop: 'limit', width: 720, fetch_format: 'auto', quality: 'auto' },
-        // blur-up placeholder (32x32, q:1) - נטען כמעט מיידית, מוצג עד
-        // שהגרסה החדה נטענת (ProgressiveImage). ראו cldBlur ב-cloudinaryImage.ts.
-        { crop: 'fill', width: 32, height: 32, effect: 'blur:1000', quality: 1, fetch_format: 'auto' },
-      ],
-      eager_async: true,
-    });
-    return result.secure_url;
-  } catch (err) {
-    logger.warn('Cloudinary upload failed:', err);
-    throw new AppError('Image upload failed', 502, 'IMAGE_UPLOAD_FAILED');
-  }
+export interface UploadSignature {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  eager: string;
+}
+
+/**
+ * חתימה להעלאה ישירה מהלקוח ל-Cloudinary, בלי לעבור דרך השרת הזה בכלל.
+ * העלאה "דרך השרת" (כפי שהיה קודם) מכפילה בפועל את זמן ההעלאה - הלקוח
+ * שולח את כל בייטי התמונה לשרת שלנו, שרק אז שולח אותם שוב ל-Cloudinary;
+ * העלאה ישירה חוסכת את המעבר הכפול הזה (מורגש בעיקר ברשתות סלולריות
+ * איטיות). ה-API secret עדיין אף פעם לא מגיע ללקוח - השרת חותם כאן רק
+ * פרמטרים קבועים משלו (תיקייה + eager), לא נותן ללקוח לחתום מה שהוא רוצה.
+ */
+export function getUploadSignature(): UploadSignature {
+  ensureConfigured();
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp, folder: UPLOAD_FOLDER, eager: UPLOAD_EAGER, eager_async: true },
+    env.CLOUDINARY_API_SECRET!,
+  );
+  return {
+    cloudName: env.CLOUDINARY_CLOUD_NAME!,
+    apiKey: env.CLOUDINARY_API_KEY!,
+    timestamp,
+    signature,
+    folder: UPLOAD_FOLDER,
+    eager: UPLOAD_EAGER,
+  };
 }

@@ -90,6 +90,8 @@ export interface CloudinaryHealth {
   transformations?: { used: number; limit: number | null; pct: number | null };
   objects?: number;
   requests?: number;
+  // ספירה חיה מה-DB, לא מדוח Cloudinary המתעדכן בעיכוב - ראו imageUpload.service.ts
+  liveObjectCount?: number;
   status?: 'ok' | 'warning' | 'critical';
 }
 

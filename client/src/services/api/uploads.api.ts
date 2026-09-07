@@ -1,17 +1,44 @@
 import apiClient from './client';
 
+interface UploadSignature {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  eager: string;
+}
+
 export const uploadsApi = {
-  // image: data URL בסיס64 דחוס ("data:image/jpeg;base64,..."). השרת מעלה
-  // ל-Cloudinary (עם ה-secret) ומחזיר את כתובת ה-https הקבועה.
-  // timeout ייעודי 45ש' - קצר מ-60ש' של הלקוח הכללי כדי שמשתמש לא יתקע
-  // דקה שלמה על העלאה שנכשלת (Render cold start וכו'); ארוך מספיק גם
-  // להעלאה אמיתית של תמונה + מעבר ל-Cloudinary.
+  // חתימה חד-פעמית להעלאה ישירה של הלקוח ל-Cloudinary (ראו imageUpload.ts).
+  // בייטי התמונה עצמם לא עוברים דרך השרת שלנו בכלל - רק הבקשה הקטנה הזו.
+  async signature(): Promise<UploadSignature> {
+    const response = await apiClient.get<{ data: UploadSignature }>('/uploads/signature');
+    return response.data.data;
+  },
+
+  // image: data URL בסיס64 דחוס ("data:image/jpeg;base64,..."). מעלה ישירות
+  // ל-Cloudinary עם חתימה מהשרת (השרת אף פעם לא רואה/מעביר את בייטי התמונה -
+  // חוסך מעבר כפול לקוח->שרת->Cloudinary, מורגש בעיקר ברשתות איטיות).
   async productImage(image: string): Promise<string> {
-    const response = await apiClient.post<{ data: { url: string } }>(
-      '/uploads/product-image',
-      { image },
-      { timeout: 45_000 },
-    );
-    return response.data.data.url;
+    const sig = await this.signature();
+    const form = new FormData();
+    form.append('file', image);
+    form.append('api_key', sig.apiKey);
+    form.append('timestamp', String(sig.timestamp));
+    form.append('signature', sig.signature);
+    form.append('folder', sig.folder);
+    form.append('eager', sig.eager);
+    form.append('eager_async', 'true');
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, {
+      method: 'POST',
+      body: form,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error?.message || 'Cloudinary upload failed');
+    }
+    return data.secure_url as string;
   },
 };
