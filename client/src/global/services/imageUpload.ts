@@ -3,12 +3,12 @@
 // זרימה בשני שלבים (ראה ProductImageField):
 //   1. compressProductImage(file)  -> data URL דחוס. מהיר ועמיד. זה מה
 //      שמוצג למשתמש *מיד* וגם מה שנשמר על המוצר אם שלב 2 לא מסתיים.
-//   2. uploadToServer(dataUrl)     -> POST /api/uploads/product-image,
-//      השרת מעלה ל-Cloudinary (עם ה-secret) ומחזיר כתובת https קצרה.
-//      רץ ברקע; אם מצליח, מחליפים את ה-data URL בכתובת.
+//   2. uploadToServer(dataUrl)     -> חותם קצר מהשרת שלנו, ואז העלאה
+//      ישירה מהדפדפן ל-Cloudinary (ראו uploads.api.ts) שמחזירה כתובת
+//      https קצרה. רץ ברקע; אם מצליח, מחליפים את ה-data URL בכתובת.
 //
-// שום מפתח/סוד לא חשוף בקוד הצד-לקוח. אם השרת בלי Cloudinary (503) -
-// נשארים עם ה-data URL הדחוס (נשמר במסמך המוצר). מיועד לדמו/פיתוח.
+// שום מפתח/סוד לא חשוף בקוד הצד-לקוח (החתימה בלבד מגיעה מהשרת). אם השרת
+// בלי Cloudinary (503) - נשארים עם ה-data URL הדחוס (נשמר במסמך המוצר).
 
 import { uploadsApi } from '../../services/api';
 
