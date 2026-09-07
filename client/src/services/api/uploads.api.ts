@@ -17,13 +17,14 @@ export const uploadsApi = {
     return response.data.data;
   },
 
-  // image: data URL בסיס64 דחוס ("data:image/jpeg;base64,..."). מעלה ישירות
-  // ל-Cloudinary עם חתימה מהשרת (השרת אף פעם לא רואה/מעביר את בייטי התמונה -
-  // חוסך מעבר כפול לקוח->שרת->Cloudinary, מורגש בעיקר ברשתות איטיות).
-  async productImage(image: string): Promise<string> {
+  // image: Blob/File באיכות גבוהה (המאסטר - ראו imageUpload.ts). מעלה
+  // ישירות ל-Cloudinary עם חתימה מהשרת (השרת אף פעם לא רואה/מעביר את
+  // בייטי התמונה - חוסך מעבר כפול לקוח->שרת->Cloudinary, מורגש בעיקר
+  // ברשתות איטיות). Cloudinary גוזר מהמאסטר את כל הגרסאות עם q_auto.
+  async productImage(image: Blob): Promise<string> {
     const sig = await this.signature();
     const form = new FormData();
-    form.append('file', image);
+    form.append('file', image, image instanceof File ? image.name : 'product.jpg');
     form.append('api_key', sig.apiKey);
     form.append('timestamp', String(sig.timestamp));
     form.append('signature', sig.signature);

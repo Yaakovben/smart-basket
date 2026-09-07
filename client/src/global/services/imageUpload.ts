@@ -1,11 +1,15 @@
 // ===== תמונת מוצר: דחיסה + העלאה =====
 //
-// זרימה בשני שלבים (ראה ProductImageField):
-//   1. compressProductImage(file)  -> data URL דחוס. מהיר ועמיד. זה מה
-//      שמוצג למשתמש *מיד* וגם מה שנשמר על המוצר אם שלב 2 לא מסתיים.
-//   2. uploadToServer(dataUrl)     -> חותם קצר מהשרת שלנו, ואז העלאה
-//      ישירה מהדפדפן ל-Cloudinary (ראו uploads.api.ts) שמחזירה כתובת
-//      https קצרה. רץ ברקע; אם מצליח, מחליפים את ה-data URL בכתובת.
+// זרימה (ראה ProductImageField):
+//   1. compressProductImage(file)  -> data URL דחוס וקטן. מהיר. משמש
+//      *רק* לתצוגה מיידית ולשמירה במסמך המוצר כשאין Cloudinary (fallback).
+//   2. buildUploadMaster(file)     -> "מאסטר" באיכות גבוהה (הקובץ המקורי
+//      אם הוא לא ענק, אחרת הקטנה עדינה ל-2400px/q0.92). זה מה שמועלה
+//      ל-Cloudinary. Cloudinary עצמו גוזר ממנו את כל הגרסאות (thumb/
+//      preview/full) עם q_auto - אז אסור להעלות אליו כבר-דחוס-אגרסיבית,
+//      אחרת מקבלים דחיסה כפולה ותמונה מטושטשת/מרוחה.
+//   3. uploadToServer(master)      -> חותם קצר מהשרת, העלאה ישירה מהדפדפן
+//      ל-Cloudinary (ראו uploads.api.ts), מחזיר כתובת https קצרה.
 //
 // שום מפתח/סוד לא חשוף בקוד הצד-לקוח (החתימה בלבד מגיעה מהשרת). אם השרת
 // בלי Cloudinary (503) - נשארים עם ה-data URL הדחוס (נשמר במסמך המוצר).
@@ -14,14 +18,22 @@ import { uploadsApi } from '../../services/api';
 
 export const MAX_INPUT_BYTES = 25 * 1024 * 1024;
 
-// יעד דחיסה. השרת חוסם את שדה product.image ב-500,000 תווים, וזה כולל
-// base64 (~1.37x מהבייטים) + תחילית - לכן ה-data URL חייב להישאר קטן
-// גם כשאין Cloudinary. 820px / איכות 0.68 נותן ~150-300KB לצילום טיפוסי.
+// יעד דחיסה ל-*תצוגה מיידית + fallback בלבד*. השרת חוסם את שדה
+// product.image ב-500,000 תווים (base64 ~1.37x + תחילית) - לכן ה-data URL
+// חייב להישאר קטן. 820px / איכות 0.68 נותן ~150-300KB לצילום טיפוסי.
+// זה *לא* מה שמועלה ל-Cloudinary (ראו buildUploadMaster).
 const TARGET_MAX_DIM = 820;
 const TARGET_QUALITY = 0.68;
 // אם עדיין גדול מדי - עוד ניסיון אחד קטן יותר, ואז מוותרים.
 const RETRY_MAX_DIM = 560;
 const RETRY_QUALITY = 0.6;
+
+// "מאסטר" ל-Cloudinary: גדול ואיכותי. מעלים את הקובץ המקורי כמו שהוא אם
+// הוא בגבולות הסבירים (Cloudinary Free: עד 10MB / 25MP לתמונה); רק תמונה
+// חריגה באמת מוקטנת - ואפילו אז ל-2400px ו-q0.92, לא ל-820/0.68.
+const MASTER_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MASTER_MAX_DIM = 2400;
+const MASTER_QUALITY = 0.92;
 // תקרה על הבייטים הגולמיים כך שה-data URL השלם < 500K תווים.
 const DATAURL_MAX_BYTES = 340 * 1024;
 // data URL של JPEG אמיתי לעולם לא קצר מזה. פחות = ה-canvas יצא ריק
@@ -139,6 +151,91 @@ export const compressProductImage = async (file: File): Promise<string> => {
   return out;
 };
 
+const canvasToBlob = (canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> =>
+  new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', quality));
+
+// ציור source לקנבס -> Blob (JPEG). כמו drawToJpeg אבל Blob במקום data URL
+// (בלי ניפוח base64 של ~37% ב-POST).
+const drawToBlob = async (
+  source: CanvasImageSource,
+  srcW: number,
+  srcH: number,
+  maxDim: number,
+  quality: number,
+): Promise<Blob | null> => {
+  const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(source, 0, 0, w, h);
+  return canvasToBlob(canvas, quality);
+};
+
+/**
+ * בונה את ה"מאסטר" שמועלה ל-Cloudinary - איכות גבוהה, לא דחוס-אגרסיבית.
+ * Cloudinary גוזר ממנו את כל הגרסאות עם q_auto, אז מקור טוב = תמונות
+ * חדות בכל הגדלים. הקובץ המקורי נשלח כמו שהוא אם הוא כבר בגבולות סבירים
+ * (עד ~2400px ו-<3MB); אחרת הקטנה עדינה ל-2400px/q0.92. תמיד יש נפילה
+ * לקובץ המקורי אם משהו נכשל.
+ */
+export const buildUploadMaster = async (file: File): Promise<Blob> => {
+  const looksSmallEnough = file.size <= 3 * 1024 * 1024 && file.type === 'image/jpeg';
+  try {
+    if (typeof createImageBitmap === 'function') {
+      const probe = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const maxSide = Math.max(probe.width, probe.height);
+      // כבר קטן ובפורמט טוב - שולחים את המקור, בלי re-encode מיותר.
+      if (maxSide <= MASTER_MAX_DIM && looksSmallEnough) {
+        probe.close?.();
+        return file;
+      }
+      const scale = Math.min(1, MASTER_MAX_DIM / maxSide);
+      const rw = Math.max(1, Math.round(probe.width * scale));
+      const rh = Math.max(1, Math.round(probe.height * scale));
+      probe.close?.();
+      const bmp = await createImageBitmap(file, {
+        imageOrientation: 'from-image',
+        resizeWidth: rw,
+        resizeHeight: rh,
+        resizeQuality: 'high',
+      });
+      const blob = await drawToBlob(bmp, bmp.width, bmp.height, MASTER_MAX_DIM, MASTER_QUALITY);
+      bmp.close?.();
+      // אם ה-re-encode יצא גדול מהמקור (תמונה קטנה מלכתחילה) - עדיף המקור.
+      if (blob && blob.size > 0 && blob.size < file.size) return blob;
+      return file;
+    }
+  } catch {
+    // נפילה למקור
+  }
+  // בלי createImageBitmap או כשל: אם הקובץ ענק מדי ל-Cloudinary Free,
+  // ננסה הקטנה דרך <img>; אחרת שולחים את המקור.
+  if (file.size <= MASTER_MAX_UPLOAD_BYTES) return file;
+  try {
+    const dataUrl = await readAsDataUrl(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('decode'));
+      el.src = dataUrl;
+    });
+    const blob = await drawToBlob(
+      img, img.naturalWidth || img.width, img.naturalHeight || img.height,
+      MASTER_MAX_DIM, MASTER_QUALITY,
+    );
+    if (blob && blob.size > 0) return blob;
+  } catch {
+    // נשארים עם המקור
+  }
+  return file;
+};
+
 // 503 + code ייעודי = השרת בלי Cloudinary. שונה משגיאה אמיתית.
 export const isNotConfiguredError = (err: unknown): boolean => {
   const e = err as { response?: { status?: number; data?: { code?: string } } } | null;
@@ -146,9 +243,9 @@ export const isNotConfiguredError = (err: unknown): boolean => {
 };
 
 /**
- * מנסה להעלות את ה-data URL לשרת ומחזיר כתובת https קבועה (Cloudinary).
- * זורק את שגיאת ה-API הגולמית - השתמש ב-isNotConfiguredError כדי להבחין
- * בין "אין Cloudinary" (להישאר עם ה-data URL) לכשל אמיתי.
+ * מעלה "מאסטר" (Blob/File באיכות גבוהה) ל-Cloudinary ומחזיר כתובת https
+ * קבועה. זורק את שגיאת ה-API הגולמית - השתמש ב-isNotConfiguredError כדי
+ * להבחין בין "אין Cloudinary" (להישאר עם ה-data URL) לכשל אמיתי.
  */
-export const uploadToServer = (dataUrl: string): Promise<string> =>
-  uploadsApi.productImage(dataUrl);
+export const uploadToServer = (master: Blob): Promise<string> =>
+  uploadsApi.productImage(master);

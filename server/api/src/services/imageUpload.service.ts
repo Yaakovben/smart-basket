@@ -117,8 +117,9 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
 // cloudinaryImage.ts (cldThumb/cldPreview/cldBlur) - אחרת אין cache hit
 // על הגרסה שבאמת מבוקשת. משותפים בין ההעלאה (למטה) לבין החתימה.
 const UPLOAD_FOLDER = 'smart-basket/products';
+// חייב להיות זהה בדיוק ל-cldThumb/cldPreview/cldBlur ב-client/cloudinaryImage.ts.
 const UPLOAD_EAGER =
-  'c_fill,w_160,h_160,f_auto,q_auto:eco|c_limit,w_720,f_auto,q_auto|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
+  'c_fill,w_256,h_256,f_auto,q_auto|c_limit,w_800,f_auto,q_auto|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
 
 export interface UploadSignature {
   cloudName: string;
