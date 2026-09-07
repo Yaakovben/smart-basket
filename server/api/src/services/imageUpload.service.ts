@@ -14,6 +14,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../config/environment';
 import { logger } from '../config/logger';
 import { AppError } from '../errors';
+import { Product } from '../models/Product.model';
 
 let configured = false;
 
@@ -50,6 +51,11 @@ export interface CloudinaryUsage {
   transformations?: { used: number; limit: number | null; pct: number | null };
   objects?: number;
   requests?: number;
+  // ספירה חיה מה-DB (לא מ-Cloudinary) - Cloudinary.api.usage() הוא מצרף
+  // מתעדכן בעיכוב מצדם (שעות, לפי התיעוד שלהם), אז "objects" למעלה יכול
+  // להישאר קבוע לזמן-מה גם אחרי העלאה אמיתית - "מוסיף ולא רואה שהשתנה".
+  // liveObjectCount תמיד מדויק לרגע הבקשה, בלי תלות בעיכוב הדיווח שלהם.
+  liveObjectCount?: number;
   status?: 'ok' | 'warning' | 'critical';
 }
 
@@ -62,7 +68,12 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
   if (!isImageUploadConfigured()) return { configured: false };
   ensureConfigured();
 
-  const u = await cloudinary.api.usage() as Record<string, any>;
+  // מקבילית ל-Cloudinary עצמו - ספירה חיה של מוצרים עם תמונה מאוחסנת שם
+  // (לא data URL), בשביל מדד שמתעדכן מיד אחרי העלאה אמיתית.
+  const [u, liveObjectCount] = await Promise.all([
+    cloudinary.api.usage() as Promise<Record<string, any>>,
+    Product.countDocuments({ image: { $regex: '^https://res.cloudinary.com/' } }),
+  ]);
 
   const pctFromField = (f: any): number | null => {
     if (typeof f?.used_percent === 'number') return Math.round(f.used_percent * 10) / 10;
@@ -102,6 +113,7 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
     },
     objects: typeof u.objects?.usage === 'number' ? u.objects.usage : (typeof u.resources === 'number' ? u.resources : undefined),
     requests: typeof u.requests === 'number' ? u.requests : undefined,
+    liveObjectCount,
     status,
   };
 }

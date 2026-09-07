@@ -114,8 +114,11 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Box sx={{ flex: 1, p: 1.5, borderRadius: 2, textAlign: 'center', bgcolor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1' }}>
           <Typography sx={{ fontSize: 10, color: '#0D9488', fontWeight: 800 }}>קבצים מאוחסנים</Typography>
+          {/* liveObjectCount - ספירה חיה מה-DB, לא מ-Cloudinary (שמתעדכן
+              בעיכוב של עד יום, ראו ההערה למעלה) - זה הוא שבאמת משתנה מיד
+              אחרי העלאת תמונה, לא data.objects. */}
           <Typography sx={{ fontSize: 17, fontWeight: 800, color: '#0D9488', lineHeight: 1.1 }}>
-            {data.objects != null ? fmtNum(data.objects) : '—'}
+            {data.liveObjectCount != null ? fmtNum(data.liveObjectCount) : (data.objects != null ? fmtNum(data.objects) : '—')}
           </Typography>
         </Box>
         <Box sx={{ flex: 1, p: 1.5, borderRadius: 2, textAlign: 'center', bgcolor: isDark ? 'rgba(59,130,246,0.12)' : '#DBEAFE' }}>
