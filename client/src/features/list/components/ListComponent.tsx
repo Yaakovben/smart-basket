@@ -350,6 +350,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     ? categoryFilter
     : null;
 
+  // האם שורת/כפתור "סדר מוצרים" רלוונטיים כרגע - רק בטאב "לקנות", בלי
+  // חיפוש/סינון קטגוריה, ומ-2 מוצרים ומעלה.
+  const canReorder = filter === 'pending' && !search && !effectiveCategoryFilter && items.length > 1;
+
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
     if (!categoryFilter) return items;
@@ -483,7 +487,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         {/* רמז עדין על לחיצה ארוכה - מוצג רק אחרי שהסרת את רמז ההחלקה ויש פריטים */}
         {!reorderMode && !showHint && items.length > 0 && <LongPressHint />}
 
-        {/* סינון לפי קטגוריה */}
+        {/* סינון לפי קטגוריה - כשלא במצב סידור, כפתור "סדר מוצרים" מוזרק
+            כ-trailing לאותה שורה (בצד שמאל, קבוע, בלי לגלול) כדי שלא יפתח
+            שורה נפרדת משלו רק בשביל זה. */}
         {!reorderMode && items.length > 0 && activeCategories.length > 1 && (
           <CategoryFilterChips
             totalCount={items.length}
@@ -491,12 +497,32 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             categoryCounts={categoryCounts}
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
+            trailing={canReorder ? (
+              <Box
+                role="button"
+                tabIndex={0}
+                aria-label={t('reorderProducts')}
+                onClick={reorderHandleEnter}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
+                sx={{
+                  width: 32, height: 32, borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  bgcolor: 'action.hover', color: 'text.secondary',
+                  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                  transition: 'transform 0.12s',
+                  '&:active': { transform: 'scale(0.9)' },
+                }}
+              >
+                <SwapVertRoundedIcon sx={{ fontSize: 18 }} />
+              </Box>
+            ) : undefined}
           />
         )}
 
-        {/* שורת סידור מוצרים - כניסה/יציאה + רמז, בסגנון סידור הרשימות בבית.
-            מוצג רק בטאב "לקנות", בלי חיפוש/סינון קטגוריה, ומ-2 מוצרים ומעלה. */}
-        {filter === 'pending' && !search && !effectiveCategoryFilter && items.length > 1 && (
+        {/* שורת סידור מוצרים - עצמאית רק כשאין שורת קטגוריות לחבר אליה
+            (קטגוריה יחידה) או במצב סידור פעיל (הצ'יפים ממילא מוסתרים אז).
+            אחרת הכפתור כבר בפנים בשורת הצ'יפים למעלה (trailing). */}
+        {canReorder && (reorderMode || activeCategories.length <= 1) && (
           <Box sx={{ mb: 1, px: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: reorderMode ? 'primary.main' : 'text.secondary' }}>
