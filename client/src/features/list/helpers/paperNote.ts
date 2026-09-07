@@ -86,32 +86,23 @@ export const addChipSx = (isDark: boolean) => ({
 // תווית, מונה תווים, חיווי גלילה - נשארים בקומפוננטה. מחזיר אובייקט
 // קונקרטי (לא SxProps) כדי שאפשר יהיה לפרוס אותו (...) לתוך sx.
 export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
-  const base = {
+  const fill = isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight;
+  // קווי המחברת נצבעים כשכבת background על האלמנט עצמו (לא על ::after),
+  // כך שהם נחתכים ע"י ה-border-radius של הפתק. ::after ב-inset:0 עם
+  // border-radius:inherit היה נותן פינות מרובעות דקות שנראו כמו "מסגרת
+  // שפיצית" בתוך המסגרת המעוגלת - במיוחד ב-'field' (בלי overflow:hidden).
+  const backgroundImage =
+    size === 'chip' ? fill : `${RULED_LINES}, ${fill}`;
+
+  return {
     position: 'relative' as const,
-    backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
+    backgroundImage,
     border: '1px solid',
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
     borderRadius: `${RADIUS[size]}px`,
     boxShadow: paperShadow(isDark, size),
-  };
-
-  // 'chip' / 'card' - clip נקי לפינות. 'field' *לא* - כפתור הסגירה של
-  // ההערה מבצבץ מעט מחוץ לפינה (ראו ProductNoteField).
-  if (size === 'chip') return { ...base, overflow: 'hidden' as const };
-
-  // 'field' / 'card' - קווי מחברת חיוורים ברקע. borderRadius:'inherit' על
-  // ה-::after כדי שהקווים ייחתכו לפינות גם ב-'field' (בלי overflow:hidden).
-  return {
-    ...base,
-    ...(size === 'card' ? { overflow: 'hidden' as const } : {}),
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      inset: 0,
-      borderRadius: 'inherit',
-      backgroundImage: RULED_LINES,
-      pointerEvents: 'none',
-      zIndex: 0,
-    },
+    // 'chip' / 'card' - clip נקי לפינות. 'field' *לא* - כפתור הסגירה של
+    // ההערה מבצבץ מעט מחוץ לפינה (ראו ProductNoteField).
+    ...(size === 'chip' || size === 'card' ? { overflow: 'hidden' as const } : {}),
   };
 };
