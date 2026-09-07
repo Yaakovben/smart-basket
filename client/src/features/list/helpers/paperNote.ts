@@ -1,126 +1,117 @@
 // ===== "פתק נייר" - שפת עיצוב אחת להערה *ולתמונה* בכל האפליקציה =====
 //
-// גם הערה וגם תמונה נראות כמו בועת-פתק תכלת מעוגלת, שטוחה (בלי הטיה),
-// עם פינה מקופלת (dog-ear) קטנה בפינה השמאלית-עליונה. אותו גוון, אותה
-// פינה - רק הגודל ורמת הפירוט משתנים לפי הקשר:
-//   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem)
-//   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר (הערה ותמונה)
+// הערה ותמונה = אותו משטח "נייר" תכלת נקי: גרדיאנט תכלת עדין, מסגרת
+// תכלת דקה, פינות מעוגלות אחידות וצל רך שנותן תחושת דף שמרים מהרקע
+// ("תופס אור" בקצה העליון). *בלי* פינה מקופלת (dog-ear) - היא נראתה
+// שבורה/זולה בגדלים הקטנים והסתירה תוכן. הרמז ל"נייר" עכשיו: קווי
+// מחברת חיוורים מאוד ברקע (רק ב-'field'/'card') + ההדגשה הפנימית העליונה.
+//
+// צבע אחד (תכלת המותג), עיצוב אחד לכל ההקשרים:
+//   'chip'  - חיווי זעיר בשורת הרשימה (SwipeItem) + צ'יפ "הוסף הערה/תמונה"
+//   'field' - הפתק במצב פתוח בטופס הוסף/ערוך מוצר
 //   'card'  - הפתק המלא במסך פרטי המוצר
-//
-// צבע אחד (תכלת המותג), עיצוב אחד - אין "זהות צבע" נפרדת לתמונה.
-//
-// הפינה המקופלת (גודל/צורה/גרדיאנט/צל) כוילה ידנית מול רפרנס אמיתי דרך
-// כלי אינטראקטיבי חי (לא ניחוש) - ראו CLIP_PATH/FOLD_SHADOW למטה.
 
 export const PAPER_NOTE = {
   fillLight: 'linear-gradient(310deg, #C7F5EA 0%, #E6F9F5 100%)',
   fillDark: 'linear-gradient(180deg, rgba(20,184,166,0.18) 0%, rgba(20,184,166,0.10) 100%)',
-  edgeLight: 'rgba(20,184,166,0.22)',
-  edgeDark: 'rgba(45,212,191,0.32)',
-  // הפינה המקופלת - גרדיאנט תלת-גוני עם פס "ברק" (shine) לבן באמצע: זה
-  // מה שנותן תחושת גליל/דף מגולגל אמיתית במקום גרדיאנט דו-גוני שטוח.
-  flapLight: 'linear-gradient(135deg, #F5FAF9 0%, #FFFFFF 55%, #0F766E 100%)',
-  flapDark: 'linear-gradient(135deg, #2DD4BF 0%, #FFFFFF 55%, #0D9488 100%)',
+  edgeLight: 'rgba(20,184,166,0.28)',
+  edgeDark: 'rgba(45,212,191,0.34)',
   // אייקון + תוויות
   inkLight: '#0F766E',
   inkDark: '#5EEAD4',
-  // גוף הטקסט - הובהר שוב מ-#0F6B62 (עדיין כהה מדי) לגוון תכלת בהיר
-  // משמעותית יותר, לא רק הבדל שולי.
+  // גוף הטקסט שנכתב בהערה
   textLight: '#1C9A89',
   textDark: '#B9F0E6',
   // מסגרת דקה סביב תמונת מוצר (שורה + מודאל) - תכלת, לא צבע הקטגוריה
   frameLight: 'rgba(20,184,166,0.45)',
   frameDark: 'rgba(45,212,191,0.5)',
+  // רקע ה"פייד" של חיווי הגלילה בתחתית הפתק - חייב להתמזג עם ה-fill.
+  fadeLight: 'rgba(219,247,240,0.96)',
+  fadeDark: 'rgba(17,38,36,0.94)',
 } as const;
 
 type PaperSize = 'chip' | 'field' | 'card';
-// גודל תיבת הקיפול. 'field' אין לו כלי כיול נפרד - מוערך יחסית בין chip
-// ל-card לפי אותו יחס גודל (~0.82 מ-card, כמו שהיה בכיולים קודמים).
-// 'card' (מסך פרטי מוצר, מחוץ לרשימה) הוקטן שוב - עדיין היה גדול מדי שם
-// ספציפית. הרדיוס של 'card' הוגדל (יותר מעוגל, פחות "פינה חדה") - זה
-// כרטיס-מוצר עצמאי, לא צריך להיראות מרובע כמו הצ'יפ הקטן ברשימה.
-const FOLD: Record<PaperSize, number> = { chip: 15, field: 24, card: 22 };
-const RADIUS: Record<PaperSize, string> = {
-  chip: '3px 4px 4px 4px',
-  field: '3px 6px 6px 6px',
-  card: '3px 16px 16px 16px',
-};
-// צורת הקיפול - clip-path עם קשת SVG (לא border-radius) כדי לקבל בדיוק
-// את העקומה שכוילה (curve~75%, קרוב לעיגול). 'field' מחושב באותה נוסחה
-// על הגודל המוערך שלו.
-const CLIP_PATH: Record<PaperSize, string> = {
-  chip: 'path("M0,0 L15,0 A11,11 0 0,1 0,15 Z")',
-  field: 'path("M0,0 L24,0 A18,18 0 0,1 0,24 Z")',
-  card: 'path("M0,0 L22,0 A17,17 0 0,1 0,22 Z")',
-};
-// צל כפול (קו הקיפול + הרמה קלה מעל הדף) - כוילו יחד עם הגודל/צורה.
-const FOLD_SHADOW: Record<PaperSize, string> = {
-  chip: 'inset -3px -3px 4px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
-  field: 'inset -4px -4px 6px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
-  card: 'inset -4px -4px 6px rgba(0,0,0,0.22), 1px 1px 2px rgba(0,0,0,0.18)',
+
+// פינות מעוגלות אחידות (כל הפינות שוות - אין יותר פינה "חדה" בצד הקיפול).
+const RADIUS: Record<PaperSize, number> = { chip: 8, field: 12, card: 16 };
+
+// צל אחיד ורך ל"נייר" - הדגשה פנימית בקצה העליון + הרמה עדינה מעל הרקע.
+const paperShadow = (isDark: boolean, size: PaperSize): string => {
+  if (isDark) {
+    return size === 'card'
+      ? '0 12px 28px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.28)'
+      : size === 'field'
+        ? '0 6px 16px rgba(0,0,0,0.35)'
+        : '0 1.5px 5px rgba(0,0,0,0.3)';
+  }
+  const lift =
+    size === 'card'
+      ? '0 14px 32px rgba(20,184,166,0.16), 0 2px 6px rgba(15,118,110,0.08)'
+      : size === 'field'
+        ? '0 6px 16px rgba(20,184,166,0.10), 0 1px 2px rgba(15,118,110,0.06)'
+        : '0 1.5px 4px rgba(20,184,166,0.18)';
+  return `inset 0 1px 0 rgba(255,255,255,0.85), ${lift}`;
 };
 
-// הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם (אותה
-// צורה, אותו צבע, אותה פינה מקופלת). הקומפוננטה מוסיפה רק אייקון, טקסט
-// ו-cursor/opacity לפי מצב (בלי עיגול "+" נפרד - האייקון עצמו כבר מסמן
-// "הוספה", ה-+ היה כפול).
-export const addChipSx = (isDark: boolean) => {
-  const fold = FOLD.chip;
-  return {
-    position: 'relative' as const,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 0.6,
-    py: 0.7, pl: 1.7, pr: 1.1,
-    userSelect: 'none' as const,
-    WebkitTapHighlightColor: 'transparent',
-    color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-    backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
-    borderRadius: RADIUS.chip,
-    overflow: 'hidden',
-    boxShadow: '0 1.5px 4px rgba(20,184,166,0.18)',
-    transition: 'transform 0.14s ease, box-shadow 0.18s ease',
-    '&::before': {
-      content: '""',
-      position: 'absolute', top: 0, left: 0,
-      width: fold, height: fold,
-      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: CLIP_PATH.chip,
-      boxShadow: FOLD_SHADOW.chip,
-    },
-    // hover רק במכשירים עם עכבר אמיתי - במגע ה-:hover "נדבק" אחרי הקשה
-    // (למשל כשנפתח בורר הקבצים) והצ'יפ נשאר מוזז 1px עד הקשה אחרת = "קופץ".
-    '@media (hover: hover)': {
-      '&:hover': { transform: 'translateY(-1px)' },
-    },
-    '&:active': { transform: 'scale(0.97)' },
-  };
-};
+// קווי מחברת חיוורים מאוד ברקע - הרמז ל"נייר" (רק ב-'field'/'card').
+const RULED_LINES =
+  'repeating-linear-gradient(transparent 0 22px, rgba(20,184,166,0.06) 22px 23px)';
 
-// סגנון הבסיס של הפתק (רקע, מסגרת, פינה מקופלת). מרכיבים ייחודיים
-// להקשר - סרט washi, קווי מחברת, תווית - נשארים בקומפוננטה עצמה.
-// מחזיר אובייקט קונקרטי (לא SxProps) כדי שאפשר יהיה לפרוס אותו (...) לתוך
-// sx יחד עם מאפיינים נוספים.
+// הצ'יפ הסגור "הוסף הערה" / "הוסף תמונה" - זהה לחלוטין לשניהם. משטח נייר
+// נקי, פינות מעוגלות אחידות, בלי קיפול. הקומפוננטה מוסיפה רק אייקון+טקסט.
+export const addChipSx = (isDark: boolean) => ({
+  position: 'relative' as const,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 0.6,
+  py: 0.7, px: 1.3,
+  userSelect: 'none' as const,
+  WebkitTapHighlightColor: 'transparent',
+  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+  backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
+  border: '1px solid',
+  borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+  borderRadius: `${RADIUS.chip}px`,
+  boxShadow: paperShadow(isDark, 'chip'),
+  transition: 'transform 0.14s ease, box-shadow 0.18s ease',
+  // hover רק במכשירים עם עכבר אמיתי - במגע ה-:hover "נדבק" אחרי הקשה
+  // (למשל כשנפתח בורר הקבצים) והצ'יפ נשאר מוזז 1px עד הקשה אחרת = "קופץ".
+  '@media (hover: hover)': {
+    '&:hover': { transform: 'translateY(-1px)' },
+  },
+  '&:active': { transform: 'scale(0.97)' },
+});
+
+// סגנון הבסיס של הפתק (רקע, מסגרת, קווי מחברת). מרכיבים ייחודיים להקשר -
+// תווית, מונה תווים, חיווי גלילה - נשארים בקומפוננטה. מחזיר אובייקט
+// קונקרטי (לא SxProps) כדי שאפשר יהיה לפרוס אותו (...) לתוך sx.
 export const paperNoteSx = (size: PaperSize, isDark: boolean) => {
-  const fold = FOLD[size];
-  return {
-    position: 'relative',
+  const base = {
+    position: 'relative' as const,
     backgroundImage: isDark ? PAPER_NOTE.fillDark : PAPER_NOTE.fillLight,
     border: '1px solid',
     borderColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
-    borderRadius: RADIUS[size],
-    // overflow:hidden רק ב-'chip' (אין שם סרט washi) - ב-'field'/'card'
-    // *אסור* overflow:hidden - הסרט יושב חלקית *מעל* הקופסה (top שלילי,
-    // ראו ProductNoteField.tsx/ProductDetailsModal.tsx) והוא היה נחתך.
-    ...(size === 'chip' ? { overflow: 'hidden' as const } : {}),
-    '&::before': {
+    borderRadius: `${RADIUS[size]}px`,
+    boxShadow: paperShadow(isDark, size),
+  };
+
+  // 'chip' / 'card' - clip נקי לפינות. 'field' *לא* - כפתור הסגירה של
+  // ההערה מבצבץ מעט מחוץ לפינה (ראו ProductNoteField).
+  if (size === 'chip') return { ...base, overflow: 'hidden' as const };
+
+  // 'field' / 'card' - קווי מחברת חיוורים ברקע. borderRadius:'inherit' על
+  // ה-::after כדי שהקווים ייחתכו לפינות גם ב-'field' (בלי overflow:hidden).
+  return {
+    ...base,
+    ...(size === 'card' ? { overflow: 'hidden' as const } : {}),
+    '&::after': {
       content: '""',
-      position: 'absolute', top: 0, left: 0,
-      width: fold, height: fold,
-      background: isDark ? PAPER_NOTE.flapDark : PAPER_NOTE.flapLight,
-      clipPath: CLIP_PATH[size],
-      boxShadow: FOLD_SHADOW[size],
-      zIndex: 1,
+      position: 'absolute',
+      inset: 0,
+      borderRadius: 'inherit',
+      backgroundImage: RULED_LINES,
+      pointerEvents: 'none',
+      zIndex: 0,
     },
   };
 };
