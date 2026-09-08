@@ -524,13 +524,19 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             </Box>
             {product.note && (
               // עטיפה בשתי שכבות: החיצונית (paperNoteSx: רקע+מסגרת+radius+
-              // overflow:hidden) *לא* display:flex בעצמה - רק inline-block.
-              // ה-flex (ליישור אייקון+טקסט) עבר לשכבה הפנימית. ב-Safari/iOS
-              // יש באג ידוע: overflow:hidden+border-radius לא תמיד נחתך
-              // כשהאלמנט עצמו הוא flex container - הצבע התכלת "בצבץ" מעבר
-              // לפינות המעוגלות בקצוות הצ'יפ. אלמנט חיצוני לא-flex פותר את זה.
+              // overflow:hidden) *לא* display:flex בעצמה - רק inline-block
+              // (מנע חשד לבאג clip ב-Safari/flex, גם אם זה לא היה הגורם
+              // האמיתי). ה-flex (ליישור אייקון+טקסט) עבר לשכבה הפנימית.
+              //
+              // הגורם האמיתי לתכלת ש"בצבצה" מעבר לפינות המעוגלות: boxShadow
+              // של paperNoteSx - box-shadow *לעולם* לא נחתך ע"י overflow:hidden
+              // של האלמנט עצמו (זה נצבע מחוץ ל-border box, לא "תוכן" שנחתך) -
+              // זה לא היה יכול להיפתר ע"י שינוי flex/inline-block בכלל. בגודל
+              // הזעיר של הצ'יפ הזה (~20px גובה) הצל הרך נראה כמו "דליפת צבע"
+              // בקצוות המעוגלים ולא כהרמה עדינה - מבטלים אותו כאן בלבד.
               <Box component="span" sx={{
                 ...paperNoteSx('chip', isDark),
+                boxShadow: 'none',
                 flexShrink: 0,
                 maxWidth: '48%',
                 minWidth: 0,
