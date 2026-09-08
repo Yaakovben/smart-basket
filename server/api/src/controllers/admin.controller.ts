@@ -20,7 +20,7 @@ import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
-import { getCloudinaryUsage } from '../services/imageUpload.service';
+import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans } from '../services/imageUpload.service';
 
 /**
  * GET /api/admin/users
@@ -237,6 +237,38 @@ export const getDbHealth = asyncHandler(async (_req: AuthRequest, res: Response)
 export const getCloudinaryHealth = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const data = await getCloudinaryUsage();
   res.json({ success: true, data });
+});
+
+/**
+ * GET/POST /api/admin/cloudinary-orphans
+ * ניקוי חד-פעמי של תמונות שכבר יתומות ב-Cloudinary (מהצטברות שלפני
+ * שההגנה השוטפת נוספה - ראו deleteCloudinaryImage/Images). dry-run
+ * כברירת מחדל - מחזיר רק תצוגה מקדימה (ספירה + רשימת public_id-ים),
+ * לא מוחק כלום. מוחק בפועל רק כשמגיע confirm=true (query או body).
+ */
+export const getCloudinaryOrphans = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const scan = await scanCloudinaryOrphans();
+  const confirm = req.query.confirm === 'true' || (req.body as { confirm?: boolean } | undefined)?.confirm === true;
+
+  if (!confirm) {
+    res.json({
+      success: true,
+      data: {
+        dryRun: true,
+        totalCloudinaryResources: scan.totalCloudinaryResources,
+        referencedCount: scan.referencedCount,
+        orphanCount: scan.orphanPublicIds.length,
+        orphanPublicIds: scan.orphanPublicIds,
+      },
+    });
+    return;
+  }
+
+  const { deleted, failed } = await deleteCloudinaryOrphans(scan.orphanPublicIds);
+  res.json({
+    success: true,
+    data: { dryRun: false, orphanCount: scan.orphanPublicIds.length, deleted, failed },
+  });
 });
 
 /**

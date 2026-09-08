@@ -180,19 +180,31 @@ export const ProductDAL = {
     return result.modifiedCount;
   },
 
-  async clearPurchased(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId, isPurchased: true });
-    return result.deletedCount;
+  // מחזיר גם את כתובות התמונות של המוצרים שנמחקו (לפני המחיקה בפועל) -
+  // כדי שהקורא יוכל לנקות אותן ב-Cloudinary אחרי (ראה product.service.ts:
+  // clearProducts + deleteCloudinaryImages).
+  async clearPurchased(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId, isPurchased: true };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  async clearPending(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId, isPurchased: false });
-    return result.deletedCount;
+  async clearPending(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId, isPurchased: false };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  async clearAll(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId });
-    return result.deletedCount;
+  async clearAll(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
   // איפוס כל המוצרים ל"לא נקנה"

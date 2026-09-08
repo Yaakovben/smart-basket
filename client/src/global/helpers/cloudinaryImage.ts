@@ -27,11 +27,12 @@ const variant = (url: string, transform: string): string => {
 // מייצר גרסה שאף בקשה לא מבקשת, וזו שכן מבוקשת נוצרת "on the fly" בכל זאת.
 export const cldThumb = (url: string) => variant(url, 'c_fill,w_256,h_256,f_auto,q_auto');
 
-// תמונת "גיבור" בפרטי מוצר (~150-300px CSS, מכסה גם רינה פי-3)
-export const cldPreview = (url: string) => variant(url, 'c_limit,w_800,f_auto,q_auto');
+// תמונת "גיבור" בפרטי מוצר (~150-300px CSS, מכסה גם רינה פי-3). q_auto:best
+// (לא q_auto הרגיל) - כאן המשתמש באמת מסתכל מקרוב, איכות עדיפה על גודל קובץ.
+export const cldPreview = (url: string) => variant(url, 'c_limit,w_800,f_auto,q_auto:best');
 
-// מסך מלא
-export const cldFull = (url: string) => variant(url, 'c_limit,w_1600,f_auto,q_auto');
+// מסך מלא - אותו היגיון כמו cldPreview, q_auto:best.
+export const cldFull = (url: string) => variant(url, 'c_limit,w_1600,f_auto,q_auto:best');
 
 // ===== blur-up placeholder =====
 // גרסה זעירה ומטושטשת (32x32, q_1) - נטענת כמעט מיידית (כמה מאות בייטים)

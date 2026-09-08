@@ -5,6 +5,7 @@ import type { CreateProductInput, UpdateProductInput } from '../validators';
 import type { IProductDoc, IProductEditChange, IProductEditEntry } from '../models';
 import { checkListAccessLean } from './list-access.helper';
 import { invalidateUser as invalidatePriceCacheForUser } from '../features/priceComparison';
+import { deleteCloudinaryImage, deleteCloudinaryImages } from './imageUpload.service';
 
 // המרת מוצר Mongoose לאובייקט תגובת API - משטח refs מאוכלסים לשם בלבד
 const flattenPopulatedName = (json: Record<string, unknown>, field: string): void => {
@@ -118,6 +119,14 @@ export async function updateProduct(
       throw NotFoundError.product();
     }
 
+    // תמונה הוחלפה/הוסרה - מנקים את הקובץ הישן ב-Cloudinary (יתום אחרת).
+    // בכוונה לא נכנס ל-changes/editHistory למטה (image לא ב-fieldsToCheck) -
+    // זה ניקוי אחסון, לא "שינוי" שצריך תיעוד למשתמש. לא await - best-effort,
+    // לא חוסם את התגובה למשתמש (ראה deleteCloudinaryImage).
+    if (data.image !== undefined && current.image && current.image !== data.image) {
+      void deleteCloudinaryImage(current.image);
+    }
+
     const changes: IProductEditChange[] = [];
     const fieldsToCheck: Array<{ field: IProductEditChange['field']; oldValue: unknown; newValue: unknown }> = [
       { field: 'name', oldValue: current.name, newValue: updates.name },
@@ -166,6 +175,7 @@ export async function deleteProduct(
   if (!product) {
     throw NotFoundError.product();
   }
+  void deleteCloudinaryImage(product.image);
 
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
@@ -178,17 +188,19 @@ export async function clearProducts(
 ): Promise<number> {
   await checkListAccessLean(listId, userId);
 
-  let deletedCount: number;
+  let result: { deletedCount: number; images: string[] };
   if (filter === 'purchased') {
-    deletedCount = await ProductDAL.clearPurchased(listId);
+    result = await ProductDAL.clearPurchased(listId);
   } else if (filter === 'pending') {
-    deletedCount = await ProductDAL.clearPending(listId);
+    result = await ProductDAL.clearPending(listId);
   } else {
-    deletedCount = await ProductDAL.clearAll(listId);
+    result = await ProductDAL.clearAll(listId);
   }
   await ListDAL.touchUpdatedAt(listId);
   invalidatePriceCacheForUser(userId);
-  return deletedCount;
+  // batch, לא await - ניקוי כל התמונות ב-Cloudinary בבת אחת, best-effort.
+  void deleteCloudinaryImages(result.images);
+  return result.deletedCount;
 }
 
 // איפוס כל המוצרים ל"לא נקנה" (רשימה קבועה)

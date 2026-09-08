@@ -15,6 +15,7 @@ import {
   deleteUser,
   getDbHealth,
   getCloudinaryHealth,
+  getCloudinaryOrphans,
   getAiStatusHandler,
   refreshAiStatusHandler,
 } from '../controllers/admin.controller';
@@ -34,6 +35,9 @@ router.get('/activity', validate({ query: adminValidator.paginationQuery }), get
 router.get('/stats', getStats);
 router.get('/db-health', getDbHealth);
 router.get('/cloudinary-health', getCloudinaryHealth);
+// dry-run כברירת מחדל (GET/POST בלי confirm) - מחיקה בפועל רק עם confirm=true.
+router.get('/cloudinary-orphans', getCloudinaryOrphans);
+router.post('/cloudinary-orphans', getCloudinaryOrphans);
 router.get('/ai-status', getAiStatusHandler);
 router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);
