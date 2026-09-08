@@ -162,26 +162,26 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
       />
 
       {value ? (
-        // יש תמונה - שורה: התמונה נדחקת עד קצה שמאל של העמודה
-        // (justifyContent flex-end = שמאל ב-RTL), ותווית "תמונה:" מימינה.
-        // התמונה עצמה: מרובעת, פינות מעוגלות אחידות, מסגרת תכלת דקה
-        // (עקבי עם SwipeItem / ProductDetailsModal). כפתור הסרה אדום על הפינה.
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+        // יש תמונה - עמודה: תווית "תמונה:" *מעל* התמונה (שתיהן צמודות
+        // לקצה השמאלי של תא ה-grid, alignItems:flex-end ב-RTL). כך התמונה
+        // מקבלת את כל רוחב התא ויכולה להיות גדולה יותר. מרובעת, פינות
+        // מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה.
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.6 }}>
           <Typography sx={{
-            fontSize: 11, fontWeight: 700, color: ink,
-            letterSpacing: 0.3, whiteSpace: 'nowrap', flexShrink: 0,
+            fontSize: 10, fontWeight: 800, color: ink,
+            letterSpacing: 1, textTransform: 'uppercase',
           }}>
             {t('photo')}:
           </Typography>
-          <Box sx={{ position: 'relative', width: 78, flexShrink: 0 }}>
+          <Box sx={{ position: 'relative', width: 112, flexShrink: 0 }}>
             <Box
               role="button"
               aria-label={imageFailed ? t('photoLoadFailed') : t('viewPhotoAria')}
               onClick={() => { if (imageFailed) return; haptic('light'); setLightbox(true); }}
               sx={{
                 position: 'relative',
-                width: 78, height: 78,
-                borderRadius: '13px', overflow: 'hidden',
+                width: 112, height: 112,
+                borderRadius: '14px', overflow: 'hidden',
                 bgcolor: 'action.hover',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                 cursor: imageFailed ? 'default' : 'pointer',
@@ -199,8 +199,8 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
                   color: 'text.disabled',
                 }}>
-                  <BrokenImageRoundedIcon sx={{ fontSize: 22 }} />
-                  <Typography sx={{ fontSize: 9, fontWeight: 600, textAlign: 'center', lineHeight: 1.1, px: 0.5 }}>
+                  <BrokenImageRoundedIcon sx={{ fontSize: 26 }} />
+                  <Typography sx={{ fontSize: 10, fontWeight: 600, textAlign: 'center', lineHeight: 1.15, px: 0.5 }}>
                     {t('photoLoadFailed')}
                   </Typography>
                 </Box>
@@ -209,7 +209,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
               )}
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0, borderRadius: '13px',
+                position: 'absolute', inset: 0, borderRadius: '14px',
                 border: '1.5px solid',
                 borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                 pointerEvents: 'none',
@@ -235,15 +235,16 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 }} />
               )}
             </Box>
-            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית),
-                מבצבץ החוצה מהתווית "תמונה:" שמימין. */}
+            {/* כפתור הסרה - עיגול אדום בפינה הימנית-עליונה (הפיזית), מבצבץ
+                החוצה מהתמונה. עבר מהפינה השמאלית כי שם עכשיו יושבת תווית
+                "תמונה:" (מעל התמונה, מיושרת שמאל). */}
             <Box
               role="button"
               aria-label={t('removePhoto')}
               onClick={remove}
               sx={{
-                position: 'absolute', top: -7, left: -7,
-                width: 22, height: 22, borderRadius: '50%',
+                position: 'absolute', top: -8, right: -8,
+                width: 24, height: 24, borderRadius: '50%',
                 bgcolor: '#DC2626', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
@@ -251,16 +252,14 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 '&:active': { transform: 'scale(0.9)' },
               }}
             >
-              <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+              <DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />
             </Box>
           </Box>
         </Box>
       ) : (
-        // אין תמונה - אותה שורה (justifyContent:'flex-end') כמו מצב "יש
-        // תמונה" למעלה, כדי שהצ'יפ יישב כבר עכשיו באותה קצה שהתמונה תתפוס
-        // ברגע שתיבחר - בלי זה הצ'יפ ישב במרכז/התחלה ואז "יקפוץ" שמאלה
-        // כשמוסיפים תמונה בפועל.
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        // אין תמונה - צ'יפ צמוד לאותו קצה (השמאלי ב-RTL) שהתמונה תתפוס
+        // ברגע שתיבחר, כדי שלא "יקפוץ" הצידה כשמוסיפים תמונה בפועל.
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <Box
             role="button"
             tabIndex={0}

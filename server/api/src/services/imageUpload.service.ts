@@ -124,7 +124,7 @@ const UPLOAD_FOLDER = 'smart-basket/products';
 // גבוהה - שם המשתמש באמת מסתכל מקרוב); thumb נשאר q_auto רגיל (קטן על
 // המסך, אין הבדל נראה, ומהיר יותר).
 const UPLOAD_EAGER =
-  'c_fill,w_256,h_256,f_auto,q_auto|c_limit,w_800,f_auto,q_auto:best|c_limit,w_1600,f_auto,q_auto:best|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
+  'c_fill,w_360,h_360,f_auto,q_auto|c_limit,w_800,f_auto,q_auto:best|c_limit,w_1600,f_auto,q_auto:best|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
 
 export interface UploadSignature {
   cloudName: string;

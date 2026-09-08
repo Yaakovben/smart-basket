@@ -143,14 +143,12 @@ export const EditProductModal = memo(({
       </Box>
       {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות grid (לא flex-wrap): חצי-חצי
           כששניהם סגורים/צ'יפים, אבל כשההערה פתוחה היא מקבלת חלק גדול יותר
-          (1.7fr לעומת 1fr) - התמונה עצמה קבועה ~78px ולא צריכה חצי מהרוחב,
-          וטקסט ההערה הרגיש צפוף מדי בחצי-חצי קבוע (ראו noteOpen למעלה).
-          alignItems:'center' - כשההערה פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה
-          קטנה, top-align גרם לתמונה להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
+          (1.7fr לעומת 1fr). alignItems:'flex-start' - שתי העמודות מתחילות
+          בתווית ("הערה:" / "תמונה:") בראש, מיושרות זו לזו. */}
       <Box sx={{
         display: 'grid',
         gridTemplateColumns: noteOpen ? 'minmax(0,1.7fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)',
-        alignItems: 'center', gap: 2.5, mb: 1.5,
+        alignItems: 'flex-start', gap: 2.5, mb: 1.5,
         transition: 'grid-template-columns 0.2s ease',
       }}>
         <ProductNoteField
