@@ -102,11 +102,19 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
           // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
           // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
           // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
+          // race מול timeout - אם הבקשה ל-thumb נתקעת (לא load ולא error,
+          // למשל רשת איטית/stall) ה-await לא היה מסתיים לעולם, וה-finally
+          // שמכבה setUploading(false) לא היה רץ - "המים" היו עולים ויורדים
+          // בלי סוף. אחרי 4ש' פשוט ממשיכים (ה-src יוחלף גם ככה, לכל היותר
+          // רפרוף בלור קצר).
           await new Promise<void>((resolve) => {
             const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
+            let done = false;
+            const finish = () => { if (!done) { done = true; resolve(); } };
+            img.onload = finish;
+            img.onerror = finish;
             img.src = cldThumb(url);
+            setTimeout(finish, 4000);
           });
           if (myId === reqIdRef.current) onChange(url);
         }
