@@ -59,7 +59,7 @@ interface ListPageProps {
   onBack: () => void;
   onUpdateList: (list: List) => void;
   onUpdateListLocal: (list: List) => void;
-  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
+  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[], extraPatch?: Partial<List>) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
@@ -211,15 +211,22 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   // עדכון אופטימי מקומי אחרי סידור - מקבע position לכל מוצר לפי הסדר החדש
   // + דגל הרשימה, כדי שהתצוגה תתעדכן מיד (לפני שה-refetch של הסוקט חוזר).
+  // קריאה אטומית *אחת* ל-onUpdateProductsForList (updater + extraPatch יחד) -
+  // לא שתי קריאות נפרדות. קריאה שנייה נפרדת ל-onUpdateListLocal({...list,...})
+  // הייתה מעבירה snapshot ישן (סגור מזמן ה-render) של list.products, שדורס
+  // בחזרה את עדכון ה-position שזה עתה בוצע (שתי קריאות setLists נשארות
+  // בתוך אותו batch, אבל השנייה מחליפה את כל אובייקט הרשימה בגרסה הישנה) -
+  // זו הייתה הסיבה שאחרי סידור המוצרים חזרו רגעית לסדר הישן, עד שה-refetch
+  // הבא (למשל visibilitychange) תיקן את זה בפועל.
   const applyLocalOrder = useCallback((orderedIds: string[], manual: boolean) => {
     const rank = new Map(orderedIds.map((id, i) => [id, i]));
     const base = Date.now();
     onUpdateProductsForList(list.id, (products) =>
       products.map((p) => rank.has(p.id)
         ? { ...p, position: manual ? rank.get(p.id)! : base + rank.get(p.id)! * 1000 }
-        : p));
-    onUpdateListLocal({ ...list, productsManuallyOrdered: manual });
-  }, [list, onUpdateProductsForList, onUpdateListLocal]);
+        : p),
+      { productsManuallyOrdered: manual });
+  }, [list.id, onUpdateProductsForList]);
 
   const {
     orderedItems: reorderOrderedItems,

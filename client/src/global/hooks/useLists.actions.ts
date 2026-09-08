@@ -187,10 +187,14 @@ export function useListActions(user: User | null, lists: List[], setLists: Dispa
 
   // עדכון מוצרים אטומי - משתמש ב-functional state update למניעת stale closures
   // מעדכן גם את updatedAt כדי שזמן העדכון יתרענן ב-UI
+  // extraPatch אופציונלי - שדות ברמת הרשימה (למשל productsManuallyOrdered)
+  // שצריך לעדכן *באותה* קריאת setLists יחד עם המוצרים - לא בקריאה נפרדת,
+  // אחרת קריאה שנייה שמחליפה את כל אובייקט הרשימה עלולה לדרוס בחזרה את
+  // עדכון המוצרים שזה עתה בוצע (ראו ההערה סביב applyLocalOrder ב-ListComponent).
   const updateProductsForList = useCallback(
-    (listId: string, updater: (products: Product[]) => Product[]) => {
+    (listId: string, updater: (products: Product[]) => Product[], extraPatch?: Partial<List>) => {
       setLists((prev) =>
-        prev.map((l) => l.id === listId ? { ...l, products: updater(l.products), updatedAt: new Date().toISOString() } : l),
+        prev.map((l) => l.id === listId ? { ...l, ...extraPatch, products: updater(l.products), updatedAt: new Date().toISOString() } : l),
       );
     },
     [setLists],
