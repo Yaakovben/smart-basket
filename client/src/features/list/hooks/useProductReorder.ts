@@ -290,7 +290,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     setDragOffsetY(0);
     haptic('medium');
     productsApi.reorderProducts(listId, ids, manual)
-      .then(() => socketService.emitProductsReordered(listId, userName))
+      .then(() => socketService.emitProductsReordered(listId, userName, ids, manual))
       .catch(() => showToast(t('errorOccurred'), 'error'));
   }, [listId, userName, applyLocalOrder, showToast, t]);
 

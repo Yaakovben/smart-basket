@@ -179,12 +179,14 @@ export const registerProductHandlers = (
     }
   });
 
-  // סידור מחדש של מוצרים - רק מודיע לשאר חברי החדר לרענן (בלי התראה,
-  // כמו סידור רשימות במסך הבית). ה-position כבר נשמר ב-DB דרך REST.
-  socket.on('product:reorder', (data: { listId: string; userName: string }) => {
+  // סידור מחדש של מוצרים - מעביר לשאר חברי החדר את הסדר בפועל (productIds)
+  // כדי שיוכלו ליישם אותו מקומית מיד, בלי לחכות ל-refetch (בלי התראה, כמו
+  // סידור רשימות במסך הבית). ה-position כבר נשמר ב-DB דרך REST - זה רק
+  // "רמז" לעדכון מיידי של התצוגה אצל האחרים.
+  socket.on('product:reorder', (data: { listId: string; userName: string; productIds: string[]; manual: boolean }) => {
     try {
       if (!checkRateLimit(socket.id)) return;
-      if (!isValidString(data?.listId)) {
+      if (!isValidString(data?.listId) || !isValidArray(data?.productIds) || !isValidBoolean(data?.manual)) {
         logger.warn('Invalid product:reorder data from user:', userId);
         return;
       }
@@ -195,6 +197,8 @@ export const registerProductHandlers = (
         userId,
         userName,
         timestamp: new Date(),
+        productIds: data.productIds,
+        manual: data.manual,
       });
     } catch (error) {
       logger.error('Error in product:reorder handler:', error);

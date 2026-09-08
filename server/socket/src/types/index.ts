@@ -23,7 +23,11 @@ export interface ClientToServerEvents {
   'product:toggle': (data: { listId: string; productId: string; productName: string; isPurchased: boolean; userName: string }) => void;
   'product:delete': (data: { listId: string; productId: string; productName: string; userName: string }) => void;
   'products:clear': (data: { listId: string; productIds: string[]; filter: 'all' | 'purchased' | 'pending'; userName: string }) => void;
-  'product:reorder': (data: { listId: string; userName: string }) => void;
+  // productIds/manual - הסדר בפועל שנקבע (הכתיבה ל-DB כבר קרתה דרך REST -
+  // זה רק "רמז" לחברי הקבוצה האחרים כדי שיוכלו לעדכן את הסדר מקומית מיד,
+  // בלי לחכות ל-refetch מלא). אותו מודל אמון כמו product:add/update/delete -
+  // השרת רק מעביר הלאה, בלי לאמת מול ה-DB.
+  'product:reorder': (data: { listId: string; userName: string; productIds: string[]; manual: boolean }) => void;
   'member:join': (data: { listId: string; listName: string; userName: string }) => void;
   'member:leave': (data: { listId: string; listName: string; userName: string }, callback?: () => void) => void;
   'member:remove': (data: { listId: string; listName: string; removedUserId: string; removedUserName: string; adminName: string }) => void;
@@ -103,6 +107,11 @@ export interface ProductsReorderedData {
   userId: string;
   userName: string;
   timestamp: Date;
+  // הסדר בפועל (מזהי מוצרים, לפי הסדר החדש) + האם ידני - מאפשר לחברי
+  // הקבוצה האחרים ליישם את הסדר מקומית מיד עם קבלת האירוע, בלי לחכות
+  // ל-refetch (ראו useLists.socketSync.ts).
+  productIds: string[];
+  manual: boolean;
 }
 
 export interface ProductToggledData {

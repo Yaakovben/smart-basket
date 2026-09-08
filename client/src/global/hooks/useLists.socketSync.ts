@@ -85,7 +85,29 @@ export function useListsSocketSync(user: User | null, listIds: string, setLists:
     });
 
     const unsubscribeProductsReordered = socketService.on('products:reordered', (data: unknown) => {
-      const eventData = data as { listId: string };
+      const eventData = data as { listId: string; productIds?: string[]; manual?: boolean };
+
+      // עדכון אופטימי מקומי *מיידי* - בלי לחכות לרענון מלא (100ms debounce
+      // + round-trip רשת). מי שסידר כבר שמר ב-DB דרך REST; זה רק משקף אצל
+      // שאר חברי הקבוצה את אותו סדר, באותו היגיון בדיוק כמו applyLocalOrder
+      // ב-ListComponent.tsx (שמעדכן את מי שביצע את הגרירה עצמו). ה-refetch
+      // למטה עדיין רץ כרשת ביטחון לעקביות סופית - זה תיקון תחושתי בלבד.
+      if (Array.isArray(eventData.productIds) && eventData.productIds.length > 0 && typeof eventData.manual === 'boolean') {
+        const { listId, productIds, manual } = eventData as { listId: string; productIds: string[]; manual: boolean };
+        const rank = new Map(productIds.map((id, i) => [id, i]));
+        const base = Date.now();
+        setLists((prev) => prev.map((l) => {
+          if (l.id !== listId) return l;
+          return {
+            ...l,
+            productsManuallyOrdered: manual,
+            products: l.products.map((p) => rank.has(p.id)
+              ? { ...p, position: manual ? rank.get(p.id)! : base + rank.get(p.id)! * 1000 }
+              : p),
+          };
+        }));
+      }
+
       scheduleRefetch(eventData.listId);
     });
 

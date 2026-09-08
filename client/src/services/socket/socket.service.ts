@@ -327,8 +327,11 @@ class SocketService {
     this.socket?.emit('products:clear', { listId, productIds, filter, userName });
   }
 
-  emitProductsReordered(listId: string, userName: string) {
-    this.socket?.emit('product:reorder', { listId, userName });
+  // productIds/manual - הסדר בפועל שנקבע, כדי שחברי הקבוצה האחרים יוכלו
+  // ליישם אותו מקומית מיד עם קבלת products:reordered, בלי לחכות ל-refetch
+  // (ראו useLists.socketSync.ts).
+  emitProductsReordered(listId: string, userName: string, productIds: string[], manual: boolean) {
+    this.socket?.emit('product:reorder', { listId, userName, productIds, manual });
   }
 
   emitProductToggled(listId: string, productId: string, productName: string, isPurchased: boolean, userName: string) {
