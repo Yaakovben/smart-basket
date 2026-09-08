@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -22,13 +22,36 @@ interface Props {
 export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
-  const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;       // אייקון + תוויות + מונה
+  const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;       // אייקון + תוויות
   const noteText = isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight; // גוף הטקסט שנכתב
   const inkMuted = isDark ? 'rgba(185,240,230,0.65)' : 'rgba(15,118,110,0.7)';
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
 
   useEffect(() => { onOpenChange?.(isOpen); }, [isOpen, onOpenChange]);
+
+  // חיווי גלילה עצמאי - סרגל דק בצד (insetInlineEnd) שמופיע *מיד* כשההערה
+  // ארוכה מגובה השדה, לא רק אחרי שמתחילים לגלול (סרגל ה-textarea הנייטיב
+  // מתחבא ב-iOS/מובייל). thumb משקף כמה נשאר ואיפה אנחנו.
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const [scroll, setScroll] = useState({ over: false, topFrac: 0, sizeFrac: 1 });
+  const measureScroll = useCallback(() => {
+    const el = taRef.current;
+    if (!el) return;
+    const { scrollHeight: sh, clientHeight: ch, scrollTop: st } = el;
+    const over = sh - ch > 4;
+    setScroll({
+      over,
+      sizeFrac: over ? Math.max(0.18, ch / sh) : 1,
+      topFrac: over ? st / sh : 0,
+    });
+  }, []);
+  useEffect(() => {
+    if (!isOpen) return;
+    measureScroll();
+    const id = window.setTimeout(measureScroll, 60); // אחרי שה-layout מתייצב
+    return () => window.clearTimeout(id);
+  }, [isOpen, value, measureScroll]);
 
   const closeAndClear = () => {
     haptic('light');
@@ -89,23 +112,7 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
             <CloseRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
 
-          {/* מונה תווים - בפינה הימנית העליונה (מול ה-X שבשמאל). top/right
-              חייבים לפצות על ה-border-radius של הפתק (RADIUS.field=12 ב-
-              paperNote.ts) - 'field' בכוונה בלי overflow:hidden (כדי שכפתור
-              הסגירה יבצבץ מהפינה השנייה), אז כל תיבה שמתחילה קרוב מדי לפינה
-              המעוגלת "בורחת" חזותית מחוץ לקו העקומה במקום להיחתך אליו. 14px
-              משני הצדדים משאיר מרווח ביטחון מעל ה-12px רדיוס. */}
-          <Typography sx={{
-            position: 'absolute', top: 14, right: 14, zIndex: 2,
-            fontSize: 10, fontWeight: 700,
-            color: value.length >= 180 ? '#DC2626' : ink,
-            opacity: value.length >= 180 ? 1 : 0.7,
-            fontVariantNumeric: 'tabular-nums', letterSpacing: 0.3,
-          }}>
-            {value.length}/200
-          </Typography>
-
-          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.6, pr: 5, lineHeight: 1.15 }}>
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.6, lineHeight: 1.15 }}>
             <Typography sx={{
               fontSize: 10, fontWeight: 800, color: ink,
               letterSpacing: 1, textTransform: 'uppercase',
@@ -123,15 +130,18 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
             placeholder={t('productNotePlaceholder')}
-            inputProps={{ maxLength: 200 }}
+            inputRef={taRef}
+            inputProps={{ maxLength: 200, onScroll: measureScroll }}
             sx={{
               position: 'relative', zIndex: 2,
+              // מקום לסרגל החיווי בצד ה-inline-end (השמאלי ב-RTL).
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'transparent',
                 fontSize: 13.5,
                 fontWeight: 500,
                 color: noteText,
                 py: 0.1,
+                pl: '9px', // מרווח קבוע מצד סרגל החיווי (inline-end)
                 '& fieldset': { border: 'none' },
                 '&.Mui-focused fieldset': { border: 'none' },
               },
@@ -139,15 +149,32 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
                 color: inkMuted,
                 opacity: 1,
               },
-              // חיווי גלילה בצד - סרגל דק צבוע (לא חץ מרפרף) - אותה שפה
-              // בדיוק כמו הפתק במסך פרטי המוצר (ProductDetailsModal).
-              '& textarea::-webkit-scrollbar': { width: 4 },
-              '& textarea::-webkit-scrollbar-thumb': {
-                backgroundColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
-                borderRadius: 4,
-              },
+              // מסתירים את סרגל ה-textarea הנייטיב - מציירים סרגל משלנו (למטה)
+              // שגלוי מיד ולא רק בזמן גלילה.
+              '& textarea': { scrollbarWidth: 'none' },
+              '& textarea::-webkit-scrollbar': { width: 0, height: 0 },
             }}
           />
+
+          {/* סרגל החיווי שלנו - צמוד לקצה השמאלי (inline-end) של הפתק,
+              גלוי מיד כשההערה ארוכה מהשדה. */}
+          {scroll.over && (
+            <Box aria-hidden sx={{
+              position: 'absolute', insetInlineEnd: 4, zIndex: 3,
+              top: 34, bottom: 10, width: 3, borderRadius: 3,
+              bgcolor: isDark ? 'rgba(94,234,212,0.14)' : 'rgba(20,184,166,0.12)',
+              pointerEvents: 'none',
+            }}>
+              <Box sx={{
+                position: 'absolute', insetInline: 0, borderRadius: 3,
+                top: `${scroll.topFrac * 100}%`,
+                height: `${scroll.sizeFrac * 100}%`,
+                bgcolor: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                opacity: 0.55,
+                transition: 'top 0.08s linear',
+              }} />
+            </Box>
+          )}
         </Box>
       )}
     </Box>
