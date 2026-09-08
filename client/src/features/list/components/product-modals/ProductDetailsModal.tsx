@@ -80,17 +80,24 @@ export const ProductDetailsModal = memo(({
   const [editsExpanded, setEditsExpanded] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
   const [nameExpanded, setNameExpanded] = useState(false);
+  // תמונת המוצר נכשלה לטעון - נופל לתצוגת אריח הקטגוריה, בדיוק כמו
+  // !product.image. מתאפס למטה (יחד עם שאר ה-state) לפי id או image.
+  const [imageFailed, setImageFailed] = useState(false);
 
   // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
   // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
   // מפורש מצב "פתוח" היה נדבק בין מוצרים. איפוס בזמן רינדור (הדפוס
-  // המומלץ ב-React) ולא ב-useEffect.
+  // המומלץ ב-React) ולא ב-useEffect. גם image נבדק (לא רק id) - עריכת
+  // תמונה למוצר קיים באותו modal instance לא אמורה לגרור failed ישן.
   const [seenId, setSeenId] = useState(product?.id);
-  if (product?.id !== seenId) {
+  const [seenImage, setSeenImage] = useState(product?.image);
+  if (product?.id !== seenId || product?.image !== seenImage) {
     setSeenId(product?.id);
+    setSeenImage(product?.image);
     setEditsExpanded(false);
     setShowPhoto(false);
     setNameExpanded(false);
+    setImageFailed(false);
   }
 
   if (!product) return null;
@@ -149,7 +156,7 @@ export const ProductDetailsModal = memo(({
           height: 148, mb: 1.5,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          {product.image ? (
+          {product.image && !imageFailed ? (
             <Box
               role="button"
               aria-label={t('viewPhotoAria')}
@@ -173,6 +180,7 @@ export const ProductDetailsModal = memo(({
                 // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
                 // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
                 fetchPriority="high"
+                onError={() => setImageFailed(true)}
               />
               {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
                   (לא box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}

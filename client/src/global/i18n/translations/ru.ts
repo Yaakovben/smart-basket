@@ -446,7 +446,7 @@ export const ru: Translations = {
   reorderProductsActive: 'Изменение порядка',
   reorderProductsHint: 'Нажмите и удерживайте товар, затем перетащите',
   productsWord: 'товаров',
-  sortByCategory: 'Авто-порядок',
+  sortByCategory: 'По категориям',
   productOrderAuto: 'Снова сортировка по категориям',
   moreDetails: 'Подробнее',
   lists: 'списков',
@@ -496,6 +496,7 @@ export const ru: Translations = {
   photoProcessing: 'Загрузка фото…',
   photoUploadError: 'Не удалось загрузить фото. Попробуйте ещё раз.',
   photoTooLarge: 'Фото слишком большое даже после сжатия. Попробуйте другое.',
+  photoLoadFailed: 'Не удалось загрузить',
   itemHasPhoto: 'У этого товара есть фото',
   // Scan list photo (OCR)
   ocrNoTextDetected: 'Не удалось распознать чёткий текст на изображении. Попробуйте более чёткое фото с хорошим освещением.',

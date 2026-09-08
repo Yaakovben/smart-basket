@@ -447,7 +447,7 @@ export const he: Translations = {
   reorderProductsActive: 'סידור מוצרים',
   reorderProductsHint: 'החזק על מוצר וגרור כדי לשנות את הסדר',
   productsWord: 'מוצרים',
-  sortByCategory: 'סידור אוטומטי',
+  sortByCategory: 'מיין לפי קטגוריה',
   productOrderAuto: 'הרשימה חזרה למיון לפי קטגוריה',
   // פרטי משתמש למנהל
   moreDetails: 'פרטים נוספים',
@@ -498,6 +498,7 @@ export const he: Translations = {
   photoProcessing: 'מעלה תמונה…',
   photoUploadError: 'העלאת התמונה נכשלה. נסה שוב.',
   photoTooLarge: 'התמונה גדולה מדי גם אחרי דחיסה. נסה תמונה אחרת.',
+  photoLoadFailed: 'לא ניתן לטעון',
   itemHasPhoto: 'למוצר זה יש תמונה',
   // Scan list photo (OCR)
   ocrNoTextDetected: 'לא זיהינו טקסט ברור בתמונה. נסה תמונה ברורה וחדה יותר, עם תאורה טובה.',

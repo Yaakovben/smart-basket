@@ -500,6 +500,7 @@ export type TranslationKeys =
   | 'photoProcessing'
   | 'photoUploadError'
   | 'photoTooLarge'
+  | 'photoLoadFailed'
   | 'itemHasPhoto'
   // Scan list photo (OCR)
   | 'ocrNoTextDetected'

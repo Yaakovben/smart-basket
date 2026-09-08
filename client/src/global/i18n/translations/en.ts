@@ -446,7 +446,7 @@ export const en: Translations = {
   reorderProductsActive: 'Reordering items',
   reorderProductsHint: 'Press and hold an item, then drag to reorder',
   productsWord: 'items',
-  sortByCategory: 'Auto-arrange',
+  sortByCategory: 'Sort by category',
   productOrderAuto: 'Back to sorting by category',
   moreDetails: 'More Details',
   lists: 'lists',
@@ -496,6 +496,7 @@ export const en: Translations = {
   photoProcessing: 'Uploading photo…',
   photoUploadError: 'Photo upload failed. Please try again.',
   photoTooLarge: 'The photo is too large even after compression. Try another one.',
+  photoLoadFailed: 'Couldn\'t load',
   itemHasPhoto: 'This item has a photo',
   // Scan list photo (OCR)
   ocrNoTextDetected: "We couldn't detect clear text in the image. Try a clearer, sharper photo with good lighting.",

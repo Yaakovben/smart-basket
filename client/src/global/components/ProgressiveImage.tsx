@@ -13,6 +13,10 @@ interface ProgressiveImageProps {
   sx?: SxProps<Theme>;
   loading?: 'lazy' | 'eager';
   fetchPriority?: 'high' | 'low' | 'auto';
+  // נקרא פעם אחת כשהתמונה נכשלת לטעון (URL מת, כשל רשת, וכו'). הקומפוננטה
+  // עצמה לא מרנדרת שום דבר במקרה כזה (ראו failed למטה) - זה תפקיד ההורה,
+  // שיודע מה ה-fallback הנכון בהקשר שלו (אריח קטגוריה, פלייסהולדר וכו').
+  onError?: () => void;
 }
 
 /**
@@ -23,17 +27,25 @@ interface ProgressiveImageProps {
  * חייבת אב עם position:'relative' וגובה/רוחב מוגדרים - שתי התמונות
  * ממוקמות absolute בתוכו וחופפות.
  */
-export const ProgressiveImage = ({ src, blurSrc, alt, finalOpacity = 1, sx, loading, fetchPriority }: ProgressiveImageProps) => {
+export const ProgressiveImage = ({ src, blurSrc, alt, finalOpacity = 1, sx, loading, fetchPriority, onError }: ProgressiveImageProps) => {
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   // איפוס בזמן רינדור (לא ב-useEffect - הדפוס המומלץ ב-React) כשה-src
   // משתנה: למשל התמונה האופטימית-מקומית הוחלפה בכתובת Cloudinary האמיתית
   // אחרי העלאה ברקע. בלי זה התמונה החדשה "קופצת" ישר לחדה כי loaded
-  // עדיין true מהתמונה הקודמת.
+  // עדיין true מהתמונה הקודמת - וכנ"ל failed: תמונה חדשה לא אמורה לרשת
+  // כישלון של קודמתה.
   const [seenSrc, setSeenSrc] = useState(src);
   if (src !== seenSrc) {
     setSeenSrc(src);
     setLoaded(false);
+    setFailed(false);
   }
+
+  // כישלון טעינה - לא מרנדרים <img> שבור בכלל. ההורה אחראי על ה-fallback
+  // (ראו onError למעלה) - זה יכול להיות אריח קטגוריה, פלייסהולדר "נכשל
+  // לטעון" וכו', תלוי בהקשר.
+  if (failed) return null;
 
   return (
     <>
@@ -63,6 +75,7 @@ export const ProgressiveImage = ({ src, blurSrc, alt, finalOpacity = 1, sx, load
         fetchPriority={fetchPriority}
         decoding="async"
         onLoad={() => setLoaded(true)}
+        onError={() => { setFailed(true); onError?.(); }}
         sx={{
           position: blurSrc ? 'absolute' : 'static',
           inset: 0,

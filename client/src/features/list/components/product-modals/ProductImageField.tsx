@@ -2,6 +2,7 @@ import { memo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
@@ -23,6 +24,15 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState(false);
+  // התמונה השמורה (value) נכשלה לטעון - אין כאן קטגוריה להציג במקומה
+  // (זה שדה טופס, לא תצוגת מוצר), אז פלייסהולדר "נכשל לטעון" פשוט בתוך
+  // אותה תיבה 78x78. מתאפס כש-value משתנה (הסרה+הוספה מחדש).
+  const [imageFailed, setImageFailed] = useState(false);
+  const [seenValue, setSeenValue] = useState(value);
+  if (value !== seenValue) {
+    setSeenValue(value);
+    setImageFailed(false);
+  }
   // מזהה בקשה - מתעלמים מתוצאה של דחיסה/העלאה שהמשתמש כבר "עקף"
   // (בחר קובץ אחר, או הסיר את התמונה) לפני שהסתיימה.
   const reqIdRef = useRef(0);
@@ -129,21 +139,37 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
           <Box sx={{ position: 'relative', width: 78, flexShrink: 0 }}>
             <Box
               role="button"
-              aria-label={t('viewPhotoAria')}
-              onClick={() => { haptic('light'); setLightbox(true); }}
+              aria-label={imageFailed ? t('photoLoadFailed') : t('viewPhotoAria')}
+              onClick={() => { if (imageFailed) return; haptic('light'); setLightbox(true); }}
               sx={{
                 position: 'relative',
                 width: 78, height: 78,
                 borderRadius: '13px', overflow: 'hidden',
                 bgcolor: 'action.hover',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                cursor: 'pointer',
+                cursor: imageFailed ? 'default' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
                 transition: 'transform 0.15s',
-                '&:active': { transform: 'scale(0.97)' },
+                '&:active': imageFailed ? {} : { transform: 'scale(0.97)' },
               }}
             >
-              <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
+              {imageFailed ? (
+                // פלייסהולדר "נכשל לטעון" - אין כאן קטגוריה כמו בתצוגות
+                // אחרות של המוצר, זה שדה טופס. כפתור ההסרה (מחוץ לתיבה
+                // הזו) עדיין עובד - המשתמש לא תקוע, יכול להסיר ולנסות שוב.
+                <Box sx={{
+                  width: '100%', height: '100%',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
+                  color: 'text.disabled',
+                }}>
+                  <BrokenImageRoundedIcon sx={{ fontSize: 22 }} />
+                  <Typography sx={{ fontSize: 9, fontWeight: 600, textAlign: 'center', lineHeight: 1.1, px: 0.5 }}>
+                    {t('photoLoadFailed')}
+                  </Typography>
+                </Box>
+              ) : (
+                <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} onError={() => setImageFailed(true)} />
+              )}
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
                 position: 'absolute', inset: 0, borderRadius: '13px',

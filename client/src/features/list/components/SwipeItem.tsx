@@ -67,6 +67,15 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
   const isDark = settings.theme === 'dark';
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
+  // תמונת המוצר נכשלה לטעון (URL מת, מכסת Cloudinary, וכו') - נופל
+  // לתצוגת אריח הקטגוריה, בדיוק כמו !product.image. מתאפס אם התמונה
+  // עצמה מוחלפת (למשל עריכת המוצר עם תמונה חדשה).
+  const [imageFailed, setImageFailed] = useState(false);
+  const [seenImage, setSeenImage] = useState(product.image);
+  if (product.image !== seenImage) {
+    setSeenImage(product.image);
+    setImageFailed(false);
+  }
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Refs למעקב אחר מחוות
@@ -380,7 +389,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
             עין). לא נקנה - IconTile variant="light": צ'יפ פסטלי, לא
             הגרדיאנט הרווי של רשימות - עשרות אייקוני מוצר יחד בעמוד לא
             אמורים להתחרות ויזואלית עם אריח-הרשימה הבודד. */}
-        {product.image ? (
+        {product.image && !imageFailed ? (
           // תמונה שהמשתמש העלה - מחליפה את אריח הקטגוריה. מסגרת תכלת
           // דקה (PAPER_NOTE.frame) - אותו תכלת של ההערה, לא צבע הקטגוריה.
           // רדיוס מרובע יותר מאריח האייקון - "צילום" נקרא טוב יותר כשהוא
@@ -409,6 +418,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                 alt=""
                 loading="lazy"
                 finalOpacity={isPurchased ? 0.45 : 1}
+                onError={() => setImageFailed(true)}
                 sx={{
                   borderRadius: '18%',
                   filter: isPurchased ? 'grayscale(1)' : 'none',
