@@ -19,7 +19,9 @@ dotenv.config();
  * - JWT_ACCESS_EXPIRES_IN: Access token expiry (default: 15m)
  * - JWT_REFRESH_EXPIRES_IN: Refresh token expiry (default: 30d)
  * - CORS_ORIGIN: Allowed origins for CORS, comma-separated (default: http://localhost:5173)
- * - ADMIN_EMAIL: Default admin user email
+ * - ADMIN_EMAIL: Email address that gets isAdmin=true on register/login.
+ *   No default - if unset, no account is auto-granted admin (same safe
+ *   behaviour as the socket server). Set it explicitly per deployment.
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
  * - OCR_API_KEY: OCR.space API key for "scan list photo" feature (free tier,
  *   register at ocr.space/ocrapi/freekey). Feature silently no-ops if absent.
@@ -56,8 +58,10 @@ const envSchema = Joi.object({
   // CORS - רשימת origins מופרדת בפסיקים
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
 
-  // מייל אדמין
-  ADMIN_EMAIL: Joi.string().email().default('yaakovbenyizchak1@gmail.com'),
+  // מייל אדמין - החשבון שמקבל isAdmin=true בהרשמה/כניסה. *אין* ברירת מחדל:
+  // אם לא מוגדר, אף אחד לא מקבל אדמין אוטומטית (זהה לדפוס של שרת ה-Socket).
+  // חייב להיות מוגדר מפורשות בכל דיפלוימנט שרוצה פאנל אדמין.
+  ADMIN_EMAIL: Joi.string().email().lowercase().allow('').default(''),
 
   // ניטור שגיאות Sentry - שולח רק ב-production
   SENTRY_DSN: Joi.string().optional(),
@@ -68,7 +72,9 @@ const envSchema = Joi.object({
   // מפתחות VAPID להתראות push - ליצירה: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
-  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:yaakovbenyizchak1@gmail.com'),
+  // ה-"subject" של VAPID (איש קשר לספק ה-push). *אין* ברירת מחדל - אם חסר
+  // כשמפתחות ה-VAPID כן מוגדרים, אתחול ה-push ידולג (ראה push.service.ts).
+  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).optional(),
 
   // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
@@ -151,7 +157,7 @@ export interface Environment {
   LOGTAIL_TOKEN?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
-  VAPID_EMAIL: string;
+  VAPID_EMAIL?: string;
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   CLOUDINARY_CLOUD_NAME?: string;

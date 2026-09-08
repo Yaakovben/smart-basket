@@ -231,11 +231,6 @@ export const STORAGE_KEYS = {
   SETTINGS: 'sb_settings'
 } as const;
 
-// ===== הגדרות מנהל =====
-export const ADMIN_CONFIG = {
-  adminEmail: 'yaakovbenyizchak1@gmail.com'
-} as const;
-
 // ===== הגדרות ברירת מחדל =====
 export const DEFAULT_SETTINGS = {
   theme: 'light' as const,

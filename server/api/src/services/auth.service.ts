@@ -50,6 +50,11 @@ export async function checkEmail(email: string): Promise<{ exists: boolean; isGo
   return { exists: true, isGoogleAccount };
 }
 
+// isAdmin רק אם ADMIN_EMAIL מוגדר *ותואם*. אם ADMIN_EMAIL ריק/לא מוגדר -
+// אף אחד לא מקבל אדמין (ה-env כבר מוחזר lowercase מ-Joi).
+const matchesAdminEmail = (email: string): boolean =>
+  !!env.ADMIN_EMAIL && email.toLowerCase() === env.ADMIN_EMAIL;
+
 /**
  * יצירת חשבון חדש עם מייל + סיסמה. אם המייל כבר קיים — ConflictError.
  * אם המייל תואם ל-ADMIN_EMAIL מה-env — המשתמש מקבל isAdmin=true.
@@ -62,7 +67,7 @@ export async function register(
   const existingUser = await UserDAL.findByEmail(data.email);
   if (existingUser) throw ConflictError.emailExists();
 
-  const isAdmin = data.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
+  const isAdmin = matchesAdminEmail(data.email);
 
   const user = await UserDAL.create({
     name: sanitizeText(data.name),
@@ -141,7 +146,7 @@ export async function googleAuth(
   let user = await UserDAL.findByGoogleId(googleUser.sub);
   if (!user) user = await UserDAL.findByEmail(googleUser.email);
 
-  const isAdmin = googleUser.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
+  const isAdmin = matchesAdminEmail(googleUser.email);
 
   if (!user) {
     user = await UserDAL.create({

@@ -6,7 +6,6 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { usePushNotifications } from '../../../global/hooks';
 import { useReliableTap } from '../../../global/hooks/useReliableTap';
-import { ADMIN_CONFIG } from '../../../global/constants';
 import type { User, ToastType } from '../../../global/types';
 import { ConfirmModal } from '../../../global/components';
 import { useSettingsPage } from '../hooks/useSettingsPage';
@@ -31,7 +30,9 @@ export const SettingsComponent = ({ user, hasUpdate = false, onDeleteAllData, sh
   const navigate = useNavigate();
   const { settings, toggleDarkMode, updateNotifications, t } = useSettings();
   const isDark = settings.theme === 'dark';
-  const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
+  // מקור אמת יחיד: השדה isAdmin של המשתמש המאומת (מהשרת). האדמין האמיתי
+  // נאכף ממילא ב-middleware בשרת - זה רק שולט על נראות ה-UI.
+  const isAdmin = !!user.isAdmin;
   // onClick רגיל על שורת המנהל התגלה כלא-אמין (דרש הקשה כפולה) - אותו
   // תיקון כמו ב-HomeHeader/ProfileComponent/Modal.
   const openAdmin = useReliableTap(() => navigate('/admin'));

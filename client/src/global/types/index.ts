@@ -24,6 +24,9 @@ export interface User {
   password?: string;
   avatarColor?: string;
   avatarEmoji?: string;
+  // הרשאת אדמין - מגיע מהשרת (isAdmin ב-DB). מקור האמת היחיד ל"האם להציג
+  // UI של אדמין" בקליינט (אין יותר השוואת מייל קשיחה).
+  isAdmin?: boolean;
   listOrder?: string[];
   // רשימות קבועות - עצמאיות ממחזור החיים של רשימה בודדת.
   savedLists?: SavedList[];
