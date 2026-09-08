@@ -2,18 +2,6 @@
 
 אפליקציית רשימות קניות שיתופית בזמן אמת — PWA מלאה עם השוואת מחירים בין רשתות בישראל.
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-14B8A6?style=for-the-badge&logo=vercel&logoColor=white)](https://smart-basket.vercel.app)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-[![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
-
-## 🌐 דמו חי
-
-**אתר:** https://smart-basket.vercel.app
-*(או הירשמו עם Google בלחיצה אחת — אין צורך באימייל אמת בסביבת דמו)*
-
 ## ⚡ סקירה מהירה — 30 שניות
 
 - **שיתופיות בזמן אמת** דרך Socket.io — שני משתמשים רואים שינויים מיד
