@@ -2,6 +2,7 @@ import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
+import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import SortRoundedIcon from '@mui/icons-material/SortRounded';
 import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
@@ -583,9 +584,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 pointerEvents: reorderDragIndex >= 0 ? 'none' : 'auto',
                 transition: 'opacity 0.15s ease',
               }}>
-                <Typography sx={{ fontSize: 11.5, color: 'text.disabled' }}>
-                  {t('reorderProductsHint')}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled' }}>
+                  <DragIndicatorRoundedIcon sx={{ fontSize: 14 }} />
+                  <Typography sx={{ fontSize: 11.5 }}>
+                    {t('reorderProductsHint')}
+                  </Typography>
+                </Box>
                 {list.productsManuallyOrdered && (
                   <Box
                     component="button"

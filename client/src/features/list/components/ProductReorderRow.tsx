@@ -67,6 +67,16 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         WebkitTapHighlightColor: 'transparent',
       }}
     >
+      {/* ידית גרירה - רמז ויזואלי בלבד (הגרירה מתחילה מכל השורה). בצד
+          ההתחלה (הימני ב-RTL) - זהה למיקום הידית בכרטיס רשימה במסך הבית. */}
+      <Box aria-hidden="true" sx={{
+        flexShrink: 0, mr: -0.25,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: isDragging ? 'primary.main' : 'text.disabled',
+      }}>
+        <DragIndicatorRoundedIcon />
+      </Box>
+
       {/* אייקון קטגוריה / תמונה */}
       {product.image ? (
         <Box
@@ -96,15 +106,6 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         <Typography sx={{ fontSize: 12.5, color: 'text.secondary' }}>
           {product.quantity} {product.unit}
         </Typography>
-      </Box>
-
-      {/* ידית גרירה - רמז ויזואלי בלבד (הגרירה מתחילה מכל השורה) */}
-      <Box aria-hidden="true" sx={{
-        flexShrink: 0, px: 0.5,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isDragging ? 'primary.main' : 'text.disabled',
-      }}>
-        <DragIndicatorRoundedIcon />
       </Box>
     </Box>
   );

@@ -440,11 +440,11 @@ export const ru: Translations = {
   // List reorder
   reorderLists: 'Упорядочить списки',
   reorderDone: 'Сохранить порядок',
-  reorderHint: 'Перетащите ☰ для сортировки',
+  reorderHint: 'Перетащите для сортировки',
   orderSaved: 'Порядок сохранён',
   reorderProducts: 'Порядок товаров',
   reorderProductsActive: 'Изменение порядка',
-  reorderProductsHint: 'Нажмите и удерживайте товар, затем перетащите',
+  reorderProductsHint: 'Перетащите для сортировки',
   productsWord: 'товаров',
   sortByCategory: 'По категориям',
   productOrderAuto: 'Снова сортировка по категориям',

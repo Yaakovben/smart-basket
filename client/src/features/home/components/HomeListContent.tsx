@@ -1,6 +1,7 @@
 import { useMemo, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 import DoneIcon from '@mui/icons-material/Done';
@@ -30,8 +31,11 @@ interface HomeListContentProps {
   onLeaveList?: (list: List) => void;
   reorderMode: boolean;
   dragIndex: number;
-  dragOverIndex: number;
-  cardRefs: RefObject<(HTMLDivElement | null)[]>;
+  // translateY (px) של הכרטיס הנגרר - עוקב אחרי האצבע 1:1.
+  dragOffsetY: number;
+  // ההזזה (px) שכרטיס שאינו נגרר צריך להחיל כדי לפנות מקום ליעד.
+  getRowShift: (index: number) => number;
+  rowRefs: RefObject<(HTMLDivElement | null)[]>;
   hasOrderChanges: boolean;
   onCancelReorder: () => void;
   onSaveOrder: () => void;
@@ -63,7 +67,7 @@ const RetryDots = () => (
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
-  reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
+  reorderMode, dragIndex, dragOffsetY, getRowShift, rowRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
   // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
@@ -319,31 +323,50 @@ export const HomeListContent = ({
             )}
           </Box>
           {reorderMode && (
-            <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25 }}>
-              {t('reorderHint')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25, color: 'text.disabled' }}>
+              <DragIndicatorRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography sx={{ fontSize: 11.5 }}>{t('reorderHint')}</Typography>
+            </Box>
           )}
         </Box>
-        {orderedDisplay.map((l: List, idx: number) => (
-        <Box key={l.id} ref={(el: HTMLDivElement | null) => { cardRefs.current[idx] = el; }}>
-          <ListCard
-            list={l}
-            isMuted={isGroupMuted(l.id)}
-            isOwner={l.owner.id === user.id}
-            onSelect={onSelectList}
-            onEditList={onEditList}
-            onDeleteList={onDeleteList}
-            onLeaveList={onLeaveList}
-            onToggleMute={onToggleMute}
-            t={t}
-            reorderMode={reorderMode}
-            isDragging={reorderMode && dragIndex === idx}
-            isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
-            onDragHandleTouch={dragHandlers[idx]?.touch}
-            onDragHandleMouse={dragHandlers[idx]?.mouse}
-          />
-        </Box>
-      ))}
+        {orderedDisplay.map((l: List, idx: number) => {
+          const isDragging = reorderMode && dragIndex === idx;
+          // translateY = מעקב מיידי אחרי האצבע לכרטיס הנגרר; קפיצה של
+          // גובה-שורה אחד לכרטיסים שמתפנים מקום (getRowShift). זהה למנוע
+          // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
+          const translateY = isDragging ? dragOffsetY : reorderMode ? getRowShift(idx) : 0;
+          return (
+            <Box
+              key={l.id}
+              ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
+              sx={{
+                position: 'relative',
+                transform: reorderMode ? `translateY(${translateY}px)` : 'none',
+                transition: isDragging
+                  ? 'none'
+                  : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                zIndex: isDragging ? 5 : 1,
+                willChange: reorderMode ? 'transform' : 'auto',
+              }}
+            >
+              <ListCard
+                list={l}
+                isMuted={isGroupMuted(l.id)}
+                isOwner={l.owner.id === user.id}
+                onSelect={onSelectList}
+                onEditList={onEditList}
+                onDeleteList={onDeleteList}
+                onLeaveList={onLeaveList}
+                onToggleMute={onToggleMute}
+                t={t}
+                reorderMode={reorderMode}
+                isDragging={isDragging}
+                onDragHandleTouch={dragHandlers[idx]?.touch}
+                onDragHandleMouse={dragHandlers[idx]?.mouse}
+              />
+            </Box>
+          );
+        })}
       </>)}
     </Box>
   );

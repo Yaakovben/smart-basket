@@ -21,12 +21,11 @@ interface ListCardProps {
   t: (key: TranslationKeys) => string;
   reorderMode?: boolean;
   isDragging?: boolean;
-  isDragOver?: boolean;
   onDragHandleTouch?: (e: React.TouchEvent) => void;
   onDragHandleMouse?: (e: React.MouseEvent) => void;
 }
 
-export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, isDragOver, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
+export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -88,10 +87,20 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
     <Card sx={{
       display: 'flex', alignItems: 'center', gap: 1.75, p: 2, mb: 1,
       cursor: reorderMode ? (isDragging ? 'grabbing' : 'default') : 'pointer',
-      transition: isDragging ? 'box-shadow 0.15s' : 'all 0.2s ease',
-      transform: isDragging ? 'scale(1.03)' : isDragOver ? 'translateY(4px)' : 'none',
-      opacity: isDragging ? 0.95 : 1,
-      boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.18)' : isDragOver ? '0 -3px 0 0 #14B8A6' : undefined,
+      // scale/rotate כ-properties נפרדים (לא transform) - ה-translateY על
+      // ה-wrapper מבחוץ נשאר צמוד לאצבע 1:1 בזמן שה"הרמה" מונפשת. זהה
+      // בדיוק למנוע של גרירת מוצרים (ProductReorderRow).
+      scale: isDragging ? '1.045' : '1',
+      rotate: isDragging ? '-1.3deg' : '0deg',
+      opacity: isDragging ? 0.98 : 1,
+      transition: isDragging
+        ? 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease'
+        : 'scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
+      // מסגרת רק במצב סידור - כדי לא לשנות את גודל הכרטיס במצב הרגיל.
+      ...(reorderMode && { border: '1px solid', borderColor: isDragging ? 'primary.main' : 'transparent' }),
+      boxShadow: isDragging
+        ? (isDark ? '0 16px 36px rgba(0,0,0,0.6)' : '0 16px 36px rgba(20,184,166,0.34)')
+        : undefined,
       position: 'relative',
       zIndex: isDragging ? 10 : 'auto',
       bgcolor: isDragging ? 'action.hover' : undefined,

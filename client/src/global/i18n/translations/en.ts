@@ -440,11 +440,11 @@ export const en: Translations = {
   // List reorder
   reorderLists: 'Reorder Lists',
   reorderDone: 'Save Order',
-  reorderHint: 'Drag ☰ to reorder',
+  reorderHint: 'Drag to reorder',
   orderSaved: 'Order saved',
   reorderProducts: 'Reorder items',
   reorderProductsActive: 'Reordering items',
-  reorderProductsHint: 'Press and hold an item, then drag to reorder',
+  reorderProductsHint: 'Drag to reorder',
   productsWord: 'items',
   sortByCategory: 'Sort by category',
   productOrderAuto: 'Back to sorting by category',

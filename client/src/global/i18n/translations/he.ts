@@ -440,12 +440,12 @@ export const he: Translations = {
   // List reorder
   reorderLists: 'סדר רשימות',
   reorderDone: 'שמור סדר',
-  reorderHint: 'גרור ☰ כדי לשנות סדר',
+  reorderHint: 'גרור כדי לשנות סדר',
   orderSaved: 'הסדר נשמר',
   // Product reorder (בתוך רשימה)
   reorderProducts: 'סדר מוצרים',
   reorderProductsActive: 'סידור מוצרים',
-  reorderProductsHint: 'החזק על מוצר וגרור כדי לשנות את הסדר',
+  reorderProductsHint: 'גרור כדי לשנות סדר',
   productsWord: 'מוצרים',
   sortByCategory: 'מיין לפי קטגוריה',
   productOrderAuto: 'הרשימה חזרה למיון לפי קטגוריה',
