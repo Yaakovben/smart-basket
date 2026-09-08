@@ -856,7 +856,7 @@ export const en: Translations = {
   offlineDesc: 'Check your Wi-Fi or mobile data. We\'ll keep retrying automatically.',
   loadRetryTitle: 'Reconnecting',
   loadRetryDesc: 'The connection dropped for a moment - we\'re trying again.',
-  retrying: 'Retrying…',
+  retrying: 'Retrying',
   reloadPageAction: 'Reload the page',
   offlineShort: 'Offline',
   offlineWillSync: 'Your changes are saved and will sync when you\'re back online',

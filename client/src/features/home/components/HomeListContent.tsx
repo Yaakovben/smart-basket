@@ -40,16 +40,16 @@ interface HomeListContentProps {
   t: (key: TranslationKeys) => string;
 }
 
-// שלוש נקודות מהבהבות לחיווי "מנסה שוב". reverse הופך את סדר ה-delay כדי
-// שבצד שמאל של הכיתוב הן "יזרמו" פנימה לכיוון הטקסט (סימטריה עם צד ימין).
-const RetryDots = ({ reverse = false }: { reverse?: boolean }) => (
+// שלוש נקודות מהבהבות אחרי הכיתוב "מנסה שוב" - כמו אינדיקטור הקלדה,
+// זורמות אחת אחרי השנייה. רק אחרי הטקסט, בלי קבוצה נוספת לפני.
+const RetryDots = () => (
   <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
     {[0, 1, 2].map(i => (
       <Box key={i} sx={{
         width: 5, height: 5, borderRadius: '50%',
         bgcolor: 'primary.main',
         animation: 'connDot 1.2s ease-in-out infinite',
-        animationDelay: `${(reverse ? 2 - i : i) * 0.18}s`,
+        animationDelay: `${i * 0.18}s`,
         '@keyframes connDot': {
           '0%, 100%': { opacity: 0.25, transform: 'scale(0.8)' },
           '50%': { opacity: 1, transform: 'scale(1)' },
@@ -129,9 +129,8 @@ export const HomeListContent = ({
               {isDeviceOffline ? t('offlineDesc') : t('loadRetryDesc')}
             </Typography>
             {/* חיווי "מנסה שוב" - שקוף ומשולב בכרטיס, לא צ'יפ נפרד זועק.
-                נקודות משני צדי הכיתוב. */}
+                נקודות מהבהבות רק אחרי הכיתוב. */}
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.9, mb: 1.5 }}>
-              <RetryDots reverse />
               <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
                 {t('retrying')}
               </Typography>

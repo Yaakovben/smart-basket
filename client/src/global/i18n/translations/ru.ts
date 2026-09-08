@@ -856,7 +856,7 @@ export const ru: Translations = {
   offlineDesc: 'Проверьте Wi-Fi или мобильные данные. Мы продолжим попытки автоматически.',
   loadRetryTitle: 'Переподключение',
   loadRetryDesc: 'Соединение на мгновение прервалось — мы повторяем попытку.',
-  retrying: 'Повтор…',
+  retrying: 'Повтор',
   reloadPageAction: 'Перезагрузить страницу',
   offlineShort: 'Не в сети',
   offlineWillSync: 'Изменения сохранены и синхронизируются, когда вы снова будете в сети',

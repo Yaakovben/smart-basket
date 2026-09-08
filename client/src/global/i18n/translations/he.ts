@@ -858,7 +858,7 @@ export const he: Translations = {
   offlineDesc: 'בדוק את ה-Wi-Fi או הנתונים הסלולריים. נמשיך לנסות אוטומטית.',
   loadRetryTitle: 'מתחברים מחדש',
   loadRetryDesc: 'החיבור נקטע לרגע — אנחנו מנסים שוב.',
-  retrying: 'מנסה שוב…',
+  retrying: 'מנסה שוב',
   reloadPageAction: 'טען מחדש את הדף',
   offlineShort: 'אין חיבור',
   offlineWillSync: 'הנתונים יישמרו וישלחו כשיחזור החיבור',
