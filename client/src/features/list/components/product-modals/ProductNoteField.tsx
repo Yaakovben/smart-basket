@@ -10,6 +10,13 @@ import { useSettings } from '../../../../global/context/SettingsContext';
 // עיצוב "פתק נייר" (paperNoteSx) - אותה שפה בדיוק כמו הפתק בשורת הרשימה
 // ובמסך פרטי המוצר: סרט washi למעלה, פינה מקופלת, הטיה כמעט-שטוחה,
 // קווי מחברת עדינים.
+
+// גובה קבוע לפתק במצב פתוח - זהה בערך לגובה הכולל של עמודת התמונה
+// ב-ProductImageField (תווית ~15px + gap 4.8px + תמונה 112px). לא מיובא
+// משם ישירות (קובץ אחר, בלי קבוע משותף כרגע) - אם גובה התמונה שם משתנה,
+// יש לעדכן גם כאן כדי ששתי העמודות בגריד יישארו מאוזנות.
+const NOTE_FIELD_HEIGHT = 132;
+
 interface Props {
   value: string;
   onChange: (v: string) => void;
@@ -99,10 +106,17 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
       ) : (
         // מצב פתוח - "פתק נייר" נקי (paperNoteSx 'field'): משטח תכלת, מסגרת
         // דקה, קווי מחברת חיוורים ברקע. בלי קיפול, בלי סרט washi.
+        // גובה קבוע (NOTE_FIELD_HEIGHT) - זהה בערך לגובה הכולל של עמודת
+        // התמונה (תווית + תמונה 112px ב-ProductImageField), כדי ששתי
+        // העמודות בגריד תמיד ייראו מאוזנות, גם כשההערה קצרה/ריקה. עמודה
+        // פנימית (flex) - שורת התווית קבועה, ה-textarea ממלא את השאר וגולל
+        // פנימית מעבר לזה.
         <Box sx={{
           ...paperNoteSx('field', isDark),
           mt: 2, mb: 0.5,
           px: 1.5, pt: 1.6, pb: 1.1,
+          height: NOTE_FIELD_HEIGHT,
+          display: 'flex', flexDirection: 'column',
         }}>
           {/* כפתור סגירה - עיגול בפינה העליונה-שמאלית (הפיזית) של הפתק,
               בולט קצת החוצה (ב-'field' אין overflow:hidden). */}
@@ -129,7 +143,7 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
             <CloseRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
 
-          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.6, lineHeight: 1.15 }}>
+          <Box sx={{ position: 'relative', zIndex: 2, mb: 0.6, lineHeight: 1.15, flexShrink: 0 }}>
             <Typography sx={{
               fontSize: 10, fontWeight: 800, color: ink,
               letterSpacing: 1, textTransform: 'uppercase',
@@ -137,45 +151,52 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
               {t('note')}:
             </Typography>
           </Box>
-          <TextField
-            fullWidth
-            multiline
-            // גובה קבוע (לא מתחיל קטן וגדל) - כדי שהפתק תמיד יהיה בערך
-            // באותו גובה כמו עמודת התמונה (112px+תווית), גם כשההערה קצרה,
-            // ולא "יקפוץ" בגובה כשמקלידים. גלישה מעבר לזה - גלילה פנימית
-            // עם סרגל החיווי שלנו (over/paintThumb למעלה).
-            minRows={5}
-            maxRows={5}
-            size="small"
-            autoFocus={expanded && value.length === 0}
-            value={value}
-            onChange={e => onChange(e.target.value.slice(0, 200))}
-            placeholder={t('productNotePlaceholder')}
-            inputRef={taRef}
-            inputProps={{ maxLength: 200, onScroll }}
-            sx={{
-              position: 'relative', zIndex: 2,
-              // מקום לסרגל החיווי בצד ה-inline-end (השמאלי ב-RTL).
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'transparent',
-                fontSize: 13.5,
-                fontWeight: 500,
-                color: noteText,
-                py: 0.1,
-                pl: '9px', // מרווח קבוע מצד סרגל החיווי (inline-end)
-                '& fieldset': { border: 'none' },
-                '&.Mui-focused fieldset': { border: 'none' },
-              },
-              '& textarea::placeholder': {
-                color: inkMuted,
-                opacity: 1,
-              },
-              // מסתירים את סרגל ה-textarea הנייטיב - מציירים סרגל משלנו (למטה)
-              // שגלוי מיד ולא רק בזמן גלילה.
-              '& textarea': { scrollbarWidth: 'none' },
-              '& textarea::-webkit-scrollbar': { width: 0, height: 0 },
-            }}
-          />
+          {/* עוטפת ה-textarea - ממלאת את מה שנשאר מהגובה הקבוע (flex:1),
+              אחרי שורת התווית שמעליה. */}
+          <Box sx={{ flex: '1 1 auto', minHeight: 0, position: 'relative', zIndex: 2 }}>
+            <TextField
+              fullWidth
+              multiline
+              size="small"
+              autoFocus={expanded && value.length === 0}
+              value={value}
+              onChange={e => onChange(e.target.value.slice(0, 200))}
+              placeholder={t('productNotePlaceholder')}
+              inputRef={taRef}
+              inputProps={{ maxLength: 200, onScroll }}
+              sx={{
+                height: '100%',
+                // מקום לסרגל החיווי בצד ה-inline-end (השמאלי ב-RTL).
+                '& .MuiInputBase-root': { height: '100%', alignItems: 'flex-start' },
+                '& .MuiOutlinedInput-root': {
+                  height: '100%',
+                  bgcolor: 'transparent',
+                  fontSize: 13.5,
+                  fontWeight: 500,
+                  color: noteText,
+                  py: 0.1,
+                  pl: '9px', // מרווח קבוע מצד סרגל החיווי (inline-end)
+                  '& fieldset': { border: 'none' },
+                  '&.Mui-focused fieldset': { border: 'none' },
+                },
+                // גובה קבוע (לא autosize) - ה-textarea תמיד ממלא את כל
+                // ה-flex:1 שמעליו, בלי קשר לכמות הטקסט. !important כי
+                // MUI (TextareaAutosize) קובע height inline דרך JS על כל
+                // שינוי תוכן - צריך לדרוס אותו. גלישה - גלילה פנימית עם
+                // סרגל החיווי שלנו (over/paintThumb למעלה), לא native.
+                '& textarea': {
+                  height: '100% !important',
+                  overflowY: 'auto !important',
+                  scrollbarWidth: 'none',
+                },
+                '& textarea::placeholder': {
+                  color: inkMuted,
+                  opacity: 1,
+                },
+                '& textarea::-webkit-scrollbar': { width: 0, height: 0 },
+              }}
+            />
+          </Box>
 
           {/* סרגל החיווי שלנו - צמוד לקצה השמאלי (inline-end) של הפתק,
               גלוי מיד כשההערה ארוכה מהשדה. ה-thumb מעודכן ישירות ב-DOM. */}

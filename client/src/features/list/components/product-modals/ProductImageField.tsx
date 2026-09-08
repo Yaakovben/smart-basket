@@ -163,10 +163,10 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
 
       {value ? (
         // יש תמונה - עמודה: תווית "תמונה:" *מעל* התמונה (שתיהן צמודות
-        // לקצה השמאלי של תא ה-grid, alignItems:flex-end ב-RTL). כך התמונה
+        // לקצה הימני של תא ה-grid, alignItems:flex-start ב-RTL). כך התמונה
         // מקבלת את כל רוחב התא ויכולה להיות גדולה יותר. מרובעת, פינות
         // מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה.
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.6 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.6 }}>
           <Typography sx={{
             fontSize: 10, fontWeight: 800, color: ink,
             letterSpacing: 1, textTransform: 'uppercase',
@@ -235,15 +235,15 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 }} />
               )}
             </Box>
-            {/* כפתור הסרה - עיגול אדום בפינה הימנית-עליונה (הפיזית), מבצבץ
-                החוצה מהתמונה. עבר מהפינה השמאלית כי שם עכשיו יושבת תווית
-                "תמונה:" (מעל התמונה, מיושרת שמאל). */}
+            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית), מבצבץ
+                החוצה מהתמונה. בפינה הנגדית לתווית "תמונה:" (מעל התמונה,
+                מיושרת ימין) כדי שלא יתנגשו. */}
             <Box
               role="button"
               aria-label={t('removePhoto')}
               onClick={remove}
               sx={{
-                position: 'absolute', top: -8, right: -8,
+                position: 'absolute', top: -8, left: -8,
                 width: 24, height: 24, borderRadius: '50%',
                 bgcolor: '#DC2626', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -257,9 +257,9 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
           </Box>
         </Box>
       ) : (
-        // אין תמונה - צ'יפ צמוד לאותו קצה (השמאלי ב-RTL) שהתמונה תתפוס
+        // אין תמונה - צ'יפ צמוד לאותו קצה (הימני ב-RTL) שהתמונה תתפוס
         // ברגע שתיבחר, כדי שלא "יקפוץ" הצידה כשמוסיפים תמונה בפועל.
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <Box
             role="button"
             tabIndex={0}
