@@ -361,8 +361,8 @@ export const HomeListContent = ({
                 t={t}
                 reorderMode={reorderMode}
                 isDragging={isDragging}
-                onDragHandleTouch={dragHandlers[idx]?.touch}
-                onDragHandleMouse={dragHandlers[idx]?.mouse}
+                onRowTouch={dragHandlers[idx]?.touch}
+                onRowMouse={dragHandlers[idx]?.mouse}
               />
             </Box>
           );

@@ -39,12 +39,10 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
 
   // getter לסדר הנוכחי - נקרא רק ברגע הכניסה למצב סידור (ראו useDragReorder.getIds).
   const getIds = useCallback(() => items.map((p) => p.id), [items]);
+  // "סיים" בכפתור = שמירה ידנית (manual=true).
+  const onCommit = useCallback((finalIds: string[]) => persist(finalIds, true), [persist]);
 
-  const engine = useDragReorder({
-    getIds,
-    contentRef,
-    onCommit: (finalIds) => persist(finalIds, true),
-  });
+  const engine = useDragReorder({ getIds, contentRef, onCommit });
   const { reorderMode, reorderedIds, exitReorder } = engine;
 
   // הסדר להצגה במצב סידור - lookup לפי id כדי לשרוד עדכוני מוצר תוך כדי.

@@ -21,11 +21,13 @@ interface ListCardProps {
   t: (key: TranslationKeys) => string;
   reorderMode?: boolean;
   isDragging?: boolean;
-  onDragHandleTouch?: (e: React.TouchEvent) => void;
-  onDragHandleMouse?: (e: React.MouseEvent) => void;
+  // גרירה מתחילה מ*כל* מקום בכרטיס (long-press), לא רק מהידית - זהה
+  // בדיוק לגרירת מוצרים (ProductReorderRow). הידית נשארת כרמז ויזואלי.
+  onRowTouch?: (e: React.TouchEvent) => void;
+  onRowMouse?: (e: React.MouseEvent) => void;
 }
 
-export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, onDragHandleTouch, onDragHandleMouse }: ListCardProps) => {
+export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList, onDeleteList, onLeaveList, onToggleMute, t, reorderMode, isDragging, onRowTouch, onRowMouse }: ListCardProps) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const mainNotificationsOff = !settings.notifications.enabled;
@@ -106,24 +108,23 @@ export const ListCard = memo(({ list: l, isMuted, isOwner, onSelect, onEditList,
       bgcolor: isDragging ? 'action.hover' : undefined,
       userSelect: reorderMode ? 'none' : 'auto',
       WebkitUserSelect: reorderMode ? 'none' : 'auto',
-      // touchAction נשאר 'auto' גם במצב סידור - הגלילה מופסקת רק אחרי שה-drag
-      // מופעל בפועל (ב-useListReorder, דרך preventDefault). ככה גלילה טבעית
-      // ממשיכה לעבוד כל עוד המשתמש לא החזיק לחוץ מספיק זמן.
+      // במצב סידור - pan-y: גלילה אנכית טבעית עובדת בשלב ה-pending (140ms),
+      // ורק אחרי שהגרירה מופעלת בפועל useDragReorder חוסם אותה ב-preventDefault.
+      // זהה בדיוק ל-ProductReorderRow.
+      ...(reorderMode && { touchAction: 'pan-y' }),
     }}
       onClick={handleClick}
+      onTouchStart={reorderMode ? onRowTouch : undefined}
+      onMouseDown={reorderMode ? onRowMouse : undefined}
     >
       {reorderMode && (
-        // ידית גרירה - מקבלת את אירועי המגע/עכבר כדי לא להפריע לגלילה
-        // בשאר הכרטיס. אנימציית "pulse" מסמנת למשתמש "לחץ ממושך לגרירה"
-        <Box
-          onTouchStart={onDragHandleTouch}
-          onMouseDown={onDragHandleMouse}
+        // ידית גרירה - רמז ויזואלי בלבד (הגרירה מתחילה מכל הכרטיס, כמו
+        // במוצרים). אנימציית "pulse" מרמזת "לחץ ממושך לגרירה".
+        <Box aria-hidden="true"
           sx={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, p: 0.75, mx: -0.5, borderRadius: '8px',
             cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
-            // אנימציית פעימה עדינה - מרמזת "לחץ ממושך"
             animation: isDragging ? 'none' : 'dragHandlePulse 2.2s ease-in-out infinite',
             '@keyframes dragHandlePulse': {
               '0%, 100%': { opacity: 0.45, transform: 'scale(1)' },
