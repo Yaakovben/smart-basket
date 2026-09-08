@@ -151,21 +151,27 @@ export const HomeListContent = ({
           </Box>
         </Box>
       ) : listsLoading && orderedDisplay.length === 0 ? (
-        // סקלטון בצורת כרטיסי רשימות - נותן ללקוח תחושה שמשהו טוען וכבר תופס
-        // את המקום שהרשימות יתפסו, במקום מסך ריק לבן.
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: { xs: 1.5, sm: 2.5 }, pt: 1 }}>
+        // סקלטון - חייב להיות זהה במידות ל-ListCard + לשורת הכותרת מעליו,
+        // אחרת יש "קפיצה" כשהרשימות נטענות (השורות היו גבוהות מהאמת). כל
+        // המידות כאן מכוילות ל-ListCard.tsx: p:2, gap:1.75, mb:1, radius 16,
+        // IconTile 48, ושתי שורות טקסט בגובה ~20/17 עם mb:0.5 ביניהן.
+        <Box>
+          {/* placeholder לשורת "N רשימות" */}
+          <Box sx={{ mb: 1, px: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <ShimmerBlock width={72} height={14} radius={7} />
+            <ShimmerBlock width={28} height={28} radius={8} />
+          </Box>
           {Array.from({ length: 4 }).map((_, i) => (
             <Box key={i} sx={{
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              p: 2, borderRadius: '16px',
+              display: 'flex', alignItems: 'center', gap: 1.75,
+              p: 2, mb: 1, borderRadius: '16px',
               bgcolor: 'background.paper',
               border: '1px solid', borderColor: 'divider',
-              minHeight: 80,
             }}>
-              <ShimmerBlock width={52} height={52} radius={14} />
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <ShimmerBlock width="65%" height={18} radius={8} />
-                <ShimmerBlock width="40%" height={14} radius={7} />
+              <ShimmerBlock width={48} height={48} radius={12} />
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <ShimmerBlock width="60%" height={20} radius={7} />
+                <ShimmerBlock width="38%" height={17} radius={7} />
               </Box>
               <ShimmerBlock width={28} height={28} radius={8} />
             </Box>
