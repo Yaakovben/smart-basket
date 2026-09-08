@@ -42,4 +42,14 @@ export const uploadsApi = {
     }
     return data.secure_url as string;
   },
+
+  // ביטול העלאה שלא נוצלה - נבחרה תמונה בטופס "הוסף מוצר" (עלתה מיד
+  // ל-Cloudinary), ואז בוטלה/הוחלפה/נסגר המודל בלי לשמור. השרת מוחק *רק*
+  // אם התמונה יתומה (שום מוצר לא מפנה אליה) - ראו POST /uploads/discard.
+  // best-effort: כשל כאן אף פעם לא מוצג למשתמש, סריקת האדמין תתפוס בסוף.
+  async discardImage(url: string): Promise<void> {
+    try {
+      await apiClient.post('/uploads/discard', { url });
+    } catch { /* best-effort ניקוי, לא קריטי */ }
+  },
 };

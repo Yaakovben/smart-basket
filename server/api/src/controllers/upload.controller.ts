@@ -9,3 +9,12 @@ export const getUploadSignature = asyncHandler(async (_req: AuthRequest, res: Re
   const data = imageUploadService.getUploadSignature();
   res.json({ success: true, data });
 });
+
+// POST /api/uploads/discard - ביטול העלאה שלא נוצלה (בחרו תמונה בטופס
+// "הוסף מוצר" ואז ביטלו/החליפו/סגרו). מוחק רק תמונה יתומה בתיקיית
+// המוצרים שלנו (ראו discardUnusedUpload) - לא יכול לפגוע בתמונה של מוצר אמיתי.
+export const discardUpload = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const url = typeof req.body?.url === 'string' ? req.body.url : undefined;
+  const { discarded } = await imageUploadService.discardUnusedUpload(url);
+  res.json({ success: true, data: { discarded } });
+});

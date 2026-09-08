@@ -120,6 +120,8 @@ export interface UseListReturn {
   incrementQuantity: (type: 'new' | 'edit') => void;
   decrementQuantity: (type: 'new' | 'edit') => void;
   closeAddModal: () => void;
+  // ביטול העלאת תמונה שלא נוצלה כשסוגרים את "הוסף מוצר" בלי לשמור
+  discardPendingImageUpload: () => void;
   duplicateProduct: { existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null;
   handleDuplicateIncreaseQuantity: () => void;
   handleDuplicateAddNew: () => void;

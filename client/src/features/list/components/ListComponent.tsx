@@ -100,7 +100,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
-    decrementQuantity, closeAddModal,
+    decrementQuantity, closeAddModal, discardPendingImageUpload,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
     refreshList, showClearList, setShowClearList, handleClearList, handleResetList, showCelebration
   } = useList({
@@ -697,7 +697,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         newProduct={newProduct}
         error={addError}
         suggestions={productSuggestions}
-        onClose={closeAddModal}
+        onClose={() => { discardPendingImageUpload(); closeAddModal(); }}
         onAdd={handleAdd}
         onUpdateField={updateNewProductField}
         onIncrement={() => incrementQuantity('new')}

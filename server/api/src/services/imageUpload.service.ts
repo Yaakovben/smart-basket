@@ -189,6 +189,22 @@ export async function deleteCloudinaryImage(url: string | undefined | null): Pro
   }
 }
 
+// ביטול העלאה שלא נוצלה - הלקוח בחר תמונה בטופס "הוסף מוצר" (עלתה מיד
+// ברקע ל-Cloudinary), ואז ביטל / החליף / סגר בלי לשמור. אין מוצר שמפנה
+// אליה - היא יתומה. הלקוח שולח לכאן את ה-URL כשזה קורה (ראו uploads.api /
+// useAddProduct). מוגן: מוחקים *רק* אם (א) זו כתובת Cloudinary בתיקיית
+// המוצרים שלנו, ו-(ב) שום מוצר לא מפנה אליה - כך משתמש לא יכול למחוק
+// תמונה של מוצר אמיתי (שלו או של אחר), רק יתומה שכבר לא בשימוש.
+export async function discardUnusedUpload(url: string | undefined | null): Promise<{ discarded: boolean }> {
+  if (!url || !isImageUploadConfigured()) return { discarded: false };
+  const publicId = extractCloudinaryPublicId(url);
+  if (!publicId || !publicId.startsWith(`${UPLOAD_FOLDER}/`)) return { discarded: false };
+  const referencedBy = await Product.countDocuments({ image: url }, { limit: 1 });
+  if (referencedBy > 0) return { discarded: false }; // בשימוש - לא נוגעים
+  await deleteCloudinaryImage(url);
+  return { discarded: true };
+}
+
 // מחיקה מרוכזת (ניקוי רשימה - "מחק הכל"/"מחק שנקנו"/"מחק שלא נקנו").
 // batch יחיד במקום לולאת destroy() בודדים - הרבה פחות בקשות ל-Cloudinary.
 // api.delete_resources מוגבל ל-100 public_id-ים לקריאה - מחלקים לנתחים.

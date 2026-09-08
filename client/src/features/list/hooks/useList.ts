@@ -151,6 +151,7 @@ export const useList = ({
     handleDuplicateIncreaseQuantity,
     handleDuplicateAddNew,
     handleDuplicateCancel,
+    discardPendingImageUpload,
   } = useAddProduct({
     list,
     user,
@@ -288,6 +289,7 @@ export const useList = ({
     incrementQuantity: productForm.incrementQuantity,
     decrementQuantity: productForm.decrementQuantity,
     closeAddModal: productForm.closeAddModal,
+    discardPendingImageUpload,
     duplicateProduct,
     handleDuplicateIncreaseQuantity,
     handleDuplicateAddNew,

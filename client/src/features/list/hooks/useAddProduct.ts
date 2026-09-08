@@ -3,7 +3,7 @@ import type { Product, List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { detectCategory } from '../../../global/helpers/categoryDetector';
 import { convertApiProduct } from '../../../global/hooks';
-import { productsApi } from '../../../services/api';
+import { productsApi, uploadsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { getDefaultNewProduct } from '../helpers/list-helpers';
 import type { NewProductForm } from '../types/list-types';
@@ -197,6 +197,13 @@ export const useAddProduct = ({
     const pending = pendingImageUploadRef.current;
     pendingImageUploadRef.current = null;
     const pendingUpload = pending && pending.localValue === productData.image ? pending.promise : null;
+    // pending היה קיים אבל התמונה שלו כבר לא נשמרת במוצר (הוסרה/הוחלפה
+    // לפני "הוסף") - כשההעלאה תסתיים היא תהיה יתומה. מבטלים אותה.
+    if (pending && !pendingUpload) {
+      pending.promise.then((url) => {
+        if (url && url !== productData.image) void uploadsApi.discardImage(url);
+      }).catch(() => { /* best-effort */ });
+    }
 
     // סגירת מודאל מיידית ואיפוס הטופס
     setNewProduct(getDefaultNewProduct());
@@ -279,6 +286,19 @@ export const useAddProduct = ({
     setDuplicateProduct(null);
   }, []);
 
+  // נקרא כשסוגרים את "הוסף מוצר" *בלי* לשמור (X / ביטול / רקע). אם נבחרה
+  // תמונה שכבר עלתה ל-Cloudinary - היא תהיה יתומה (אין מוצר), אז מבטלים
+  // אותה. handleAdd מאפס את ה-ref לפני שהוא רץ, אז אם הגענו לכאן וה-ref
+  // עדיין מלא - באמת לא נשמר מוצר.
+  const discardPendingImageUpload = useCallback(() => {
+    const pending = pendingImageUploadRef.current;
+    pendingImageUploadRef.current = null;
+    if (!pending) return;
+    pending.promise.then((url) => {
+      if (url) void uploadsApi.discardImage(url);
+    }).catch(() => { /* best-effort */ });
+  }, [pendingImageUploadRef]);
+
   return {
     duplicateProduct,
     addProductToServer,
@@ -288,5 +308,6 @@ export const useAddProduct = ({
     handleDuplicateIncreaseQuantity,
     handleDuplicateAddNew,
     handleDuplicateCancel,
+    discardPendingImageUpload,
   };
 };
