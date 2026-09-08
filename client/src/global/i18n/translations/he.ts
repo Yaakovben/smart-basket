@@ -438,12 +438,16 @@ export const he: Translations = {
   loginsThisMonth: 'כניסות החודש',
   uniqueUsersThisMonth: 'פעילים החודש',
   // List reorder
-  reorderLists: 'סדר רשימות',
+  // שם התכונה עצמה תמיד "סידור" (גם בכפתור, גם בכותרת במצב פעיל - ראו
+  // HomeListContent.tsx, שמשתמש באותו מפתח לשניהם) - "סדר" בשאר המפתחות
+  // למטה (reorderHint/reorderDone/orderSaved) הוא שימוש שונה ("הסדר"
+  // כעצם-מושא שנשמר/משתנה, לא שם התכונה) ונשאר כמו שהוא בכוונה.
+  reorderLists: 'סידור רשימות',
   reorderDone: 'שמור סדר',
   reorderHint: 'גרור כדי לשנות סדר',
   orderSaved: 'הסדר נשמר',
   // Product reorder (בתוך רשימה)
-  reorderProducts: 'סדר מוצרים',
+  reorderProducts: 'סידור מוצרים',
   reorderProductsActive: 'סידור מוצרים',
   reorderProductsHint: 'גרור כדי לשנות סדר',
   productsWord: 'מוצרים',
@@ -881,9 +885,9 @@ export const he: Translations = {
   tipProductNoteTitle: 'הערה למוצר',
   tipProductNoteBody: 'בהוספה או עריכה של מוצר אפשר לכתוב הערה קצרה — מותג מועדף, גודל, או כל פרט שחשוב שמי שקונה יידע.',
   tipProductReorderTitle: 'סדר את המוצרים ברשימה',
-  tipProductReorderBody: 'בכפתור "סדר מוצרים" אפשר לגרור כל מוצר למקום שנוח לך — למשל בדיוק לפי סדר המעברים בסופר שלך.',
+  tipProductReorderBody: 'בכפתור "סידור מוצרים" אפשר לגרור כל מוצר למקום שנוח לך — למשל בדיוק לפי סדר המעברים בסופר שלך.',
   tipListReorderTitle: 'סדר את הרשימות שלך',
-  tipListReorderBody: 'במסך הבית, בכפתור "סדר רשימות" אפשר לגרור כרטיס רשימה למיקום אחר ולסדר הכל בדיוק כמו שנוח לך.',
+  tipListReorderBody: 'במסך הבית, בכפתור "סידור רשימות" אפשר לגרור כרטיס רשימה למיקום אחר ולסדר הכל בדיוק כמו שנוח לך.',
   tipAiAssistantTitle: 'עוזר קניות חכם',
   tipAiAssistantBody: 'בכפתור ה-AI ✨ אפשר לשאול על סופרים ומחירים, ולקבל המלצות מבוססות על ההוצאות וההרגלים האמיתיים שלך.',
   tipPriceComparisonTitle: 'השוואת מחירים בין רשתות',
