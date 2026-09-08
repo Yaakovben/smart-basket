@@ -60,6 +60,10 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   const lastPointerYRef = useRef(0);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const autoScrollRef = useRef<number | null>(null);
+  // כיוון הגלילה האוטומטית הפעילה כרגע (null = לא גוללים). קיים כדי
+  // שה-rAF loop יתחיל/ייעצר *רק* כשהכיוון עצמו משתנה - ראו ההערה בתוך
+  // handleDragMove למה זה קריטי (לא רק אופטימיזציה).
+  const autoScrollDirRef = useRef<-1 | 0 | 1>(0);
   const lastMoveTimeRef = useRef(0);
   // מיקומי ה-top של כל השורות (viewport coords) + gap בין שורות, נמדדים
   // *פעם אחת* בתחילת הגרירה. חישוב targetIndex מהם (ולא מ-
@@ -168,17 +172,28 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     // חלקה. שורות שכנות מגיבות לפי targetIndex, שמתעדכן בנפרד למטה.
     setDragOffsetY(clientY - dragStartYRef.current);
 
+    // גלילה אוטומטית - הכיוון (לא ה-loop עצמו) מחושב מחדש בכל תזוזה, אבל
+    // ה-rAF loop עצמו מופעל/מבוטל *רק* כשהכיוון באמת משתנה. touchmove
+    // יכול לירות כמה פעמים באותו frame - אם היינו מבטלים+מתחילים מחדש
+    // rAF בכל קריאה (כפי שהיה כאן קודם), ה-tick המתוזמן אף פעם לא מקבל
+    // סיכוי לרוץ בפועל לפני שהוא מבוטל שוב, והגלילה יוצאת stutter-y
+    // ("קופצת" בבת אחת כשסוף-סוף מצליחה לרוץ) - זה בדיוק מה שגרם לשורה
+    // הנגררת "להתרחק מהאצבע" ולתחושה שהתצוגה לא מגיבה מיד.
     const SCROLL_ZONE = 100;
     const SCROLL_SPEED = 6;
     const container = contentRef.current;
-    if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
+    let dir: -1 | 0 | 1 = 0;
     if (container) {
       const rect = container.getBoundingClientRect();
-      if (clientY < rect.top + SCROLL_ZONE) {
-        const tick = () => { container.scrollBy(0, -SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
-        autoScrollRef.current = requestAnimationFrame(tick);
-      } else if (clientY > rect.bottom - SCROLL_ZONE) {
-        const tick = () => { container.scrollBy(0, SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
+      if (clientY < rect.top + SCROLL_ZONE) dir = -1;
+      else if (clientY > rect.bottom - SCROLL_ZONE) dir = 1;
+    }
+    if (dir !== autoScrollDirRef.current) {
+      autoScrollDirRef.current = dir;
+      if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+      if (dir !== 0 && container) {
+        const speed = dir * SCROLL_SPEED;
+        const tick = () => { container.scrollBy(0, speed); autoScrollRef.current = requestAnimationFrame(tick); };
         autoScrollRef.current = requestAnimationFrame(tick);
       }
     }
@@ -199,6 +214,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     cancelPending();
     setPending(false);
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+    autoScrollDirRef.current = 0;
     const from = dragIndexRef.current;
     const to = targetIndexRef.current;
     if (from >= 0 && to >= 0 && from !== to) {
@@ -267,6 +283,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     // לא שווה לסמוך עליו. ביטול אמיתי חייב להישאר בלי שום commit.
     cancelPending();
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+    autoScrollDirRef.current = 0;
     dragIndexRef.current = -1;
     targetIndexRef.current = -1;
     setReorderMode(false);
