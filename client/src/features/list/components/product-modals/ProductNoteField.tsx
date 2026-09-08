@@ -140,8 +140,12 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
           <TextField
             fullWidth
             multiline
-            minRows={1}
-            maxRows={3}
+            // גובה קבוע (לא מתחיל קטן וגדל) - כדי שהפתק תמיד יהיה בערך
+            // באותו גובה כמו עמודת התמונה (112px+תווית), גם כשההערה קצרה,
+            // ולא "יקפוץ" בגובה כשמקלידים. גלישה מעבר לזה - גלילה פנימית
+            // עם סרגל החיווי שלנו (over/paintThumb למעלה).
+            minRows={5}
+            maxRows={5}
             size="small"
             autoFocus={expanded && value.length === 0}
             value={value}
