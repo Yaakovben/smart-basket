@@ -523,31 +523,43 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
               • {relevantName}
             </Box>
             {product.note && (
+              // עטיפה בשתי שכבות: החיצונית (paperNoteSx: רקע+מסגרת+radius+
+              // overflow:hidden) *לא* display:flex בעצמה - רק inline-block.
+              // ה-flex (ליישור אייקון+טקסט) עבר לשכבה הפנימית. ב-Safari/iOS
+              // יש באג ידוע: overflow:hidden+border-radius לא תמיד נחתך
+              // כשהאלמנט עצמו הוא flex container - הצבע התכלת "בצבץ" מעבר
+              // לפינות המעוגלות בקצוות הצ'יפ. אלמנט חיצוני לא-flex פותר את זה.
               <Box component="span" sx={{
                 ...paperNoteSx('chip', isDark),
                 flexShrink: 0,
                 maxWidth: '48%',
                 minWidth: 0,
-                display: 'inline-flex', alignItems: 'center', gap: 0.3,
-                // ריפוד סימטרי - אין יותר פינה מקופלת לפנות לה מקום.
-                px: '6px', py: '1px',
+                display: 'inline-block',
+                verticalAlign: 'middle',
                 color: isDark ? PAPER_NOTE.textDark : PAPER_NOTE.textLight,
                 opacity: isPurchased ? 0.55 : 1,
                 filter: isPurchased ? 'grayscale(0.6)' : 'none',
               }}>
-                {/* בלי אייקון - תווית "הערה:" קטנה במקומו, אותו גוון "ink"
-                    כמו האייקון הישן. */}
                 <Box component="span" sx={{
-                  flexShrink: 0, fontSize: 10.5, fontWeight: 700,
-                  color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                  display: 'inline-flex', alignItems: 'center', gap: 0.3,
+                  minWidth: 0, maxWidth: '100%',
+                  // ריפוד סימטרי - אין יותר פינה מקופלת לפנות לה מקום.
+                  px: '6px', py: '1px',
                 }}>
-                  {t('note')}:
-                </Box>
-                <Box component="span" sx={{
-                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  fontWeight: 500,
-                }}>
-                  {product.note}
+                  {/* בלי אייקון - תווית "הערה:" קטנה במקומו, אותו גוון "ink"
+                      כמו האייקון הישן. */}
+                  <Box component="span" sx={{
+                    flexShrink: 0, fontSize: 10.5, fontWeight: 700,
+                    color: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                  }}>
+                    {t('note')}:
+                  </Box>
+                  <Box component="span" sx={{
+                    minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    fontWeight: 500,
+                  }}>
+                    {product.note}
+                  </Box>
                 </Box>
               </Box>
             )}
