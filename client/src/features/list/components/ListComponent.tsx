@@ -3,7 +3,7 @@ import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import SortRoundedIcon from '@mui/icons-material/SortRounded';
 import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
 import { ConfirmModal, SlowLoadIndicator } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -536,29 +536,6 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
               </Typography>
               {reorderMode ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  {/* "מיין לפי קטגוריה" - רק כשהרשימה מסודרת ידנית (יש מה
-                      להחזיר לאוטומט). קישור-רפאים קליל ליד "ביטול". */}
-                  {list.productsManuallyOrdered && (
-                    <Box
-                      component="button"
-                      onClick={reorderSortByCategory}
-                     
-                      sx={{
-                        flexShrink: 0, border: 'none', bgcolor: 'transparent',
-                        display: 'inline-flex', alignItems: 'center', gap: 0.35, p: 0.25, mr: 0.25,
-                        fontFamily: 'inherit', fontSize: 11, fontWeight: 600,
-                        color: 'text.secondary', cursor: 'pointer',
-                        WebkitTapHighlightColor: 'transparent',
-                        transition: 'color 0.15s',
-                        '&:hover': { color: 'primary.main' },
-                        '&:active': { opacity: 0.6 },
-                        '&:disabled': { opacity: 0.4, cursor: 'default' },
-                      }}
-                    >
-                      <AutoAwesomeRoundedIcon sx={{ fontSize: 13, color: 'primary.main', opacity: 0.8 }} />
-                      {t('sortByCategory')}
-                    </Box>
-                  )}
                   <Button
                     size="small" variant="outlined" onClick={reorderHandleCancel}
                     sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', color: 'error.main', borderColor: 'error.main', '&:hover': { borderColor: 'error.dark', bgcolor: 'rgba(239,68,68,0.04)' } }}
@@ -588,9 +565,41 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
               )}
             </Box>
             {reorderMode && (
-              <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.75 }}>
-                {t('reorderProductsHint')}
-              </Typography>
+              // רמז + "מיין לפי קטגוריה" (רק כשהרשימה מסודרת ידנית - יש מה
+              // להחזיר לאוטומט) על אותה שורה, לא ליד "ביטול"/"סיים" למעלה -
+              // אלה שתי פעולות סיום, זו פעולת עזר נפרדת ולא רוצים לצופף
+              // שלושה כפתורים יחד. דועך בזמן גרירה פעילה כדי לא להסיח את
+              // הדעת בדיוק כשהאצבע על מוצר - "מגיב" לגרירה בפועל, לא רק שם.
+              <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.75,
+                opacity: reorderDragIndex >= 0 ? 0.3 : 1,
+                pointerEvents: reorderDragIndex >= 0 ? 'none' : 'auto',
+                transition: 'opacity 0.15s ease',
+              }}>
+                <Typography sx={{ fontSize: 11.5, color: 'text.disabled' }}>
+                  {t('reorderProductsHint')}
+                </Typography>
+                {list.productsManuallyOrdered && (
+                  <Box
+                    component="button"
+                    onClick={reorderSortByCategory}
+                    sx={{
+                      flexShrink: 0, border: '1.5px solid', borderColor: 'divider',
+                      bgcolor: 'action.hover', borderRadius: '999px',
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.1, py: 0.5,
+                      fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
+                      color: 'primary.main', cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'transform 0.12s, background-color 0.15s',
+                      '&:active': { transform: 'scale(0.95)' },
+                      '&:hover': { bgcolor: 'action.selected' },
+                    }}
+                  >
+                    <SortRoundedIcon sx={{ fontSize: 14 }} />
+                    {t('sortByCategory')}
+                  </Box>
+                )}
+              </Box>
             )}
           </Box>
         )}
