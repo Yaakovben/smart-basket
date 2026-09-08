@@ -127,20 +127,29 @@ export const ProductDAL = {
     return Product.findOneAndDelete({ _id: productId, listId });
   },
 
-  async deleteByListId(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId });
-    return result.deletedCount;
+  // מחזיר גם את כתובות התמונות של המוצרים שנמחקו (לפני המחיקה בפועל) -
+  // כדי שהקורא יוכל לנקות אותן ב-Cloudinary אחרי (ראה list.service.ts:
+  // deleteList + deleteCloudinaryImages), אחרת הן נשארות שם יתומות לנצח.
+  async deleteByListId(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  // מחיקת מוצרים של מספר רשימות (עם תמיכה בטרנזקציה)
-  async deleteByListIds(listIds: string[], session?: mongoose.ClientSession): Promise<number> {
-    if (listIds.length === 0) return 0;
+  // מחיקת מוצרים של מספר רשימות (עם תמיכה בטרנזקציה) - גם מחזיר images[]
+  // לאותה סיבה כמו deleteByListId למעלה (ראה user.service.ts:deleteAccount).
+  async deleteByListIds(listIds: string[], session?: mongoose.ClientSession): Promise<{ deletedCount: number; images: string[] }> {
+    if (listIds.length === 0) return { deletedCount: 0, images: [] };
     const objectIds = listIds.map(id => new mongoose.Types.ObjectId(id));
-    const result = await Product.deleteMany(
-      { listId: { $in: objectIds } },
-      session ? { session } : undefined,
-    );
-    return result.deletedCount;
+    const filter = { listId: { $in: objectIds } };
+    const query = Product.find(filter).select('image');
+    if (session) query.session(session);
+    const images = (await query.lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter, session ? { session } : undefined);
+    return { deletedCount: result.deletedCount, images };
   },
 
   // סידור מחדש. manual=true: position רץ 0,1,2... לפי הסדר שנשלח (הלקוח

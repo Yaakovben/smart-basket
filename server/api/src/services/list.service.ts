@@ -25,6 +25,7 @@ import {
 } from './list-membership.service';
 import { transformList, transformListsWithProducts } from './list-transform.helper';
 import { checkListAccess, checkListOwner } from './list-access.helper';
+import { deleteCloudinaryImages } from './imageUpload.service';
 import type { CreateListInput, UpdateListInput, JoinGroupInput } from '../validators';
 import type { IListResponse } from '../types';
 import type { IList } from '../models';
@@ -138,7 +139,10 @@ export async function deleteList(listId: string, userId: string): Promise<{ memb
   const listName = list.name;
 
   // מחיקת מוצרים והתראות ישנות לפני מחיקת הרשימה עצמה
-  await ProductDAL.deleteByListId(listId);
+  const { images } = await ProductDAL.deleteByListId(listId);
+  // ניקוי תמונות המוצרים ב-Cloudinary - best-effort, לא חוסם את מחיקת
+  // הרשימה. בלי זה כל תמונה של מוצר ברשימה שנמחקת נשארת יתומה לנצח.
+  void deleteCloudinaryImages(images);
   await deleteNotificationsForList(listId);
 
   // התראות list_deleted לחברים - אחרי הניקוי כדי שלא יימחקו.
