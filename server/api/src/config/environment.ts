@@ -87,10 +87,11 @@ const envSchema = Joi.object({
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
 
-  // Cloudinary - אחסון תמונות מוצר. ההעלאה עוברת דרך השרת הזה (POST
-  // /api/uploads/product-image): הלקוח שולח תמונה דחוסה, השרת מעלה
-  // ל-Cloudinary עם ה-API secret ומחזיר רק את כתובת ה-https. שלושתם
-  // סודות אמיתיים - רק במשתני סביבה, אף פעם לא בקליינט. אם אחד מהם חסר,
+  // Cloudinary - אחסון תמונות מוצר. ההעלאה עצמה *ישירה* מהדפדפן ל-Cloudinary
+  // (בייטי התמונה אף פעם לא עוברים דרך השרת הזה) - הלקוח מבקש חתימה
+  // חד-פעמית מ-GET /api/uploads/signature (עם ה-API secret, כאן בלבד),
+  // ומשתמש בה כדי להעלות ישירות ל-Cloudinary מהדפדפן. שלושתם סודות
+  // אמיתיים - רק במשתני סביבה, אף פעם לא בקליינט. אם אחד מהם חסר,
   // ה-endpoint מחזיר 503 והלקוח נופל לאחסון data-URL במסמך המוצר.
   CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
   CLOUDINARY_API_KEY: Joi.string().optional(),
