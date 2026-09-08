@@ -534,7 +534,7 @@ export const SwipeItem = memo(({ product, onToggle, onEdit, onDelete, onClick, o
                   {t('note')}:
                 </Box>
                 <Box component="span" sx={{
-                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
+                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   fontWeight: 500,
                 }}>
                   {product.note}

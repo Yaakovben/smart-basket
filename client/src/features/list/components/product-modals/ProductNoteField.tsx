@@ -82,9 +82,14 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             <CloseRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
 
-          {/* מונה תווים - בפינה הימנית העליונה (מול ה-X שבשמאל). */}
+          {/* מונה תווים - בפינה הימנית העליונה (מול ה-X שבשמאל). top/right
+              חייבים לפצות על ה-border-radius של הפתק (RADIUS.field=12 ב-
+              paperNote.ts) - 'field' בכוונה בלי overflow:hidden (כדי שכפתור
+              הסגירה יבצבץ מהפינה השנייה), אז כל תיבה שמתחילה קרוב מדי לפינה
+              המעוגלת "בורחת" חזותית מחוץ לקו העקומה במקום להיחתך אליו. 14px
+              משני הצדדים משאיר מרווח ביטחון מעל ה-12px רדיוס. */}
           <Typography sx={{
-            position: 'absolute', top: 6, right: 8, zIndex: 2,
+            position: 'absolute', top: 14, right: 14, zIndex: 2,
             fontSize: 10, fontWeight: 700,
             color: value.length >= 180 ? '#DC2626' : ink,
             opacity: value.length >= 180 ? 1 : 0.7,

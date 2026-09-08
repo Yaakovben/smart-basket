@@ -15,33 +15,65 @@
 const SOURCE_SELECTOR = '.print-list-view';
 const CAPTURE_WIDTH = 480; // רוחב קבוע לצילום - יחס דומה לעמוד צר, קריא במובייל
 const OVERLAY_ID = 'pdf-generating-overlay';
+const SPIN_KEYFRAMES_ID = 'pdf-generating-overlay-spin-keyframes';
+// אותו font stack בדיוק כמו ה-theme של האפליקציה (client/src/global/theme/theme.ts) -
+// כדי שה-overlay לא יראה כמו מסך זר/דיבאג שהודבק על האפליקציה.
+const APP_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+// תכלת המותג - זהה ל-PAPER_NOTE.inkLight/inkDark (paperNote.ts). קובץ זה
+// מכוון להיות עצמאי (בלי תלות בקומפוננטות React) אז מוגדר כאן ישירות.
+const BRAND_INK_LIGHT = '#0F766E';
+const BRAND_INK_DARK = '#5EEAD4';
 
-export async function generateListPdf(fileNameBase: string, preparingText: string = 'מכין PDF...'): Promise<File | null> {
-  const sourceEl = document.querySelector<HTMLElement>(SOURCE_SELECTOR);
-  if (!sourceEl) return null;
+// חושפים overlay מלא-מסך עם ספינר וטקסט - נבנה ב-DOM גולמי (לא React) כי
+// הוא חייב להישאר קיים ומצויר בזמן שה-DOM האמיתי של PrintListView נחשף
+// ומצולם ע"י html2canvas. מוצג *לפני* טעינת html2canvas/jsPDF (לא אחרי) -
+// בפעם הראשונה בסשן, הורדה+פענוח של שתי הספריות האלה יכולה לקחת כמה
+// שניות ברשת סלולרית, ובלי זה המשתמש רואה מסך ריק לגמרי באותו זמן.
+function showOverlay(preparingText: string, isDark: boolean): HTMLElement {
+  if (!document.getElementById(SPIN_KEYFRAMES_ID)) {
+    const style = document.createElement('style');
+    style.id = SPIN_KEYFRAMES_ID;
+    style.textContent = '@keyframes pdf-generating-spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
 
-  const [html2canvasModule, jsPdfModule] = await Promise.all([
-    import('html2canvas'),
-    import('jspdf'),
-  ]);
-  const html2canvas = html2canvasModule.default;
-  const { jsPDF } = jsPdfModule;
-
-  // חושפים על-המסך (לא מחוץ למסך ב-left:-9999px!) - ב-Safari/iOS html2canvas
-  // לא מצלם נכון אלמנטים שממוקמים הרחק מחוץ ל-viewport (הצילום יוצא ריק/
-  // חתוך בחלק גדול מהתוכן - זו הייתה הסיבה האמיתית לשמות חסרים ב-PDF,
-  // לא באג flexbox). כדי שהמשתמש לא יראה את תוכן ה-print הגולמי לרגע,
-  // מכסים אותו ב-overlay אטום עם הודעת טעינה, ומסירים הכל בסוף.
+  const ink = isDark ? BRAND_INK_DARK : BRAND_INK_LIGHT;
   const overlay = document.createElement('div');
   overlay.id = OVERLAY_ID;
   overlay.style.cssText = `
     position: fixed; inset: 0; z-index: 999999;
-    background: rgba(255,255,255,0.97);
-    display: flex; align-items: center; justify-content: center;
-    font-family: Arial, sans-serif; font-size: 15px; color: #0F766E;
+    background: ${isDark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    font-family: ${APP_FONT_STACK}; font-size: 15px; font-weight: 600; color: ${ink};
   `;
-  overlay.textContent = preparingText;
+
+  const spinner = document.createElement('div');
+  spinner.style.cssText = `
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid ${isDark ? 'rgba(94,234,212,0.25)' : 'rgba(15,118,110,0.18)'};
+    border-top-color: ${ink};
+    animation: pdf-generating-spin 0.8s linear infinite;
+  `;
+
+  const label = document.createElement('div');
+  label.textContent = preparingText;
+
+  overlay.appendChild(spinner);
+  overlay.appendChild(label);
   document.body.appendChild(overlay);
+  return overlay;
+}
+
+export async function generateListPdf(
+  fileNameBase: string,
+  preparingText: string = 'מכין PDF...',
+  isDark: boolean = false,
+): Promise<File | null> {
+  const sourceEl = document.querySelector<HTMLElement>(SOURCE_SELECTOR);
+  if (!sourceEl) return null;
+
+  // ה-overlay מוצג *לפני* ה-import הדינמי (לא אחריו) - ראה הערה ב-showOverlay.
+  const overlay = showOverlay(preparingText, isDark);
 
   const prevStyle = {
     display: sourceEl.style.display,
@@ -51,14 +83,27 @@ export async function generateListPdf(fileNameBase: string, preparingText: strin
     width: sourceEl.style.width,
     zIndex: sourceEl.style.zIndex,
   };
-  sourceEl.style.display = 'block';
-  sourceEl.style.position = 'fixed';
-  sourceEl.style.top = '0';
-  sourceEl.style.left = '0';
-  sourceEl.style.width = `${CAPTURE_WIDTH}px`;
-  sourceEl.style.zIndex = '999998'; // מתחת ל-overlay, אבל עדיין ממוקם ומצויר כרגיל על המסך
 
   try {
+    const [html2canvasModule, jsPdfModule] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ]);
+    const html2canvas = html2canvasModule.default;
+    const { jsPDF } = jsPdfModule;
+
+    // חושפים על-המסך (לא מחוץ למסך ב-left:-9999px!) - ב-Safari/iOS html2canvas
+    // לא מצלם נכון אלמנטים שממוקמים הרחק מחוץ ל-viewport (הצילום יוצא ריק/
+    // חתוך בחלק גדול מהתוכן - זו הייתה הסיבה האמיתית לשמות חסרים ב-PDF,
+    // לא באג flexbox). כדי שהמשתמש לא יראה את תוכן ה-print הגולמי לרגע,
+    // מכסים אותו ב-overlay אטום עם הודעת טעינה (שכבר על המסך משלב קודם).
+    sourceEl.style.display = 'block';
+    sourceEl.style.position = 'fixed';
+    sourceEl.style.top = '0';
+    sourceEl.style.left = '0';
+    sourceEl.style.width = `${CAPTURE_WIDTH}px`;
+    sourceEl.style.zIndex = '999998'; // מתחת ל-overlay, אבל עדיין ממוקם ומצויר כרגיל על המסך
+
     const canvas = await html2canvas(sourceEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
     // JPEG ולא PNG - הרקע לבן אחיד והתוכן הוא בעיקר טקסט/אייקונים, כך שאיכות
     // JPEG גבוהה (0.85) נראית זהה כמעט לעין אבל במשקל קטן משמעותית (חשוב
