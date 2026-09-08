@@ -15,13 +15,15 @@ interface Props {
   // useProductReorder.getRowShift).
   translateY: number;
   rowRef: (el: HTMLDivElement | null) => void;
-  onHandleTouch: (e: React.TouchEvent) => void;
-  onHandleMouse: (e: React.MouseEvent) => void;
+  // גרירה מתחילה מ*כל* מקום בשורה (long-press), לא רק מהידית - יותר סלחני
+  // ומרגיש מיידי. הידית נשארת כרמז ויזואלי.
+  onRowTouch: (e: React.TouchEvent) => void;
+  onRowMouse: (e: React.MouseEvent) => void;
 }
 
 // שורת מוצר במצב "סידור מחדש" - פשוטה ונקייה, בלי מחוות ההחלקה של
-// SwipeItem. גרירה מתחילה מהידית (long-press), כמו סידור רשימות בבית.
-export const ProductReorderRow = memo(({ product, index, isDragging, translateY, rowRef, onHandleTouch, onHandleMouse }: Props) => {
+// SwipeItem. long-press על השורה מתחיל גרירה.
+export const ProductReorderRow = memo(({ product, index, isDragging, translateY, rowRef, onRowTouch, onRowMouse }: Props) => {
   const { settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const icon = CATEGORY_ICONS[product.category as ProductCategory] || '📦';
@@ -31,15 +33,17 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
     <Box
       ref={rowRef}
       data-reorder-index={index}
+      onTouchStart={onRowTouch}
+      onMouseDown={onRowMouse}
       sx={{
         display: 'flex', alignItems: 'center', gap: 1.25,
         mb: '6px', px: '12px', height: 64,
         borderRadius: '14px',
         bgcolor: 'background.paper',
         border: '1px solid',
-        borderColor: 'transparent',
+        borderColor: isDragging ? 'primary.main' : 'transparent',
         boxShadow: isDragging
-          ? (isDark ? '0 10px 28px rgba(0,0,0,0.5)' : '0 10px 28px rgba(20,184,166,0.28)')
+          ? (isDark ? '0 12px 30px rgba(0,0,0,0.55)' : '0 12px 30px rgba(20,184,166,0.3)')
           : (isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'),
         transform: `translateY(${translateY}px)${isDragging ? ' scale(1.03)' : ''}`,
         opacity: isDragging ? 0.97 : 1,
@@ -47,11 +51,16 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         // האצבע מיידית, בלי עיכוב. שורות שכנות כן מקבלות transition, כדי
         // שההזזה שלהן (לפנות מקום) תיראה חלקה ולא קפיצה.
         transition: isDragging
-          ? 'box-shadow 0.16s ease'
-          : 'transform 0.18s ease, box-shadow 0.16s ease',
+          ? 'box-shadow 0.16s ease, border-color 0.12s ease'
+          : 'transform 0.2s cubic-bezier(0.2,0,0,1), box-shadow 0.16s ease, border-color 0.12s ease',
         position: 'relative',
         zIndex: isDragging ? 5 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        // חוסם את מחוות הגלילה של הדפדפן על השורה עצמה בזמן גרירה פעילה;
+        // בשלב pending הגלילה עדיין עובדת (ראו useProductReorder).
         touchAction: 'pan-y',
+        userSelect: 'none', WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
       {/* אייקון קטגוריה / תמונה */}
@@ -85,22 +94,12 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         </Typography>
       </Box>
 
-      {/* ידית גרירה - כאן מתחילים long-press */}
-      <Box
-        role="button"
-        aria-label="גרור לסידור מחדש"
-        onTouchStart={onHandleTouch}
-        onMouseDown={onHandleMouse}
-        sx={{
-          flexShrink: 0, px: 0.5, py: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: isDragging ? 'primary.main' : 'text.disabled',
-          cursor: 'grab',
-          touchAction: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          '&:active': { cursor: 'grabbing' },
-        }}
-      >
+      {/* ידית גרירה - רמז ויזואלי בלבד (הגרירה מתחילה מכל השורה) */}
+      <Box aria-hidden="true" sx={{
+        flexShrink: 0, px: 0.5,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: isDragging ? 'primary.main' : 'text.disabled',
+      }}>
         <DragIndicatorRoundedIcon />
       </Box>
     </Box>

@@ -6,14 +6,15 @@ import { productsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { getCategoryOrder } from '../helpers/list-helpers';
 
-// כמה ms להחזיק על שורה לפני שגרירה מתחילה - מאפשר גלילה טבעית ולא
-// מפעיל drag בטעות בתנועה מהירה. (זהה ל-useListReorder במסך הבית.)
-const DRAG_ACTIVATION_DELAY_MS = 180;
-const DRAG_CANCEL_VERTICAL_PX = 8;
-const DRAG_CANCEL_HORIZONTAL_PX = 12;
-// גובה שורה + מרווח (ProductReorderRow: height:64 + mb:'6px') - קבוע כאן
-// כדי לחשב הזזות פיקסליות של שורות שכנות בלי למדוד DOM בכל תזוזה. אם
-// המידות של ProductReorderRow משתנות, לעדכן גם כאן.
+// כמה ms להחזיק לפני שגרירה מתחילה - מאפשר גלילה אנכית טבעית ולא מפעיל
+// drag בטעות. קצר יחסית (140) כי הגרירה מתחילה מכל מקום בשורה, לא רק
+// מהידית - צריך להרגיש מיידי.
+const DRAG_ACTIVATION_DELAY_MS = 140;
+// כמה אפשר לזוז לפני שהטיימר נגמר בלי לבטל - קצת סובלנות לרעד אצבע.
+const DRAG_CANCEL_VERTICAL_PX = 10;
+const DRAG_CANCEL_HORIZONTAL_PX = 14;
+// גובה שורה + מרווח (ProductReorderRow: height:64 + mb:'6px'). משמש רק
+// כ-fallback - הגובה האמיתי נמדד מה-DOM בתחילת הגרירה (rowPitchRef).
 const ROW_HEIGHT_PX = 70;
 
 interface Params {
@@ -44,14 +45,29 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   const [dragIndex, setDragIndex] = useState(-1);
   const [targetIndex, setTargetIndex] = useState(-1);
   const [dragOffsetY, setDragOffsetY] = useState(0);
+  // pending = long-press ממתין (עוד לא drag). state (לא ref) כדי שה-effect
+  // שמחבר את מאזיני ה-touch של ה-document ירוץ *מיד* עם הלחיצה - אחרת אין
+  // מעקב אחרי האצבע במהלך חלון ה-140ms, והגרירה "קופצת" כשהיא נכנסת לתוקף.
+  const [pending, setPending] = useState(false);
   const [saving, setSaving] = useState(false);
   const dragIndexRef = useRef(-1);
   const targetIndexRef = useRef(-1);
   const dragStartYRef = useRef(0);
+  // מיקום האצבע האחרון - מתעדכן גם בשלב ה-pending, כדי שההפעלה תשתמש
+  // במיקום הנוכחי ולא במיקום הלחיצה המקורי (מונע קפיצה).
+  const lastPointerYRef = useRef(0);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const autoScrollRef = useRef<number | null>(null);
   const originalOrderRef = useRef<string[]>([]);
   const lastMoveTimeRef = useRef(0);
+  // מיקומי ה-top של כל השורות (viewport coords) + gap בין שורות, נמדדים
+  // *פעם אחת* בתחילת הגרירה. חישוב targetIndex מהם (ולא מ-
+  // getBoundingClientRect חי) - כי בזמן גרירה השורות עצמן מוזזות ב-
+  // transform, ומדידה חיה שלהן גרמה ל-targetIndex לקפוץ הלוך-ושוב
+  // ("לא מגיב טוב"). scrollTop ההתחלתי מפצה על גלילה אוטומטית תוך כדי.
+  const rowTopsRef = useRef<number[]>([]);
+  const rowPitchRef = useRef(ROW_HEIGHT_PX);
+  const startScrollTopRef = useRef(0);
 
   const pendingDragRef = useRef<{
     index: number; startY: number; startX: number; timer: ReturnType<typeof setTimeout>;
@@ -62,6 +78,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
       clearTimeout(pendingDragRef.current.timer);
       pendingDragRef.current = null;
     }
+    setPending(false);
   }, []);
 
   // הסדר להצגה במצב סידור - lookup לפי id כדי לשרוד עדכוני מוצר תוך כדי.
@@ -79,28 +96,39 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     return result;
   }, [reorderMode, reorderedIds, items]);
 
+  // targetIndex מתוך המדידה הסטטית שנלקחה ב-activateDrag + פיצוי גלילה.
   const getTargetIndex = useCallback((clientY: number): number => {
-    for (let i = 0; i < rowRefs.current.length; i++) {
-      const el = rowRefs.current[i];
-      if (!el) continue;
-      const rect = el.getBoundingClientRect();
-      if (clientY < rect.top + rect.height / 2) return i;
+    const tops = rowTopsRef.current;
+    if (tops.length === 0) return -1;
+    const container = contentRef.current;
+    const scrollDelta = container ? container.scrollTop - startScrollTopRef.current : 0;
+    const y = clientY + scrollDelta;
+    const half = rowPitchRef.current / 2;
+    for (let i = 0; i < tops.length; i++) {
+      if (y < tops[i] + half) return i;
     }
-    return rowRefs.current.length - 1;
-  }, []);
+    return tops.length - 1;
+  }, [contentRef]);
 
   // ההזזה (px) שיש להחיל על שורה שאינה נגררת, כדי לפנות מקום ל-targetIndex
   // הנוכחי. שורות בין dragIndex ל-targetIndex זזות בדיוק גובה-שורה אחד
   // בכיוון ההפוך לתנועת הגרירה.
   const getRowShift = useCallback((index: number): number => {
     if (dragIndex < 0 || targetIndex < 0 || index === dragIndex) return 0;
+    const pitch = rowPitchRef.current;
     if (dragIndex < targetIndex) {
-      return index > dragIndex && index <= targetIndex ? -ROW_HEIGHT_PX : 0;
+      return index > dragIndex && index <= targetIndex ? -pitch : 0;
     }
-    return index >= targetIndex && index < dragIndex ? ROW_HEIGHT_PX : 0;
+    return index >= targetIndex && index < dragIndex ? pitch : 0;
   }, [dragIndex, targetIndex]);
 
   const activateDrag = useCallback((index: number, startY: number) => {
+    // מדידה סטטית של כל השורות *לפני* ש-setDragIndex גורם ל-transform.
+    const tops = rowRefs.current.map((el) => (el ? el.getBoundingClientRect().top : 0));
+    rowTopsRef.current = tops;
+    const validPitch = tops.length >= 2 && tops[0] > 0 && tops[1] > tops[0] ? tops[1] - tops[0] : ROW_HEIGHT_PX;
+    rowPitchRef.current = validPitch;
+    startScrollTopRef.current = contentRef.current?.scrollTop ?? 0;
     dragIndexRef.current = index;
     targetIndexRef.current = index;
     dragStartYRef.current = startY;
@@ -108,18 +136,23 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     setTargetIndex(index);
     setDragOffsetY(0);
     haptic('medium');
-  }, []);
+  }, [contentRef]);
 
   const handleDragStart = useCallback((index: number, clientY: number, clientX = 0) => {
     cancelPending();
+    lastPointerYRef.current = clientY;
     const timer = setTimeout(() => {
+      const p = pendingDragRef.current;
       pendingDragRef.current = null;
-      activateDrag(index, clientY);
+      setPending(false);
+      if (p) activateDrag(p.index, lastPointerYRef.current || p.startY);
     }, DRAG_ACTIVATION_DELAY_MS);
     pendingDragRef.current = { index, startY: clientY, startX: clientX, timer };
+    setPending(true);
   }, [cancelPending, activateDrag]);
 
   const handleDragMove = useCallback((clientY: number, clientX = 0) => {
+    lastPointerYRef.current = clientY;
     if (pendingDragRef.current) {
       const { startY, startX } = pendingDragRef.current;
       if (Math.abs(clientX - startX) > DRAG_CANCEL_HORIZONTAL_PX) { cancelPending(); return; }
@@ -163,6 +196,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
 
   const handleDragEnd = useCallback(() => {
     cancelPending();
+    setPending(false);
     if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
     const from = dragIndexRef.current;
     const to = targetIndexRef.current;
@@ -182,11 +216,14 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     setDragOffsetY(0);
   }, [cancelPending]);
 
-  const isActive = dragIndex >= 0 || pendingDragRef.current !== null;
+  const isActive = dragIndex >= 0 || pending;
   useEffect(() => {
     if (!isActive) return;
     const onTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
+      if (!touch) return;
+      // בזמן גרירה פעילה - חוסמים גלילת דף. בשלב pending - *לא* חוסמים,
+      // כדי שגלילה אנכית תעבוד רגיל ורק תבטל את ה-pending (ראו handleDragMove).
       if (dragIndex >= 0) e.preventDefault();
       handleDragMove(touch.clientY, touch.clientX);
     };
@@ -195,15 +232,17 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     const onMouseUp = () => handleDragEnd();
     document.addEventListener('touchmove', onTouchMove, { passive: false });
     document.addEventListener('touchend', onTouchEnd);
+    document.addEventListener('touchcancel', onTouchEnd);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
     return () => {
       document.removeEventListener('touchmove', onTouchMove);
       document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-  }, [dragIndex, isActive, handleDragMove, handleDragEnd]);
+  }, [dragIndex, pending, isActive, handleDragMove, handleDragEnd]);
 
   const hasChanges = useMemo(() => {
     if (!reorderedIds) return false;

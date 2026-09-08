@@ -445,7 +445,7 @@ export const he: Translations = {
   // Product reorder (בתוך רשימה)
   reorderProducts: 'סדר מוצרים',
   reorderProductsActive: 'סידור מוצרים',
-  reorderProductsHint: 'גרור מהידית כדי לשנות את הסדר',
+  reorderProductsHint: 'החזק על מוצר וגרור כדי לשנות את הסדר',
   productsWord: 'מוצרים',
   sortByCategory: 'מיין לפי קטגוריה',
   productOrderAuto: 'הרשימה חזרה למיון לפי קטגוריה',

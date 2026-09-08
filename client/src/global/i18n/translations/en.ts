@@ -444,7 +444,7 @@ export const en: Translations = {
   orderSaved: 'Order saved',
   reorderProducts: 'Reorder items',
   reorderProductsActive: 'Reordering items',
-  reorderProductsHint: 'Drag from the handle to change the order',
+  reorderProductsHint: 'Press and hold an item, then drag to reorder',
   productsWord: 'items',
   sortByCategory: 'Sort by category',
   productOrderAuto: 'Back to sorting by category',

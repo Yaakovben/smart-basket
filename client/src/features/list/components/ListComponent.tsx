@@ -498,9 +498,9 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // עיגול מלא (לא ריבוע מעוגל) - אותה גובה מדויק (32) ואותו
-              // bgcolor כמו הצ'יפים, כדי שיישב באותה שורה כאילו הוא חלק
-              // ממנה ולא רכיב זר שהודבק לצד.
+              // ריבוע 32x32 - בדיוק בגובה הצ'יפים ואותו bgcolor, אבל צורה
+              // מרובעת (לא פיל) כדי שייקרא כפעולה ולא כעוד פילטר. האייקון
+              // בצבע המותג כדי שיהיה ברור וזמין.
               <Box
                 role="button"
                 tabIndex={0}
@@ -508,16 +508,17 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
                 sx={{
-                  width: 32, height: 32, borderRadius: '50%',
+                  width: 32, height: 32, borderRadius: '8px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: 'action.hover', color: 'text.secondary',
-                  border: '1.5px solid transparent',
+                  bgcolor: 'action.hover', color: 'primary.main',
+                  border: '1.5px solid', borderColor: 'divider',
                   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                  transition: 'transform 0.12s',
+                  transition: 'transform 0.12s, background-color 0.15s',
                   '&:active': { transform: 'scale(0.9)' },
+                  '&:hover': { bgcolor: 'action.selected' },
                 }}
               >
-                <SwapVertRoundedIcon sx={{ fontSize: 18 }} />
+                <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
             ) : undefined}
           />
@@ -560,19 +561,23 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
               )}
             </Box>
             {reorderMode && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.25 }}>
-                <Typography sx={{ fontSize: 11.5, color: 'text.disabled' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.75 }}>
+                <Typography sx={{ fontSize: 11.5, color: 'text.disabled', minWidth: 0 }}>
                   {t('reorderProductsHint')}
                 </Typography>
-                {list.productsManuallyOrdered && (
-                  <Button
-                    size="small" onClick={reorderSortByCategory} disabled={reorderSaving}
-                    startIcon={<SortRoundedIcon sx={{ fontSize: 15 }} />}
-                    sx={{ fontSize: 11, fontWeight: 600, textTransform: 'none', minWidth: 'auto', p: 0.25, gap: 0.4, color: 'text.secondary' }}
-                  >
-                    {t('sortByCategory')}
-                  </Button>
-                )}
+                <Button
+                  size="small" variant="outlined" onClick={reorderSortByCategory} disabled={reorderSaving}
+                  startIcon={<SortRoundedIcon sx={{ fontSize: 16 }} />}
+                  sx={{
+                    flexShrink: 0,
+                    fontSize: 11.5, fontWeight: 700, textTransform: 'none',
+                    borderRadius: '9px', px: 1.25, py: 0.4, minWidth: 'auto', gap: 0.5,
+                    color: 'primary.main', borderColor: 'primary.main',
+                    '&:hover': { borderColor: 'primary.dark', bgcolor: 'rgba(20,184,166,0.06)' },
+                  }}
+                >
+                  {t('sortByCategory')}
+                </Button>
               </Box>
             )}
           </Box>
@@ -589,8 +594,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 isDragging={reorderDragIndex === idx}
                 translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
                 rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
-                onHandleTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
-                onHandleMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
+                onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
+                onRowMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
               />
             ))}
           </>
