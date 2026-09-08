@@ -49,7 +49,9 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   // שמחבר את מאזיני ה-touch של ה-document ירוץ *מיד* עם הלחיצה - אחרת אין
   // מעקב אחרי האצבע במהלך חלון ה-140ms, והגרירה "קופצת" כשהיא נכנסת לתוקף.
   const [pending, setPending] = useState(false);
-  const [saving, setSaving] = useState(false);
+  // סדר הפריטים ברגע הכניסה למצב סידור - state (לא ref) כי hasChanges
+  // נגזר ממנו בזמן render.
+  const [originalOrder, setOriginalOrder] = useState<string[]>([]);
   const dragIndexRef = useRef(-1);
   const targetIndexRef = useRef(-1);
   const dragStartYRef = useRef(0);
@@ -58,7 +60,6 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
   const lastPointerYRef = useRef(0);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const autoScrollRef = useRef<number | null>(null);
-  const originalOrderRef = useRef<string[]>([]);
   const lastMoveTimeRef = useRef(0);
   // מיקומי ה-top של כל השורות (viewport coords) + gap בין שורות, נמדדים
   // *פעם אחת* בתחילת הגרירה. חישוב targetIndex מהם (ולא מ-
@@ -208,6 +209,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
         next.splice(to, 0, moved);
         return next;
       });
+      haptic('medium'); // "נחיתה" מספקת של השורה במקום החדש
     }
     dragIndexRef.current = -1;
     targetIndexRef.current = -1;
@@ -246,14 +248,13 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
 
   const hasChanges = useMemo(() => {
     if (!reorderedIds) return false;
-    const original = originalOrderRef.current;
-    if (reorderedIds.length !== original.length) return true;
-    return reorderedIds.some((id, i) => id !== original[i]);
-  }, [reorderedIds]);
+    if (reorderedIds.length !== originalOrder.length) return true;
+    return reorderedIds.some((id, i) => id !== originalOrder[i]);
+  }, [reorderedIds, originalOrder]);
 
   const handleEnter = useCallback(() => {
     const ids = items.map((p) => p.id);
-    originalOrderRef.current = ids;
+    setOriginalOrder(ids);
     rowRefs.current = [];
     setReorderedIds(ids);
     setReorderMode(true);
@@ -275,25 +276,27 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     setDragOffsetY(0);
   }, [cancelPending]);
 
-  const persist = useCallback(async (ids: string[], manual: boolean) => {
-    setSaving(true);
+  // שמירה אופטימית: מיישמים את הסדר מקומית ויוצאים ממצב סידור *מיד*
+  // (התצוגה מתעדכנת מיידית - "שקוף"), וה-API רץ ברקע. אם ייכשל - טוסט
+  // שגיאה; הסנכרון הבא ממילא יתקן.
+  const persist = useCallback((ids: string[], manual: boolean) => {
     applyLocalOrder(ids, manual);
-    try {
-      await productsApi.reorderProducts(listId, ids, manual);
-      socketService.emitProductsReordered(listId, userName);
-      showToast(t(manual ? 'orderSaved' : 'productOrderAuto'));
-    } catch {
-      showToast(t('errorOccurred'), 'error');
-    } finally {
-      setSaving(false);
-      setReorderMode(false);
-      setReorderedIds(null);
-    }
+    setReorderMode(false);
+    setReorderedIds(null);
+    dragIndexRef.current = -1;
+    targetIndexRef.current = -1;
+    setDragIndex(-1);
+    setTargetIndex(-1);
+    setDragOffsetY(0);
+    haptic('medium');
+    productsApi.reorderProducts(listId, ids, manual)
+      .then(() => socketService.emitProductsReordered(listId, userName))
+      .catch(() => showToast(t('errorOccurred'), 'error'));
   }, [listId, userName, applyLocalOrder, showToast, t]);
 
   const handleSave = useCallback(() => {
     if (!reorderedIds) { setReorderMode(false); return; }
-    void persist(reorderedIds, true);
+    persist(reorderedIds, true);
   }, [reorderedIds, persist]);
 
   // חזרה למיון אוטומטי לפי קטגוריה→א"ב - שולח לשרת את הסדר הזה עם manual=false.
@@ -305,7 +308,7 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
         return a.name.localeCompare(b.name, 'he');
       })
       .map((p) => p.id);
-    void persist(ids, false);
+    persist(ids, false);
   }, [items, persist]);
 
   return {
@@ -316,7 +319,6 @@ export function useProductReorder({ listId, items, userName, contentRef, applyLo
     getRowShift,
     rowRefs,
     hasChanges,
-    saving,
     handleDragStart,
     handleSave,
     handleEnter,

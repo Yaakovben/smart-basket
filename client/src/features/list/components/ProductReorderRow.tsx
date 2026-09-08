@@ -43,19 +43,23 @@ export const ProductReorderRow = memo(({ product, index, isDragging, translateY,
         border: '1px solid',
         borderColor: isDragging ? 'primary.main' : 'transparent',
         boxShadow: isDragging
-          ? (isDark ? '0 12px 30px rgba(0,0,0,0.55)' : '0 12px 30px rgba(20,184,166,0.3)')
+          ? (isDark ? '0 16px 36px rgba(0,0,0,0.6)' : '0 16px 36px rgba(20,184,166,0.34)')
           : (isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)'),
-        transform: `translateY(${translateY}px)${isDragging ? ' scale(1.03)' : ''}`,
-        opacity: isDragging ? 0.97 : 1,
-        // בלי transition על transform בשורה הנגררת - היא חייבת לעקוב אחרי
-        // האצבע מיידית, בלי עיכוב. שורות שכנות כן מקבלות transition, כדי
-        // שההזזה שלהן (לפנות מקום) תיראה חלקה ולא קפיצה.
+        // translateY = מעקב מיידי אחרי האצבע (בלי transition). ה"הרמה"
+        // (scale+rotate) היא property נפרד (scale/rotate) שכן מקבל transition,
+        // כדי שהקפיצה החוצה בהרמה תהיה מונפשת אבל המעקב יישאר צמוד לאצבע.
+        transform: `translateY(${translateY}px)`,
+        scale: isDragging ? '1.045' : '1',
+        rotate: isDragging ? '-1.3deg' : '0deg',
+        opacity: isDragging ? 0.98 : 1,
+        // שורות שכנות: תזוזה "לפנות מקום" עם קפיצה קלה (overshoot) - כיפי.
         transition: isDragging
-          ? 'box-shadow 0.16s ease, border-color 0.12s ease'
-          : 'transform 0.2s cubic-bezier(0.2,0,0,1), box-shadow 0.16s ease, border-color 0.12s ease',
+          ? 'scale 0.15s cubic-bezier(0.34,1.4,0.64,1), rotate 0.15s ease, box-shadow 0.16s ease, border-color 0.12s ease'
+          : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1), scale 0.18s ease, rotate 0.18s ease, box-shadow 0.2s ease, border-color 0.12s ease',
         position: 'relative',
         zIndex: isDragging ? 5 : 1,
         cursor: isDragging ? 'grabbing' : 'grab',
+        willChange: 'transform',
         // חוסם את מחוות הגלילה של הדפדפן על השורה עצמה בזמן גרירה פעילה;
         // בשלב pending הגלילה עדיין עובדת (ראו useProductReorder).
         touchAction: 'pan-y',

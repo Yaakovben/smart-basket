@@ -67,25 +67,22 @@ interface ListPageProps {
   onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
 
-// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים) עם טינט תכלת
-// עדין: מספיק בולט כדי לא "להיבלע" בשורת הצ'יפים, אבל לא צועק.
-const reorderEntrySx = (isDark: boolean) => ({
-  width: 32, height: 32, borderRadius: '9px', flexShrink: 0,
+// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), אותו bgcolor
+// כמו הצ'יפים ומסגרת divider. שקט, משתלב בשורה. האייקון בצבע המותג.
+const reorderEntrySx = {
+  width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  color: 'primary.main',
-  bgcolor: isDark ? 'rgba(45,212,191,0.16)' : 'rgba(20,184,166,0.13)',
-  border: '1.5px solid',
-  borderColor: isDark ? 'rgba(45,212,191,0.42)' : 'rgba(20,184,166,0.38)',
+  bgcolor: 'action.hover', color: 'primary.main',
+  border: '1.5px solid', borderColor: 'divider',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.12s, background-color 0.15s',
   '&:active': { transform: 'scale(0.9)' },
-  '&:hover': { bgcolor: isDark ? 'rgba(45,212,191,0.24)' : 'rgba(20,184,166,0.2)' },
-});
+  '&:hover': { bgcolor: 'action.selected' },
+} as const;
 
 // ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds, onSaveSavedLists }: ListPageProps) => {
   const { t, settings, toggleGroupMute, isGroupMuted, updateNotifications } = useSettings();
-  const isDark = settings.theme === 'dark';
   const isMuteToggling = useRef(false);
 
   const {
@@ -227,7 +224,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   const {
     orderedItems: reorderOrderedItems,
     reorderMode, dragIndex: reorderDragIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
-    rowRefs: reorderRowRefs, hasChanges: reorderHasChanges, saving: reorderSaving,
+    rowRefs: reorderRowRefs, hasChanges: reorderHasChanges,
     handleDragStart: reorderHandleDragStart,
     handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
     handleCancel: reorderHandleCancel, handleSortByCategory: reorderSortByCategory,
@@ -520,7 +517,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={reorderEntrySx(isDark)}
+                sx={reorderEntrySx}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
@@ -538,16 +535,39 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 {reorderMode ? t('reorderProductsActive') : `${items.length} ${t('productsWord')}`}
               </Typography>
               {reorderMode ? (
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  {/* "מיין לפי קטגוריה" - רק כשהרשימה מסודרת ידנית (יש מה
+                      להחזיר לאוטומט). קישור-רפאים קליל ליד "ביטול". */}
+                  {list.productsManuallyOrdered && (
+                    <Box
+                      component="button"
+                      onClick={reorderSortByCategory}
+                     
+                      sx={{
+                        flexShrink: 0, border: 'none', bgcolor: 'transparent',
+                        display: 'inline-flex', alignItems: 'center', gap: 0.35, p: 0.25, mr: 0.25,
+                        fontFamily: 'inherit', fontSize: 11, fontWeight: 600,
+                        color: 'text.secondary', cursor: 'pointer',
+                        WebkitTapHighlightColor: 'transparent',
+                        transition: 'color 0.15s',
+                        '&:hover': { color: 'primary.main' },
+                        '&:active': { opacity: 0.6 },
+                        '&:disabled': { opacity: 0.4, cursor: 'default' },
+                      }}
+                    >
+                      <AutoAwesomeRoundedIcon sx={{ fontSize: 13, color: 'primary.main', opacity: 0.8 }} />
+                      {t('sortByCategory')}
+                    </Box>
+                  )}
                   <Button
-                    size="small" variant="outlined" onClick={reorderHandleCancel} disabled={reorderSaving}
+                    size="small" variant="outlined" onClick={reorderHandleCancel}
                     sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', color: 'error.main', borderColor: 'error.main', '&:hover': { borderColor: 'error.dark', bgcolor: 'rgba(239,68,68,0.04)' } }}
                   >
                     {t('cancel')}
                   </Button>
                   <Button
                     size="small" variant="contained" onClick={reorderHandleSave}
-                    disabled={!reorderHasChanges || reorderSaving}
+                    disabled={!reorderHasChanges}
                     startIcon={<DoneRoundedIcon sx={{ fontSize: 16 }} />}
                     sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', gap: 0.75, boxShadow: reorderHasChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
                   >
@@ -561,39 +581,16 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                   aria-label={t('reorderProducts')}
                   onClick={reorderHandleEnter}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                  sx={reorderEntrySx(isDark)}
+                  sx={reorderEntrySx}
                 >
                   <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
                 </Box>
               )}
             </Box>
             {reorderMode && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.75 }}>
-                <Typography sx={{ fontSize: 11.5, color: 'text.disabled', minWidth: 0 }}>
-                  {t('reorderProductsHint')}
-                </Typography>
-                {/* "סידור אוטומטי" - קישור-רפאים קליל: בלי מסגרת, טקסט מעומעם,
-                    ניצוץ תכלת קטן. נוכח למי שמחפש אבל לא מסיח בזמן הגרירה. */}
-                <Box
-                  component="button"
-                  onClick={reorderSortByCategory}
-                  disabled={reorderSaving}
-                  sx={{
-                    flexShrink: 0, border: 'none', bgcolor: 'transparent',
-                    display: 'inline-flex', alignItems: 'center', gap: 0.4, p: 0.25,
-                    fontFamily: 'inherit', fontSize: 11, fontWeight: 600,
-                    color: 'text.secondary', cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                    transition: 'color 0.15s',
-                    '&:hover': { color: 'primary.main' },
-                    '&:active': { opacity: 0.6 },
-                    '&:disabled': { opacity: 0.4, cursor: 'default' },
-                  }}
-                >
-                  <AutoAwesomeRoundedIcon sx={{ fontSize: 13, color: 'primary.main', opacity: 0.8 }} />
-                  {t('sortByCategory')}
-                </Box>
-              </Box>
+              <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.75 }}>
+                {t('reorderProductsHint')}
+              </Typography>
             )}
           </Box>
         )}
