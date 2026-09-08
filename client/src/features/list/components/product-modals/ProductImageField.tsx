@@ -178,12 +178,18 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 pointerEvents: 'none',
               }} />
               {uploading && (
+                // scrim בגוון תכלת המותג (לא שחור גנרי) + ספינר ב-ink הבהיר
+                // (מבליט טוב על הרקע הכהה משני מצבי הערכת נושא) + תווית -
+                // אותה שפה עיצובית כמו שאר הרכיב הזה, לא רק חיווי פונקציונלי.
                 <Box aria-hidden="true" sx={{
                   position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: 'rgba(0,0,0,0.32)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+                  bgcolor: 'rgba(13,148,136,0.6)',
                 }}>
-                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                  <CircularProgress size={24} thickness={4} sx={{ color: PAPER_NOTE.inkDark }} />
+                  <Typography sx={{ fontSize: 8, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.1, px: 0.5 }}>
+                    {t('photoProcessing')}
+                  </Typography>
                 </Box>
               )}
             </Box>
