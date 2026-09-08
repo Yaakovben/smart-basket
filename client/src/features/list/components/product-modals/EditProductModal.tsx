@@ -143,12 +143,15 @@ export const EditProductModal = memo(({
       </Box>
       {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות grid (לא flex-wrap): חצי-חצי
           כששניהם סגורים/צ'יפים, אבל כשההערה פתוחה היא מקבלת חלק גדול יותר
-          (1.7fr לעומת 1fr). alignItems:'flex-start' - שתי העמודות מתחילות
-          בתווית ("הערה:" / "תמונה:") בראש, מיושרות זו לזו. */}
+          (1.7fr לעומת 1fr). alignItems:'center' (לא flex-start) - כשצד אחד
+          פתוח (פתק גבוה, 132px) והשני עדיין צ'יפ סגור קטן, הצ'יפ ממורכז
+          בגובה השורה במקום להישאר תקוע למעלה עם המון רווח ריק מתחתיו (וגם
+          כדי שכפתור ה-X של הפתק, שמבצבץ -12px מעל הפינה שלו, לא "יבצבץ"
+          לתוך הצ'יפ השכן כשהוא צמוד לראש השורה). */}
       <Box sx={{
         display: 'grid',
         gridTemplateColumns: noteOpen ? 'minmax(0,1.7fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)',
-        alignItems: 'flex-start', gap: 2.5, mb: 1.5,
+        alignItems: 'center', gap: 2.5, mb: 1.5,
         transition: 'grid-template-columns 0.2s ease',
       }}>
         <ProductNoteField
