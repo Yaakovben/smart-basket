@@ -72,9 +72,11 @@ const envSchema = Joi.object({
   // מפתחות VAPID להתראות push - ליצירה: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
-  // ה-"subject" של VAPID (איש קשר לספק ה-push). *אין* ברירת מחדל - אם חסר
-  // כשמפתחות ה-VAPID כן מוגדרים, אתחול ה-push ידולג (ראה push.service.ts).
-  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).optional(),
+  // ה-"subject" של VAPID - כתובת איש קשר שספק ה-push (Google/Apple/Mozilla)
+  // יכול לפנות אליה. לא סוד ולא הרשאה - סתם מחרוזת קשר. ברירת המחדל היא
+  // *כתובת התמיכה הפומבית של הפרויקט* (אותה אחת שב-HelpModal/EMAIL_SETUP),
+  // לא מייל אישי. אפשר לדרוס עם VAPID_EMAIL בסביבה.
+  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:smartbasket129@gmail.com'),
 
   // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
@@ -157,7 +159,7 @@ export interface Environment {
   LOGTAIL_TOKEN?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
-  VAPID_EMAIL?: string;
+  VAPID_EMAIL: string;
   LOCATIONIQ_API_KEY?: string;
   OCR_API_KEY?: string;
   CLOUDINARY_CLOUD_NAME?: string;

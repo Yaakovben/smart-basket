@@ -13,12 +13,10 @@ import { User } from '../models';
 import { env } from '../config/environment';
 import { logger } from '../config';
 
-// אתחול web-push. צריך את שלושת הערכים: שני המפתחות + VAPID_EMAIL (ה-subject).
-// אם אחד חסר - מדלגים, ו-isEnabled() יחזיר false כך שכל שליחה הופכת ל-no-op.
-if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_EMAIL) {
+// אתחול web-push עם מפתחות VAPID. אם חסרים - הלוגיקה בהמשך תדלג על שליחות.
+// (VAPID_EMAIL תמיד קיים - ברירת מחדל ל-env, ראה environment.ts.)
+if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(env.VAPID_EMAIL, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
-} else if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
-  logger.warn('VAPID keys set but VAPID_EMAIL missing - push notifications disabled');
 }
 
 export interface PushPayload {
@@ -36,9 +34,9 @@ export interface PushPayload {
 
 // ============== הגדרות ==============
 
-/** האם Push מופעל כלל (יש מפתחות VAPID + subject). */
+/** האם Push מופעל כלל (יש מפתחות VAPID). */
 function isEnabled(): boolean {
-  return !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_EMAIL);
+  return !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
 }
 
 /** מחזיר את המפתח הציבורי לצד הלקוח (או null אם לא מוגדר). */
