@@ -16,6 +16,7 @@ import {
   getDbHealth,
   getCloudinaryHealth,
   getCloudinaryOrphans,
+  getLocalImages,
   getAiStatusHandler,
   refreshAiStatusHandler,
 } from '../controllers/admin.controller';
@@ -38,6 +39,10 @@ router.get('/cloudinary-health', getCloudinaryHealth);
 // dry-run כברירת מחדל (GET/POST בלי confirm) - מחיקה בפועל רק עם confirm=true.
 router.get('/cloudinary-orphans', getCloudinaryOrphans);
 router.post('/cloudinary-orphans', getCloudinaryOrphans);
+// תמונות שנשמרו כ-data URL בתוך מסמכי המוצר (לא ב-Cloudinary) - אותו דפוס
+// dry-run/confirm כמו cloudinary-orphans.
+router.get('/local-images', getLocalImages);
+router.post('/local-images', getLocalImages);
 router.get('/ai-status', getAiStatusHandler);
 router.post('/ai-status/refresh', refreshAiStatusHandler);
 router.get('/users/:userId/details', validate({ params: userIdParams }), getUserDetails);

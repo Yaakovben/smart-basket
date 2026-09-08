@@ -4,6 +4,7 @@ import type { CloudinaryHealth } from '../../../services/api/admin.api';
 import { statusInfo, formatMB, CLOUDINARY_METRIC_META } from '../helpers/dbHealthHelpers';
 import { DbHealthCircularGauge } from './DbHealthCircularGauge';
 import { CloudinaryMetricRow } from './CloudinaryMetricRow';
+import { LocalImagesWarningCard } from './LocalImagesWarningCard';
 
 interface Props {
   data: CloudinaryHealth | null;
@@ -37,10 +38,15 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
 
   if (!data.configured) {
     return (
-      <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-        <CloudOffIcon sx={{ fontSize: 40, opacity: 0.5, mb: 1 }} />
-        <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Cloudinary לא מוגדר בשרת הזה</Typography>
-        <Typography sx={{ fontSize: 12, mt: 0.5 }}>תמונות מוצרים נשמרות כ-data-URL בתוך המסמך</Typography>
+      <Box>
+        <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+          <CloudOffIcon sx={{ fontSize: 40, opacity: 0.5, mb: 1 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Cloudinary לא מוגדר בשרת הזה</Typography>
+          <Typography sx={{ fontSize: 12, mt: 0.5 }}>תמונות מוצרים נשמרות כ-data-URL בתוך המסמך</Typography>
+        </Box>
+        {/* בלי Cloudinary בכלל - *כל* תמונה נופלת ל-DB, אז זה בדיוק המקום
+            החשוב ביותר להראות כמה מקום זה תופס. */}
+        <LocalImagesWarningCard isDark={isDark} />
       </Box>
     );
   }
@@ -95,6 +101,10 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
         valueText={data.liveObjectCount != null ? fmtNum(data.liveObjectCount) : (data.objects != null ? fmtNum(data.objects) : '—')} isDark={isDark} />
       <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.requests} pct={null}
         valueText={data.requests != null ? fmtNum(data.requests) : '—'} isDark={isDark} />
+
+      {/* תמונות שבכל זאת נשארו ב-DB (Cloudinary כן מוגדר, אבל העלאה
+          ספציפית נכשלה) - ראו LocalImagesWarningCard. */}
+      <LocalImagesWarningCard isDark={isDark} />
     </>
   );
 };

@@ -277,3 +277,34 @@ export async function deleteCloudinaryOrphans(publicIds: string[]): Promise<{ de
   logger.info(`[cloudinary] orphan cleanup: deleted=${deleted} failed=${failed}`);
   return { deleted, failed };
 }
+
+// ===== תמונות ששמורות מקומית (data URL) בתוך מסמך המוצר עצמו =====
+// כל תמונה שהעלאתה ל-Cloudinary לא הצליחה (לא מוגדר בשרת, או שהעלאה
+// אמיתית נכשלה - ראו product.service.ts/ProductImageField.tsx) נשארת
+// כ-data URL ישירות בשדה Product.image, ולא כ-URL קצר. זה תופס מקום
+// אמיתי בתוך ה-DB עצמו (maxlength 500,000 תווים לתמונה בודדת ב-
+// Product.model.ts) - בניגוד לתמונה שכן עברה ל-Cloudinary, שרק ה-URL
+// שלה (כמה עשרות בייטים) יושב במסמך.
+export interface LocalImagesStats {
+  count: number;
+  totalBytes: number;
+}
+
+const LOCAL_IMAGE_FILTER = { image: { $regex: '^data:' } };
+
+export async function getLocalImagesStats(): Promise<LocalImagesStats> {
+  const result = await Product.aggregate([
+    { $match: LOCAL_IMAGE_FILTER },
+    { $group: { _id: null, count: { $sum: 1 }, totalBytes: { $sum: { $strLenBytes: '$image' } } } },
+  ]);
+  const r = result[0] as { count: number; totalBytes: number } | undefined;
+  return { count: r?.count ?? 0, totalBytes: r?.totalBytes ?? 0 };
+}
+
+// מסיר את שדה image (לא מוחק את המוצר עצמו - הוא נשאר, רק בלי תמונה,
+// בדיוק כמו מוצר שאף פעם לא קיבל תמונה) מכל מוצר עם תמונה שמורה מקומית.
+// מחזיר כמה מוצרים שונו בפועל.
+export async function clearLocalImages(): Promise<number> {
+  const result = await Product.updateMany(LOCAL_IMAGE_FILTER, { $set: { image: '' } });
+  return result.modifiedCount;
+}

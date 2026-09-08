@@ -20,7 +20,7 @@ import { ForbiddenError, NotFoundError } from '../errors';
 import { UserDAL, ListDAL, ProductDAL, LoginActivityDAL, PushSubscriptionDAL } from '../dal';
 import { deleteAccount } from '../services/user.service';
 import { getAiStatus, refreshAiStatus } from '../services/aiAssistant.service';
-import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans } from '../services/imageUpload.service';
+import { getCloudinaryUsage, scanCloudinaryOrphans, deleteCloudinaryOrphans, getLocalImagesStats, clearLocalImages } from '../services/imageUpload.service';
 
 /**
  * GET /api/admin/users
@@ -269,6 +269,26 @@ export const getCloudinaryOrphans = asyncHandler(async (req: AuthRequest, res: R
     success: true,
     data: { dryRun: false, orphanCount: scan.orphanPublicIds.length, deleted, failed },
   });
+});
+
+/**
+ * GET/POST /api/admin/local-images
+ * תמונות מוצר ששמורות כ-data URL ישירות בתוך מסמכי המוצר (לא ב-Cloudinary,
+ * ראו getLocalImagesStats) - תופסות מקום ב-DB עצמו. dry-run כברירת מחדל
+ * (רק ספירה + גודל כולל). מסיר בפועל (רק את שדה image, לא את המוצר) רק
+ * כשמגיע confirm=true (query או body).
+ */
+export const getLocalImages = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const stats = await getLocalImagesStats();
+  const confirm = req.query.confirm === 'true' || (req.body as { confirm?: boolean } | undefined)?.confirm === true;
+
+  if (!confirm) {
+    res.json({ success: true, data: { dryRun: true, count: stats.count, totalBytes: stats.totalBytes } });
+    return;
+  }
+
+  const cleared = await clearLocalImages();
+  res.json({ success: true, data: { dryRun: false, count: stats.count, totalBytes: stats.totalBytes, cleared } });
 });
 
 /**

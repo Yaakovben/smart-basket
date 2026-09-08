@@ -1,9 +1,9 @@
 import apiClient from './client';
-import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, CloudinaryHealth, AiStatus } from './types/admin.types';
+import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, CloudinaryHealth, LocalImagesResult, AiStatus } from './types/admin.types';
 
 // DbHealth/DbHealthCollection ממשיכים להיות מיובאים ישירות מהקובץ הזה
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
-export type { DbHealthCollection, DbHealth, CloudinaryHealth, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
+export type { DbHealthCollection, DbHealth, CloudinaryHealth, LocalImagesResult, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
 
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
@@ -35,6 +35,18 @@ export const adminApi = {
 
   async getCloudinaryHealth(): Promise<CloudinaryHealth> {
     const response = await apiClient.get<{ data: CloudinaryHealth }>('/admin/cloudinary-health');
+    return response.data.data;
+  },
+
+  /** תמיד dry-run - רק ספירה + גודל, לא מוחק כלום. */
+  async getLocalImagesInfo(): Promise<LocalImagesResult> {
+    const response = await apiClient.get<{ data: LocalImagesResult }>('/admin/local-images');
+    return response.data.data;
+  },
+
+  /** מסיר בפועל את שדה image מכל מוצר עם תמונה שמורה מקומית. בלתי הפיך. */
+  async clearLocalImages(): Promise<LocalImagesResult> {
+    const response = await apiClient.post<{ data: LocalImagesResult }>('/admin/local-images', { confirm: true });
     return response.data.data;
   },
 
