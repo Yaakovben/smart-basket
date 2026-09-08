@@ -173,11 +173,15 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
         // יש תמונה - עמודה: התמונה עצמה נשארת צמודה לקצה הימני של תא ה-grid
         // (alignItems:flex-end ב-RTL, כמו במקור) - רק התווית "תמונה:" זזה,
         // מיושרת לקצה הימני *של התמונה עצמה* (לא של כל התא) דרך תיבה ברוחב
-        // 112 קבוע + justifyContent:flex-end, כדי שהיא תשב מעל הפינה
-        // הימנית-עליונה של התמונה בלי להזיז את התמונה עצמה. מרובעת, פינות
-        // מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה הנגדית.
+        // 112 קבוע + justifyContent:flex-start, כדי שהיא תשב מעל הפינה
+        // הימנית-עליונה של התמונה בלי להזיז את התמונה עצמה. שימו לב:
+        // justifyContent (ציר ראשי, row) ו-alignItems (ציר צולב, column)
+        // הולכים לפי אותה לוגיקה בדיוק ב-RTL - flex-start=ימין, flex-end=
+        // שמאל בשניהם (לא הפוך אחד מהשני, כמו שבטעות הונח כאן קודם).
+        // מרובעת, פינות מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה
+        // הנגדית.
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.6 }}>
-          <Box sx={{ width: 112, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ width: 112, display: 'flex', justifyContent: 'flex-start' }}>
             <Typography sx={{
               fontSize: 10, fontWeight: 800, color: ink,
               letterSpacing: 1, textTransform: 'uppercase',
