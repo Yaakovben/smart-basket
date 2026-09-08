@@ -22,7 +22,10 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   // (לא חוסם - התמונה כבר מוצגת ושמישה, רק מוחלפת בכתובת מתארחת אם יצליח).
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // tone מבחין בין כשל חוסם (דחיסה נכשלה/גדול מדי - 'error', אדום) לכשל רך
+  // (העלאה לענן נכשלה אבל התמונה המקומית עדיין תקינה ושמישה - 'warning',
+  // טון ניטרלי) - אותו state יחיד, לא שני משתנים, כדי שתמיד יתנקה יחד.
+  const [error, setError] = useState<{ text: string; tone: 'error' | 'warning' } | null>(null);
   const [lightbox, setLightbox] = useState(false);
   // התמונה השמורה (value) נכשלה לטעון - אין כאן קטגוריה להציג במקומה
   // (זה שדה טופס, לא תצוגת מוצר), אז פלייסהולדר "נכשל לטעון" פשוט בתוך
@@ -59,7 +62,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     } catch (err) {
       if (myId === reqIdRef.current) {
         const code = err instanceof ImageUploadError ? err.code : 'unknown';
-        setError(code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'));
+        setError({ text: code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'), tone: 'error' });
         haptic('heavy');
         setBusy(false);
       }
@@ -94,8 +97,23 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
         if (myId === reqIdRef.current) onChange(url);
       }
     } catch (err) {
-      if (!isNotConfiguredError(err) && import.meta.env.DEV) {
-        console.warn('product image server upload failed, keeping local copy', err);
+      // "לא מוגדר" (503, IMAGE_UPLOAD_NOT_CONFIGURED) - נפילה מכוונת ושקטה
+      // לאחסון data-URL, לא באמת "כשל". כל כשל אחר (מכסת Cloudinary נגמרה,
+      // רשת נפלה באמצע, חתימה לא תקפה וכו') - שקט לגמרי בפרודקשן עד עכשיו,
+      // המשתמש לא ידע שהתמונה לא הגיעה לאחסון קבוע. עדיין לא חוסם: התמונה
+      // המקומית כבר מוצגת ותקינה, רק מודיעים.
+      if (!isNotConfiguredError(err)) {
+        if (import.meta.env.DEV) {
+          console.warn('product image server upload failed, keeping local copy', err);
+        }
+        if (myId === reqIdRef.current) {
+          setError({ text: t('photoSyncFailed'), tone: 'warning' });
+        }
+        if (import.meta.env.PROD) {
+          import('@sentry/react').then(Sentry => {
+            Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
+          }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+        }
       }
     } finally {
       if (myId === reqIdRef.current) setUploading(false);
@@ -245,8 +263,13 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       )}
 
       {error && (
-        <Typography sx={{ fontSize: 11.5, color: '#DC2626', mt: 0.6, px: 0.25 }}>
-          {error}
+        <Typography sx={{
+          fontSize: 11.5, mt: 0.6, px: 0.25,
+          // warning (העלאה לענן נכשלה, לא חוסם) - טון ניטרלי, לא אדום כמו
+          // כשל חוסם אמיתי (too-large/decode) - זה לא מצריך פעולה מהמשתמש.
+          color: error.tone === 'warning' ? 'text.secondary' : '#DC2626',
+        }}>
+          {error.text}
         </Typography>
       )}
 

@@ -501,6 +501,7 @@ export type TranslationKeys =
   | 'photoUploadError'
   | 'photoTooLarge'
   | 'photoLoadFailed'
+  | 'photoSyncFailed'
   | 'itemHasPhoto'
   // Scan list photo (OCR)
   | 'ocrNoTextDetected'
