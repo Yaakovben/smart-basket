@@ -30,28 +30,45 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
 
   useEffect(() => { onOpenChange?.(isOpen); }, [isOpen, onOpenChange]);
 
-  // חיווי גלילה עצמאי - סרגל דק בצד (insetInlineEnd) שמופיע *מיד* כשההערה
-  // ארוכה מגובה השדה, לא רק אחרי שמתחילים לגלול (סרגל ה-textarea הנייטיב
-  // מתחבא ב-iOS/מובייל). thumb משקף כמה נשאר ואיפה אנחנו.
+  // חיווי גלילה עצמאי - סרגל דק בצד שמופיע *מיד* כשההערה ארוכה מגובה השדה
+  // (סרגל ה-textarea הנייטיב מתחבא ב-iOS/מובייל). ה-thumb מתעדכן *ישירות
+  // ב-DOM* דרך ref (בלי setState / בלי transition) ומסונכרן ל-rAF - ככה
+  // הוא נצמד לאצבע 1:1 בלי "דיליי" ובלי רעד.
   const taRef = useRef<HTMLTextAreaElement | null>(null);
-  const [scroll, setScroll] = useState({ over: false, topFrac: 0, sizeFrac: 1 });
-  const measureScroll = useCallback(() => {
+  const thumbRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const [over, setOver] = useState(false);
+
+  const paintThumb = useCallback(() => {
     const el = taRef.current;
+    const thumb = thumbRef.current;
     if (!el) return;
     const { scrollHeight: sh, clientHeight: ch, scrollTop: st } = el;
-    const over = sh - ch > 4;
-    setScroll({
-      over,
-      sizeFrac: over ? Math.max(0.18, ch / sh) : 1,
-      topFrac: over ? st / sh : 0,
-    });
+    const isOver = sh - ch > 4;
+    setOver((prev) => (prev === isOver ? prev : isOver));
+    if (thumb && isOver) {
+      thumb.style.top = `${(st / sh) * 100}%`;
+      thumb.style.height = `${Math.max(0.18, ch / sh) * 100}%`;
+    }
   }, []);
+
+  const onScroll = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      paintThumb();
+    });
+  }, [paintThumb]);
+
   useEffect(() => {
     if (!isOpen) return;
-    measureScroll();
-    const id = window.setTimeout(measureScroll, 60); // אחרי שה-layout מתייצב
-    return () => window.clearTimeout(id);
-  }, [isOpen, value, measureScroll]);
+    paintThumb();
+    const id = window.setTimeout(paintThumb, 60); // אחרי שה-layout מתייצב
+    return () => {
+      window.clearTimeout(id);
+      if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    };
+  }, [isOpen, value, over, paintThumb]);
 
   const closeAndClear = () => {
     haptic('light');
@@ -131,7 +148,7 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
             onChange={e => onChange(e.target.value.slice(0, 200))}
             placeholder={t('productNotePlaceholder')}
             inputRef={taRef}
-            inputProps={{ maxLength: 200, onScroll: measureScroll }}
+            inputProps={{ maxLength: 200, onScroll }}
             sx={{
               position: 'relative', zIndex: 2,
               // מקום לסרגל החיווי בצד ה-inline-end (השמאלי ב-RTL).
@@ -157,22 +174,23 @@ export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) 
           />
 
           {/* סרגל החיווי שלנו - צמוד לקצה השמאלי (inline-end) של הפתק,
-              גלוי מיד כשההערה ארוכה מהשדה. */}
-          {scroll.over && (
+              גלוי מיד כשההערה ארוכה מהשדה. ה-thumb מעודכן ישירות ב-DOM. */}
+          {over && (
             <Box aria-hidden sx={{
               position: 'absolute', insetInlineEnd: 4, zIndex: 3,
               top: 34, bottom: 10, width: 3, borderRadius: 3,
               bgcolor: isDark ? 'rgba(94,234,212,0.14)' : 'rgba(20,184,166,0.12)',
               pointerEvents: 'none',
             }}>
-              <Box sx={{
-                position: 'absolute', insetInline: 0, borderRadius: 3,
-                top: `${scroll.topFrac * 100}%`,
-                height: `${scroll.sizeFrac * 100}%`,
-                bgcolor: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
-                opacity: 0.55,
-                transition: 'top 0.08s linear',
-              }} />
+              <Box
+                ref={thumbRef}
+                sx={{
+                  position: 'absolute', insetInline: 0, borderRadius: 3,
+                  top: 0, height: '30%',
+                  bgcolor: isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight,
+                  opacity: 0.55,
+                }}
+              />
             </Box>
           )}
         </Box>
