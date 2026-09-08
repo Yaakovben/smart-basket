@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useCallback, useState, type ReactNode } from 'react';
 import { Box, Chip } from '@mui/material';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -25,24 +25,40 @@ export const CategoryFilterChips = memo(({
 }: CategoryFilterChipsProps) => {
   const { t } = useSettings();
 
+  // trailing (כפתור "סדר מוצרים") מתכווץ ונעלם כשגוללים את רצועת הצ'יפים
+  // הרחק מההתחלה, וחוזר כשגוללים בחזרה - כמו באפליקציות עם רצועות סינון
+  // (למשל כפתור פעולה שנעלם/חוזר עם רצועת פילטרים). Math.abs (לא בדיקת
+  // סימן) כי המוסכמה של scrollLeft ב-RTL לא אחידה בין דפדפנים - אבל
+  // scrollLeft===0 (בקירוב) תמיד אומר "בהתחלה" בכל המוסכמות.
+  const [scrolled, setScrolled] = useState(false);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const isScrolled = Math.abs(e.currentTarget.scrollLeft) > 6;
+    setScrolled(prev => (prev === isScrolled ? prev : isScrolled));
+  }, []);
+
   return (
     // alignItems:'flex-start' (לא center) - הקופסה הפנימית של הצ'יפים
     // כוללת pb:0.5 (מקום לסרגל גלילה) שגבוה מ-32px בפועל; עם center
     // trailing היה מתמרכז בתוך הגובה הזה וזז ~2px למטה מהצ'יפים. עם
     // flex-start שניהם מתחילים באותו y בדיוק - אותו גובה, בלי קפיצה.
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 1.5 }}>
-      <Box sx={{
-        display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, flex: 1, minWidth: 0,
-        // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent
-        // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
-        // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת) - הקצה השני
-        // עכשיו יושב לצד trailing, לא נצמד למסך.
-        mr: { xs: -1.5, sm: -2.5 }, pr: { xs: 1.5, sm: 2.5 },
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': { display: 'none' },
-        maskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
-        WebkitMaskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
-      }}>
+      <Box
+        onScroll={handleScroll}
+        sx={{
+          display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, flex: 1, minWidth: 0,
+          // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent
+          // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
+          // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת) - הקצה השני
+          // עכשיו יושב לצד trailing, לא נצמד למסך.
+          mr: { xs: -1.5, sm: -2.5 }, pr: { xs: 1.5, sm: 2.5 },
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+          // גלילה חלקה/יציבה ב-iOS (momentum) - בלי זה overflow-x:auto נגלל
+          // "קשה"/לא רציף במיוחד כשיש הרבה צ'יפים.
+          WebkitOverflowScrolling: 'touch',
+          maskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to left, black calc(100% - 12px), transparent)',
+        }}>
         <Chip
           label={`${t('all')} (${totalCount})`}
           size="small"
@@ -86,7 +102,21 @@ export const CategoryFilterChips = memo(({
           );
         })}
       </Box>
-      {trailing && <Box sx={{ flexShrink: 0 }}>{trailing}</Box>}
+      {trailing && (
+        // מתכווץ לרוחב 0 (לא display:none - כדי שהאנימציה עצמה תהיה
+        // חלקה) + דוהה + זז קלות שמאלה (לכיוון שהצ'יפים נגללים אליו)
+        // כשגוללים את הצ'יפים; חוזר בדיוק אותו דבר כשחוזרים להתחלה.
+        <Box sx={{
+          flexShrink: 0,
+          overflow: 'hidden',
+          width: scrolled ? 0 : 32,
+          opacity: scrolled ? 0 : 1,
+          transform: scrolled ? 'translateX(-10px) scale(0.7)' : 'translateX(0) scale(1)',
+          transition: 'width 0.22s ease, opacity 0.18s ease, transform 0.22s ease',
+        }}>
+          {trailing}
+        </Box>
+      )}
     </Box>
   );
 });
