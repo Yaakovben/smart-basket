@@ -196,19 +196,24 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 pointerEvents: 'none',
               }} />
               {uploading && (
-                // scrim בגוון תכלת המותג (לא שחור גנרי) + ספינר ב-ink הבהיר
-                // (מבליט טוב על הרקע הכהה משני מצבי הערכת נושא) + תווית -
-                // אותה שפה עיצובית כמו שאר הרכיב הזה, לא רק חיווי פונקציונלי.
-                <Box aria-hidden="true" sx={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.5,
-                  bgcolor: 'rgba(13,148,136,0.6)',
-                }}>
-                  <CircularProgress size={24} thickness={4} sx={{ color: PAPER_NOTE.inkDark }} />
-                  <Typography sx={{ fontSize: 8, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.1, px: 0.5 }}>
-                    {t('photoProcessing')}
-                  </Typography>
-                </Box>
+                // חיווי העלאה - "מים" בגוון תכלת המותג שעולים מלמטה למעלה
+                // וחוזרים, בלי ספינר ובלי טקסט. חצי-שקוף כדי שרואים את
+                // התמונה שמאחור (מה שמעלים). קו "פני המים" בהיר בקצה העליון.
+                <Box role="status" aria-label={t('photoProcessing')} sx={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0,
+                  overflow: 'hidden',
+                  animation: 'sbUploadRise 1.5s ease-in-out infinite',
+                  '@keyframes sbUploadRise': {
+                    '0%, 100%': { height: '10%' },
+                    '50%': { height: '100%' },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
+                  bgcolor: 'rgba(20,184,166,0.42)',
+                  '&::before': {
+                    content: '""', position: 'absolute', left: 0, right: 0, top: 0, height: 2,
+                    bgcolor: 'rgba(94,234,212,0.95)',
+                  },
+                }} />
               )}
             </Box>
             {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית),
