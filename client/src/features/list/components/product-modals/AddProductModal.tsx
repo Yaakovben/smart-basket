@@ -72,6 +72,11 @@ export const AddProductModal = memo(({
   const [scannerMounted, setScannerMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
+  // האם שדה ההערה פתוח כרגע - מדווח ע"י ProductNoteField עצמו (מצב
+  // expanded הפנימי שלו לא נגיש כאן אחרת). כשפתוח, עמודת ההערה ב-grid
+  // מתרחבת על חשבון עמודת התמונה (ראו למטה) - התמונה עצמה קטנה (78px)
+  // ולא צריכה חצי מהרוחב, וטקסט ההערה הרגיש צפוף מדי בחצי-חצי קבוע.
+  const [noteOpen, setNoteOpen] = useState(false);
 
   // חימום מקדים של ה-chunk של הסורק ברגע שהמודאל נפתח (לא ממתינים ללחיצה
   // על כפתור הברקוד) - כשהמשתמש בפועל ילחץ לסרוק, ה-JS כבר בקאש והמסך
@@ -377,16 +382,22 @@ export const AddProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
-          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
-          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
-          במקום לשבת לצידה. alignItems:'center' (היה 'flex-start') - כשההערה
-          פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה קטנה, top-align גרם לתמונה
-          להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'center', gap: 2.5, mb: 1.5 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות grid (לא flex-wrap): חצי-חצי
+          כששניהם סגורים/צ'יפים, אבל כשההערה פתוחה היא מקבלת חלק גדול יותר
+          (1.7fr לעומת 1fr) - התמונה עצמה קבועה ~78px ולא צריכה חצי מהרוחב,
+          וטקסט ההערה הרגיש צפוף מדי בחצי-חצי קבוע (ראו noteOpen למעלה).
+          alignItems:'center' - כשההערה פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה
+          קטנה, top-align גרם לתמונה להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: noteOpen ? 'minmax(0,1.7fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)',
+        alignItems: 'center', gap: 2.5, mb: 1.5,
+        transition: 'grid-template-columns 0.2s ease',
+      }}>
         <ProductNoteField
           value={newProduct.note}
           onChange={(v) => onUpdateField('note', v)}
+          onOpenChange={setNoteOpen}
         />
         <ProductImageField
           value={newProduct.image}

@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback } from 'react';
+import { memo, useRef, useCallback, useState } from 'react';
 import { Box, Typography, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
 import type { Product, ProductUnit } from '../../../../global/types';
 import { haptic, COMMON_STYLES } from '../../../../global/helpers';
@@ -51,6 +51,8 @@ export const EditProductModal = memo(({
 }: EditProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
+  // האם שדה ההערה פתוח כרגע - ראו הערה זהה ב-AddProductModal.tsx.
+  const [noteOpen, setNoteOpen] = useState(false);
 
   const isNameValid = product ? product.name.trim().length >= 2 : false;
   const canSave = hasChanges && isNameValid && !saving;
@@ -139,16 +141,22 @@ export const EditProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
-          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
-          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
-          במקום לשבת לצידה. alignItems:'center' (היה 'flex-start') - כשההערה
-          פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה קטנה, top-align גרם לתמונה
-          להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'center', gap: 2.5, mb: 1.5 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות grid (לא flex-wrap): חצי-חצי
+          כששניהם סגורים/צ'יפים, אבל כשההערה פתוחה היא מקבלת חלק גדול יותר
+          (1.7fr לעומת 1fr) - התמונה עצמה קבועה ~78px ולא צריכה חצי מהרוחב,
+          וטקסט ההערה הרגיש צפוף מדי בחצי-חצי קבוע (ראו noteOpen למעלה).
+          alignItems:'center' - כשההערה פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה
+          קטנה, top-align גרם לתמונה להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: noteOpen ? 'minmax(0,1.7fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)',
+        alignItems: 'center', gap: 2.5, mb: 1.5,
+        transition: 'grid-template-columns 0.2s ease',
+      }}>
         <ProductNoteField
           value={product.note || ''}
           onChange={(v) => onUpdateField('note', v as Product['note'])}
+          onOpenChange={setNoteOpen}
         />
         <ProductImageField
           value={product.image || ''}

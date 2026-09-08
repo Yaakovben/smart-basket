@@ -1,18 +1,25 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 import EditNoteRoundedIcon from '@mui/icons-material/EditNoteRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { haptic } from '../../../../global/helpers';
 import { paperNoteSx, PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
-import { useScrollHint } from '../../helpers/useScrollHint';
-import { NoteScrollHint } from './NoteScrollHint';
 import { useSettings } from '../../../../global/context/SettingsContext';
 
 // ===== שדה הערה - משותף ל-Add ול-Edit =====
 // עיצוב "פתק נייר" (paperNoteSx) - אותה שפה בדיוק כמו הפתק בשורת הרשימה
 // ובמסך פרטי המוצר: סרט washi למעלה, פינה מקופלת, הטיה כמעט-שטוחה,
 // קווי מחברת עדינים.
-export const ProductNoteField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+interface Props {
+  value: string;
+  onChange: (v: string) => void;
+  // מודיע להורה (AddProductModal/EditProductModal) כשהפתק נפתח/נסגר, כדי
+  // שה-grid יוכל להרחיב את עמודת ההערה על חשבון עמודת התמונה (ראו שם) -
+  // אין דרך אחרת להורה לדעת את מצב ה-expanded הפנימי כאן.
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const ProductNoteField = memo(({ value, onChange, onOpenChange }: Props) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;       // אייקון + תוויות + מונה
@@ -20,8 +27,8 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
   const inkMuted = isDark ? 'rgba(185,240,230,0.65)' : 'rgba(15,118,110,0.7)';
   const [expanded, setExpanded] = useState(value.length > 0);
   const isOpen = expanded || value.length > 0;
-  // חיווי גלילה - ההערה מוגבלת ל-3 שורות ואז גוללת; החץ מופיע כשיש עוד.
-  const { ref: taRef, showHint, onScroll } = useScrollHint<HTMLTextAreaElement>(value);
+
+  useEffect(() => { onOpenChange?.(isOpen); }, [isOpen, onOpenChange]);
 
   const closeAndClear = () => {
     haptic('light');
@@ -116,8 +123,7 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
             value={value}
             onChange={e => onChange(e.target.value.slice(0, 200))}
             placeholder={t('productNotePlaceholder')}
-            inputRef={taRef}
-            inputProps={{ maxLength: 200, onScroll }}
+            inputProps={{ maxLength: 200 }}
             sx={{
               position: 'relative', zIndex: 2,
               '& .MuiOutlinedInput-root': {
@@ -133,9 +139,15 @@ export const ProductNoteField = memo(({ value, onChange }: { value: string; onCh
                 color: inkMuted,
                 opacity: 1,
               },
+              // חיווי גלילה בצד - סרגל דק צבוע (לא חץ מרפרף) - אותה שפה
+              // בדיוק כמו הפתק במסך פרטי המוצר (ProductDetailsModal).
+              '& textarea::-webkit-scrollbar': { width: 4 },
+              '& textarea::-webkit-scrollbar-thumb': {
+                backgroundColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
+                borderRadius: 4,
+              },
             }}
           />
-          <NoteScrollHint show={showHint} isDark={isDark} />
         </Box>
       )}
     </Box>
