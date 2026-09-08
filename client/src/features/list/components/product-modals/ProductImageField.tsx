@@ -13,7 +13,18 @@ import { compressProductImage, buildUploadMaster, uploadToServer, isNotConfigure
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
 // עיצוב אחיד לחלוטין עם ProductNoteField: אותו צ'יפ תכלת סגור, אותם
 // גוונים (PAPER_NOTE), אותה מסגרת נייר. הערה ותמונה = אותה שפה, אותו צבע.
-export const ProductImageField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+interface Props {
+  value: string;
+  onChange: (v: string) => void;
+  // נקרא פעם אחת כשמתחילה העלאה ברקע, עם ה-promise שלה (הכתובת הסופית או
+  // null בכשל/לא-מוגדר). למי-שקורה? AddProductModal - כדי לתקן מוצר שכבר
+  // נוצר עם ה-data-URL המקומי, אם "הוסף" נלחץ *לפני* שההעלאה הספיקה
+  // להסתיים (אחרת onChange כבר היה מעדכן את value לכתובת האמיתית). ראו
+  // useProductForm.ts (pendingImageUploadRef) + useAddProduct.ts.
+  onUploadStart?: (promise: Promise<string | null>) => void;
+}
+
+export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;
@@ -76,48 +87,56 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     // שלב 2 - העלאה ברקע. בונים "מאסטר" איכותי *מהקובץ המקורי* (לא מ-local
     // שכבר דחוס אגרסיבית לתצוגה) ומעלים אותו ל-Cloudinary, שגוזר ממנו את
     // כל הגרסאות. אם השרת בלי Cloudinary / כל כשל - נשארים עם ה-data URL.
+    // עטוף בפונקציה (במקום קוד ישיר) כדי שאפשר יהיה גם להחזיר את ה-promise
+    // שלה להורה (onUploadStart) - ראו ההערה על ה-prop למעלה.
     setUploading(true);
-    try {
-      const master = await buildUploadMaster(file);
-      if (myId !== reqIdRef.current) return;
-      const url = await uploadToServer(master);
-      if (myId === reqIdRef.current) {
-        // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
-        // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
-        // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
-        // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
-        // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
-        // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
-        await new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = cldThumb(url);
-        });
-        if (myId === reqIdRef.current) onChange(url);
-      }
-    } catch (err) {
-      // "לא מוגדר" (503, IMAGE_UPLOAD_NOT_CONFIGURED) - נפילה מכוונת ושקטה
-      // לאחסון data-URL, לא באמת "כשל". כל כשל אחר (מכסת Cloudinary נגמרה,
-      // רשת נפלה באמצע, חתימה לא תקפה וכו') - שקט לגמרי בפרודקשן עד עכשיו,
-      // המשתמש לא ידע שהתמונה לא הגיעה לאחסון קבוע. עדיין לא חוסם: התמונה
-      // המקומית כבר מוצגת ותקינה, רק מודיעים.
-      if (!isNotConfiguredError(err)) {
-        if (import.meta.env.DEV) {
-          console.warn('product image server upload failed, keeping local copy', err);
-        }
+    const runUpload = async (): Promise<string | null> => {
+      try {
+        const master = await buildUploadMaster(file);
+        if (myId !== reqIdRef.current) return null;
+        const url = await uploadToServer(master);
         if (myId === reqIdRef.current) {
-          setError({ text: t('photoSyncFailed'), tone: 'warning' });
+          // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
+          // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
+          // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
+          // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
+          // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
+          // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
+          await new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = cldThumb(url);
+          });
+          if (myId === reqIdRef.current) onChange(url);
         }
-        if (import.meta.env.PROD) {
-          import('@sentry/react').then(Sentry => {
-            Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
-          }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+        return url;
+      } catch (err) {
+        // "לא מוגדר" (503, IMAGE_UPLOAD_NOT_CONFIGURED) - נפילה מכוונת ושקטה
+        // לאחסון data-URL, לא באמת "כשל". כל כשל אחר (מכסת Cloudinary נגמרה,
+        // רשת נפלה באמצע, חתימה לא תקפה וכו') - שקט לגמרי בפרודקשן עד עכשיו,
+        // המשתמש לא ידע שהתמונה לא הגיעה לאחסון קבוע. עדיין לא חוסם: התמונה
+        // המקומית כבר מוצגת ותקינה, רק מודיעים.
+        if (!isNotConfiguredError(err)) {
+          if (import.meta.env.DEV) {
+            console.warn('product image server upload failed, keeping local copy', err);
+          }
+          if (myId === reqIdRef.current) {
+            setError({ text: t('photoSyncFailed'), tone: 'warning' });
+          }
+          if (import.meta.env.PROD) {
+            import('@sentry/react').then(Sentry => {
+              Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
+            }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+          }
         }
+        return null;
+      } finally {
+        if (myId === reqIdRef.current) setUploading(false);
       }
-    } finally {
-      if (myId === reqIdRef.current) setUploading(false);
-    }
+    };
+
+    onUploadStart?.(runUpload());
   };
 
   const remove = () => {

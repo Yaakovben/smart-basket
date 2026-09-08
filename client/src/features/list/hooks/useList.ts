@@ -165,6 +165,7 @@ export const useList = ({
     setAddError: productForm.setAddError,
     setOpenItemId,
     validateProduct: productForm.validateProduct,
+    pendingImageUploadRef: productForm.pendingImageUploadRef,
   });
 
   const {
@@ -262,6 +263,7 @@ export const useList = ({
     setNewProduct: productForm.setNewProduct,
     setOpenItemId,
     setAddError: productForm.setAddError,
+    pendingImageUploadRef: productForm.pendingImageUploadRef,
 
     handleDragStart,
     handleDragMove,

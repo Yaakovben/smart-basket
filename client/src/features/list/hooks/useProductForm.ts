@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type { Product } from '../../../global/types';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { newProductSchema, validateForm } from '../../../global/validation';
@@ -16,6 +16,14 @@ export const useProductForm = () => {
 
   const [showEdit, setShowEdit] = useState<Product | null>(null);
   const [originalEditProduct, setOriginalEditProduct] = useState<Product | null>(null);
+
+  // העלאת תמונה ברקע שעוד לא הסתיימה, בזמן שהמשתמש לוחץ "הוסף" (ProductImageField
+  // מדווח כאן דרך onUploadStart). localValue = ה-data-URL המקומי שהיה ב-
+  // newProduct.image ברגע שההעלאה התחילה - אם זה עדיין הערך הנוכחי כשלוחצים
+  // "הוסף" (כלומר ה-upload עוד לא הצליח והחליף אותו), handleAdd (useAddProduct)
+  // ממתין להעלאה ברקע ומתקן את המוצר שכבר נוצר עם ה-URL האמיתי כשהיא מסתיימת -
+  // בלי לחסום את "הוסף" עצמו. ראו addProductToServer.
+  const pendingImageUploadRef = useRef<{ promise: Promise<string | null>; localValue: string } | null>(null);
 
   // זיהוי שינויים בטופס עריכה
   const hasProductChanges = useMemo(() => {
@@ -93,6 +101,7 @@ export const useProductForm = () => {
   return {
     showAdd, setShowAdd,
     newProduct, setNewProduct,
+    pendingImageUploadRef,
     addError, setAddError,
     showEdit, setShowEdit,
     originalEditProduct, setOriginalEditProduct,

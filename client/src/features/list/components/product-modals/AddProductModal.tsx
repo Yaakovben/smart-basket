@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
@@ -51,6 +51,9 @@ interface AddProductModalProps {
   onUpdateField: <K extends keyof NewProductForm>(field: K, value: NewProductForm[K]) => void;
   onIncrement: () => void;
   onDecrement: () => void;
+  // ראו ProductImageField.onUploadStart + useProductForm.ts - מאפשר ל-"הוסף"
+  // לא לחכות להעלאת התמונה לענן, ועדיין לתקן את המוצר אחרי שהיא מסתיימת.
+  pendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 }
 
 export const AddProductModal = memo(({
@@ -62,7 +65,8 @@ export const AddProductModal = memo(({
   onAdd,
   onUpdateField,
   onIncrement,
-  onDecrement
+  onDecrement,
+  pendingImageUploadRef
 }: AddProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
@@ -402,6 +406,7 @@ export const AddProductModal = memo(({
         <ProductImageField
           value={newProduct.image}
           onChange={(v) => onUpdateField('image', v)}
+          onUploadStart={(promise) => { pendingImageUploadRef.current = { promise, localValue: newProduct.image }; }}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>

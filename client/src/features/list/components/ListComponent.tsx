@@ -88,7 +88,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   const {
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
-    confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
+    confirmDeleteList, confirm, newProduct, openItemId, showHint, addError, pendingImageUploadRef,
     refreshing,
     fabPosition, showFab, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
@@ -695,6 +695,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         onUpdateField={updateNewProductField}
         onIncrement={() => incrementQuantity('new')}
         onDecrement={() => decrementQuantity('new')}
+        pendingImageUploadRef={pendingImageUploadRef}
       />
 
       <EditProductModal
