@@ -1,8 +1,8 @@
 import type { TranslationKeys } from '../../global/i18n/translations';
 
 // מאגר הטיפים ל"ידעת ש...?" - פיצ'רים שקל לפספס. כל טיפ: אמוג'י, גרדיאנט
-// hero ייחודי, ומפתחות תרגום לכותרת+גוף. הסדר לא משנה - הבחירה אקראית
-// מתוך מה שעדיין לא הוצג (ראו useFeatureTips).
+// hero ייחודי, וצל תואם. הסדר כאן = סדר ההצגה בקרוסלה (ראו FeatureTipsPopup) -
+// מקובץ בקירוב לפי נושא: תוכן מוצר → סידור → יכולות חכמות → שיתוף → ניהול.
 export interface FeatureTip {
   id: string;
   emoji: string;
@@ -14,14 +14,6 @@ export interface FeatureTip {
 
 export const FEATURE_TIPS: FeatureTip[] = [
   {
-    id: 'scan-list',
-    emoji: '📸',
-    gradient: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
-    glowColor: 'rgba(20,184,166,0.45)',
-    titleKey: 'tipScanListTitle',
-    bodyKey: 'tipScanListBody',
-  },
-  {
     id: 'product-photo',
     emoji: '🖼️',
     gradient: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
@@ -30,36 +22,68 @@ export const FEATURE_TIPS: FeatureTip[] = [
     bodyKey: 'tipProductPhotoBody',
   },
   {
-    id: 'share-qr',
-    emoji: '📱',
+    id: 'product-note',
+    emoji: '📝',
+    gradient: 'linear-gradient(135deg, #FB923C 0%, #EA580C 100%)',
+    glowColor: 'rgba(251,146,60,0.45)',
+    titleKey: 'tipProductNoteTitle',
+    bodyKey: 'tipProductNoteBody',
+  },
+  {
+    id: 'scan-list',
+    emoji: '📸',
+    gradient: 'linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)',
+    glowColor: 'rgba(20,184,166,0.45)',
+    titleKey: 'tipScanListTitle',
+    bodyKey: 'tipScanListBody',
+  },
+  {
+    id: 'product-reorder',
+    emoji: '↕️',
     gradient: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
     glowColor: 'rgba(14,165,233,0.45)',
-    titleKey: 'tipShareQrTitle',
-    bodyKey: 'tipShareQrBody',
+    titleKey: 'tipProductReorderTitle',
+    bodyKey: 'tipProductReorderBody',
   },
   {
-    id: 'move-products',
-    emoji: '↔️',
+    id: 'list-reorder',
+    emoji: '📚',
     gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
     glowColor: 'rgba(245,158,11,0.45)',
-    titleKey: 'tipMoveProductsTitle',
-    bodyKey: 'tipMoveProductsBody',
+    titleKey: 'tipListReorderTitle',
+    bodyKey: 'tipListReorderBody',
   },
   {
-    id: 'long-press',
-    emoji: '✅',
+    id: 'ai-assistant',
+    emoji: '✨',
+    gradient: 'linear-gradient(135deg, #C084FC 0%, #9333EA 100%)',
+    glowColor: 'rgba(192,132,252,0.45)',
+    titleKey: 'tipAiAssistantTitle',
+    bodyKey: 'tipAiAssistantBody',
+  },
+  {
+    id: 'price-comparison',
+    emoji: '🏷️',
     gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
     glowColor: 'rgba(16,185,129,0.45)',
-    titleKey: 'tipLongPressTitle',
-    bodyKey: 'tipLongPressBody',
+    titleKey: 'tipPriceComparisonTitle',
+    bodyKey: 'tipPriceComparisonBody',
   },
   {
-    id: 'swipe',
-    emoji: '👈',
-    gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
-    glowColor: 'rgba(236,72,153,0.45)',
-    titleKey: 'tipSwipeTitle',
-    bodyKey: 'tipSwipeBody',
+    id: 'share-whatsapp',
+    emoji: '💬',
+    gradient: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+    glowColor: 'rgba(37,211,102,0.45)',
+    titleKey: 'tipShareWhatsappTitle',
+    bodyKey: 'tipShareWhatsappBody',
+  },
+  {
+    id: 'share-pdf',
+    emoji: '📄',
+    gradient: 'linear-gradient(135deg, #F87171 0%, #DC2626 100%)',
+    glowColor: 'rgba(248,113,113,0.45)',
+    titleKey: 'tipSharePdfTitle',
+    bodyKey: 'tipSharePdfBody',
   },
   {
     id: 'saved-lists',
@@ -70,11 +94,11 @@ export const FEATURE_TIPS: FeatureTip[] = [
     bodyKey: 'tipSavedListsBody',
   },
   {
-    id: 'insights',
-    emoji: '💰',
-    gradient: 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
-    glowColor: 'rgba(13,148,136,0.45)',
-    titleKey: 'tipInsightsTitle',
-    bodyKey: 'tipInsightsBody',
+    id: 'mute-list',
+    emoji: '🔕',
+    gradient: 'linear-gradient(135deg, #64748B 0%, #475569 100%)',
+    glowColor: 'rgba(100,116,139,0.4)',
+    titleKey: 'tipMuteListTitle',
+    bodyKey: 'tipMuteListBody',
   },
 ];
