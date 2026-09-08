@@ -446,7 +446,7 @@ export const ru: Translations = {
   reorderProductsActive: 'Изменение порядка',
   reorderProductsHint: 'Нажмите и удерживайте товар, затем перетащите',
   productsWord: 'товаров',
-  sortByCategory: 'По категориям',
+  sortByCategory: 'Авто-порядок',
   productOrderAuto: 'Снова сортировка по категориям',
   moreDetails: 'Подробнее',
   lists: 'списков',
