@@ -25,7 +25,9 @@ export const DbHealthCollectionsBreakdown = ({ data, isDark }: DbHealthCollectio
         return (
           <Box key={c.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 0.5 }}>
             <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: meta.color, flexShrink: 0 }} />
-            <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{meta.he}</Typography>
+            <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'ui-monospace, Menlo, Consolas, monospace' }}>
+              {c.name}
+            </Typography>
           </Box>
         );
       })}

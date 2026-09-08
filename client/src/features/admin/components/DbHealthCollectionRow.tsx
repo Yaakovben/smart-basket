@@ -10,9 +10,10 @@ interface DbHealthCollectionRowProps {
   isDark: boolean;
 }
 
-// שורת קולקציה בודדת. תצוגה ראשית = השם הידידותי בעברית + כמות מסמכים +
-// גודל + פס (כמו שהיה). לחיצה פותחת (accordion) הסבר בעברית: השם האמיתי
-// במסד, מה הקולקציה שומרת, ופירוט גודל נתונים מול אינדקסים.
+// שורת קולקציה בודדת. תצוגה ראשית (סגורה) = השם *האמיתי* של הקולקציה
+// באנגלית (monospace, כמו במסד) + כמות מסמכים + גודל + פס. לחיצה פותחת
+// (accordion) הסבר בעברית: השם הידידותי, מה הקולקציה שומרת, ופירוט גודל
+// נתונים מול אינדקסים.
 export const DbHealthCollectionRow = ({ collection: c, totalSize, isDark }: DbHealthCollectionRowProps) => {
   const [expanded, setExpanded] = useState(false);
   const meta = collectionMeta(c.name);
@@ -47,8 +48,11 @@ export const DbHealthCollectionRow = ({ collection: c, totalSize, isDark }: DbHe
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {meta.he}
+            <Typography sx={{
+              fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
+            }}>
+              {c.name}
             </Typography>
             <ExpandMoreRoundedIcon sx={{
               fontSize: 15, color: 'text.disabled', flexShrink: 0,
@@ -82,11 +86,8 @@ export const DbHealthCollectionRow = ({ collection: c, totalSize, isDark }: DbHe
 
         <Collapse in={expanded}>
           <Box sx={{ mt: 1, pt: 1, borderTop: '1px dashed', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-            <Typography sx={{ fontSize: 10.5, color: 'text.secondary' }}>
-              שם במסד:{' '}
-              <Box component="span" sx={{ fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontWeight: 700, color: 'text.primary' }}>
-                {c.name}
-              </Box>
+            <Typography sx={{ fontSize: 11, fontWeight: 800, color: 'text.primary' }}>
+              {meta.he}
             </Typography>
             <Typography sx={{ fontSize: 10.5, color: 'text.disabled', lineHeight: 1.35 }}>
               {meta.desc}
