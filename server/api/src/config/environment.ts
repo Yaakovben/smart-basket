@@ -117,13 +117,6 @@ const envSchema = Joi.object({
   // האמיתית של הספק (ראו remainingTokens/remainingRequests בפאנל האדמין),
   // עם מרווח ביטחון. 0 = בלי תקרה.
   AI_DAILY_REQUEST_BUDGET: Joi.number().integer().min(0).default(2000),
-  // NVIDIA NIM (build.nvidia.com) - ספק גיבוי לעוזר ה-AI, לא ראשי. Groq הוא
-  // הראשי (מהיר יותר), אבל לטייר החינמי שלו יש מכסה יומית/דקתית - אם היא
-  // נגמרת (429) או ש-Groq לא זמין רגעית, השירות עובר אוטומטית ל-NIM כדי
-  // שהעוזר ימשיך לעבוד במקום להחזיר שגיאה למשתמש. אופציונלי לגמרי - אם
-  // המפתח חסר, פשוט אין גיבוי (Groq בלבד).
-  NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.3-70b-instruct'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -168,8 +161,6 @@ export interface Environment {
   GROQ_API_KEY?: string;
   GROQ_MODEL: string;
   AI_DAILY_REQUEST_BUDGET: number;
-  NVIDIA_NIM_API_KEY?: string;
-  NVIDIA_NIM_MODEL: string;
   GMAIL_USER?: string;
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
