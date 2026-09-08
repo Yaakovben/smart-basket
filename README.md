@@ -7,6 +7,7 @@
 - **שיתופיות בזמן אמת** דרך Socket.io — שני משתמשים רואים שינויים מיד
 - **השוואת מחירים** מקבצי XML רשמיים של הרשתות (חוק שקיפות המחירים)
 - **איתור סניף קרוב** עם geolocation + Nominatim
+- **עוזר קניות מבוסס-AI** (Groq, Llama 3.3 70B) — עונה על שאלות כלליות (סופרים, מחירים, טיפים) וגם נותן המלצות מבוססות על התובנות/ההוצאות האמיתיות של המשתמש
 - **התראות Push** דרך VAPID
 - **התקנה כאפליקציה** מובייל (PWA installable, מצב אופליין חלקי)
 - **RTL מלא** + מצב כהה/בהיר + דו-לשוני
@@ -176,6 +177,7 @@ smart-basket/
 | Sentry | error monitoring |
 | web-push | Push Notifications |
 | Swagger | API docs |
+| Groq (OpenAI-compatible API) | עוזר קניות AI (Llama 3.3 70B) |
 
 ### שרת Socket
 | טכנולוגיה | שימוש |
@@ -603,6 +605,8 @@ cd client && npm run build         # → dist/
 ## משתני סביבה
 
 ### שרת API (`server/api/.env`)
+> להגדרת ארבעת משתני ה-`GMAIL_*` (שליחת מיילים דרך Gmail API) - מדריך הקמה מלא ב-[`server/api/EMAIL_SETUP.md`](server/api/EMAIL_SETUP.md).
+
 | משתנה | חובה | ברירת מחדל | תיאור |
 |-------|------|-----------|--------|
 | `NODE_ENV` | כן | `development` | `development` / `production` |
@@ -620,9 +624,19 @@ cd client && npm run build         # → dist/
 | `VAPID_EMAIL` | לא | - | אימייל VAPID |
 | `LOCATIONIQ_API_KEY` | לא | - | Fallback geocoding כש-Nominatim נכשל/מוגבל |
 | `OCR_API_KEY` | לא | - | מפתח OCR.space לסריקת רשימות מתמונה |
+| `CLOUDINARY_CLOUD_NAME` | לא | - | שם ה-Cloud ב-Cloudinary (אחסון תמונות מוצר) |
+| `CLOUDINARY_API_KEY` | לא | - | מפתח API של Cloudinary |
+| `CLOUDINARY_API_SECRET` | לא | - | סוד API של Cloudinary - חותם בקשות להעלאה ישירה מהדפדפן (ראו זרימת Cloudinary למעלה); אם אחד משלושת המשתנים חסר, הלקוח נופל לאחסון data-URL בתוך מסמך המוצר |
 | `SENTRY_DSN` | לא | - | Sentry DSN (פעיל רק בproduction) |
 | `LOGTAIL_TOKEN` | לא | - | BetterStack Logtail token |
 | `REDIS_URL` | לא | - | פרסום אירועי `user:deleted`/`member:kicked` לשרת ה-Socket (ראו סעיף Redis) |
+| `GROQ_API_KEY` | לא | - | מפתח Groq (console.groq.com) לעוזר הקניות AI - בלעדיו ה-endpoint מחזיר שגיאה ברורה |
+| `GROQ_MODEL` | לא | `openai/gpt-oss-120b` | המודל שנקרא ב-Groq |
+| `AI_DAILY_REQUEST_BUDGET` | לא | `2000` | תקרה יומית גלובלית (לא פר-משתמש) על קריאות AI חיצוניות; `0` = בלי תקרה |
+| `GMAIL_USER` | לא | - | כתובת ה-Gmail השולחת מיילים (איפוס סיסמה / הודעות אדמין) - ראו [`server/api/EMAIL_SETUP.md`](server/api/EMAIL_SETUP.md) |
+| `GMAIL_CLIENT_ID` | לא | - | OAuth2 Client ID מ-Google Cloud |
+| `GMAIL_CLIENT_SECRET` | לא | - | OAuth2 Client Secret מ-Google Cloud |
+| `GMAIL_REFRESH_TOKEN` | לא | - | OAuth2 Refresh Token; אם אחד מארבעת משתני ה-Gmail חסר, שליחת המייל היא no-op שקט |
 
 ### שרת Socket (`server/socket/.env`)
 | משתנה | חובה | ברירת מחדל | תיאור |
