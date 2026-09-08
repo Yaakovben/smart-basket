@@ -1,8 +1,9 @@
 import { Box, Typography } from '@mui/material';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import type { CloudinaryHealth } from '../../../services/api/admin.api';
-import { statusInfo, formatMB } from '../helpers/dbHealthHelpers';
+import { statusInfo, formatMB, CLOUDINARY_METRIC_META } from '../helpers/dbHealthHelpers';
 import { DbHealthCircularGauge } from './DbHealthCircularGauge';
+import { CloudinaryMetricRow } from './CloudinaryMetricRow';
 
 interface Props {
   data: CloudinaryHealth | null;
@@ -23,22 +24,6 @@ const formatCloudinaryAsOf = (raw: string): string => {
     ? d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
     : d.toLocaleString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
-
-// שורת מדד עם פס התקדמות - אחסון / תעבורה / טרנספורמציות.
-const MetricBar = ({ label, valueText, pct, color, isDark }: { label: string; valueText: string; pct: number | null; color: string; isDark: boolean }) => (
-  <Box sx={{ mb: 1.25 }}>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.4 }}>
-      <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary' }}>{label}</Typography>
-      <Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>
-        {valueText}
-        {pct != null && <Box component="span" sx={{ fontSize: 10.5, color: 'text.disabled', ml: 0.5 }}>({pct}%)</Box>}
-      </Typography>
-    </Box>
-    <Box sx={{ height: 7, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-      <Box sx={{ height: '100%', width: `${Math.min(100, pct ?? 0)}%`, bgcolor: color, borderRadius: 4, transition: 'width 0.5s ease' }} />
-    </Box>
-  </Box>
-);
 
 export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
   if (!data) {
@@ -90,44 +75,26 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
         )}
       </Box>
 
-      {/* מדדים מפורטים */}
-      <Box sx={{
-        p: 2, borderRadius: 3, mb: 2,
-        bgcolor: isDark ? 'rgba(255,255,255,0.04)' : '#FFF',
-        border: '1px solid', borderColor: 'divider',
-      }}>
-        {data.storage && (
-          <MetricBar label="אחסון" color="#0D9488" isDark={isDark} pct={data.storage.pct}
-            valueText={data.storage.limitBytes ? `${formatMB(data.storage.usedBytes)} / ${formatMB(data.storage.limitBytes)}` : formatMB(data.storage.usedBytes)} />
-        )}
-        {data.bandwidth && (
-          <MetricBar label="תעבורה (החודש)" color="#3B82F6" isDark={isDark} pct={data.bandwidth.pct}
-            valueText={data.bandwidth.limitBytes ? `${formatMB(data.bandwidth.usedBytes)} / ${formatMB(data.bandwidth.limitBytes)}` : formatMB(data.bandwidth.usedBytes)} />
-        )}
-        {data.transformations && (
-          <MetricBar label="טרנספורמציות (החודש)" color="#8B5CF6" isDark={isDark} pct={data.transformations.pct}
-            valueText={data.transformations.limit ? `${fmtNum(data.transformations.used)} / ${fmtNum(data.transformations.limit)}` : fmtNum(data.transformations.used)} />
-        )}
-      </Box>
-
-      {/* סטטים קטנים */}
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Box sx={{ flex: 1, p: 1.5, borderRadius: 2, textAlign: 'center', bgcolor: isDark ? 'rgba(20,184,166,0.12)' : '#CCFBF1' }}>
-          <Typography sx={{ fontSize: 10, color: '#0D9488', fontWeight: 800 }}>קבצים מאוחסנים</Typography>
-          {/* liveObjectCount - ספירה חיה מה-DB, לא מ-Cloudinary (שמתעדכן
-              בעיכוב של עד יום, ראו ההערה למעלה) - זה הוא שבאמת משתנה מיד
-              אחרי העלאת תמונה, לא data.objects. */}
-          <Typography sx={{ fontSize: 17, fontWeight: 800, color: '#0D9488', lineHeight: 1.1 }}>
-            {data.liveObjectCount != null ? fmtNum(data.liveObjectCount) : (data.objects != null ? fmtNum(data.objects) : '—')}
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1, p: 1.5, borderRadius: 2, textAlign: 'center', bgcolor: isDark ? 'rgba(59,130,246,0.12)' : '#DBEAFE' }}>
-          <Typography sx={{ fontSize: 10, color: '#1D4ED8', fontWeight: 800 }}>בקשות (החודש)</Typography>
-          <Typography sx={{ fontSize: 17, fontWeight: 800, color: '#1D4ED8', lineHeight: 1.1 }}>
-            {data.requests != null ? fmtNum(data.requests) : '—'}
-          </Typography>
-        </Box>
-      </Box>
+      {/* מדדים מפורטים - שורה בסגנון "קולקשן" (ראו DbHealthCollectionRow):
+          שם אמיתי (כמו ש-Cloudinary עצמו קורא למדד) + שם ידידותי בעברית,
+          ולחיצה פותחת הסבר קצר. liveObjectCount (לא data.objects) - ספירה
+          חיה מה-DB, לא מ-Cloudinary (שמתעדכן בעיכוב, ראו ההערה למעלה). */}
+      {data.storage && (
+        <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.storage} pct={data.storage.pct}
+          valueText={data.storage.limitBytes ? `${formatMB(data.storage.usedBytes)} / ${formatMB(data.storage.limitBytes)}` : formatMB(data.storage.usedBytes)} isDark={isDark} />
+      )}
+      {data.bandwidth && (
+        <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.bandwidth} pct={data.bandwidth.pct}
+          valueText={data.bandwidth.limitBytes ? `${formatMB(data.bandwidth.usedBytes)} / ${formatMB(data.bandwidth.limitBytes)}` : formatMB(data.bandwidth.usedBytes)} isDark={isDark} />
+      )}
+      {data.transformations && (
+        <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.transformations} pct={data.transformations.pct}
+          valueText={data.transformations.limit ? `${fmtNum(data.transformations.used)} / ${fmtNum(data.transformations.limit)}` : fmtNum(data.transformations.used)} isDark={isDark} />
+      )}
+      <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.objects} pct={null}
+        valueText={data.liveObjectCount != null ? fmtNum(data.liveObjectCount) : (data.objects != null ? fmtNum(data.objects) : '—')} isDark={isDark} />
+      <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.requests} pct={null}
+        valueText={data.requests != null ? fmtNum(data.requests) : '—'} isDark={isDark} />
     </>
   );
 };

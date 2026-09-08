@@ -11,6 +11,11 @@ import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ErrorIcon from '@mui/icons-material/Error';
+import CloudQueueRoundedIcon from '@mui/icons-material/CloudQueueRounded';
+import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import PhotoLibraryRoundedIcon from '@mui/icons-material/PhotoLibraryRounded';
+import HttpRoundedIcon from '@mui/icons-material/HttpRounded';
 
 // לכל קולקציה: שם ידידותי (he), תיאור קצר של מה היא שומרת (desc), אייקון
 // וצבע. השם *האמיתי* של הקולקציה מוצג ע"י הקומפוננטה מתוך c.name.
@@ -34,6 +39,45 @@ const COLLECTION_META: Record<string, CollectionMeta> = {
 };
 export const collectionMeta = (name: string): CollectionMeta =>
   COLLECTION_META[name] || { he: name, desc: 'קולקציה במסד', icon: DescriptionIcon, color: '#94A3B8' };
+
+// מטא-דאטה לכל מדד Cloudinary - אותה שפה עיצובית כמו CollectionMeta למעלה
+// (שורה בסגנון "קולקשן"): שם *אמיתי* (en, בדיוק כמו ש-Cloudinary עצמו קורא
+// למדד ב-API/בדשבורד שלהם - לא תרגום), שם ידידותי בעברית לצידו, והסבר קצר
+// שנפתח רק בלחיצה (לא תמיד גלוי - אלה 5 שורות, לא רוצים גוש טקסט קבוע).
+export interface CloudinaryMetricMeta {
+  en: string;
+  he: string;
+  desc: string;
+  icon: React.ComponentType<{ sx?: object }>;
+  color: string;
+}
+export const CLOUDINARY_METRIC_META: Record<string, CloudinaryMetricMeta> = {
+  storage: {
+    en: 'Storage', he: 'אחסון',
+    desc: 'הנפח הכולל שתופסות כל התמונות המאוחסנות כרגע ב-Cloudinary.',
+    icon: CloudQueueRoundedIcon, color: '#0D9488',
+  },
+  bandwidth: {
+    en: 'Bandwidth', he: 'תעבורה',
+    desc: 'כמות הנתונים שהוגשה החודש - כל פעם שתמונה נטענת אצל משתמש נספרת כאן.',
+    icon: SwapHorizRoundedIcon, color: '#3B82F6',
+  },
+  transformations: {
+    en: 'Transformations', he: 'טרנספורמציות',
+    desc: 'כמה גרסאות של תמונה (הקטנה, שינוי פורמט, טשטוש וכו׳) נוצרו החודש.',
+    icon: TuneRoundedIcon, color: '#8B5CF6',
+  },
+  objects: {
+    en: 'Objects', he: 'קבצים מאוחסנים',
+    desc: 'מספר קבצי התמונה המאוחסנים כרגע - נספר ישירות מה-DB שלנו, מתעדכן מיד אחרי העלאה (בניגוד לשאר המדדים כאן, שמתעדכנים אצל Cloudinary בעיכוב).',
+    icon: PhotoLibraryRoundedIcon, color: '#0D9488',
+  },
+  requests: {
+    en: 'Requests', he: 'בקשות',
+    desc: 'כמה בקשות API בוצעו מול Cloudinary החודש - כולל הצגת תמונות, העלאות ועיבודים.',
+    icon: HttpRoundedIcon, color: '#1D4ED8',
+  },
+};
 
 export const formatMB = (bytes: number) => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
