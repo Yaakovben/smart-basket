@@ -522,14 +522,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // תיקון קודם ניחש hex אטום ל"אפור של הצ'יפים" - לא הסתדר,
-              // כי action.hover הוא שקיפות שנחתכת (composite) מעל מה
-              // שממש נמצא מתחת, וזה לא קבוע (פעם צ'יפ, פעם רווח בין
-              // צ'יפים) - אין hex יחיד שתמיד יתאים. הפתרון האמיתי: לשכפל
-              // בדיוק את מה שצ'יפ עושה - שכבה אטומה עם *אותו* רקע שהצ'יפים
-              // באמת יושבים עליו (background.default, ראו ה-Box שעוטף את
-              // כל אזור התוכן) שחוסמת את מה שמתחת, ועליה שכבה שנייה עם
-              // action.hover בדיוק - בלי לנחש/לחשב ערך משוקלל בעצמנו.
+              // שכבת בסיס אטומה (background.default, אותו רקע שהצ'יפים
+              // באמת יושבים עליו) + שכבת action.hover מדויקת מעליה - כמו
+              // בתיקון הקודם. הפעם גם borderColor:'transparent' (במקום
+              // 'divider' מ-reorderEntrySx) - צ'יפ לא-פעיל *אין לו* מסגרת
+              // נראית (borderColor:'transparent' גם שם), אז מסגרת divider
+              // כאן הייתה בדיוק ה"הבדל" שגרם לזה להיראות כגוון אחר, גם
+              // כשהמילוי בפועל זהה.
               <Box
                 role="button"
                 tabIndex={0}
@@ -540,6 +539,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                   ...reorderEntrySx,
                   position: 'relative', overflow: 'hidden',
                   bgcolor: 'background.default',
+                  borderColor: 'transparent',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                 }}
               >
