@@ -521,19 +521,25 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // דורס את bgcolor:'action.hover' של reorderEntrySx (מעורבב
-              // שקיפות - נראה טוב על רקע העמוד הרגיל, אבל כשהכפתור צף מעל
-              // הצ'יפים עצמם - ראו CategoryFilterChips, trailing הוא
-              // position:absolute מעליהם - הצבעים/הצללים שלהם הופיעו מבעד
-              // לו, ונראה "שקוף"/מרוח). background.paper אטום + צל קטן -
-              // נראה כמו כפתור צף אמיתי, לא מתערבב עם מה שמתחתיו.
+              // דורס את bgcolor:'action.hover' של reorderEntrySx - זה אמנם
+              // הצבע "הרשמי" של צ'יפ לא-פעיל, אבל הוא שקיפות חלקית מעל מה
+              // שמתחת (ולא רקע אטום), אז כשהכפתור צף (position:absolute)
+              // מעל הצ'יפים עצמם - ראו CategoryFilterChips - זה נראה "שקוף"/
+              // מרוח. גם background.paper (לבן אטום) לא נכון - זה *לא* אותו
+              // אפור שרואים בצ'יפים (שהוא action.hover מעל רקע העמוד, לא
+              // לבן טהור). כאן גוון אפור אטום ומחושב-מראש שמדמה חזותית את
+              // אותה תוצאה בלי להיות שקוף בפועל.
               <Box
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={{ ...reorderEntrySx, bgcolor: 'background.paper', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                sx={{
+                  ...reorderEntrySx,
+                  bgcolor: settings.theme === 'dark' ? '#334155' : '#EEF1F4',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                }}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
