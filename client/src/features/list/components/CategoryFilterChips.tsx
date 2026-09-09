@@ -146,6 +146,19 @@ export const CategoryFilterChips = memo(({
         })}
       </Box>
       {trailing && (
+        // צל רך וקבוע (לא תלוי-גלילה) בדיוק באזור שבו הכפתור הצף יושב -
+        // כשצ'יפ מגיע עד לשם תוך כדי גלילה, הוא "נבלע" בעדינות בצל הזה
+        // במקום להיצמד ישירות לגבול הכפתור בלי שום מעבר. עדין (0.08 אלפא
+        // בלבד), דוהה מהר לתוך רצועת הצ'יפים.
+        <Box aria-hidden sx={{
+          position: 'absolute', insetInlineEnd: 0, top: 0, bottom: 4, width: 56,
+          pointerEvents: 'none',
+          background: (theme) => `linear-gradient(to left, ${
+            theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.35)' : 'rgba(15,23,42,0.10)'
+          }, transparent)`,
+        }} />
+      )}
+      {trailing && (
         // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
         // שזה פותר. insetInlineEnd:0 = הפינה השמאלית-עליונה הפיזית ב-RTL
         // (אותה פינה שבה trailing ישב קודם כ-flex sibling). opacity/
