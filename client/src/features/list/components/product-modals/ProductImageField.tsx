@@ -1,5 +1,5 @@
-import { memo, useRef, useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Box, Typography } from '@mui/material';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
@@ -8,7 +8,7 @@ import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinar
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import { ImageLightbox, ProgressiveImage } from '../../../../global/components';
-import { compressProductImage, buildUploadMaster, uploadToServer, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
+import { compressProductImage, buildUploadMaster, uploadToServer, prefetchUploadSignature, isNotConfiguredError, ImageUploadError } from '../../../../global/services/imageUpload';
 
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
 // עיצוב אחיד לחלוטין עם ProductNoteField: אותו צ'יפ תכלת סגור, אותם
@@ -36,6 +36,10 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   // (לא חוסם - התמונה כבר מוצגת ושמישה, רק מוחלפת בכתובת מתארחת אם יצליח).
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  // אחוז התקדמות ההעלאה (0-100) מ-xhr.upload.onprogress. null = אין נתון
+  // (onprogress עוד לא ירה / לא lengthComputable) -> חיווי ה"מים" נופל
+  // לאנימציה הקבועה במקום להישאר תקוע.
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   // tone מבחין בין כשל חוסם (דחיסה נכשלה/גדול מדי - 'error', אדום) לכשל רך
   // (העלאה לענן נכשלה אבל התמונה המקומית עדיין תקינה ושמישה - 'warning',
   // טון ניטרלי) - אותו state יחיד, לא שני משתנים, כדי שתמיד יתנקה יחד.
@@ -53,6 +57,10 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   // מזהה בקשה - מתעלמים מתוצאה של דחיסה/העלאה שהמשתמש כבר "עקף"
   // (בחר קובץ אחר, או הסיר את התמונה) לפני שהסתיימה.
   const reqIdRef = useRef(0);
+
+  // מחמם את חתימת ההעלאה ברגע שהשדה נטען (פתיחת המודל) - כך בחירת הקובץ
+  // בפועל לא ממתינה ל-round-trip, במיוחד כשה-API בקור start ב-Render Free.
+  useEffect(() => { prefetchUploadSignature(); }, []);
 
   const pick = () => {
     if (busy) return;
@@ -93,11 +101,14 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
     // עטוף בפונקציה (במקום קוד ישיר) כדי שאפשר יהיה גם להחזיר את ה-promise
     // שלה להורה (onUploadStart) - ראו ההערה על ה-prop למעלה.
     setUploading(true);
+    setUploadProgress(null);
     const runUpload = async (): Promise<string | null> => {
       try {
         const master = await buildUploadMaster(file);
         if (myId !== reqIdRef.current) return null;
-        const url = await uploadToServer(master);
+        const url = await uploadToServer(master, (pct) => {
+          if (myId === reqIdRef.current) setUploadProgress(pct);
+        });
         if (myId === reqIdRef.current) {
           // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
           // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
@@ -143,7 +154,10 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
         }
         return null;
       } finally {
-        if (myId === reqIdRef.current) setUploading(false);
+        if (myId === reqIdRef.current) {
+          setUploading(false);
+          setUploadProgress(null);
+        }
       }
     };
 
@@ -153,6 +167,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   const remove = () => {
     reqIdRef.current++; // מבטל דחיסה/העלאה שרצה
     setUploading(false);
+    setUploadProgress(null);
     setBusy(false);
     haptic('light');
     setError(null);
@@ -210,11 +225,11 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
               }}
             >
               {imageFailed ? (
-                // פלייסהולדר "נכשל לטעון" - אין כאן קטגוריה כמו בתצוגות
-                // אחרות של המוצר, זה שדה טופס. כפתור ההסרה (מחוץ לתיבה
-                // הזו) עדיין עובד - המשתמש לא תקוע, יכול להסיר ולנסות שוב.
+                // פלייסהולדר "נכשל לטעון" - סטטי לגמרי (בלי אנימציה), אין
+                // כאן קטגוריה כמו בתצוגות אחרות של המוצר, זה שדה טופס.
+                // כפתור ההסרה (מחוץ לתיבה הזו) עדיין עובד - המשתמש לא תקוע.
                 <Box sx={{
-                  width: '100%', height: '100%',
+                  position: 'absolute', inset: 0,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
                   color: 'text.disabled',
                 }}>
@@ -224,7 +239,26 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                   </Typography>
                 </Box>
               ) : (
-                <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} onError={() => setImageFailed(true)} />
+                <>
+                  {/* שכבת "טוען" עדינה מתחת לתמונה - shimmer, לא ספינר.
+                      נגלית רק כשה-<img> עדיין שקוף (רשת איטית); ברגע
+                      שהתמונה נטענת היא מכסה אותה. לא באנימציה במצב
+                      reduced-motion. */}
+                  <Box aria-hidden="true" sx={{
+                    position: 'absolute', inset: 0,
+                    background: isDark
+                      ? 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%)'
+                      : 'linear-gradient(90deg, rgba(15,118,110,0.04) 25%, rgba(15,118,110,0.10) 50%, rgba(15,118,110,0.04) 75%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'sbImgShimmer 1.4s ease-in-out infinite',
+                    '@keyframes sbImgShimmer': {
+                      '0%': { backgroundPosition: '200% 0' },
+                      '100%': { backgroundPosition: '-200% 0' },
+                    },
+                    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+                  }} />
+                  <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} onError={() => setImageFailed(true)} />
+                </>
               )}
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
@@ -234,19 +268,28 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 pointerEvents: 'none',
               }} />
               {uploading && (
-                // חיווי העלאה - "מים" בגוון תכלת המותג שעולים מלמטה למעלה
-                // וחוזרים, בלי ספינר ובלי טקסט. חצי-שקוף כדי שרואים את
-                // התמונה שמאחור (מה שמעלים). קו "פני המים" בהיר בקצה העליון.
+                // חיווי העלאה - "מים" בגוון תכלת המותג שעולים מלמטה למעלה.
+                // כשיש אחוז התקדמות אמיתי (uploadProgress) - הגובה נצמד
+                // אליו עם מעבר חלק. כשאין נתון (onprogress לא זמין) -
+                // נופל לאנימציית "גאות" קבועה. חצי-שקוף כדי שרואים את
+                // התמונה שמאחור. קו "פני המים" בהיר בקצה העליון.
                 <Box role="status" aria-label={t('photoProcessing')} sx={{
                   position: 'absolute', left: 0, right: 0, bottom: 0,
                   overflow: 'hidden',
-                  animation: 'sbUploadRise 1.5s ease-in-out infinite',
-                  '@keyframes sbUploadRise': {
-                    '0%, 100%': { height: '10%' },
-                    '50%': { height: '100%' },
-                  },
-                  '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
                   bgcolor: 'rgba(20,184,166,0.42)',
+                  ...(uploadProgress != null
+                    ? {
+                        height: `${Math.max(5, uploadProgress)}%`,
+                        transition: 'height 0.3s ease-out',
+                      }
+                    : {
+                        animation: 'sbUploadRise 1.5s ease-in-out infinite',
+                        '@keyframes sbUploadRise': {
+                          '0%, 100%': { height: '10%' },
+                          '50%': { height: '100%' },
+                        },
+                        '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
+                      }),
                   '&::before': {
                     content: '""', position: 'absolute', left: 0, right: 0, top: 0, height: 2,
                     bgcolor: 'rgba(94,234,212,0.95)',
@@ -283,20 +326,35 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
             role="button"
             tabIndex={0}
             aria-label={t('addPhoto')}
+            aria-busy={busy}
             onClick={pick}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pick(); }}
             sx={{
               ...addChipSx(isDark),
+              position: 'relative', overflow: 'hidden',
               cursor: busy ? 'default' : 'pointer',
-              opacity: busy ? 0.75 : 1,
               ...(busy ? { '&:hover': {} } : {}),
+              // מצב "מעבד" (דחיסה מקומית, ~שנייה) - שטף shimmer עדין על
+              // הצ'יפ במקום ספינר. אותה שפה כמו ה-shimmer מתחת לתמונה.
+              ...(busy && {
+                '&::after': {
+                  content: '""', position: 'absolute', inset: 0,
+                  background: isDark
+                    ? 'linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.10) 50%, transparent 80%)'
+                    : 'linear-gradient(90deg, transparent 20%, rgba(15,118,110,0.12) 50%, transparent 80%)',
+                  backgroundSize: '220% 100%',
+                  animation: 'sbChipShimmer 1.25s ease-in-out infinite',
+                  '@keyframes sbChipShimmer': {
+                    '0%': { backgroundPosition: '180% 0' },
+                    '100%': { backgroundPosition: '-180% 0' },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': { animation: 'none', opacity: 0.5 },
+                  pointerEvents: 'none',
+                },
+              }),
             }}
           >
-            {busy ? (
-              <CircularProgress size={13} sx={{ color: ink }} />
-            ) : (
-              <AddPhotoAlternateRoundedIcon sx={{ fontSize: 16 }} />
-            )}
+            <AddPhotoAlternateRoundedIcon sx={{ fontSize: 16, opacity: busy ? 0.65 : 1 }} />
             <Typography sx={{ fontSize: 11.5, fontWeight: 700, fontStyle: 'italic' }}>
               {busy ? t('photoProcessing') : t('addPhoto')}
             </Typography>
