@@ -69,11 +69,13 @@ interface ListPageProps {
 }
 
 // כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), אותו bgcolor
-// כמו הצ'יפים ומסגרת divider. שקט, משתלב בשורה. האייקון בצבע המותג.
+// ומסגרת divider כמו הצ'יפים הלא-פעילים, כולל צבע האייקון (text.secondary,
+// לא צבע המותג) - כך שהוא נראה כמו עוד "צ'יפ" אפור בשורה, לא כפתור בולט
+// יותר מהקטגוריות שסביבו.
 const reorderEntrySx = {
   width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  bgcolor: 'action.hover', color: 'primary.main',
+  bgcolor: 'action.hover', color: 'text.secondary',
   border: '1.5px solid', borderColor: 'divider',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.12s, background-color 0.15s',
