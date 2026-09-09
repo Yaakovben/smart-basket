@@ -432,7 +432,12 @@ export const ProductDetailsModal = memo(({
       </Box>
 
       {showPhoto && product.image && (
-        <ImageLightbox src={cldFull(product.image)} alt={product.name} onClose={() => setShowPhoto(false)} />
+        <ImageLightbox
+          src={cldFull(product.image)}
+          placeholderSrc={cldPreview(product.image)}
+          alt={product.name}
+          onClose={() => setShowPhoto(false)}
+        />
       )}
     </Modal>
   );
