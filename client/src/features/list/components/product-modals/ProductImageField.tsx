@@ -109,6 +109,9 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
         const url = await uploadToServer(master, (pct) => {
           if (myId === reqIdRef.current) setUploadProgress(pct);
         });
+        // כל הבייטים עלו - גם אם onprogress לא ירה בכלל. מכאן זה עיבוד
+        // בצד Cloudinary + preload, לא העלאה -> ה"מים" מתרוקנים.
+        if (myId === reqIdRef.current) setUploadProgress(100);
         if (myId === reqIdRef.current) {
           // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
           // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
@@ -240,15 +243,15 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 </Box>
               ) : (
                 <>
-                  {/* שכבת "טוען" עדינה מתחת לתמונה - shimmer, לא ספינר.
-                      נגלית רק כשה-<img> עדיין שקוף (רשת איטית); ברגע
-                      שהתמונה נטענת היא מכסה אותה. לא באנימציה במצב
-                      reduced-motion. */}
+                  {/* שכבת "טוען" עדינה מתחת לתמונה - shimmer אפרפר ניטרלי
+                      (לא תורכיז - תורכיז שמור *רק* לחיווי ההעלאה). נגלית
+                      רק כשה-<img> עדיין שקוף (רשת איטית); ברגע שהתמונה
+                      נטענת היא מכסה אותה. לא באנימציה ב-reduced-motion. */}
                   <Box aria-hidden="true" sx={{
                     position: 'absolute', inset: 0,
                     background: isDark
                       ? 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%)'
-                      : 'linear-gradient(90deg, rgba(15,118,110,0.04) 25%, rgba(15,118,110,0.10) 50%, rgba(15,118,110,0.04) 75%)',
+                      : 'linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.03) 75%)',
                     backgroundSize: '200% 100%',
                     animation: 'sbImgShimmer 1.4s ease-in-out infinite',
                     '@keyframes sbImgShimmer': {
@@ -268,33 +271,39 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 pointerEvents: 'none',
               }} />
               {uploading && (
-                // חיווי העלאה - "מים" בגוון תכלת המותג שעולים מלמטה למעלה.
-                // כשיש אחוז התקדמות אמיתי (uploadProgress) - הגובה נצמד
-                // אליו עם מעבר חלק. כשאין נתון (onprogress לא זמין) -
-                // נופל לאנימציית "גאות" קבועה. חצי-שקוף כדי שרואים את
-                // התמונה שמאחור. קו "פני המים" בהיר בקצה העליון.
-                <Box role="status" aria-label={t('photoProcessing')} sx={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0,
-                  overflow: 'hidden',
-                  bgcolor: 'rgba(20,184,166,0.42)',
-                  ...(uploadProgress != null
-                    ? {
-                        height: `${Math.max(5, uploadProgress)}%`,
-                        transition: 'height 0.3s ease-out',
-                      }
-                    : {
-                        animation: 'sbUploadRise 1.5s ease-in-out infinite',
-                        '@keyframes sbUploadRise': {
-                          '0%, 100%': { height: '10%' },
-                          '50%': { height: '100%' },
-                        },
-                        '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
-                      }),
-                  '&::before': {
-                    content: '""', position: 'absolute', left: 0, right: 0, top: 0, height: 2,
-                    bgcolor: 'rgba(94,234,212,0.95)',
-                  },
-                }} />
+                // חיווי העלאה - "מים" תורכיז שעולים מלמטה למעלה, ומסמנים
+                // *אך ורק* שההעלאה עדיין רצה וכמה התקדמה. כשיש אחוז אמיתי
+                // (uploadProgress) הגובה נצמד אליו; ברגע ש-100% מכל
+                // הבייטים עלו - המים "מתרוקנים" ונעלמים (מכאן זו רק הכנה
+                // בצד Cloudinary, לא העלאה - אין תורכיז). כשאין נתון
+                // התקדמות בכלל - אנימציית "גאות" קבועה עד סוף ההעלאה.
+                <Box
+                  role="status"
+                  aria-label={t('photoProcessing')}
+                  sx={{
+                    position: 'absolute', left: 0, right: 0, bottom: 0,
+                    overflow: 'hidden',
+                    bgcolor: 'rgba(20,184,166,0.42)',
+                    ...(uploadProgress != null
+                      ? {
+                          height: uploadProgress >= 100 ? '0%' : `${Math.max(5, uploadProgress)}%`,
+                          opacity: uploadProgress >= 100 ? 0 : 1,
+                          transition: 'height 0.35s ease-out, opacity 0.3s ease-out',
+                        }
+                      : {
+                          animation: 'sbUploadRise 1.5s ease-in-out infinite',
+                          '@keyframes sbUploadRise': {
+                            '0%, 100%': { height: '10%' },
+                            '50%': { height: '100%' },
+                          },
+                          '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
+                        }),
+                    '&::before': {
+                      content: '""', position: 'absolute', left: 0, right: 0, top: 0, height: 2,
+                      bgcolor: 'rgba(94,234,212,0.95)',
+                    },
+                  }}
+                />
               )}
             </Box>
             {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית), מבצבץ
