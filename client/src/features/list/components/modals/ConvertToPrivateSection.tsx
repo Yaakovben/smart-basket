@@ -1,8 +1,7 @@
 import { memo, useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
-import LockRoundedIcon from '@mui/icons-material/LockRounded';
+import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, iconBadgeSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx } from './listSettingsCardSx';
 
 // ===== המרת קבוצה ריקה לרשימה פרטית =====
 interface ConvertToPrivateSectionProps {
@@ -10,36 +9,31 @@ interface ConvertToPrivateSectionProps {
 }
 
 export const ConvertToPrivateSection = memo(({ onConvertToPrivate }: ConvertToPrivateSectionProps) => {
-  const { t, settings } = useSettings();
-  const isDark = settings.theme === 'dark';
+  const { t } = useSettings();
   const [converting, setConverting] = useState(false);
 
   return (
-    <Box
-      onClick={async () => {
-        if (converting) return;
-        setConverting(true);
-        try {
-          await onConvertToPrivate();
-        } finally {
-          setConverting(false);
-        }
-      }}
-      sx={settingsRowSx(converting)}
-    >
-      <Box sx={iconBadgeSx('neutral', isDark)}>
-        <LockRoundedIcon sx={{ fontSize: 18 }} />
+    <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+      <Box
+        sx={{ ...settingsRowSx, opacity: converting ? 0.6 : 1, cursor: converting ? 'default' : 'pointer' }}
+        onClick={async () => {
+          if (converting) return;
+          setConverting(true);
+          try {
+            await onConvertToPrivate();
+          } finally {
+            setConverting(false);
+          }
+        }}
+      >
+        <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={rowLabelSx}>{t('convertToPrivate')}</Typography>
+          <Typography sx={rowHintSx}>{t('convertToPrivateHint')}</Typography>
+        </Box>
+        {converting && <CircularProgress size={18} sx={{ color: 'text.secondary', flexShrink: 0 }} />}
       </Box>
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
-          {t('convertToPrivate')}
-        </Typography>
-        <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.3 }}>
-          {t('convertToPrivateHint')}
-        </Typography>
-      </Box>
-      {converting && <CircularProgress size={16} sx={{ color: 'text.secondary', flexShrink: 0 }} />}
-    </Box>
+    </Paper>
   );
 });
 
