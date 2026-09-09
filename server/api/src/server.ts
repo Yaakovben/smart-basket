@@ -4,6 +4,7 @@ import app from './app';
 import { env, connectDatabase, logger } from './config';
 import { startPriceSyncJob } from './features/priceComparison';
 import { warmGroqModel } from './services/aiAssistant.service';
+import { isImageUploadConfigured } from './services/imageUpload.service';
 
 // אתחול Sentry לניטור שגיאות (חייב להיות ראשון)
 if (env.SENTRY_DSN) {
@@ -27,6 +28,11 @@ const startServer = async () => {
       logger.info(`API server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
       // discovery ברקע — מחמם את cache המודל לפני שמשתמש יגיע
       warmGroqModel();
+      // אזהרה מוקדמת: בלי Cloudinary *כל* תמונת מוצר נופלת לאחסון data-URL
+      // בתוך Mongo (מנפח את ה-DB). עדיף לדעת בעלייה ולא רק כשמשתמש מתלונן.
+      if (!isImageUploadConfigured()) {
+        logger.warn('[imageUpload] Cloudinary is NOT configured - every product photo will fall back to a data-URL stored in MongoDB. Set CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET.');
+      }
     });
 
     // התחלת cron job לרענון מחירים - בכל סביבה שהיא לא development (dev מקומי).

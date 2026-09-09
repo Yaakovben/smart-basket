@@ -21,17 +21,22 @@ const variant = (url: string, transform: string): string => {
 };
 
 // אריח בשורת הרשימה (~48-72px CSS) ובטופס (עד 112px). w_360 מכסה תצוגת
-// 112px במסך פי-3 (רינה). q_auto (לא :eco - :eco היה אגרסיבי מדי וריכך
-// את האריח). הפרמטרים כאן חייבים להיות זהים ל-eager ב-imageUpload.service.ts
-// (שרת) - אחרת ה-eager מייצר גרסה שאף בקשה לא מבקשת, וזו שכן מבוקשת נוצרת
-// "on the fly" בכל זאת.
+// 112px במסך פי-3 (רטינה). q_auto (לא :eco - :eco היה אגרסיבי מדי וריכך
+// את האריח). זו הגרסה היחידה שנבנית ב-eager *סינכרוני* בשרת (ראו
+// UPLOAD_EAGER_THUMB ב-imageUpload.service.ts) - כך שהיא קיימת ב-CDN
+// ברגע שההעלאה חוזרת. הפרמטרים כאן חייבים להיות זהים מילה-במילה למחרוזת
+// שם - אחרת ה-eager מייצר גרסה שאף בקשה לא מבקשת, וזו שכן מבוקשת נוצרת
+// "on the fly".
 export const cldThumb = (url: string) => variant(url, 'c_fill,w_360,h_360,f_auto,q_auto');
 
-// תמונת "גיבור" בפרטי מוצר (~150-300px CSS, מכסה גם רינה פי-3). q_auto:best
+// תמונת "גיבור" בפרטי מוצר (~150-300px CSS, מכסה גם רטינה פי-3). q_auto:best
 // (לא q_auto הרגיל) - כאן המשתמש באמת מסתכל מקרוב, איכות עדיפה על גודל קובץ.
+// *לא* ב-eager - נוצרת on-the-fly בבקשה הראשונה ואז נשמרת לנצח ב-CDN של
+// Cloudinary (פעולה מכוונת שסובלת השהיה קצרה; ProgressiveImage מציג בלור
+// בינתיים).
 export const cldPreview = (url: string) => variant(url, 'c_limit,w_800,f_auto,q_auto:best');
 
-// מסך מלא - אותו היגיון כמו cldPreview, q_auto:best.
+// מסך מלא - אותו היגיון כמו cldPreview (on-the-fly + CDN cache), q_auto:best.
 export const cldFull = (url: string) => variant(url, 'c_limit,w_1600,f_auto,q_auto:best');
 
 // ===== blur-up placeholder =====

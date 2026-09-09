@@ -246,6 +246,13 @@ export const isNotConfiguredError = (err: unknown): boolean => {
  * מעלה "מאסטר" (Blob/File באיכות גבוהה) ל-Cloudinary ומחזיר כתובת https
  * קבועה. זורק את שגיאת ה-API הגולמית - השתמש ב-isNotConfiguredError כדי
  * להבחין בין "אין Cloudinary" (להישאר עם ה-data URL) לכשל אמיתי.
+ * onProgress (אופציונלי) - אחוז התקדמות ההעלאה (0-100) לחיווי אמיתי.
  */
-export const uploadToServer = (master: Blob): Promise<string> =>
-  uploadsApi.productImage(master);
+export const uploadToServer = (master: Blob, onProgress?: (pct: number) => void): Promise<string> =>
+  uploadsApi.productImage(master, onProgress);
+
+/**
+ * מחמם מראש את חתימת ההעלאה (ProductImageField קורא בטעינה) - ראו
+ * uploadsApi.prefetchUploadSignature.
+ */
+export const prefetchUploadSignature = (): void => uploadsApi.prefetchUploadSignature();

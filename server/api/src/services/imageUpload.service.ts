@@ -114,17 +114,23 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
   };
 }
 
-// תיקייה + eager קבועים, זהים בדיוק לפרמטרים שהלקוח מזריק דרך
-// cloudinaryImage.ts (cldThumb/cldPreview/cldBlur) - אחרת אין cache hit
-// על הגרסה שבאמת מבוקשת. משותפים בין ההעלאה (למטה) לבין החתימה.
+// תיקייה קבועה - משותפת בין ההעלאה לבין החתימה.
 const UPLOAD_FOLDER = 'smart-basket/products';
-// חייב להיות זהה בדיוק ל-cldThumb/cldPreview/cldFull/cldBlur ב-client/
-// cloudinaryImage.ts, גודל-גודל, פרמטר-פרמטר - אחרת אין cache hit על
-// הגרסה שבאמת מבוקשת (ראו ההערה שם). preview/full ב-q_auto:best (איכות
-// גבוהה - שם המשתמש באמת מסתכל מקרוב); thumb נשאר q_auto רגיל (קטן על
-// המסך, אין הבדל נראה, ומהיר יותר).
-const UPLOAD_EAGER =
-  'c_fill,w_360,h_360,f_auto,q_auto|c_limit,w_800,f_auto,q_auto:best|c_limit,w_1600,f_auto,q_auto:best|c_fill,w_32,h_32,e_blur:1000,q_1,f_auto';
+// eager סינכרוני: *רק* גרסת ה-thumb (זו שמוצגת מיד בשורת הרשימה ובטופס).
+// eager_async לא נשלח בכלל -> Cloudinary בונה את הגרסה הזו *לפני* שהוא
+// מחזיר תשובה להעלאה, כך שברגע שההעלאה חוזרת ה-thumb כבר קיים ב-CDN
+// (בלי "on the fly" איטי בטעינה הראשונה, בלי צורך לחכות ל-eager שרץ
+// ברקע). זו גרסה אחת קטנה - התוספת לזמן ההעלאה זניחה (~100-300ms).
+//
+// preview/full/blur (cldPreview/cldFull/cldBlur ב-client) *אינם* כאן -
+// הם נוצרים on-the-fly בבקשה הראשונה ואז נשמרים לנצח ב-CDN של Cloudinary.
+// הם נצרכים רק בלייטבוקס/פרטי-מוצר (פעולה מכוונת, ProgressiveImage מציג
+// blur/thumb מתחת בינתיים) - לא שווה להשהות את *כל* העלאה בשבילם.
+//
+// חשוב: 'c_fill,w_360,h_360,f_auto,q_auto' חייב להישאר זהה מילה-במילה
+// ל-cldThumb ב-client/src/global/helpers/cloudinaryImage.ts - אחרת ה-
+// eager מייצר גרסה שאף בקשה לא מבקשת, וזו שכן מבוקשת נוצרת "on the fly".
+const UPLOAD_EAGER_THUMB = 'c_fill,w_360,h_360,f_auto,q_auto';
 
 export interface UploadSignature {
   cloudName: string;
@@ -146,8 +152,12 @@ export interface UploadSignature {
 export function getUploadSignature(): UploadSignature {
   ensureConfigured();
   const timestamp = Math.round(Date.now() / 1000);
+  // eager_async לא נחתם ולא נשלח -> ברירת המחדל (סינכרוני): Cloudinary
+  // בונה את גרסת ה-thumb לפני שהוא מחזיר תשובה. הלקוח חייב גם הוא לא
+  // לשלוח eager_async (ראו uploads.api.ts) - כל פרמטר שנשלח ולא נחתם
+  // פוסל את החתימה.
   const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder: UPLOAD_FOLDER, eager: UPLOAD_EAGER, eager_async: true },
+    { timestamp, folder: UPLOAD_FOLDER, eager: UPLOAD_EAGER_THUMB },
     env.CLOUDINARY_API_SECRET!,
   );
   return {
@@ -156,7 +166,7 @@ export function getUploadSignature(): UploadSignature {
     timestamp,
     signature,
     folder: UPLOAD_FOLDER,
-    eager: UPLOAD_EAGER,
+    eager: UPLOAD_EAGER_THUMB,
   };
 }
 
