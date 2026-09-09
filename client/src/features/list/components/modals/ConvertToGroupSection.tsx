@@ -1,9 +1,8 @@
 import { memo, useState } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Collapse } from '@mui/material';
-import GroupAddRoundedIcon from '@mui/icons-material/GroupAddRounded';
+import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, iconBadgeSx, pinFieldSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx } from './listSettingsCardSx';
 
 // ===== המרת רשימה פרטית לקבוצה: כרטיס פתיחה + שלב הגדרת סיסמה =====
 interface ConvertToGroupSectionProps {
@@ -11,39 +10,29 @@ interface ConvertToGroupSectionProps {
 }
 
 export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupSectionProps) => {
-  const { t, settings } = useSettings();
-  const isDark = settings.theme === 'dark';
+  const { t } = useSettings();
   const [showPasswordStep, setShowPasswordStep] = useState(false);
   const [convertPassword, setConvertPassword] = useState('');
   const [converting, setConverting] = useState(false);
 
   return (
-    <>
-      <Box
-        onClick={() => setShowPasswordStep(!showPasswordStep)}
-        sx={{ ...settingsRowSx(), mb: showPasswordStep ? 1 : 0 }}
-      >
-        <Box sx={iconBadgeSx('accent', isDark)}>
-          <GroupAddRoundedIcon sx={{ fontSize: 19 }} />
-        </Box>
+    <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+      <Box sx={settingsRowSx} onClick={() => setShowPasswordStep(!showPasswordStep)}>
+        <Box component="span" sx={{ fontSize: 22 }}>👥</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 14, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
-            {t('convertToGroup')}
-          </Typography>
-          <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.3 }}>
-            {t('convertToGroupHint')}
-          </Typography>
+          <Typography sx={rowLabelSx}>{t('convertToGroup')}</Typography>
+          <Typography sx={rowHintSx}>{t('convertToGroupHint')}</Typography>
         </Box>
         <ExpandMoreRoundedIcon sx={{
-          color: 'text.secondary',
+          color: 'text.disabled',
           flexShrink: 0,
           transition: 'transform 0.25s ease',
           transform: showPasswordStep ? 'rotate(180deg)' : 'rotate(0deg)',
         }} />
       </Box>
       <Collapse in={showPasswordStep} unmountOnExit>
-        <Box sx={{ mt: 1.25, mb: 1, px: 0.25 }}>
-          <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+        <Box sx={{ ...expandedFieldRowSx, flexDirection: 'column', alignItems: 'stretch', gap: 1 }}>
+          <Typography sx={{ fontSize: 12.5, color: 'text.secondary' }}>
             {t('setGroupPassword')}
           </Typography>
           <TextField
@@ -51,10 +40,9 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
             autoFocus
             value={convertPassword}
             onChange={e => setConvertPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            placeholder="• • • •"
+            placeholder="1234"
             size="small"
-            sx={{ ...pinFieldSx(isDark), mb: 1.5 }}
-            inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 12 } }}
+            inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 4 } }}
           />
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
@@ -85,7 +73,7 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
           </Box>
         </Box>
       </Collapse>
-    </>
+    </Paper>
   );
 });
 

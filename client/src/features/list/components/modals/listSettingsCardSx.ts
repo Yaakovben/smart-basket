@@ -1,69 +1,35 @@
-// ===== סגנון משותף ל"שורות פעולה" בהגדרות רשימה =====
+// ===== סגנון משותף לשורות פעולה בהגדרות רשימה =====
 // (שינוי סיסמה / הפוך למשותפת / הפוך לפרטית ב-EditListModal).
 //
-// גרסה שנייה - הגרסה הקודמת (כרטיס שלם צבוע בגוון פסטלי חלש) התבררה
-// כלא ברורה מספיק: הצבע החלש-מדי גרם לזה להיראות כמו עוד שורת מידע
-// אפורה, לא כמו פעולה זמינה - "איפה זה?" היה התגובה. הפתרון: תבנית
-// "שורת הגדרות" סטנדרטית (כמו iOS/Material Settings) - השורה עצמה
-// נייטרלית ונקייה (action.hover), וכל הצבע מרוכז בתג-אייקון עגול מלא
-// (לא שקוף) - זה מה שבפועל אומר "זו פעולה, ובצבע הזה" בלי לצבוע את כל
-// הרקע. שני טונים בלבד: accent (תכלת המותג, לפעולות "מרחיבות" - שינוי
-// סיסמה/הפוך למשותפת) ו-neutral (אפור, לפעולת "צמצום" - חזרה לפרטי).
+// גרסה שלישית. שתי הגרסאות הקודמות המציאו סגנון "כרטיס" ייחודי משלהן
+// (גרדיאנט פסטלי, אח"כ תג-אייקון עגול צבעוני, שדה קוד עם רקע מפוספס
+// מיוחד) - אף אחת מהן לא הסתדרה. הפתרון: להפסיק להמציא, ופשוט לשכפל
+// *בדיוק* את שורת ה"הגדרות" הקיימת כבר בכל האפליקציה (ראו
+// features/settings/styles/SettingsComponent.styles.ts - settingRowSx/
+// rowLabelSx/subSettingRowSx) - אמוג'י פשוט (לא תג צבעוני), טקסט רגיל,
+// ChevronLeftIcon כחיווי הרחבה, בתוך Paper מעוגל. זו "השפה של האפליקציה"
+// שהמשתמש ביקש - לא סגנון חדש, השפה שכבר קיימת.
 import type { SxProps, Theme } from '@mui/material';
 
-export type CardTone = 'accent' | 'neutral';
-
-const BADGE_FILL: Record<CardTone, { light: string; dark: string }> = {
-  accent: { light: '#14B8A6', dark: '#2DD4BF' },
-  neutral: { light: '#94A3B8', dark: '#64748B' },
-};
-
-// שורה נייטרלית, זהה בדיוק לצ'יפ/פריט הגדרות רגיל באפליקציה - שום
-// גרדיאנט/גוון-רקע ייחודי, כדי שהצבע היחיד שיבלוט הוא תג האייקון.
-export const settingsRowSx = (disabled = false): SxProps<Theme> => ({
-  p: 1.5,
-  borderRadius: '14px',
+export const settingsRowSx: SxProps<Theme> = {
   display: 'flex',
   alignItems: 'center',
   gap: 1.5,
-  cursor: disabled ? 'default' : 'pointer',
-  opacity: disabled ? 0.6 : 1,
-  bgcolor: 'action.hover',
-  border: '1px solid',
-  borderColor: 'divider',
-  transition: 'background-color 0.15s ease, transform 0.1s ease',
-  WebkitTapHighlightColor: 'transparent',
-  '&:active': disabled ? {} : { transform: 'scale(0.985)' },
-});
+  p: 2,
+  cursor: 'pointer',
+  transition: 'background-color 0.15s ease',
+  '&:active': { bgcolor: 'action.selected' },
+};
 
-// תג אייקון עגול, מילוי מלא (לא שקוף) - זה מה שבפועל "צובע" את הפעולה.
-export const iconBadgeSx = (tone: CardTone, isDark: boolean): SxProps<Theme> => ({
-  width: 38,
-  height: 38,
-  borderRadius: '50%',
-  flexShrink: 0,
+export const rowLabelSx: SxProps<Theme> = { flex: 1, minWidth: 0, fontWeight: 500, fontSize: 15 };
+export const rowHintSx: SxProps<Theme> = { fontSize: 12.5, color: 'text.secondary', mt: 0.25 };
+
+// שורת השדה המורחבת (סיסמה/קוד) - אותה הזחה (48px) כמו תת-שורות
+// ההתראות הקיימות (subSettingRowSx), כדי שההרחבה תיראה כהמשך טבעי
+// של השורה שמעליה, לא כתוסף נפרד.
+export const expandedFieldRowSx: SxProps<Theme> = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  color: '#fff',
-  bgcolor: isDark ? BADGE_FILL[tone].dark : BADGE_FILL[tone].light,
-  boxShadow: `0 3px 8px ${tone === 'accent' ? 'rgba(20,184,166,0.4)' : 'rgba(100,116,139,0.3)'}`,
-});
-
-// שדה קוד 4-ספרות (סיסמת רשימה) - "חריצי ספרה" ויזואליים במקום שדה טקסט
-// גנרי: גרדיאנט מפוספס עדין ברקע (4 תאים) + letterSpacing מכוון + מסגרת/
-// זוהר-פוקוס בגוון המותג. עדיין input בודד אחד (לא 4 שדות נפרדים) -
-// פשוט, נגיש, בלי ניהול focus מסובך בין תאים.
-export const pinFieldSx = (isDark: boolean): SxProps<Theme> => ({
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '10px',
-    bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.6)',
-    backgroundImage: `repeating-linear-gradient(90deg, transparent 0, transparent calc(25% - 1px), ${
-      isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'
-    } calc(25% - 1px), ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'} 25%)`,
-    '& fieldset': { borderColor: isDark ? 'rgba(45,212,191,0.3)' : 'rgba(20,184,166,0.3)' },
-    '&:hover fieldset': { borderColor: isDark ? 'rgba(45,212,191,0.5)' : 'rgba(20,184,166,0.5)' },
-    '&.Mui-focused fieldset': { borderColor: 'primary.main', borderWidth: '1.5px' },
-  },
-  '& input': { caretColor: isDark ? '#5EEAD4' : '#0F766E' },
-});
+  gap: 1,
+  p: '4px 16px 16px 48px',
+};
