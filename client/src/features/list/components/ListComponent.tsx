@@ -68,19 +68,18 @@ interface ListPageProps {
   onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
 
-// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), אותו bgcolor
-// ומסגרת divider כמו הצ'יפים הלא-פעילים, כולל צבע האייקון (text.secondary,
-// לא צבע המותג) - כך שהוא נראה כמו עוד "צ'יפ" אפור בשורה, לא כפתור בולט
-// יותר מהקטגוריות שסביבו.
+// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), לבן אטום עם
+// צל עדין (כך שהוא בולט/צף מעל הרקע, לא מתמזג איתו) והאייקון בצבע המותג
+// (תכלת) - לא אפור כמו הצ'יפים; זה כפתור פעולה, לא עוד קטגוריה.
 const reorderEntrySx = {
   width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  bgcolor: 'action.hover', color: 'text.secondary',
-  border: '1.5px solid', borderColor: 'divider',
+  bgcolor: '#FFFFFF', color: 'primary.main',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.12s, background-color 0.15s',
   '&:active': { transform: 'scale(0.9)' },
-  '&:hover': { bgcolor: 'action.selected' },
+  '&:hover': { bgcolor: '#F8FAFC' },
 } as const;
 
 // ===== קומפוננטה ראשית =====
@@ -522,29 +521,17 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // שכבת בסיס אטומה (background.default, אותו רקע שהצ'יפים
-              // באמת יושבים עליו) + שכבת action.hover מדויקת מעליה - כמו
-              // בתיקון הקודם. הפעם גם borderColor:'transparent' (במקום
-              // 'divider' מ-reorderEntrySx) - צ'יפ לא-פעיל *אין לו* מסגרת
-              // נראית (borderColor:'transparent' גם שם), אז מסגרת divider
-              // כאן הייתה בדיוק ה"הבדל" שגרם לזה להיראות כגוון אחר, גם
-              // כשהמילוי בפועל זהה.
+              // לבן + תכלת (reorderEntrySx) - כפתור פעולה שבולט מעל
+              // הצ'יפים, לא מתמזג איתם.
               <Box
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={{
-                  ...reorderEntrySx,
-                  position: 'relative', overflow: 'hidden',
-                  bgcolor: 'background.default',
-                  borderColor: 'transparent',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                }}
+                sx={reorderEntrySx}
               >
-                <Box aria-hidden sx={{ position: 'absolute', inset: 0, bgcolor: 'action.hover' }} />
-                <SwapVertRoundedIcon sx={{ position: 'relative', zIndex: 1, fontSize: 19 }} />
+                <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
             ) : undefined}
           />

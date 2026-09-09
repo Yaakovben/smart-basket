@@ -23,8 +23,7 @@ export const CategoryFilterChips = memo(({
   onSelectCategory,
   trailing,
 }: CategoryFilterChipsProps) => {
-  const { t, settings } = useSettings();
-  const isDark = settings.theme === 'dark';
+  const { t } = useSettings();
 
   // trailing (כפתור "סידור מוצרים") מתכווץ ונעלם כשגוללים את רצועת הצ'יפים
   // הרחק מההתחלה - *בדיוק* לפי מרחק הגלילה, לא "נעלם/מופיע" בסוף/בהתחלה של
@@ -49,12 +48,6 @@ export const CategoryFilterChips = memo(({
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
   const COLLAPSE_DISTANCE = TRAILING_WIDTH;
   const trailingRef = useRef<HTMLDivElement | null>(null);
-  // "הארה" רכה על הקצה של הצ'יפ הצמוד לכפתור - גרדיאנט דקורטיבי שמבהיר
-  // בעדינות את הפינה שנוגעת בכפתור, כך שהמעבר בין הצ'יפ לכפתור מרגיש
-  // מכוון ולא כמו התנגשות סתמית. דוהה/חוזר בדיוק כמו הכפתור עצמו (אותו
-  // progress בדיוק ב-paintTrailing) - כשהכפתור נעלם בגלילה, אין סיבה
-  // שההארה שמצביעה עליו תישאר.
-  const glowRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const paintTrailing = useCallback((scrollLeft: number) => {
@@ -69,7 +62,6 @@ export const CategoryFilterChips = memo(({
     el.style.opacity = String(1 - progress);
     el.style.transform = `scale(${1 - progress * 0.4})`;
     el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
-    if (glowRef.current) glowRef.current.style.opacity = String(1 - progress);
   }, [COLLAPSE_DISTANCE]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -153,21 +145,6 @@ export const CategoryFilterChips = memo(({
           );
         })}
       </Box>
-      {trailing && (
-        // "הארה" - ראו glowRef למעלה. רוחב 70px (חופף לתוך אזור ה-pl
-        // השמור בצ'יפים) עם גרדיאנט שהולך מ-transparent (לא נוגע בצ'יפים
-        // הרחוקים מהכפתור) לבהיר יותר בקצה הצמוד לכפתור. pointerEvents:none -
-        // דקורטיבי בלבד, לא חוסם קליק על הצ'יפ מתחתיו.
-        <Box aria-hidden sx={{
-          position: 'absolute', insetInlineEnd: 0, top: 0, bottom: 4, width: 70,
-          pointerEvents: 'none',
-          // "to left, transparent, bright" - הבהיר בקצה השמאלי (הצמוד
-          // לכפתור), דוהה לשקוף כלפי ימין (הרחק מהכפתור, לתוך הצ'יפים).
-          background: isDark
-            ? 'linear-gradient(to left, transparent, rgba(255,255,255,0.10))'
-            : 'linear-gradient(to left, transparent, rgba(255,255,255,0.85))',
-        }} ref={glowRef} />
-      )}
       {trailing && (
         // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
         // שזה פותר. insetInlineEnd:0 = הפינה השמאלית-עליונה הפיזית ב-RTL
