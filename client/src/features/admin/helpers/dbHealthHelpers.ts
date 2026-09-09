@@ -68,8 +68,8 @@ export const CLOUDINARY_METRIC_META: Record<string, CloudinaryMetricMeta> = {
     icon: TuneRoundedIcon, color: '#8B5CF6',
   },
   objects: {
-    en: 'Objects', he: 'קבצים מאוחסנים',
-    desc: 'מספר קבצי התמונה המאוחסנים כרגע - נספר ישירות מה-DB שלנו, מתעדכן מיד אחרי העלאה (בניגוד לשאר המדדים כאן, שמתעדכנים אצל Cloudinary בעיכוב).',
+    en: 'Objects', he: 'תמונות',
+    desc: 'מימין: כמה מוצרים מפנים לכתובת Cloudinary (נספר מה-DB, מיידי). משמאל: כמה קבצים קיימים בפועל בתיקיית המוצרים ב-Cloudinary. פער ביניהם = מוצרים שמפנים לקובץ שכבר נמחק (למשל ידנית מלוח הבקרה).',
     icon: PhotoLibraryRoundedIcon, color: '#0D9488',
   },
   requests: {

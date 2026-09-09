@@ -89,6 +89,11 @@ export const CategoryFilterChips = memo(({
           // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
           // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת).
           mr: { xs: -1.5, sm: -2.5 }, pr: { xs: 1.5, sm: 2.5 },
+          // רווח שמור בקצה השני (שמאל ב-RTL, שם trailing יושב) - כדי
+          // שבמנוחה הצ'יפ האחרון לא ייצמד/יתנגש עם הכפתור הצף, אלא ישאיר
+          // "אוויר" נעים ביניהם. קבוע (לא תלוי-גלילה בכוונה) - ראו ההערה
+          // למעלה על לולאת המשוב שגרם ריצוד כשזה היה דינמי.
+          pl: trailing ? '46px' : 0,
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
           // גלילה חלקה/יציבה ב-iOS (momentum) - בלי זה overflow-x:auto נגלל
@@ -140,6 +145,19 @@ export const CategoryFilterChips = memo(({
           );
         })}
       </Box>
+      {trailing && (
+        // צל רך וקבוע (לא תלוי-גלילה) בדיוק באזור שבו הכפתור הצף יושב -
+        // כשצ'יפ מגיע עד לשם תוך כדי גלילה, הוא "נבלע" בעדינות בצל הזה
+        // במקום להיצמד ישירות לגבול הכפתור בלי שום מעבר. עדין (0.08 אלפא
+        // בלבד), דוהה מהר לתוך רצועת הצ'יפים.
+        <Box aria-hidden sx={{
+          position: 'absolute', insetInlineEnd: 0, top: 0, bottom: 4, width: 56,
+          pointerEvents: 'none',
+          background: (theme) => `linear-gradient(to left, ${
+            theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.35)' : 'rgba(15,23,42,0.10)'
+          }, transparent)`,
+        }} />
+      )}
       {trailing && (
         // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
         // שזה פותר. insetInlineEnd:0 = הפינה השמאלית-עליונה הפיזית ב-RTL

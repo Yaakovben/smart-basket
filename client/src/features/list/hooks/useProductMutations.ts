@@ -3,7 +3,7 @@ import type { Product, List, User, ToastType, ProductEditEntry, ProductEditChang
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { haptic } from '../../../global/helpers';
 import { trackEvent } from '../../../global/services/analytics';
-import { productsApi } from '../../../services/api';
+import { productsApi, uploadsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { isTempId } from '../helpers/list-helpers';
 import { isNetworkError, enqueueToggle, enqueueUpdate, enqueueDelete, enqueueClear, enqueueReset, updateQueuedAddPendingPurchase } from '../../../services/offlineQueue';
@@ -24,6 +24,7 @@ interface UseProductMutationsParams {
   originalEditProduct: Product | null;
   setOriginalEditProduct: (product: Product | null) => void;
   hasProductChanges: boolean;
+  editPendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 }
 
 // פעולות שינוי מצב על מוצרים קיימים: סימון/ביטול, מחיקה עם undo, עריכה,
@@ -44,6 +45,7 @@ export const useProductMutations = ({
   originalEditProduct,
   setOriginalEditProduct,
   hasProductChanges,
+  editPendingImageUploadRef,
 }: UseProductMutationsParams) => {
   // תור מחיקות ל-undo
   const deletedStackRef = useRef<{ product: Product; index: number }[]>([]);
@@ -249,6 +251,21 @@ export const useProductMutations = ({
     const editData = { ...showEdit };
     const original = { ...originalEditProduct };
 
+    // תמונה שעדיין עולה לענן ברגע ששומרים (כמו ב-handleAdd). אם ה-localValue
+    // עדיין שווה לתמונה שנשמרת (ה-upload לא הצליח והחליף אותה) - נמתין לה
+    // ברקע ונתקן את המוצר עם הכתובת האמיתית, בלי לחסום את השמירה. אם ה-
+    // pending כבר לא רלוונטי (התמונה הוסרה/הוחלפה/כבר עברה לענן) - מבטלים
+    // את ההעלאה שלו כשתסתיים, שלא תישאר יתומה ב-Cloudinary.
+    const editPending = editPendingImageUploadRef.current;
+    editPendingImageUploadRef.current = null;
+    const pendingImageUpload = editPending && editPending.localValue === (editData.image || '')
+      ? editPending.promise : null;
+    if (editPending && !pendingImageUpload) {
+      editPending.promise.then((url) => {
+        if (url && url !== (editData.image || '')) void uploadsApi.discardImage(url);
+      }).catch(() => { /* best-effort */ });
+    }
+
     // בניית diff - שליחת שדות שהשתנו בלבד
     const changes: Record<string, unknown> = {};
     if (editData.name !== original.name) changes.name = editData.name;
@@ -302,6 +319,18 @@ export const useProductMutations = ({
     try {
       await productsApi.updateProduct(list.id, editData.id, changes);
       showToast(t('saved'));
+      // התמונה עדיין הייתה data-URL בזמן השמירה - ממתינים להעלאה ומתקנים
+      // את המוצר עם ה-URL הקבוע כשהיא מסתיימת (בלי לחסום). כשל -> נשארים
+      // בשקט עם ה-data-URL, כמו במקום אחר.
+      if (pendingImageUpload) {
+        pendingImageUpload.then((finalUrl) => {
+          if (!finalUrl) return;
+          return productsApi.updateProduct(list.id, editData.id, { image: finalUrl }).then(() => {
+            onUpdateProductsForList(list.id, (current) =>
+              current.map(p => p.id === editData.id ? { ...p, image: finalUrl } : p));
+          });
+        }).catch(() => { /* best-effort */ });
+      }
       socketService.emitProductUpdated(list.id, {
         id: editData.id,
         name: editData.name,
@@ -320,7 +349,18 @@ export const useProductMutations = ({
       );
       showToast(t('errorOccurred'), 'error');
     }
-  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t, setShowEdit, setOriginalEditProduct]);
+  }, [showEdit, originalEditProduct, hasProductChanges, list.id, user.name, onUpdateProductsForList, showToast, t, setShowEdit, setOriginalEditProduct, editPendingImageUploadRef]);
+
+  // סגירת מודל העריכה בלי לשמור - אם נבחרה תמונה חדשה שכבר עלתה/עולה
+  // ל-Cloudinary, היא יתומה (המוצר שומר על תמונתו הקודמת). מבטלים אותה.
+  const discardPendingEditImageUpload = useCallback(() => {
+    const pending = editPendingImageUploadRef.current;
+    editPendingImageUploadRef.current = null;
+    if (!pending) return;
+    pending.promise.then((url) => {
+      if (url) void uploadsApi.discardImage(url);
+    }).catch(() => { /* best-effort */ });
+  }, [editPendingImageUploadRef]);
 
   // ===== איפוס רשימה (החזרת כל המוצרים ל"לא נקנה") - כרטיס בתוך מודאל הניקוי =====
   const handleResetList = useCallback(async () => {
@@ -353,6 +393,7 @@ export const useProductMutations = ({
     toggleProduct,
     deleteProduct,
     saveEditedProduct,
+    discardPendingEditImageUpload,
     showClearList,
     setShowClearList,
     handleClearList,

@@ -68,17 +68,18 @@ interface ListPageProps {
   onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
 
-// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), אותו bgcolor
-// כמו הצ'יפים ומסגרת divider. שקט, משתלב בשורה. האייקון בצבע המותג.
+// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), לבן אטום עם
+// צל עדין (כך שהוא בולט/צף מעל הרקע, לא מתמזג איתו) והאייקון בצבע המותג
+// (תכלת) - לא אפור כמו הצ'יפים; זה כפתור פעולה, לא עוד קטגוריה.
 const reorderEntrySx = {
   width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  bgcolor: 'action.hover', color: 'primary.main',
-  border: '1.5px solid', borderColor: 'divider',
+  bgcolor: '#FFFFFF', color: 'primary.main',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
   cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.12s, background-color 0.15s',
   '&:active': { transform: 'scale(0.9)' },
-  '&:hover': { bgcolor: 'action.selected' },
+  '&:hover': { bgcolor: '#F8FAFC' },
 } as const;
 
 // ===== קומפוננטה ראשית =====
@@ -100,6 +101,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     handleAdd, handleQuickAdd, addProductToServer, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
+    discardPendingEditImageUpload, editPendingImageUploadRef,
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal, discardPendingImageUpload,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
@@ -519,19 +521,15 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // דורס את bgcolor:'action.hover' של reorderEntrySx (מעורבב
-              // שקיפות - נראה טוב על רקע העמוד הרגיל, אבל כשהכפתור צף מעל
-              // הצ'יפים עצמם - ראו CategoryFilterChips, trailing הוא
-              // position:absolute מעליהם - הצבעים/הצללים שלהם הופיעו מבעד
-              // לו, ונראה "שקוף"/מרוח). background.paper אטום + צל קטן -
-              // נראה כמו כפתור צף אמיתי, לא מתערבב עם מה שמתחתיו.
+              // לבן + תכלת (reorderEntrySx) - כפתור פעולה שבולט מעל
+              // הצ'יפים, לא מתמזג איתם.
               <Box
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={{ ...reorderEntrySx, bgcolor: 'background.paper', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                sx={reorderEntrySx}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
@@ -719,11 +717,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         product={showEdit}
         hasChanges={hasProductChanges}
         saving={false}
-        onClose={closeEditProduct}
+        onClose={() => { discardPendingEditImageUpload(); closeEditProduct(); }}
         onSave={saveEditedProduct}
         onUpdateField={updateEditProductField}
         onIncrement={() => incrementQuantity('edit')}
         onDecrement={() => decrementQuantity('edit')}
+        editPendingImageUploadRef={editPendingImageUploadRef}
       />
 
       <ProductDetailsModal

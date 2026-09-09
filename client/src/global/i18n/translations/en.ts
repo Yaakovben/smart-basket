@@ -498,7 +498,10 @@ export const en: Translations = {
   photoUploadError: 'Photo upload failed. Please try again.',
   photoTooLarge: 'The photo is too large even after compression. Try another one.',
   photoLoadFailed: 'Couldn\'t load',
-  photoSyncFailed: 'The photo is saved on this device, but wasn\'t uploaded to the cloud. Try again later.',
+  photoSyncFailed: 'The photo is saved on this device, but wasn\'t uploaded to the cloud.',
+  photoRetryUpload: 'Retry upload',
+  photoSavedToCloud: 'Photo saved',
+  photoDropHint: 'Drop here to add a photo',
   itemHasPhoto: 'This item has a photo',
   // Scan list photo (OCR)
   ocrNoTextDetected: "We couldn't detect clear text in the image. Try a clearer, sharper photo with good lighting.",

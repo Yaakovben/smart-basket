@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useState } from 'react';
+import { memo, useRef, useCallback, useState, type RefObject } from 'react';
 import { Box, Typography, Button, Select, MenuItem, FormControl, CircularProgress } from '@mui/material';
 import type { Product, ProductUnit } from '../../../../global/types';
 import { haptic, COMMON_STYLES } from '../../../../global/helpers';
@@ -37,6 +37,9 @@ interface EditProductModalProps {
   onUpdateField: <K extends keyof Product>(field: K, value: Product[K]) => void;
   onIncrement: () => void;
   onDecrement: () => void;
+  // ראו ProductImageField.onUploadStart - כדי לתקן/לבטל העלאת תמונה ברקע
+  // שלא הסתיימה כששומרים/סוגרים. ראו useProductMutations.
+  editPendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 }
 
 export const EditProductModal = memo(({
@@ -47,7 +50,8 @@ export const EditProductModal = memo(({
   onSave,
   onUpdateField,
   onIncrement,
-  onDecrement
+  onDecrement,
+  editPendingImageUploadRef,
 }: EditProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
@@ -162,6 +166,7 @@ export const EditProductModal = memo(({
         <ProductImageField
           value={product.image || ''}
           onChange={(v) => onUpdateField('image', v as Product['image'])}
+          onUploadStart={(promise, localValue) => { editPendingImageUploadRef.current = { promise, localValue }; }}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>
