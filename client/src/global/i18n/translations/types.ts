@@ -425,6 +425,7 @@ export type TranslationKeys =
   | 'convertToGroupHint'
   | 'convertToPrivate'
   | 'convertToPrivateHint'
+  | 'convertToPrivateConfirmMessage'
   | 'setGroupPassword'
   // Duplicate product
   | 'productExists'

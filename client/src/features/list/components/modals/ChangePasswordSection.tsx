@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper }
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { List } from '../../../../global/types';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx, accentBarSx } from './listSettingsCardSx';
 
 // ===== שינוי סיסמה - מעל כפתור שמירה, נפתח בלחיצה =====
 // אותה שורת-הגדרות בדיוק כמו במסך ההגדרות הראשי (SettingsComponent) -
@@ -21,7 +21,7 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
   const [savingPassword, setSavingPassword] = useState(false);
 
   return (
-    <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2 }}>
+    <Paper sx={{ ...accentBarSx('accent'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 2 }}>
       <Box sx={settingsRowSx} onClick={() => setShowChangePassword(!showChangePassword)}>
         <Box component="span" sx={{ fontSize: 22 }}>🔑</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>

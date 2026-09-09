@@ -425,6 +425,7 @@ export const ru: Translations = {
   convertToGroupHint: 'Поделитесь списком с другими',
   convertToPrivate: 'Сделать личным списком',
   convertToPrivateHint: 'Убрать возможность совместного доступа',
+  convertToPrivateConfirmMessage: 'Список перестанет быть общим, а пароль группы будет удалён. Продолжить?',
   setGroupPassword: 'Установите пароль группы (4 цифры)',
   productExists: 'Продукт существует',
   productExistsMessage: '"{name}" уже в списке ({quantity} {unit}). Что делать?',

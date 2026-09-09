@@ -425,6 +425,7 @@ export const he: Translations = {
   convertToGroupHint: 'שתף את הרשימה עם אחרים',
   convertToPrivate: 'הפוך לרשימה פרטית',
   convertToPrivateHint: 'הסר את אפשרות השיתוף',
+  convertToPrivateConfirmMessage: 'הרשימה תפסיק להיות משותפת וסיסמת הקבוצה תוסר. להמשיך?',
   setGroupPassword: 'הגדר סיסמת קבוצה (4 ספרות)',
   productExists: 'מוצר קיים',
   productExistsMessage: '"{name}" כבר ברשימה ({quantity} {unit}). מה לעשות?',

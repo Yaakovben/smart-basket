@@ -52,10 +52,6 @@ export const EditListModal = memo(({
         <ChangePasswordSection list={list} onChangePassword={onChangePassword} />
       )}
 
-      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15 }}>
-        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
-      </Button>
-
       {!list.isGroup && onConvertToGroup && (
         <ConvertToGroupSection onConvertToGroup={onConvertToGroup} />
       )}
@@ -64,6 +60,9 @@ export const EditListModal = memo(({
         <ConvertToPrivateSection onConvertToPrivate={onConvertToPrivate} />
       )}
 
+      <Button variant="contained" fullWidth onClick={() => { haptic('medium'); onSave(); }} disabled={!hasChanges || saving} sx={{ py: 1.25, fontSize: 15, mt: 2 }}>
+        {saving ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t('saveChanges')}
+      </Button>
     </Modal>
   );
 });
