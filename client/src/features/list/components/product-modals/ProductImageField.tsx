@@ -17,11 +17,14 @@ interface Props {
   value: string;
   onChange: (v: string) => void;
   // נקרא פעם אחת כשמתחילה העלאה ברקע, עם ה-promise שלה (הכתובת הסופית או
-  // null בכשל/לא-מוגדר). למי-שקורה? AddProductModal - כדי לתקן מוצר שכבר
-  // נוצר עם ה-data-URL המקומי, אם "הוסף" נלחץ *לפני* שההעלאה הספיקה
-  // להסתיים (אחרת onChange כבר היה מעדכן את value לכתובת האמיתית). ראו
-  // useProductForm.ts (pendingImageUploadRef) + useAddProduct.ts.
-  onUploadStart?: (promise: Promise<string | null>) => void;
+  // null בכשל/לא-מוגדר) ועם ה-data-URL המקומי שהוצג באותו רגע. למי-שקורה?
+  // AddProductModal - כדי לתקן מוצר שכבר נוצר עם ה-data-URL המקומי, אם
+  // "הוסף" נלחץ *לפני* שההעלאה הספיקה להסתיים (אחרת onChange כבר היה
+  // מעדכן את value לכתובת האמיתית). localValue מגיע מכאן ולא נקרא מה-
+  // state של ההורה - ברגע הקריאה ה-onChange(local) עוד לא גרם לרינדור
+  // מחדש, אז ההורה עדיין מחזיק את הערך הישן. ראו useProductForm.ts
+  // (pendingImageUploadRef) + useAddProduct.ts.
+  onUploadStart?: (promise: Promise<string | null>, localValue: string) => void;
 }
 
 export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props) => {
@@ -144,7 +147,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
       }
     };
 
-    onUploadStart?.(runUpload());
+    onUploadStart?.(runUpload(), local);
   };
 
   const remove = () => {
