@@ -407,7 +407,7 @@ export const AddProductModal = memo(({
         <ProductImageField
           value={newProduct.image}
           onChange={(v) => onUpdateField('image', v)}
-          onUploadStart={(promise) => { pendingImageUploadRef.current = { promise, localValue: newProduct.image }; }}
+          onUploadStart={(promise, localValue) => { pendingImageUploadRef.current = { promise, localValue }; }}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>

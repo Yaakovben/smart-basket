@@ -7,6 +7,9 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/signature', imageUploadLimiter, getUploadSignature);
-router.post('/discard', imageUploadLimiter, discardUpload);
+// discard הוא ניקוי (best-effort), לא העלאה - לא סופר מול מכסת ה-40/שעה
+// של ההעלאות עצמן (אחרת משתמש הפכפך שבוחר-מבטל היה נחסם מלהעלות). מוגן
+// ע"י apiLimiter הגלובלי (1000/15דק' למשתמש מאומת).
+router.post('/discard', discardUpload);
 
 export default router;
