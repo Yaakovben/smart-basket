@@ -425,6 +425,7 @@ export const en: Translations = {
   convertToGroupHint: 'Share this list with others',
   convertToPrivate: 'Convert to private list',
   convertToPrivateHint: 'Remove sharing capability',
+  convertToPrivateConfirmMessage: 'The list will stop being shared and the group password will be removed. Continue?',
   setGroupPassword: 'Set group password (4 digits)',
   productExists: 'Product exists',
   productExistsMessage: '"{name}" is already in the list ({quantity} {unit}). What to do?',

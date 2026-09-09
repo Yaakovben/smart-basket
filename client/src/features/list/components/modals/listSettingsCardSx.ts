@@ -33,3 +33,12 @@ export const expandedFieldRowSx: SxProps<Theme> = {
   gap: 1,
   p: '4px 16px 16px 48px',
 };
+
+// פס צבעוני דק בצד הכרטיס - הפשרה אחרי שלוש גרסאות: לא רקע צבוע (v1),
+// לא תג-אייקון עגול (v2), ולא לגמרי נייטרלי כמו שורת הגדרות רגילה (v3,
+// "נעלם בעמוד" לפי המשתמש). borderInlineStart - לוגי, לא פיזי - נופל
+// אוטומטית לצד ה"התחלה" (ימין ב-RTL) בלי לתלות בכיוון המסמך בקוד עצמו.
+export const accentBarSx = (tone: 'accent' | 'neutral'): SxProps<Theme> => ({
+  borderInlineStart: '3px solid',
+  borderInlineStartColor: tone === 'accent' ? 'primary.main' : 'divider',
+});

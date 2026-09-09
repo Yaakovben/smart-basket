@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, accentBarSx } from './listSettingsCardSx';
 
 // ===== המרת קבוצה ריקה לרשימה פרטית =====
 interface ConvertToPrivateSectionProps {
@@ -13,7 +13,7 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate }: ConvertToPr
   const [converting, setConverting] = useState(false);
 
   return (
-    <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+    <Paper sx={{ ...accentBarSx('neutral'), borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
       <Box
         sx={{ ...settingsRowSx, opacity: converting ? 0.6 : 1, cursor: converting ? 'default' : 'pointer' }}
         onClick={async () => {

@@ -787,16 +787,26 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             showToast(t('errorOccurred'), 'error');
           }
         } : undefined}
-        onConvertToPrivate={list.isGroup && list.members.length === 0 ? async () => {
-          try {
-            if (isGroupMuted(list.id)) {
-              updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== list.id) });
-            }
-            await onUpdateList({ ...list, isGroup: false, password: null });
-            setShowEditList(false);
-          } catch {
-            showToast(t('errorOccurred'), 'error');
-          }
+        onConvertToPrivate={list.isGroup && list.members.length === 0 ? () => {
+          // הפעולה עצמה מיידית וחסרת חיכוך (בניגוד ל"הפוך למשותפת", שכבר
+          // דורש הרחבה+הגדרת סיסמה+כפתור נפרד) - אישור לפני ביצוע, אותו
+          // מנגנון confirm/setConfirm כמו removeMember/leaveList.
+          setConfirm({
+            title: t('convertToPrivate'),
+            message: t('convertToPrivateConfirmMessage'),
+            onConfirm: async () => {
+              try {
+                if (isGroupMuted(list.id)) {
+                  updateNotifications({ mutedGroupIds: settings.notifications.mutedGroupIds.filter(id => id !== list.id) });
+                }
+                await onUpdateList({ ...list, isGroup: false, password: null });
+                setShowEditList(false);
+              } catch {
+                showToast(t('errorOccurred'), 'error');
+              }
+              setConfirm(null);
+            },
+          });
         } : undefined}
         onChangePassword={list.isGroup ? async (password: string) => {
           try {

@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx, accentBarSx } from './listSettingsCardSx';
 
 // ===== המרת רשימה פרטית לקבוצה: כרטיס פתיחה + שלב הגדרת סיסמה =====
 interface ConvertToGroupSectionProps {
@@ -16,7 +16,7 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
   const [converting, setConverting] = useState(false);
 
   return (
-    <Paper sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+    <Paper sx={{ ...accentBarSx('accent'), borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
       <Box sx={settingsRowSx} onClick={() => setShowPasswordStep(!showPasswordStep)}>
         <Box component="span" sx={{ fontSize: 22 }}>👥</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
