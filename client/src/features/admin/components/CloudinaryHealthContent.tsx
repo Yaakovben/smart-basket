@@ -98,7 +98,26 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
           valueText={data.transformations.limit ? `${fmtNum(data.transformations.used)} / ${fmtNum(data.transformations.limit)}` : fmtNum(data.transformations.used)} isDark={isDark} />
       )}
       <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.objects} pct={null}
-        valueText={data.liveObjectCount != null ? fmtNum(data.liveObjectCount) : (data.objects != null ? fmtNum(data.objects) : '—')} isDark={isDark} />
+        valueText={
+          data.cloudinaryFileCount != null && data.liveObjectCount != null
+            ? `${fmtNum(data.liveObjectCount)} מוצרים · ${fmtNum(data.cloudinaryFileCount)} קבצים`
+            : data.liveObjectCount != null ? `${fmtNum(data.liveObjectCount)} מוצרים`
+            : data.objects != null ? fmtNum(data.objects) : '—'
+        } isDark={isDark} />
+      {data.deadReferenceCount != null && data.deadReferenceCount > 0 && (
+        <Box sx={{
+          mb: 1, p: 1.25, borderRadius: 2,
+          bgcolor: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.10)',
+          border: '1px solid', borderColor: isDark ? 'rgba(245,158,11,0.35)' : 'rgba(245,158,11,0.3)',
+        }}>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: isDark ? '#FCD34D' : '#B45309', lineHeight: 1.4 }}>
+            ⚠ {fmtNum(data.deadReferenceCount)} {data.deadReferenceCount === 1 ? 'מוצר מפנה' : 'מוצרים מפנים'} לתמונה שכבר לא קיימת ב-Cloudinary
+          </Typography>
+          <Typography sx={{ fontSize: 10.5, color: 'text.secondary', mt: 0.3, lineHeight: 1.4 }}>
+            קרוב לוודאי נמחקה ידנית מלוח הבקרה של Cloudinary. באפליקציה המשתמשים רואים אריח קטגוריה במקום התמונה. פתחו כל מוצר כזה והסירו/החליפו את התמונה.
+          </Typography>
+        </Box>
+      )}
       <CloudinaryMetricRow meta={CLOUDINARY_METRIC_META.requests} pct={null}
         valueText={data.requests != null ? fmtNum(data.requests) : '—'} isDark={isDark} />
 

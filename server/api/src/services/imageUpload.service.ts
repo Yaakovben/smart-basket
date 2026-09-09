@@ -47,11 +47,15 @@ export interface CloudinaryUsage {
   transformations?: { used: number; limit: number | null; pct: number | null };
   objects?: number;
   requests?: number;
-  // ספירה חיה מה-DB (לא מ-Cloudinary) - Cloudinary.api.usage() הוא מצרף
-  // מתעדכן בעיכוב מצדם (שעות, לפי התיעוד שלהם), אז "objects" למעלה יכול
-  // להישאר קבוע לזמן-מה גם אחרי העלאה אמיתית - "מוסיף ולא רואה שהשתנה".
-  // liveObjectCount תמיד מדויק לרגע הבקשה, בלי תלות בעיכוב הדיווח שלהם.
+  // ספירה חיה מה-DB - כמה *מוצרים* מפנים לכתובת Cloudinary. api.usage()
+  // הוא מצרף שמתעדכן בעיכוב יומי, אז "objects" למעלה יכול להישאר קבוע גם
+  // אחרי העלאה אמיתית. liveObjectCount מדויק לרגע.
   liveObjectCount?: number;
+  // ספירת קבצים *בפועל* בתיקיית המוצרים ב-Cloudinary (api.resources, מדויק
+  // לרגע). deadReferenceCount = כמה מוצרים מפנים ל-URL שכבר לא קיים שם
+  // (נמחק ידנית מלוח הבקרה של Cloudinary וכו').
+  cloudinaryFileCount?: number;
+  deadReferenceCount?: number;
   status?: 'ok' | 'warning' | 'critical';
 }
 
@@ -64,12 +68,41 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
   if (!isImageUploadConfigured()) return { configured: false };
   ensureConfigured();
 
-  // מקבילית ל-Cloudinary עצמו - ספירה חיה של מוצרים עם תמונה מאוחסנת שם
-  // (לא data URL), בשביל מדד שמתעדכן מיד אחרי העלאה אמיתית.
-  const [u, liveObjectCount] = await Promise.all([
+  // מקבילית ל-Cloudinary עצמו:
+  //  - u: דוח השימוש המצרפי (מתעדכן בעיכוב יומי)
+  //  - productImages: כל כתובות ה-Cloudinary שמוצרים מפנים אליהן כרגע
+  //  - existingFileIds: ה-public_id-ים שקיימים *בפועל* בתיקיית המוצרים
+  //    (api.resources, מדויק לרגע). ההצלבה נותנת deadReferenceCount -
+  //    מוצרים שמפנים לקובץ שכבר נמחק (למשל ידנית ב-Cloudinary).
+  const [u, productImages, existingFileIds] = await Promise.all([
     cloudinary.api.usage() as Promise<Record<string, any>>,
-    Product.countDocuments({ image: { $regex: '^https://res.cloudinary.com/' } }),
+    Product.find({ image: { $regex: '^https://res\\.cloudinary\\.com/' } }).select('image').lean(),
+    (async (): Promise<Set<string> | null> => {
+      try {
+        const ids = new Set<string>();
+        let cursor: string | undefined;
+        do {
+          const page = await cloudinary.api.resources({
+            type: 'upload', prefix: UPLOAD_FOLDER, max_results: 500, next_cursor: cursor,
+          });
+          for (const r of page.resources as Array<{ public_id: string }>) ids.add(r.public_id);
+          cursor = page.next_cursor;
+        } while (cursor);
+        return ids;
+      } catch {
+        return null; // לא קריטי - נשארים בלי המדדים המדויקים
+      }
+    })(),
   ]);
+
+  const liveObjectCount = productImages.length;
+  const cloudinaryFileCount = existingFileIds ? existingFileIds.size : undefined;
+  const deadReferenceCount = existingFileIds
+    ? productImages.reduce((n, p) => {
+        const id = extractCloudinaryPublicId(p.image as string);
+        return n + (id && !existingFileIds.has(id) ? 1 : 0);
+      }, 0)
+    : undefined;
 
   const pctFromField = (f: any): number | null => {
     if (typeof f?.used_percent === 'number') return Math.round(f.used_percent * 10) / 10;
@@ -80,8 +113,11 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
   };
 
   const creditsPct = pctFromField(u.credits) ?? 0;
-  const status: 'ok' | 'warning' | 'critical' =
+  let status: 'ok' | 'warning' | 'critical' =
     creditsPct < 70 ? 'ok' : creditsPct < 90 ? 'warning' : 'critical';
+  // מוצרים שמפנים לקובץ שנמחק = לינקים שבורים בפרודקשן. לא "תקין" גם אם
+  // המכסה רחוקה.
+  if (deadReferenceCount && deadReferenceCount > 0 && status === 'ok') status = 'warning';
 
   return {
     configured: true,
@@ -110,6 +146,8 @@ export async function getCloudinaryUsage(): Promise<CloudinaryUsage> {
     objects: typeof u.objects?.usage === 'number' ? u.objects.usage : (typeof u.resources === 'number' ? u.resources : undefined),
     requests: typeof u.requests === 'number' ? u.requests : undefined,
     liveObjectCount,
+    cloudinaryFileCount,
+    deadReferenceCount,
     status,
   };
 }
