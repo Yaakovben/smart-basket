@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Box, Chip } from '@mui/material';
 import { CATEGORY_ICONS, CATEGORY_TRANSLATION_KEYS, CATEGORY_COLORS } from '../../../global/constants';
 import { useSettings } from '../../../global/context/SettingsContext';
@@ -25,42 +25,50 @@ export const CategoryFilterChips = memo(({
 }: CategoryFilterChipsProps) => {
   const { t } = useSettings();
 
-  // trailing (כפתור "סידור מוצרים") נעלם כשגוללים את רצועת הצ'יפים הרחק
-  // מההתחלה, וחוזר כשגוללים בחזרה - כמו באפליקציות עם רצועות סינון.
-  // Math.abs (לא בדיקת סימן) כי המוסכמה של scrollLeft ב-RTL לא אחידה בין
-  // דפדפנים - אבל scrollLeft===0 (בקירוב) תמיד אומר "בהתחלה" בכל המוסכמות.
-  //
-  // שני תיקוני יציבות (היו "מרצדים"/"קופצים" עם הרבה קטגוריות):
-  //  1. הסתרה (SHOW_AT..HIDE_AT) - "אזור מת" בין שני ספים שונים במקום סף
-  //     יחיד, כדי שרעד קטן סביב נקודה בודדת (למשל rubber-band bounce
-  //     ב-iOS בקצה הגלילה) לא יגרום להחלפה הלוך-חזור. גם: החזרה חייבת
-  //     "להתייצב" DEBOUNCE_MS לפני שבאמת חוזרים - מעבר חטוף/רגעי מתחת לסף
-  //     (למשל באמצע האטת מומנטום) לא מספיק כדי להחזיר את הכפתור.
-  //  2. האנימציה עצמה (למטה, ב-sx) עברה מ-width (גורם ל-reflow של כל שאר
-  //     הצ'יפים בכל פריים, בדיוק בזמן שהם ממילא נגללים - זה מה שגרם
-  //     לקפיצות/ריצוד) ל-opacity+transform בלבד (compositor, בלי reflow
-  //     בכלל) - הרוחב נשאר קבוע (32px שמורים תמיד), רק נעלם/מופיע חזותית.
-  const HIDE_AT = 14;
-  const SHOW_AT = 4;
-  const DEBOUNCE_MS = 140;
-  const [scrolled, setScrolled] = useState(false);
-  const showTimerRef = useRef<number | null>(null);
+  // trailing (כפתור "סידור מוצרים") מתכווץ ונעלם כשגוללים את רצועת הצ'יפים
+  // הרחק מההתחלה - *בדיוק* לפי מרחק הגלילה, לא "נעלם/מופיע" בסוף/בהתחלה של
+  // איזה סף. שני יתרונות על פני מצב בינארי + טיימר (איך שזה היה קודם):
+  //  1. הרוחב עצמו מתכווץ עם הגלילה (לא נשאר "חור" קבוע) - השטח שהכפתור
+  //     תפס עובר בפועל לרצועת הקטגוריות, שמקבלת פינוי אמיתי, לא רק חיווי
+  //     חזותי בלי תוכן מאחוריו.
+  //  2. בחזרה - הכפתור מתחיל "לחזור" כבר מהרגע שגוללים לכיוון ההתחלה, לא
+  //     רק כשמגיעים ממש לאפס. בדיוק ההתנהגות של רצועות סינון באפליקציות
+  //     מוקפדות (למשל טאבים שמתכווצים/מתרווחים בהתאם למיקום הגלילה עצמו).
+  // מסונכרן ישירות ל-DOM דרך ref (בלי setState/בלי transition CSS) ומעודכן
+  // ב-rAF - אותו דפדוד מדויק כמו סרגל הגלילה בהערה (ProductNoteField) -
+  // מונע reflow עצמאי-מהגלילה (מה שגרם לריצוד/קפיצות בגרסה עם width+transition).
+  const TRAILING_WIDTH = 32;
+  // מרחק הגלילה (px) שמעליו הכפתור נעלם כליל - קשור לרוחב שלו עצמו
+  // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
+  const COLLAPSE_DISTANCE = TRAILING_WIDTH;
+  const trailingRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const paintTrailing = useCallback((scrollLeft: number) => {
+    const el = trailingRef.current;
+    if (!el) return;
+    // Math.abs - המוסכמה של סימן scrollLeft ב-RTL לא אחידה בין דפדפנים,
+    // אבל |scrollLeft| קטן תמיד אומר "קרוב להתחלה" בכל המוסכמות.
+    const progress = Math.min(1, Math.abs(scrollLeft) / COLLAPSE_DISTANCE);
+    el.style.width = `${TRAILING_WIDTH * (1 - progress)}px`;
+    el.style.opacity = String(1 - progress);
+    el.style.transform = `scale(${1 - progress * 0.4})`;
+    el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
+  }, [COLLAPSE_DISTANCE]);
+
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const x = Math.abs(e.currentTarget.scrollLeft);
-    if (x > HIDE_AT) {
-      if (showTimerRef.current != null) { window.clearTimeout(showTimerRef.current); showTimerRef.current = null; }
-      setScrolled(prev => (prev ? prev : true));
-    } else if (x < SHOW_AT && showTimerRef.current == null) {
-      showTimerRef.current = window.setTimeout(() => {
-        showTimerRef.current = null;
-        setScrolled(false);
-      }, DEBOUNCE_MS);
-    }
-    // בין SHOW_AT ל-HIDE_AT - אזור מת, לא נוגעים במצב בכלל.
-  }, []);
-  useEffect(() => () => {
-    if (showTimerRef.current != null) window.clearTimeout(showTimerRef.current);
-  }, []);
+    const { scrollLeft } = e.currentTarget;
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      paintTrailing(scrollLeft);
+    });
+  }, [paintTrailing]);
+
+  useEffect(() => {
+    paintTrailing(0); // מצב התחלתי - גלול לגמרי להתחלה, כפתור מלא
+    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); };
+  }, [paintTrailing]);
 
   return (
     // alignItems:'flex-start' (לא center) - הקופסה הפנימית של הצ'יפים
@@ -129,20 +137,11 @@ export const CategoryFilterChips = memo(({
         })}
       </Box>
       {trailing && (
-        // הרוחב (32px) *קבוע תמיד* - לא נכנס ל-sx המותנה למטה בכלל. רק
-        // opacity+transform (compositor, בלי layout/reflow) עושים את
-        // ה"היעלמות" - זו הסיבה שזה כבר לא גורם לריצוד/קפיצות עם הרבה
-        // צ'יפים: לפני כן width היה משתנה, מה שאילץ reflow של כל השורה
-        // בכל פריים אנימציה, בדיוק תוך כדי גלילה - זה מה שנראה "לא יציב".
-        // pointerEvents:none כשמוסתר כי המקום עדיין תפוס (אין display:none).
-        <Box sx={{
-          flexShrink: 0,
-          width: 32,
-          opacity: scrolled ? 0 : 1,
-          transform: scrolled ? 'scale(0.55)' : 'scale(1)',
-          pointerEvents: scrolled ? 'none' : 'auto',
-          transition: 'opacity 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1)',
-        }}>
+        // width/opacity/transform מעודכנים ישירות ב-DOM (paintTrailing
+        // למעלה) - בלי sx מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה
+        // (1:1, פריים-פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה.
+        // ערכי ה-sx כאן הם רק ה"מנוחה" ההתחלתית (לפני שה-effect הראשון רץ).
+        <Box ref={trailingRef} sx={{ flexShrink: 0, width: 32, opacity: 1, transform: 'scale(1)' }}>
           {trailing}
         </Box>
       )}
