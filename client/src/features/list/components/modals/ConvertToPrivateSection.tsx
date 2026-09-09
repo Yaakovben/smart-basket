@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsCardSx, iconBadgeSx, cardInk } from './listSettingsCardSx';
+import { settingsRowSx, iconBadgeSx } from './listSettingsCardSx';
 
 // ===== המרת קבוצה ריקה לרשימה פרטית =====
 interface ConvertToPrivateSectionProps {
@@ -25,20 +25,20 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate }: ConvertToPr
           setConverting(false);
         }
       }}
-      sx={settingsCardSx('neutral', isDark, converting)}
+      sx={settingsRowSx(converting)}
     >
       <Box sx={iconBadgeSx('neutral', isDark)}>
         <LockRoundedIcon sx={{ fontSize: 18 }} />
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: cardInk('neutral', isDark), lineHeight: 1.3 }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
           {t('convertToPrivate')}
         </Typography>
-        <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>
+        <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.3 }}>
           {t('convertToPrivateHint')}
         </Typography>
       </Box>
-      {converting && <CircularProgress size={16} sx={{ color: cardInk('neutral', isDark), flexShrink: 0 }} />}
+      {converting && <CircularProgress size={16} sx={{ color: 'text.secondary', flexShrink: 0 }} />}
     </Box>
   );
 });
