@@ -474,6 +474,7 @@ export const en: Translations = {
   sendQrAria: 'Send QR',
   // Change password section
   changePassword: 'Change password',
+  changePasswordHint: 'A new entry code for group members',
   // Share list modal
   moreOptionsAria: 'More options',
   // PDF generation

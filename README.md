@@ -676,6 +676,20 @@ cd client && npm run build         # → dist/
 - Deploy אוטומטי על כל push ל-main
 - SSL אוטומטי
 
+#### Keep-alive (חובה במסלול Free)
+Render Free משתיק שירות אחרי ~15 דקות ללא תעבורה, וההשכמה (cold start) לוקחת
+30-50 שניות — פוגע ב**כל** בקשה ראשונה (לא רק העלאת תמונה: התחברות, טעינת
+רשימות, כל דבר). הפתרון: מוניטור חיצוני חינמי שמבצע ping כל ~10 דקות.
+
+1. פותחים חשבון ב-[UptimeRobot](https://uptimerobot.com) או [cron-job.org](https://cron-job.org) (שניהם חינמיים).
+2. מגדירים HTTP(S) monitor לכתובת: `https://<API-service>.onrender.com/health`
+   (`/health` לא עובר דרך `apiLimiter`, לא ניגע ל-DB מעבר לבדיקת `readyState`,
+   ומחזיר `{ status, db, timestamp }` — זול לגמרי).
+3. Interval: 5-10 דקות. אפשר להוסיף monitor שני ל-Socket service באותה צורה.
+
+> חשוב: ה-monitor הזה הוא הדבר היחיד שמחזיק את הפרודקשן "ער". בלעדיו כל
+> משתמש ראשון אחרי הפוגה סופג את ה-cold start המלא.
+
 ### Vercel (Client)
 - Build: `npm run build`
 - Output: `dist/`
