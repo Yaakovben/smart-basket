@@ -519,13 +519,19 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
+              // דורס את bgcolor:'action.hover' של reorderEntrySx (מעורבב
+              // שקיפות - נראה טוב על רקע העמוד הרגיל, אבל כשהכפתור צף מעל
+              // הצ'יפים עצמם - ראו CategoryFilterChips, trailing הוא
+              // position:absolute מעליהם - הצבעים/הצללים שלהם הופיעו מבעד
+              // לו, ונראה "שקוף"/מרוח). background.paper אטום + צל קטן -
+              // נראה כמו כפתור צף אמיתי, לא מתערבב עם מה שמתחתיו.
               <Box
                 role="button"
                 tabIndex={0}
                 aria-label={t('reorderProducts')}
                 onClick={reorderHandleEnter}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
-                sx={reorderEntrySx}
+                sx={{ ...reorderEntrySx, bgcolor: 'background.paper', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
               >
                 <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
               </Box>
