@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import {
   Dialog, Box, Typography, IconButton, Button, TextField, Checkbox,
-  CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
@@ -183,8 +182,50 @@ export const ScanListPhoto = ({ open, onClose, onConfirm }: ScanListPhotoProps) 
           )}
 
           {phase === 'uploading' && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, height: '100%' }}>
-              <CircularProgress />
+            // "סורק" - כרטיס עם שורות טקסט + קו סריקה תכלת זוהר שעובר
+            // מלמעלה למטה; כל שורה "נחשפת" (מאפורה לתכלת) בתזמון מדורג
+            // שמתאים בערך לרגע שהקו עובר עליה, במקום ספינר גנרי. אותו
+            // גוון תכלת בדיוק כמו אייקון ה-intro של המסך הזה, כדי שזה
+            // ירגיש כהמשך טבעי, לא מסך טעינה נפרד.
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2.5, height: '100%' }}>
+              <Box sx={{
+                position: 'relative', width: 108, height: 138, borderRadius: '14px', overflow: 'hidden',
+                bgcolor: 'background.paper',
+                border: '1.5px solid rgba(20,184,166,0.35)',
+                boxShadow: '0 10px 28px rgba(20,184,166,0.22)',
+              }}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Box key={i} sx={{
+                    position: 'absolute', insetInlineStart: 14, insetInlineEnd: 14, top: 18 + i * 24, height: 6,
+                    borderRadius: '3px', bgcolor: 'rgba(20,184,166,0.14)', overflow: 'hidden',
+                  }}>
+                    <Box sx={{
+                      position: 'absolute', inset: 0, bgcolor: '#14B8A6',
+                      transformOrigin: 'left center',
+                      transform: 'scaleX(0)',
+                      animation: 'ocrLineReveal 2s ease-in-out infinite',
+                      animationDelay: `${i * 0.3}s`,
+                      '@keyframes ocrLineReveal': {
+                        '0%, 15%': { transform: 'scaleX(0)', opacity: 0.4 },
+                        '35%, 65%': { transform: 'scaleX(1)', opacity: 1 },
+                        '90%, 100%': { transform: 'scaleX(1)', opacity: 0.55 },
+                      },
+                    }} />
+                  </Box>
+                ))}
+                <Box sx={{
+                  position: 'absolute', left: 0, right: 0, height: 3, borderRadius: '2px',
+                  bgcolor: '#5EEAD4',
+                  boxShadow: '0 0 10px 2px rgba(20,184,166,0.65)',
+                  animation: 'ocrScanSweep 2s ease-in-out infinite',
+                  '@keyframes ocrScanSweep': {
+                    '0%': { top: 8, opacity: 0 },
+                    '8%': { opacity: 1 },
+                    '92%': { opacity: 1 },
+                    '100%': { top: 'calc(100% - 10px)', opacity: 0 },
+                  },
+                }} />
+              </Box>
               <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{t('scanListDetecting')}</Typography>
             </Box>
           )}

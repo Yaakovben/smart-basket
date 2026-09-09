@@ -4,7 +4,6 @@ import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateR
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
@@ -49,8 +48,6 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   // טון ניטרלי). retryable=true כשאפשר "לנסות שוב" (יש קובץ שמור).
   const [error, setError] = useState<{ text: string; tone: 'error' | 'warning'; retryable?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState(false);
-  // הבזק "התמונה נשמרה" אחרי שההעלאה לענן הצליחה וה-src הוחלף לכתובת הקבועה.
-  const [savedFlash, setSavedFlash] = useState(false);
   // גרירת קובץ מעל השדה (דסקטופ) - מסגרת מקווקוות + רמז.
   const [dragActive, setDragActive] = useState(false);
   // התמונה השמורה (value) נכשלה לטעון - פלייסהולדר "נכשל לטעון" סטטי.
@@ -66,21 +63,10 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   // הקובץ המקורי של הבחירה הנוכחית - נשמר כדי ש"נסה שוב" יוכל להעלות אותו
   // מחדש בלי לבקש מהמשתמש לבחור שוב.
   const lastFileRef = useRef<File | null>(null);
-  const savedFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // מחמם את חתימת ההעלאה ברגע שהשדה נטען (פתיחת המודל) - כך בחירת הקובץ
   // בפועל לא ממתינה ל-round-trip, במיוחד כשה-API בקור start ב-Render Free.
   useEffect(() => { prefetchUploadSignature(); }, []);
-  useEffect(() => () => {
-    if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
-  }, []);
-
-  const flashSaved = useCallback(() => {
-    haptic('light');
-    setSavedFlash(true);
-    if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
-    savedFlashTimer.current = setTimeout(() => setSavedFlash(false), 1500);
-  }, []);
 
   // העלאת רקע של קובץ שכבר נדחס והוצג. מוחזר promise עם הכתובת הסופית /
   // null (כשל / לא-מוגדר). ניסיון שני אוטומטי אחרי השהיה קצרה לפני
@@ -127,7 +113,6 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
           if (myId === reqIdRef.current) {
             setError(null);
             onChange(url);
-            flashSaved();
           }
         }
         return url;
@@ -155,7 +140,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
         }
       }
     })();
-  }, [onChange, flashSaved, t]);
+  }, [onChange, t]);
 
   // דחיסה מקומית -> הצגה מיידית -> התחלת העלאת רקע. משותף לבחירת קובץ,
   // הדבקה (paste) וגרירה (drop).
@@ -215,7 +200,6 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
     setUploading(false);
     setUploadProgress(null);
     setBusy(false);
-    setSavedFlash(false);
     haptic('light');
     setError(null);
     onChange('');
@@ -375,35 +359,6 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                   }}
                 />
               )}
-              {savedFlash && (
-                // אישור קצר "נשמר לענן" - עיגול תכלת מלא עם וי, קופץ פנימה
-                // ודוהה. תורכיז=מעלה, וי=נשמר לצמיתות.
-                <Box aria-hidden="true" sx={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
-                }}>
-                  <Box sx={{
-                    width: 40, height: 40, borderRadius: '50%',
-                    bgcolor: '#14B8A6', color: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 10px rgba(20,184,166,0.5)',
-                    animation: 'sbSavedPop 1.5s ease-out forwards',
-                    '@keyframes sbSavedPop': {
-                      '0%': { transform: 'scale(0.4)', opacity: 0 },
-                      '18%': { transform: 'scale(1.08)', opacity: 1 },
-                      '32%': { transform: 'scale(1)', opacity: 1 },
-                      '72%': { opacity: 1 },
-                      '100%': { opacity: 0 },
-                    },
-                    '@media (prefers-reduced-motion: reduce)': {
-                      animation: 'none', opacity: 0.95,
-                    },
-                  }}>
-                    <CheckRoundedIcon sx={{ fontSize: 24 }} />
-                  </Box>
-                </Box>
-              )}
             </Box>
             {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית). */}
             <Box
@@ -503,7 +458,12 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
       )}
 
       {lightbox && value && (
-        <ImageLightbox src={cldFull(value)} alt={t('photo')} onClose={() => setLightbox(false)} />
+        <ImageLightbox
+          src={cldFull(value)}
+          placeholderSrc={cldThumb(value)}
+          alt={t('photo')}
+          onClose={() => setLightbox(false)}
+        />
       )}
     </Box>
   );

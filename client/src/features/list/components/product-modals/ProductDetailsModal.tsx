@@ -7,7 +7,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
 import type { Product, ProductEditChange, ProductCategory } from '../../../../global/types';
 import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateShort, formatTimeShort, getRelativeTime } from '../../../../global/helpers';
-import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
+import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
 import { useSettings } from '../../../../global/context/SettingsContext';
@@ -173,12 +173,13 @@ export const ProductDetailsModal = memo(({
               }}
             >
               <ProgressiveImage
-                src={cldPreview(product.image)}
+                // אותה גרסה (cldThumb) שכבר נטענה בשורת הרשימה - פתיחת
+                // פרטי המוצר לא טוענת שום דבר מחדש. 360px מספיק בהחלט
+                // ל-hero של 148px (גם ברטינה). הזום (lightbox) הוא זה
+                // שמביא את הגרסה החדה.
+                src={cldThumb(product.image)}
                 blurSrc={cldBlur(product.image)}
                 alt={product.name}
-                // בלי loading="lazy" - התמונה תמיד גלויה מיד עם פתיחת המודל
-                // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
-                // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
                 fetchPriority="high"
                 onError={() => setImageFailed(true)}
               />
@@ -432,7 +433,12 @@ export const ProductDetailsModal = memo(({
       </Box>
 
       {showPhoto && product.image && (
-        <ImageLightbox src={cldFull(product.image)} alt={product.name} onClose={() => setShowPhoto(false)} />
+        <ImageLightbox
+          src={cldFull(product.image)}
+          placeholderSrc={cldThumb(product.image)}
+          alt={product.name}
+          onClose={() => setShowPhoto(false)}
+        />
       )}
     </Modal>
   );

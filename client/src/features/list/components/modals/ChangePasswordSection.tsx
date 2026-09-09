@@ -4,7 +4,7 @@ import KeyRoundedIcon from '@mui/icons-material/KeyRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { List } from '../../../../global/types';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsCardSx, iconBadgeSx, pinFieldSx, cardInk } from './listSettingsCardSx';
+import { settingsRowSx, iconBadgeSx, pinFieldSx } from './listSettingsCardSx';
 
 // ===== שינוי סיסמה - מעל כפתור שמירה, נפתח בלחיצה =====
 interface ChangePasswordSectionProps {
@@ -23,21 +23,21 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
     <>
       <Box
         onClick={() => setShowChangePassword(!showChangePassword)}
-        sx={{ ...settingsCardSx('accent', isDark), mt: 2.5, mb: showChangePassword ? 1 : 0 }}
+        sx={{ ...settingsRowSx(), mt: 2.5, mb: showChangePassword ? 1 : 0 }}
       >
         <Box sx={iconBadgeSx('accent', isDark)}>
           <KeyRoundedIcon sx={{ fontSize: 19 }} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: cardInk('accent', isDark), lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
             {t('changePassword')}
           </Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.3 }}>
             {t('changePasswordHint')}
           </Typography>
         </Box>
         <ExpandMoreRoundedIcon sx={{
-          color: cardInk('accent', isDark),
+          color: 'text.secondary',
           flexShrink: 0,
           transition: 'transform 0.25s ease',
           transform: showChangePassword ? 'rotate(180deg)' : 'rotate(0deg)',

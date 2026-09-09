@@ -7,6 +7,10 @@ import { useSettings } from '../context/SettingsContext';
 
 interface ImageLightboxProps {
   src: string;
+  // גרסה קטנה שכבר במטמון הדפדפן (למשל ה-thumb שמוצג בשורה/בטופס) - מוצגת
+  // *מיד* (0ms) בזמן שה-src הגדול נטען מאחוריה ודוהה פנימה כשמוכן. ככה
+  // הפתיחה מיידית ואין "רגע ריק/טעינה מחדש".
+  placeholderSrc?: string;
   alt?: string;
   onClose: () => void;
 }
@@ -24,13 +28,14 @@ const IDENTITY: Transform = { scale: 1, tx: 0, ty: 0 };
 //   - גרירה כשמוגדל -> הזזה (pan), עם הגבלה שהתמונה לא בורחת מהמסך
 // הקשה על הרקע: כשמוגדל -> חזרה ל-1x; אחרת -> סגירה.
 // לא Dialog של MUI בכוונה - נפתח מעל מודאלים קיימים בלי להתנגש ב-z-index.
-export const ImageLightbox = ({ src, alt, onClose }: ImageLightboxProps) => {
+export const ImageLightbox = ({ src, placeholderSrc, alt, onClose }: ImageLightboxProps) => {
   const { t } = useSettings();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [transform, setTransform] = useState<Transform>(IDENTITY);
   const [gesturing, setGesturing] = useState(false);
+  const [mainLoaded, setMainLoaded] = useState(false);
   const zoomed = transform.scale > 1.01;
 
   useEffect(() => {
@@ -219,26 +224,58 @@ export const ImageLightbox = ({ src, alt, onClose }: ImageLightboxProps) => {
         <CloseIcon />
       </IconButton>
       <Box
-        component="img"
-        ref={imgRef}
-        src={src}
-        alt={alt || t('photo')}
-        fetchPriority="high"
-        decoding="async"
-        draggable={false}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={onMouseDown}
         sx={{
+          position: 'relative',
+          display: 'inline-flex',
           maxWidth: '100%', maxHeight: '100%',
-          objectFit: 'contain',
-          borderRadius: '8px',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
           transform: `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.scale})`,
           transition: gesturing ? 'none' : 'transform 0.2s ease-out',
           cursor: zoomed ? 'grab' : 'zoom-in',
-          userSelect: 'none', WebkitUserSelect: 'none',
         }}
-      />
+      >
+        {placeholderSrc && (
+          <Box
+            component="img"
+            src={placeholderSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            sx={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'contain',
+              borderRadius: '8px',
+              // מעט בלור עד שהחדה נטענת - מסתיר את הפיקסלים של ההגדלה.
+              filter: mainLoaded ? 'none' : 'blur(6px)',
+              opacity: mainLoaded ? 0 : 1,
+              transition: 'opacity 0.25s ease-out',
+              userSelect: 'none', WebkitUserSelect: 'none',
+            }}
+          />
+        )}
+        <Box
+          component="img"
+          ref={imgRef}
+          src={src}
+          alt={alt || t('photo')}
+          fetchPriority="high"
+          decoding="async"
+          draggable={false}
+          onLoad={() => setMainLoaded(true)}
+          sx={{
+            display: 'block',
+            maxWidth: '100%', maxHeight: '100%',
+            objectFit: 'contain',
+            borderRadius: '8px',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+            opacity: mainLoaded || !placeholderSrc ? 1 : 0,
+            transition: 'opacity 0.25s ease-out',
+            userSelect: 'none', WebkitUserSelect: 'none',
+          }}
+        />
+      </Box>
     </Box>,
     document.body,
   );

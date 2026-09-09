@@ -1,8 +1,9 @@
 import { memo, useState } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Collapse } from '@mui/material';
 import GroupAddRoundedIcon from '@mui/icons-material/GroupAddRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsCardSx, iconBadgeSx, pinFieldSx, cardInk } from './listSettingsCardSx';
+import { settingsRowSx, iconBadgeSx, pinFieldSx } from './listSettingsCardSx';
 
 // ===== המרת רשימה פרטית לקבוצה: כרטיס פתיחה + שלב הגדרת סיסמה =====
 interface ConvertToGroupSectionProps {
@@ -20,23 +21,29 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
     <>
       <Box
         onClick={() => setShowPasswordStep(!showPasswordStep)}
-        sx={{ ...settingsCardSx('accent', isDark), mb: showPasswordStep ? 1 : 0 }}
+        sx={{ ...settingsRowSx(), mb: showPasswordStep ? 1 : 0 }}
       >
         <Box sx={iconBadgeSx('accent', isDark)}>
           <GroupAddRoundedIcon sx={{ fontSize: 19 }} />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: cardInk('accent', isDark), lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
             {t('convertToGroup')}
           </Typography>
-          <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.3 }}>
             {t('convertToGroupHint')}
           </Typography>
         </Box>
+        <ExpandMoreRoundedIcon sx={{
+          color: 'text.secondary',
+          flexShrink: 0,
+          transition: 'transform 0.25s ease',
+          transform: showPasswordStep ? 'rotate(180deg)' : 'rotate(0deg)',
+        }} />
       </Box>
       <Collapse in={showPasswordStep} unmountOnExit>
         <Box sx={{ mt: 1.25, mb: 1, px: 0.25 }}>
-          <Typography sx={{ fontSize: 12, fontWeight: 600, color: cardInk('accent', isDark), mb: 1 }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', mb: 1 }}>
             {t('setGroupPassword')}
           </Typography>
           <TextField
