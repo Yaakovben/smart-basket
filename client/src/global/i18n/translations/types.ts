@@ -503,6 +503,9 @@ export type TranslationKeys =
   | 'photoTooLarge'
   | 'photoLoadFailed'
   | 'photoSyncFailed'
+  | 'photoRetryUpload'
+  | 'photoSavedToCloud'
+  | 'photoDropHint'
   | 'itemHasPhoto'
   // Scan list photo (OCR)
   | 'ocrNoTextDetected'

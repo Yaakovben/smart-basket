@@ -1,8 +1,10 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
@@ -16,16 +18,18 @@ import { compressProductImage, buildUploadMaster, uploadToServer, prefetchUpload
 interface Props {
   value: string;
   onChange: (v: string) => void;
-  // נקרא פעם אחת כשמתחילה העלאה ברקע, עם ה-promise שלה (הכתובת הסופית או
-  // null בכשל/לא-מוגדר) ועם ה-data-URL המקומי שהוצג באותו רגע. למי-שקורה?
-  // AddProductModal - כדי לתקן מוצר שכבר נוצר עם ה-data-URL המקומי, אם
-  // "הוסף" נלחץ *לפני* שההעלאה הספיקה להסתיים (אחרת onChange כבר היה
-  // מעדכן את value לכתובת האמיתית). localValue מגיע מכאן ולא נקרא מה-
-  // state של ההורה - ברגע הקריאה ה-onChange(local) עוד לא גרם לרינדור
-  // מחדש, אז ההורה עדיין מחזיק את הערך הישן. ראו useProductForm.ts
-  // (pendingImageUploadRef) + useAddProduct.ts.
+  // נקרא בכל פעם שמתחילה העלאה ברקע (בחירה חדשה או "נסה שוב"), עם ה-promise
+  // שלה (הכתובת הסופית או null בכשל/לא-מוגדר) ועם ה-data-URL המקומי שהוצג
+  // באותו רגע. למי-שקורה? AddProductModal - כדי לתקן מוצר שכבר נוצר עם ה-
+  // data-URL המקומי, אם "הוסף" נלחץ *לפני* שההעלאה הספיקה להסתיים. localValue
+  // מגיע מכאן ולא נקרא מה-state של ההורה - ברגע הקריאה ה-onChange(local) עוד
+  // לא גרם לרינדור מחדש. ראו useProductForm.ts (pendingImageUploadRef) +
+  // useAddProduct.ts.
   onUploadStart?: (promise: Promise<string | null>, localValue: string) => void;
 }
+
+// כמה ms להמתין בין ניסיון העלאה ראשון שנכשל לניסיון השני (רשת מתאוששת).
+const UPLOAD_RETRY_DELAY_MS = 1200;
 
 export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props) => {
   const { t, settings } = useSettings();
@@ -42,12 +46,14 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   // tone מבחין בין כשל חוסם (דחיסה נכשלה/גדול מדי - 'error', אדום) לכשל רך
   // (העלאה לענן נכשלה אבל התמונה המקומית עדיין תקינה ושמישה - 'warning',
-  // טון ניטרלי) - אותו state יחיד, לא שני משתנים, כדי שתמיד יתנקה יחד.
-  const [error, setError] = useState<{ text: string; tone: 'error' | 'warning' } | null>(null);
+  // טון ניטרלי). retryable=true כשאפשר "לנסות שוב" (יש קובץ שמור).
+  const [error, setError] = useState<{ text: string; tone: 'error' | 'warning'; retryable?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState(false);
-  // התמונה השמורה (value) נכשלה לטעון - אין כאן קטגוריה להציג במקומה
-  // (זה שדה טופס, לא תצוגת מוצר), אז פלייסהולדר "נכשל לטעון" פשוט בתוך
-  // אותה תיבה 78x78. מתאפס כש-value משתנה (הסרה+הוספה מחדש).
+  // הבזק "התמונה נשמרה" אחרי שההעלאה לענן הצליחה וה-src הוחלף לכתובת הקבועה.
+  const [savedFlash, setSavedFlash] = useState(false);
+  // גרירת קובץ מעל השדה (דסקטופ) - מסגרת מקווקוות + רמז.
+  const [dragActive, setDragActive] = useState(false);
+  // התמונה השמורה (value) נכשלה לטעון - פלייסהולדר "נכשל לטעון" סטטי.
   const [imageFailed, setImageFailed] = useState(false);
   const [seenValue, setSeenValue] = useState(value);
   if (value !== seenValue) {
@@ -57,27 +63,108 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
   // מזהה בקשה - מתעלמים מתוצאה של דחיסה/העלאה שהמשתמש כבר "עקף"
   // (בחר קובץ אחר, או הסיר את התמונה) לפני שהסתיימה.
   const reqIdRef = useRef(0);
+  // הקובץ המקורי של הבחירה הנוכחית - נשמר כדי ש"נסה שוב" יוכל להעלות אותו
+  // מחדש בלי לבקש מהמשתמש לבחור שוב.
+  const lastFileRef = useRef<File | null>(null);
+  const savedFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // מחמם את חתימת ההעלאה ברגע שהשדה נטען (פתיחת המודל) - כך בחירת הקובץ
   // בפועל לא ממתינה ל-round-trip, במיוחד כשה-API בקור start ב-Render Free.
   useEffect(() => { prefetchUploadSignature(); }, []);
+  useEffect(() => () => {
+    if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
+  }, []);
 
-  const pick = () => {
-    if (busy) return;
+  const flashSaved = useCallback(() => {
     haptic('light');
-    setError(null);
-    inputRef.current?.click();
-  };
+    setSavedFlash(true);
+    if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
+    savedFlashTimer.current = setTimeout(() => setSavedFlash(false), 1500);
+  }, []);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  // העלאת רקע של קובץ שכבר נדחס והוצג. מוחזר promise עם הכתובת הסופית /
+  // null (כשל / לא-מוגדר). ניסיון שני אוטומטי אחרי השהיה קצרה לפני
+  // שמראים "נסה שוב" - הרבה כשלים הם רגעיים (רשת סלולרית).
+  const runBackgroundUpload = useCallback((file: File, myId: number): Promise<string | null> => {
+    setUploading(true);
+    setUploadProgress(null);
+
+    const attempt = async (): Promise<string> => {
+      const master = await buildUploadMaster(file);
+      if (myId !== reqIdRef.current) throw new Error('superseded');
+      return uploadToServer(master, (pct) => {
+        if (myId === reqIdRef.current) setUploadProgress(pct);
+      });
+    };
+
+    return (async (): Promise<string | null> => {
+      try {
+        let url: string;
+        try {
+          url = await attempt();
+        } catch (firstErr) {
+          if (isNotConfiguredError(firstErr) || (firstErr as Error)?.message === 'superseded') throw firstErr;
+          await new Promise((r) => setTimeout(r, UPLOAD_RETRY_DELAY_MS));
+          if (myId !== reqIdRef.current) return null;
+          url = await attempt(); // ניסיון שני - נכשל -> ל-catch החיצוני
+        }
+        // כל הבייטים עלו - גם אם onprogress לא ירה. מכאן זה עיבוד בצד
+        // Cloudinary + preload, לא העלאה -> ה"מים" מתרוקנים.
+        if (myId === reqIdRef.current) setUploadProgress(100);
+        if (myId === reqIdRef.current) {
+          // preload של גרסת ה-thumb לפני שמחליפים את value - אחרת
+          // ProgressiveImage מציג לרגע בלור מעל התמונה החדה. timeout של 4ש'
+          // כדי שבקשה תקועה לא תשאיר את החיווי דולק לנצח.
+          await new Promise<void>((resolve) => {
+            const img = new Image();
+            let done = false;
+            const finish = () => { if (!done) { done = true; resolve(); } };
+            img.onload = finish;
+            img.onerror = finish;
+            img.src = cldThumb(url);
+            setTimeout(finish, 4000);
+          });
+          if (myId === reqIdRef.current) {
+            setError(null);
+            onChange(url);
+            flashSaved();
+          }
+        }
+        return url;
+      } catch (err) {
+        if ((err as Error)?.message === 'superseded') return null;
+        // "לא מוגדר" (503) - נפילה מכוונת ושקטה ל-data-URL, לא באמת כשל.
+        if (!isNotConfiguredError(err)) {
+          if (import.meta.env.DEV) {
+            console.warn('product image server upload failed, keeping local copy', err);
+          }
+          if (myId === reqIdRef.current) {
+            setError({ text: t('photoSyncFailed'), tone: 'warning', retryable: true });
+          }
+          if (import.meta.env.PROD) {
+            import('@sentry/react').then((Sentry) => {
+              Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
+            }).catch(() => { /* Sentry לא זמין - לא קריטי */ });
+          }
+        }
+        return null;
+      } finally {
+        if (myId === reqIdRef.current) {
+          setUploading(false);
+          setUploadProgress(null);
+        }
+      }
+    })();
+  }, [onChange, flashSaved, t]);
+
+  // דחיסה מקומית -> הצגה מיידית -> התחלת העלאת רקע. משותף לבחירת קובץ,
+  // הדבקה (paste) וגרירה (drop).
+  const processFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
     const myId = ++reqIdRef.current;
     setBusy(true);
     setError(null);
 
-    // שלב 1 - דחיסה מקומית. מציגים מיד.
     let local: string;
     try {
       local = await compressProductImage(file);
@@ -91,97 +178,80 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
       return;
     }
     if (myId !== reqIdRef.current) return;
+    lastFileRef.current = file;
     onChange(local);
     haptic('medium');
     setBusy(false);
 
-    // שלב 2 - העלאה ברקע. בונים "מאסטר" איכותי *מהקובץ המקורי* (לא מ-local
-    // שכבר דחוס אגרסיבית לתצוגה) ומעלים אותו ל-Cloudinary, שגוזר ממנו את
-    // כל הגרסאות. אם השרת בלי Cloudinary / כל כשל - נשארים עם ה-data URL.
-    // עטוף בפונקציה (במקום קוד ישיר) כדי שאפשר יהיה גם להחזיר את ה-promise
-    // שלה להורה (onUploadStart) - ראו ההערה על ה-prop למעלה.
-    setUploading(true);
-    setUploadProgress(null);
-    const runUpload = async (): Promise<string | null> => {
-      try {
-        const master = await buildUploadMaster(file);
-        if (myId !== reqIdRef.current) return null;
-        const url = await uploadToServer(master, (pct) => {
-          if (myId === reqIdRef.current) setUploadProgress(pct);
-        });
-        // כל הבייטים עלו - גם אם onprogress לא ירה בכלל. מכאן זה עיבוד
-        // בצד Cloudinary + preload, לא העלאה -> ה"מים" מתרוקנים.
-        if (myId === reqIdRef.current) setUploadProgress(100);
-        if (myId === reqIdRef.current) {
-          // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
-          // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
-          // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
-          // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
-          // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
-          // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
-          // race מול timeout - אם הבקשה ל-thumb נתקעת (לא load ולא error,
-          // למשל רשת איטית/stall) ה-await לא היה מסתיים לעולם, וה-finally
-          // שמכבה setUploading(false) לא היה רץ - "המים" היו עולים ויורדים
-          // בלי סוף. אחרי 4ש' פשוט ממשיכים (ה-src יוחלף גם ככה, לכל היותר
-          // רפרוף בלור קצר).
-          await new Promise<void>((resolve) => {
-            const img = new Image();
-            let done = false;
-            const finish = () => { if (!done) { done = true; resolve(); } };
-            img.onload = finish;
-            img.onerror = finish;
-            img.src = cldThumb(url);
-            setTimeout(finish, 4000);
-          });
-          if (myId === reqIdRef.current) onChange(url);
-        }
-        return url;
-      } catch (err) {
-        // "לא מוגדר" (503, IMAGE_UPLOAD_NOT_CONFIGURED) - נפילה מכוונת ושקטה
-        // לאחסון data-URL, לא באמת "כשל". כל כשל אחר (מכסת Cloudinary נגמרה,
-        // רשת נפלה באמצע, חתימה לא תקפה וכו') - שקט לגמרי בפרודקשן עד עכשיו,
-        // המשתמש לא ידע שהתמונה לא הגיעה לאחסון קבוע. עדיין לא חוסם: התמונה
-        // המקומית כבר מוצגת ותקינה, רק מודיעים.
-        if (!isNotConfiguredError(err)) {
-          if (import.meta.env.DEV) {
-            console.warn('product image server upload failed, keeping local copy', err);
-          }
-          if (myId === reqIdRef.current) {
-            setError({ text: t('photoSyncFailed'), tone: 'warning' });
-          }
-          if (import.meta.env.PROD) {
-            import('@sentry/react').then(Sentry => {
-              Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
-            }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
-          }
-        }
-        return null;
-      } finally {
-        if (myId === reqIdRef.current) {
-          setUploading(false);
-          setUploadProgress(null);
-        }
-      }
-    };
+    onUploadStart?.(runBackgroundUpload(file, myId), local);
+  }, [onChange, onUploadStart, runBackgroundUpload, t]);
 
-    onUploadStart?.(runUpload(), local);
+  const pick = () => {
+    if (busy) return;
+    haptic('light');
+    setError(null);
+    inputRef.current?.click();
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) void processFile(file);
+  };
+
+  // "נסה שוב" - מעלה מחדש את הקובץ השמור בלי לבקש מהמשתמש לבחור שוב.
+  const retryUpload = () => {
+    const file = lastFileRef.current;
+    if (!file || busy || uploading) return;
+    haptic('light');
+    setError(null);
+    const myId = ++reqIdRef.current;
+    onUploadStart?.(runBackgroundUpload(file, myId), value);
   };
 
   const remove = () => {
     reqIdRef.current++; // מבטל דחיסה/העלאה שרצה
+    lastFileRef.current = null;
     setUploading(false);
     setUploadProgress(null);
     setBusy(false);
+    setSavedFlash(false);
     haptic('light');
     setError(null);
     onChange('');
   };
 
+  // הדבקת תמונה מהלוח (דסקטופ) - מאזין ברמת ה-window כל עוד השדה מוצג
+  // (=המודל פתוח). פועל *רק* כשיש קובץ תמונה בלוח; הדבקת טקסט רגילה לא
+  // מושפעת. מוגן מפני busy.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (busy) return;
+      const file = Array.from(e.clipboardData?.files ?? []).find((f) => f.type.startsWith('image/'));
+      if (file) {
+        e.preventDefault();
+        void processFile(file);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [busy, processFile]);
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (busy) return;
+    const file = Array.from(e.dataTransfer.files ?? []).find((f) => f.type.startsWith('image/'));
+    if (file) void processFile(file);
+  };
+
   return (
-    // תא בעמודת ה-grid (ראו AddProductModal/EditProductModal) - stretch
-    // תמיד (לא רק כשיש תמונה) כדי ששני המצבים ייצמדו לאותה קצה קבועה
-    // (flex-end בשורה הפנימית למטה) ולא "יקפצו" כשמוסיפים תמונה.
-    <Box sx={{ minWidth: 0, justifySelf: 'stretch' }}>
+    <Box
+      sx={{ minWidth: 0, justifySelf: 'stretch', position: 'relative' }}
+      onDragOver={(e) => { e.preventDefault(); if (!busy) setDragActive(true); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragActive(false); }}
+      onDrop={onDrop}
+    >
       <input
         ref={inputRef}
         type="file"
@@ -190,17 +260,24 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
         onChange={handleFile}
       />
 
+      {dragActive && (
+        <Box aria-hidden="true" sx={{
+          position: 'absolute', inset: -6, zIndex: 5,
+          borderRadius: '14px',
+          border: '2px dashed', borderColor: 'primary.main',
+          bgcolor: isDark ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 700, color: 'primary.main', textAlign: 'center', px: 1 }}>
+            {t('photoDropHint')}
+          </Typography>
+        </Box>
+      )}
+
       {value ? (
-        // יש תמונה - עמודה: התמונה עצמה נשארת צמודה לקצה הימני של תא ה-grid
-        // (alignItems:flex-end ב-RTL, כמו במקור) - רק התווית "תמונה:" זזה,
-        // מיושרת לקצה הימני *של התמונה עצמה* (לא של כל התא) דרך תיבה ברוחב
-        // 112 קבוע + justifyContent:flex-start, כדי שהיא תשב מעל הפינה
-        // הימנית-עליונה של התמונה בלי להזיז את התמונה עצמה. שימו לב:
-        // justifyContent (ציר ראשי, row) ו-alignItems (ציר צולב, column)
-        // הולכים לפי אותה לוגיקה בדיוק ב-RTL - flex-start=ימין, flex-end=
-        // שמאל בשניהם (לא הפוך אחד מהשני, כמו שבטעות הונח כאן קודם).
-        // מרובעת, פינות מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה
-        // הנגדית.
+        // יש תמונה - עמודה: התמונה עצמה צמודה לקצה הימני של תא ה-grid,
+        // התווית "תמונה:" מעליה מיושרת לקצה הימני של התמונה עצמה.
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.6 }}>
           <Box sx={{ width: 112, display: 'flex', justifyContent: 'flex-start' }}>
             <Typography sx={{
@@ -228,9 +305,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
               }}
             >
               {imageFailed ? (
-                // פלייסהולדר "נכשל לטעון" - סטטי לגמרי (בלי אנימציה), אין
-                // כאן קטגוריה כמו בתצוגות אחרות של המוצר, זה שדה טופס.
-                // כפתור ההסרה (מחוץ לתיבה הזו) עדיין עובד - המשתמש לא תקוע.
+                // פלייסהולדר "נכשל לטעון" - סטטי לגמרי (בלי אנימציה).
                 <Box sx={{
                   position: 'absolute', inset: 0,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
@@ -244,9 +319,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
               ) : (
                 <>
                   {/* שכבת "טוען" עדינה מתחת לתמונה - shimmer אפרפר ניטרלי
-                      (לא תורכיז - תורכיז שמור *רק* לחיווי ההעלאה). נגלית
-                      רק כשה-<img> עדיין שקוף (רשת איטית); ברגע שהתמונה
-                      נטענת היא מכסה אותה. לא באנימציה ב-reduced-motion. */}
+                      (לא תורכיז - תורכיז שמור *רק* לחיווי ההעלאה). */}
                   <Box aria-hidden="true" sx={{
                     position: 'absolute', inset: 0,
                     background: isDark
@@ -271,12 +344,9 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                 pointerEvents: 'none',
               }} />
               {uploading && (
-                // חיווי העלאה - "מים" תורכיז שעולים מלמטה למעלה, ומסמנים
-                // *אך ורק* שההעלאה עדיין רצה וכמה התקדמה. כשיש אחוז אמיתי
-                // (uploadProgress) הגובה נצמד אליו; ברגע ש-100% מכל
-                // הבייטים עלו - המים "מתרוקנים" ונעלמים (מכאן זו רק הכנה
-                // בצד Cloudinary, לא העלאה - אין תורכיז). כשאין נתון
-                // התקדמות בכלל - אנימציית "גאות" קבועה עד סוף ההעלאה.
+                // חיווי העלאה - "מים" תורכיז שעולים מלמטה למעלה, מסמנים
+                // *אך ורק* שההעלאה עדיין רצה וכמה. ברגע ש-100% מהבייטים
+                // עלו - המים "מתרוקנים" ונעלמים.
                 <Box
                   role="status"
                   aria-label={t('photoProcessing')}
@@ -305,10 +375,37 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
                   }}
                 />
               )}
+              {savedFlash && (
+                // אישור קצר "נשמר לענן" - עיגול תכלת מלא עם וי, קופץ פנימה
+                // ודוהה. תורכיז=מעלה, וי=נשמר לצמיתות.
+                <Box aria-hidden="true" sx={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}>
+                  <Box sx={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    bgcolor: '#14B8A6', color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 10px rgba(20,184,166,0.5)',
+                    animation: 'sbSavedPop 1.5s ease-out forwards',
+                    '@keyframes sbSavedPop': {
+                      '0%': { transform: 'scale(0.4)', opacity: 0 },
+                      '18%': { transform: 'scale(1.08)', opacity: 1 },
+                      '32%': { transform: 'scale(1)', opacity: 1 },
+                      '72%': { opacity: 1 },
+                      '100%': { opacity: 0 },
+                    },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      animation: 'none', opacity: 0.95,
+                    },
+                  }}>
+                    <CheckRoundedIcon sx={{ fontSize: 24 }} />
+                  </Box>
+                </Box>
+              )}
             </Box>
-            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית), מבצבץ
-                החוצה מהתמונה. בפינה הנגדית לתווית "תמונה:" (מעל התמונה,
-                מיושרת ימין) כדי שלא יתנגשו. */}
+            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית). */}
             <Box
               role="button"
               aria-label={t('removePhoto')}
@@ -328,8 +425,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
           </Box>
         </Box>
       ) : (
-        // אין תמונה - צ'יפ צמוד לאותו קצה (השמאלי ב-RTL) שהתמונה תתפוס
-        // ברגע שתיבחר, כדי שלא "יקפוץ" הצידה כשמוסיפים תמונה בפועל.
+        // אין תמונה - צ'יפ צמוד לאותו קצה (השמאלי ב-RTL) שהתמונה תתפוס.
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <Box
             role="button"
@@ -343,8 +439,7 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
               position: 'relative', overflow: 'hidden',
               cursor: busy ? 'default' : 'pointer',
               ...(busy ? { '&:hover': {} } : {}),
-              // מצב "מעבד" (דחיסה מקומית, ~שנייה) - שטף shimmer עדין על
-              // הצ'יפ במקום ספינר. אותה שפה כמו ה-shimmer מתחת לתמונה.
+              // מצב "מעבד" (דחיסה מקומית, ~שנייה) - שטף shimmer עדין.
               ...(busy && {
                 '&::after': {
                   content: '""', position: 'absolute', inset: 0,
@@ -372,14 +467,39 @@ export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props
       )}
 
       {error && (
-        <Typography sx={{
-          fontSize: 11.5, mt: 0.6, px: 0.25,
-          // warning (העלאה לענן נכשלה, לא חוסם) - טון ניטרלי, לא אדום כמו
-          // כשל חוסם אמיתי (too-large/decode) - זה לא מצריך פעולה מהמשתמש.
-          color: error.tone === 'warning' ? 'text.secondary' : '#DC2626',
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap',
+          mt: 0.6, px: 0.25,
         }}>
-          {error.text}
-        </Typography>
+          <Typography sx={{
+            fontSize: 11.5,
+            color: error.tone === 'warning' ? 'text.secondary' : '#DC2626',
+          }}>
+            {error.text}
+          </Typography>
+          {error.retryable && !uploading && lastFileRef.current && (
+            <Box
+              role="button"
+              tabIndex={0}
+              onClick={retryUpload}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') retryUpload(); }}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 0.4,
+                px: 0.9, py: 0.3, borderRadius: '999px',
+                border: '1.5px solid', borderColor: 'primary.main',
+                color: 'primary.main', cursor: 'pointer',
+                fontSize: 11, fontWeight: 700,
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'transform 0.12s, background-color 0.15s',
+                '&:active': { transform: 'scale(0.95)' },
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <RefreshRoundedIcon sx={{ fontSize: 13 }} />
+              {t('photoRetryUpload')}
+            </Box>
+          )}
+        </Box>
       )}
 
       {lightbox && value && (

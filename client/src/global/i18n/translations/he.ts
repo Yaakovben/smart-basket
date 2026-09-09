@@ -504,7 +504,10 @@ export const he: Translations = {
   photoUploadError: 'העלאת התמונה נכשלה. נסה שוב.',
   photoTooLarge: 'התמונה גדולה מדי גם אחרי דחיסה. נסה תמונה אחרת.',
   photoLoadFailed: 'לא ניתן לטעון',
-  photoSyncFailed: 'התמונה נשמרה במכשיר, אך לא הועלתה לענן. נסו שוב מאוחר יותר.',
+  photoSyncFailed: 'התמונה נשמרה במכשיר, אך לא הועלתה לענן.',
+  photoRetryUpload: 'נסו להעלות שוב',
+  photoSavedToCloud: 'התמונה נשמרה',
+  photoDropHint: 'שחררו כאן כדי להוסיף תמונה',
   itemHasPhoto: 'למוצר זה יש תמונה',
   // Scan list photo (OCR)
   ocrNoTextDetected: 'לא זיהינו טקסט ברור בתמונה. נסה תמונה ברורה וחדה יותר, עם תאורה טובה.',
