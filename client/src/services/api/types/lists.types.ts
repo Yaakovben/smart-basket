@@ -37,6 +37,7 @@ export interface Product {
   note?: string;
   image?: string;
   editHistory?: ProductEditEntry[];
+  position?: number;
 }
 
 export interface List {
@@ -58,6 +59,7 @@ export interface List {
   inviteCode?: string;
   password?: string;
   hasPassword?: boolean;
+  productsManuallyOrdered?: boolean;
   createdAt: string;
   updatedAt: string;
 }

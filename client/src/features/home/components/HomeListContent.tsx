@@ -1,6 +1,7 @@
 import { useMemo, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 import DoneIcon from '@mui/icons-material/Done';
@@ -30,8 +31,11 @@ interface HomeListContentProps {
   onLeaveList?: (list: List) => void;
   reorderMode: boolean;
   dragIndex: number;
-  dragOverIndex: number;
-  cardRefs: RefObject<(HTMLDivElement | null)[]>;
+  // translateY (px) של הכרטיס הנגרר - עוקב אחרי האצבע 1:1.
+  dragOffsetY: number;
+  // ההזזה (px) שכרטיס שאינו נגרר צריך להחיל כדי לפנות מקום ליעד.
+  getRowShift: (index: number) => number;
+  rowRefs: RefObject<(HTMLDivElement | null)[]>;
   hasOrderChanges: boolean;
   onCancelReorder: () => void;
   onSaveOrder: () => void;
@@ -40,16 +44,16 @@ interface HomeListContentProps {
   t: (key: TranslationKeys) => string;
 }
 
-// שלוש נקודות מהבהבות לחיווי "מנסה שוב". reverse הופך את סדר ה-delay כדי
-// שבצד שמאל של הכיתוב הן "יזרמו" פנימה לכיוון הטקסט (סימטריה עם צד ימין).
-const RetryDots = ({ reverse = false }: { reverse?: boolean }) => (
+// שלוש נקודות מהבהבות אחרי הכיתוב "מנסה שוב" - כמו אינדיקטור הקלדה,
+// זורמות אחת אחרי השנייה. רק אחרי הטקסט, בלי קבוצה נוספת לפני.
+const RetryDots = () => (
   <Box sx={{ display: 'inline-flex', gap: 0.5 }}>
     {[0, 1, 2].map(i => (
       <Box key={i} sx={{
         width: 5, height: 5, borderRadius: '50%',
         bgcolor: 'primary.main',
         animation: 'connDot 1.2s ease-in-out infinite',
-        animationDelay: `${(reverse ? 2 - i : i) * 0.18}s`,
+        animationDelay: `${i * 0.18}s`,
         '@keyframes connDot': {
           '0%, 100%': { opacity: 0.25, transform: 'scale(0.8)' },
           '50%': { opacity: 1, transform: 'scale(1)' },
@@ -63,7 +67,7 @@ const RetryDots = ({ reverse = false }: { reverse?: boolean }) => (
 export const HomeListContent = ({
   contentRef, listsFetchError, hasAnyLists, hasSearchQuery, fewLists, listsLoading, tab, isDark, orderedDisplay, user,
   isGroupMuted, onToggleMute, onSelectList, onEditList, onDeleteList, onLeaveList,
-  reorderMode, dragIndex, dragOverIndex, cardRefs, hasOrderChanges,
+  reorderMode, dragIndex, dragOffsetY, getRowShift, rowRefs, hasOrderChanges,
   onCancelReorder, onSaveOrder, onEnterReorder, onDragHandleStart, t,
 }: HomeListContentProps) => {
   // מבדיל בין "אין אינטרנט אצל הלקוח" (offline מאומת) ל"החיבור נקטע רגעית /
@@ -129,9 +133,8 @@ export const HomeListContent = ({
               {isDeviceOffline ? t('offlineDesc') : t('loadRetryDesc')}
             </Typography>
             {/* חיווי "מנסה שוב" - שקוף ומשולב בכרטיס, לא צ'יפ נפרד זועק.
-                נקודות משני צדי הכיתוב. */}
+                נקודות מהבהבות רק אחרי הכיתוב. */}
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.9, mb: 1.5 }}>
-              <RetryDots reverse />
               <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'primary.main' }}>
                 {t('retrying')}
               </Typography>
@@ -151,21 +154,27 @@ export const HomeListContent = ({
           </Box>
         </Box>
       ) : listsLoading && orderedDisplay.length === 0 ? (
-        // סקלטון בצורת כרטיסי רשימות - נותן ללקוח תחושה שמשהו טוען וכבר תופס
-        // את המקום שהרשימות יתפסו, במקום מסך ריק לבן.
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: { xs: 1.5, sm: 2.5 }, pt: 1 }}>
+        // סקלטון - חייב להיות זהה במידות ל-ListCard + לשורת הכותרת מעליו,
+        // אחרת יש "קפיצה" כשהרשימות נטענות (השורות היו גבוהות מהאמת). כל
+        // המידות כאן מכוילות ל-ListCard.tsx: p:2, gap:1.75, mb:1, radius 16,
+        // IconTile 48, ושתי שורות טקסט בגובה ~20/17 עם mb:0.5 ביניהן.
+        <Box>
+          {/* placeholder לשורת "N רשימות" */}
+          <Box sx={{ mb: 1, px: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <ShimmerBlock width={72} height={14} radius={7} />
+            <ShimmerBlock width={28} height={28} radius={8} />
+          </Box>
           {Array.from({ length: 4 }).map((_, i) => (
             <Box key={i} sx={{
-              display: 'flex', alignItems: 'center', gap: 1.5,
-              p: 2, borderRadius: '16px',
+              display: 'flex', alignItems: 'center', gap: 1.75,
+              p: 2, mb: 1, borderRadius: '16px',
               bgcolor: 'background.paper',
               border: '1px solid', borderColor: 'divider',
-              minHeight: 80,
             }}>
-              <ShimmerBlock width={52} height={52} radius={14} />
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <ShimmerBlock width="65%" height={18} radius={8} />
-                <ShimmerBlock width="40%" height={14} radius={7} />
+              <ShimmerBlock width={48} height={48} radius={12} />
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <ShimmerBlock width="60%" height={20} radius={7} />
+                <ShimmerBlock width="38%" height={17} radius={7} />
               </Box>
               <ShimmerBlock width={28} height={28} radius={8} />
             </Box>
@@ -314,31 +323,50 @@ export const HomeListContent = ({
             )}
           </Box>
           {reorderMode && (
-            <Typography sx={{ fontSize: 11.5, color: 'text.disabled', mt: 0.25 }}>
-              {t('reorderHint')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25, color: 'text.disabled' }}>
+              <DragIndicatorRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography sx={{ fontSize: 11.5 }}>{t('reorderHint')}</Typography>
+            </Box>
           )}
         </Box>
-        {orderedDisplay.map((l: List, idx: number) => (
-        <Box key={l.id} ref={(el: HTMLDivElement | null) => { cardRefs.current[idx] = el; }}>
-          <ListCard
-            list={l}
-            isMuted={isGroupMuted(l.id)}
-            isOwner={l.owner.id === user.id}
-            onSelect={onSelectList}
-            onEditList={onEditList}
-            onDeleteList={onDeleteList}
-            onLeaveList={onLeaveList}
-            onToggleMute={onToggleMute}
-            t={t}
-            reorderMode={reorderMode}
-            isDragging={reorderMode && dragIndex === idx}
-            isDragOver={reorderMode && dragOverIndex === idx && dragIndex !== idx}
-            onDragHandleTouch={dragHandlers[idx]?.touch}
-            onDragHandleMouse={dragHandlers[idx]?.mouse}
-          />
-        </Box>
-      ))}
+        {orderedDisplay.map((l: List, idx: number) => {
+          const isDragging = reorderMode && dragIndex === idx;
+          // translateY = מעקב מיידי אחרי האצבע לכרטיס הנגרר; קפיצה של
+          // גובה-שורה אחד לכרטיסים שמתפנים מקום (getRowShift). זהה למנוע
+          // של גרירת מוצרים - ראו useDragReorder / ProductReorderRow.
+          const translateY = isDragging ? dragOffsetY : reorderMode ? getRowShift(idx) : 0;
+          return (
+            <Box
+              key={l.id}
+              ref={(el: HTMLDivElement | null) => { rowRefs.current[idx] = el; }}
+              sx={{
+                position: 'relative',
+                transform: reorderMode ? `translateY(${translateY}px)` : 'none',
+                transition: isDragging
+                  ? 'none'
+                  : 'transform 0.22s cubic-bezier(0.34,1.25,0.64,1)',
+                zIndex: isDragging ? 5 : 1,
+                willChange: reorderMode ? 'transform' : 'auto',
+              }}
+            >
+              <ListCard
+                list={l}
+                isMuted={isGroupMuted(l.id)}
+                isOwner={l.owner.id === user.id}
+                onSelect={onSelectList}
+                onEditList={onEditList}
+                onDeleteList={onDeleteList}
+                onLeaveList={onLeaveList}
+                onToggleMute={onToggleMute}
+                t={t}
+                reorderMode={reorderMode}
+                isDragging={isDragging}
+                onRowTouch={dragHandlers[idx]?.touch}
+                onRowMouse={dragHandlers[idx]?.mouse}
+              />
+            </Box>
+          );
+        })}
       </>)}
     </Box>
   );

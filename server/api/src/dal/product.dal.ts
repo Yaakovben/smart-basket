@@ -127,27 +127,43 @@ export const ProductDAL = {
     return Product.findOneAndDelete({ _id: productId, listId });
   },
 
-  async deleteByListId(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId });
-    return result.deletedCount;
+  // מחזיר גם את כתובות התמונות של המוצרים שנמחקו (לפני המחיקה בפועל) -
+  // כדי שהקורא יוכל לנקות אותן ב-Cloudinary אחרי (ראה list.service.ts:
+  // deleteList + deleteCloudinaryImages), אחרת הן נשארות שם יתומות לנצח.
+  async deleteByListId(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  // מחיקת מוצרים של מספר רשימות (עם תמיכה בטרנזקציה)
-  async deleteByListIds(listIds: string[], session?: mongoose.ClientSession): Promise<number> {
-    if (listIds.length === 0) return 0;
+  // מחיקת מוצרים של מספר רשימות (עם תמיכה בטרנזקציה) - גם מחזיר images[]
+  // לאותה סיבה כמו deleteByListId למעלה (ראה user.service.ts:deleteAccount).
+  async deleteByListIds(listIds: string[], session?: mongoose.ClientSession): Promise<{ deletedCount: number; images: string[] }> {
+    if (listIds.length === 0) return { deletedCount: 0, images: [] };
     const objectIds = listIds.map(id => new mongoose.Types.ObjectId(id));
-    const result = await Product.deleteMany(
-      { listId: { $in: objectIds } },
-      session ? { session } : undefined,
-    );
-    return result.deletedCount;
+    const filter = { listId: { $in: objectIds } };
+    const query = Product.find(filter).select('image');
+    if (session) query.session(session);
+    const images = (await query.lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter, session ? { session } : undefined);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  async reorderProducts(listId: string, productIds: string[]): Promise<void> {
+  // סידור מחדש. manual=true: position רץ 0,1,2... לפי הסדר שנשלח (הלקוח
+  // ממיין לפיו). manual=false (חזרה למיון אוטומטי): position חוזר לערכי
+  // timestamp גדולים ורצופים לפי הסדר שנשלח (הסדר לפי קטגוריה), כדי
+  // שגם מיון השרת (position:1) יישאר עקבי - אבל הלקוח ממילא ממיין לפי
+  // קטגוריה כש-list.productsManuallyOrdered=false.
+  async reorderProducts(listId: string, productIds: string[], manual = true): Promise<void> {
+    const base = manual ? 0 : Date.now();
+    const step = manual ? 1 : 1000;
     const bulkOps = productIds.map((id, index) => ({
       updateOne: {
         filter: { _id: new mongoose.Types.ObjectId(id), listId: new mongoose.Types.ObjectId(listId) },
-        update: { $set: { position: index } },
+        update: { $set: { position: base + index * step } },
       },
     }));
 
@@ -173,19 +189,31 @@ export const ProductDAL = {
     return result.modifiedCount;
   },
 
-  async clearPurchased(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId, isPurchased: true });
-    return result.deletedCount;
+  // מחזיר גם את כתובות התמונות של המוצרים שנמחקו (לפני המחיקה בפועל) -
+  // כדי שהקורא יוכל לנקות אותן ב-Cloudinary אחרי (ראה product.service.ts:
+  // clearProducts + deleteCloudinaryImages).
+  async clearPurchased(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId, isPurchased: true };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  async clearPending(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId, isPurchased: false });
-    return result.deletedCount;
+  async clearPending(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId, isPurchased: false };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
-  async clearAll(listId: string): Promise<number> {
-    const result = await Product.deleteMany({ listId });
-    return result.deletedCount;
+  async clearAll(listId: string): Promise<{ deletedCount: number; images: string[] }> {
+    const filter = { listId };
+    const images = (await Product.find(filter).select('image').lean())
+      .map((p) => p.image).filter((img): img is string => !!img);
+    const result = await Product.deleteMany(filter);
+    return { deletedCount: result.deletedCount, images };
   },
 
   // איפוס כל המוצרים ל"לא נקנה"

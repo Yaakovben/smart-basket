@@ -95,6 +95,16 @@ export interface CloudinaryHealth {
   status?: 'ok' | 'warning' | 'critical';
 }
 
+// תמונות ששמורות כ-data URL בתוך מסמכי המוצר עצמם (לא ב-Cloudinary) -
+// ראו imageUpload.service.ts:getLocalImagesStats/clearLocalImages.
+export interface LocalImagesResult {
+  dryRun: boolean;
+  count: number;
+  totalBytes: number;
+  // רק כש-dryRun=false - כמה מוצרים נוקו בפועל.
+  cleared?: number;
+}
+
 export interface AiProviderRateLimit {
   limitRequests: string | null;
   remainingRequests: string | null;

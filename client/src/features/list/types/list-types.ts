@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import type { Product, ProductUnit, ProductCategory, Member } from '../../../global/types';
 
 // ===== טיפוסי מצב טופס =====
@@ -87,6 +88,9 @@ export interface UseListReturn {
   setNewProduct: (data: NewProductForm) => void;
   setOpenItemId: (id: string | null) => void;
   setAddError: (error: string) => void;
+  // ראו ProductImageField.onUploadStart + useProductForm.ts - העלאת תמונה
+  // ברקע שעוד לא הסתיימה כשלוחצים "הוסף" (AddProductModal).
+  pendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 
   // currentCenterX/Y אופציונליים: הקומפוננטה מעבירה את המיקום הנוכחי בפועל
   // של ה-FAB (אחרי תנועות קודמות) כדי למנוע קפיצה בחציית סף הגרירה.
@@ -116,6 +120,8 @@ export interface UseListReturn {
   incrementQuantity: (type: 'new' | 'edit') => void;
   decrementQuantity: (type: 'new' | 'edit') => void;
   closeAddModal: () => void;
+  // ביטול העלאת תמונה שלא נוצלה כשסוגרים את "הוסף מוצר" בלי לשמור
+  discardPendingImageUpload: () => void;
   duplicateProduct: { existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null;
   handleDuplicateIncreaseQuantity: () => void;
   handleDuplicateAddNew: () => void;

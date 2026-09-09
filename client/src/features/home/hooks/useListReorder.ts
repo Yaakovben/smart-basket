@@ -1,19 +1,27 @@
-import { useState, useRef, useCallback, useMemo, useEffect, type RefObject } from 'react';
+import { useCallback, useMemo, type RefObject } from 'react';
 import type { List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
-import { haptic } from '../../../global/helpers';
 import { authApi } from '../../../services/api';
+import { useDragReorder } from '../../../global/hooks/useDragReorder';
 
-// כמה ms צריך להחזיק על handle לפני שמתחילה גרירה.
-// מאפשר גלילה טבעית ולא מפעיל drag בטעות בתנועה מהירה.
-const DRAG_ACTIVATION_DELAY_MS = 180;
-// טולרנס תנועה (px) - גלילה אנכית מעל סף זה מבטלת את ה-drag
-const DRAG_CANCEL_VERTICAL_PX = 8;
-// תנועה אופקית גדולה מזה = בוודאי גלילה אופקית (בפחות זמן)
-const DRAG_CANCEL_HORIZONTAL_PX = 12;
+// מיין רשימות לפי סדר-מזהים נתון (user.listOrder או הסדר הזמני בזמן גרירה).
+// מזהים שלא מופיעים בסדר - נשארים בסוף לפי סדרם המקורי.
+function sortByOrder(lists: List[], order: string[] | null | undefined): List[] {
+  if (!order || order.length === 0) return lists;
+  const idx = new Map(order.map((id, i) => [id, i]));
+  return [...lists].sort((a, b) => {
+    const ai = idx.get(a.id);
+    const bi = idx.get(b.id);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+    return 0;
+  });
+}
 
-// לוגיקת גרירה-לסידור-מחדש של כרטיסי רשימה במסך הבית.
-// גרסה משופרת: long-press (180ms) לפני הפעלת drag - מאפשר גלילה טבעית.
+// גרירה-לסידור-מחדש של כרטיסי רשימה במסך הבית. המנוע (מחוות הגרירה,
+// ה-transform-ים, הגלילה האוטומטית) משותף עם גרירת מוצרים בתוך רשימה -
+// ראו useDragReorder. כאן רק השמירה: אופטימית מקומית + PATCH לשרת.
 export function useListReorder(
   contentRef: RefObject<HTMLDivElement | null>,
   display: List[],
@@ -21,213 +29,51 @@ export function useListReorder(
   showToast: (message: string, type?: ToastType) => void,
   t: (key: TranslationKeys) => string,
 ) {
-  const [reorderMode, setReorderMode] = useState(false);
-  const [reorderedIds, setReorderedIds] = useState<string[] | null>(null);
-  const [dragIndex, setDragIndex] = useState(-1);
-  const [dragOverIndex, setDragOverIndex] = useState(-1);
-  const dragIndexRef = useRef(-1);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const autoScrollRef = useRef<number | null>(null);
-  const originalOrderRef = useRef<string[]>([]);
-  const lastMoveTimeRef = useRef(0);
-
-  // long-press pending state - מאחסן את ה-timer ונקודת ההתחלה
-  const pendingDragRef = useRef<{
-    index: number;
-    startY: number;
-    startX: number;
-    timer: ReturnType<typeof setTimeout>;
-  } | null>(null);
-
-  const cancelPending = useCallback(() => {
-    if (pendingDragRef.current) {
-      clearTimeout(pendingDragRef.current.timer);
-      pendingDragRef.current = null;
-    }
-  }, []);
-
-  // חישוב סדר תצוגה עם סדר מותאם אישית
-  const orderedDisplay = useMemo(() => {
-    const order = reorderedIds || user.listOrder;
-    if (!order || order.length === 0) return display;
-    const orderMap = new Map(order.map((id, idx) => [id, idx]));
-    return [...display].sort((a, b) => {
-      const aIdx = orderMap.get(a.id);
-      const bIdx = orderMap.get(b.id);
-      if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
-      if (aIdx !== undefined) return -1;
-      if (bIdx !== undefined) return 1;
-      return 0;
-    });
-  }, [display, reorderedIds, user.listOrder]);
-
-  // גרירה: חישוב אינדקס יעד לפי מיקום Y
-  const getTargetIndex = useCallback((clientY: number): number => {
-    for (let i = 0; i < cardRefs.current.length; i++) {
-      const el = cardRefs.current[i];
-      if (!el) continue;
-      const rect = el.getBoundingClientRect();
-      if (clientY < rect.top + rect.height / 2) return i;
-    }
-    return cardRefs.current.length - 1;
-  }, []);
-
-  // מפעיל את הגרירה בפועל (אחרי ה-delay)
-  const activateDrag = useCallback((index: number) => {
-    dragIndexRef.current = index;
-    setDragIndex(index);
-    setDragOverIndex(index);
-    haptic('medium');
-  }, []);
-
-  // handleDragStart - מתחיל pending, מפעיל גרירה רק אחרי long-press
-  const handleDragStart = useCallback((index: number, clientY: number, clientX = 0) => {
-    cancelPending();
-    const timer = setTimeout(() => {
-      pendingDragRef.current = null;
-      activateDrag(index);
-    }, DRAG_ACTIVATION_DELAY_MS);
-    pendingDragRef.current = { index, startY: clientY, startX: clientX, timer };
-  }, [cancelPending, activateDrag]);
-
-  // handleDragMove - מטפל בתנועה בשני שלבים: pending או גרירה פעילה
-  const handleDragMove = useCallback((clientY: number, clientX = 0) => {
-    // שלב pending: בדוק אם מדובר בגלילה ולא בגרירה
-    if (pendingDragRef.current) {
-      const { startY, startX } = pendingDragRef.current;
-      const dy = Math.abs(clientY - startY);
-      const dx = Math.abs(clientX - startX);
-      // אם המשתמש זז אופקית בצורה ברורה - זוהי גלילה אופקית, בטל מיד
-      if (dx > DRAG_CANCEL_HORIZONTAL_PX) { cancelPending(); return; }
-      // אם המשתמש זז אנכית מעל הסף - זוהי גלילה אנכית, בטל מיד
-      if (dy > DRAG_CANCEL_VERTICAL_PX) { cancelPending(); return; }
-      // תנועה קטנה מאוד - ממשיכים לחכות לטיימר
-      return;
-    }
-
-    // שלב גרירה פעילה
-    const currentIdx = dragIndexRef.current;
-    if (currentIdx < 0) return;
-
-    // גלילה אוטומטית כשגוררים לקצוות המסך
-    const SCROLL_ZONE = 100;
-    const SCROLL_SPEED = 5;
-    const container = contentRef.current;
-    if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      if (clientY < rect.top + SCROLL_ZONE) {
-        const tick = () => { container.scrollBy(0, -SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
-        autoScrollRef.current = requestAnimationFrame(tick);
-      } else if (clientY > rect.bottom - SCROLL_ZONE) {
-        const tick = () => { container.scrollBy(0, SCROLL_SPEED); autoScrollRef.current = requestAnimationFrame(tick); };
-        autoScrollRef.current = requestAnimationFrame(tick);
-      }
-    }
-
-    // throttle: מקסימום עדכון סדר כל 50ms
-    const now = Date.now();
-    if (now - lastMoveTimeRef.current < 50) return;
-    lastMoveTimeRef.current = now;
-
-    const targetIdx = getTargetIndex(clientY);
-    if (targetIdx !== currentIdx) {
-      setReorderedIds(prev => {
-        if (!prev) return prev;
-        const newIds = [...prev];
-        const [moved] = newIds.splice(currentIdx, 1);
-        newIds.splice(targetIdx, 0, moved);
-        return newIds;
-      });
-      dragIndexRef.current = targetIdx;
-      setDragIndex(targetIdx);
-      setDragOverIndex(targetIdx);
-      haptic('light');
-    }
-  }, [contentRef, getTargetIndex, cancelPending]);
-
-  // סיום גרירה
-  const handleDragEnd = useCallback(() => {
-    cancelPending();
-    if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
-    dragIndexRef.current = -1;
-    setDragIndex(-1);
-    setDragOverIndex(-1);
-  }, [cancelPending]);
-
-  // touch/mouse event listeners
-  const isActive = dragIndex >= 0 || pendingDragRef.current !== null;
-  useEffect(() => {
-    if (!isActive) return;
-    const onTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (dragIndex >= 0) {
-        // גרירה פעילה - מנע גלילה
-        e.preventDefault();
-      }
-      handleDragMove(touch.clientY, touch.clientX);
-    };
-    const onTouchEnd = () => handleDragEnd();
-    const onMouseMove = (e: MouseEvent) => handleDragMove(e.clientY, e.clientX);
-    const onMouseUp = () => handleDragEnd();
-
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-    return () => {
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [dragIndex, isActive, handleDragMove, handleDragEnd]);
-
-  const handleSaveOrder = useCallback(async () => {
-    if (reorderedIds) {
-      try {
-        await authApi.updateListOrder(reorderedIds);
-        // eslint-disable-next-line react-hooks/immutability
-        user.listOrder = reorderedIds;
-        showToast(t('orderSaved'));
-      } catch {
+  // שמירה אופטימית: מעדכנים את user.listOrder מיד (התצוגה מתעדכנת) וה-API
+  // רץ ברקע. כשל - החזרת הסדר הקודם + טוסט שגיאה.
+  const persistOrder = useCallback((orderedIds: string[]) => {
+    const prev = user.listOrder;
+    // מוטציה מכוונת על ה-user (אותו דפוס כמו הקוד הקודם) - עדכון אופטימי
+    // כדי שהתצוגה תשקף מיד; הסנכרון הבא ממילא מביא את הסדר הרשמי מהשרת.
+    // eslint-disable-next-line react-hooks/immutability
+    user.listOrder = orderedIds;
+    authApi.updateListOrder(orderedIds)
+      .then(() => showToast(t('orderSaved'), 'success'))
+      .catch(() => {
+        user.listOrder = prev;
         showToast(t('errorOccurred'), 'error');
-      }
-    }
-    setReorderMode(false);
-    setReorderedIds(null);
-  }, [reorderedIds, user, showToast, t]);
+      });
+  }, [user, showToast, t]);
 
-  const handleEnterReorder = useCallback(() => {
-    const ids = orderedDisplay.map(l => l.id);
-    originalOrderRef.current = ids;
-    setReorderMode(true);
-    setReorderedIds(ids);
-    haptic('medium');
-  }, [orderedDisplay]);
+  // getter לסדר הנוכחי - נקרא רק ברגע הכניסה למצב סידור (ראו getIds).
+  const getIds = useCallback(
+    () => sortByOrder(display, user.listOrder).map((l) => l.id),
+    [display, user.listOrder],
+  );
 
-  const hasOrderChanges = useMemo(() => {
-    if (!reorderedIds) return false;
-    const original = originalOrderRef.current;
-    if (reorderedIds.length !== original.length) return true;
-    return reorderedIds.some((id, i) => id !== original[i]);
-  }, [reorderedIds]);
+  const engine = useDragReorder({ getIds, contentRef, onCommit: persistOrder });
+  const { reorderMode, reorderedIds } = engine;
 
-  const handleCancelReorder = useCallback(() => {
-    setReorderMode(false);
-    setReorderedIds(null);
-  }, []);
+  // הסדר להצגה. במצב סידור - הסדר הזמני של הגרירה; אחרת - user.listOrder.
+  // חשוב: המיון קורה *באותו* useMemo שתלוי ב-reorderedIds, כך שאחרי שמירה
+  // (reorderedIds→null) הוא מחושב מחדש וקורא את user.listOrder המעודכן,
+  // גם אם React לא "ראה" את המוטציה.
+  const orderedDisplay = useMemo(() => {
+    if (reorderMode && reorderedIds) return sortByOrder(display, reorderedIds);
+    return sortByOrder(display, user.listOrder);
+  }, [reorderMode, reorderedIds, display, user.listOrder]);
 
   return {
     orderedDisplay,
     reorderMode,
-    dragIndex,
-    dragOverIndex,
-    cardRefs,
-    hasOrderChanges,
-    handleDragStart,
-    handleSaveOrder,
-    handleEnterReorder,
-    handleCancelReorder,
+    dragIndex: engine.dragIndex,
+    dragOffsetY: engine.dragOffsetY,
+    getRowShift: engine.getRowShift,
+    rowRefs: engine.rowRefs,
+    hasOrderChanges: engine.hasChanges,
+    handleDragStart: engine.handleDragStart,
+    handleSaveOrder: engine.handleSave,
+    handleEnterReorder: engine.handleEnter,
+    handleCancelReorder: engine.handleCancel,
   };
 }

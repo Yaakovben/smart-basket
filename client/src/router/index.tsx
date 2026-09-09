@@ -9,7 +9,6 @@ import { DailyFaithAutoPopup } from "../features/daily-faith";
 import { FeatureTipAutoPopup } from "../features/feature-tips";
 // OnboardingGate הוסר - פופאפ הסבר על האפליקציה לא רצוי יותר
 import { useSettings } from "../global/context/SettingsContext";
-import { ADMIN_CONFIG } from "../global/constants";
 import { authApi, insightsApi } from "../services/api";
 import { hideInitialLoader } from "../global/helpers/initialLoader";
 import { clearListNotifications } from "../global/helpers";
@@ -59,11 +58,11 @@ const ProtectedRoute = ({ children, user }: { children: React.ReactNode; user: U
   return <>{children}</>;
 };
 
-// עטיפת נתיב מנהל
+// עטיפת נתיב מנהל - נראות בלבד; ההרשאה האמיתית נאכפת ב-middleware בשרת
+// לכל endpoint של /api/admin. isAdmin מגיע מהמשתמש המאומת (שדה ב-DB).
 const AdminRoute = ({ children, user }: { children: React.ReactNode; user: User | null }) => {
   if (!user) return <Navigate to="/login" replace />;
-  const isAdmin = user.email === ADMIN_CONFIG.adminEmail;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!user.isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 

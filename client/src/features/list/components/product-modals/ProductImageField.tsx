@@ -2,6 +2,7 @@ import { memo, useRef, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import BrokenImageRoundedIcon from '@mui/icons-material/BrokenImageRounded';
 import { haptic } from '../../../../global/helpers';
 import { cldThumb, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { PAPER_NOTE, addChipSx } from '../../helpers/paperNote';
@@ -12,7 +13,18 @@ import { compressProductImage, buildUploadMaster, uploadToServer, isNotConfigure
 // ===== שדה תמונת מוצר - משותף ל-Add ול-Edit =====
 // עיצוב אחיד לחלוטין עם ProductNoteField: אותו צ'יפ תכלת סגור, אותם
 // גוונים (PAPER_NOTE), אותה מסגרת נייר. הערה ותמונה = אותה שפה, אותו צבע.
-export const ProductImageField = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+interface Props {
+  value: string;
+  onChange: (v: string) => void;
+  // נקרא פעם אחת כשמתחילה העלאה ברקע, עם ה-promise שלה (הכתובת הסופית או
+  // null בכשל/לא-מוגדר). למי-שקורה? AddProductModal - כדי לתקן מוצר שכבר
+  // נוצר עם ה-data-URL המקומי, אם "הוסף" נלחץ *לפני* שההעלאה הספיקה
+  // להסתיים (אחרת onChange כבר היה מעדכן את value לכתובת האמיתית). ראו
+  // useProductForm.ts (pendingImageUploadRef) + useAddProduct.ts.
+  onUploadStart?: (promise: Promise<string | null>) => void;
+}
+
+export const ProductImageField = memo(({ value, onChange, onUploadStart }: Props) => {
   const { t, settings } = useSettings();
   const isDark = settings.theme === 'dark';
   const ink = isDark ? PAPER_NOTE.inkDark : PAPER_NOTE.inkLight;
@@ -21,8 +33,20 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
   // (לא חוסם - התמונה כבר מוצגת ושמישה, רק מוחלפת בכתובת מתארחת אם יצליח).
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // tone מבחין בין כשל חוסם (דחיסה נכשלה/גדול מדי - 'error', אדום) לכשל רך
+  // (העלאה לענן נכשלה אבל התמונה המקומית עדיין תקינה ושמישה - 'warning',
+  // טון ניטרלי) - אותו state יחיד, לא שני משתנים, כדי שתמיד יתנקה יחד.
+  const [error, setError] = useState<{ text: string; tone: 'error' | 'warning' } | null>(null);
   const [lightbox, setLightbox] = useState(false);
+  // התמונה השמורה (value) נכשלה לטעון - אין כאן קטגוריה להציג במקומה
+  // (זה שדה טופס, לא תצוגת מוצר), אז פלייסהולדר "נכשל לטעון" פשוט בתוך
+  // אותה תיבה 78x78. מתאפס כש-value משתנה (הסרה+הוספה מחדש).
+  const [imageFailed, setImageFailed] = useState(false);
+  const [seenValue, setSeenValue] = useState(value);
+  if (value !== seenValue) {
+    setSeenValue(value);
+    setImageFailed(false);
+  }
   // מזהה בקשה - מתעלמים מתוצאה של דחיסה/העלאה שהמשתמש כבר "עקף"
   // (בחר קובץ אחר, או הסיר את התמונה) לפני שהסתיימה.
   const reqIdRef = useRef(0);
@@ -49,7 +73,7 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     } catch (err) {
       if (myId === reqIdRef.current) {
         const code = err instanceof ImageUploadError ? err.code : 'unknown';
-        setError(code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'));
+        setError({ text: code === 'too-large' ? t('photoTooLarge') : t('photoUploadError'), tone: 'error' });
         haptic('heavy');
         setBusy(false);
       }
@@ -63,33 +87,64 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
     // שלב 2 - העלאה ברקע. בונים "מאסטר" איכותי *מהקובץ המקורי* (לא מ-local
     // שכבר דחוס אגרסיבית לתצוגה) ומעלים אותו ל-Cloudinary, שגוזר ממנו את
     // כל הגרסאות. אם השרת בלי Cloudinary / כל כשל - נשארים עם ה-data URL.
+    // עטוף בפונקציה (במקום קוד ישיר) כדי שאפשר יהיה גם להחזיר את ה-promise
+    // שלה להורה (onUploadStart) - ראו ההערה על ה-prop למעלה.
     setUploading(true);
-    try {
-      const master = await buildUploadMaster(file);
-      if (myId !== reqIdRef.current) return;
-      const url = await uploadToServer(master);
-      if (myId === reqIdRef.current) {
-        // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
-        // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
-        // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
-        // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
-        // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
-        // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
-        await new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = cldThumb(url);
-        });
-        if (myId === reqIdRef.current) onChange(url);
+    const runUpload = async (): Promise<string | null> => {
+      try {
+        const master = await buildUploadMaster(file);
+        if (myId !== reqIdRef.current) return null;
+        const url = await uploadToServer(master);
+        if (myId === reqIdRef.current) {
+          // טוענים מראש את גרסת ה-thumb לפני שמחליפים את value - אחרת
+          // ProgressiveImage (שמאפס את מצב "נטען" בכל שינוי src) מציג לרגע
+          // את שכבת הבלור מעל התמונה החדה שכבר מוצגת, כי ל-URL המקומי (data:)
+          // אין בלור בכלל (cldBlur מחזיר undefined) אבל ל-URL של Cloudinary
+          // כן - נראה כמו "רפרוש" של התמונה. עם preload, ברגע שה-src מוחלף
+          // הדפדפן כבר פענח את הקובץ ו-onLoad יורה כמעט מיידית.
+          // race מול timeout - אם הבקשה ל-thumb נתקעת (לא load ולא error,
+          // למשל רשת איטית/stall) ה-await לא היה מסתיים לעולם, וה-finally
+          // שמכבה setUploading(false) לא היה רץ - "המים" היו עולים ויורדים
+          // בלי סוף. אחרי 4ש' פשוט ממשיכים (ה-src יוחלף גם ככה, לכל היותר
+          // רפרוף בלור קצר).
+          await new Promise<void>((resolve) => {
+            const img = new Image();
+            let done = false;
+            const finish = () => { if (!done) { done = true; resolve(); } };
+            img.onload = finish;
+            img.onerror = finish;
+            img.src = cldThumb(url);
+            setTimeout(finish, 4000);
+          });
+          if (myId === reqIdRef.current) onChange(url);
+        }
+        return url;
+      } catch (err) {
+        // "לא מוגדר" (503, IMAGE_UPLOAD_NOT_CONFIGURED) - נפילה מכוונת ושקטה
+        // לאחסון data-URL, לא באמת "כשל". כל כשל אחר (מכסת Cloudinary נגמרה,
+        // רשת נפלה באמצע, חתימה לא תקפה וכו') - שקט לגמרי בפרודקשן עד עכשיו,
+        // המשתמש לא ידע שהתמונה לא הגיעה לאחסון קבוע. עדיין לא חוסם: התמונה
+        // המקומית כבר מוצגת ותקינה, רק מודיעים.
+        if (!isNotConfiguredError(err)) {
+          if (import.meta.env.DEV) {
+            console.warn('product image server upload failed, keeping local copy', err);
+          }
+          if (myId === reqIdRef.current) {
+            setError({ text: t('photoSyncFailed'), tone: 'warning' });
+          }
+          if (import.meta.env.PROD) {
+            import('@sentry/react').then(Sentry => {
+              Sentry.captureException(err, { extra: { context: 'product-image-upload' } });
+            }).catch(() => { /* Sentry לא זמין/לא מוגדר - לא קריטי */ });
+          }
+        }
+        return null;
+      } finally {
+        if (myId === reqIdRef.current) setUploading(false);
       }
-    } catch (err) {
-      if (!isNotConfiguredError(err) && import.meta.env.DEV) {
-        console.warn('product image server upload failed, keeping local copy', err);
-      }
-    } finally {
-      if (myId === reqIdRef.current) setUploading(false);
-    }
+    };
+
+    onUploadStart?.(runUpload());
   };
 
   const remove = () => {
@@ -115,61 +170,97 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       />
 
       {value ? (
-        // יש תמונה - שורה: התמונה נדחקת עד קצה שמאל של העמודה
-        // (justifyContent flex-end = שמאל ב-RTL), ותווית "תמונה:" מימינה.
-        // התמונה עצמה: מרובעת, פינות מעוגלות אחידות, מסגרת תכלת דקה
-        // (עקבי עם SwipeItem / ProductDetailsModal). כפתור הסרה אדום על הפינה.
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-          <Typography sx={{
-            fontSize: 11, fontWeight: 700, color: ink,
-            letterSpacing: 0.3, whiteSpace: 'nowrap', flexShrink: 0,
-          }}>
-            {t('photo')}:
-          </Typography>
-          <Box sx={{ position: 'relative', width: 78, flexShrink: 0 }}>
+        // יש תמונה - עמודה: התמונה עצמה נשארת צמודה לקצה הימני של תא ה-grid
+        // (alignItems:flex-end ב-RTL, כמו במקור) - רק התווית "תמונה:" זזה,
+        // מיושרת לקצה הימני *של התמונה עצמה* (לא של כל התא) דרך תיבה ברוחב
+        // 112 קבוע + justifyContent:flex-start, כדי שהיא תשב מעל הפינה
+        // הימנית-עליונה של התמונה בלי להזיז את התמונה עצמה. שימו לב:
+        // justifyContent (ציר ראשי, row) ו-alignItems (ציר צולב, column)
+        // הולכים לפי אותה לוגיקה בדיוק ב-RTL - flex-start=ימין, flex-end=
+        // שמאל בשניהם (לא הפוך אחד מהשני, כמו שבטעות הונח כאן קודם).
+        // מרובעת, פינות מעוגלות, מסגרת תכלת דקה. כפתור הסרה אדום על הפינה
+        // הנגדית.
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.6 }}>
+          <Box sx={{ width: 112, display: 'flex', justifyContent: 'flex-start' }}>
+            <Typography sx={{
+              fontSize: 10, fontWeight: 800, color: ink,
+              letterSpacing: 1, textTransform: 'uppercase',
+            }}>
+              {t('photo')}:
+            </Typography>
+          </Box>
+          <Box sx={{ position: 'relative', width: 112, flexShrink: 0 }}>
             <Box
               role="button"
-              aria-label={t('viewPhotoAria')}
-              onClick={() => { haptic('light'); setLightbox(true); }}
+              aria-label={imageFailed ? t('photoLoadFailed') : t('viewPhotoAria')}
+              onClick={() => { if (imageFailed) return; haptic('light'); setLightbox(true); }}
               sx={{
                 position: 'relative',
-                width: 78, height: 78,
-                borderRadius: '13px', overflow: 'hidden',
+                width: 112, height: 112,
+                borderRadius: '14px', overflow: 'hidden',
                 bgcolor: 'action.hover',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                cursor: 'pointer',
+                cursor: imageFailed ? 'default' : 'pointer',
                 WebkitTapHighlightColor: 'transparent',
                 transition: 'transform 0.15s',
-                '&:active': { transform: 'scale(0.97)' },
+                '&:active': imageFailed ? {} : { transform: 'scale(0.97)' },
               }}
             >
-              <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} />
+              {imageFailed ? (
+                // פלייסהולדר "נכשל לטעון" - אין כאן קטגוריה כמו בתצוגות
+                // אחרות של המוצר, זה שדה טופס. כפתור ההסרה (מחוץ לתיבה
+                // הזו) עדיין עובד - המשתמש לא תקוע, יכול להסיר ולנסות שוב.
+                <Box sx={{
+                  width: '100%', height: '100%',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.4,
+                  color: 'text.disabled',
+                }}>
+                  <BrokenImageRoundedIcon sx={{ fontSize: 26 }} />
+                  <Typography sx={{ fontSize: 10, fontWeight: 600, textAlign: 'center', lineHeight: 1.15, px: 0.5 }}>
+                    {t('photoLoadFailed')}
+                  </Typography>
+                </Box>
+              ) : (
+                <ProgressiveImage src={cldThumb(value)} blurSrc={cldBlur(value)} alt={t('photo')} onError={() => setImageFailed(true)} />
+              )}
               {/* מסגרת תכלת דקה מעל התמונה */}
               <Box aria-hidden="true" sx={{
-                position: 'absolute', inset: 0, borderRadius: '13px',
+                position: 'absolute', inset: 0, borderRadius: '14px',
                 border: '1.5px solid',
                 borderColor: isDark ? PAPER_NOTE.frameDark : PAPER_NOTE.frameLight,
                 pointerEvents: 'none',
               }} />
               {uploading && (
-                <Box aria-hidden="true" sx={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  bgcolor: 'rgba(0,0,0,0.32)',
-                }}>
-                  <CircularProgress size={18} sx={{ color: '#fff' }} />
-                </Box>
+                // חיווי העלאה - "מים" בגוון תכלת המותג שעולים מלמטה למעלה
+                // וחוזרים, בלי ספינר ובלי טקסט. חצי-שקוף כדי שרואים את
+                // התמונה שמאחור (מה שמעלים). קו "פני המים" בהיר בקצה העליון.
+                <Box role="status" aria-label={t('photoProcessing')} sx={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0,
+                  overflow: 'hidden',
+                  animation: 'sbUploadRise 1.5s ease-in-out infinite',
+                  '@keyframes sbUploadRise': {
+                    '0%, 100%': { height: '10%' },
+                    '50%': { height: '100%' },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': { animation: 'none', height: '55%' },
+                  bgcolor: 'rgba(20,184,166,0.42)',
+                  '&::before': {
+                    content: '""', position: 'absolute', left: 0, right: 0, top: 0, height: 2,
+                    bgcolor: 'rgba(94,234,212,0.95)',
+                  },
+                }} />
               )}
             </Box>
-            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית),
-                מבצבץ החוצה מהתווית "תמונה:" שמימין. */}
+            {/* כפתור הסרה - עיגול אדום בפינה השמאלית-עליונה (הפיזית), מבצבץ
+                החוצה מהתמונה. בפינה הנגדית לתווית "תמונה:" (מעל התמונה,
+                מיושרת ימין) כדי שלא יתנגשו. */}
             <Box
               role="button"
               aria-label={t('removePhoto')}
               onClick={remove}
               sx={{
-                position: 'absolute', top: -7, left: -7,
-                width: 22, height: 22, borderRadius: '50%',
+                position: 'absolute', top: -8, left: -8,
+                width: 24, height: 24, borderRadius: '50%',
                 bgcolor: '#DC2626', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
@@ -177,16 +268,14 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
                 '&:active': { transform: 'scale(0.9)' },
               }}
             >
-              <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+              <DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />
             </Box>
           </Box>
         </Box>
       ) : (
-        // אין תמונה - אותה שורה (justifyContent:'flex-end') כמו מצב "יש
-        // תמונה" למעלה, כדי שהצ'יפ יישב כבר עכשיו באותה קצה שהתמונה תתפוס
-        // ברגע שתיבחר - בלי זה הצ'יפ ישב במרכז/התחלה ואז "יקפוץ" שמאלה
-        // כשמוסיפים תמונה בפועל.
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        // אין תמונה - צ'יפ צמוד לאותו קצה (השמאלי ב-RTL) שהתמונה תתפוס
+        // ברגע שתיבחר, כדי שלא "יקפוץ" הצידה כשמוסיפים תמונה בפועל.
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <Box
             role="button"
             tabIndex={0}
@@ -213,8 +302,13 @@ export const ProductImageField = memo(({ value, onChange }: { value: string; onC
       )}
 
       {error && (
-        <Typography sx={{ fontSize: 11.5, color: '#DC2626', mt: 0.6, px: 0.25 }}>
-          {error}
+        <Typography sx={{
+          fontSize: 11.5, mt: 0.6, px: 0.25,
+          // warning (העלאה לענן נכשלה, לא חוסם) - טון ניטרלי, לא אדום כמו
+          // כשל חוסם אמיתי (too-large/decode) - זה לא מצריך פעולה מהמשתמש.
+          color: error.tone === 'warning' ? 'text.secondary' : '#DC2626',
+        }}>
+          {error.text}
         </Typography>
       )}
 

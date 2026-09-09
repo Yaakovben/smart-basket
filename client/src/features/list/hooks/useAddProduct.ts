@@ -3,7 +3,7 @@ import type { Product, List, User, ToastType } from '../../../global/types';
 import type { TranslationKeys } from '../../../global/i18n/translations';
 import { detectCategory } from '../../../global/helpers/categoryDetector';
 import { convertApiProduct } from '../../../global/hooks';
-import { productsApi } from '../../../services/api';
+import { productsApi, uploadsApi } from '../../../services/api';
 import { socketService } from '../../../services/socket';
 import { getDefaultNewProduct } from '../helpers/list-helpers';
 import type { NewProductForm } from '../types/list-types';
@@ -23,6 +23,9 @@ interface UseAddProductParams {
   setAddError: (error: string) => void;
   setOpenItemId: (id: string | null) => void;
   validateProduct: () => boolean;
+  // ראו ProductImageField.onUploadStart + useProductForm.ts - העלאת תמונה
+  // ברקע שעוד לא הסתיימה כשלוחצים "הוסף".
+  pendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 }
 
 // הוספת מוצרים לרשימה: הוספה אופטימיסטית עם מזהה זמני, זיהוי כפילויות,
@@ -41,6 +44,7 @@ export const useAddProduct = ({
   setAddError,
   setOpenItemId,
   validateProduct,
+  pendingImageUploadRef,
 }: UseAddProductParams) => {
   const [duplicateProduct, setDuplicateProduct] = useState<{ existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null>(null);
 
@@ -52,7 +56,7 @@ export const useAddProduct = ({
     category: Product['category'];
     note?: string;
     image?: string;
-  }, showToastOnAdd = true) => {
+  }, showToastOnAdd = true, pendingUpload?: Promise<string | null> | null) => {
     setOpenItemId(null);
 
     // הוספה אופטימיסטית מיידית עם מזהה זמני
@@ -90,6 +94,20 @@ export const useAddProduct = ({
         unit: addedProduct.unit,
         category: addedProduct.category,
       }, user.name);
+
+      // תמונה שהעלאתה לענן עוד לא הסתיימה כשהמוצר נוצר (המוצר כבר נשמר עם
+      // ה-data-URL המקומי, ראו productData.image למעלה) - מחכים לה ברקע,
+      // בלי לחסום שום דבר, ומתקנים את המוצר עם הכתובת האמיתית כשהיא מסתיימת.
+      // אם ההעלאה נכשלת (null) - נשארים בשקט עם ה-data-URL, כמו בעריכה.
+      if (pendingUpload) {
+        pendingUpload.then((finalUrl) => {
+          if (!finalUrl) return;
+          return productsApi.updateProduct(list.id, realId, { image: finalUrl }).then(() => {
+            onUpdateProductsForList(list.id, (current) =>
+              current.map(p => p.id === realId ? { ...p, image: finalUrl } : p));
+          });
+        }).catch(() => { /* שקט - התמונה המקומית כבר שמורה, לא קריטי */ });
+      }
 
       if (showToastOnAdd) {
         showToast(t('added'));
@@ -172,13 +190,28 @@ export const useAddProduct = ({
       return;
     }
 
+    // תמונה שעדיין מעלה לענן ברקע ברגע שלוחצים "הוסף" - localValue שווה
+    // ל-productData.image רק אם ה-upload עוד לא הצליח והחליף אותו (אחרת
+    // onChange כבר עדכן את newProduct.image לכתובת האמיתית, ואין מה לחכות
+    // לו). ה-ref נצרך (מתאפס) כאן כדי שהוספה הבאה לא תשתמש בו בטעות.
+    const pending = pendingImageUploadRef.current;
+    pendingImageUploadRef.current = null;
+    const pendingUpload = pending && pending.localValue === productData.image ? pending.promise : null;
+    // pending היה קיים אבל התמונה שלו כבר לא נשמרת במוצר (הוסרה/הוחלפה
+    // לפני "הוסף") - כשההעלאה תסתיים היא תהיה יתומה. מבטלים אותה.
+    if (pending && !pendingUpload) {
+      pending.promise.then((url) => {
+        if (url && url !== productData.image) void uploadsApi.discardImage(url);
+      }).catch(() => { /* best-effort */ });
+    }
+
     // סגירת מודאל מיידית ואיפוס הטופס
     setNewProduct(getDefaultNewProduct());
     setShowAdd(false);
 
     // שליחה לשרת - המוצר יופיע רק אחרי אישור
-    await addProductToServer(productData);
-  }, [newProduct, validateProduct, addProductToServer, checkDuplicate, setNewProduct, setShowAdd, setAddError]);
+    await addProductToServer(productData, true, pendingUpload);
+  }, [newProduct, validateProduct, addProductToServer, checkDuplicate, setNewProduct, setShowAdd, setAddError, pendingImageUploadRef]);
 
   const handleQuickAdd = useCallback(async (name: string) => {
     const trimmedName = name.trim();
@@ -253,6 +286,19 @@ export const useAddProduct = ({
     setDuplicateProduct(null);
   }, []);
 
+  // נקרא כשסוגרים את "הוסף מוצר" *בלי* לשמור (X / ביטול / רקע). אם נבחרה
+  // תמונה שכבר עלתה ל-Cloudinary - היא תהיה יתומה (אין מוצר), אז מבטלים
+  // אותה. handleAdd מאפס את ה-ref לפני שהוא רץ, אז אם הגענו לכאן וה-ref
+  // עדיין מלא - באמת לא נשמר מוצר.
+  const discardPendingImageUpload = useCallback(() => {
+    const pending = pendingImageUploadRef.current;
+    pendingImageUploadRef.current = null;
+    if (!pending) return;
+    pending.promise.then((url) => {
+      if (url) void uploadsApi.discardImage(url);
+    }).catch(() => { /* best-effort */ });
+  }, [pendingImageUploadRef]);
+
   return {
     duplicateProduct,
     addProductToServer,
@@ -262,5 +308,6 @@ export const useAddProduct = ({
     handleDuplicateIncreaseQuantity,
     handleDuplicateAddNew,
     handleDuplicateCancel,
+    discardPendingImageUpload,
   };
 };

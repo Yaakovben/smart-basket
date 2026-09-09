@@ -1,11 +1,16 @@
 import { memo, useState, useRef, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
+import DragIndicatorRoundedIcon from '@mui/icons-material/DragIndicatorRounded';
+import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
+import SortRoundedIcon from '@mui/icons-material/SortRounded';
 import type { Product, List, User, ToastType, SavedList } from '../../../global/types';
 import { ConfirmModal, SlowLoadIndicator } from '../../../global/components';
 import { useSettings } from '../../../global/context/SettingsContext';
 import { authApi, productsApi } from '../../../services/api';
 import { useList } from '../hooks/useList';
+import { useProductReorder } from '../hooks/useProductReorder';
 import { useProductSelection } from '../hooks/useProductSelection';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useListCostEstimate } from '../hooks/useListCostEstimate';
@@ -18,6 +23,7 @@ import { EmptyState } from './EmptyState';
 import { SwipeHint } from './SwipeHint';
 import { LongPressHint } from './LongPressHint';
 import { SwipeItem } from './SwipeItem';
+import { ProductReorderRow } from './ProductReorderRow';
 import { AddProductFab } from './AddProductFab';
 import { CelebrationOverlay } from './CelebrationOverlay';
 import { ClearListModal } from './ClearListModal';
@@ -54,13 +60,26 @@ interface ListPageProps {
   onBack: () => void;
   onUpdateList: (list: List) => void;
   onUpdateListLocal: (list: List) => void;
-  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[]) => void;
+  onUpdateProductsForList: (listId: string, updater: (products: Product[]) => Product[], extraPatch?: Partial<List>) => void;
   onLeaveList: (listId: string) => void;
   onDeleteList: (listId: string) => void;
   showToast: (message: string, type?: ToastType, onUndo?: () => void) => void;
   onlineUserIds?: Set<string>;
   onSaveSavedLists: (next: SavedList[]) => Promise<void>;
 }
+
+// כפתור הכניסה ל"סדר מוצרים" - ריבוע 32x32 (גובה הצ'יפים), אותו bgcolor
+// כמו הצ'יפים ומסגרת divider. שקט, משתלב בשורה. האייקון בצבע המותג.
+const reorderEntrySx = {
+  width: 32, height: 32, borderRadius: '8px', flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  bgcolor: 'action.hover', color: 'primary.main',
+  border: '1.5px solid', borderColor: 'divider',
+  cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.12s, background-color 0.15s',
+  '&:active': { transform: 'scale(0.9)' },
+  '&:hover': { bgcolor: 'action.selected' },
+} as const;
 
 // ===== קומפוננטה ראשית =====
 export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdateListLocal, onUpdateProductsForList, onLeaveList, onDeleteList, showToast, user, onlineUserIds, onSaveSavedLists }: ListPageProps) => {
@@ -70,7 +89,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
   const {
     filter, search, showAdd, showEdit, showDetails, showInvite,
     showMembers, showShareList, showEditList, editListData,
-    confirmDeleteList, confirm, newProduct, openItemId, showHint, addError,
+    confirmDeleteList, confirm, newProduct, openItemId, showHint, addError, pendingImageUploadRef,
     refreshing,
     fabPosition, showFab, isDragging,
     pending, purchased, items, allMembers, isOwner, hasProductChanges, hasListChanges,
@@ -82,7 +101,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
     updateNewProductField, updateEditProductField, incrementQuantity,
-    decrementQuantity, closeAddModal,
+    decrementQuantity, closeAddModal, discardPendingImageUpload,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
     refreshList, showClearList, setShowClearList, handleClearList, handleResetList, showCelebration
   } = useList({
@@ -188,6 +207,61 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
   // אומדן עלות עדין לרשימה - נטען ברקע, לא חוסם שום דבר
   const { estimate: costEstimate } = useListCostEstimate(list.id, pending.length);
+
+  // ===== סידור מוצרים ידני (גרירה) =====
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  // עדכון אופטימי מקומי אחרי סידור - מקבע position לכל מוצר לפי הסדר החדש
+  // + דגל הרשימה, כדי שהתצוגה תתעדכן מיד (לפני שה-refetch של הסוקט חוזר).
+  // קריאה אטומית *אחת* ל-onUpdateProductsForList (updater + extraPatch יחד) -
+  // לא שתי קריאות נפרדות. קריאה שנייה נפרדת ל-onUpdateListLocal({...list,...})
+  // הייתה מעבירה snapshot ישן (סגור מזמן ה-render) של list.products, שדורס
+  // בחזרה את עדכון ה-position שזה עתה בוצע (שתי קריאות setLists נשארות
+  // בתוך אותו batch, אבל השנייה מחליפה את כל אובייקט הרשימה בגרסה הישנה) -
+  // זו הייתה הסיבה שאחרי סידור המוצרים חזרו רגעית לסדר הישן, עד שה-refetch
+  // הבא (למשל visibilitychange) תיקן את זה בפועל.
+  const applyLocalOrder = useCallback((orderedIds: string[], manual: boolean) => {
+    const rank = new Map(orderedIds.map((id, i) => [id, i]));
+    const base = Date.now();
+    onUpdateProductsForList(list.id, (products) =>
+      products.map((p) => rank.has(p.id)
+        ? { ...p, position: manual ? rank.get(p.id)! : base + rank.get(p.id)! * 1000 }
+        : p),
+      { productsManuallyOrdered: manual });
+  }, [list.id, onUpdateProductsForList]);
+
+  const {
+    orderedItems: reorderOrderedItems,
+    reorderMode, dragIndex: reorderDragIndex, dragOffsetY: reorderDragOffsetY, getRowShift: reorderGetRowShift,
+    rowRefs: reorderRowRefs, hasChanges: reorderHasChanges,
+    handleDragStart: reorderHandleDragStart,
+    handleSave: reorderHandleSave, handleEnter: reorderHandleEnter,
+    handleCancel: reorderHandleCancel, handleSortByCategory: reorderSortByCategory,
+  } = useProductReorder({
+    listId: list.id,
+    items,
+    userName: user.name,
+    contentRef: scrollContainerRef,
+    applyLocalOrder,
+    showToast,
+    t,
+  });
+
+  // ידיות גרירה יציבות לפי אינדקס (אותו דפוס כמו HomeListContent) - מונע
+  // יצירת פונקציה חדשה בכל רינדור ששוברת את ה-memo של השורות.
+  const reorderDragHandlers = useMemo(() => {
+    if (!reorderMode) return [];
+    return reorderOrderedItems.map((_, idx) => ({
+      touch: (e: React.TouchEvent) => {
+        e.stopPropagation();
+        reorderHandleDragStart(idx, e.touches[0].clientY, e.touches[0].clientX);
+      },
+      mouse: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        reorderHandleDragStart(idx, e.clientY, e.clientX);
+      },
+    }));
+  }, [reorderMode, reorderOrderedItems, reorderHandleDragStart]);
 
   // refs לגישה לערכים עדכניים מתוך useCallbacks יציבים - מונע יצירת closures
   // חדשות בכל render שתשברנה את memo של ListHeader ויגרמנה לרינדור מחדש מיותר.
@@ -297,6 +371,10 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     ? categoryFilter
     : null;
 
+  // האם שורת/כפתור "סדר מוצרים" רלוונטיים כרגע - רק בטאב "לקנות", בלי
+  // חיפוש/סינון קטגוריה, ומ-2 מוצרים ומעלה.
+  const canReorder = filter === 'pending' && !search && !effectiveCategoryFilter && items.length > 1;
+
   // סינון מוצרים לפי קטגוריה
   const filteredItems = useMemo(() => {
     if (!categoryFilter) return items;
@@ -394,6 +472,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
 
       {/* Content */}
       <Box
+        ref={scrollContainerRef}
         sx={{
           flex: 1,
           overflowY: 'auto',
@@ -422,26 +501,137 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         aria-label={list.name}
       >
         {/* Swipe Hint */}
-        {showHint && items.length > 0 && (
+        {!reorderMode && showHint && items.length > 0 && (
           <SwipeHint onDismiss={dismissHint} />
         )}
 
         {/* רמז עדין על לחיצה ארוכה - מוצג רק אחרי שהסרת את רמז ההחלקה ויש פריטים */}
-        {!showHint && items.length > 0 && <LongPressHint />}
+        {!reorderMode && !showHint && items.length > 0 && <LongPressHint />}
 
-        {/* סינון לפי קטגוריה */}
-        {items.length > 0 && activeCategories.length > 1 && (
+        {/* סינון לפי קטגוריה - כשלא במצב סידור, כפתור "סדר מוצרים" מוזרק
+            כ-trailing לאותה שורה (בצד שמאל, קבוע, בלי לגלול) כדי שלא יפתח
+            שורה נפרדת משלו רק בשביל זה. */}
+        {!reorderMode && items.length > 0 && activeCategories.length > 1 && (
           <CategoryFilterChips
             totalCount={items.length}
             activeCategories={activeCategories}
             categoryCounts={categoryCounts}
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
+            trailing={canReorder ? (
+              <Box
+                role="button"
+                tabIndex={0}
+                aria-label={t('reorderProducts')}
+                onClick={reorderHandleEnter}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
+                sx={reorderEntrySx}
+              >
+                <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+              </Box>
+            ) : undefined}
           />
         )}
 
+        {/* שורת סידור מוצרים - עצמאית רק כשאין שורת קטגוריות לחבר אליה
+            (קטגוריה יחידה) או במצב סידור פעיל (הצ'יפים ממילא מוסתרים אז).
+            אחרת הכפתור כבר בפנים בשורת הצ'יפים למעלה (trailing). */}
+        {canReorder && (reorderMode || activeCategories.length <= 1) && (
+          <Box sx={{ mb: 1, px: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: reorderMode ? 'primary.main' : 'text.secondary' }}>
+                {reorderMode ? t('reorderProductsActive') : `${items.length} ${t('productsWord')}`}
+              </Typography>
+              {reorderMode ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Button
+                    size="small" variant="outlined" onClick={reorderHandleCancel}
+                    sx={{ fontSize: 12, fontWeight: 600, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', color: 'error.main', borderColor: 'error.main', '&:hover': { borderColor: 'error.dark', bgcolor: 'rgba(239,68,68,0.04)' } }}
+                  >
+                    {t('cancel')}
+                  </Button>
+                  <Button
+                    size="small" variant="contained" onClick={reorderHandleSave}
+                    disabled={!reorderHasChanges}
+                    startIcon={<DoneRoundedIcon sx={{ fontSize: 16 }} />}
+                    sx={{ fontSize: 12, fontWeight: 700, textTransform: 'none', borderRadius: '10px', px: 1.5, py: 0.5, minWidth: 'auto', gap: 0.75, boxShadow: reorderHasChanges ? '0 2px 8px rgba(20,184,166,0.3)' : 'none' }}
+                  >
+                    {t('reorderDone')}
+                  </Button>
+                </Box>
+              ) : (
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('reorderProducts')}
+                  onClick={reorderHandleEnter}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
+                  sx={reorderEntrySx}
+                >
+                  <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                </Box>
+              )}
+            </Box>
+            {reorderMode && (
+              // רמז + "מיין לפי קטגוריה" (רק כשהרשימה מסודרת ידנית - יש מה
+              // להחזיר לאוטומט) על אותה שורה, לא ליד "ביטול"/"סיים" למעלה -
+              // אלה שתי פעולות סיום, זו פעולת עזר נפרדת ולא רוצים לצופף
+              // שלושה כפתורים יחד. דועך בזמן גרירה פעילה כדי לא להסיח את
+              // הדעת בדיוק כשהאצבע על מוצר - "מגיב" לגרירה בפועל, לא רק שם.
+              <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.75,
+                opacity: reorderDragIndex >= 0 ? 0.3 : 1,
+                pointerEvents: reorderDragIndex >= 0 ? 'none' : 'auto',
+                transition: 'opacity 0.15s ease',
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled' }}>
+                  <DragIndicatorRoundedIcon sx={{ fontSize: 14 }} />
+                  <Typography sx={{ fontSize: 11.5 }}>
+                    {t('reorderProductsHint')}
+                  </Typography>
+                </Box>
+                {list.productsManuallyOrdered && (
+                  <Box
+                    component="button"
+                    onClick={reorderSortByCategory}
+                    sx={{
+                      flexShrink: 0, border: '1.5px solid', borderColor: 'divider',
+                      bgcolor: 'action.hover', borderRadius: '999px',
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.1, py: 0.5,
+                      fontFamily: 'inherit', fontSize: 11, fontWeight: 700,
+                      color: 'primary.main', cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'transform 0.12s, background-color 0.15s',
+                      '&:active': { transform: 'scale(0.95)' },
+                      '&:hover': { bgcolor: 'action.selected' },
+                    }}
+                  >
+                    <SortRoundedIcon sx={{ fontSize: 14 }} />
+                    {t('sortByCategory')}
+                  </Box>
+                )}
+              </Box>
+            )}
+          </Box>
+        )}
+
         {/* Products List or Empty State */}
-        {items.length === 0 ? (
+        {reorderMode ? (
+          <>
+            {reorderOrderedItems.map((p: Product, idx: number) => (
+              <ProductReorderRow
+                key={p.id}
+                product={p}
+                index={idx}
+                isDragging={reorderDragIndex === idx}
+                translateY={reorderDragIndex === idx ? reorderDragOffsetY : reorderGetRowShift(idx)}
+                rowRef={(el) => { reorderRowRefs.current[idx] = el; }}
+                onRowTouch={reorderDragHandlers[idx]?.touch ?? (() => {})}
+                onRowMouse={reorderDragHandlers[idx]?.mouse ?? (() => {})}
+              />
+            ))}
+          </>
+        ) : items.length === 0 ? (
           <EmptyState filter={filter} totalProducts={pending.length + purchased.length} hasSearch={!!search} onAddProduct={() => setShowAdd(true)} onClearPurchased={() => handleClearList('purchased')} savedLists={savedLists} onApplySavedList={handleApplySavedList} />
         ) : filteredItems.length === 0 && effectiveCategoryFilter ? (
           <Box sx={{ textAlign: 'center', py: 6 }}>
@@ -492,8 +682,8 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         )}
       </Box>
 
-      {/* FAB - Add Product Button */}
-      {showFab && (
+      {/* FAB - Add Product Button (מוסתר במצב סידור מוצרים) */}
+      {showFab && !reorderMode && (
         <AddProductFab
           itemCount={items.length}
           fabPosition={fabPosition}
@@ -511,11 +701,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         newProduct={newProduct}
         error={addError}
         suggestions={productSuggestions}
-        onClose={closeAddModal}
+        onClose={() => { discardPendingImageUpload(); closeAddModal(); }}
         onAdd={handleAdd}
         onUpdateField={updateNewProductField}
         onIncrement={() => incrementQuantity('new')}
         onDecrement={() => decrementQuantity('new')}
+        pendingImageUploadRef={pendingImageUploadRef}
       />
 
       <EditProductModal

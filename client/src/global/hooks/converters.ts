@@ -29,6 +29,7 @@ export const convertApiProduct = (p: ApiList['products'][0]): Product => ({
   note: p.note,
   image: p.image,
   editHistory: p.editHistory,
+  position: p.position,
 });
 
 // המרת רשימה מפורמט API לפורמט לקוח
@@ -50,6 +51,7 @@ export const convertApiList = (apiList: ApiList): List => ({
   inviteCode: apiList.inviteCode,
   password: apiList.password,
   hasPassword: apiList.hasPassword,
+  productsManuallyOrdered: apiList.productsManuallyOrdered,
   createdAt: apiList.createdAt,
   updatedAt: apiList.updatedAt,
 });

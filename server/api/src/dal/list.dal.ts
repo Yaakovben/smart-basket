@@ -113,6 +113,14 @@ export const ListDAL = {
     );
   },
 
+  // מצב סידור המוצרים - ידני (גרירה) מול אוטומטי (קטגוריה→א״ב)
+  async setProductsManuallyOrdered(listId: string, value: boolean): Promise<void> {
+    await List.updateOne(
+      { _id: listId },
+      { $set: { productsManuallyOrdered: value, updatedAt: new Date() } }
+    );
+  },
+
   // מתודות עם session לטרנזקציות
   async findPrivateListIds(ownerId: string, session: ClientSession): Promise<string[]> {
     const uid = new mongoose.Types.ObjectId(ownerId);

@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import { memo, useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense, type RefObject } from 'react';
 import { Box, Typography, Button, IconButton, Select, MenuItem, Alert, FormControl, InputAdornment } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import type { ProductUnit, ProductCategory } from '../../../../global/types';
@@ -51,6 +51,9 @@ interface AddProductModalProps {
   onUpdateField: <K extends keyof NewProductForm>(field: K, value: NewProductForm[K]) => void;
   onIncrement: () => void;
   onDecrement: () => void;
+  // ראו ProductImageField.onUploadStart + useProductForm.ts - מאפשר ל-"הוסף"
+  // לא לחכות להעלאת התמונה לענן, ועדיין לתקן את המוצר אחרי שהיא מסתיימת.
+  pendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
 }
 
 export const AddProductModal = memo(({
@@ -62,7 +65,8 @@ export const AddProductModal = memo(({
   onAdd,
   onUpdateField,
   onIncrement,
-  onDecrement
+  onDecrement,
+  pendingImageUploadRef
 }: AddProductModalProps) => {
   const { t } = useSettings();
   const quantityRef = useRef<HTMLInputElement>(null);
@@ -72,6 +76,11 @@ export const AddProductModal = memo(({
   const [scannerMounted, setScannerMounted] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
+  // האם שדה ההערה פתוח כרגע - מדווח ע"י ProductNoteField עצמו (מצב
+  // expanded הפנימי שלו לא נגיש כאן אחרת). כשפתוח, עמודת ההערה ב-grid
+  // מתרחבת על חשבון עמודת התמונה (ראו למטה) - התמונה עצמה קטנה (78px)
+  // ולא צריכה חצי מהרוחב, וטקסט ההערה הרגיש צפוף מדי בחצי-חצי קבוע.
+  const [noteOpen, setNoteOpen] = useState(false);
 
   // חימום מקדים של ה-chunk של הסורק ברגע שהמודאל נפתח (לא ממתינים ללחיצה
   // על כפתור הברקוד) - כשהמשתמש בפועל ילחץ לסרוק, ה-JS כבר בקאש והמסך
@@ -377,20 +386,28 @@ export const AddProductModal = memo(({
           </FormControl>
         </Box>
       </Box>
-      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות קבועות (grid, לא flex-wrap):
-          לכל אחד חצי מהרוחב תמיד, כולל כשהוא פתוח/יש בו תמונה. בעבר עם
-          flexBasis:100% כשנפתח, פתיחת ההערה דחפה את התמונה לשורה חדשה
-          במקום לשבת לצידה. alignItems:'center' (היה 'flex-start') - כשההערה
-          פתוחה (גבוהה) והתמונה סתם צ'יפ/תמונה קטנה, top-align גרם לתמונה
-          להיראות "תלויה" גבוה מדי ביחס לתוכן ההערה. */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', alignItems: 'center', gap: 2.5, mb: 1.5 }}>
+      {/* "הוסף הערה" ו"הוסף תמונה" - שתי עמודות grid (לא flex-wrap): חצי-חצי
+          כששניהם סגורים/צ'יפים, אבל כשההערה פתוחה היא מקבלת חלק גדול יותר
+          (1.7fr לעומת 1fr). alignItems:'center' (לא flex-start) - כשצד אחד
+          פתוח (פתק גבוה, 132px) והשני עדיין צ'יפ סגור קטן, הצ'יפ ממורכז
+          בגובה השורה במקום להישאר תקוע למעלה עם המון רווח ריק מתחתיו (וגם
+          כדי שכפתור ה-X של הפתק, שמבצבץ -12px מעל הפינה שלו, לא "יבצבץ"
+          לתוך הצ'יפ השכן כשהוא צמוד לראש השורה). */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: noteOpen ? 'minmax(0,1.7fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)',
+        alignItems: 'center', gap: 2.5, mb: 1.5,
+        transition: 'grid-template-columns 0.2s ease',
+      }}>
         <ProductNoteField
           value={newProduct.note}
           onChange={(v) => onUpdateField('note', v)}
+          onOpenChange={setNoteOpen}
         />
         <ProductImageField
           value={newProduct.image}
           onChange={(v) => onUpdateField('image', v)}
+          onUploadStart={(promise) => { pendingImageUploadRef.current = { promise, localValue: newProduct.image }; }}
         />
       </Box>
       <Box sx={{ mb: 0.5 }}>

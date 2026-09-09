@@ -19,7 +19,9 @@ dotenv.config();
  * - JWT_ACCESS_EXPIRES_IN: Access token expiry (default: 15m)
  * - JWT_REFRESH_EXPIRES_IN: Refresh token expiry (default: 30d)
  * - CORS_ORIGIN: Allowed origins for CORS, comma-separated (default: http://localhost:5173)
- * - ADMIN_EMAIL: Default admin user email
+ * - ADMIN_EMAIL: Email address that gets isAdmin=true on register/login.
+ *   No default - if unset, no account is auto-granted admin (same safe
+ *   behaviour as the socket server). Set it explicitly per deployment.
  * - SENTRY_DSN: Sentry error monitoring DSN (only sends errors in production)
  * - OCR_API_KEY: OCR.space API key for "scan list photo" feature (free tier,
  *   register at ocr.space/ocrapi/freekey). Feature silently no-ops if absent.
@@ -56,8 +58,10 @@ const envSchema = Joi.object({
   // CORS - רשימת origins מופרדת בפסיקים
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
 
-  // מייל אדמין
-  ADMIN_EMAIL: Joi.string().email().default('yaakovbenyizchak1@gmail.com'),
+  // מייל אדמין - החשבון שמקבל isAdmin=true בהרשמה/כניסה. *אין* ברירת מחדל:
+  // אם לא מוגדר, אף אחד לא מקבל אדמין אוטומטית (זהה לדפוס של שרת ה-Socket).
+  // חייב להיות מוגדר מפורשות בכל דיפלוימנט שרוצה פאנל אדמין.
+  ADMIN_EMAIL: Joi.string().email().lowercase().allow('').default(''),
 
   // ניטור שגיאות Sentry - שולח רק ב-production
   SENTRY_DSN: Joi.string().optional(),
@@ -68,7 +72,11 @@ const envSchema = Joi.object({
   // מפתחות VAPID להתראות push - ליצירה: npx web-push generate-vapid-keys
   VAPID_PUBLIC_KEY: Joi.string().optional(),
   VAPID_PRIVATE_KEY: Joi.string().optional(),
-  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:yaakovbenyizchak1@gmail.com'),
+  // ה-"subject" של VAPID - כתובת איש קשר שספק ה-push (Google/Apple/Mozilla)
+  // יכול לפנות אליה. לא סוד ולא הרשאה - סתם מחרוזת קשר. ברירת המחדל היא
+  // *כתובת התמיכה הפומבית של הפרויקט* (אותה אחת שב-HelpModal/EMAIL_SETUP),
+  // לא מייל אישי. אפשר לדרוס עם VAPID_EMAIL בסביבה.
+  VAPID_EMAIL: Joi.string().pattern(/^mailto:/).default('mailto:smartbasket129@gmail.com'),
 
   // LocationIQ API key - fallback ל-geocoding כשNominatim נכשל לכתובות בעברית.
   // מסלול חינמי: 5,000 בקשות ביום, ללא כרטיס אשראי. אם חסר - geocoder יורד חזרה למרכז עיר.
@@ -87,10 +95,11 @@ const envSchema = Joi.object({
   // אם חסר - ה-endpoint מחזיר שגיאה ברורה במקום לנסות בלי מפתח.
   OCR_API_KEY: Joi.string().optional(),
 
-  // Cloudinary - אחסון תמונות מוצר. ההעלאה עוברת דרך השרת הזה (POST
-  // /api/uploads/product-image): הלקוח שולח תמונה דחוסה, השרת מעלה
-  // ל-Cloudinary עם ה-API secret ומחזיר רק את כתובת ה-https. שלושתם
-  // סודות אמיתיים - רק במשתני סביבה, אף פעם לא בקליינט. אם אחד מהם חסר,
+  // Cloudinary - אחסון תמונות מוצר. ההעלאה עצמה *ישירה* מהדפדפן ל-Cloudinary
+  // (בייטי התמונה אף פעם לא עוברים דרך השרת הזה) - הלקוח מבקש חתימה
+  // חד-פעמית מ-GET /api/uploads/signature (עם ה-API secret, כאן בלבד),
+  // ומשתמש בה כדי להעלות ישירות ל-Cloudinary מהדפדפן. שלושתם סודות
+  // אמיתיים - רק במשתני סביבה, אף פעם לא בקליינט. אם אחד מהם חסר,
   // ה-endpoint מחזיר 503 והלקוח נופל לאחסון data-URL במסמך המוצר.
   CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
   CLOUDINARY_API_KEY: Joi.string().optional(),
@@ -116,13 +125,6 @@ const envSchema = Joi.object({
   // האמיתית של הספק (ראו remainingTokens/remainingRequests בפאנל האדמין),
   // עם מרווח ביטחון. 0 = בלי תקרה.
   AI_DAILY_REQUEST_BUDGET: Joi.number().integer().min(0).default(2000),
-  // NVIDIA NIM (build.nvidia.com) - ספק גיבוי לעוזר ה-AI, לא ראשי. Groq הוא
-  // הראשי (מהיר יותר), אבל לטייר החינמי שלו יש מכסה יומית/דקתית - אם היא
-  // נגמרת (429) או ש-Groq לא זמין רגעית, השירות עובר אוטומטית ל-NIM כדי
-  // שהעוזר ימשיך לעבוד במקום להחזיר שגיאה למשתמש. אופציונלי לגמרי - אם
-  // המפתח חסר, פשוט אין גיבוי (Groq בלבד).
-  NVIDIA_NIM_API_KEY: Joi.string().optional(),
-  NVIDIA_NIM_MODEL: Joi.string().default('meta/llama-3.3-70b-instruct'),
 }).unknown(true); // מאפשר משתני סביבה נוספים
 
 const parseEnv = () => {
@@ -167,8 +169,6 @@ export interface Environment {
   GROQ_API_KEY?: string;
   GROQ_MODEL: string;
   AI_DAILY_REQUEST_BUDGET: number;
-  NVIDIA_NIM_API_KEY?: string;
-  NVIDIA_NIM_MODEL: string;
   GMAIL_USER?: string;
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;

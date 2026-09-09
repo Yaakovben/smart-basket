@@ -12,3 +12,4 @@ export { convertApiProduct, convertApiList } from './converters';
 export { useOfflineSync } from './useOfflineSync';
 export { useReliableTap } from './useReliableTap';
 export { useConnectionStatus, type ConnectionPhase } from './useConnectionStatus';
+export { useDragReorder } from './useDragReorder';

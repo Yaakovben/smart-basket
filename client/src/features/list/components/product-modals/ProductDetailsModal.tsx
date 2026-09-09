@@ -10,8 +10,6 @@ import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_TRANSLATION_KEYS, formatDateS
 import { cldPreview, cldFull, cldBlur } from '../../../../global/helpers/cloudinaryImage';
 import { Modal, IconTile, ImageLightbox, ProgressiveImage } from '../../../../global/components';
 import { PAPER_NOTE, paperNoteSx } from '../../helpers/paperNote';
-import { useScrollHint } from '../../helpers/useScrollHint';
-import { NoteScrollHint } from './NoteScrollHint';
 import { useSettings } from '../../../../global/context/SettingsContext';
 import type { TranslationKeys } from '../../../../global/i18n/translations';
 
@@ -82,19 +80,24 @@ export const ProductDetailsModal = memo(({
   const [editsExpanded, setEditsExpanded] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
   const [nameExpanded, setNameExpanded] = useState(false);
-  // חיווי גלילה על ההערה - היא מוגבלת בגובה ואז גוללת בתוך הפתק.
-  const { ref: noteRef, showHint: noteShowHint, onScroll: onNoteScroll } = useScrollHint<HTMLDivElement>(product?.note);
+  // תמונת המוצר נכשלה לטעון - נופל לתצוגת אריח הקטגוריה, בדיוק כמו
+  // !product.image. מתאפס למטה (יחד עם שאר ה-state) לפי id או image.
+  const [imageFailed, setImageFailed] = useState(false);
 
   // פרטי העריכה תמיד נפתחים סגורים בכל פתיחה של המודל / החלפת מוצר -
   // המודל נשאר mounted אצל ההורה ורק ה-product prop מתחלף, אז בלי איפוס
   // מפורש מצב "פתוח" היה נדבק בין מוצרים. איפוס בזמן רינדור (הדפוס
-  // המומלץ ב-React) ולא ב-useEffect.
+  // המומלץ ב-React) ולא ב-useEffect. גם image נבדק (לא רק id) - עריכת
+  // תמונה למוצר קיים באותו modal instance לא אמורה לגרור failed ישן.
   const [seenId, setSeenId] = useState(product?.id);
-  if (product?.id !== seenId) {
+  const [seenImage, setSeenImage] = useState(product?.image);
+  if (product?.id !== seenId || product?.image !== seenImage) {
     setSeenId(product?.id);
+    setSeenImage(product?.image);
     setEditsExpanded(false);
     setShowPhoto(false);
     setNameExpanded(false);
+    setImageFailed(false);
   }
 
   if (!product) return null;
@@ -153,7 +156,7 @@ export const ProductDetailsModal = memo(({
           height: 148, mb: 1.5,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          {product.image ? (
+          {product.image && !imageFailed ? (
             <Box
               role="button"
               aria-label={t('viewPhotoAria')}
@@ -177,6 +180,7 @@ export const ProductDetailsModal = memo(({
                 // (לא ברשימה גוללת כמו SwipeItem), אין תועלת בדחיית טעינה.
                 // fetchPriority מבקש מהדפדפן להקדים אותה מול בקשות אחרות.
                 fetchPriority="high"
+                onError={() => setImageFailed(true)}
               />
               {/* מסגרת תכלת דקה - אותו תכלת של ההערה. overlay עם border
                   (לא box-shadow על img, שלא נצבע בחלק מגרסאות Safari). */}
@@ -285,14 +289,11 @@ export const ProductDetailsModal = memo(({
             </Typography>
           </Box>
           <Box
-            ref={noteRef}
-            onScroll={onNoteScroll}
             sx={{
               position: 'relative', zIndex: 2,
               maxHeight: 168, overflowY: 'auto', overscrollBehavior: 'contain',
-              // מקום ל"פייד" של חיווי הגלילה שלא יחתוך שורה באמצע
               pb: 0.5,
-              // סרגל גלילה דק ודיסקרטי
+              // חיווי גלילה בצד - סרגל דק צבוע (לא חץ מרפרף)
               '&::-webkit-scrollbar': { width: 4 },
               '&::-webkit-scrollbar-thumb': {
                 backgroundColor: isDark ? PAPER_NOTE.edgeDark : PAPER_NOTE.edgeLight,
@@ -310,7 +311,6 @@ export const ProductDetailsModal = memo(({
               {product.note}
             </Typography>
           </Box>
-          <NoteScrollHint show={noteShowHint} isDark={isDark} />
         </Box>
       )}
 

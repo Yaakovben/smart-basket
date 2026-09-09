@@ -10,6 +10,7 @@ import { NotFoundError, ConflictError, AuthError, ValidationError } from '../err
 import { sanitizeText } from '../utils';
 import { invalidateAllUserTokens } from './token.service';
 import { publishUserDeleted } from './redisPublisher.service';
+import { deleteCloudinaryImages } from './imageUpload.service';
 import { logger } from '../config';
 import type { UpdateProfileInput, SavedListInput } from '../validators';
 import type { IUserResponse, ISavedListResponse } from '../types';
@@ -159,12 +160,16 @@ export async function updateSavedLists(
  */
 export async function deleteAccount(userId: string): Promise<void> {
   const session = await mongoose.startSession();
+  // תמונות המוצרים של כל הרשימות שנמחקות בטרנזקציה - מצטבר תוך כדי,
+  // ומנוקה ב-Cloudinary רק *אחרי* שהטרנזקציה הצליחה (ראה סוף הפונקציה).
+  const orphanedImages: string[] = [];
 
   try {
     await session.withTransaction(async () => {
       // 1. רשימות פרטיות + המוצרים שלהן
       const privateListIds = await ListDAL.findPrivateListIds(userId, session);
-      await ProductDAL.deleteByListIds(privateListIds, session);
+      const { images: privateImages } = await ProductDAL.deleteByListIds(privateListIds, session);
+      orphanedImages.push(...privateImages);
       await ListDAL.deletePrivateLists(userId, session);
 
       // 2. קבוצות שבבעלות המשתמש
@@ -178,7 +183,8 @@ export async function deleteAccount(userId: string): Promise<void> {
           await ListDAL.transferOwnership(group._id.toString(), newOwner.user, session);
         } else {
           // קבוצה ריקה → מוחקים אותה ואת מוצריה
-          await ProductDAL.deleteByListIds([group._id.toString()], session);
+          const { images: groupImages } = await ProductDAL.deleteByListIds([group._id.toString()], session);
+          orphanedImages.push(...groupImages);
           await ListDAL.deleteByIdWithSession(group._id.toString(), session);
         }
       }
@@ -199,6 +205,9 @@ export async function deleteAccount(userId: string): Promise<void> {
   } finally {
     await session.endSession();
   }
+
+  // רץ אחרי הטרנזקציה — לא דורש rollback אם נכשל. best-effort, לא חוסם.
+  void deleteCloudinaryImages(orphanedImages);
 
   // רץ אחרי הטרנזקציה — לא דורש rollback אם נכשל
   await invalidateAllUserTokens(userId);

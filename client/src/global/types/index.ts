@@ -24,6 +24,9 @@ export interface User {
   password?: string;
   avatarColor?: string;
   avatarEmoji?: string;
+  // הרשאת אדמין - מגיע מהשרת (isAdmin ב-DB). מקור האמת היחיד ל"האם להציג
+  // UI של אדמין" בקליינט (אין יותר השוואת מייל קשיחה).
+  isAdmin?: boolean;
   listOrder?: string[];
   // רשימות קבועות - עצמאיות ממחזור החיים של רשימה בודדת.
   savedLists?: SavedList[];
@@ -79,6 +82,10 @@ export interface Product {
   // לוג עריכות תוכן - עד 10 האחרונות (ראו MAX_EDIT_HISTORY בשרת). לא חובה
   // כי מוצר שמעולם לא נערך פשוט לא מכיל את השדה.
   editHistory?: ProductEditEntry[];
+  // מיקום בסדר הידני של הרשימה. הלקוח ממיין לפיו רק כש-
+  // list.productsManuallyOrdered=true. מוצר חדש מקבל position גדול (Date.now)
+  // בשרת ולכן נופל לסוף.
+  position?: number;
 }
 
 // ===== רשימה =====
@@ -104,6 +111,9 @@ export interface List {
   inviteCode?: string | null;
   password?: string | null;
   hasPassword?: boolean;
+  // סדר מוצרים ידני (גרירה) פעיל לרשימה הזו. false/undefined = מיון
+  // אוטומטי לפי קטגוריה→א״ב. משותף לכל חברי הקבוצה.
+  productsManuallyOrdered?: boolean;
   createdAt: string;
   updatedAt: string;
 }

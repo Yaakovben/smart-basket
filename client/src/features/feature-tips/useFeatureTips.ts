@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { safeStorage, markPopupShown, canShowSecondaryPopup } from '../../global/helpers';
-import { FEATURE_TIPS, type FeatureTip } from './tips';
+import { markPopupShown, canShowSecondaryPopup } from '../../global/helpers';
 
 const SESSION_COUNT_KEY = 'sb_session_count';       // מונה סשנים משותף (זהה ל-useDailyFaith)
 const SESSION_MARKER_KEY = 'sb_session_marker';
-const SEEN_KEY = 'sb_feature_tips_seen';            // מזהי טיפים שכבר הוצגו (מתאפס כשכולם הוצגו)
 const SESSION_SHOWN_KEY = 'sb_feature_tip_session_shown'; // הוצג בסשן הזה (הגנה מ-reload)
 
 const MIN_SESSION = 3;        // לא מציקים למשתמש חדש - רק מהסשן השלישי
 const SHOW_EVERY = 3;         // פעם בכל 3 פתיחות
-const DELAY_MS = 12_000;      // 12 שניות שימוש לפני שהטיפ קופץ
+const DELAY_MS = 12_000;      // 12 שניות שימוש לפני שהקרוסלה קופצת
 
 const getSessionNumber = (): number => {
   try {
@@ -28,31 +26,12 @@ const getSessionNumber = (): number => {
   }
 };
 
-// בוחר טיפ שעדיין לא הוצג. כשכולם הוצגו - מאפסים ומתחילים סבב חדש.
-const pickTip = (): FeatureTip | null => {
-  if (FEATURE_TIPS.length === 0) return null;
-  let seen = safeStorage.getJSON<string[]>(SEEN_KEY, []);
-  if (!Array.isArray(seen)) seen = [];
-  let pool = FEATURE_TIPS.filter(t => !seen.includes(t.id));
-  if (pool.length === 0) {
-    seen = [];
-    pool = FEATURE_TIPS;
-  }
-  return pool[Math.floor(Math.random() * pool.length)];
-};
-
-const markSeen = (id: string) => {
-  let seen = safeStorage.getJSON<string[]>(SEEN_KEY, []);
-  if (!Array.isArray(seen)) seen = [];
-  if (!seen.includes(id)) seen.push(id);
-  if (seen.length >= FEATURE_TIPS.length) seen = []; // סבב הושלם - איפוס
-  safeStorage.setJSON(SEEN_KEY, seen);
-};
-
-// טיפ "ידעת ש...?" שקופץ פעם בכמה פתיחות, אחרי 12 שניות, ורק אם שום פופאפ
-// אחר לא הוצג בסשן הזה (popupCoordinator). enabled = משתמש מחובר.
+// קרוסלת טיפים "ידעת ש...?" שקופצת פעם בכמה פתיחות, אחרי 12 שניות, ורק אם
+// שום פופאפ אחר לא הוצג בסשן הזה (popupCoordinator). enabled = משתמש מחובר.
+// בניגוד לגרסה הקודמת - כל הופעה מציגה את *כל* הטיפים כקרוסלה לדפדוף
+// (ראו FeatureTipsPopup), לא טיפ בודד אקראי; אין יותר מעקב "מי כבר נראה".
 export function useFeatureTips(enabled: boolean) {
-  const [tip, setTip] = useState<FeatureTip | null>(null);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -74,9 +53,7 @@ export function useFeatureTips(enabled: boolean) {
       if (document.querySelector('[role="dialog"]')) return;
       if (window.location.pathname !== '/') return;
 
-      const picked = pickTip();
-      if (!picked) return;
-      setTip(picked);
+      setShow(true);
       markPopupShown('feature-tip');
       try { sessionStorage.setItem(SESSION_SHOWN_KEY, '1'); } catch { /* */ }
     }, DELAY_MS);
@@ -84,10 +61,7 @@ export function useFeatureTips(enabled: boolean) {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [enabled]);
 
-  const dismiss = () => {
-    if (tip) markSeen(tip.id);
-    setTip(null);
-  };
+  const dismiss = () => setShow(false);
 
-  return { tip, dismiss };
+  return { show, dismiss };
 }

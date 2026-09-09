@@ -19,13 +19,15 @@ export const DbHealthCollectionsBreakdown = ({ data, isDark }: DbHealthCollectio
       התפלגות קולקציות
     </Typography>
     <DbHealthStackedBar collections={data.collections} totalSize={data.totalSize} />
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
       {data.collections.map(c => {
         const meta = collectionMeta(c.name);
         return (
           <Box key={c.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 0.5 }}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: meta.color }} />
-            <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>{meta.he}</Typography>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: meta.color, flexShrink: 0 }} />
+            <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'ui-monospace, Menlo, Consolas, monospace' }}>
+              {c.name}
+            </Typography>
           </Box>
         );
       })}

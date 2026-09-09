@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { Box, Typography, Button, IconButton, Avatar, Chip, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Typography, Button, IconButton, Avatar, Chip, Menu, MenuItem, ListItemIcon, ListItemText, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -30,9 +30,14 @@ export const ShareListModal = memo(({
   onClose,
   showToast
 }: ShareListModalProps) => {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const isDark = settings.theme === 'dark';
   // תפריט "עוד" (העתק/PDF) - נפתח מכפתור שלוש הנקודות ליד כפתור הוואטסאפ
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<HTMLElement | null>(null);
+  // חיווי "עסוק" מיידי על פריט התפריט "PDF" (iOS בלבד) - הפתרון עצמו
+  // (generateListPdf) כבר מציג overlay מלא-מסך, אבל יש פער קצר בין הקשה
+  // לבין שהדפדפן בפועל מצייר אותו; ה-state הזה סוגר את הפער הזה.
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   // מניעת גלילת רקע כשמודאל פתוח
   useEffect(() => {
@@ -70,8 +75,11 @@ export const ShareListModal = memo(({
   const handlePrint = () => {
     if (isIOS) {
       setMoreMenuAnchor(null);
+      // חיווי מיידי - לפני כל await, כדי שלא יהיה שום רגע "כאילו כלום לא קרה"
+      // בין ההקשה לבין ה-overlay מלא-המסך שגם הוא כבר מוצג מתוך generateListPdf.
+      setPdfGenerating(true);
       trackEvent('list_shared', { channel: 'pdf_ios' });
-      generateListPdf(list.name, t('preparingPdf'))
+      generateListPdf(list.name, t('preparingPdf'), isDark)
         .then(async (pdfFile) => {
           if (pdfFile && navigator.share && navigator.canShare?.({ files: [pdfFile] })) {
             try {
@@ -96,7 +104,8 @@ export const ShareListModal = memo(({
             await navigator.share({ text: generateShareListMessage(list, t) }).catch(() => {});
           }
         })
-        .catch(() => showToast(t('errorOccurred')));
+        .catch(() => showToast(t('errorOccurred')))
+        .finally(() => setPdfGenerating(false));
       return;
     }
     window.print();
@@ -178,9 +187,14 @@ export const ShareListModal = memo(({
             variant="outlined"
             onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
             aria-label={t('moreOptionsAria')}
+            disabled={pdfGenerating}
             sx={{ flex: '0 0 auto', minWidth: 0, width: 52, py: 1.5, px: 0 }}
           >
-            <MoreVertIcon />
+            {/* מציג ספינר במקום את שלוש הנקודות בזמן יצירת PDF ב-iOS - תפריט
+                ה"עוד" עצמו נסגר מיד בהקשה (setMoreMenuAnchor(null) למעלה),
+                אז חיווי "עסוק" על פריט התפריט לא היה נראה בכלל; כאן, על
+                הכפתור הקבוע, הוא כן. */}
+            {pdfGenerating ? <CircularProgress size={18} sx={{ color: 'text.secondary' }} /> : <MoreVertIcon />}
           </Button>
         </Box>
         <Menu

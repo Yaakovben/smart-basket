@@ -14,6 +14,7 @@ import { env } from '../config/environment';
 import { logger } from '../config';
 
 // אתחול web-push עם מפתחות VAPID. אם חסרים - הלוגיקה בהמשך תדלג על שליחות.
+// (VAPID_EMAIL תמיד קיים - ברירת מחדל ל-env, ראה environment.ts.)
 if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(env.VAPID_EMAIL, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
 }
