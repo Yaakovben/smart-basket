@@ -105,8 +105,17 @@ export interface LocalImagesResult {
   dryRun: boolean;
   count: number;
   totalBytes: number;
-  // רק כש-dryRun=false - כמה מוצרים נוקו בפועל.
+  // רק כש-dryRun=false ו-confirm - כמה מוצרים נוקו בפועל.
   cleared?: number;
+}
+
+// תוצאת העלאת מנת תמונות-data-URL ל-Cloudinary (POST local-images { migrate }).
+export interface LocalImagesMigrationResult {
+  migrated: number;
+  failed: number;
+  freedBytes: number;
+  attempted: number;
+  remaining: number;
 }
 
 export interface AiProviderRateLimit {

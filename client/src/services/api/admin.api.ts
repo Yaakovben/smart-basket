@@ -1,9 +1,9 @@
 import apiClient from './client';
-import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, CloudinaryHealth, LocalImagesResult, AiStatus } from './types/admin.types';
+import type { AdminUser, PaginatedActivity, AdminStats, AdminUserDetails, DbHealth, CloudinaryHealth, LocalImagesResult, LocalImagesMigrationResult, AiStatus } from './types/admin.types';
 
 // DbHealth/DbHealthCollection ממשיכים להיות מיובאים ישירות מהקובץ הזה
 // ע"י קומפוננטות DbHealthCard (לא רק דרך ה-barrel index.ts)
-export type { DbHealthCollection, DbHealth, CloudinaryHealth, LocalImagesResult, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
+export type { DbHealthCollection, DbHealth, CloudinaryHealth, LocalImagesResult, LocalImagesMigrationResult, AiStatus, AiProviderStatus, AiProviderRateLimit, AiDailyBudget } from './types/admin.types';
 
 export const adminApi = {
   async getUsers(): Promise<AdminUser[]> {
@@ -47,6 +47,13 @@ export const adminApi = {
   /** מסיר בפועל את שדה image מכל מוצר עם תמונה שמורה מקומית. בלתי הפיך. */
   async clearLocalImages(): Promise<LocalImagesResult> {
     const response = await apiClient.post<{ data: LocalImagesResult }>('/admin/local-images', { confirm: true });
+    return response.data.data;
+  },
+
+  /** מעלה מנה של תמונות data-URL ל-Cloudinary ומחליף את השדה. שומר את
+   *  התמונה ומשחרר מקום ב-DB. remaining>0 -> קרא שוב. */
+  async migrateLocalImages(): Promise<LocalImagesMigrationResult> {
+    const response = await apiClient.post<{ data: LocalImagesMigrationResult }>('/admin/local-images', { migrate: true });
     return response.data.data;
   },
 

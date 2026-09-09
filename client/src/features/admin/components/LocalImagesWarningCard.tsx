@@ -3,6 +3,7 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
+import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import { adminApi } from '../../../services/api';
 import type { LocalImagesResult } from '../../../services/api/admin.api';
 import { ConfirmModal } from '../../../global/components';
@@ -21,6 +22,8 @@ export const LocalImagesWarningCard = ({ isDark }: Props) => {
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultMsg, setResultMsg] = useState<string | null>(null);
+  // מצב ההעלאה ל-Cloudinary (רב-מנתי): null=לא רץ, אחרת התקדמות מצטברת.
+  const [migrating, setMigrating] = useState<{ migrated: number; failed: number; freed: number } | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -36,6 +39,32 @@ export const LocalImagesWarningCard = ({ isDark }: Props) => {
     const result = await adminApi.clearLocalImages();
     setInfo(result);
     setResultMsg(`נוקו ${result.cleared ?? 0} תמונות, שוחררו ${formatMB(result.totalBytes)} מה-DB.`);
+  };
+
+  // מעלה ל-Cloudinary מנה אחר מנה עד שנגמר (השרת מגביל כל קריאה כדי לא
+  // לחרוג מ-timeout). שומר את התמונות - לא מוחק.
+  const handleMigrate = async () => {
+    setResultMsg(null);
+    let migrated = 0;
+    let failed = 0;
+    let freed = 0;
+    setMigrating({ migrated, failed, freed });
+    try {
+      for (let guard = 0; guard < 100; guard += 1) {
+        const r = await adminApi.migrateLocalImages();
+        migrated += r.migrated;
+        failed += r.failed;
+        freed += r.freedBytes;
+        setMigrating({ migrated, failed, freed });
+        if (r.remaining === 0 || r.attempted === 0) break;
+      }
+    } finally {
+      setMigrating(null);
+      setResultMsg(
+        `הועלו ${migrated} תמונות ל-Cloudinary${failed ? `, ${failed} נכשלו` : ''} · ${formatMB(freed)} שוחררו מה-DB.`,
+      );
+      load();
+    }
   };
 
   if (loading) {
@@ -75,29 +104,59 @@ export const LocalImagesWarningCard = ({ isDark }: Props) => {
               {info.count} תמונות שמורות ישירות ב-DB (לא ב-Cloudinary)
             </Typography>
             <Typography sx={{ fontSize: 11, color: isDark ? '#FCD34D' : '#B45309', mt: 0.25, lineHeight: 1.4 }}>
-              תופסות {formatMB(info.totalBytes)} מתוך מכסת ה-DB. אלה תמונות שהעלאתן ל-Cloudinary נכשלה (או שהוא לא היה מוגדר באותו רגע) - נשארו ישירות במסמך המוצר.
+              תופסות {formatMB(info.totalBytes)} מתוך מכסת ה-DB. אלה תמונות שהעלאתן ל-Cloudinary נכשלה (או שהוא לא היה מוגדר / המכשיר היה אופליין באותו רגע) - נשארו ישירות במסמך המוצר.
             </Typography>
           </Box>
         </Box>
-        <Box
-          role="button"
-          tabIndex={0}
-          onClick={() => setConfirmOpen(true)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConfirmOpen(true); }}
-          sx={{
-            mt: 1.25, display: 'inline-flex', alignItems: 'center', gap: 0.5,
-            px: 1.25, py: 0.6, borderRadius: '999px',
-            bgcolor: isDark ? 'rgba(217,119,6,0.18)' : '#FEF3C7',
-            border: '1px solid', borderColor: isDark ? 'rgba(217,119,6,0.4)' : '#FCD34D',
-            color: isDark ? '#FBBF24' : '#92400E',
-            fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-            transition: 'transform 0.12s',
-            '&:active': { transform: 'scale(0.96)' },
-          }}
-        >
-          <DeleteSweepRoundedIcon sx={{ fontSize: 15 }} />
-          נקה תמונות אלה מה-DB
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.25 }}>
+          {/* פעולה מועדפת: להעלות ל-Cloudinary (שומר את התמונה + משחרר DB) */}
+          <Box
+            role="button"
+            tabIndex={0}
+            aria-disabled={!!migrating}
+            onClick={() => { if (!migrating) void handleMigrate(); }}
+            onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !migrating) void handleMigrate(); }}
+            sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.5,
+              px: 1.25, py: 0.6, borderRadius: '999px',
+              bgcolor: '#0D9488', color: '#fff',
+              fontSize: 11.5, fontWeight: 700,
+              cursor: migrating ? 'default' : 'pointer', opacity: migrating ? 0.7 : 1,
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'transform 0.12s',
+              '&:active': migrating ? {} : { transform: 'scale(0.96)' },
+            }}
+          >
+            {migrating
+              ? <CircularProgress size={13} sx={{ color: '#fff' }} />
+              : <CloudUploadRoundedIcon sx={{ fontSize: 15 }} />}
+            {migrating ? `מעלה… ${migrating.migrated}` : 'העלה ל-Cloudinary'}
+          </Box>
+
+          {/* פעולה הרסנית: פשוט למחוק את התמונה */}
+          <Box
+            role="button"
+            tabIndex={0}
+            aria-disabled={!!migrating}
+            onClick={() => { if (!migrating) setConfirmOpen(true); }}
+            onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !migrating) setConfirmOpen(true); }}
+            sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.5,
+              px: 1.25, py: 0.6, borderRadius: '999px',
+              bgcolor: isDark ? 'rgba(217,119,6,0.18)' : '#FEF3C7',
+              border: '1px solid', borderColor: isDark ? 'rgba(217,119,6,0.4)' : '#FCD34D',
+              color: isDark ? '#FBBF24' : '#92400E',
+              fontSize: 11.5, fontWeight: 700,
+              cursor: migrating ? 'default' : 'pointer', opacity: migrating ? 0.5 : 1,
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'transform 0.12s',
+              '&:active': migrating ? {} : { transform: 'scale(0.96)' },
+            }}
+          >
+            <DeleteSweepRoundedIcon sx={{ fontSize: 15 }} />
+            מחק מה-DB
+          </Box>
         </Box>
       </Box>
 

@@ -372,3 +372,57 @@ export async function clearLocalImages(): Promise<number> {
   const result = await Product.updateMany(LOCAL_IMAGE_FILTER, { $set: { image: '' } });
   return result.modifiedCount;
 }
+
+// מעביר תמונות data-URL ל-Cloudinary: מעלה כל אחת (Cloudinary מקבל data
+// URI כמקור), ומחליף את שדה image ב-secure_url הקצר. כך *נשמרת* התמונה
+// (בניגוד ל-clearLocalImages שמוחק אותה) וגם משתחרר מקום ב-DB. מטפל בכל
+// data-URL שנוצר: העלאה שנכשלה, מכשיר שהיה אופליין בזמן ההוספה, או שרת
+// שהיה בלי Cloudinary באותו רגע.
+//
+// עובד במנות קטנות (maxToProcess) עם קצת מקביליות - data-URL בודד יכול
+// להיות ~300KB וההעלאה לוקחת זמן; מנה גדולה מדי הייתה חורגת מ-timeout
+// הבקשה. מחזיר remaining כדי שהלקוח יריץ שוב עד שנגמר.
+export interface LocalImagesMigration {
+  attempted: number;
+  migrated: number;
+  failed: number;
+  freedBytes: number;
+  remaining: number;
+}
+
+export async function migrateLocalImagesToCloudinary(maxToProcess = 40): Promise<LocalImagesMigration> {
+  if (!isImageUploadConfigured()) {
+    const remaining = await Product.countDocuments(LOCAL_IMAGE_FILTER);
+    return { attempted: 0, migrated: 0, failed: 0, freedBytes: 0, remaining };
+  }
+  ensureConfigured();
+
+  const docs = await Product.find(LOCAL_IMAGE_FILTER).select('image').limit(maxToProcess).lean();
+  let migrated = 0;
+  let failed = 0;
+  let freedBytes = 0;
+
+  const CONCURRENCY = 4;
+  for (let i = 0; i < docs.length; i += CONCURRENCY) {
+    const batch = docs.slice(i, i + CONCURRENCY);
+    await Promise.all(batch.map(async (doc) => {
+      const dataUri = doc.image as string;
+      try {
+        const result = await cloudinary.uploader.upload(dataUri, {
+          folder: UPLOAD_FOLDER,
+          eager: UPLOAD_EAGER_THUMB,
+        });
+        await Product.updateOne({ _id: doc._id }, { $set: { image: result.secure_url } });
+        migrated += 1;
+        freedBytes += Buffer.byteLength(dataUri, 'utf8');
+      } catch (err) {
+        failed += 1;
+        logger.warn('[cloudinary] failed to migrate local image', String(doc._id), err);
+      }
+    }));
+  }
+
+  const remaining = await Product.countDocuments(LOCAL_IMAGE_FILTER);
+  logger.info(`[cloudinary] local-image migration: migrated=${migrated} failed=${failed} remaining=${remaining}`);
+  return { attempted: docs.length, migrated, failed, freedBytes, remaining };
+}
