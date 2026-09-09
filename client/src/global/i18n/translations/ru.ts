@@ -474,6 +474,7 @@ export const ru: Translations = {
   sendQrAria: 'Отправить QR',
   // Change password section
   changePassword: 'Изменить пароль',
+  changePasswordHint: 'Новый код входа для участников группы',
   // Share list modal
   moreOptionsAria: 'Дополнительные параметры',
   // PDF generation

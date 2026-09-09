@@ -480,6 +480,7 @@ export const he: Translations = {
   sendQrAria: 'שלח QR',
   // Change password section
   changePassword: 'שנה סיסמה',
+  changePasswordHint: 'קוד כניסה חדש לחברי הקבוצה',
   // Share list modal
   moreOptionsAria: 'אפשרויות נוספות',
   // PDF generation

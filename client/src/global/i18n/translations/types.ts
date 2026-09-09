@@ -478,6 +478,7 @@ export type TranslationKeys =
   | 'sendQrAria'
   // Change password section
   | 'changePassword'
+  | 'changePasswordHint'
   // Share list modal
   | 'moreOptionsAria'
   // PDF generation
