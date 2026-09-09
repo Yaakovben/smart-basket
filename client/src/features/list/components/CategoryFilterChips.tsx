@@ -28,15 +28,21 @@ export const CategoryFilterChips = memo(({
   // trailing (כפתור "סידור מוצרים") מתכווץ ונעלם כשגוללים את רצועת הצ'יפים
   // הרחק מההתחלה - *בדיוק* לפי מרחק הגלילה, לא "נעלם/מופיע" בסוף/בהתחלה של
   // איזה סף. שני יתרונות על פני מצב בינארי + טיימר (איך שזה היה קודם):
-  //  1. הרוחב עצמו מתכווץ עם הגלילה (לא נשאר "חור" קבוע) - השטח שהכפתור
-  //     תפס עובר בפועל לרצועת הקטגוריות, שמקבלת פינוי אמיתי, לא רק חיווי
-  //     חזותי בלי תוכן מאחוריו.
+  //  1. הרוחב עצמו מתכווץ עם הגלילה (לא נשאר "חור" קבוע) - הצ'יפים כבר
+  //     פרושים על פני כל הרוחב מתחתיו (ראו למטה - trailing כבר לא flex
+  //     sibling), אז כשהוא נעלם רואים אותם, לא שטח ריק.
   //  2. בחזרה - הכפתור מתחיל "לחזור" כבר מהרגע שגוללים לכיוון ההתחלה, לא
   //     רק כשמגיעים ממש לאפס. בדיוק ההתנהגות של רצועות סינון באפליקציות
   //     מוקפדות (למשל טאבים שמתכווצים/מתרווחים בהתאם למיקום הגלילה עצמו).
-  // מסונכרן ישירות ל-DOM דרך ref (בלי setState/בלי transition CSS) ומעודכן
-  // ב-rAF - אותו דפדוד מדויק כמו סרגל הגלילה בהערה (ProductNoteField) -
-  // מונע reflow עצמאי-מהגלילה (מה שגרם לריצוד/קפיצות בגרסה עם width+transition).
+  //
+  // trailing מוצב absolute *מעל* רצועת הצ'יפים (לא flex sibling שלה) - זה
+  // קריטי ליציבות: בגרסה הקודמת trailing היה flex:0 בתוך אותה שורה כמו
+  // רצועת הצ'יפים (flex:1), אז כיווץ הרוחב שלו שינה את ה-clientWidth של
+  // רצועת הצ'יפים *בזמן שהיא נגללת*. כש-clientWidth גדל, ה-scrollLeft
+  // המקסימלי האפשרי קטן - והדפדפן "תופס" את scrollLeft הנוכחי בחזרה כדי
+  // שיישאר בטווח, מה שיורה אירוע scroll חדש עם ערך שונה -> משנה שוב את
+  // הרוחב -> לולאת משוב שנראית כ"ריצוד". עם absolute, שינוי הרוחב של
+  // trailing לא משפיע בכלל על ה-layout של רצועת הצ'יפים - אין תלות הדדית.
   const TRAILING_WIDTH = 32;
   // מרחק הגלילה (px) שמעליו הכפתור נעלם כליל - קשור לרוחב שלו עצמו
   // (נעלם "על פני הרוחב שלו"), לא מספר שרירותי.
@@ -50,7 +56,9 @@ export const CategoryFilterChips = memo(({
     // Math.abs - המוסכמה של סימן scrollLeft ב-RTL לא אחידה בין דפדפנים,
     // אבל |scrollLeft| קטן תמיד אומר "קרוב להתחלה" בכל המוסכמות.
     const progress = Math.min(1, Math.abs(scrollLeft) / COLLAPSE_DISTANCE);
-    el.style.width = `${TRAILING_WIDTH * (1 - progress)}px`;
+    // רק opacity+transform - לא width. trailing כבר absolute (לא flex
+    // sibling של רצועת הצ'יפים), אז אין שום סיבה layout-ית לשנות את
+    // הרוחב שלו; scale+opacity מספיקים חזותית לכל האפקט.
     el.style.opacity = String(1 - progress);
     el.style.transform = `scale(${1 - progress * 0.4})`;
     el.style.pointerEvents = progress > 0.5 ? 'none' : 'auto';
@@ -71,19 +79,15 @@ export const CategoryFilterChips = memo(({
   }, [paintTrailing]);
 
   return (
-    // alignItems:'flex-start' (לא center) - הקופסה הפנימית של הצ'יפים
-    // כוללת pb:0.5 (מקום לסרגל גלילה) שגבוה מ-32px בפועל; עם center
-    // trailing היה מתמרכז בתוך הגובה הזה וזז ~2px למטה מהצ'יפים. עם
-    // flex-start שניהם מתחילים באותו y בדיוק - אותו גובה, בלי קפיצה.
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 1.5 }}>
+    // position:relative - עוגן ל-trailing (absolute) למטה.
+    <Box sx={{ position: 'relative', mb: 1.5 }}>
       <Box
         onScroll={handleScroll}
         sx={{
-          display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, flex: 1, minWidth: 0,
+          display: 'flex', gap: 0.75, overflowX: 'auto', pb: 0.5, width: '100%',
           // ה-bleed חייב להתאים בדיוק לריפוד של אזור התוכן ב-ListComponent
           // (p: { xs: 1.5, sm: 2.5 }) - אחרת הצ'יפים לא נצמדים לקצה בטאבלט.
-          // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת) - הקצה השני
-          // עכשיו יושב לצד trailing, לא נצמד למסך.
+          // רק בצד ההתחלה (ימין ב-RTL, שם רצועת הצ'יפים נפתחת).
           mr: { xs: -1.5, sm: -2.5 }, pr: { xs: 1.5, sm: 2.5 },
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
@@ -137,11 +141,20 @@ export const CategoryFilterChips = memo(({
         })}
       </Box>
       {trailing && (
-        // width/opacity/transform מעודכנים ישירות ב-DOM (paintTrailing
-        // למעלה) - בלי sx מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה
-        // (1:1, פריים-פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה.
-        // ערכי ה-sx כאן הם רק ה"מנוחה" ההתחלתית (לפני שה-effect הראשון רץ).
-        <Box ref={trailingRef} sx={{ flexShrink: 0, width: 32, opacity: 1, transform: 'scale(1)' }}>
+        // absolute, לא flex sibling - ראו ההערה למעלה על לולאת המשוב
+        // שזה פותר. insetInlineEnd:0 = הפינה השמאלית-עליונה הפיזית ב-RTL
+        // (אותה פינה שבה trailing ישב קודם כ-flex sibling). opacity/
+        // transform מעודכנים ישירות ב-DOM (paintTrailing למעלה) - בלי sx
+        // מותנה ובלי transition: הכיווץ *הוא* הגלילה עצמה (1:1, פריים-
+        // פריים), לא אנימציה נפרדת שרצה על ציר זמן משלה. ערכי ה-sx כאן הם
+        // רק ה"מנוחה" ההתחלתית (לפני שה-effect הראשון רץ).
+        <Box
+          ref={trailingRef}
+          sx={{
+            position: 'absolute', insetInlineEnd: 0, top: 0,
+            width: 32, height: 32, opacity: 1, transform: 'scale(1)',
+          }}
+        >
           {trailing}
         </Box>
       )}
