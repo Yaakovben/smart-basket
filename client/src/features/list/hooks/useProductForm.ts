@@ -24,6 +24,10 @@ export const useProductForm = () => {
   // ממתין להעלאה ברקע ומתקן את המוצר שכבר נוצר עם ה-URL האמיתי כשהיא מסתיימת -
   // בלי לחסום את "הוסף" עצמו. ראו addProductToServer.
   const pendingImageUploadRef = useRef<{ promise: Promise<string | null>; localValue: string } | null>(null);
+  // אותו דבר עבור מודל העריכה - כשמחליפים/מסירים תמונה או סוגרים בלי לשמור,
+  // ההעלאה שברקע צריכה להתבטל (תמונה יתומה ב-Cloudinary). ראו
+  // useProductMutations (saveEditedProduct / discardPendingEditImageUpload).
+  const editPendingImageUploadRef = useRef<{ promise: Promise<string | null>; localValue: string } | null>(null);
 
   // זיהוי שינויים בטופס עריכה
   const hasProductChanges = useMemo(() => {
@@ -102,6 +106,7 @@ export const useProductForm = () => {
     showAdd, setShowAdd,
     newProduct, setNewProduct,
     pendingImageUploadRef,
+    editPendingImageUploadRef,
     addError, setAddError,
     showEdit, setShowEdit,
     originalEditProduct, setOriginalEditProduct,

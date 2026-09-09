@@ -173,6 +173,7 @@ export const useList = ({
     toggleProduct,
     deleteProduct,
     saveEditedProduct,
+    discardPendingEditImageUpload,
     showClearList,
     setShowClearList,
     handleClearList,
@@ -193,6 +194,7 @@ export const useList = ({
     originalEditProduct: productForm.originalEditProduct,
     setOriginalEditProduct: productForm.setOriginalEditProduct,
     hasProductChanges: productForm.hasProductChanges,
+    editPendingImageUploadRef: productForm.editPendingImageUploadRef,
   });
 
   const {
@@ -282,6 +284,8 @@ export const useList = ({
     toggleProduct,
     deleteProduct,
     saveEditedProduct,
+    discardPendingEditImageUpload,
+    editPendingImageUploadRef: productForm.editPendingImageUploadRef,
     openEditProduct: productForm.openEditProduct,
     closeEditProduct: productForm.closeEditProduct,
     updateNewProductField: productForm.updateNewProductField,

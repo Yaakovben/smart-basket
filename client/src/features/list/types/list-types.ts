@@ -122,6 +122,9 @@ export interface UseListReturn {
   closeAddModal: () => void;
   // ביטול העלאת תמונה שלא נוצלה כשסוגרים את "הוסף מוצר" בלי לשמור
   discardPendingImageUpload: () => void;
+  // אותו דבר עבור מודל העריכה (סגירה בלי לשמור אחרי בחירת/החלפת תמונה)
+  discardPendingEditImageUpload: () => void;
+  editPendingImageUploadRef: RefObject<{ promise: Promise<string | null>; localValue: string } | null>;
   duplicateProduct: { existing: Product; newData: { name: string; quantity: number; unit: Product['unit']; category: Product['category'] } } | null;
   handleDuplicateIncreaseQuantity: () => void;
   handleDuplicateAddNew: () => void;

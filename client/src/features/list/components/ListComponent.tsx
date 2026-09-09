@@ -102,6 +102,7 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
     handleAdd, handleQuickAdd, addProductToServer, handleEditList, saveListChanges, handleDeleteList,
     removeMember, leaveList,
     toggleProduct, deleteProduct, saveEditedProduct, openEditProduct, closeEditProduct,
+    discardPendingEditImageUpload, editPendingImageUploadRef,
     updateNewProductField, updateEditProductField, incrementQuantity,
     decrementQuantity, closeAddModal, discardPendingImageUpload,
     duplicateProduct, handleDuplicateIncreaseQuantity, handleDuplicateAddNew, handleDuplicateCancel,
@@ -727,11 +728,12 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
         product={showEdit}
         hasChanges={hasProductChanges}
         saving={false}
-        onClose={closeEditProduct}
+        onClose={() => { discardPendingEditImageUpload(); closeEditProduct(); }}
         onSave={saveEditedProduct}
         onUpdateField={updateEditProductField}
         onIncrement={() => incrementQuantity('edit')}
         onDecrement={() => decrementQuantity('edit')}
+        editPendingImageUploadRef={editPendingImageUploadRef}
       />
 
       <ProductDetailsModal
