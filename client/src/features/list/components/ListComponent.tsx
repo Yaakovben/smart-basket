@@ -522,14 +522,14 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
             effectiveCategoryFilter={effectiveCategoryFilter}
             onSelectCategory={setCategoryFilter}
             trailing={canReorder ? (
-              // דורס את bgcolor:'action.hover' של reorderEntrySx - זה אמנם
-              // הצבע "הרשמי" של צ'יפ לא-פעיל, אבל הוא שקיפות חלקית מעל מה
-              // שמתחת (ולא רקע אטום), אז כשהכפתור צף (position:absolute)
-              // מעל הצ'יפים עצמם - ראו CategoryFilterChips - זה נראה "שקוף"/
-              // מרוח. גם background.paper (לבן אטום) לא נכון - זה *לא* אותו
-              // אפור שרואים בצ'יפים (שהוא action.hover מעל רקע העמוד, לא
-              // לבן טהור). כאן גוון אפור אטום ומחושב-מראש שמדמה חזותית את
-              // אותה תוצאה בלי להיות שקוף בפועל.
+              // תיקון קודם ניחש hex אטום ל"אפור של הצ'יפים" - לא הסתדר,
+              // כי action.hover הוא שקיפות שנחתכת (composite) מעל מה
+              // שממש נמצא מתחת, וזה לא קבוע (פעם צ'יפ, פעם רווח בין
+              // צ'יפים) - אין hex יחיד שתמיד יתאים. הפתרון האמיתי: לשכפל
+              // בדיוק את מה שצ'יפ עושה - שכבה אטומה עם *אותו* רקע שהצ'יפים
+              // באמת יושבים עליו (background.default, ראו ה-Box שעוטף את
+              // כל אזור התוכן) שחוסמת את מה שמתחת, ועליה שכבה שנייה עם
+              // action.hover בדיוק - בלי לנחש/לחשב ערך משוקלל בעצמנו.
               <Box
                 role="button"
                 tabIndex={0}
@@ -538,11 +538,13 @@ export const ListComponent = memo(({ list, lists, onBack, onUpdateList, onUpdate
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') reorderHandleEnter(); }}
                 sx={{
                   ...reorderEntrySx,
-                  bgcolor: settings.theme === 'dark' ? '#334155' : '#EEF1F4',
+                  position: 'relative', overflow: 'hidden',
+                  bgcolor: 'background.default',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                 }}
               >
-                <SwapVertRoundedIcon sx={{ fontSize: 19 }} />
+                <Box aria-hidden sx={{ position: 'absolute', inset: 0, bgcolor: 'action.hover' }} />
+                <SwapVertRoundedIcon sx={{ position: 'relative', zIndex: 1, fontSize: 19 }} />
               </Box>
             ) : undefined}
           />
