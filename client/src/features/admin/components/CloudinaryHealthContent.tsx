@@ -126,7 +126,7 @@ export const CloudinaryHealthContent = ({ data, isDark }: Props) => {
           ספציפית נכשלה) - ראו LocalImagesWarningCard. */}
       <LocalImagesWarningCard isDark={isDark} />
 
-      {/* ניקוי יתומים — תמונות ב-Cloudinary שלא מוכרות ל-DB */}
+      {/* ניקוי קבצים מיותרים — תמונות ב-Cloudinary שלא מוכרות ל-DB */}
       <CloudinaryOrphanCard isDark={isDark} />
     </>
   );
