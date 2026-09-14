@@ -425,6 +425,10 @@ export type TranslationKeys =
   | 'convertToGroupHint'
   | 'convertToPrivate'
   | 'convertToPrivateHint'
+  | 'convertToPrivateWarning'
+  | 'convertToPrivateMembersTitle'
+  | 'convertToPrivateMembersHint'
+  | 'convertToGroupExplain'
   | 'convertToPrivateConfirmMessage'
   | 'setGroupPassword'
   // Duplicate product
