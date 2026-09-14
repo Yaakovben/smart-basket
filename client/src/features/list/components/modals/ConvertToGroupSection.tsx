@@ -1,9 +1,8 @@
 import { memo, useState } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, accentBarSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx, pinFieldSx } from './listSettingsCardSx';
 
 interface ConvertToGroupSectionProps {
   onConvertToGroup: (password: string) => void | Promise<void>;
@@ -16,7 +15,7 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
   const [converting, setConverting] = useState(false);
 
   return (
-    <Paper sx={{ ...accentBarSx('accent'), borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+    <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, border: '1px solid', borderColor: 'divider' }}>
       <Box sx={settingsRowSx} onClick={() => setOpen(v => !v)}>
         <Box component="span" sx={{ fontSize: 22 }}>👥</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -32,24 +31,13 @@ export const ConvertToGroupSection = memo(({ onConvertToGroup }: ConvertToGroupS
 
       <Collapse in={open} unmountOnExit>
         <Box sx={expandedAreaSx}>
-          <Box sx={{
-            display: 'flex', gap: 1, alignItems: 'flex-start',
-            p: 1.5, mb: 1.5, borderRadius: '10px',
-            bgcolor: 'action.selected',
-            border: '1px solid', borderColor: 'divider',
-          }}>
-            <Box component="span" sx={{ fontSize: 17, lineHeight: 1.3, flexShrink: 0 }}>👥</Box>
-            <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.55 }}>
-              {t('convertToGroupExplain')}
-            </Typography>
-          </Box>
+          <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 1.5, lineHeight: 1.55 }}>
+            {t('convertToGroupExplain')}
+          </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
-            <LockOutlinedIcon sx={{ fontSize: 15, color: 'text.disabled' }} />
-            <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 500 }}>
-              {t('setGroupPassword')}
-            </Typography>
-          </Box>
+          <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1.25 }}>
+            {t('setGroupPassword')}
+          </Typography>
 
           <TextField
             fullWidth

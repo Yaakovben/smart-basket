@@ -1,10 +1,8 @@
 import { memo, useState } from 'react';
 import { Box, Typography, Button, CircularProgress, Collapse, Paper } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
-import GroupRemoveRoundedIcon from '@mui/icons-material/GroupRemoveRounded';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, accentBarSx, expandedAreaSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, expandedAreaSx } from './listSettingsCardSx';
 
 interface ConvertToPrivateSectionProps {
   onConvertToPrivate: () => void | Promise<void>;
@@ -15,15 +13,11 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount 
   const { t } = useSettings();
   const [open, setOpen] = useState(false);
   const [converting, setConverting] = useState(false);
-
   const hasMembers = membersCount > 0;
 
   return (
-    <Paper sx={{ ...accentBarSx('neutral'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1 }}>
-      <Box
-        sx={{ ...settingsRowSx, cursor: 'pointer', opacity: hasMembers ? 0.75 : 1 }}
-        onClick={() => setOpen(v => !v)}
-      >
+    <Paper elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1, border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ ...settingsRowSx, opacity: hasMembers ? 0.6 : 1 }} onClick={() => setOpen(v => !v)}>
         <Box component="span" sx={{ fontSize: 22 }}>🔒</Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={rowLabelSx}>{t('convertToPrivate')}</Typography>
@@ -39,38 +33,19 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate, membersCount 
       <Collapse in={open} unmountOnExit>
         <Box sx={expandedAreaSx}>
           {hasMembers ? (
-            /* יש חברים — לא ניתן להמיר עדיין */
-            <Box sx={{
-              display: 'flex', gap: 1, alignItems: 'flex-start',
-              p: 1.5, borderRadius: '10px',
-              bgcolor: 'action.selected',
-              border: '1px solid', borderColor: 'divider',
-            }}>
-              <GroupRemoveRoundedIcon sx={{ fontSize: 18, color: 'text.secondary', mt: '1px', flexShrink: 0 }} />
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
-                  {t('convertToPrivateMembersTitle')} ({membersCount})
-                </Typography>
-                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.5 }}>
-                  {t('convertToPrivateMembersHint')}
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            /* אין חברים — ניתן להמיר, מבקש אישור */
             <>
-              <Box sx={{
-                display: 'flex', gap: 1, alignItems: 'flex-start',
-                p: 1.5, mb: 1.5, borderRadius: '10px',
-                bgcolor: 'action.selected',
-                border: '1px solid', borderColor: 'divider',
-              }}>
-                <WarningAmberRoundedIcon sx={{ fontSize: 17, color: 'text.secondary', mt: '1px', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.5 }}>
-                  {t('convertToPrivateWarning')}
-                </Typography>
-              </Box>
-
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
+                {t('convertToPrivateMembersTitle')} ({membersCount})
+              </Typography>
+              <Typography sx={{ fontSize: 12.5, color: 'text.secondary', lineHeight: 1.55 }}>
+                {t('convertToPrivateMembersHint')}
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography sx={{ fontSize: 12.5, color: 'text.secondary', mb: 1.5, lineHeight: 1.55 }}>
+                {t('convertToPrivateWarning')}
+              </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   variant="outlined"
