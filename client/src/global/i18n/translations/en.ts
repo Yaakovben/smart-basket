@@ -476,6 +476,7 @@ export const en: Translations = {
   // Change password section
   changePassword: 'Change password',
   changePasswordHint: 'A new entry code for group members',
+  newPasswordLabel: 'New code (4 digits)',
   // Share list modal
   moreOptionsAria: 'More options',
   // PDF generation

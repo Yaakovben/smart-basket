@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, CircularProgress, Collapse, Paper }
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { List } from '../../../../global/types';
 import { useSettings } from '../../../../global/context/SettingsContext';
-import { settingsRowSx, rowLabelSx, rowHintSx, expandedFieldRowSx, accentBarSx } from './listSettingsCardSx';
+import { settingsRowSx, rowLabelSx, rowHintSx, accentBarSx } from './listSettingsCardSx';
 
 // ===== שינוי סיסמה - מעל כפתור שמירה, נפתח בלחיצה =====
 // אותה שורת-הגדרות בדיוק כמו במסך ההגדרות הראשי (SettingsComponent) -
@@ -36,33 +36,48 @@ export const ChangePasswordSection = memo(({ list, onChangePassword }: ChangePas
         }} />
       </Box>
       <Collapse in={showChangePassword} unmountOnExit>
-        <Box sx={expandedFieldRowSx}>
-          <TextField
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            placeholder="1234"
-            size="small"
-            fullWidth
-            autoFocus
-            inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 4 } }}
-          />
-          <Button
-            variant="contained"
-            disabled={newPassword.length !== 4 || newPassword === (list.password || '') || savingPassword}
-            onClick={async () => {
-              setSavingPassword(true);
-              try {
-                await onChangePassword(newPassword);
-                setNewPassword('');
-                setShowChangePassword(false);
-              } finally {
-                setSavingPassword(false);
-              }
-            }}
-            sx={{ minWidth: 76, fontSize: 13, fontWeight: 700 }}
-          >
-            {savingPassword ? <CircularProgress size={18} sx={{ color: 'white' }} /> : t('save')}
-          </Button>
+        <Box sx={{
+          px: 2, pb: 2, pt: 0.5,
+          bgcolor: 'action.hover',
+          borderTop: '1px solid',
+          borderTopColor: 'divider',
+        }}>
+          <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 500, mb: 1, mt: 1 }}>
+            {t('newPasswordLabel')}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <TextField
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="• • • •"
+              size="small"
+              fullWidth
+              inputProps={{ inputMode: 'numeric', maxLength: 4, style: { textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 6 } }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: 'background.paper',
+                },
+              }}
+            />
+            <Button
+              variant="contained"
+              disabled={newPassword.length !== 4 || newPassword === (list.password || '') || savingPassword}
+              onClick={async () => {
+                setSavingPassword(true);
+                try {
+                  await onChangePassword(newPassword);
+                  setNewPassword('');
+                  setShowChangePassword(false);
+                } finally {
+                  setSavingPassword(false);
+                }
+              }}
+              sx={{ minWidth: 76, fontSize: 13, fontWeight: 700, borderRadius: '12px', height: 40, flexShrink: 0 }}
+            >
+              {savingPassword ? <CircularProgress size={18} sx={{ color: 'white' }} /> : t('save')}
+            </Button>
+          </Box>
         </Box>
       </Collapse>
     </Paper>

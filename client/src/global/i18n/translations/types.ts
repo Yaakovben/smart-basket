@@ -480,6 +480,7 @@ export type TranslationKeys =
   // Change password section
   | 'changePassword'
   | 'changePasswordHint'
+  | 'newPasswordLabel'
   // Share list modal
   | 'moreOptionsAria'
   // PDF generation

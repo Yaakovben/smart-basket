@@ -476,6 +476,7 @@ export const ru: Translations = {
   // Change password section
   changePassword: 'Изменить пароль',
   changePasswordHint: 'Новый код входа для участников группы',
+  newPasswordLabel: 'Новый код (4 цифры)',
   // Share list modal
   moreOptionsAria: 'Дополнительные параметры',
   // PDF generation

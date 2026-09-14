@@ -482,6 +482,7 @@ export const he: Translations = {
   // Change password section
   changePassword: 'שנה סיסמה',
   changePasswordHint: 'קוד כניסה חדש לחברי הקבוצה',
+  newPasswordLabel: 'קוד חדש (4 ספרות)',
   // Share list modal
   moreOptionsAria: 'אפשרויות נוספות',
   // PDF generation

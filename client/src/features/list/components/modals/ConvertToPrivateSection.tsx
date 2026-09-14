@@ -13,9 +13,9 @@ export const ConvertToPrivateSection = memo(({ onConvertToPrivate }: ConvertToPr
   const [converting, setConverting] = useState(false);
 
   return (
-    <Paper sx={{ ...accentBarSx('neutral'), borderRadius: '16px', overflow: 'hidden', mt: 2.5 }}>
+    <Paper sx={{ ...accentBarSx('neutral'), borderRadius: '16px', overflow: 'hidden', mt: 2.5, mb: 1 }}>
       <Box
-        sx={{ ...settingsRowSx, opacity: converting ? 0.6 : 1, cursor: converting ? 'default' : 'pointer' }}
+        sx={{ ...settingsRowSx, opacity: converting ? 0.55 : 1, cursor: converting ? 'default' : 'pointer', transition: 'opacity 0.2s ease' }}
         onClick={async () => {
           if (converting) return;
           setConverting(true);
